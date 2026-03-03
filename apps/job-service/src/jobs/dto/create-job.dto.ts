@@ -12,12 +12,12 @@ export enum JobPriorityDto {
 }
 
 export class CreateJobDto {
-  @ApiProperty() @IsString() customerId: string;
-  @ApiProperty() @IsString() customerName: string;
+  @ApiProperty() @IsString() customerId!: string;
+  @ApiProperty() @IsString() customerName!: string;
   @ApiPropertyOptional() @IsOptional() @IsString() customerPhone?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() customerEmail?: string;
 
-  @ApiProperty() @IsString() @MaxLength(300) serviceAddress: string;
+  @ApiProperty() @IsString() @MaxLength(300) serviceAddress!: string;
   @ApiPropertyOptional() @IsOptional() @IsString() serviceCity?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() serviceState?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() serviceZip?: string;
@@ -27,7 +27,7 @@ export class CreateJobDto {
   @ApiPropertyOptional() @IsOptional() @IsString() jobTypeId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() templateId?: string;
 
-  @ApiProperty() @IsString() @MaxLength(200) title: string;
+  @ApiProperty() @IsString() @MaxLength(200) title!: string;
   @ApiPropertyOptional() @IsOptional() @IsString() description?: string;
 
   @ApiPropertyOptional({ enum: JobPriorityDto })

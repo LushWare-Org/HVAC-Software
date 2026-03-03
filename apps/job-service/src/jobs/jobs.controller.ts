@@ -25,7 +25,7 @@ class UpdateJobDto {
 }
 
 class UpdateCustomFieldsDto {
-  @IsArray() fields: Array<{ fieldDefId: string; value: unknown }>;
+  @IsArray() fields!: Array<{ fieldDefId: string; value: unknown }>;
 }
 
 @ApiTags('Jobs')

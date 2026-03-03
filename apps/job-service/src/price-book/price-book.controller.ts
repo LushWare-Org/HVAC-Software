@@ -20,12 +20,12 @@ enum PriceCategory {
 }
 
 class CreatePriceBookItemDto {
-  @IsEnum(PriceCategory) category: PriceCategory;
+  @IsEnum(PriceCategory) category!: PriceCategory;
   @IsOptional() @IsString() @MaxLength(50) code?: string;
-  @IsString() @MaxLength(200) name: string;
+  @IsString() @MaxLength(200) name!: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsString() unit?: string;
-  @IsNumber() @Min(0) unitPrice: number;
+  @IsNumber() @Min(0) unitPrice!: number;
   @IsOptional() @IsBoolean() taxable?: boolean;
   @IsOptional() @IsString() jobTypeId?: string;
 }

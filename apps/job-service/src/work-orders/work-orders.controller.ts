@@ -16,15 +16,15 @@ enum PriceCategoryDto {
 }
 
 class CreateWorkOrderDto {
-  @IsString() jobId: string;
-  @IsString() technicianId: string;
-  @IsString() technicianName: string;
+  @IsString() jobId!: string;
+  @IsString() technicianId!: string;
+  @IsString() technicianName!: string;
   @IsOptional() @IsString() scheduledStart?: string;
   @IsOptional() @IsString() scheduledEnd?: string;
 }
 
 class CompleteTaskDto {
-  @IsBoolean() isCompleted: boolean;
+  @IsBoolean() isCompleted!: boolean;
   @IsOptional() @IsString() notes?: string;
   @IsOptional() @IsString() photoUrl?: string;
 }
@@ -35,10 +35,10 @@ class CheckOutDto {
 
 class AddLineItemDto {
   @IsOptional() @IsString() priceBookItemId?: string;
-  @IsString() description: string;
-  @IsEnum(PriceCategoryDto) category: PriceCategoryDto;
-  @IsNumber() @Min(0) quantity: number;
-  @IsNumber() @Min(0) unitPrice: number;
+  @IsString() description!: string;
+  @IsEnum(PriceCategoryDto) category!: PriceCategoryDto;
+  @IsNumber() @Min(0) quantity!: number;
+  @IsNumber() @Min(0) unitPrice!: number;
   @IsOptional() @IsBoolean() taxable?: boolean;
 }
 

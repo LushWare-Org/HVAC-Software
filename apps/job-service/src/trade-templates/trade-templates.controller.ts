@@ -14,8 +14,8 @@ import { TradeTemplatesService } from './trade-templates.service';
 // ---- DTOs ----
 
 class CreateJobTypeDto {
-  @IsString() @MaxLength(80) name: string;
-  @IsString() @MaxLength(40) slug: string;
+  @IsString() @MaxLength(80) name!: string;
+  @IsString() @MaxLength(40) slug!: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsString() icon?: string;
   @IsOptional() @IsString() color?: string;
@@ -32,9 +32,9 @@ class UpdateJobTypeDto {
 }
 
 class TaskDto {
-  @IsString() taskName: string;
+  @IsString() taskName!: string;
   @IsOptional() @IsString() description?: string;
-  @IsInt() taskOrder: number;
+  @IsInt() taskOrder!: number;
   @IsOptional() @IsBoolean() isRequired?: boolean;
   @IsOptional() @IsBoolean() photoRequired?: boolean;
   @IsOptional() @IsString() safetyNote?: string;
@@ -42,8 +42,8 @@ class TaskDto {
 }
 
 class CreateTemplateDto {
-  @IsString() jobTypeId: string;
-  @IsString() name: string;
+  @IsString() jobTypeId!: string;
+  @IsString() name!: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsInt() estimatedDurationMins?: number;
   @IsOptional() @IsArray() tasks?: TaskDto[];
@@ -57,9 +57,9 @@ class UpdateTemplateDto {
 }
 
 class CreateCustomFieldDto {
-  @IsString() fieldKey: string;
-  @IsString() label: string;
-  @IsString() fieldType: string;
+  @IsString() fieldKey!: string;
+  @IsString() label!: string;
+  @IsString() fieldType!: string;
   @IsOptional() @IsArray() @IsString({ each: true }) options?: string[];
   @IsOptional() @IsBoolean() isRequired?: boolean;
   @IsOptional() @IsString() helpText?: string;
@@ -67,7 +67,7 @@ class CreateCustomFieldDto {
 }
 
 class ReorderTasksDto {
-  @IsArray() @IsString({ each: true }) taskIds: string[];
+  @IsArray() @IsString({ each: true }) taskIds!: string[];
 }
 
 // ============================================================
