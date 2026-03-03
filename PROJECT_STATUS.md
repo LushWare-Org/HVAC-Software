@@ -1,7 +1,7 @@
 # Trade & Service CRM — Project Decision Log
 
 > **Purpose:** Quick context-restoration file. Read this at the start of any new development session.
-> **Last Updated:** Feb 2026 | **Status:** 🚧 Week 1 Foundation Built — Awaiting `pnpm install` + Auth0 Setup
+> **Last Updated:** Feb 2026 | **Status:** 🚧 Week 2/3 Done — Job Service complete, awaiting `prisma:migrate` + seed
 
 ---
 
@@ -188,29 +188,42 @@ Database-driven, extensible — adding new trades requires NO code changes, only
 
 ## Development Progress
 
-### Week 1 — Foundation ✅ BUILT (awaiting pnpm install)
+### Week 1 — Foundation ✅ DONE
 - [x] Monorepo: Turborepo + pnpm workspaces, root configs
 - [x] Docker Compose: PostgreSQL+PostGIS, Redis, MongoDB, MinIO, Nginx
 - [x] Infrastructure: nginx.conf (6 service routes), init.sql (5 schemas + PostGIS)
 - [x] Shared package: @tscrm/types (all enums + interfaces)
 - [x] Shared package: @tscrm/auth-client (Auth0 JWT strategy, guards, decorators)
 - [x] Shared package: @tscrm/queue (BullMQ factory, 9 queue names)
-- [x] CRM Service (port 3001): full scaffold — Prisma schema, all 4 modules (customers, contacts, leads, bookings)
-- [x] 4 service stubs: job, finance, comms, analytics (boot + /health each)
-- [x] Scheduling service: README placeholder (Go — Week 4)
-- [ ] YOU: `git init && git add . && git commit -m "feat: Week 1 foundation"`
-- [ ] YOU: Auth0 account setup (see AUTH0_SETUP.md)
-- [ ] YOU: `pnpm install && docker compose up -d`
-- [ ] YOU: `cd apps/crm-service && pnpm prisma:generate && pnpm prisma:migrate`
+- [x] CRM Service (port 3001): Prisma schema + customers, contacts, leads, bookings modules
+- [x] 4 service stubs: job, finance, comms, analytics
+- [x] Git committed, Docker running, pnpm installed
 
-### Week 2/3 — Job Management (NEXT)
-- [ ] Job Management Service: full Prisma schema (jobs, work_orders, job_types, job_templates, price_book)
-- [ ] Trade template system: HVAC/Plumbing/Electrical seed data
-- [ ] Custom field system: dynamic fields per trade type
-- [ ] Price book: parts, labour rates, packages
-- [ ] Job state machine: pending → scheduled → en_route → on_site → completed → invoiced → paid
+### Week 2/3 — Job Management ✅ DONE
+- [x] Prisma schema: JobType, JobTemplate, JobTemplateTask, JobCustomFieldDef/Value, Job, WorkOrder, WorkOrderTaskCompletion, WorkOrderLineItem, PriceBookItem, JobStatusHistory, JobPhoto
+- [x] Seed: 3 trades, 5 templates with full task lists, 31 custom field defs, 17 price book items
+- [x] TradeTemplatesModule: job type CRUD, template CRUD + task management, custom field CRUD
+- [x] PriceBookModule: paginated search, category filter, CRUD
+- [x] JobsModule: full CRUD + state machine (validates transitions) + custom field update endpoint
+- [x] WorkOrdersModule: create from job template, check-in/out, task tick-off, line items
+- [ ] YOU: `cd apps/job-service && pnpm prisma:generate && pnpm prisma:migrate && pnpm prisma:seed`
+- [ ] YOU: `git add . && git commit -m "feat: Week 2/3 — Job Management Service complete"`
 
-### Weeks 4-8 — Pending
+### Week 4 — Scheduling Service (NEXT)
+- [ ] Go module init, Gin framework, PostgreSQL (pgx), Redis client
+- [ ] Technician availability + shifts DB schema (in scheduling PG schema)
+- [ ] Dispatch board WebSocket (Socket.IO Go adapter)
+- [ ] GPS tracking endpoints (receive + broadcast to dashboard)
+- [ ] Service zone management (PostGIS polygons)
+- [ ] Phase 1 AI assignment: rule-based scoring (distance 40% + workload 35% + rating 25%)
+
+### Weeks 5-8 — Pending
+- [ ] Week 5: Finance service (quotes, invoices, Stripe, PDF generation)
+- [ ] Week 6: Comms service (BullMQ, SMS/email/push processors)
+- [ ] Week 7: Analytics + admin dashboard UI + customer portal UI
+- [ ] Week 8: Technician React Native app, integration testing, prod deploy
+
+### Weeks 4-8 — Pending (old)
 - [ ] Week 4: Go scheduling service (GPS, dispatch board, AI assignment)
 - [ ] Week 5: Finance service (quotes, invoices, Stripe, PDFs)
 - [ ] Week 6: Comms service (BullMQ processors, SMS/email/push)

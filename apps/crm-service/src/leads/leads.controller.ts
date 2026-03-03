@@ -8,8 +8,8 @@ import { LeadsService } from './leads.service';
 import { IsString, IsOptional, IsNumber, IsEmail } from 'class-validator';
 
 class CreateLeadDto {
-  @IsString() firstName: string;
-  @IsString() lastName: string;
+  @IsString() firstName!: string;
+  @IsString() lastName!: string;
   @IsOptional() @IsEmail() email?: string;
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() source?: string;
@@ -19,7 +19,7 @@ class CreateLeadDto {
 }
 
 class UpdateLeadStatusDto {
-  @IsString() status: string;
+  @IsString() status!: string;
   @IsOptional() @IsString() notes?: string;
 }
 

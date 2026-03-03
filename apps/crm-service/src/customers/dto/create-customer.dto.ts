@@ -17,12 +17,12 @@ export class CreateCustomerDto {
   @ApiProperty({ example: 'John' })
   @IsString()
   @MaxLength(100)
-  firstName: string;
+  firstName!: string;
 
   @ApiProperty({ example: 'Smith' })
   @IsString()
   @MaxLength(100)
-  lastName: string;
+  lastName!: string;
 
   @ApiPropertyOptional({ enum: CustomerType, default: CustomerType.RESIDENTIAL })
   @IsOptional()

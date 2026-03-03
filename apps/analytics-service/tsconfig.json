@@ -2,11 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
-    "paths": {
-      "@tscrm/types": ["../../packages/types/src"],
-      "@tscrm/auth-client": ["../../packages/auth-client/src"]
-    }
+    "outDir": "dist"
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]

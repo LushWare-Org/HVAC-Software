@@ -1,0 +1,226 @@
+// ============================================================
+// CRM Service — Prisma Schema
+// Schema: crm (isolated from other services)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("CRM_DATABASE_URL")
+  // Connection URL must include ?schema=crm
+  // e.g. postgresql://user:pass@localhost:5432/tscrm?schema=crm
+}
+
+// ---- Companies (tenants) ----
+model Company {
+  id          String    @id @default(uuid())
+  name        String
+  email       String    @unique
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  country     String    @default("US")
+  logoUrl     String?
+  website     String?
+  isActive    Boolean   @default(true)
+  trialEndsAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  customers  Customer[]
+  contacts   Contact[]
+  leads      Lead[]
+  agreements ServiceAgreement[]
+  bookings   Booking[]
+
+  @@map("companies")
+}
+
+// ---- Customers (business accounts or residential) ----
+model Customer {
+  id          String       @id @default(uuid())
+  companyId   String
+  company     Company      @relation(fields: [companyId], references: [id])
+  type        CustomerType @default(RESIDENTIAL)
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  mobile      String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  notes       String?
+  source      String? // how they found us
+  tags        String[] // flexible tagging
+  isActive    Boolean      @default(true)
+  auth0UserId String? // when customer has portal access
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  contacts   Contact[]
+  leads      Lead[]
+  agreements ServiceAgreement[]
+  bookings   Booking[]
+  reviews    Review[]
+
+  @@index([companyId])
+  @@index([companyId, email])
+  @@index([companyId, lastName])
+  @@map("customers")
+}
+
+enum CustomerType {
+  RESIDENTIAL
+  COMMERCIAL
+}
+
+// ---- Contacts (multiple contacts per customer account) ----
+model Contact {
+  id         String   @id @default(uuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  firstName  String
+  lastName   String
+  email      String?
+  phone      String?
+  role       String? // e.g. "Property Manager", "Owner"
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([customerId])
+  @@map("contacts")
+}
+
+// ---- Leads (pre-customer pipeline) ----
+model Lead {
+  id             String     @id @default(uuid())
+  companyId      String
+  company        Company    @relation(fields: [companyId], references: [id])
+  customerId     String?
+  customer       Customer?  @relation(fields: [customerId], references: [id])
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  source         String? // google, referral, website, etc.
+  status         LeadStatus @default(NEW)
+  estimatedValue Decimal?   @db.Decimal(10, 2)
+  notes          String?
+  assignedToId   String? // Auth0 user ID of assigned staff
+  convertedAt    DateTime? // when lead became customer
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([companyId])
+  @@index([companyId, status])
+  @@map("leads")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  WON
+  LOST
+}
+
+// ---- Service Agreements / Maintenance Contracts ----
+model ServiceAgreement {
+  id           String          @id @default(uuid())
+  companyId    String
+  company      Company         @relation(fields: [companyId], references: [id])
+  customerId   String
+  customer     Customer        @relation(fields: [customerId], references: [id])
+  name         String
+  description  String?
+  status       AgreementStatus @default(DRAFT)
+  startDate    DateTime
+  endDate      DateTime?
+  value        Decimal?        @db.Decimal(10, 2)
+  billingCycle String? // monthly, annual
+  autoRenew    Boolean         @default(false)
+  signedAt     DateTime?
+  signedByName String?
+  documentUrl  String? // S3 key for signed PDF
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([companyId])
+  @@index([customerId])
+  @@map("service_agreements")
+}
+
+enum AgreementStatus {
+  DRAFT
+  SENT
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+// ---- Bookings (online booking portal requests) ----
+model Booking {
+  id            String        @id @default(uuid())
+  companyId     String
+  company       Company       @relation(fields: [companyId], references: [id])
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  // For anonymous bookings (not yet a customer)
+  guestName     String?
+  guestEmail    String?
+  guestPhone    String?
+  serviceType   String
+  description   String?
+  preferredDate DateTime
+  alternateDate DateTime?
+  status        BookingStatus @default(PENDING)
+  jobId         String? // set when converted to a job
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([companyId])
+  @@index([companyId, status])
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CONVERTED
+  CANCELLED
+}
+
+// ---- Reviews / Reputation Management ----
+model Review {
+  id          String    @id @default(uuid())
+  companyId   String
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  jobId       String?
+  rating      Int // 1-5
+  comment     String?
+  platform    String    @default("internal") // google, internal
+  isPublished Boolean   @default(false)
+  respondedAt DateTime?
+  response    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([companyId])
+  @@index([customerId])
+  @@map("reviews")
+}

@@ -8,8 +8,8 @@ import { ContactsService } from './contacts.service';
 import { IsString, IsEmail, IsOptional, IsBoolean } from 'class-validator';
 
 class CreateContactDto {
-  @IsString() firstName: string;
-  @IsString() lastName: string;
+  @IsString() firstName!: string;
+  @IsString() lastName!: string;
   @IsOptional() @IsEmail() email?: string;
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() role?: string;

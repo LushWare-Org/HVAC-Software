@@ -7,7 +7,14 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const port = process.env.JOBS_PORT ?? 3002;
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
   app.enableCors({ origin: ['http://localhost:3000', 'http://localhost:5173'] });
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()

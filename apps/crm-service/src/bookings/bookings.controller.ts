@@ -9,9 +9,9 @@ import { IsString, IsOptional, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class CreateBookingDto {
-  @IsString() serviceType: string;
+  @IsString() serviceType!: string;
   @IsOptional() @IsString() description?: string;
-  @IsDateString() preferredDate: string;
+  @IsDateString() preferredDate!: string;
   @IsOptional() @IsDateString() alternateDate?: string;
   @IsOptional() @IsString() customerId?: string;
   @IsOptional() @IsString() guestName?: string;

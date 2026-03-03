@@ -1,0 +1,372 @@
+// ============================================================
+// Job Management Service — Prisma Schema
+// Schema: jobs (isolated from other services)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("JOBS_DATABASE_URL")
+}
+
+// ============================================================
+// TRADE TEMPLATE SYSTEM (DB-driven, extensible without code)
+// Admin adds a new trade type → job templates → tasks
+// All from the admin dashboard — zero code changes needed
+// ============================================================
+
+// e.g. HVAC, Plumbing, Electrical, General, Landscaping…
+model JobType {
+  id          String   @id @default(uuid())
+  companyId   String
+  name        String                         // "HVAC", "Plumbing"
+  slug        String                         // "hvac", "plumbing" — for icons/routing
+  description String?
+  icon        String?                        // lucide icon name or URL
+  color       String?                        // hex, for UI colour coding
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  templates         JobTemplate[]
+  customFieldDefs   JobCustomFieldDef[]
+  jobs              Job[]
+
+  @@unique([companyId, slug])
+  @@index([companyId])
+  @@map("job_types")
+}
+
+// Template per job type — e.g. "HVAC Annual Maintenance", "AC Installation"
+model JobTemplate {
+  id                    String   @id @default(uuid())
+  companyId             String
+  jobTypeId             String
+  jobType               JobType  @relation(fields: [jobTypeId], references: [id])
+  name                  String   // "Annual AC Tune-Up"
+  description           String?
+  estimatedDurationMins Int      @default(60)
+  version               Int      @default(1)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tasks       JobTemplateTask[]
+  jobs        Job[]
+
+  @@index([companyId])
+  @@index([jobTypeId])
+  @@map("job_templates")
+}
+
+// Individual checklist tasks within a template
+// Technician ticks these off on-site
+model JobTemplateTask {
+  id             String      @id @default(uuid())
+  templateId     String
+  template       JobTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  taskName       String      // "Check refrigerant levels"
+  description    String?
+  taskOrder      Int
+  isRequired     Boolean     @default(true)
+  photoRequired  Boolean     @default(false)
+  safetyNote     String?     // highlighted in red on technician app
+  estimatedMins  Int?
+  createdAt      DateTime    @default(now())
+
+  @@index([templateId])
+  @@map("job_template_tasks")
+}
+
+// Dynamic custom field DEFINITIONS per job type
+// e.g. HVAC → "refrigerant_type" (select), "tonnage" (number), "filter_size" (text)
+// e.g. Electrical → "panel_amperage" (number), "circuit_count" (number)
+model JobCustomFieldDef {
+  id          String          @id @default(uuid())
+  companyId   String
+  jobTypeId   String
+  jobType     JobType         @relation(fields: [jobTypeId], references: [id])
+  fieldKey    String          // machine-readable key: "refrigerant_type"
+  label       String          // human label: "Refrigerant Type"
+  fieldType   CustomFieldType
+  options     Json?           // for SELECT type: ["R-410A", "R-22", "R-32"]
+  isRequired  Boolean         @default(false)
+  helpText    String?
+  sortOrder   Int             @default(0)
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+
+  values      JobCustomFieldValue[]
+
+  @@unique([jobTypeId, fieldKey])
+  @@index([jobTypeId])
+  @@map("job_custom_field_defs")
+}
+
+enum CustomFieldType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  SELECT
+  MULTI_SELECT
+  DATE
+  TEXTAREA
+}
+
+// Actual values stored per job — flexible JSONB
+model JobCustomFieldValue {
+  id            String           @id @default(uuid())
+  jobId         String
+  job           Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fieldDefId    String
+  fieldDef      JobCustomFieldDef @relation(fields: [fieldDefId], references: [id])
+  value         Json             // stores any type — text, number, array, boolean
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([jobId, fieldDefId])
+  @@index([jobId])
+  @@map("job_custom_field_values")
+}
+
+// ============================================================
+// PRICE BOOK
+// ============================================================
+
+model PriceBookItem {
+  id            String        @id @default(uuid())
+  companyId     String
+  category      PriceCategory
+  code          String?       // internal part/service code
+  name          String
+  description   String?
+  unit          String        @default("each") // each, hour, sqft, lbs
+  unitPrice     Decimal       @db.Decimal(10, 2)
+  taxable       Boolean       @default(true)
+  isActive      Boolean       @default(true)
+  jobTypeId     String?       // optional: restrict to a trade type
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  lineItems     WorkOrderLineItem[]
+
+  @@index([companyId])
+  @@index([companyId, category])
+  @@map("price_book_items")
+}
+
+enum PriceCategory {
+  LABOUR
+  PART
+  MATERIAL
+  EQUIPMENT_RENTAL
+  SUBCONTRACTOR
+  OTHER
+}
+
+// ============================================================
+// JOBS
+// ============================================================
+
+model Job {
+  id               String      @id @default(uuid())
+  companyId        String
+  jobNumber        String                        // human-readable: "JOB-2024-0001"
+  customerId       String                        // FK to crm.customers (cross-service ref)
+  customerName     String                        // denormalised for display without join
+  customerPhone    String?
+  customerEmail    String?
+  serviceAddress   String
+  serviceCity      String?
+  serviceState     String?
+  serviceZip       String?
+  serviceLatitude  Decimal?    @db.Decimal(10, 7)
+  serviceLongitude Decimal?    @db.Decimal(10, 7)
+
+  jobTypeId        String?
+  jobType          JobType?    @relation(fields: [jobTypeId], references: [id])
+  templateId       String?
+  template         JobTemplate? @relation(fields: [templateId], references: [id])
+
+  title            String
+  description      String?
+  status           JobStatus   @default(PENDING)
+  priority         JobPriority @default(NORMAL)
+
+  // Scheduling refs (set by scheduling-service, stored here for query convenience)
+  assignedToId     String?     // Auth0 user ID of primary technician
+  assignedToName   String?
+  scheduledStart   DateTime?
+  scheduledEnd     DateTime?
+  actualStart      DateTime?
+  actualEnd        DateTime?
+
+  estimatedDurationMins Int?
+  travelDistanceKm      Decimal? @db.Decimal(8, 2)
+
+  // Finance refs (set by finance-service)
+  quoteId          String?
+  invoiceId        String?
+
+  notes            String?
+  internalNotes    String?
+  tags             String[]
+
+  createdByUserId  String      // Auth0 user ID
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  completedAt      DateTime?
+
+  workOrders       WorkOrder[]
+  customFieldValues JobCustomFieldValue[]
+  statusHistory    JobStatusHistory[]
+  photos           JobPhoto[]
+
+  @@unique([companyId, jobNumber])
+  @@index([companyId])
+  @@index([companyId, status])
+  @@index([companyId, assignedToId])
+  @@index([companyId, scheduledStart])
+  @@index([customerId])
+  @@map("jobs")
+}
+
+enum JobStatus {
+  PENDING
+  SCHEDULED
+  EN_ROUTE
+  ON_SITE
+  COMPLETED
+  INVOICED
+  PAID
+  CANCELLED
+  ON_HOLD
+}
+
+enum JobPriority {
+  LOW
+  NORMAL
+  HIGH
+  EMERGENCY
+}
+
+// Audit trail of every job status change
+model JobStatusHistory {
+  id         String    @id @default(uuid())
+  jobId      String
+  job        Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fromStatus JobStatus?
+  toStatus   JobStatus
+  changedById String   // Auth0 user ID
+  changedByName String
+  note       String?
+  createdAt  DateTime  @default(now())
+
+  @@index([jobId])
+  @@map("job_status_history")
+}
+
+// Job photos (uploaded by technician on-site)
+model JobPhoto {
+  id          String   @id @default(uuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  workOrderId String?
+  s3Key       String   // e.g. "photos/company-id/job-id/before-001.jpg"
+  caption     String?
+  photoType   PhotoType @default(GENERAL)
+  uploadedById String  // Auth0 user ID
+  createdAt   DateTime @default(now())
+
+  @@index([jobId])
+  @@map("job_photos")
+}
+
+enum PhotoType {
+  BEFORE
+  AFTER
+  GENERAL
+  EQUIPMENT
+  ISSUE
+}
+
+// ============================================================
+// WORK ORDERS (one per visit / per technician)
+// The technician-facing document with tasks + parts used
+// ============================================================
+
+model WorkOrder {
+  id             String          @id @default(uuid())
+  companyId      String
+  jobId          String
+  job            Job             @relation(fields: [jobId], references: [id])
+  workOrderNumber String                        // "WO-2024-0001"
+  technicianId   String                         // Auth0 user ID
+  technicianName String
+  status         WorkOrderStatus @default(PENDING)
+  scheduledStart DateTime?
+  scheduledEnd   DateTime?
+  checkinAt      DateTime?
+  checkoutAt     DateTime?
+  signatureUrl   String?                        // customer signature S3 key
+  technicianNotes String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  lineItems      WorkOrderLineItem[]
+  taskCompletions WorkOrderTaskCompletion[]
+
+  @@unique([companyId, workOrderNumber])
+  @@index([companyId])
+  @@index([jobId])
+  @@index([technicianId])
+  @@map("work_orders")
+}
+
+enum WorkOrderStatus {
+  PENDING
+  EN_ROUTE
+  ON_SITE
+  COMPLETED
+  CANCELLED
+}
+
+// Tracks completion of each checklist task per work order
+model WorkOrderTaskCompletion {
+  id           String          @id @default(uuid())
+  workOrderId  String
+  workOrder    WorkOrder       @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  templateTaskId String        // ref to job_template_tasks.id
+  taskName     String          // denormalised for record-keeping
+  isCompleted  Boolean         @default(false)
+  photoUrl     String?         // S3 key of required photo
+  notes        String?
+  completedAt  DateTime?
+
+  @@index([workOrderId])
+  @@map("work_order_task_completions")
+}
+
+// Parts and labour used in a work order (feeds into invoice)
+model WorkOrderLineItem {
+  id              String         @id @default(uuid())
+  workOrderId     String
+  workOrder       WorkOrder      @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  priceBookItemId String?
+  priceBookItem   PriceBookItem? @relation(fields: [priceBookItemId], references: [id])
+  description     String
+  category        PriceCategory  @default(PART)
+  quantity        Decimal        @db.Decimal(8, 2) @default(1)
+  unitPrice       Decimal        @db.Decimal(10, 2)
+  taxable         Boolean        @default(true)
+  // computed: quantity × unitPrice (stored for invoice snapshot)
+  lineTotal       Decimal        @db.Decimal(10, 2)
+  createdAt       DateTime       @default(now())
+
+  @@index([workOrderId])
+  @@map("work_order_line_items")
+}
