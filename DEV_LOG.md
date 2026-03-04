@@ -5,6 +5,103 @@
 
 ---
 
+## Session 4 — March 2026 (Week 4: Go Scheduling Service)
+
+**Status: ✅ Scheduling service fully built — ready for `go mod tidy` + migration + `go run ./cmd/server`**
+
+### What was built — scheduling-service (Go 1.22, port 3003)
+
+**Technology choices:**
+- `gin v1.9` — minimal, fast HTTP router (idiomatic Go, no annotation magic)
+- `pgx/v5` — native PostgreSQL driver (better than database/sql for PostGIS JSONB/arrays)
+- `go-redis/v9` — Redis pub/sub for WebSocket fan-out across pods
+- `gorilla/websocket v1.5` — native WS (NOT Socket.IO — simpler, no JS runtime dependency)
+- `lestrrat-go/jwx/v2` — Auth0 RS256 JWT + JWKS auto-cache (15-min refresh)
+- Multi-stage Dockerfile: `go:1.22-alpine` → `alpine:3.19`, static binary, non-root user
+
+**`migrations/001_scheduling_schema.sql`:**
+- `scheduling.technicians` — GPS location (PostGIS geometry Point 4326), skills TEXT[], rating, max_daily_jobs
+- `scheduling.technician_shifts` — per-day availability windows with UNIQUE(technician_id, shift_date)
+- `scheduling.service_zones` — geographic boundary polygons for company service areas
+- `scheduling.technician_zones` — junction table (technician ↔ zone M:M)
+- `scheduling.dispatch_assignments` — core scheduling record with status ENUM, score, distance_km, timestamps (en_route_at, on_site_at, completed_at)
+- `scheduling.gps_tracking` — high-frequency time-series GPS with PostGIS Point, speed, heading, battery
+
+**`internal/config/config.go`:**
+- Reads env vars at startup; `requireEnv()` causes fatal exit if missing
+- Stores `AutoAssignThreshold` (90.0), `MaxDistanceKm` (50.0), `MaxActiveJobs` (5) for scoring
+
+**`internal/database/postgres.go` + `redis.go`:**
+- pgx pool (25 max, 3 min, 30min lifetime, 1min health check)
+- Redis pool (10 connections, 2 idle min)
+- Channel naming: `gps:<companyId>` and `assignment:<companyId>` (multi-tenant isolation)
+
+**`internal/models/models.go`:**
+- `Technician`, `TechnicianShift`, `DispatchAssignment`, `GPSTrackingPoint`
+- Full request/response DTOs: `CreateTechnicianRequest`, `AssignJobRequest`, `ManualAssignRequest`, `ScoredTechnician`, `AssignResponse`, `GPSUpdateRequest`
+- WebSocket envelope: `WSMessage { Type, CompanyID, Payload }` — frontend switches on `type`
+
+**`internal/ws/hub.go` — WebSocket hub:**
+- `clients map[companyID][]*Client` — company-scoped rooms
+- `StartRedisSubscriber(ctx)` — pattern subscribes to `gps:*` + `assignment:*` via PSubscribe
+- `BroadcastMessage()` — encodes to JSON, publishes to Redis (all pods fan out)
+- `ServeWS()` — upgrades HTTP, registers client, spawns read+write pump goroutines
+- Ping/pong every 54s; dead connections auto-closed; send buffer 256 frames
+
+**`internal/middleware/auth.go`:**
+- `JWTMiddleware(domain, audience)` — builds JWKS cache at startup (pre-warms)
+- Validates RS256 token: issuer, audience, expiry
+- Extracts `company_id` + `role` custom claims (injected by Auth0 Actions)
+- Guards: `company_id` must be present; `RequireRole(...)` middleware for role checks
+
+**`internal/repository/technician_repo.go`:**
+- `FindCandidatesNearby()` — `ST_DWithin` radius pre-filter + `ST_Distance` exact km
+- `CountActiveJobsForTechnicians()` — single query for all candidates at once (ASSIGNED + EN_ROUTE + ON_SITE)
+- `UpdateLocation()` — `ST_SetSRID(ST_MakePoint(lng, lat), 4326)` + `last_seen_at`
+- Skill filter done in Go (avoids complex array-overlap SQL that interferes with spatial index)
+
+**`internal/repository/assignment_repo.go`:**
+- Status transitions with per-status timestamp fields (en_route_at, on_site_at, completed_at)
+- `InsertGPSPoint()` — PostGIS point insert, called async in goroutine (non-blocking main path)
+- `FindByTechnician()` with optional `[]AssignmentStatus` filter
+
+**`internal/service/assignment_service.go` — Phase 1 scoring:**
+```
+distanceScore = max(0, 100 - (distanceKm / 50.0 × 100))   // weight 40%
+workloadScore = max(0, 100 - (activeJobs / 5.0 × 100))     // weight 35%
+ratingScore   = (rating / 5.0) × 100                        // weight 25%
+totalScore    = distanceScore×0.40 + workloadScore×0.35 + ratingScore×0.25
+```
+- If `totalScore >= 90.0` → auto-assign, broadcast WSTypeAssigned, return `{autoAssigned: true}`
+- Otherwise → return top-3 `ScoredTechnician[]` for dispatcher `{autoAssigned: false}`
+- `ManualAssign()` — dispatcher explicit pick, still computes score for record-keeping
+- `UpdateAssignmentStatus()` — transitions + broadcasts `WSTypeStatusChanged`
+
+**Handlers:**
+- `GET /health` + `GET /health/ready` — liveness + readiness (DB + Redis ping)
+- `GET/POST/PATCH /technicians` + `GET /technicians/me` — profile CRUD
+- `POST /dispatch/assign` — smart Phase 1 scoring
+- `POST /dispatch/assign/manual` — dispatcher override
+- `GET /dispatch/assignments/:id` + `/job/:jobId` + `/technician/:techId`
+- `PATCH /dispatch/assignments/:id/status` — with role-based transition guard
+- `POST /gps` — GPS ingest: persist + update location + broadcast
+- `GET /ws` — WebSocket upgrade (DISPATCHER/OFFICE_MANAGER/COMPANY_ADMIN only)
+
+**nginx.conf updated:**
+- Removed `/socket.io/` proxy (we don't use Socket.IO)
+- Added `/ws` proxy with `proxy_http_version 1.1`, `Upgrade` + `Connection: upgrade` headers, 1-hour read/send timeout
+
+### Your actions needed
+1. `cd apps/scheduling-service && go mod tidy` (requires Go 1.22)
+2. Run migration: `psql $DATABASE_URL -f migrations/001_scheduling_schema.sql`
+3. `go run ./cmd/server` — starts on port 3003
+4. `git add . && git commit -m "feat: Week 4 — Go Scheduling Service + Phase 1 AI assignment"`
+
+### What's next (Week 5)
+- Finance Service: NestJS + Prisma, quotes/invoices, Stripe integration, Puppeteer PDF generation
+
+---
+
 ## Session 3 — Feb 2026 (Week 2/3: Job Management Service)
 
 **Status: ✅ Job service fully built — ready for `prisma:generate && prisma:migrate && prisma:seed`**

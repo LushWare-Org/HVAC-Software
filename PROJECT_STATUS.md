@@ -1,7 +1,7 @@
 # Trade & Service CRM — Project Decision Log
 
 > **Purpose:** Quick context-restoration file. Read this at the start of any new development session.
-> **Last Updated:** Feb 2026 | **Status:** 🚧 Week 2/3 Done — Job Service complete, awaiting `prisma:migrate` + seed
+> **Last Updated:** March 2026 | **Status:** 🚧 Week 4 Done — Go Scheduling Service complete, awaiting `go mod tidy` + `go run`
 
 ---
 
@@ -31,7 +31,8 @@ Inspired by HousecallPro / ServiceTitan. Targeting small-to-mid trade companies.
 ### Infrastructure
 - **Monorepo:** Turborepo + pnpm workspaces
 - **Async Events:** BullMQ (Redis-backed) — NOT Kafka at launch
-- **Real-time:** Socket.IO + Redis Adapter
+- **Real-time:** gorilla/websocket (Go scheduling service) + Redis pub/sub fan-out; NestJS services use BullMQ events
+- **WebSocket URL:** ws://localhost/ws (or ws://localhost:3003/ws directly)
 - **Deployment DEV:** Docker Compose
 - **Deployment PROD:** Docker Swarm OR AWS ECS Fargate — NOT Kubernetes at launch
 - **Monitoring:** Better Stack (logs + uptime) + Sentry (error tracking)
@@ -209,26 +210,42 @@ Database-driven, extensible — adding new trades requires NO code changes, only
 - [ ] YOU: `cd apps/job-service && pnpm prisma:generate && pnpm prisma:migrate && pnpm prisma:seed`
 - [ ] YOU: `git add . && git commit -m "feat: Week 2/3 — Job Management Service complete"`
 
-### Week 4 — Scheduling Service (NEXT)
-- [ ] Go module init, Gin framework, PostgreSQL (pgx), Redis client
-- [ ] Technician availability + shifts DB schema (in scheduling PG schema)
-- [ ] Dispatch board WebSocket (Socket.IO Go adapter)
-- [ ] GPS tracking endpoints (receive + broadcast to dashboard)
-- [ ] Service zone management (PostGIS polygons)
-- [ ] Phase 1 AI assignment: rule-based scoring (distance 40% + workload 35% + rating 25%)
+### Week 4 — Scheduling & Dispatch ✅ DONE
+- [x] SQL migration: scheduling schema (technicians, shifts, service_zones, dispatch_assignments, gps_tracking) + PostGIS
+- [x] go.mod with all dependencies (gin, pgx/v5, go-redis/v9, gorilla/websocket, lestrrat-go/jwx/v2)
+- [x] config/config.go — env var loading with required/optional helpers
+- [x] database/postgres.go — pgx/v5 connection pool (25 max conns)
+- [x] database/redis.go — go-redis/v9 client + channel naming helpers (gps:<companyId>, assignment:<companyId>)
+- [x] models/models.go — all domain structs + request/response DTOs + WS message envelope
+- [x] ws/hub.go — gorilla/websocket hub: company-scoped broadcast, Redis pub/sub fan-out, ping/pong, write+read pumps
+- [x] middleware/auth.go — Auth0 JWT validation (lestrrat-go/jwx JWKS auto-cache, RS256, company_id guard)
+- [x] repository/technician_repo.go — PostGIS ST_Distance/ST_DWithin queries, GPS update, skill filter
+- [x] repository/assignment_repo.go — assignment CRUD, status transitions with timestamp fields, GPS time-series insert
+- [x] service/assignment_service.go — Phase 1 scoring (distance×40% + workload×35% + rating×25%), auto-assign ≥90
+- [x] handler/health_handler.go — /health + /health/ready (DB + Redis check)
+- [x] handler/technician_handler.go — technician CRUD, /me endpoint
+- [x] handler/dispatch_handler.go — smart assign, manual assign, assignment queries, status update
+- [x] handler/gps_handler.go — GPS ingestion: persist + update current_location + broadcast to WS hub
+- [x] handler/websocket_handler.go — WS upgrade with role guard (DISPATCHER, OFFICE_MANAGER, COMPANY_ADMIN)
+- [x] cmd/server/main.go — Gin router with graceful shutdown, dependency wiring
+- [x] Dockerfile — multi-stage build (go:1.22-alpine → alpine:3.19), non-root user, static binary
+- [x] nginx.conf updated: /socket.io/ → /ws (native WebSocket, not Socket.IO)
+- [ ] YOU: `cd apps/scheduling-service && go mod tidy` (requires Go 1.22 installed)
+- [ ] YOU: Run migration: `psql $DATABASE_URL -f migrations/001_scheduling_schema.sql`
+- [ ] YOU: `go run ./cmd/server` to start on port 3003
+- [ ] YOU: `git add . && git commit -m "feat: Week 4 — Go Scheduling Service + Phase 1 AI assignment"`
 
-### Weeks 5-8 — Pending
-- [ ] Week 5: Finance service (quotes, invoices, Stripe, PDF generation)
-- [ ] Week 6: Comms service (BullMQ, SMS/email/push processors)
+### Week 5 — Finance Service (NEXT)
+- [ ] Prisma schema: quotes, invoices, line items, payments, recurring billing
+- [ ] Stripe integration: payment intents, webhooks, refunds
+- [ ] PDF generation: Puppeteer + Handlebars templates
+- [ ] Quote approval flow with e-signature
+- [ ] Auto-invoice from completed work order (job-service webhook)
+
+### Weeks 6-8 — Pending
+- [ ] Week 6: Comms service (BullMQ processors, SMS/email/push)
 - [ ] Week 7: Analytics + admin dashboard UI + customer portal UI
 - [ ] Week 8: Technician React Native app, integration testing, prod deploy
-
-### Weeks 4-8 — Pending (old)
-- [ ] Week 4: Go scheduling service (GPS, dispatch board, AI assignment)
-- [ ] Week 5: Finance service (quotes, invoices, Stripe, PDFs)
-- [ ] Week 6: Comms service (BullMQ processors, SMS/email/push)
-- [ ] Week 7: Analytics + React Native technician app
-- [ ] Week 8: Integration testing, security audit, production deploy
 
 ---
 
