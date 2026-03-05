@@ -1,7 +1,7 @@
 # Trade & Service CRM — Project Decision Log
 
 > **Purpose:** Quick context-restoration file. Read this at the start of any new development session.
-> **Last Updated:** March 2026 | **Status:** 🚧 Week 4 Done — Go Scheduling Service complete, awaiting `go mod tidy` + `go run`
+> **Last Updated:** March 2026 | **Status:** 🚧 Week 5 Done — Finance Service complete, awaiting `npm install` + `prisma generate` + `prisma migrate dev`
 
 ---
 
@@ -235,16 +235,38 @@ Database-driven, extensible — adding new trades requires NO code changes, only
 - [ ] YOU: `go run ./cmd/server` to start on port 3003
 - [ ] YOU: `git add . && git commit -m "feat: Week 4 — Go Scheduling Service + Phase 1 AI assignment"`
 
-### Week 5 — Finance Service (NEXT)
-- [ ] Prisma schema: quotes, invoices, line items, payments, recurring billing
-- [ ] Stripe integration: payment intents, webhooks, refunds
-- [ ] PDF generation: Puppeteer + Handlebars templates
-- [ ] Quote approval flow with e-signature
-- [ ] Auto-invoice from completed work order (job-service webhook)
+### Week 5 — Finance Service ✅ DONE
+- [x] Prisma schema: Quote, QuoteLineItem, Invoice, InvoiceLineItem, Payment, RecurringSchedule, Expense (all Decimal money fields)
+- [x] Stripe integration: payment intents, payment links, webhook (`payment_intent.succeeded` / `payment_intent.payment_failed`)
+- [x] PDF generation: PdfService (Puppeteer-core + @sparticuz/chromium + Handlebars) — quote.hbs + invoice.hbs templates
+- [x] Quote approval flow: token-based e-signature (UUID token, public `/approve/:token` endpoint)
+- [x] Quote → Invoice conversion (ACCEPTED quotes only)
+- [x] State machines: QuotesService (6 statuses) + InvoicesService (6 statuses) with BadRequestException guards
+- [x] Manual payment recording (CASH, CHECK, ACH) with partial/full detection
+- [x] Batch `markOverdueInvoices()` method for cron job
+- [x] Expenses CRUD with job-level cost aggregation
+- [x] Revenue metrics endpoint (totalRevenue, outstandingBalance, byMethod breakdown)
+- [x] Seed: 2 quotes, 2 invoices (paid + overdue), 1 recurring schedule
+- [x] **Unit tests:** 34 tests across QuotesService, InvoicesService, PaymentsService
+- [x] **E2E tests:** 18 integration tests with mocked Prisma + Stripe
+- [x] **Job Service state machine tests:** 30 tests (valid/invalid transitions matrix, timestamp side-effects)
+- [x] **Go scoring algorithm tests:** 14 go test cases (formula correctness, edge cases, ranking order, roundTwoDP)
+- [ ] YOU: `cd apps/finance-service && pnpm install` (adds stripe, puppeteer-core, @sparticuz/chromium, handlebars)
+- [ ] YOU: `npx prisma generate && npx prisma migrate dev --name finance-service-init`
+- [ ] YOU: `npx prisma db seed`
+- [ ] YOU (Go tests): `cd apps/scheduling-service && go test ./internal/service/...`
+- [ ] YOU (Job Service tests): `cd apps/job-service && pnpm test`
+- [ ] YOU: `git add . && git commit -m "feat: Week 5 — Finance Service complete + cross-service testing"`
 
-### Weeks 6-8 — Pending
-- [ ] Week 6: Comms service (BullMQ processors, SMS/email/push)
-- [ ] Week 7: Analytics + admin dashboard UI + customer portal UI
+### Week 6 — Communication Service (NEXT)
+- [ ] BullMQ processors for SMS (Twilio), email (SendGrid), push (FCM/APNs)
+- [ ] Automated appointment reminders (job status → comms trigger)
+- [ ] Two-way customer messaging with MongoDB thread store
+- [ ] Notification template management
+- [ ] Review request automation (triggered post-payment)
+
+### Weeks 7-8 — Pending
+- [ ] Week 7: Analytics service + admin dashboard UI + customer portal UI
 - [ ] Week 8: Technician React Native app, integration testing, prod deploy
 
 ---

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #1a1a2e; background: #fff; }
+    .page { padding: 48px 52px; max-width: 800px; margin: 0 auto; }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+    .brand-name { font-size: 22px; font-weight: 700; color: #1d4ed8; letter-spacing: -0.5px; }
+    .brand-address { font-size: 11px; color: #6b7280; margin-top: 4px; line-height: 1.5; }
+    .doc-title { text-align: right; }
+    .doc-label { font-size: 28px; font-weight: 800; color: #1d4ed8; letter-spacing: -1px; }
+    .doc-number { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+    /* Status badge */
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 8px; }
+    .status-DRAFT    { background: #f3f4f6; color: #6b7280; }
+    .status-SENT     { background: #dbeafe; color: #1d4ed8; }
+    .status-VIEWED   { background: #fef3c7; color: #d97706; }
+    .status-ACCEPTED { background: #dcfce7; color: #16a34a; }
+    .status-DECLINED { background: #fee2e2; color: #dc2626; }
+    .status-EXPIRED  { background: #f3f4f6; color: #9ca3af; }
+
+    /* Meta section */
+    .meta { display: flex; gap: 40px; margin-bottom: 32px; }
+    .meta-block { flex: 1; }
+    .meta-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .meta-value { font-size: 13px; color: #111827; line-height: 1.5; }
+    .meta-value strong { font-weight: 600; }
+
+    /* Divider */
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
+
+    /* Title / description */
+    .quote-title { font-size: 17px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+    .quote-desc  { font-size: 12px; color: #6b7280; line-height: 1.6; margin-bottom: 24px; }
+
+    /* Line items table */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+    thead th { background: #f9fafb; font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.6px; padding: 10px 12px; border-bottom: 2px solid #e5e7eb; }
+    thead th:last-child, thead th:nth-last-child(2), thead th:nth-last-child(3) { text-align: right; }
+    tbody tr:nth-child(even) { background: #f9fafb; }
+    tbody td { padding: 10px 12px; vertical-align: top; border-bottom: 1px solid #f3f4f6; }
+    .td-right { text-align: right; }
+    .item-category { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+    /* Totals */
+    .totals { margin-top: 0; }
+    .totals table { width: 320px; margin-left: auto; }
+    .totals td { padding: 6px 12px; }
+    .totals .label { color: #6b7280; }
+    .totals .value { text-align: right; font-weight: 500; }
+    .totals .total-row { border-top: 2px solid #e5e7eb; font-size: 15px; font-weight: 800; color: #111827; }
+    .totals .total-row td { padding-top: 10px; }
+    .discount-row { color: #16a34a; }
+
+    /* Notes / Terms */
+    .notes-section { margin-top: 32px; display: flex; gap: 32px; }
+    .notes-block { flex: 1; }
+    .section-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .section-text { font-size: 12px; color: #374151; line-height: 1.6; }
+
+    /* Footer */
+    .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+    .footer-left { font-size: 11px; color: #9ca3af; }
+    .footer-right { font-size: 11px; color: #9ca3af; }
+
+    /* Approval block (shown when approved) */
+    .approval-block { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px 20px; margin-top: 24px; }
+    .approval-title { font-size: 12px; font-weight: 700; color: #16a34a; margin-bottom: 6px; }
+    .approval-detail { font-size: 12px; color: #374151; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="header">
+    <div>
+      <div class="brand-name">{{companyName}}</div>
+      <div class="brand-address">{{companyAddress}}</div>
+    </div>
+    <div class="doc-title">
+      <div class="doc-label">QUOTE</div>
+      <div class="doc-number"># {{quoteNumber}}</div>
+      <div>
+        <span class="status-badge status-{{status}}">{{status}}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Meta ── -->
+  <div class="meta">
+    <div class="meta-block">
+      <div class="meta-label">Prepared For</div>
+      <div class="meta-value">
+        <strong>{{customerName}}</strong><br/>
+        {{customerEmail}}
+      </div>
+    </div>
+    <div class="meta-block">
+      <div class="meta-label">Quote Date</div>
+      <div class="meta-value">{{quoteDate}}</div>
+    </div>
+    <div class="meta-block">
+      <div class="meta-label">Valid Until</div>
+      <div class="meta-value">{{validUntil}}</div>
+    </div>
+    {{#if jobId}}
+    <div class="meta-block">
+      <div class="meta-label">Job Reference</div>
+      <div class="meta-value">{{jobId}}</div>
+    </div>
+    {{/if}}
+  </div>
+
+  <hr/>
+
+  <!-- ── Title ── -->
+  <div class="quote-title">{{title}}</div>
+  {{#if description}}
+  <div class="quote-desc">{{description}}</div>
+  {{/if}}
+
+  <!-- ── Line Items ── -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width:45%">Description</th>
+        <th style="width:12%">Category</th>
+        <th style="width:8%">Qty</th>
+        <th style="width:13%">Unit Price</th>
+        <th style="width:10%">Tax</th>
+        <th style="width:12%">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each lineItems}}
+      <tr>
+        <td>{{description}}</td>
+        <td><span class="item-category">{{category}}</span></td>
+        <td class="td-right">{{quantity}}</td>
+        <td class="td-right">{{unitPriceFmt}}</td>
+        <td class="td-right">{{#if taxable}}Yes{{else}}—{{/if}}</td>
+        <td class="td-right">{{lineTotalFmt}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <!-- ── Totals ── -->
+  <div class="totals">
+    <table>
+      <tbody>
+        <tr>
+          <td class="label">Subtotal</td>
+          <td class="value">{{subtotalFmt}}</td>
+        </tr>
+        {{#if hasDiscount}}
+        <tr class="discount-row">
+          <td class="label">Discount {{discountLabel}}</td>
+          <td class="value">−{{discountAmountFmt}}</td>
+        </tr>
+        {{/if}}
+        <tr>
+          <td class="label">Tax ({{taxRatePct}}%)</td>
+          <td class="value">{{taxAmountFmt}}</td>
+        </tr>
+        <tr class="total-row">
+          <td><strong>Total</strong></td>
+          <td class="value"><strong>{{totalFmt}}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Approval Block ── -->
+  {{#if approvedAt}}
+  <div class="approval-block">
+    <div class="approval-title">✓ Approved by Customer</div>
+    <div class="approval-detail">
+      Signed by <strong>{{approvedByName}}</strong> ({{approvedByEmail}}) on {{approvedAtFmt}}
+    </div>
+  </div>
+  {{/if}}
+
+  <!-- ── Notes / Terms ── -->
+  <div class="notes-section">
+    {{#if notes}}
+    <div class="notes-block">
+      <div class="section-label">Notes</div>
+      <div class="section-text">{{notes}}</div>
+    </div>
+    {{/if}}
+    {{#if terms}}
+    <div class="notes-block">
+      <div class="section-label">Terms &amp; Conditions</div>
+      <div class="section-text">{{terms}}</div>
+    </div>
+    {{/if}}
+  </div>
+
+  <!-- ── Footer ── -->
+  <div class="footer">
+    <div class="footer-left">Generated {{generatedAt}} · T&amp;S CRM</div>
+    <div class="footer-right">Quote valid until {{validUntil}}</div>
+  </div>
+
+</div>
+</body>
+</html>
