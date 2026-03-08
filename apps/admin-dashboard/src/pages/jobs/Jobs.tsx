@@ -367,7 +367,11 @@ export default function Jobs() {
                 {paginatedJobs.map((j) => {
                   const s = STATUS[j.status];
                   return (
-                    <tr key={j.id}>
+                    <tr
+                      key={j.id}
+                      onClick={() => handleViewJob(j)}
+                      className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                    >
                       <td>
                         <span className="td-mono td-primary">{j.id}</span>
                       </td>

@@ -530,7 +530,11 @@ export default function Customers() {
                   </thead>
                   <tbody>
                     {paginatedCustomers.map((c) => (
-                      <tr key={c.id}>
+                      <tr
+                        key={c.id}
+                        onClick={() => handleViewClick(c, "customer")}
+                        className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                      >
                         <td>
                           <div className="cell-user">
                             <div>
@@ -558,8 +562,7 @@ export default function Customers() {
                         </td>
                         <td>
                           <span
-                            className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full ${
-                              c.status === "active"
+                            className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full ${c.status === "active"
                                 ? "bg-green-100 text-green-700 dark:bg-green-100 dark:text-green-700"
                                 : "bg-gray-100 text-gray-600 dark:bg-gray-100 dark:text-gray-600"
                             }`}
@@ -761,7 +764,11 @@ export default function Customers() {
                   </thead>
                   <tbody>
                     {paginatedLeads.map((l) => (
-                      <tr key={l.name}>
+                      <tr
+                        key={l.name}
+                        onClick={() => handleViewClick(l, "lead")}
+                        className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                      >
                         <td>
                           <div className="cell-user">
                             <div>
@@ -939,7 +946,11 @@ export default function Customers() {
                   </thead>
                   <tbody>
                     {paginatedAgreements.map((a) => (
-                      <tr key={a.id}>
+                      <tr
+                        key={a.id}
+                        onClick={() => handleViewClick(a, "agreement")}
+                        className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                      >
                         <td className="font-500 text-[13px]">{a.id}</td>
                         <td>
                           <div className="cell-name">{a.customer}</div>

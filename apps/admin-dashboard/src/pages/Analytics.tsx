@@ -407,7 +407,11 @@ export default function Analytics() {
                                 {paginatedTechs.map((t, i) => {
                                     const rank = (page - 1) * itemsPerPage + i
                                     return (
-                                        <tr key={t.name}>
+                                        <tr
+                                            key={t.name}
+                                            onClick={() => window.dispatchEvent(new CustomEvent("open-technician-detail", { detail: t }))}
+                                            className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                                        >
                                             <td>
                                                 <span style={{ fontSize: 16 }}>{rank + 1}</span>
                                             </td>

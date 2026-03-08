@@ -143,7 +143,11 @@ export default function Team() {
                                     </tr>
                                 ) : (
                                     paginatedTeamMembers.map(member => (
-                                        <tr key={member._id}>
+                                        <tr
+                                            key={member._id}
+                                            onClick={() => window.dispatchEvent(new CustomEvent("open-technician-detail", { detail: member }))}
+                                            className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                                        >
                                             <td>
                                                 <div className="cell-user">
                                                     <div>

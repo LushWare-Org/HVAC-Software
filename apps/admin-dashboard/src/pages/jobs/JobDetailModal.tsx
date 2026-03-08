@@ -167,11 +167,10 @@ export default function JobDetailModal({
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 cursor-pointer bg-transparent ${
-                activeTab === t.id
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 cursor-pointer bg-transparent ${activeTab === t.id
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
             >
               {t.icon}
               {t.label}

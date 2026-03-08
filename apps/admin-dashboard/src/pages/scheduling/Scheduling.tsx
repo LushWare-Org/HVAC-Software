@@ -267,7 +267,11 @@ export default function Scheduling() {
                                         </thead>
                                         <tbody>
                                             {filteredTechs.map(t => (
-                                                <tr key={t.name}>
+                                                <tr
+                                                    key={t.name}
+                                                    onClick={() => window.dispatchEvent(new CustomEvent("open-technician-detail", { detail: t }))}
+                                                    className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                                                >
                                                     <td>
                                                         <div className="cell-user">
                                                             <div className="flex flex-col">

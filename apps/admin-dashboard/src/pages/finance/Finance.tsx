@@ -153,7 +153,11 @@ export default function Finance() {
                                 </thead>
                                 <tbody>
                                     {paginatedInvoices.map(inv => (
-                                        <tr key={inv.id}>
+                                        <tr
+                                            key={inv.id}
+                                            onClick={() => window.dispatchEvent(new CustomEvent("open-invoice-detail", { detail: inv }))}
+                                            className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                                        >
                                             <td><span className="td-mono td-primary">{inv.id}</span></td>
                                             <td>
                                                 <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-[11px] font-bold border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors">
@@ -263,7 +267,11 @@ export default function Finance() {
                                 </thead>
                                 <tbody>
                                     {paginatedQuotes.map(q => (
-                                        <tr key={q.id}>
+                                        <tr
+                                            key={q.id}
+                                            onClick={() => window.dispatchEvent(new CustomEvent("open-quote-detail", { detail: q }))}
+                                            className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                                        >
                                             <td><span className="td-mono td-primary">{q.id}</span></td>
                                             <td>
                                                 <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[11px] font-bold border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors">
@@ -366,7 +374,11 @@ export default function Finance() {
                                 </thead>
                                 <tbody>
                                     {paginatedExpenses.map(exp => (
-                                        <tr key={exp.id}>
+                                        <tr
+                                            key={exp.id}
+                                            onClick={() => window.dispatchEvent(new CustomEvent("open-expense-detail", { detail: exp }))}
+                                            className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                                        >
                                             <td><span className="td-mono td-primary">{exp.id}</span></td>
                                             <td><span className="text-sm font-500 text-[var(--t2)]">{exp.invoiceNo}</span></td>
                                             <td>
