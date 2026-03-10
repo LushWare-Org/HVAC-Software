@@ -1,0 +1,402 @@
+import { useState, useRef, useEffect } from 'react'
+import { Bell, Search, Sun, Moon, Monitor, ChevronDown, User, Settings as SettingsIcon, LogOut, Calendar, Plus, ArrowRight, Download, RefreshCw, LayoutDashboard, CalendarDays, MapPin } from 'lucide-react'
+import { useLocation, useSearchParams } from 'react-router-dom'
+import { useTheme } from '../contexts/ThemeContext'
+import AddJobModal from '../pages/jobs/AddJobModal'
+import JobDetailModal from '../pages/jobs/JobDetailModal'
+import InvoiceDetailModal from '../pages/finance/InvoiceDetailModal'
+import QuoteDetailModal from '../pages/finance/QuoteDetailModal'
+import ExpenseDetailModal from '../pages/finance/ExpenseDetailModal'
+import SchedulingDetailModal from '../pages/scheduling/SchedulingDetailModal'
+import TechnicianDetailModal from '../pages/scheduling/TechnicianDetailModal'
+
+const NOTIFICATIONS = [
+    { id: 1, type: 'success', title: 'Job Completed', msg: 'JOB-1202 marked complete by Anna Smith', time: '2 min ago', read: false },
+    { id: 2, type: 'info', title: 'New Booking', msg: 'Sarah Williams booked AC Installation', time: '18 min ago', read: false },
+    { id: 3, type: 'warning', title: 'Payment Overdue', msg: 'INV-0876 is 30+ days overdue — $1,400', time: '1 hr ago', read: false },
+    { id: 4, type: 'info', title: 'Invoice Sent', msg: 'INV-0892 sent to Robert Chen', time: '2 hrs ago', read: true },
+    { id: 5, type: 'success', title: '5-Star Review', msg: 'Maria Garcia left a 5-star review', time: '3 hrs ago', read: true },
+]
+
+function useDropdown() {
+    const [open, setOpen] = useState(false)
+    const ref = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+        function handler(e: MouseEvent) {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+        }
+        document.addEventListener('mousedown', handler)
+        return () => document.removeEventListener('mousedown', handler)
+    }, [])
+    return { open, setOpen, ref }
+}
+
+export default function Topbar() {
+    const [search, setSearch] = useState('')
+    const { pathname } = useLocation()
+    const { theme, toggleTheme } = useTheme()
+    const notif = useDropdown()
+    const user = useDropdown()
+    const [searchParams, setSearchParams] = useSearchParams()
+    const currentView = searchParams.get('view') || 'dispatch'
+    const unread = NOTIFICATIONS.filter(n => !n.read).length
+    const isLight = theme === 'light'
+    const [isAddJobOpen, setIsAddJobOpen] = useState(false)
+    const [isDetailOpen, setIsDetailOpen] = useState(false)
+    const [selectedJob, setSelectedJob] = useState<any>(null)
+    const [isInvoiceDetailOpen, setIsInvoiceDetailOpen] = useState(false)
+    const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
+    const [isQuoteDetailOpen, setIsQuoteDetailOpen] = useState(false)
+    const [selectedQuote, setSelectedQuote] = useState<any>(null)
+    const [isExpenseDetailOpen, setIsExpenseDetailOpen] = useState(false)
+    const [selectedExpense, setSelectedExpense] = useState<any>(null)
+    const [isSchedulingDetailOpen, setIsSchedulingDetailOpen] = useState(false)
+    const [selectedScheduling, setSelectedScheduling] = useState<any>(null)
+    const [isTechnicianDetailOpen, setIsTechnicianDetailOpen] = useState(false)
+    const [selectedTechnician, setSelectedTechnician] = useState<any>(null)
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const job = (e as CustomEvent).detail
+            setSelectedJob(job)
+            setIsDetailOpen(true)
+        }
+        window.addEventListener('open-job-detail', handler)
+        return () => window.removeEventListener('open-job-detail', handler)
+    }, [])
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const invoice = (e as CustomEvent).detail
+            setSelectedInvoice(invoice)
+            setIsInvoiceDetailOpen(true)
+        }
+        window.addEventListener('open-invoice-detail', handler)
+        return () => window.removeEventListener('open-invoice-detail', handler)
+    }, [])
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const quote = (e as CustomEvent).detail
+            setSelectedQuote(quote)
+            setIsQuoteDetailOpen(true)
+        }
+        window.addEventListener('open-quote-detail', handler)
+        return () => window.removeEventListener('open-quote-detail', handler)
+    }, [])
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const expense = (e as CustomEvent).detail
+            setSelectedExpense(expense)
+            setIsExpenseDetailOpen(true)
+        }
+        window.addEventListener('open-expense-detail', handler)
+        return () => window.removeEventListener('open-expense-detail', handler)
+    }, [])
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const schedule = (e as CustomEvent).detail
+            setSelectedScheduling(schedule)
+            setIsSchedulingDetailOpen(true)
+        }
+        window.addEventListener('open-scheduling-detail', handler)
+        return () => window.removeEventListener('open-scheduling-detail', handler)
+    }, [])
+
+    const handleCloseSchedulingDetail = () => {
+        setIsSchedulingDetailOpen(false);
+        window.dispatchEvent(new CustomEvent('scheduling-detail-closed'));
+    };
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const technician = (e as CustomEvent).detail
+            setSelectedTechnician(technician)
+            setIsTechnicianDetailOpen(true)
+        }
+        window.addEventListener('open-technician-detail', handler)
+        return () => window.removeEventListener('open-technician-detail', handler)
+    }, [])
+
+    const MOCK_USER = {
+        name: 'Sarah Anderson',
+        role: 'Super Admin',
+        initials: 'SA',
+    }
+
+    const getPageHeader = () => {
+        switch (pathname) {
+            case '/': return { title: 'Dashboard', sub: '' }
+            case '/customers': return { title: 'Customers & CRM', sub: 'Manage customers, leads, and service agreements' }
+            case '/jobs': return { title: 'Jobs', sub: 'Manage and track all your service work orders' }
+            case '/scheduling': return { title: 'Scheduling & Dispatch', sub: 'Assign jobs and track field operations' }
+            case '/finance': return { title: 'Finance', sub: 'Invoices, quotes, expenses and cash flow' }
+            case '/communications': return { title: 'Communications', sub: 'Customer messaging and marketing automations' }
+            case '/analytics': return { title: 'Analytics', sub: 'Business intelligence and performance insights' }
+            case '/settings': return { title: 'Settings', sub: '' }
+            case '/team': return { title: 'Team Management', sub: '' }
+            default: return { title: 'Admin Platform', sub: '' }
+        }
+    }
+    const headerParams = getPageHeader()
+    const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
+
+    const getSearchPlaceholder = () => {
+        switch (pathname) {
+            case '/customers': return "Search customers..."
+            case '/jobs': return "Search jobs..."
+            case '/analytics': return "Search reports..."
+            case '/settings': return "Search settings..."
+            case '/team': return "Search team members..."
+            default: return "Search customers, jobs..."
+        }
+    }
+
+    const btnBase = "inline-flex items-center justify-center gap-1.5 px-3.5 h-[34px] rounded-[var(--r)] text-[13px] font-medium transition-all duration-[var(--dur-fast)] ease-[var(--ease)] whitespace-nowrap leading-none select-none cursor-pointer border-none"
+    const btnSm = "h-[28px] px-2.5 text-[12px]"
+    const btnPrimary = `${btnBase} bg-[var(--blue)] text-white shadow-[0_1px_2px_rgba(37,99,235,0.2)] hover:bg-[#1D4ED8] hover:shadow-[0_2px_4px_rgba(37,99,235,0.3)] hover:-translate-y-[1px] active:translate-y-0 active:shadow-[0_1px_2px_rgba(37,99,235,0.2)]`
+    const btnSecondary = `${btnBase} bg-[var(--bg-card)] text-[var(--t2)] border border-[var(--bd-md)] shadow-[var(--shadow-xs)] hover:bg-[var(--bg-hover)] hover:text-[var(--t1)] hover:border-[var(--bd-lg)]`
+
+    const getPageActions = () => {
+        switch (pathname) {
+            case '/': return (
+                <>
+                    <button className={`${btnSecondary} ${btnSm}`}><Calendar size={14} /> Today</button>
+                    <button className={`${btnPrimary} ${btnSm}`}><ArrowRight size={14} /> New Job</button>
+                </>
+            )
+            case '/jobs': return <button className={`${btnPrimary} ${btnSm}`} id="btn-create-job" onClick={() => setIsAddJobOpen(true)}><Plus size={13} /> Create Job</button>
+            case '/finance': return (
+                <>
+                    <button className={`${btnPrimary} ${btnSm}`}><Download size={13} />Export</button>
+                </>
+            )
+            case '/analytics': return <button className={`${btnPrimary} ${btnSm}`}><Download size={13} /> Export Report</button>
+            case '/team': return <button className={`${btnPrimary} ${btnSm}`}><Plus size={13} /> Add Team Member</button>
+            default: return null
+        }
+    }
+
+    const topbarBg = isLight ? 'bg-white border-slate-200' : 'bg-[var(--bg-surface)] border-[var(--bd)]'
+    const searchIconColor = isLight ? 'text-slate-400' : 'text-[var(--t3)]'
+    const btnClass = isLight
+        ? 'border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+        : 'border-[var(--bd)] text-[var(--t2)] hover:bg-[var(--bg-hover)] hover:text-[var(--t1)]'
+    const dropdownBg = isLight ? 'bg-white border-slate-200' : 'bg-[var(--bg-surface)] border-[var(--bd)]'
+    const dropdownText = isLight ? 'text-slate-800' : 'text-[var(--t1)]'
+    const dropdownTextMuted = isLight ? 'text-slate-500' : 'text-[var(--t3)]'
+    const dropdownTime = isLight ? 'text-slate-400' : 'text-[var(--t4)]'
+    const dropdownUnreadBg = isLight ? 'bg-blue-50' : 'bg-[var(--bg-active)]'
+    const dropdownHover = isLight ? 'hover:bg-slate-50' : 'hover:bg-[var(--bg-hover)]'
+    const dividerBorder = isLight ? 'border-slate-200' : 'border-[var(--bd)]'
+
+    return (
+        <>
+            <header className={`h-20 border-b flex items-center justify-between px-6 gap-6 flex-shrink-0 sticky top-0 z-30 transition-colors duration-300 ${topbarBg}`}>
+                <div className="flex-1 min-w-0">
+                    <h2 className={`text-2xl font-bold tracking-tight truncate ${isLight ? 'text-slate-900' : 'text-[var(--t1)]'}`}>
+                        {headerParams.title}
+                    </h2>
+                    <div className={`flex items-center gap-1.5 text-sm mt-1 font-medium ${isLight ? 'text-slate-500' : 'text-[var(--t3)]'}`}>
+                        <Calendar size={14} />
+                        <span>{dateStr}</span>
+                    </div>
+                </div>
+
+                {/* Right Actions */}
+                <div className="flex items-center gap-4">
+                    {!['/analytics', '/settings', '/communications', '/finance',].includes(pathname) && (
+                        <div className="flex items-center gap-4">
+                            {pathname === '/scheduling' && (
+                                <div className="flex items-center gap-1 rounded-xl p-1 border border-[var(--bd)] bg-[var(--bg-input)]">
+                                    {[
+                                        { id: 'dispatch', label: 'Dispatch Board', icon: LayoutDashboard },
+                                        { id: 'calendar', label: 'Full Calendar', icon: CalendarDays },
+                                        { id: 'map', label: 'Live Map', icon: MapPin }
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => {
+                                                setSearchParams({ view: tab.id });
+                                                const event = new CustomEvent('changeSchedulingView', { detail: tab.id });
+                                                window.dispatchEvent(event);
+                                            }}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${currentView === tab.id
+                                                ? (isLight ? 'bg-blue-600 text-white shadow-md' : 'bg-[var(--primary)] text-white shadow-sm')
+                                                : (isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100' : 'text-[var(--t3)] hover:text-[var(--t1)] hover:bg-[var(--bg-hover)]')
+                                                }`}
+                                        >
+                                            <tab.icon size={14} />
+                                            <span className="whitespace-nowrap">{tab.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            {pathname !== '/scheduling' && (
+                                <div className={`hidden md:flex items-center gap-3 border rounded-xl px-4 py-2.5 w-[280px] lg:w-[320px] transition-colors duration-300 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[var(--bg-input)] border-[var(--bd)]'}`}>
+                                    <Search size={16} className={`flex-shrink-0 ${searchIconColor}`} />
+                                    <input
+                                        type="text"
+                                        placeholder={getSearchPlaceholder()}
+                                        value={search}
+                                        onChange={e => setSearch(e.target.value)}
+                                        className={`flex-1 bg-transparent border-none outline-none text-[14px] font-medium ${isLight ? 'text-slate-700 placeholder-slate-400' : 'text-[var(--t1)] placeholder-[var(--t4)]'}`}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Main Actions */}
+                    <div className="flex items-center gap-2.5">
+                        <button
+                            onClick={() => window.location.reload()}
+                            title="Refresh Page"
+                            className={`flex items-center justify-center w-11 h-11 border rounded-xl transition-colors duration-150 ${btnClass}`}
+                        >
+                            <RefreshCw size={20} />
+                        </button>
+
+                        <button
+                            onClick={toggleTheme}
+                            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                            className={`flex items-center justify-center w-11 h-11 border rounded-xl transition-colors duration-150 ${btnClass}`}
+                        >
+                            {theme === 'light' ? <Sun size={20} /> : theme === 'dark' ? <Moon size={20} /> : <Monitor size={20} />}
+                        </button>
+
+                        <div ref={notif.ref} className="relative">
+                            <button
+                                onClick={() => { notif.setOpen(o => !o); user.setOpen(false) }}
+                                title="Notifications"
+                                className={`relative flex items-center justify-center w-11 h-11 border rounded-xl transition-colors duration-150 ${btnClass}`}
+                            >
+                                <Bell size={20} />
+                                {unread > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm border-2 border-white">
+                                        {unread}
+                                    </span>
+                                )}
+                            </button>
+
+                            {notif.open && (
+                                <div className={`absolute top-[calc(100%+8px)] right-0 w-80 border rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.15)] z-50 overflow-hidden ${dropdownBg}`}>
+                                    <div className={`p-4 border-b ${dividerBorder}`}>
+                                        <div className={`text-sm font-semibold ${dropdownText}`}>Notifications</div>
+                                    </div>
+                                    <div className="max-h-80 overflow-y-auto">
+                                        {NOTIFICATIONS.slice(0, 5).map((n) => (
+                                            <div key={n.id} className={`p-3 border-b ${dividerBorder} cursor-pointer transition-colors duration-150 ${n.read ? 'bg-transparent' : dropdownUnreadBg} ${dropdownHover}`}>
+                                                <div className={`text-[13px] font-semibold mb-0.5 ${dropdownText}`}>{n.title}</div>
+                                                <div className={`text-xs leading-relaxed mb-1 ${dropdownTextMuted}`}>{n.msg}</div>
+                                                <div className={`text-[11px] ${dropdownTime}`}>{n.time}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className={`p-3 border-t text-center ${dividerBorder}`}>
+                                        <button className="text-xs text-blue-500 font-medium hover:text-blue-400 transition-colors bg-transparent border-0 cursor-pointer">
+                                            View all notifications
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* User Menu */}
+                    {pathname === '/' && (
+                        <div ref={user.ref} className="relative">
+                            <button
+                                onClick={() => { user.setOpen(o => !o); notif.setOpen(false) }}
+                                className={`flex items-center gap-3 px-3 py-1.5 border rounded-xl transition-colors duration-150 ${btnClass}`}
+                            >
+                                <div className="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-lg text-white text-[13px] font-bold flex-shrink-0 shadow-sm">
+                                    {MOCK_USER.initials}
+                                </div>
+                                <div className="hidden sm:flex flex-col items-start pr-1">
+                                    <span className={`text-[14px] font-semibold leading-tight ${isLight ? 'text-slate-800' : 'text-[var(--t1)]'}`}>
+                                        {MOCK_USER.name}
+                                    </span>
+                                    <span className={`text-[12px] font-medium leading-tight ${isLight ? 'text-slate-500' : 'text-[var(--t3)]'}`}>
+                                        {MOCK_USER.role}
+                                    </span>
+                                </div>
+                                <ChevronDown size={16} className={isLight ? 'text-slate-400' : 'text-[var(--t3)]'} />
+                            </button>
+
+                            {user.open && (
+                                <div className={`absolute top-[calc(100%+8px)] right-0 w-48 border rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.15)] z-50 overflow-hidden ${dropdownBg}`}>
+                                    <div className={`px-3.5 py-3 border-b ${dividerBorder}`}>
+                                        <div className={`text-[13px] font-semibold ${dropdownText}`}>My Account</div>
+                                    </div>
+                                    <div className="p-2">
+                                        {[
+                                            { icon: User, label: 'Profile' },
+                                            { icon: SettingsIcon, label: 'Settings' }
+                                        ].map((item) => {
+                                            const Icon = item.icon
+                                            return (
+                                                <button key={item.label} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors text-[14px] text-left font-medium bg-transparent border-0 cursor-pointer mb-0.5 ${isLight ? 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' : 'text-[var(--t2)] hover:bg-[var(--bg-hover)] hover:text-[var(--t1)]'}`}>
+                                                    <Icon size={16} className={isLight ? 'text-slate-400' : 'text-[var(--t3)]'} />
+                                                    {item.label}
+                                                </button>
+                                            )
+                                        })}
+                                        <div className={`h-px my-2 ${isLight ? 'bg-slate-100' : 'bg-[var(--bd)]'}`} />
+                                        <button className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors text-[13px] text-left font-medium text-red-500 hover:bg-red-500/10 bg-transparent border-0 cursor-pointer`}>
+                                            <LogOut size={14} className="text-red-500" />
+                                            Logout
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {pathname !== '/' && (
+                        <div className={`flex items-center gap-3 border-l pl-4 ml-2 ${isLight ? 'border-slate-200' : 'border-[var(--bd)]'}`}>
+                            {getPageActions()}
+                        </div>
+                    )}
+                </div>
+            </header>
+
+            <AddJobModal
+                isOpen={isAddJobOpen}
+                onClose={() => setIsAddJobOpen(false)}
+            />
+            <JobDetailModal
+                isOpen={isDetailOpen}
+                onClose={() => setIsDetailOpen(false)}
+                job={selectedJob}
+            />
+            <InvoiceDetailModal
+                isOpen={isInvoiceDetailOpen}
+                onClose={() => setIsInvoiceDetailOpen(false)}
+                invoice={selectedInvoice}
+            />
+            <QuoteDetailModal
+                isOpen={isQuoteDetailOpen}
+                onClose={() => setIsQuoteDetailOpen(false)}
+                quote={selectedQuote}
+            />
+            <ExpenseDetailModal
+                isOpen={isExpenseDetailOpen}
+                onClose={() => setIsExpenseDetailOpen(false)}
+                expense={selectedExpense}
+            />
+            <SchedulingDetailModal
+                isOpen={isSchedulingDetailOpen}
+                onClose={handleCloseSchedulingDetail}
+                schedule={selectedScheduling}
+            />
+            <TechnicianDetailModal
+                isOpen={isTechnicianDetailOpen}
+                onClose={() => setIsTechnicianDetailOpen(false)}
+                technician={selectedTechnician}
+            />
+        </>
+    )
+}
