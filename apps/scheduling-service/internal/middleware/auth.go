@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -50,6 +51,31 @@ func JWTMiddleware(auth0Domain, audience string) gin.HandlerFunc {
 	issuer := fmt.Sprintf("https://%s/", auth0Domain)
 
 	return func(c *gin.Context) {
+		// 0. BYPASS_AUTH mode — development/testing only, never in production
+		if os.Getenv("BYPASS_AUTH") == "true" && os.Getenv("GIN_MODE") != "release" {
+			companyID := c.GetHeader("x-test-company-id")
+			if companyID != "" {
+				userID := c.GetHeader("x-test-user-id")
+				if userID == "" {
+					userID = "test-user-001"
+				}
+				role := strings.ToLower(c.GetHeader("x-test-user-role"))
+				if role == "" {
+					role = "company_admin"
+				}
+				claims := AuthClaims{
+					UserID:    userID,
+					CompanyID: companyID,
+					Role:      role,
+					Email:     "test@demo.tscrm.dev",
+					Name:      "Test User",
+				}
+				c.Set(ClaimsKey, claims)
+				c.Next()
+				return
+			}
+		}
+
 		// 1. Extract the Bearer token
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {

@@ -5,8 +5,9 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 import {
   IsString, IsOptional, IsInt, IsBoolean, IsArray, IsEnum,
-  IsHexColor, Min, MaxLength,
+  IsHexColor, Min, MaxLength, ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { TradeTemplatesService } from './trade-templates.service';
@@ -46,7 +47,7 @@ class CreateTemplateDto {
   @IsString() name!: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsInt() estimatedDurationMins?: number;
-  @IsOptional() @IsArray() tasks?: TaskDto[];
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => TaskDto) tasks?: TaskDto[];
 }
 
 class UpdateTemplateDto {

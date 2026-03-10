@@ -62,9 +62,19 @@ export class InvoicesController {
   @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new invoice' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateInvoiceDto) {
-    return this.invoicesService.create(user.companyId, user.sub, dto);
+    return this.invoicesService.create(user.companyId, user.userId, dto);
   }
-
+  // ── Update status / fields (PATCH) ───────────────────────────────────────
+  @Patch(':id')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @ApiOperation({ summary: 'Partially update invoice (status, etc.)' })
+  patch(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateStatusDto,
+  ) {
+    return this.invoicesService.updateStatus(user.companyId, id, dto.status);
+  }
   // ── Send ──────────────────────────────────────────────────────────────────
   @Patch(':id/send')
   @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)

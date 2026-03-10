@@ -1,0 +1,14 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testRegex": "./test/.+\\.e2e-spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@tscrm/auth-client$": "<rootDir>/../../packages/auth-client/src/index.ts",
+    "^@tscrm/types$": "<rootDir>/../../packages/types/src/index.ts",
+    "^@tscrm/queue$": "<rootDir>/../../packages/queue/src/index.ts"
+  }
+}

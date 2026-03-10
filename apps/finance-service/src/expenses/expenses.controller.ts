@@ -61,7 +61,7 @@ export class ExpensesController {
   @Post()
   @ApiOperation({ summary: 'Create an expense record (any authenticated user can submit)' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateExpenseBodyDto) {
-    return this.expensesService.create(user.companyId, user.sub, dto);
+    return this.expensesService.create(user.companyId, user.userId, dto);
   }
 
   @Put(':id')

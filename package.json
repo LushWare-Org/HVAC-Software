@@ -5,7 +5,7 @@
   "description": "Trade & Service CRM — Field Service Management Platform",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=!@tscrm/admin-dashboard",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "type-check": "turbo run type-check",

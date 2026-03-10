@@ -93,6 +93,9 @@ export class InvoicesService {
 
   async create(companyId: string, userId: string, dto: CreateInvoiceDto) {
     const { lineItems = [], taxRate = 0, dueDate, dueDays = 30, ...rest } = dto;
+    // Default customer name/email when not provided (e.g. when creating from a quote reference)
+    const customerName = rest.customerName ?? 'Unknown Customer';
+    const customerEmail = rest.customerEmail ?? 'noreply@example.com';
 
     const subtotal = lineItems.reduce((acc, li) => acc + li.quantity * li.unitPrice, 0);
     const taxableSubtotal = lineItems
@@ -116,6 +119,8 @@ export class InvoicesService {
     return this.prisma.invoice.create({
       data: {
         ...rest,
+        customerName,
+        customerEmail,
         companyId,
         invoiceNumber,
         createdByUserId: userId,

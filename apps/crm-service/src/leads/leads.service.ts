@@ -36,6 +36,34 @@ export class LeadsService {
     return this.prisma.lead.update({ where: { id }, data: updateData });
   }
 
+  async patch(
+    companyId: string,
+    id: string,
+    data: {
+      status?: string;
+      estimatedValue?: number;
+      customerId?: string;
+      convertedAt?: string;
+      notes?: string;
+      // accepted but not persisted (compatibility aliases)
+      lastContactedAt?: string;
+      qualificationNotes?: string;
+    },
+  ) {
+    const lead = await this.prisma.lead.findFirst({ where: { id, companyId } });
+    if (!lead) throw new NotFoundException('Lead not found');
+
+    const { lastContactedAt: _lca, qualificationNotes, ...rest } = data;
+    const updateData: any = { ...rest };
+    if (qualificationNotes) updateData.notes = qualificationNotes;
+    if (rest.status === 'WON' && !rest.convertedAt) updateData.convertedAt = new Date();
+    if (rest.convertedAt) updateData.convertedAt = new Date(rest.convertedAt);
+    if (rest.estimatedValue !== undefined) updateData.estimatedValue = rest.estimatedValue;
+    if (rest.customerId !== undefined) updateData.customerId = rest.customerId;
+
+    return this.prisma.lead.update({ where: { id }, data: updateData });
+  }
+
   async getPipelineSummary(companyId: string) {
     const statuses = ['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL_SENT', 'WON', 'LOST'];
     const counts = await Promise.all(

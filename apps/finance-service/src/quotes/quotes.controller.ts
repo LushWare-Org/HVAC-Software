@@ -21,6 +21,12 @@ class ApproveDto {
   @IsString() email!: string;
 }
 
+class ApproveByIdDto {
+  @IsOptional() @IsString() approvedByName?: string;
+  @IsOptional() @IsString() approvedByEmail?: string;
+  @IsOptional() @IsString() approvalToken?: string;  // accepted but not used here
+}
+
 @ApiTags('Quotes')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -61,14 +67,26 @@ export class QuotesController {
   @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new quote' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateQuoteDto) {
-    return this.quotesService.create(user.companyId, user.sub, dto);
+    return this.quotesService.create(user.companyId, user.userId, dto);
   }
 
-  // ── Update ────────────────────────────────────────────────────────────────
+  // ── Update (PUT) ─────────────────────────────────────────────────────────
   @Put(':id')
   @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update a quote (incl. line items and status)' })
   update(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateQuoteDto,
+  ) {
+    return this.quotesService.update(user.companyId, id, dto);
+  }
+
+  // ── Update (PATCH — alias for PUT, accepts same DTO) ─────────────────────
+  @Patch(':id')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @ApiOperation({ summary: 'Partially update a quote status or fields' })
+  patch(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
     @Body() dto: UpdateQuoteDto,
@@ -84,6 +102,24 @@ export class QuotesController {
     return this.quotesService.send(user.companyId, id);
   }
 
+  // ── Approve by ID (test/admin endpoint) ──────────────────────────────────
+  @Post(':id/approve')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @ApiOperation({ summary: 'Approve a quote directly by ID (no token required)' })
+  approveById(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: ApproveByIdDto,
+  ) {
+    return this.quotesService.approveById(
+      user.companyId,
+      id,
+      dto.approvedByName ?? 'Unknown',
+      dto.approvedByEmail ?? 'noreply@example.com',
+    );
+  }
+
   // ── Approve (public endpoint — called from customer email link) ───────────
   @Patch('approve/:token')
   @ApiOperation({ summary: 'Customer approves the quote via email token link' })
@@ -96,7 +132,7 @@ export class QuotesController {
   @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Convert an accepted quote to an invoice' })
   convertToInvoice(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.quotesService.convertToInvoice(user.companyId, id, user.sub);
+    return this.quotesService.convertToInvoice(user.companyId, id, user.userId);
   }
 
   // ── PDF Download ──────────────────────────────────────────────────────────

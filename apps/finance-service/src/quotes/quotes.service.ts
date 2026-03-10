@@ -226,6 +226,26 @@ export class QuotesService {
     });
   }
 
+  // ── Approve by ID (admin/test — no token required) ───────────────────────
+
+  async approveById(companyId: string, id: string, name: string, email: string) {
+    const quote = await this.findOne(companyId, id);
+    if (quote.status === QuoteStatus.ACCEPTED) return quote; // idempotent
+    if (!([QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.VIEWED] as QuoteStatus[]).includes(quote.status)) {
+      throw new BadRequestException(`Quote cannot be approved in status: ${quote.status}`);
+    }
+    return this.prisma.quote.update({
+      where: { id },
+      data: {
+        status: QuoteStatus.ACCEPTED,
+        approvedAt: new Date(),
+        approvedByName: name,
+        approvedByEmail: email,
+      },
+      include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
+    });
+  }
+
   // ── Approve (customer clicks link with token) ─────────────────────────────
 
   async approve(token: string, name: string, email: string) {

@@ -4,7 +4,7 @@ import {
   DefaultValuePipe, ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { IsOptional, IsString, IsArray, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsArray, IsEnum, IsBoolean, IsDateString } from 'class-validator';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { JobsService } from './jobs.service';
@@ -22,6 +22,14 @@ class UpdateJobDto {
   @IsOptional() @IsString() notes?: string;
   @IsOptional() @IsString() internalNotes?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
+}
+
+// Combined PATCH DTO — allows updating fields AND status in one request
+class PatchJobDto extends UpdateJobDto {
+  @IsOptional() @IsEnum(JobStatusDto) status?: JobStatusDto;
+  @IsOptional() @IsString() statusNote?: string;
+  @IsOptional() @IsBoolean() gpsTrackingEnabled?: boolean;
+  @IsOptional() @IsString() completedAt?: string;
 }
 
 class UpdateCustomFieldsDto {
@@ -84,7 +92,7 @@ export class JobsController {
     return this.jobsService.create(user, dto);
   }
 
-  // ---- Update general fields ----
+  // ---- Update general fields (PUT) ----
   @Put(':id')
   @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Update job fields (not status — use /status for that)' })
@@ -94,6 +102,32 @@ export class JobsController {
     @Body() dto: UpdateJobDto,
   ) {
     return this.jobsService.update(user.companyId, id, dto);
+  }
+
+  // ---- Combined PATCH (fields + optional status in one call) ----
+  @Patch(':id')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN)
+  @ApiOperation({ summary: 'Patch job: update fields and/or transition status in one request' })
+  async patch(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: PatchJobDto,
+  ) {
+    const { status, statusNote, gpsTrackingEnabled, completedAt, ...fields } = dto;
+    // Update scalar fields first (if any)
+    const hasFields = Object.values(fields).some((v) => v !== undefined);
+    if (hasFields || gpsTrackingEnabled !== undefined || completedAt !== undefined) {
+      await this.jobsService.patchFields(user.companyId, id, {
+        ...fields, gpsTrackingEnabled, completedAt,
+      });
+    }
+    // Then run status transition if requested
+    if (status) {
+      return this.jobsService.updateStatus(
+        user.companyId, id, user, { status, note: statusNote },
+      );
+    }
+    return this.jobsService.findOne(user.companyId, id);
   }
 
   // ---- Status transition (state machine) ----

@@ -6,6 +6,7 @@ import { CustomersModule } from './customers/customers.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { LeadsModule } from './leads/leads.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { ReviewsModule } from './reviews/reviews.module';
 import { HealthModule } from './health/health.module';
 import appConfig from './config/app.config';
 
@@ -24,6 +25,7 @@ import appConfig from './config/app.config';
     ContactsModule,   // GET/POST/PUT/DELETE /contacts
     LeadsModule,      // GET/POST/PUT/DELETE /leads
     BookingsModule,   // GET/POST/PUT/DELETE /bookings
+    ReviewsModule,    // GET/POST /reviews
   ],
 })
 export class AppModule {}

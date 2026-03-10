@@ -2,6 +2,7 @@ import {
   IsString, IsOptional, IsEnum, IsNumber, IsBoolean,
   IsArray, ValidateNested, IsEmail, IsDateString, Min, MaxLength,
 } from 'class-validator';
+// Note: MaxLength is kept in import for the title field
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DiscountType, LineItemCategory } from '../../prisma/generated';
@@ -27,7 +28,7 @@ export class CreateQuoteDto {
   @ApiPropertyOptional({ enum: DiscountType })
   @IsOptional() @IsEnum(DiscountType) discountType?: DiscountType;
   @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) discountValue?: number;
-  @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) @MaxLength(10) taxRate?: number;
+  @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) taxRate?: number;
 
   @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() terms?: string;

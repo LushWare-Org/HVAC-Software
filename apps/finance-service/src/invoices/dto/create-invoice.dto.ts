@@ -11,8 +11,8 @@ export class CreateInvoiceDto {
   @ApiPropertyOptional() @IsOptional() @IsString() jobId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() workOrderId?: string;
   @ApiProperty() @IsString() customerId!: string;
-  @ApiProperty() @IsString() customerName!: string;
-  @ApiProperty() @IsEmail() customerEmail!: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() customerName?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() customerEmail?: string;
 
   @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) dueDays?: number;
   @ApiPropertyOptional() @IsOptional() @IsDateString() dueDate?: string;

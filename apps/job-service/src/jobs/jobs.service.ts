@@ -205,6 +205,45 @@ export class JobsService {
   }
 
   // ============================================================
+  // PATCH FIELDS  (used by combined PATCH /jobs/:id endpoint)
+  // Accepts extra non-schema fields like gpsTrackingEnabled/completedAt
+  // gracefully (they are silently ignored if not in DB schema).
+  // ============================================================
+
+  async patchFields(
+    companyId: string,
+    id: string,
+    data: Partial<{
+      title: string;
+      description: string;
+      priority: string;
+      assignedToId: string;
+      assignedToName: string;
+      scheduledStart: string;
+      scheduledEnd: string;
+      notes: string;
+      internalNotes: string;
+      tags: string[];
+      gpsTrackingEnabled?: boolean;  // no DB column — ignored
+      completedAt?: string;
+    }>,
+  ) {
+    await this.findOne(companyId, id);
+    // Strip fields that don't exist on the Prisma Job model
+    const { gpsTrackingEnabled: _gps, ...rest } = data;
+    return this.prisma.job.update({
+      where: { id },
+      data: {
+        ...rest,
+        priority: rest.priority as any,
+        scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
+        scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
+        completedAt: rest.completedAt ? new Date(rest.completedAt) : undefined,
+      },
+    });
+  }
+
+  // ============================================================
   // UPDATE (general fields — not status)
   // ============================================================
 

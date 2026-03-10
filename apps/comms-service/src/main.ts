@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import * as express from 'express';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -6,6 +7,10 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Twilio inbound webhook requires raw body to pass through unchanged
+  // (Twilio signature is computed over the raw request body)
+  app.use('/webhooks/twilio', express.raw({ type: '*/*' }));
   const port = process.env.COMMS_PORT ?? 3005;
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors({ origin: ['http://localhost:3000', 'http://localhost:5173'] });

@@ -1,11 +1,11 @@
 import {
-  Controller, Get, Post, Patch, Param, Body, Query, UseGuards,
+  Controller, Get, Post, Patch, Param, Body, Query, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { LeadsService } from './leads.service';
-import { IsString, IsOptional, IsNumber, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEmail, IsDateString } from 'class-validator';
 
 class CreateLeadDto {
   @IsString() firstName!: string;
@@ -21,6 +21,16 @@ class CreateLeadDto {
 class UpdateLeadStatusDto {
   @IsString() status!: string;
   @IsOptional() @IsString() notes?: string;
+}
+
+class PatchLeadDto {
+  @IsOptional() @IsString() status?: string;
+  @IsOptional() @IsNumber() estimatedValue?: number;
+  @IsOptional() @IsString() customerId?: string;
+  @IsOptional() @IsString() convertedAt?: string;
+  @IsOptional() @IsString() notes?: string;
+  @IsOptional() @IsString() lastContactedAt?: string;
+  @IsOptional() @IsString() qualificationNotes?: string;
 }
 
 @ApiTags('Leads')
@@ -48,6 +58,17 @@ export class LeadsController {
   @ApiOperation({ summary: 'Create a lead' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateLeadDto) {
     return this.leadsService.create(user.companyId, dto);
+  }
+
+  @Patch(':id')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Partially update a lead (status, estimated value, notes, etc.)' })
+  patch(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: PatchLeadDto,
+  ) {
+    return this.leadsService.patch(user.companyId, id, dto);
   }
 
   @Patch(':id/status')

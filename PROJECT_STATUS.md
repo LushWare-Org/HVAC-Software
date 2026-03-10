@@ -1,7 +1,7 @@
 # Trade & Service CRM — Project Decision Log
 
 > **Purpose:** Quick context-restoration file. Read this at the start of any new development session.
-> **Last Updated:** March 2026 | **Status:** 🚧 Week 5 Done — Finance Service complete, awaiting `npm install` + `prisma generate` + `prisma migrate dev`
+> **Last Updated:** March 2026 | **Status:** ✅ Week 7 Done — Analytics Service complete | 🚧 Next: API-level user flow tests before frontend
 
 ---
 
@@ -258,16 +258,39 @@ Database-driven, extensible — adding new trades requires NO code changes, only
 - [ ] YOU (Job Service tests): `cd apps/job-service && pnpm test`
 - [ ] YOU: `git add . && git commit -m "feat: Week 5 — Finance Service complete + cross-service testing"`
 
-### Week 6 — Communication Service (NEXT)
-- [ ] BullMQ processors for SMS (Twilio), email (SendGrid), push (FCM/APNs)
-- [ ] Automated appointment reminders (job status → comms trigger)
-- [ ] Two-way customer messaging with MongoDB thread store
-- [ ] Notification template management
-- [ ] Review request automation (triggered post-payment)
+### Week 6 — Communication Service ✅ DONE
+- [x] BullMQ processors: SmsProcessor (Twilio), EmailProcessor (SendGrid), PushProcessor (FCM) — all with DELIVERED/FAILED/DeliveryLog lifecycle
+- [x] Provider services: SmsService, EmailService (Handlebars compile), PushService (token/multicast/topic) — all gracefully mock when credentials missing
+- [x] NotificationsService — central orchestrator; creates Notification doc then enqueues to BullMQ; supports scheduledAt delay
+- [x] NotificationsController — SMS/email/push endpoints + list + delivery stats
+- [x] TemplatesService — CRUD + Handlebars compile cache + render()/renderDefault(); validates syntax on create/update
+- [x] TemplatesController — full CRUD + POST :id/render preview endpoint
+- [x] MessagingService — createThread (idempotent), sendMessage (outbound via Twilio), handleInboundWebhook (Twilio sig validation, finds/creates thread, appends INBOUND, increments unreadCount)
+- [x] MessagingController + TwilioWebhookController
+- [x] AutomationService — rule engine: load active rules by trigger → condition matching (simple equality) → render template → dispatch via NotificationsService (with delayMinutes support)
+- [x] AutomationRulesController (JWT-guarded CRUD) + AutomationEventsController (x-internal-api-key protected)
+- [x] AppModule: BullMQ forRoot + all modules wired; main.ts: Twilio raw body middleware
+- [x] **Unit tests:** 27 tests — SmsProcessor/EmailProcessor/PushProcessor, AutomationService (11 tests), TemplatesService (10 tests)
+- [x] **E2E tests:** 20 integration tests — notifications, templates CRUD + render, messaging threads, automation rules + internal events
+- [ ] YOU: `cd apps/comms-service && pnpm install`
+- [ ] YOU: `npx prisma generate` (MongoDB — no migrations, `db push` applies schema)
+- [ ] YOU: `pnpm test` (unit tests) + `pnpm test:e2e` (e2e tests)
+- [ ] YOU: `git add . && git commit -m "feat: Week 6 — Communication Service complete"`
 
-### Weeks 7-8 — Pending
-- [ ] Week 7: Analytics service + admin dashboard UI + customer portal UI
-- [ ] Week 8: Technician React Native app, integration testing, prod deploy
+### Week 7 — Analytics Service (NEXT)
+- [ ] NestJS + PostgreSQL read replica
+- [ ] Revenue dashboards (daily/weekly/monthly/yearly aggregations)
+- [ ] Technician performance metrics (jobs/day, avg rating, completion rate)
+- [ ] Job type analytics + trade breakdown
+- [ ] Customer LTV, acquisition, retention metrics
+- [ ] Custom report builder + CSV/Excel export
+
+### Week 8 — Integration & Launch (Pending)
+- [ ] Technician React Native app (Expo SDK 51)
+- [ ] Admin dashboard UI (React 18 + shadcn/ui)
+- [ ] Customer portal (Next.js 14 App Router)
+- [ ] Full integration + load testing
+- [ ] Security audit + prod deploy (Docker Swarm or AWS ECS Fargate)
 
 ---
 

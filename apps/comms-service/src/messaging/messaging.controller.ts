@@ -1,0 +1,115 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
+import { AuthUser } from '@tscrm/types';
+import { Request } from 'express';
+import { MessagingService } from './messaging.service';
+import {
+  CreateThreadDto,
+  SendMessageDto,
+  TwilioInboundWebhookDto,
+  UpdateThreadStatusDto,
+} from './dto/messaging.dto';
+import { ThreadStatus } from '../prisma/generated';
+
+@ApiTags('Messaging')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('messaging')
+export class MessagingController {
+  constructor(private readonly service: MessagingService) {}
+
+  // ── Threads ───────────────────────────────────────────────────────────────
+
+  @Post('threads')
+  @ApiOperation({ summary: 'Create or retrieve an active thread for a customer' })
+  createThread(@CurrentUser() user: AuthUser, @Body() dto: CreateThreadDto) {
+    return this.service.createThread(user.companyId, dto);
+  }
+
+  @Get('threads')
+  @ApiOperation({ summary: 'List message threads' })
+  findThreads(
+    @CurrentUser() user: AuthUser,
+    @Query('status') status?: ThreadStatus,
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
+    return this.service.findThreads(user.companyId, {
+      status,
+      page: Number(page),
+      limit: Number(limit),
+    });
+  }
+
+  @Get('threads/:id')
+  @ApiOperation({ summary: 'Get thread with all messages' })
+  findThread(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.service.findThread(user.companyId, id);
+  }
+
+  @Patch('threads/:id/status')
+  @ApiOperation({ summary: 'Update thread status (ACTIVE / RESOLVED / SPAM)' })
+  updateStatus(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateThreadStatusDto,
+  ) {
+    return this.service.updateThreadStatus(user.companyId, id, dto.status as ThreadStatus);
+  }
+
+  @Patch('threads/:id/read')
+  @ApiOperation({ summary: 'Mark all messages in thread as read (resets unreadCount)' })
+  markRead(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.service.markThreadRead(user.companyId, id);
+  }
+
+  // ── Messages ──────────────────────────────────────────────────────────────
+
+  @Post('threads/:id/messages')
+  @ApiOperation({ summary: 'Send a message from staff to customer' })
+  sendMessage(
+    @CurrentUser() user: AuthUser,
+    @Param('id') threadId: string,
+    @Body() dto: SendMessageDto,
+  ) {
+    return this.service.sendMessage(user.companyId, threadId, user.userId, user.name ?? user.email ?? '', dto);
+  }
+}
+
+// ── Twilio Inbound Webhook (no JWT guard — validated by Twilio signature) ──
+
+@ApiTags('Webhooks')
+@Controller('webhooks')
+export class TwilioWebhookController {
+  constructor(private readonly service: MessagingService) {}
+
+  @Post('twilio/inbound')
+  @ApiOperation({ summary: 'Twilio inbound SMS webhook — no auth required' })
+  async handleInbound(
+    @Headers('x-twilio-signature') signature: string,
+    @Req() req: Request,
+    @Body() payload: TwilioInboundWebhookDto,
+  ) {
+    // companyId resolution: production would look up by Twilio number in request
+    // For now, using a company-id from query/header that the gateway injects
+    const companyId = req.headers['x-company-id'] as string ?? '';
+    const webhookUrl = `${req.protocol}://${req.headers.host}${req.path}`;
+
+    await this.service.handleInboundWebhook(companyId, payload, signature, webhookUrl);
+
+    // Twilio expects 2xx with empty TwiML or plain text
+    return '<Response></Response>';
+  }
+}

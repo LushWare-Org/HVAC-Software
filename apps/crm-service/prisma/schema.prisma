@@ -208,8 +208,8 @@ enum BookingStatus {
 model Review {
   id           String   @id @default(uuid())
   companyId    String
-  customerId   String
-  customer     Customer @relation(fields: [customerId], references: [id])
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id])
   jobId        String?
   rating       Int      // 1-5
   comment      String?

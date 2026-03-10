@@ -6,10 +6,19 @@ async function main() {
   console.log('Seeding CRM database...');
 
   // Seed a demo company (tenant)
+  // IMPORTANT: ID must match TEST_COMPANY_ID used in flow tests ('co-demo-001')
+  // If an old seed created a company with this email but a random UUID, rename its email
+  // to free the unique constraint — we cannot delete it because FK'd customers may reference it.
+  await prisma.company.updateMany({
+    where: { email: 'demo@acmeplumbing.com', NOT: { id: 'co-demo-001' } },
+    data: { email: `old-demo-${Date.now()}@acmeplumbing.com` },
+  });
+
   const demoCompany = await prisma.company.upsert({
-    where: { email: 'demo@acmeplumbing.com' },
+    where: { id: 'co-demo-001' },
     update: {},
     create: {
+      id: 'co-demo-001',
       name: 'Acme Plumbing & HVAC',
       email: 'demo@acmeplumbing.com',
       phone: '555-0100',

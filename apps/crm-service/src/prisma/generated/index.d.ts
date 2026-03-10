@@ -8445,7 +8445,7 @@ export namespace Prisma {
   export type ReviewGroupByOutputType = {
     id: string
     companyId: string
-    customerId: string
+    customerId: string | null
     jobId: string | null
     rating: number
     comment: string | null
@@ -8489,7 +8489,7 @@ export namespace Prisma {
     response?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Review$customerArgs<ExtArgs>
   }, ExtArgs["result"]["review"]>
 
   export type ReviewSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -8505,7 +8505,7 @@ export namespace Prisma {
     response?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Review$customerArgs<ExtArgs>
   }, ExtArgs["result"]["review"]>
 
   export type ReviewSelectScalar = {
@@ -8524,21 +8524,21 @@ export namespace Prisma {
   }
 
   export type ReviewInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Review$customerArgs<ExtArgs>
   }
   export type ReviewIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Review$customerArgs<ExtArgs>
   }
 
   export type $ReviewPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Review"
     objects: {
-      customer: Prisma.$CustomerPayload<ExtArgs>
+      customer: Prisma.$CustomerPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       companyId: string
-      customerId: string
+      customerId: string | null
       jobId: string | null
       rating: number
       comment: string | null
@@ -8912,7 +8912,7 @@ export namespace Prisma {
    */
   export interface Prisma__ReviewClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    customer<T extends Review$customerArgs<ExtArgs> = {}>(args?: Subset<T, Review$customerArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9269,6 +9269,21 @@ export namespace Prisma {
      * Filter which Reviews to delete
      */
     where?: ReviewWhereInput
+  }
+
+  /**
+   * Review.customer
+   */
+  export type Review$customerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Customer
+     */
+    select?: CustomerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerInclude<ExtArgs> | null
+    where?: CustomerWhereInput
   }
 
   /**
@@ -10294,7 +10309,7 @@ export namespace Prisma {
     NOT?: ReviewWhereInput | ReviewWhereInput[]
     id?: StringFilter<"Review"> | string
     companyId?: StringFilter<"Review"> | string
-    customerId?: StringFilter<"Review"> | string
+    customerId?: StringNullableFilter<"Review"> | string | null
     jobId?: StringNullableFilter<"Review"> | string | null
     rating?: IntFilter<"Review"> | number
     comment?: StringNullableFilter<"Review"> | string | null
@@ -10304,13 +10319,13 @@ export namespace Prisma {
     response?: StringNullableFilter<"Review"> | string | null
     createdAt?: DateTimeFilter<"Review"> | Date | string
     updatedAt?: DateTimeFilter<"Review"> | Date | string
-    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+    customer?: XOR<CustomerNullableRelationFilter, CustomerWhereInput> | null
   }
 
   export type ReviewOrderByWithRelationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    customerId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
     jobId?: SortOrderInput | SortOrder
     rating?: SortOrder
     comment?: SortOrderInput | SortOrder
@@ -10329,7 +10344,7 @@ export namespace Prisma {
     OR?: ReviewWhereInput[]
     NOT?: ReviewWhereInput | ReviewWhereInput[]
     companyId?: StringFilter<"Review"> | string
-    customerId?: StringFilter<"Review"> | string
+    customerId?: StringNullableFilter<"Review"> | string | null
     jobId?: StringNullableFilter<"Review"> | string | null
     rating?: IntFilter<"Review"> | number
     comment?: StringNullableFilter<"Review"> | string | null
@@ -10339,13 +10354,13 @@ export namespace Prisma {
     response?: StringNullableFilter<"Review"> | string | null
     createdAt?: DateTimeFilter<"Review"> | Date | string
     updatedAt?: DateTimeFilter<"Review"> | Date | string
-    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+    customer?: XOR<CustomerNullableRelationFilter, CustomerWhereInput> | null
   }, "id">
 
   export type ReviewOrderByWithAggregationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    customerId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
     jobId?: SortOrderInput | SortOrder
     rating?: SortOrder
     comment?: SortOrderInput | SortOrder
@@ -10368,7 +10383,7 @@ export namespace Prisma {
     NOT?: ReviewScalarWhereWithAggregatesInput | ReviewScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Review"> | string
     companyId?: StringWithAggregatesFilter<"Review"> | string
-    customerId?: StringWithAggregatesFilter<"Review"> | string
+    customerId?: StringNullableWithAggregatesFilter<"Review"> | string | null
     jobId?: StringNullableWithAggregatesFilter<"Review"> | string | null
     rating?: IntWithAggregatesFilter<"Review"> | number
     comment?: StringNullableWithAggregatesFilter<"Review"> | string | null
@@ -11186,13 +11201,13 @@ export namespace Prisma {
     response?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    customer: CustomerCreateNestedOneWithoutReviewsInput
+    customer?: CustomerCreateNestedOneWithoutReviewsInput
   }
 
   export type ReviewUncheckedCreateInput = {
     id?: string
     companyId: string
-    customerId: string
+    customerId?: string | null
     jobId?: string | null
     rating: number
     comment?: string | null
@@ -11216,13 +11231,13 @@ export namespace Prisma {
     response?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customer?: CustomerUpdateOneRequiredWithoutReviewsNestedInput
+    customer?: CustomerUpdateOneWithoutReviewsNestedInput
   }
 
   export type ReviewUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     rating?: IntFieldUpdateOperationsInput | number
     comment?: NullableStringFieldUpdateOperationsInput | string | null
@@ -11237,7 +11252,7 @@ export namespace Prisma {
   export type ReviewCreateManyInput = {
     id?: string
     companyId: string
-    customerId: string
+    customerId?: string | null
     jobId?: string | null
     rating: number
     comment?: string | null
@@ -11266,7 +11281,7 @@ export namespace Prisma {
   export type ReviewUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     rating?: IntFieldUpdateOperationsInput | number
     comment?: NullableStringFieldUpdateOperationsInput | string | null
@@ -12628,10 +12643,12 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type CustomerUpdateOneRequiredWithoutReviewsNestedInput = {
+  export type CustomerUpdateOneWithoutReviewsNestedInput = {
     create?: XOR<CustomerCreateWithoutReviewsInput, CustomerUncheckedCreateWithoutReviewsInput>
     connectOrCreate?: CustomerCreateOrConnectWithoutReviewsInput
     upsert?: CustomerUpsertWithoutReviewsInput
+    disconnect?: CustomerWhereInput | boolean
+    delete?: CustomerWhereInput | boolean
     connect?: CustomerWhereUniqueInput
     update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutReviewsInput, CustomerUpdateWithoutReviewsInput>, CustomerUncheckedUpdateWithoutReviewsInput>
   }
@@ -13721,7 +13738,7 @@ export namespace Prisma {
     NOT?: ReviewScalarWhereInput | ReviewScalarWhereInput[]
     id?: StringFilter<"Review"> | string
     companyId?: StringFilter<"Review"> | string
-    customerId?: StringFilter<"Review"> | string
+    customerId?: StringNullableFilter<"Review"> | string | null
     jobId?: StringNullableFilter<"Review"> | string | null
     rating?: IntFilter<"Review"> | number
     comment?: StringNullableFilter<"Review"> | string | null

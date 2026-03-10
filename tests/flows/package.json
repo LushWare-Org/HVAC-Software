@@ -1,0 +1,38 @@
+{
+  "name": "@tscrm/flow-tests",
+  "version": "1.0.0",
+  "description": "End-to-end API flow tests for T&S Services CRM — client demo suite",
+  "private": true,
+  "scripts": {
+    "health": "npx ts-node health-check.ts",
+    "stop": "pkill -f 'turbo run dev' 2>/dev/null; pkill -f 'node --watch' 2>/dev/null; pkill -f 'go run ./cmd/server' 2>/dev/null; for p in 3001 3002 3003 3004 3005 3006; do lsof -ti :$p | xargs kill -9 2>/dev/null; done; echo '✅ All services stopped'",
+    "test": "jest --runInBand --forceExit --verbose",
+    "test:flow": "jest --runInBand --forceExit --verbose --testPathPattern",
+    "test:watch": "jest --runInBand --watch",
+    "test:01": "jest --runInBand --forceExit --verbose 01-lead-to-customer",
+    "test:02": "jest --runInBand --forceExit --verbose 02-full-job-lifecycle",
+    "test:03": "jest --runInBand --forceExit --verbose 03-quote-to-payment",
+    "test:04": "jest --runInBand --forceExit --verbose 04-technician-dispatch",
+    "test:05": "jest --runInBand --forceExit --verbose 05-automation-rules",
+    "test:06": "jest --runInBand --forceExit --verbose 06-two-way-messaging",
+    "test:07": "jest --runInBand --forceExit --verbose 07-customer-portal",
+    "test:08": "jest --runInBand --forceExit --verbose 08-service-agreements",
+    "test:09": "jest --runInBand --forceExit --verbose 09-analytics-reporting",
+    "test:showcase": "jest --runInBand --forceExit --verbose 10-full-e2e-showcase",
+    "test:all": "jest --runInBand --forceExit --verbose --testPathPattern=\"\\d{2}-\""
+  },
+  "dependencies": {
+    "axios": "^1.6.8"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.12.7",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

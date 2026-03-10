@@ -2,21 +2,15 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as express from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     // rawBody: true is required for Stripe webhook signature verification.
-    // Express middleware below attaches req.rawBody before JSON parsing.
     rawBody: true,
   });
 
   const port = process.env.FINANCE_PORT ?? 3004;
-
-  // ── Stripe webhook route needs raw body ────────────────────────────────
-  // Attach raw body buffer to req before any other middleware parses it.
-  app.use('/webhooks/stripe', express.raw({ type: 'application/json' }));
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors({ origin: ['http://localhost:3000', 'http://localhost:5173'] });

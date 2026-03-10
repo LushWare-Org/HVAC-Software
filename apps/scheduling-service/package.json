@@ -1,0 +1,11 @@
+{
+  "name": "scheduling-service",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "go build -o ./server ./cmd/server/...",
+    "dev": "go run ./cmd/server/...",
+    "start": "./server",
+    "clean": "rm -f ./server"
+  }
+}

@@ -1,0 +1,213 @@
+// ============================================================
+// Comms Service — Prisma Schema
+// Database: MongoDB (message threads, delivery logs)
+// Why MongoDB: Message threads are nested documents (messages inside threads).
+//              Variable metadata per notification type. High write volume for delivery logs.
+//              Document model avoids complex join tables for thread participants.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/prisma/generated"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────
+
+enum Channel {
+  SMS
+  EMAIL
+  PUSH
+  IN_APP
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  BOUNCED
+  UNSUBSCRIBED
+}
+
+enum ThreadStatus {
+  ACTIVE
+  RESOLVED
+  SPAM
+}
+
+enum MessageDirection {
+  OUTBOUND // company → customer
+  INBOUND  // customer → company (Twilio webhook)
+}
+
+enum TemplateType {
+  APPOINTMENT_REMINDER
+  JOB_STATUS_UPDATE
+  INVOICE_SENT
+  PAYMENT_RECEIVED
+  REVIEW_REQUEST
+  WELCOME
+  CUSTOM
+}
+
+enum AutomationTrigger {
+  JOB_STATUS_CHANGED
+  INVOICE_SENT
+  PAYMENT_RECEIVED
+  QUOTE_APPROVED
+  APPOINTMENT_BOOKED
+  MANUAL
+}
+
+// ── Notification — one notification delivery attempt per channel per event ─
+
+model Notification {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  companyId   String
+  // Context references (foreign keys to other services — not enforced by Mongo)
+  customerId  String?
+  jobId       String?
+  invoiceId   String?
+  quoteId     String?
+  // Recipient
+  recipientId String         // Auth0 user sub OR external contact ID
+  recipientName String?
+  recipientEmail String?
+  recipientPhone String?
+  recipientPushToken String?
+  // Delivery
+  channel     Channel
+  subject     String?        // email only
+  body        String
+  status      DeliveryStatus @default(QUEUED)
+  // Provider tracking
+  externalId  String?        // Twilio SID / SendGrid message-id / FCM message-id
+  providerResponse String?   // raw provider response JSON
+  error       String?
+  // Timestamps
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  failedAt    DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([companyId, status])
+  @@index([companyId, customerId])
+  @@index([companyId, jobId])
+  @@index([scheduledAt])
+}
+
+// ── MessageThread — two-way conversation between company staff and a customer ─
+
+model MessageThread {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  companyId     String
+  customerId    String
+  customerName  String
+  customerPhone String?
+  customerEmail String?
+  // Job context (optional)
+  jobId         String?
+  // Thread state
+  status        ThreadStatus  @default(ACTIVE)
+  unreadCount   Int           @default(0)  // unread by staff
+  lastMessageAt DateTime?
+  lastMessageBody String?
+  // Messages embedded as array (MongoDB document model)
+  messages      Message[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([companyId, customerId])
+  @@index([companyId, status])
+  @@index([lastMessageAt])
+}
+
+// ── Message — embedded in MessageThread ───────────────────────────────────
+
+type Message {
+  id         String           // UUID generated in app
+  senderId   String           // Auth0 sub (staff) OR customerId for inbound
+  senderName String
+  direction  MessageDirection
+  body       String
+  channel    Channel
+  mediaUrls  String[]         // MMS / email attachments
+  // Provider info
+  twilioSid  String?
+  sentAt     DateTime?
+  deliveredAt DateTime?
+  readAt     DateTime?
+  createdAt  DateTime
+}
+
+// ── NotificationTemplate — reusable templates per company ────────────────
+
+model NotificationTemplate {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  companyId   String
+  name        String
+  type        TemplateType
+  channel     Channel
+  // Content (Handlebars syntax — {{customerName}}, {{jobAddress}}, etc.)
+  subject     String?      // email only
+  body        String
+  // Variables declared for validation
+  variables   String[]     @default([])
+  isActive    Boolean      @default(true)
+  isDefault   Boolean      @default(false)  // system default vs custom
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([companyId, type])
+  @@index([companyId, channel])
+}
+
+// ── AutomationRule — defines when notifications are triggered automatically ─
+
+model AutomationRule {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  companyId       String
+  name            String
+  isActive        Boolean           @default(true)
+  trigger         AutomationTrigger
+  // Condition JSON: e.g. {"jobStatus": "COMPLETED"} or {"invoiceStatus": "SENT"}
+  conditions      String            // JSON string
+  // Actions JSON array: [{channel: "SMS", templateId: "..."}, {channel: "EMAIL", ...}]
+  actions         String            // JSON string
+  // Delay config: send X minutes/hours before/after trigger
+  delayMinutes    Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([companyId, trigger])
+  @@index([companyId, isActive])
+}
+
+// ── DeliveryLog — immutable audit log of every send attempt ──────────────
+
+model DeliveryLog {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  companyId       String
+  notificationId  String?
+  channel         Channel
+  recipient       String   // phone or email or push token
+  status          DeliveryStatus
+  provider        String   // "twilio" | "sendgrid" | "fcm"
+  externalId      String?
+  requestPayload  String?  // JSON (redacted PII)
+  responsePayload String?  // JSON
+  durationMs      Int?
+  error           String?
+  createdAt       DateTime @default(now())
+
+  @@index([companyId, channel])
+  @@index([companyId, status])
+  @@index([createdAt])
+}
