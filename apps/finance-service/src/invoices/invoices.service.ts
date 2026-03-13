@@ -13,6 +13,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
+import { PdfService } from '../pdf/pdf.service';
+import { NotificationClientService } from '../notification-client/notification-client.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceStatus, PaymentStatus } from '../prisma/generated';
 
@@ -34,6 +36,8 @@ export class InvoicesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly pdfService: PdfService,
+    private readonly notificationClient: NotificationClientService,
   ) {
     this.stripe = new Stripe(this.config.get<string>('stripe.secretKey') ?? '', {
       apiVersion: '2023-10-16',
@@ -70,7 +74,7 @@ export class InvoicesService {
       }),
       this.prisma.invoice.count({ where }),
     ]);
-    return { items, total, page, limit };
+    return { data: items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   // ── Single ────────────────────────────────────────────────────────────────
@@ -181,10 +185,34 @@ export class InvoicesService {
     if (invoice.status !== InvoiceStatus.DRAFT) {
       throw new BadRequestException(`Invoice must be DRAFT to send, current: ${invoice.status}`);
     }
-    return this.prisma.invoice.update({
+    const updated = await this.prisma.invoice.update({
       where: { id },
       data: { status: InvoiceStatus.SENT, sentAt: new Date() },
+      include: {
+        lineItems: { orderBy: { sortOrder: 'asc' } },
+        payments: { orderBy: { createdAt: 'desc' } },
+        quote: { select: { quoteNumber: true } },
+      },
     });
+
+    // Generate email HTML from the invoice template and send via comms-service
+    if (invoice.customerEmail) {
+      const companyName = process.env.COMPANY_NAME ?? 'T&S Services';
+      const companyAddress = process.env.COMPANY_ADDRESS ?? '';
+      const emailHtml = this.pdfService.renderInvoiceHtml(updated as any, companyName, companyAddress);
+
+      this.notificationClient.sendEmail({
+        recipientId: invoice.customerId,
+        recipientName: invoice.customerName ?? undefined,
+        recipientEmail: invoice.customerEmail,
+        subject: `Invoice ${invoice.invoiceNumber} from ${companyName}`,
+        htmlBody: emailHtml,
+        customerId: invoice.customerId,
+        invoiceId: id,
+      });
+    }
+
+    return updated;
   }
 
   // ── Create Stripe Payment Intent ──────────────────────────────────────────

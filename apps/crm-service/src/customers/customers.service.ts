@@ -36,12 +36,15 @@ export class CustomersService {
     page = 1,
     limit = 20,
     search?: string,
+    type?: string,
+    isActive?: boolean,
   ): Promise<PaginatedResponse<unknown>> {
     const skip = (page - 1) * limit;
 
     const where = {
       companyId,
-      isActive: true,
+      isActive: isActive !== undefined ? isActive : true,
+      ...(type && { type: type as any }),
       ...(search && {
         OR: [
           { firstName: { contains: search, mode: 'insensitive' as const } },
@@ -57,7 +60,7 @@ export class CustomersService {
         where,
         skip,
         take: limit,
-        orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+        orderBy: [{ createdAt: 'desc' }],
         include: { _count: { select: { contacts: true } } },
       }),
       this.prisma.customer.count({ where }),
@@ -74,6 +77,8 @@ export class CustomersService {
       where: { id, companyId },
       include: {
         contacts: true,
+        addresses: { orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }] },
+        equipment: { orderBy: { createdAt: 'desc' } },
         reviews: {
           orderBy: { createdAt: 'desc' },
           take: 5,

@@ -1,6 +1,6 @@
 import { useLocation, Link } from 'react-router-dom'
 import {
-    LayoutDashboard, Users, Wrench, CalendarDays,
+    LayoutDashboard, Users, Wrench, CalendarDays, Zap,
     DollarSign, MessageSquare, BarChart3, Settings,
     Menu, X, LogOut, Shield
 } from 'lucide-react'
@@ -17,6 +17,7 @@ const NAV = [
             { icon: Users, label: 'Customers & CRM', path: '/customers' },
             { icon: Wrench, label: 'Jobs', path: '/jobs', badge: 3 },
             { icon: CalendarDays, label: 'Scheduling', path: '/scheduling' },
+            { icon: Zap, label: 'Dispatch Board', path: '/dispatch' },
         ],
     },
     {

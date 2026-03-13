@@ -11,21 +11,21 @@ import (
 
 // Technician represents a field technician's scheduling profile.
 type Technician struct {
-	ID              string    `json:"id"`
-	CompanyID       string    `json:"companyId"`
-	UserID          string    `json:"userId"`
-	Name            string    `json:"name"`
-	Phone           *string   `json:"phone,omitempty"`
-	AvatarURL       *string   `json:"avatarUrl,omitempty"`
-	Skills          []string  `json:"skills"`
-	MaxDailyJobs    int       `json:"maxDailyJobs"`
-	IsActive        bool      `json:"isActive"`
-	Rating          float64   `json:"rating"`
-	TotalRatings    int       `json:"totalRatings"`
+	ID              string     `json:"id"`
+	CompanyID       string     `json:"companyId"`
+	UserID          string     `json:"userId"`
+	Name            string     `json:"name"`
+	Phone           *string    `json:"phone,omitempty"`
+	AvatarURL       *string    `json:"avatarUrl,omitempty"`
+	Skills          []string   `json:"skills"`
+	MaxDailyJobs    int        `json:"maxDailyJobs"`
+	IsActive        bool       `json:"isActive"`
+	Rating          float64    `json:"rating"`
+	TotalRatings    int        `json:"totalRatings"`
 	LastSeenAt      *time.Time `json:"lastSeenAt,omitempty"`
-	CurrentLocation *GeoPoint `json:"currentLocation,omitempty"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	CurrentLocation *GeoPoint  `json:"currentLocation,omitempty"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
 }
 
 // GeoPoint is used for current_location PostGIS geometry.
@@ -52,12 +52,12 @@ type TechnicianShift struct {
 type AssignmentStatus string
 
 const (
-	StatusSuggested  AssignmentStatus = "SUGGESTED"
-	StatusAssigned   AssignmentStatus = "ASSIGNED"
-	StatusEnRoute    AssignmentStatus = "EN_ROUTE"
-	StatusOnSite     AssignmentStatus = "ON_SITE"
-	StatusCompleted  AssignmentStatus = "COMPLETED"
-	StatusCancelled  AssignmentStatus = "CANCELLED"
+	StatusSuggested AssignmentStatus = "SUGGESTED"
+	StatusAssigned  AssignmentStatus = "ASSIGNED"
+	StatusEnRoute   AssignmentStatus = "EN_ROUTE"
+	StatusOnSite    AssignmentStatus = "ON_SITE"
+	StatusCompleted AssignmentStatus = "COMPLETED"
+	StatusCancelled AssignmentStatus = "CANCELLED"
 )
 
 // DispatchAssignment is the core scheduling record linking
@@ -109,6 +109,8 @@ type CreateTechnicianRequest struct {
 	AvatarURL    *string  `json:"avatarUrl"`
 	Skills       []string `json:"skills"`
 	MaxDailyJobs *int     `json:"maxDailyJobs"`
+	Latitude     *float64 `json:"latitude"`  // optional initial GPS location
+	Longitude    *float64 `json:"longitude"` // optional initial GPS location
 }
 
 // UpdateTechnicianRequest — PATCH /technicians/:id
@@ -119,13 +121,15 @@ type UpdateTechnicianRequest struct {
 	Skills       []string `json:"skills"`
 	MaxDailyJobs *int     `json:"maxDailyJobs"`
 	IsActive     *bool    `json:"isActive"`
+	Latitude     *float64 `json:"latitude"`  // update GPS location
+	Longitude    *float64 `json:"longitude"` // update GPS location
 }
 
 // AssignJobRequest — POST /dispatch/assign
 type AssignJobRequest struct {
 	JobID          string   `json:"jobId"          binding:"required"`
-	JobLatitude    float64  `json:"jobLatitude"    binding:"required"`
-	JobLongitude   float64  `json:"jobLongitude"   binding:"required"`
+	JobLatitude    float64  `json:"jobLatitude"`
+	JobLongitude   float64  `json:"jobLongitude"`
 	RequiredSkills []string `json:"requiredSkills"`
 	ScheduledStart *string  `json:"scheduledStart"` // ISO8601
 	ScheduledEnd   *string  `json:"scheduledEnd"`
@@ -135,8 +139,8 @@ type AssignJobRequest struct {
 type ManualAssignRequest struct {
 	JobID          string  `json:"jobId"          binding:"required"`
 	TechnicianID   string  `json:"technicianId"   binding:"required"`
-	JobLatitude    float64 `json:"jobLatitude"    binding:"required"`
-	JobLongitude   float64 `json:"jobLongitude"   binding:"required"`
+	JobLatitude    float64 `json:"jobLatitude"`
+	JobLongitude   float64 `json:"jobLongitude"`
 	ScheduledStart *string `json:"scheduledStart"`
 	ScheduledEnd   *string `json:"scheduledEnd"`
 	Notes          *string `json:"notes"`
@@ -145,20 +149,20 @@ type ManualAssignRequest struct {
 // ScoredTechnician is returned when auto-assign score < threshold.
 // Dispatcher picks from the top candidates returned.
 type ScoredTechnician struct {
-	Technician   Technician `json:"technician"`
-	Score        float64    `json:"score"`
-	DistanceKm   float64    `json:"distanceKm"`
-	ActiveJobs   int        `json:"activeJobs"`
-	DistanceScore float64   `json:"distanceScore"`
-	WorkloadScore float64   `json:"workloadScore"`
-	RatingScore   float64   `json:"ratingScore"`
+	Technician    Technician `json:"technician"`
+	Score         float64    `json:"score"`
+	DistanceKm    float64    `json:"distanceKm"`
+	ActiveJobs    int        `json:"activeJobs"`
+	DistanceScore float64    `json:"distanceScore"`
+	WorkloadScore float64    `json:"workloadScore"`
+	RatingScore   float64    `json:"ratingScore"`
 }
 
 // AssignResponse — result of POST /dispatch/assign
 type AssignResponse struct {
-	AutoAssigned bool               `json:"autoAssigned"`
-	Assignment   *DispatchAssignment `json:"assignment,omitempty"` // set when autoAssigned=true
-	Suggestions  []ScoredTechnician `json:"suggestions,omitempty"` // set when autoAssigned=false
+	AutoAssigned bool                `json:"autoAssigned"`
+	Assignment   *DispatchAssignment `json:"assignment,omitempty"`  // set when autoAssigned=true
+	Suggestions  []ScoredTechnician  `json:"suggestions,omitempty"` // set when autoAssigned=false
 }
 
 // GPSUpdateRequest — POST /gps (from technician mobile app)

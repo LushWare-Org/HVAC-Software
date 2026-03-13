@@ -1385,6 +1385,9 @@ export namespace Prisma {
     externalId: string | null
     providerResponse: string | null
     error: string | null
+    isRead: boolean | null
+    title: string | null
+    type: string | null
     scheduledAt: Date | null
     sentAt: Date | null
     deliveredAt: Date | null
@@ -1412,6 +1415,9 @@ export namespace Prisma {
     externalId: string | null
     providerResponse: string | null
     error: string | null
+    isRead: boolean | null
+    title: string | null
+    type: string | null
     scheduledAt: Date | null
     sentAt: Date | null
     deliveredAt: Date | null
@@ -1439,6 +1445,9 @@ export namespace Prisma {
     externalId: number
     providerResponse: number
     error: number
+    isRead: number
+    title: number
+    type: number
     scheduledAt: number
     sentAt: number
     deliveredAt: number
@@ -1468,6 +1477,9 @@ export namespace Prisma {
     externalId?: true
     providerResponse?: true
     error?: true
+    isRead?: true
+    title?: true
+    type?: true
     scheduledAt?: true
     sentAt?: true
     deliveredAt?: true
@@ -1495,6 +1507,9 @@ export namespace Prisma {
     externalId?: true
     providerResponse?: true
     error?: true
+    isRead?: true
+    title?: true
+    type?: true
     scheduledAt?: true
     sentAt?: true
     deliveredAt?: true
@@ -1522,6 +1537,9 @@ export namespace Prisma {
     externalId?: true
     providerResponse?: true
     error?: true
+    isRead?: true
+    title?: true
+    type?: true
     scheduledAt?: true
     sentAt?: true
     deliveredAt?: true
@@ -1622,6 +1640,9 @@ export namespace Prisma {
     externalId: string | null
     providerResponse: string | null
     error: string | null
+    isRead: boolean
+    title: string | null
+    type: string | null
     scheduledAt: Date | null
     sentAt: Date | null
     deliveredAt: Date | null
@@ -1666,6 +1687,9 @@ export namespace Prisma {
     externalId?: boolean
     providerResponse?: boolean
     error?: boolean
+    isRead?: boolean
+    title?: boolean
+    type?: boolean
     scheduledAt?: boolean
     sentAt?: boolean
     deliveredAt?: boolean
@@ -1694,6 +1718,9 @@ export namespace Prisma {
     externalId?: boolean
     providerResponse?: boolean
     error?: boolean
+    isRead?: boolean
+    title?: boolean
+    type?: boolean
     scheduledAt?: boolean
     sentAt?: boolean
     deliveredAt?: boolean
@@ -1725,6 +1752,9 @@ export namespace Prisma {
       externalId: string | null
       providerResponse: string | null
       error: string | null
+      isRead: boolean
+      title: string | null
+      type: string | null
       scheduledAt: Date | null
       sentAt: Date | null
       deliveredAt: Date | null
@@ -2141,6 +2171,9 @@ export namespace Prisma {
     readonly externalId: FieldRef<"Notification", 'String'>
     readonly providerResponse: FieldRef<"Notification", 'String'>
     readonly error: FieldRef<"Notification", 'String'>
+    readonly isRead: FieldRef<"Notification", 'Boolean'>
+    readonly title: FieldRef<"Notification", 'String'>
+    readonly type: FieldRef<"Notification", 'String'>
     readonly scheduledAt: FieldRef<"Notification", 'DateTime'>
     readonly sentAt: FieldRef<"Notification", 'DateTime'>
     readonly deliveredAt: FieldRef<"Notification", 'DateTime'>
@@ -6448,6 +6481,9 @@ export namespace Prisma {
     externalId: 'externalId',
     providerResponse: 'providerResponse',
     error: 'error',
+    isRead: 'isRead',
+    title: 'title',
+    type: 'type',
     scheduledAt: 'scheduledAt',
     sentAt: 'sentAt',
     deliveredAt: 'deliveredAt',
@@ -6595,6 +6631,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -6647,13 +6690,6 @@ export namespace Prisma {
    * Reference to a field of type 'TemplateType[]'
    */
   export type ListEnumTemplateTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TemplateType[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -6724,6 +6760,9 @@ export namespace Prisma {
     externalId?: StringNullableFilter<"Notification"> | string | null
     providerResponse?: StringNullableFilter<"Notification"> | string | null
     error?: StringNullableFilter<"Notification"> | string | null
+    isRead?: BoolFilter<"Notification"> | boolean
+    title?: StringNullableFilter<"Notification"> | string | null
+    type?: StringNullableFilter<"Notification"> | string | null
     scheduledAt?: DateTimeNullableFilter<"Notification"> | Date | string | null
     sentAt?: DateTimeNullableFilter<"Notification"> | Date | string | null
     deliveredAt?: DateTimeNullableFilter<"Notification"> | Date | string | null
@@ -6751,6 +6790,9 @@ export namespace Prisma {
     externalId?: SortOrder
     providerResponse?: SortOrder
     error?: SortOrder
+    isRead?: SortOrder
+    title?: SortOrder
+    type?: SortOrder
     scheduledAt?: SortOrder
     sentAt?: SortOrder
     deliveredAt?: SortOrder
@@ -6781,6 +6823,9 @@ export namespace Prisma {
     externalId?: StringNullableFilter<"Notification"> | string | null
     providerResponse?: StringNullableFilter<"Notification"> | string | null
     error?: StringNullableFilter<"Notification"> | string | null
+    isRead?: BoolFilter<"Notification"> | boolean
+    title?: StringNullableFilter<"Notification"> | string | null
+    type?: StringNullableFilter<"Notification"> | string | null
     scheduledAt?: DateTimeNullableFilter<"Notification"> | Date | string | null
     sentAt?: DateTimeNullableFilter<"Notification"> | Date | string | null
     deliveredAt?: DateTimeNullableFilter<"Notification"> | Date | string | null
@@ -6808,6 +6853,9 @@ export namespace Prisma {
     externalId?: SortOrder
     providerResponse?: SortOrder
     error?: SortOrder
+    isRead?: SortOrder
+    title?: SortOrder
+    type?: SortOrder
     scheduledAt?: SortOrder
     sentAt?: SortOrder
     deliveredAt?: SortOrder
@@ -6841,6 +6889,9 @@ export namespace Prisma {
     externalId?: StringNullableWithAggregatesFilter<"Notification"> | string | null
     providerResponse?: StringNullableWithAggregatesFilter<"Notification"> | string | null
     error?: StringNullableWithAggregatesFilter<"Notification"> | string | null
+    isRead?: BoolWithAggregatesFilter<"Notification"> | boolean
+    title?: StringNullableWithAggregatesFilter<"Notification"> | string | null
+    type?: StringNullableWithAggregatesFilter<"Notification"> | string | null
     scheduledAt?: DateTimeNullableWithAggregatesFilter<"Notification"> | Date | string | null
     sentAt?: DateTimeNullableWithAggregatesFilter<"Notification"> | Date | string | null
     deliveredAt?: DateTimeNullableWithAggregatesFilter<"Notification"> | Date | string | null
@@ -7225,6 +7276,9 @@ export namespace Prisma {
     externalId?: string | null
     providerResponse?: string | null
     error?: string | null
+    isRead?: boolean
+    title?: string | null
+    type?: string | null
     scheduledAt?: Date | string | null
     sentAt?: Date | string | null
     deliveredAt?: Date | string | null
@@ -7252,6 +7306,9 @@ export namespace Prisma {
     externalId?: string | null
     providerResponse?: string | null
     error?: string | null
+    isRead?: boolean
+    title?: string | null
+    type?: string | null
     scheduledAt?: Date | string | null
     sentAt?: Date | string | null
     deliveredAt?: Date | string | null
@@ -7278,6 +7335,9 @@ export namespace Prisma {
     externalId?: NullableStringFieldUpdateOperationsInput | string | null
     providerResponse?: NullableStringFieldUpdateOperationsInput | string | null
     error?: NullableStringFieldUpdateOperationsInput | string | null
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: NullableStringFieldUpdateOperationsInput | string | null
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7304,6 +7364,9 @@ export namespace Prisma {
     externalId?: NullableStringFieldUpdateOperationsInput | string | null
     providerResponse?: NullableStringFieldUpdateOperationsInput | string | null
     error?: NullableStringFieldUpdateOperationsInput | string | null
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: NullableStringFieldUpdateOperationsInput | string | null
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7331,6 +7394,9 @@ export namespace Prisma {
     externalId?: string | null
     providerResponse?: string | null
     error?: string | null
+    isRead?: boolean
+    title?: string | null
+    type?: string | null
     scheduledAt?: Date | string | null
     sentAt?: Date | string | null
     deliveredAt?: Date | string | null
@@ -7357,6 +7423,9 @@ export namespace Prisma {
     externalId?: NullableStringFieldUpdateOperationsInput | string | null
     providerResponse?: NullableStringFieldUpdateOperationsInput | string | null
     error?: NullableStringFieldUpdateOperationsInput | string | null
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: NullableStringFieldUpdateOperationsInput | string | null
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7383,6 +7452,9 @@ export namespace Prisma {
     externalId?: NullableStringFieldUpdateOperationsInput | string | null
     providerResponse?: NullableStringFieldUpdateOperationsInput | string | null
     error?: NullableStringFieldUpdateOperationsInput | string | null
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: NullableStringFieldUpdateOperationsInput | string | null
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7847,6 +7919,11 @@ export namespace Prisma {
     not?: NestedEnumDeliveryStatusFilter<$PrismaModel> | $Enums.DeliveryStatus
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -7889,6 +7966,9 @@ export namespace Prisma {
     externalId?: SortOrder
     providerResponse?: SortOrder
     error?: SortOrder
+    isRead?: SortOrder
+    title?: SortOrder
+    type?: SortOrder
     scheduledAt?: SortOrder
     sentAt?: SortOrder
     deliveredAt?: SortOrder
@@ -7916,6 +7996,9 @@ export namespace Prisma {
     externalId?: SortOrder
     providerResponse?: SortOrder
     error?: SortOrder
+    isRead?: SortOrder
+    title?: SortOrder
+    type?: SortOrder
     scheduledAt?: SortOrder
     sentAt?: SortOrder
     deliveredAt?: SortOrder
@@ -7943,6 +8026,9 @@ export namespace Prisma {
     externalId?: SortOrder
     providerResponse?: SortOrder
     error?: SortOrder
+    isRead?: SortOrder
+    title?: SortOrder
+    type?: SortOrder
     scheduledAt?: SortOrder
     sentAt?: SortOrder
     deliveredAt?: SortOrder
@@ -8006,6 +8092,14 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumDeliveryStatusFilter<$PrismaModel>
     _max?: NestedEnumDeliveryStatusFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -8180,11 +8274,6 @@ export namespace Prisma {
     isEmpty?: boolean
   }
 
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type NotificationTemplateCountOrderByAggregateInput = {
     id?: SortOrder
     companyId?: SortOrder
@@ -8236,14 +8325,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumTemplateTypeFilter<$PrismaModel>
     _max?: NestedEnumTemplateTypeFilter<$PrismaModel>
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type EnumAutomationTriggerFilter<$PrismaModel = never> = {
@@ -8412,6 +8493,10 @@ export namespace Prisma {
     set?: $Enums.DeliveryStatus
   }
 
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
   export type NullableDateTimeFieldUpdateOperationsInput = {
     set?: Date | string | null
     unset?: boolean
@@ -8472,10 +8557,6 @@ export namespace Prisma {
     push?: string | string[]
   }
 
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
-  }
-
   export type EnumAutomationTriggerFieldUpdateOperationsInput = {
     set?: $Enums.AutomationTrigger
   }
@@ -8530,6 +8611,11 @@ export namespace Prisma {
     in?: $Enums.DeliveryStatus[] | ListEnumDeliveryStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.DeliveryStatus[] | ListEnumDeliveryStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumDeliveryStatusFilter<$PrismaModel> | $Enums.DeliveryStatus
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
@@ -8633,6 +8719,14 @@ export namespace Prisma {
     _max?: NestedEnumDeliveryStatusFilter<$PrismaModel>
   }
 
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -8731,11 +8825,6 @@ export namespace Prisma {
     not?: NestedEnumTemplateTypeFilter<$PrismaModel> | $Enums.TemplateType
   }
 
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type NestedEnumTemplateTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.TemplateType | EnumTemplateTypeFieldRefInput<$PrismaModel>
     in?: $Enums.TemplateType[] | ListEnumTemplateTypeFieldRefInput<$PrismaModel>
@@ -8744,14 +8833,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumTemplateTypeFilter<$PrismaModel>
     _max?: NestedEnumTemplateTypeFilter<$PrismaModel>
-  }
-
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedEnumAutomationTriggerFilter<$PrismaModel = never> = {

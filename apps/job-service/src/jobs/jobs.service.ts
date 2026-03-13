@@ -77,6 +77,7 @@ export class JobsService {
       search?: string;
       dateFrom?: string;
       dateTo?: string;
+      customerId?: string;
     } = {},
   ): Promise<PaginatedResponse<unknown>> {
     const skip = (page - 1) * limit;
@@ -85,6 +86,7 @@ export class JobsService {
     if (filters.status) where.status = filters.status;
     if (filters.assignedToId) where.assignedToId = filters.assignedToId;
     if (filters.jobTypeId) where.jobTypeId = filters.jobTypeId;
+    if (filters.customerId) where.customerId = filters.customerId;
     if (filters.dateFrom || filters.dateTo) {
       where.scheduledStart = {};
       if (filters.dateFrom) where.scheduledStart.gte = new Date(filters.dateFrom);

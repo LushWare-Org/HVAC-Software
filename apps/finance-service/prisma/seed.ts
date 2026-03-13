@@ -9,7 +9,7 @@ import { PrismaClient, QuoteStatus, InvoiceStatus } from '../src/prisma/generate
 
 const prisma = new PrismaClient();
 
-const DEMO_COMPANY_ID = 'demo-company-id';
+const DEMO_COMPANY_ID = 'co-demo-001';
 const DEMO_CUSTOMER_ID = 'demo-customer-id';
 const DEMO_USER_ID = 'demo-user-id';
 

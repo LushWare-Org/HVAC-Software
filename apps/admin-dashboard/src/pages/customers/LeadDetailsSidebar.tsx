@@ -13,14 +13,20 @@ import {
   Users,
   Wrench,
   Trash2,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
+import { useUpdateLead } from "../../hooks/useCustomers";
+import { useLeadAddresses, useSaveLeadAddresses } from "../../hooks/useAddresses";
+import type { Lead } from "../../types/api";
 
 type TabType = "contact" | "addresses" | "activity";
 
 interface LeadDetailsSidebarProps {
-  person: any | null;
+  person: Lead | null;
   isOpen: boolean;
   onClose: () => void;
+  onConverted?: (customerId: string) => void;
 }
 
 const inputBase =
@@ -109,81 +115,51 @@ function SectionHeader({
   );
 }
 
-const mockAddresses = [
-  {
-    id: 1,
-    type: "Site",
-    line1: "14 Elm Street",
-    line2: "Flat 3",
-    city: "London",
-    postcode: "E1 6RF",
-    primary: true,
-  },
-  {
-    id: 2,
-    type: "Billing",
-    line1: "88 King Road",
-    line2: "",
-    city: "Manchester",
-    postcode: "M1 2AB",
-    primary: false,
-  },
-];
 const mockContacts = [{ id: 1, name: "", role: "Owner", email: "", phone: "" }];
-const mockTimeline = [
-  {
-    id: 1,
-    icon: Plus,
-    color: "#3B82F6",
-    label: "Lead Created",
-    desc: "Added manually.",
-    time: "Mar 1, 2026",
-  },
-  {
-    id: 2,
-    icon: Mail,
-    color: "#10B981",
-    label: "Email Sent",
-    desc: "Follow-up email sent.",
-    time: "Mar 2, 2026",
-  },
-  {
-    id: 3,
-    icon: User,
-    color: "#8B5CF6",
-    label: "Qualified",
-    desc: "Lead status changed to QUALIFIED.",
-    time: "Mar 4, 2026",
-  },
-];
+const mockTimeline: any[] = [];
 
 export default function LeadDetailsSidebar({
   person,
   isOpen,
   onClose,
+  onConverted,
 }: LeadDetailsSidebarProps) {
   const [activeTab, setActiveTab] = useState<TabType>("contact");
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<any>({});
-  const [addresses, setAddresses] = useState(mockAddresses);
+  const [error, setError] = useState("");
+  const [convertedCustomerId, setConvertedCustomerId] = useState<string | null>(null);
+  const [addresses, setAddresses] = useState<any[]>([]);
   const [contacts, setContacts] = useState(mockContacts);
+  const updateLead = useUpdateLead();
+
+  // Fetch real addresses from API
+  const leadId = person?.id ?? "";
+  const addressesQuery = useLeadAddresses(leadId || undefined);
+  const saveAddresses = useSaveLeadAddresses();
+
+  const displayName = person ? `${person.firstName ?? ""} ${person.lastName ?? ""}`.trim() || "Unknown" : "";
 
   useEffect(() => {
     if (isOpen && person) {
       document.body.style.overflow = "hidden";
-      setFormData({ ...person });
+      setFormData({
+        ...person,
+        name: displayName,
+      });
       setContacts([
         {
           id: 1,
-          name: person.name || "",
+          name: displayName,
           role: "Owner",
           email: person.email || "",
-          phone: person.phone || person.whatsappNo || "",
+          phone: person.phone || "",
         },
       ]);
-      setAddresses(mockAddresses);
       setActiveTab("contact");
       setIsEditMode(false);
+      setError("");
+      setConvertedCustomerId(null);
     } else {
       document.body.style.overflow = "unset";
     }
@@ -191,6 +167,22 @@ export default function LeadDetailsSidebar({
       document.body.style.overflow = "unset";
     };
   }, [isOpen, person]);
+
+  // Sync addresses from API query into local state for editing
+  useEffect(() => {
+    if (addressesQuery.data) {
+      setAddresses(addressesQuery.data.map((a: any) => ({
+        id: a.id,
+        type: a.type || "Site",
+        line1: a.line1 || "",
+        line2: a.line2 || "",
+        city: a.city || "",
+        state: a.state || "",
+        postcode: a.postcode || "",
+        isPrimary: a.isPrimary || false,
+      })));
+    }
+  }, [addressesQuery.data]);
 
   if (!isOpen || !person) return null;
 
@@ -203,47 +195,106 @@ export default function LeadDetailsSidebar({
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => setIsEditMode(false);
+  const handleSave = () => {
+    setError("");
+    const nameParts = (formData.name || "").trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+    updateLead.mutate(
+      {
+        id: person.id,
+        data: {
+          firstName,
+          lastName,
+          email: formData.email || undefined,
+          phone: formData.phone || undefined,
+          whatsappNo: formData.whatsappNo || undefined,
+          type: formData.type || undefined,
+          status: formData.status || undefined,
+          source: formData.source || undefined,
+          serviceInterest: formData.serviceInterest || formData.service || undefined,
+          notes: formData.notes || undefined,
+        },
+      },
+      {
+        onSuccess: (data: any) => {
+          if (formData.status === 'WON' && data?.customerId) {
+            setConvertedCustomerId(data.customerId);
+            onConverted?.(data.customerId);
+          }
+          // Also save addresses if any exist or were modified
+          if (addresses.length > 0 || (addressesQuery.data && addressesQuery.data.length > 0)) {
+            saveAddresses.mutate({
+              leadId: person.id,
+              addresses: addresses
+                .filter((a: any) => a.line1?.trim())
+                .map((a: any) => ({
+                  type: a.type || 'Site',
+                  line1: a.line1,
+                  line2: a.line2 || undefined,
+                  city: a.city || undefined,
+                  state: a.state || undefined,
+                  postcode: a.postcode || undefined,
+                  isPrimary: a.isPrimary || false,
+                })),
+            });
+          }
+          setIsEditMode(false);
+        },
+        onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to update lead."),
+      },
+    );
+  };
 
-  const ORDER = [
-    "NEW",
-    "CONTACTED",
-    "PROPOSAL_SENT",
-    "QUOTATION_SENT",
-    "WON",
-    "REJECTED",
-  ];
+  // Real activity timeline derived from the actual record — no DB activity log yet
+  const activityTimeline = (() => {
+    const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const events: Array<{ id: string; icon: any; color: string; label: string; desc: string; time: string }> = [];
+    events.push({
+      id: 'created', icon: Plus, color: '#3B82F6',
+      label: 'Lead Created',
+      desc: person.source ? `Lead added via ${person.source}.` : 'Lead added manually.',
+      time: fmt(person.createdAt),
+    });
+    if (person.status && person.status !== 'NEW') {
+      events.push({
+        id: 'status', icon: CheckCircle2, color: '#10B981',
+        label: `Status: ${person.status.replace(/_/g, ' ')}`,
+        desc: 'Lead status updated.',
+        time: fmt(person.updatedAt),
+      });
+    }
+    if ((person as any).convertedAt) {
+      events.push({
+        id: 'won', icon: Users, color: '#8B5CF6',
+        label: 'Won / Converted',
+        desc: 'Lead marked as won and converted to customer.',
+        time: fmt((person as any).convertedAt),
+      });
+    }
+    return events;
+  })();
+
+  const ORDER = ["NEW", "CONTACTED", "QUALIFIED", "WON", "LOST"];
   const currentIdx = ORDER.indexOf(formData.status || "NEW");
+  const isLost = formData.status === "LOST";
 
   const stages = [
     {
       name: "New",
-      status:
-        currentIdx > 0 ? "completed" : currentIdx === 0 ? "active" : "pending",
+      status: currentIdx > 0 ? "completed" : currentIdx === 0 ? "active" : "pending",
     },
     {
       name: "Contacted",
-      status:
-        currentIdx > 1 ? "completed" : currentIdx === 1 ? "active" : "pending",
+      status: currentIdx > 1 ? "completed" : currentIdx === 1 ? "active" : "pending",
     },
     {
-      name: "Proposal Sent",
-      status:
-        currentIdx > 2 ? "completed" : currentIdx === 2 ? "active" : "pending",
-    },
-    {
-      name: "Quotation Sent",
-      status:
-        currentIdx > 3 ? "completed" : currentIdx === 3 ? "active" : "pending",
+      name: "Qualified",
+      status: currentIdx > 2 ? "completed" : currentIdx === 2 ? "active" : "pending",
     },
     {
       name: "Won",
-      status:
-        currentIdx > 4 ? "completed" : currentIdx === 4 ? "active" : "pending",
-    },
-    {
-      name: "Rejected",
-      status: currentIdx === 5 ? "active" : "pending",
+      status: isLost ? "pending" : currentIdx === 3 ? "active" : currentIdx > 3 ? "completed" : "pending",
     },
   ];
 
@@ -278,10 +329,9 @@ export default function LeadDetailsSidebar({
               >
                 <option value="NEW">New</option>
                 <option value="CONTACTED">Contacted</option>
-                <option value="PROPOSAL_SENT">Proposal Sent</option>
-                <option value="QUOTATION_SENT">Quotation Sent</option>
+                <option value="QUALIFIED">Qualified</option>
                 <option value="WON">Won</option>
-                <option value="REJECTED">Rejected</option>
+                <option value="LOST">Lost</option>
               </select>
             </div>
             <p className="text-blue-100 text-xs mt-1">
@@ -338,6 +388,30 @@ export default function LeadDetailsSidebar({
             </button>
           </div>
         </div>
+
+        {/* Conversion success banner */}
+        {convertedCustomerId && (
+          <div className="bg-green-50 border-b border-green-200 px-6 py-3 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle2 size={16} className="text-green-600" />
+              <span className="text-sm font-semibold">Lead converted to customer successfully!</span>
+            </div>
+            <button
+              onClick={() => onConverted?.(convertedCustomerId)}
+              className="text-sm font-semibold text-green-700 border border-green-300 bg-white hover:bg-green-50 px-3 py-1 rounded-lg transition-colors"
+            >
+              View Customer →
+            </button>
+          </div>
+        )}
+
+        {/* Lost banner */}
+        {formData.status === 'LOST' && (
+          <div className="bg-red-50 border-b border-red-200 px-6 py-3 flex items-center gap-2 shrink-0">
+            <AlertCircle size={16} className="text-red-500" />
+            <span className="text-sm font-medium text-red-700">This lead has been marked as lost.</span>
+          </div>
+        )}
 
         <div
           className="flex-1 overflow-y-auto"
@@ -568,8 +642,8 @@ export default function LeadDetailsSidebar({
                             />
                             <Field
                               label="Notes / Remarks"
-                              name="remarks"
-                              value={formData.remarks}
+                              name="notes"
+                              value={formData.notes}
                               isEdit={isEditMode}
                               onChange={handleChange}
                               as="textarea"
@@ -737,29 +811,34 @@ export default function LeadDetailsSidebar({
                           icon={MapPin}
                           title="Site & Billing Addresses"
                           action={
-                            isEditMode && (
-                              <button
-                                className="flex items-center gap-1 text-[11px] font-600 text-blue-600 hover:text-blue-700"
-                                onClick={() =>
-                                  setAddresses((prev) => [
-                                    ...prev,
-                                    {
-                                      id: Date.now(),
-                                      type: "Site",
-                                      line1: "",
-                                      line2: "",
-                                      city: "",
-                                      postcode: "",
-                                      primary: false,
-                                    },
-                                  ])
-                                }
-                              >
-                                <Plus size={13} /> Add Address
-                              </button>
-                            )
+                            <button
+                              className="flex items-center gap-1 text-[11px] font-600 text-blue-600 hover:text-blue-700"
+                              onClick={() => {
+                                if (!isEditMode) setIsEditMode(true);
+                                setAddresses((prev) => [
+                                  ...prev,
+                                  {
+                                    id: Date.now(),
+                                    type: "Site",
+                                    line1: "",
+                                    line2: "",
+                                    city: "",
+                                    postcode: "",
+                                    primary: false,
+                                  },
+                                ]);
+                              }}
+                            >
+                              <Plus size={13} /> Add Address
+                            </button>
                           }
                         />
+                        {addresses.length === 0 && (
+                          <div className="text-center py-10 text-[var(--t4)] text-sm">
+                            <MapPin size={28} className="mx-auto mb-2 opacity-30" />
+                            No addresses yet. Click <b>Add Address</b> to add one.
+                          </div>
+                        )}
                         <div className="space-y-4">
                           {addresses.map((addr) => (
                             <div
@@ -810,6 +889,7 @@ export default function LeadDetailsSidebar({
                                   { lbl: "Address Line 1", key: "line1" },
                                   { lbl: "Address Line 2", key: "line2" },
                                   { lbl: "City", key: "city" },
+                                  { lbl: "State", key: "state" },
                                   { lbl: "Postcode", key: "postcode" },
                                 ].map((f) => (
                                   <div key={f.key} className="space-y-1">
@@ -852,7 +932,7 @@ export default function LeadDetailsSidebar({
                           title="Activity Timeline"
                         />
                         <div className="relative space-y-5 before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-gray-200">
-                          {mockTimeline.map((item) => {
+                          {activityTimeline.map((item) => {
                             const Icon = item.icon;
                             return (
                               <div

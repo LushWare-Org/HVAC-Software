@@ -25,6 +25,7 @@ func NewTechnicianRepository(db *pgxpool.Pool) *TechnicianRepository {
 }
 
 // Create inserts a new technician profile.
+// If latitude and longitude are provided, sets the initial current_location using PostGIS.
 func (r *TechnicianRepository) Create(ctx context.Context, companyID string, req models.CreateTechnicianRequest) (*models.Technician, error) {
 	maxDailyJobs := 8
 	if req.MaxDailyJobs != nil {
@@ -33,6 +34,23 @@ func (r *TechnicianRepository) Create(ctx context.Context, companyID string, req
 	skills := req.Skills
 	if skills == nil {
 		skills = []string{}
+	}
+
+	// If initial GPS location is provided, include it in the INSERT
+	if req.Latitude != nil && req.Longitude != nil {
+		row := r.db.QueryRow(ctx, `
+			INSERT INTO scheduling.technicians
+				(company_id, user_id, name, phone, avatar_url, skills, max_daily_jobs,
+				 current_location, last_seen_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7,
+				ST_SetSRID(ST_MakePoint($9, $8), 4326), NOW())
+			RETURNING id, company_id, user_id, name, phone, avatar_url, skills,
+			          max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
+			          created_at, updated_at`,
+			companyID, req.UserID, req.Name, req.Phone, req.AvatarURL, skills, maxDailyJobs,
+			*req.Latitude, *req.Longitude,
+		)
+		return scanTechnician(row)
 	}
 
 	row := r.db.QueryRow(ctx, `
@@ -270,6 +288,24 @@ func (r *TechnicianRepository) UpdateTechnician(
 	isActive := existing.IsActive
 	if req.IsActive != nil {
 		isActive = *req.IsActive
+	}
+
+	// If lat/lng provided, update current_location + last_seen_at too
+	if req.Latitude != nil && req.Longitude != nil {
+		row := r.db.QueryRow(ctx, `
+			UPDATE scheduling.technicians
+			SET name = $1, phone = $2, avatar_url = $3, skills = $4,
+			    max_daily_jobs = $5, is_active = $6,
+			    current_location = ST_SetSRID(ST_MakePoint($10, $9), 4326),
+			    last_seen_at = NOW(), updated_at = NOW()
+			WHERE id = $7 AND company_id = $8
+			RETURNING id, company_id, user_id, name, phone, avatar_url, skills,
+			          max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
+			          created_at, updated_at`,
+			name, phone, avatarURL, skills, maxDailyJobs, isActive, id, companyID,
+			*req.Latitude, *req.Longitude,
+		)
+		return scanTechnician(row)
 	}
 
 	row := r.db.QueryRow(ctx, `

@@ -204,7 +204,7 @@ export class NotificationsService {
     return notification;
   }
 
-  // ── List / stats ──────────────────────────────────────────────────────────
+  // ── List / stats / read ────────────────────────────────────────────────
 
   async findAll(
     companyId: string,
@@ -226,7 +226,34 @@ export class NotificationsService {
       }),
       this.prisma.notification.count({ where }),
     ]);
-    return { items, total, page, limit };
+    // Map to frontend-expected shape
+    const data = items.map((n) => ({
+      id: n.id,
+      companyId: n.companyId,
+      userId: n.recipientId,
+      title: n.title ?? n.subject ?? `${n.channel} notification`,
+      body: n.body,
+      isRead: n.isRead,
+      type: n.type ?? (n.status === 'FAILED' ? 'error' : 'info'),
+      referenceId: n.customerId ?? n.jobId ?? undefined,
+      referenceType: n.customerId ? 'customer' : n.jobId ? 'job' : undefined,
+      createdAt: n.createdAt.toISOString(),
+    }));
+    return { data, total, page, limit };
+  }
+
+  async markRead(companyId: string, id: string) {
+    return this.prisma.notification.updateMany({
+      where: { id, companyId },
+      data: { isRead: true },
+    });
+  }
+
+  async markAllRead(companyId: string) {
+    return this.prisma.notification.updateMany({
+      where: { companyId, isRead: false },
+      data: { isRead: true },
+    });
   }
 
   async getDeliveryStats(companyId: string) {

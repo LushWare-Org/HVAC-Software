@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
@@ -53,13 +56,24 @@ func JWTMiddleware(auth0Domain, audience string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 0. BYPASS_AUTH mode — development/testing only, never in production
 		if os.Getenv("BYPASS_AUTH") == "true" && os.Getenv("GIN_MODE") != "release" {
+			// Check headers first, then fall back to query params (needed for
+			// WebSocket connections where the browser API cannot send custom headers).
 			companyID := c.GetHeader("x-test-company-id")
+			if companyID == "" {
+				companyID = c.Query("x-test-company-id")
+			}
 			if companyID != "" {
 				userID := c.GetHeader("x-test-user-id")
+				if userID == "" {
+					userID = c.Query("x-test-user-id")
+				}
 				if userID == "" {
 					userID = "test-user-001"
 				}
 				role := strings.ToLower(c.GetHeader("x-test-user-role"))
+				if role == "" {
+					role = strings.ToLower(c.Query("x-test-user-role"))
+				}
 				if role == "" {
 					role = "company_admin"
 				}
@@ -84,25 +98,43 @@ func JWTMiddleware(auth0Domain, audience string) gin.HandlerFunc {
 		}
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
-		// 2. Fetch the current JWKS key set
-		keySet, err := cache.Get(c.Request.Context(), jwksURI)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "failed to fetch JWKS"})
+		// 2. Peek at the JWT header to determine algorithm (HS256 vs RS256)
+		var parsedToken jwt.Token
+		var parseErr error
+
+		if alg := peekJWTAlgorithm(tokenStr); alg == "HS256" {
+			// Local JWT signed with symmetric secret
+			localSecret := os.Getenv("JWT_SECRET")
+			if localSecret == "" {
+				localSecret = "tscrm-local-jwt-secret-change-in-production"
+			}
+			parsedToken, parseErr = jwt.Parse(
+				[]byte(tokenStr),
+				jwt.WithKey(jwa.HS256, []byte(localSecret)),
+				jwt.WithValidate(true),
+			)
+		} else {
+			// Auth0 / RS256 — use JWKS key set
+			keySet, err := cache.Get(c.Request.Context(), jwksURI)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "failed to fetch JWKS"})
+				return
+			}
+			parsedToken, parseErr = jwt.Parse(
+				[]byte(tokenStr),
+				jwt.WithKeySet(keySet),
+				jwt.WithValidate(true),
+				jwt.WithIssuer(issuer),
+				jwt.WithAudience(audience),
+			)
+		}
+
+		if parseErr != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token: " + parseErr.Error()})
 			return
 		}
 
-		// 3. Parse & validate the JWT
-		token, err := jwt.Parse(
-			[]byte(tokenStr),
-			jwt.WithKeySet(keySet),
-			jwt.WithValidate(true),
-			jwt.WithIssuer(issuer),
-			jwt.WithAudience(audience),
-		)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token: " + err.Error()})
-			return
-		}
+		token := parsedToken
 
 		// 4. Extract custom claims injected by Auth0 Actions
 		companyID, _ := token.Get(companyIDKey)
@@ -163,4 +195,25 @@ func RequireRole(roles ...string) gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+// peekJWTAlgorithm decodes the JWT header (without verification) and returns
+// the "alg" field. Returns "" if the token cannot be decoded.
+func peekJWTAlgorithm(tokenStr string) string {
+	parts := strings.SplitN(tokenStr, ".", 3)
+	if len(parts) < 2 {
+		return ""
+	}
+	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return ""
+	}
+	var header map[string]interface{}
+	if err := json.Unmarshal(headerBytes, &header); err != nil {
+		return ""
+	}
+	if alg, ok := header["alg"].(string); ok {
+		return alg
+	}
+	return ""
 }

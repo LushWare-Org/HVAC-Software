@@ -168,20 +168,36 @@ export class PdfService {
   // ── Puppeteer ──────────────────────────────────────────────────────────────
 
   private async htmlToPdf(html: string): Promise<Buffer> {
-    // Dynamic import so the module is loaded on first use (cold-start speed).
-    // In Lambda / Docker the chromium binary is bundled via @sparticuz/chromium.
     const puppeteer = await import('puppeteer-core');
     let chromiumPath: string;
 
-    try {
-      // @sparticuz/chromium provides a serverless-optimised static binary.
-      const chromium = await import('@sparticuz/chromium');
-      chromiumPath = await chromium.default.executablePath();
-    } catch {
-      // Fallback: local Chrome / Chromium for dev machines
-      chromiumPath =
-        process.env.CHROMIUM_PATH ??
-        '/usr/bin/google-chrome-stable';
+    if (process.env.CHROMIUM_PATH) {
+      // Explicit override always wins
+      chromiumPath = process.env.CHROMIUM_PATH;
+    } else if (process.platform === 'darwin') {
+      // macOS dev machine — use the installed Google Chrome
+      const macPaths = [
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        '/Applications/Chromium.app/Contents/MacOS/Chromium',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/google-chrome',
+      ];
+      const fs = await import('fs');
+      const found = macPaths.find((p) => fs.existsSync(p));
+      if (!found) {
+        throw new Error(
+          'No Chrome/Chromium found on macOS. Install Google Chrome or set CHROMIUM_PATH.',
+        );
+      }
+      chromiumPath = found;
+    } else {
+      // Linux / Lambda / Docker — use @sparticuz/chromium serverless binary
+      try {
+        const chromium = await import('@sparticuz/chromium');
+        chromiumPath = await chromium.default.executablePath();
+      } catch {
+        chromiumPath = '/usr/bin/google-chrome-stable';
+      }
     }
 
     const browser = await puppeteer.default.launch({
@@ -192,8 +208,7 @@ export class PdfService {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--no-zygote',
-        '--single-process',
+        ...(process.platform !== 'darwin' ? ['--no-zygote', '--single-process'] : []),
       ],
     });
 

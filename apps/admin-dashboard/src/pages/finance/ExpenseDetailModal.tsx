@@ -6,7 +6,11 @@ import {
   DollarSign,
   Calendar,
   Briefcase,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
+import { useUpdateExpense, decimalToNumber } from "../../hooks/useFinance";
 
 interface ExpenseDetailModalProps {
   isOpen: boolean;
@@ -17,8 +21,13 @@ interface ExpenseDetailModalProps {
 type TabType = "details" | "activity";
 
 const EXP_CSS: Record<string, string> = {
+  PAID: "badge-green",
+  PENDING: "badge-amber",
+  APPROVED: "badge-blue",
+  REJECTED: "badge-red",
   paid: "badge-green",
   pending: "badge-amber",
+  approved: "badge-blue",
   rejected: "badge-red",
 };
 
@@ -35,12 +44,20 @@ export default function ExpenseDetailModal({
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const updateExpense = useUpdateExpense();
 
   useEffect(() => {
     if (expense) {
-      setFormData({ ...expense });
+      setFormData({
+        ...expense,
+        amount: decimalToNumber(expense.amount),
+        date: expense.date ? expense.date.split("T")[0] : "",
+      });
       setIsEditMode(false);
       setActiveTab("details");
+      setSaveSuccess(false);
     }
   }, [expense]);
 
@@ -56,7 +73,26 @@ export default function ExpenseDetailModal({
   };
 
   const handleSave = () => {
-    setIsEditMode(false);
+    updateExpense.mutate(
+      {
+        id: expense.id,
+        data: {
+          category: formData.category,
+          vendor: formData.vendor || undefined,
+          amount: String(formData.amount),
+          date: formData.date,
+          description: formData.description || undefined,
+          status: formData.status,
+        },
+      },
+      {
+        onSuccess: () => {
+          setIsEditMode(false);
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 2000);
+        },
+      },
+    );
   };
 
   const statusCSS = EXP_CSS[expense.status] || "badge-neutral";
@@ -96,6 +132,11 @@ export default function ExpenseDetailModal({
             <p className="text-amber-100 text-sm mt-0.5">{expense.vendor}</p>
           </div>
           <div className="flex items-center gap-2">
+            {saveSuccess && (
+              <span className="flex items-center gap-1 text-green-200 text-sm font-medium">
+                <CheckCircle size={14} /> Saved
+              </span>
+            )}
             {!isEditMode ? (
               <button
                 onClick={() => setIsEditMode(true)}
@@ -107,13 +148,14 @@ export default function ExpenseDetailModal({
               <>
                 <button
                   onClick={handleSave}
-                  className="flex items-center gap-1.5 text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0"
+                  disabled={updateExpense.isPending}
+                  className="flex items-center gap-1.5 text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0 disabled:opacity-60"
                 >
-                  <Save size={13} /> Save
+                  {updateExpense.isPending ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Save
                 </button>
                 <button
                   onClick={() => {
-                    setFormData({ ...expense });
+                    setFormData({ ...expense, amount: decimalToNumber(expense.amount), date: expense.date?.split("T")[0] || "" });
                     setIsEditMode(false);
                   }}
                   className="flex items-center gap-1.5 text-amber-100 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0"
@@ -156,19 +198,6 @@ export default function ExpenseDetailModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Expense ID
-                    </label>
-                    <input
-                      type="text"
-                      name="id"
-                      value={formData.id}
-                      onChange={handleChange}
-                      disabled={!isEditMode}
-                      className={!isEditMode ? inputView : inputEdit}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Category
                     </label>
                     <select
@@ -203,11 +232,13 @@ export default function ExpenseDetailModal({
                       Amount
                     </label>
                     <input
-                      type="text"
+                      type="number"
                       name="amount"
-                      value={`$${formData.amount?.toLocaleString()}`}
+                      value={formData.amount}
                       onChange={handleChange}
                       disabled={!isEditMode}
+                      min="0"
+                      step="0.01"
                       className={!isEditMode ? inputView : inputEdit}
                     />
                   </div>
@@ -235,22 +266,23 @@ export default function ExpenseDetailModal({
                       disabled={!isEditMode}
                       className={!isEditMode ? inputView : inputEdit}
                     >
-                      <option value="pending">Pending</option>
-                      <option value="paid">Paid</option>
-                      <option value="rejected">Rejected</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="PAID">Paid</option>
+                      <option value="REJECTED">Rejected</option>
                     </select>
                   </div>
                   <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Reference
+                      Description
                     </label>
-                    <input
-                      type="text"
-                      name="reference"
-                      value={formData.reference}
+                    <textarea
+                      name="description"
+                      value={formData.description || ""}
                       onChange={handleChange}
                       disabled={!isEditMode}
-                      className={!isEditMode ? inputView : inputEdit}
+                      rows={3}
+                      className={`${!isEditMode ? inputView : inputEdit} resize-none`}
                     />
                   </div>
                 </div>
@@ -277,9 +309,22 @@ export default function ExpenseDetailModal({
           >
             Close
           </button>
-          <button className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors cursor-pointer">
-            <Briefcase size={14} className="inline mr-1" /> Approve Expense
-          </button>
+          {expense.status === "PENDING" && (
+            <button
+              onClick={() => {
+                updateExpense.mutate(
+                  { id: expense.id, data: { status: "APPROVED" } as any },
+                  { onSuccess: () => { setSaveSuccess(true); setTimeout(() => { setSaveSuccess(false); onClose(); }, 1000); } },
+                );
+              }}
+              disabled={updateExpense.isPending}
+              className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors cursor-pointer border-0 flex items-center gap-1.5 disabled:opacity-60"
+            >
+              {updateExpense.isPending ? <Loader2 size={14} className="animate-spin" /> : <Briefcase size={14} />}
+              Approve Expense
+            </button>
+          )}
+          {saveSuccess && <span className="flex items-center gap-1 text-green-600 text-sm font-medium self-center"><CheckCircle size={14} /> Done</span>}
         </div>
       </div>
     </div>

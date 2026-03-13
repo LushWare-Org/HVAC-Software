@@ -98,8 +98,8 @@ export class JobsAnalyticsService {
           )::BIGINT                                                AS completed
         FROM   jobs.jobs j
         JOIN   jobs.job_types jt ON jt.id = j."jobTypeId"
-        LEFT   JOIN finance.invoices i ON i."jobId" = j.id
-        LEFT   JOIN finance.payments p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN finance."Invoice" i ON i."jobId" = j.id
+        LEFT   JOIN finance."Payment" p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         LEFT   JOIN crm.reviews      r ON r."jobId" = j.id
         WHERE  j."companyId" = ${companyId}
           AND  j."createdAt" BETWEEN ${from} AND ${to}
@@ -146,8 +146,8 @@ export class JobsAnalyticsService {
           COUNT(j.id)::BIGINT                   AS "jobCount",
           COALESCE(SUM(p.amount), 0)::TEXT      AS revenue
         FROM   jobs.jobs j
-        LEFT   JOIN finance.invoices i ON i."jobId" = j.id
-        LEFT   JOIN finance.payments p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN finance."Invoice" i ON i."jobId" = j.id
+        LEFT   JOIN finance."Payment" p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         WHERE  j."companyId" = ${companyId}
           AND  j."createdAt" BETWEEN ${from} AND ${to}
         GROUP  BY j."serviceCity", j."serviceState", j."serviceZip"

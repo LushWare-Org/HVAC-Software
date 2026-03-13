@@ -113,7 +113,7 @@ export class DashboardService {
     const rows = await this.prisma.$queryRaw<{ total: string }[]>(
       Prisma.sql`
         SELECT COALESCE(SUM(amount), 0)::TEXT AS total
-        FROM   finance.payments
+        FROM   finance."Payment"
         WHERE  "companyId" = ${companyId}
           AND  status = 'SUCCEEDED'
           AND  "paidAt" BETWEEN ${from} AND ${to}
@@ -166,7 +166,7 @@ export class DashboardService {
       Prisma.sql`
         SELECT COUNT(*)::BIGINT AS cnt,
                COALESCE(SUM("balanceDue"), 0)::TEXT AS total
-        FROM   finance.invoices
+        FROM   finance."Invoice"
         WHERE  "companyId" = ${companyId}
           AND  status IN ('SENT', 'PARTIALLY_PAID', 'OVERDUE')
       `,

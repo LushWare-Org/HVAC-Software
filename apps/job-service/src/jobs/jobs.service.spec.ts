@@ -97,8 +97,9 @@ describe('STATUS_TRANSITIONS map', () => {
     expect(STATUS_TRANSITIONS[JobStatusDto.PAID]).toHaveLength(0);
   });
 
-  it('COMPLETED can only move to INVOICED (no skipping billing)', () => {
-    expect(STATUS_TRANSITIONS[JobStatusDto.COMPLETED]).toEqual([JobStatusDto.INVOICED]);
+  it('COMPLETED can move to INVOICED or CANCELLED (voiding a completed job)', () => {
+    expect(STATUS_TRANSITIONS[JobStatusDto.COMPLETED]).toContain(JobStatusDto.INVOICED);
+    expect(STATUS_TRANSITIONS[JobStatusDto.COMPLETED]).toContain(JobStatusDto.CANCELLED);
   });
 
   it('CANCELLED can be re-opened to PENDING (one recovery path)', () => {
@@ -112,8 +113,9 @@ describe('STATUS_TRANSITIONS map', () => {
     expect(transitions).toContain(JobStatusDto.CANCELLED);
   });
 
-  it('INVOICED can only move to PAID (no skipping payment)', () => {
-    expect(STATUS_TRANSITIONS[JobStatusDto.INVOICED]).toEqual([JobStatusDto.PAID]);
+  it('INVOICED can move to PAID or CANCELLED (disputing an invoice)', () => {
+    expect(STATUS_TRANSITIONS[JobStatusDto.INVOICED]).toContain(JobStatusDto.PAID);
+    expect(STATUS_TRANSITIONS[JobStatusDto.INVOICED]).toContain(JobStatusDto.CANCELLED);
   });
 });
 

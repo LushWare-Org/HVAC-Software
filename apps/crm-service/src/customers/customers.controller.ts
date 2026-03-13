@@ -55,13 +55,18 @@ export class CustomersController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'type', required: false, type: String })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('search') search?: string,
+    @Query('type') type?: string,
+    @Query('isActive') isActive?: string,
   ) {
-    return this.customersService.findAll(user.companyId, page, limit, search);
+    const active = isActive === 'false' ? false : isActive === 'true' ? true : undefined;
+    return this.customersService.findAll(user.companyId, page, limit, search, type, active);
   }
 
   // ---- Stats ----

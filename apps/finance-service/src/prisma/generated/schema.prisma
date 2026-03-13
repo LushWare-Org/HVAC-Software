@@ -26,6 +26,7 @@ enum QuoteStatus {
   ACCEPTED
   DECLINED
   EXPIRED
+  CONVERTED
 
   @@schema("finance")
 }

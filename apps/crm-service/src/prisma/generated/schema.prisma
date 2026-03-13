@@ -38,38 +38,64 @@ model Company {
   leads      Lead[]
   agreements ServiceAgreement[]
   bookings   Booking[]
+  users      CompanyUser[]
 
   @@map("companies")
 }
 
+// ---- Company Users (staff members with roles) ----
+model CompanyUser {
+  id           String    @id @default(uuid())
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id])
+  auth0UserId  String?
+  name         String
+  email        String
+  phone        String?
+  passwordHash String?
+  role         String    @default("technician") // super_admin, company_admin, office_manager, dispatcher, technician
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([companyId, email])
+  @@index([companyId])
+  @@index([companyId, role])
+  @@map("company_users")
+}
+
 // ---- Customers (business accounts or residential) ----
 model Customer {
-  id          String       @id @default(uuid())
-  companyId   String
-  company     Company      @relation(fields: [companyId], references: [id])
-  type        CustomerType @default(RESIDENTIAL)
-  firstName   String
-  lastName    String
-  email       String?
-  phone       String?
-  mobile      String?
-  address     String?
-  city        String?
-  state       String?
-  zipCode     String?
-  notes       String?
-  source      String? // how they found us
-  tags        String[] // flexible tagging
-  isActive    Boolean      @default(true)
-  auth0UserId String? // when customer has portal access
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id               String                   @id @default(uuid())
+  companyId        String
+  company          Company                  @relation(fields: [companyId], references: [id])
+  type             CustomerType             @default(RESIDENTIAL)
+  firstName        String
+  lastName         String
+  email            String?
+  phone            String?
+  mobile           String?
+  address          String?
+  city             String?
+  state            String?
+  zipCode          String?
+  notes            String?
+  source           String? // how they found us
+  tags             String[] // flexible tagging
+  isActive         Boolean                  @default(true)
+  engagementStatus CustomerEngagementStatus @default(ACTIVE)
+  auth0UserId      String? // when customer has portal access
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
 
   contacts   Contact[]
   leads      Lead[]
   agreements ServiceAgreement[]
   bookings   Booking[]
   reviews    Review[]
+  addresses  Address[]
+  equipment  Equipment[]
 
   @@index([companyId])
   @@index([companyId, email])
@@ -105,23 +131,28 @@ model Contact {
 
 // ---- Leads (pre-customer pipeline) ----
 model Lead {
-  id             String     @id @default(uuid())
-  companyId      String
-  company        Company    @relation(fields: [companyId], references: [id])
-  customerId     String?
-  customer       Customer?  @relation(fields: [customerId], references: [id])
-  firstName      String
-  lastName       String
-  email          String?
-  phone          String?
-  source         String? // google, referral, website, etc.
-  status         LeadStatus @default(NEW)
-  estimatedValue Decimal?   @db.Decimal(10, 2)
-  notes          String?
-  assignedToId   String? // Auth0 user ID of assigned staff
-  convertedAt    DateTime? // when lead became customer
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id              String     @id @default(uuid())
+  companyId       String
+  company         Company    @relation(fields: [companyId], references: [id])
+  customerId      String?
+  customer        Customer?  @relation(fields: [customerId], references: [id])
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  source          String? // google, referral, website, etc.
+  serviceInterest String? // what service they're interested in
+  whatsappNo      String? // WhatsApp / mobile number
+  type            String? // customer type / category
+  status          LeadStatus @default(NEW)
+  estimatedValue  Decimal?   @db.Decimal(10, 2)
+  notes           String?
+  assignedToId    String? // Auth0 user ID of assigned staff
+  convertedAt     DateTime? // when lead became customer
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  addresses Address[]
 
   @@index([companyId])
   @@index([companyId, status])
@@ -132,9 +163,17 @@ enum LeadStatus {
   NEW
   CONTACTED
   QUALIFIED
-  PROPOSAL_SENT
   WON
   LOST
+}
+
+enum CustomerEngagementStatus {
+  ACTIVE
+  QUOTE_SENT
+  INVOICE_SENT
+  JOB_BOOKED
+  COMPLETED
+  INACTIVE
 }
 
 // ---- Service Agreements / Maintenance Contracts ----
@@ -223,4 +262,47 @@ model Review {
   @@index([companyId])
   @@index([customerId])
   @@map("reviews")
+}
+
+// ---- Addresses (multiple per customer or lead) ----
+model Address {
+  id         String    @id @default(uuid())
+  companyId  String
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  leadId     String?
+  lead       Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type       String    @default("Site") // Site, Billing, Shipping
+  line1      String
+  line2      String?
+  city       String?
+  state      String?
+  postcode   String?
+  isPrimary  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([customerId])
+  @@index([leadId])
+  @@map("addresses")
+}
+
+// ---- Equipment (installed at customer sites) ----
+model Equipment {
+  id          String    @id @default(uuid())
+  companyId   String
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type        String    @default("Boiler") // Boiler, AC Unit, Heat Pump, etc.
+  brand       String?
+  model       String?
+  serialNo    String?
+  installDate DateTime?
+  warrantyEnd DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([customerId])
+  @@map("equipment")
 }

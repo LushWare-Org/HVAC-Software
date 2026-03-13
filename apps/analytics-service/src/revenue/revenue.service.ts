@@ -64,7 +64,7 @@ export class RevenueService {
         SELECT DATE_TRUNC(${trunc}, "paidAt") AS period,
                SUM(amount)::TEXT              AS revenue,
                COUNT(*)::BIGINT               AS cnt
-        FROM   finance.payments
+        FROM   finance."Payment"
         WHERE  "companyId" = ${companyId}
           AND  status = 'SUCCEEDED'
           AND  "paidAt" BETWEEN ${from} AND ${to}
@@ -89,8 +89,8 @@ export class RevenueService {
       Prisma.sql`
         SELECT il.category::TEXT,
                SUM(il."lineTotal")::TEXT AS total
-        FROM   finance.invoice_line_items il
-        JOIN   finance.invoices i ON i.id = il."invoiceId"
+        FROM   finance."InvoiceLineItem" il
+        JOIN   finance."Invoice" i ON i.id = il."invoiceId"
         WHERE  i."companyId" = ${companyId}
           AND  i.status IN ('PAID')
           AND  i."paidAt" BETWEEN ${from} AND ${to}
@@ -134,8 +134,8 @@ export class RevenueService {
                j."completedAt",
                SUM(p.amount)::TEXT AS revenue
         FROM   jobs.jobs j
-        JOIN   finance.invoices i ON i."jobId" = j.id
-        JOIN   finance.payments p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        JOIN   finance."Invoice" i ON i."jobId" = j.id
+        JOIN   finance."Payment" p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         WHERE  j."companyId" = ${companyId}
           AND  j."completedAt" BETWEEN ${from} AND ${to}
         GROUP  BY j.id, j."jobNumber", j."customerName", j."serviceAddress", j."completedAt"
@@ -173,7 +173,7 @@ export class RevenueService {
           COALESCE(SUM(CASE WHEN status IN ('SENT','PARTIALLY_PAID') THEN "balanceDue" ELSE 0 END), 0)::TEXT AS outstanding,
           COALESCE(SUM(CASE WHEN status = 'OVERDUE' THEN "balanceDue" ELSE 0 END), 0)::TEXT   AS overdue,
           0::TEXT                                                                               AS refunded
-        FROM   finance.invoices
+        FROM   finance."Invoice"
         WHERE  "companyId" = ${companyId}
           AND  "createdAt" BETWEEN ${from} AND ${to}
       `,

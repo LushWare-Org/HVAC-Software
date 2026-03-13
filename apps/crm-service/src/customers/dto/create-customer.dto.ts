@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsEnum,
   IsArray,
+  IsBoolean,
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -11,6 +12,15 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export enum CustomerType {
   RESIDENTIAL = 'RESIDENTIAL',
   COMMERCIAL = 'COMMERCIAL',
+}
+
+export enum CustomerEngagementStatusDto {
+  ACTIVE = 'ACTIVE',
+  QUOTE_SENT = 'QUOTE_SENT',
+  INVOICE_SENT = 'INVOICE_SENT',
+  JOB_BOOKED = 'JOB_BOOKED',
+  COMPLETED = 'COMPLETED',
+  INACTIVE = 'INACTIVE',
 }
 
 export class CreateCustomerDto {
@@ -79,4 +89,14 @@ export class CreateCustomerDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @ApiPropertyOptional({ enum: CustomerEngagementStatusDto, default: CustomerEngagementStatusDto.ACTIVE })
+  @IsOptional()
+  @IsEnum(CustomerEngagementStatusDto)
+  engagementStatus?: CustomerEngagementStatusDto;
+
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

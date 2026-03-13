@@ -76,7 +76,7 @@ func main() {
 			c.Header("Access-Control-Allow-Origin", origin)
 		}
 		c.Header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Authorization,Content-Type")
+		c.Header("Access-Control-Allow-Headers", "Authorization,Content-Type,x-test-company-id,x-test-user-id,x-test-user-email,x-test-user-role,x-test-user-name")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		if c.Request.Method == http.MethodOptions {
 			c.AbortWithStatus(http.StatusNoContent)
@@ -104,9 +104,9 @@ func main() {
 	{
 		tech.POST("", middleware.RequireRole("company_admin", "office_manager"), techH.Create)
 		tech.GET("", techH.List)
-		tech.GET("/me", techH.GetMe)       // must be before :id to avoid route conflict
+		tech.GET("/me", techH.GetMe) // must be before :id to avoid route conflict
 		tech.GET("/:id", techH.GetOne)
-		tech.PATCH("/:id", techH.Update)   // self-update allowed inside handler
+		tech.PATCH("/:id", techH.Update) // self-update allowed inside handler
 	}
 
 	// Dispatch / assignment

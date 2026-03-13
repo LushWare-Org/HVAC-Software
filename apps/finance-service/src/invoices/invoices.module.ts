@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { InvoicesController, StripeWebhookController } from './invoices.controller';
 import { InvoicesService } from './invoices.service';
 import { PdfModule } from '../pdf/pdf.module';
+import { NotificationClientModule } from '../notification-client/notification-client.module';
 
 @Module({
-  imports: [PdfModule],
+  imports: [PdfModule, NotificationClientModule],
   controllers: [InvoicesController, StripeWebhookController],
   providers: [InvoicesService],
   exports: [InvoicesService],

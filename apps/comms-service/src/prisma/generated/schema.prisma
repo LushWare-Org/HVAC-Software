@@ -89,6 +89,10 @@ model Notification {
   externalId         String? // Twilio SID / SendGrid message-id / FCM message-id
   providerResponse   String? // raw provider response JSON
   error              String?
+  // Read state (for in-app notification display)
+  isRead             Boolean        @default(false)
+  title              String? // optional title for in-app display
+  type               String? // info | success | warning | error
   // Timestamps
   scheduledAt        DateTime?
   sentAt             DateTime?
@@ -98,6 +102,7 @@ model Notification {
   updatedAt          DateTime       @updatedAt
 
   @@index([companyId, status])
+  @@index([companyId, isRead])
   @@index([companyId, customerId])
   @@index([companyId, jobId])
   @@index([scheduledAt])

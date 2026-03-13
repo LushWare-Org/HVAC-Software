@@ -80,8 +80,8 @@ export class TechnicianMetricsService {
             WHERE j."scheduledStart" IS NOT NULL
           )::BIGINT                                                            AS "totalWithSchedule"
         FROM   jobs.jobs j
-        LEFT   JOIN finance.invoices i   ON i."jobId" = j.id
-        LEFT   JOIN finance.payments  p  ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN finance."Invoice" i   ON i."jobId" = j.id
+        LEFT   JOIN finance."Payment"  p  ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         LEFT   JOIN crm.reviews       r  ON r."jobId" = j.id
         WHERE  j."companyId" = ${companyId}
           AND  j."assignedToId" IS NOT NULL
@@ -178,8 +178,8 @@ export class TechnicianMetricsService {
           COUNT(*) FILTER (WHERE j.status IN ('COMPLETED','INVOICED','PAID'))::BIGINT AS "totalJobs",
           COALESCE(SUM(j."travelDistanceKm"), 0)::TEXT                    AS "totalKm"
         FROM   jobs.jobs j
-        LEFT   JOIN finance.invoices i ON i."jobId" = j.id
-        LEFT   JOIN finance.payments p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN finance."Invoice" i ON i."jobId" = j.id
+        LEFT   JOIN finance."Payment" p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         LEFT   JOIN crm.reviews      r ON r."jobId" = j.id
         WHERE  j."companyId"     = ${companyId}
           AND  j."assignedToId"  = ${technicianId}

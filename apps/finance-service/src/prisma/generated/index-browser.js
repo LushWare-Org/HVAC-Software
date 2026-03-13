@@ -282,7 +282,8 @@ exports.QuoteStatus = exports.$Enums.QuoteStatus = {
   VIEWED: 'VIEWED',
   ACCEPTED: 'ACCEPTED',
   DECLINED: 'DECLINED',
-  EXPIRED: 'EXPIRED'
+  EXPIRED: 'EXPIRED',
+  CONVERTED: 'CONVERTED'
 };
 
 exports.DiscountType = exports.$Enums.DiscountType = {

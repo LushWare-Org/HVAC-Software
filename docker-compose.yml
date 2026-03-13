@@ -50,24 +50,24 @@ services:
 
   # ----------------------------------------------------------
   # MongoDB 7 — Communication service (message threads, logs)
+  # Runs as a single-node replica set so Prisma transactions work.
+  # On first boot the mongo-init container calls rs.initiate().
   # ----------------------------------------------------------
   mongodb:
     image: mongo:7
     container_name: tscrm_mongodb
     restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: tscrm_user
-      MONGO_INITDB_ROOT_PASSWORD: tscrm_pass
-      MONGO_INITDB_DATABASE: tscrm_comms
+    command: mongod --replSet rs0 --bind_ip_all
     ports:
       - "27017:27017"
     volumes:
       - ./.docker-data/mongodb:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { rs.status().ok } catch(e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok }"]
+      interval: 15s
+      timeout: 10s
       retries: 5
+      start_period: 20s
 
   # ----------------------------------------------------------
   # MinIO — S3-compatible object storage (photos, PDFs, docs)
@@ -116,6 +116,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ----------------------------------------------------------
+  # pgAdmin 4 — web-based PostgreSQL GUI
+  # Browse ALL schemas (crm, finance, jobs, analytics...) in one place
+  # UI: http://localhost:5050  (admin@tscrm.local / admin)
+  # ----------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tscrm_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@tscrm.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - ./.docker-data/pgadmin:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 networks:
   default:

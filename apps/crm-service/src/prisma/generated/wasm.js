@@ -140,6 +140,21 @@ exports.Prisma.CompanyScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CompanyUserScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  auth0UserId: 'auth0UserId',
+  name: 'name',
+  email: 'email',
+  phone: 'phone',
+  passwordHash: 'passwordHash',
+  role: 'role',
+  isActive: 'isActive',
+  lastLoginAt: 'lastLoginAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.CustomerScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
@@ -157,6 +172,7 @@ exports.Prisma.CustomerScalarFieldEnum = {
   source: 'source',
   tags: 'tags',
   isActive: 'isActive',
+  engagementStatus: 'engagementStatus',
   auth0UserId: 'auth0UserId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -185,6 +201,9 @@ exports.Prisma.LeadScalarFieldEnum = {
   email: 'email',
   phone: 'phone',
   source: 'source',
+  serviceInterest: 'serviceInterest',
+  whatsappNo: 'whatsappNo',
+  type: 'type',
   status: 'status',
   estimatedValue: 'estimatedValue',
   notes: 'notes',
@@ -246,6 +265,37 @@ exports.Prisma.ReviewScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AddressScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  customerId: 'customerId',
+  leadId: 'leadId',
+  type: 'type',
+  line1: 'line1',
+  line2: 'line2',
+  city: 'city',
+  state: 'state',
+  postcode: 'postcode',
+  isPrimary: 'isPrimary',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.EquipmentScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  customerId: 'customerId',
+  type: 'type',
+  brand: 'brand',
+  model: 'model',
+  serialNo: 'serialNo',
+  installDate: 'installDate',
+  warrantyEnd: 'warrantyEnd',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -265,11 +315,19 @@ exports.CustomerType = exports.$Enums.CustomerType = {
   COMMERCIAL: 'COMMERCIAL'
 };
 
+exports.CustomerEngagementStatus = exports.$Enums.CustomerEngagementStatus = {
+  ACTIVE: 'ACTIVE',
+  QUOTE_SENT: 'QUOTE_SENT',
+  INVOICE_SENT: 'INVOICE_SENT',
+  JOB_BOOKED: 'JOB_BOOKED',
+  COMPLETED: 'COMPLETED',
+  INACTIVE: 'INACTIVE'
+};
+
 exports.LeadStatus = exports.$Enums.LeadStatus = {
   NEW: 'NEW',
   CONTACTED: 'CONTACTED',
   QUALIFIED: 'QUALIFIED',
-  PROPOSAL_SENT: 'PROPOSAL_SENT',
   WON: 'WON',
   LOST: 'LOST'
 };
@@ -291,12 +349,15 @@ exports.BookingStatus = exports.$Enums.BookingStatus = {
 
 exports.Prisma.ModelName = {
   Company: 'Company',
+  CompanyUser: 'CompanyUser',
   Customer: 'Customer',
   Contact: 'Contact',
   Lead: 'Lead',
   ServiceAgreement: 'ServiceAgreement',
   Booking: 'Booking',
-  Review: 'Review'
+  Review: 'Review',
+  Address: 'Address',
+  Equipment: 'Equipment'
 };
 
 /**

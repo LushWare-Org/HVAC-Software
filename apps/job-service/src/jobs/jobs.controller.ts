@@ -61,6 +61,7 @@ export class JobsController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date e.g. 2024-01-01' })
   @ApiQuery({ name: 'dateTo', required: false })
+  @ApiQuery({ name: 'customerId', required: false })
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -71,9 +72,10 @@ export class JobsController {
     @Query('search') search?: string,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
+    @Query('customerId') customerId?: string,
   ) {
     return this.jobsService.findAll(user.companyId, page, limit, {
-      status, assignedToId, jobTypeId, search, dateFrom, dateTo,
+      status, assignedToId, jobTypeId, search, dateFrom, dateTo, customerId,
     });
   }
 

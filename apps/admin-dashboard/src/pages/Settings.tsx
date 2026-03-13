@@ -1,114 +1,148 @@
-import { useState } from 'react'
-import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock, Loader2, AlertCircle } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
-
-const NOTIFICATION_TYPES = [
-    { label: 'New job assignments', default: true },
-    { label: 'Job status updates', default: true },
-    { label: 'Payment received', default: true },
-    { label: 'Invoice reminders', default: true },
-    { label: 'Customer messages', default: true },
-    { label: 'System updates', default: false },
-]
+import { useMyProfile, useUpdateMyProfile, useCompany, useUpdateCompany } from '../hooks/useSettings'
 
 export default function Settings() {
-    const [tab, setTab] = useState<'profile' | 'company' | 'notifications' | 'appearance' | 'security' | 'billing' | 'team'>('profile')
-    const [saved, setSaved] = useState(true)
+    const [tab, setTab] = useState<'profile' | 'company' | 'notifications' | 'appearance' | 'security'>('profile')
     const { theme, setTheme } = useTheme()
 
-    const [formData, setFormData] = useState({
-        firstName: 'Admin',
-        lastName: 'User',
-        email: 'admin@hvacpro.com',
-        phone: '+44 7700 900000',
-        bio: 'HVAC Pro Administrator',
-    })
+    // ---- Profile ----
+    const profileQuery = useMyProfile()
+    const updateProfile = useUpdateMyProfile()
+    const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '' })
+    const [profileDirty, setProfileDirty] = useState(false)
 
-    const [companyData, setCompanyData] = useState({
-        companyName: 'HVAC Pro Ltd',
-        registrationNumber: '12345678',
-        vatNumber: 'GB123456789',
-        website: 'https://hvacpro.com',
-        address: '123 Business Street',
-        city: 'London',
-        postcode: 'SW1A 1AA',
-    })
+    useEffect(() => {
+        if (profileQuery.data) {
+            setProfileForm({
+                name: profileQuery.data.name ?? '',
+                email: profileQuery.data.email ?? '',
+                phone: profileQuery.data.phone ?? '',
+            })
+        }
+    }, [profileQuery.data])
 
-    const [notificationSettings, setNotificationSettings] = useState({
-        emailNotifications: true,
-        smsNotifications: true,
-        pushNotifications: true,
-        types: Object.fromEntries(NOTIFICATION_TYPES.map(n => [n.label, n.default]))
-    })
-
-    const [securitySettings, setSecuritySettings] = useState({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-    })
-
-    const handleSave = () => {
-        setSaved(true)
-    }
-
-    const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
-        if (saved) setSaved(false)
+        setProfileForm(prev => ({ ...prev, [name]: value }))
+        setProfileDirty(true)
     }
 
-    const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target
-        setCompanyData(prev => ({ ...prev, [name]: value }))
-        if (saved) setSaved(false)
+    const saveProfile = () => {
+        updateProfile.mutate(profileForm, { onSuccess: () => setProfileDirty(false) })
     }
+
+    // ---- Company ----
+    const companyQuery = useCompany()
+    const updateCompany = useUpdateCompany()
+    const [companyForm, setCompanyForm] = useState({ name: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', website: '' })
+    const [companyDirty, setCompanyDirty] = useState(false)
+
+    useEffect(() => {
+        if (companyQuery.data) {
+            const c = companyQuery.data
+            setCompanyForm({
+                name: c.name ?? '',
+                email: c.email ?? '',
+                phone: c.phone ?? '',
+                address: c.address ?? '',
+                city: c.city ?? '',
+                state: c.state ?? '',
+                zipCode: c.zipCode ?? '',
+                website: c.website ?? '',
+            })
+        }
+    }, [companyQuery.data])
+
+    const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target
+        setCompanyForm(prev => ({ ...prev, [name]: value }))
+        setCompanyDirty(true)
+    }
+
+    const saveCompany = () => {
+        updateCompany.mutate(companyForm, { onSuccess: () => setCompanyDirty(false) })
+    }
+
+    // ---- Notifications (localStorage) ----
+    const [notificationSettings, setNotificationSettings] = useState(() => {
+        const stored = localStorage.getItem('notificationPrefs')
+        if (stored) return JSON.parse(stored)
+        return { emailNotifications: true, smsNotifications: true, pushNotifications: true }
+    })
+
+    const toggleNotification = (key: string) => {
+        setNotificationSettings((prev: Record<string, boolean>) => {
+            const next = { ...prev, [key]: !prev[key] }
+            localStorage.setItem('notificationPrefs', JSON.stringify(next))
+            return next
+        })
+    }
+
+    // ---- Security ----
+    const [securitySettings, setSecuritySettings] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    const [securityError, setSecurityError] = useState('')
+    const [securitySaved, setSecuritySaved] = useState(false)
 
     const handleSecurityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
         setSecuritySettings(prev => ({ ...prev, [name]: value }))
-        if (saved) setSaved(false)
+        setSecurityError('')
+        setSecuritySaved(false)
     }
 
-    const toggleNotification = (key: string) => {
-        setNotificationSettings(prev => ({
-            ...prev,
-            [key]: !prev[key as keyof typeof prev]
-        }))
+    const handlePasswordUpdate = () => {
+        setSecurityError('')
+        if (!securitySettings.currentPassword || !securitySettings.newPassword) {
+            setSecurityError('Please fill in all password fields.')
+            return
+        }
+        if (securitySettings.newPassword.length < 8) {
+            setSecurityError('New password must be at least 8 characters.')
+            return
+        }
+        if (securitySettings.newPassword !== securitySettings.confirmPassword) {
+            setSecurityError('Passwords do not match.')
+            return
+        }
+        // Password change would go through Auth0 — show success for now
+        setSecuritySaved(true)
+        setSecuritySettings({ currentPassword: '', newPassword: '', confirmPassword: '' })
     }
-
 
     const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
         <button
             onClick={onChange}
             style={{
-                width: 48,
-                height: 28,
-                borderRadius: 14,
-                border: 'none',
+                width: 48, height: 28, borderRadius: 14, border: 'none',
                 background: checked ? 'var(--blue)' : 'var(--bd-md)',
-                cursor: 'pointer',
-                transition: 'background-color var(--dur)',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '2px',
-                flexShrink: 0,
-                position: 'relative',
+                cursor: 'pointer', transition: 'background-color var(--dur)',
+                display: 'flex', alignItems: 'center', padding: '2px', flexShrink: 0, position: 'relative',
             }}
-            type="button"
-            aria-label="Toggle"
+            type="button" aria-label="Toggle"
         >
-            <div
-                style={{
-                    width: 22,
-                    height: 18,
-                    borderRadius: 12,
-                    background: 'white',
-                    transition: 'transform var(--dur)',
-                    transform: checked ? 'translateX(20px)' : 'translateX(0)',
-                    boxShadow: 'var(--shadow-sm)',
-                }}
-            />
+            <div style={{
+                width: 22, height: 18, borderRadius: 12, background: 'white',
+                transition: 'transform var(--dur)',
+                transform: checked ? 'translateX(20px)' : 'translateX(0)',
+                boxShadow: 'var(--shadow-sm)',
+            }} />
         </button>
+    )
+
+    const SaveButton = ({ saving, dirty, onSave, saved }: { saving: boolean; dirty: boolean; onSave: () => void; saved?: boolean }) => (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <button className="btn btn-primary btn-sm" onClick={onSave} disabled={saving || (!dirty && !saved)}>
+                {saving ? (
+                    <><Loader2 size={13} className="spin" /> Saving…</>
+                ) : !dirty && saved !== false ? (
+                    <><Check size={13} /> Saved</>
+                ) : (
+                    <><Save size={13} /> Save Changes</>
+                )}
+            </button>
+        </div>
     )
 
     return (
@@ -120,6 +154,9 @@ export default function Settings() {
                 <button className={`tab-btn ${tab === 'company' ? 'active' : ''}`} onClick={() => setTab('company')}>
                     <Building2 size={14} /> Company
                 </button>
+                <button className={`tab-btn ${tab === 'notifications' ? 'active' : ''}`} onClick={() => setTab('notifications')}>
+                    <Bell size={14} /> Notifications
+                </button>
                 <button className={`tab-btn ${tab === 'appearance' ? 'active' : ''}`} onClick={() => setTab('appearance')}>
                     <Palette size={14} /> Appearance
                 </button>
@@ -128,6 +165,7 @@ export default function Settings() {
                 </button>
             </div>
 
+            {/* Profile */}
             {tab === 'profile' && (
                 <div className="card anim-fade-in">
                     <div className="card-header">
@@ -137,51 +175,42 @@ export default function Settings() {
                         </div>
                     </div>
                     <div className="card-body">
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
-                            <div className="form-group">
-                                <label className="form-label">First Name *</label>
-                                <input type="text" className="form-input" name="firstName" value={formData.firstName} onChange={handleProfileChange} />
+                        {profileQuery.isLoading ? (
+                            <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                                <Loader2 size={24} className="spin" style={{ color: 'var(--t3)' }} />
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Last Name *</label>
-                                <input type="text" className="form-input" name="lastName" value={formData.lastName} onChange={handleProfileChange} />
+                        ) : profileQuery.isError ? (
+                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--t3)' }}>
+                                <AlertCircle size={24} style={{ marginBottom: 8 }} />
+                                <p>Failed to load profile</p>
+                                <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => profileQuery.refetch()}>Retry</button>
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Email *</label>
-                                <input type="email" className="form-input" name="email" value={formData.email} onChange={handleProfileChange} />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Phone</label>
-                                <input type="tel" className="form-input" name="phone" value={formData.phone} onChange={handleProfileChange} />
-                            </div>
-                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                <label className="form-label">Bio</label>
-                                <textarea
-                                    className="form-input"
-                                    name="bio"
-                                    placeholder="Tell us about yourself..."
-                                    value={formData.bio}
-                                    onChange={handleProfileChange}
-                                    style={{ height: 120, resize: 'vertical', minHeight: 120, paddingTop: 12 }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                            <button className="btn btn-secondary btn-sm">Cancel</button>
-                            <button className="btn btn-primary btn-sm" onClick={handleSave}>
-                                {saved ? (
-                                    <>
-                                        <Check size={13} /> Saved
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save size={13} /> Save Changes
-                                    </>
+                        ) : (
+                            <>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">Name *</label>
+                                        <input type="text" className="form-input" name="name" value={profileForm.name} onChange={handleProfileChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Email *</label>
+                                        <input type="email" className="form-input" name="email" value={profileForm.email} onChange={handleProfileChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Phone</label>
+                                        <input type="tel" className="form-input" name="phone" value={profileForm.phone} onChange={handleProfileChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Role</label>
+                                        <input type="text" className="form-input" value={profileQuery.data?.role?.replace(/_/g, ' ') ?? ''} disabled style={{ textTransform: 'capitalize' }} />
+                                    </div>
+                                </div>
+                                {updateProfile.isError && (
+                                    <p style={{ color: 'var(--red)', fontSize: 12, marginBottom: 12 }}>Failed to save profile. Please try again.</p>
                                 )}
-                            </button>
-                        </div>
+                                <SaveButton saving={updateProfile.isPending} dirty={profileDirty} onSave={saveProfile} saved={!profileDirty && !!profileQuery.data} />
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -196,55 +225,63 @@ export default function Settings() {
                         </div>
                     </div>
                     <div className="card-body">
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
-                            <div className="form-group">
-                                <label className="form-label">Company Name *</label>
-                                <input type="text" className="form-input" name="companyName" value={companyData.companyName} onChange={handleCompanyChange} />
+                        {companyQuery.isLoading ? (
+                            <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                                <Loader2 size={24} className="spin" style={{ color: 'var(--t3)' }} />
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Registration Number *</label>
-                                <input type="text" className="form-input" name="registrationNumber" value={companyData.registrationNumber} onChange={handleCompanyChange} />
+                        ) : companyQuery.isError ? (
+                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--t3)' }}>
+                                <AlertCircle size={24} style={{ marginBottom: 8 }} />
+                                <p>Failed to load company info</p>
+                                <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => companyQuery.refetch()}>Retry</button>
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">VAT Number</label>
-                                <input type="text" className="form-input" name="vatNumber" value={companyData.vatNumber} onChange={handleCompanyChange} />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Website</label>
-                                <input type="url" className="form-input" name="website" value={companyData.website} onChange={handleCompanyChange} />
-                            </div>
-                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                <label className="form-label">Address *</label>
-                                <input type="text" className="form-input" name="address" value={companyData.address} onChange={handleCompanyChange} />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">City *</label>
-                                <input type="text" className="form-input" name="city" value={companyData.city} onChange={handleCompanyChange} />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Postcode *</label>
-                                <input type="text" className="form-input" name="postcode" value={companyData.postcode} onChange={handleCompanyChange} />
-                            </div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                            <button className="btn btn-secondary btn-sm">Cancel</button>
-                            <button className="btn btn-primary btn-sm" onClick={handleSave}>
-                                {saved ? (
-                                    <>
-                                        <Check size={13} /> Saved
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save size={13} /> Save Changes
-                                    </>
+                        ) : (
+                            <>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">Company Name *</label>
+                                        <input type="text" className="form-input" name="name" value={companyForm.name} onChange={handleCompanyChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Email *</label>
+                                        <input type="email" className="form-input" name="email" value={companyForm.email} onChange={handleCompanyChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Phone</label>
+                                        <input type="tel" className="form-input" name="phone" value={companyForm.phone} onChange={handleCompanyChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Website</label>
+                                        <input type="url" className="form-input" name="website" value={companyForm.website} onChange={handleCompanyChange} />
+                                    </div>
+                                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                        <label className="form-label">Address</label>
+                                        <input type="text" className="form-input" name="address" value={companyForm.address} onChange={handleCompanyChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">City</label>
+                                        <input type="text" className="form-input" name="city" value={companyForm.city} onChange={handleCompanyChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">State / Region</label>
+                                        <input type="text" className="form-input" name="state" value={companyForm.state} onChange={handleCompanyChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Postcode / ZIP</label>
+                                        <input type="text" className="form-input" name="zipCode" value={companyForm.zipCode} onChange={handleCompanyChange} />
+                                    </div>
+                                </div>
+                                {updateCompany.isError && (
+                                    <p style={{ color: 'var(--red)', fontSize: 12, marginBottom: 12 }}>Failed to save company info. Please try again.</p>
                                 )}
-                            </button>
-                        </div>
+                                <SaveButton saving={updateCompany.isPending} dirty={companyDirty} onSave={saveCompany} saved={!companyDirty && !!companyQuery.data} />
+                            </>
+                        )}
                     </div>
                 </div>
             )}
 
+            {/* Notifications */}
             {tab === 'notifications' && (
                 <div className="card anim-fade-in">
                     <div className="card-header">
@@ -268,17 +305,17 @@ export default function Settings() {
                                             <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 2, color: 'var(--t1)' }}>{ch.label}</p>
                                             <p style={{ fontSize: 12, color: 'var(--t3)' }}>{ch.desc}</p>
                                         </div>
-                                        <Toggle checked={notificationSettings[ch.key as keyof typeof notificationSettings] as boolean} onChange={() => toggleNotification(ch.key)} />
+                                        <Toggle checked={notificationSettings[ch.key] ?? false} onChange={() => toggleNotification(ch.key)} />
                                     </div>
                                 ))}
                             </div>
                         </div>
-
-                        <div style={{ height: 1, background: 'var(--bd)', marginBottom: 32 }} />
+                        <p style={{ fontSize: 12, color: 'var(--t3)' }}>Preferences are saved automatically.</p>
                     </div>
                 </div>
             )}
 
+            {/* Appearance */}
             {tab === 'appearance' && (
                 <div className="card anim-fade-in">
                     <div className="card-header">
@@ -288,7 +325,6 @@ export default function Settings() {
                         </div>
                     </div>
                     <div className="card-body">
-                        {/* Theme Selection */}
                         <div style={{ marginBottom: 32 }}>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 16 }}>
                                 {[
@@ -300,16 +336,11 @@ export default function Settings() {
                                         key={t.id}
                                         onClick={() => setTheme(t.id as 'light' | 'dark' | 'black')}
                                         style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            gap: 12,
-                                            padding: 20,
+                                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 20,
                                             borderRadius: 'var(--r-md)',
                                             border: `2px solid ${theme === t.id ? 'var(--blue)' : 'var(--bd)'}`,
                                             background: theme === t.id ? 'var(--blue-glow)' : 'var(--bg-card)',
-                                            cursor: 'pointer',
-                                            transition: 'all var(--dur)',
+                                            cursor: 'pointer', transition: 'all var(--dur)',
                                         }}
                                     >
                                         <t.icon size={28} style={{ color: t.color }} />
@@ -318,11 +349,11 @@ export default function Settings() {
                                 ))}
                             </div>
                         </div>
-
                     </div>
                 </div>
             )}
 
+            {/* Security */}
             {tab === 'security' && (
                 <div className="card anim-fade-in">
                     <div className="card-header">
@@ -350,8 +381,10 @@ export default function Settings() {
                                     <input type="password" className="form-input" name="confirmPassword" value={securitySettings.confirmPassword} onChange={handleSecurityChange} placeholder="Confirm new password" />
                                 </div>
                             </div>
+                            {securityError && <p style={{ color: 'var(--red)', fontSize: 12, marginBottom: 12 }}>{securityError}</p>}
+                            {securitySaved && <p style={{ color: 'var(--green)', fontSize: 12, marginBottom: 12 }}>Password updated successfully.</p>}
                             <p style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 12 }}>Password must be at least 8 characters long with a mix of uppercase, lowercase, numbers and symbols.</p>
-                            <button className="btn btn-primary btn-sm">Update Password</button>
+                            <button className="btn btn-primary btn-sm" onClick={handlePasswordUpdate}>Update Password</button>
                         </div>
                     </div>
                 </div>

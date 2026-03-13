@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Param, Body, Query, UseGuards, HttpCode, HttpStatus,
+  Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
@@ -13,6 +13,7 @@ class CreateLeadDto {
   @IsOptional() @IsEmail() email?: string;
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() source?: string;
+  @IsOptional() @IsString() serviceInterest?: string;
   @IsOptional() @IsNumber() estimatedValue?: number;
   @IsOptional() @IsString() notes?: string;
   @IsOptional() @IsString() assignedToId?: string;
@@ -24,6 +25,14 @@ class UpdateLeadStatusDto {
 }
 
 class PatchLeadDto {
+  @IsOptional() @IsString() firstName?: string;
+  @IsOptional() @IsString() lastName?: string;
+  @IsOptional() @IsEmail() email?: string;
+  @IsOptional() @IsString() phone?: string;
+  @IsOptional() @IsString() whatsappNo?: string;
+  @IsOptional() @IsString() type?: string;
+  @IsOptional() @IsString() source?: string;
+  @IsOptional() @IsString() serviceInterest?: string;
   @IsOptional() @IsString() status?: string;
   @IsOptional() @IsNumber() estimatedValue?: number;
   @IsOptional() @IsString() customerId?: string;
@@ -41,10 +50,19 @@ export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List leads (optionally filtered by status)' })
+  @ApiOperation({ summary: 'List leads (paginated, filterable)' })
   @ApiQuery({ name: 'status', required: false })
-  findAll(@CurrentUser() user: AuthUser, @Query('status') status?: string) {
-    return this.leadsService.findAll(user.companyId, status);
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'page',   required: false })
+  @ApiQuery({ name: 'limit',  required: false })
+  findAll(
+    @CurrentUser() user: AuthUser,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+    @Query('page')   page?: number,
+    @Query('limit')  limit?: number,
+  ) {
+    return this.leadsService.findAll(user.companyId, { status, search, page, limit });
   }
 
   @Get('pipeline')
@@ -80,5 +98,13 @@ export class LeadsController {
     @Body() dto: UpdateLeadStatusDto,
   ) {
     return this.leadsService.updateStatus(user.companyId, id, dto.status, dto.notes);
+  }
+
+  @Delete(':id')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a lead' })
+  remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.leadsService.remove(user.companyId, id);
   }
 }

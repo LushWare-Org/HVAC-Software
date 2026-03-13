@@ -1,33 +1,31 @@
 import React, { useState, useEffect } from "react";
 import {
-  X,
-  Edit2,
-  Save,
-  FileText,
-  Calendar,
-  Mail,
+  X, Edit2, Save, FileText, Calendar, Mail, CheckCircle,
+  RefreshCw, AlertCircle, Loader2, Download,
 } from "lucide-react";
+import {
+  useUpdateQuote, useSendQuote, useApproveQuote, useConvertQuote, useQuote, decimalToNumber,
+} from "../../hooks/useFinance";
+import api from "../../lib/api";
+import type { Quote } from "../../types/api";
 
 interface QuoteDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  quote: any | null;
+  quote: Quote | null;
 }
 
 type TabType = "details" | "activity";
 
 const QUO_CSS: Record<string, string> = {
-  sent: "badge-blue",
-  accepted: "badge-green",
-  draft: "badge-neutral",
-  rejected: "badge-red",
-  expired: "badge-amber",
+  DRAFT: "badge-neutral", SENT: "badge-blue", ACCEPTED: "badge-green",
+  REJECTED: "badge-red", EXPIRED: "badge-amber", CONVERTED: "badge-cyan",
 };
 
 const inputView =
   "w-full px-3 py-2.5 rounded-lg border bg-gray-100 border-transparent text-gray-600 text-sm font-medium";
 const inputEdit =
-  "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none";
+  "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none";
 
 export default function QuoteDetailModal({
   isOpen,
@@ -36,36 +34,120 @@ export default function QuoteDetailModal({
 }: QuoteDetailModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState<any>({});
+  const [error, setError] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [formData, setFormData] = useState({ notes: "", expiresAt: "" });
+
+  const updateQuote  = useUpdateQuote();
+  const sendQuote    = useSendQuote();
+  const approveQuote = useApproveQuote();
+  const convertQuote = useConvertQuote();
+
+  // Fetch live data so the modal auto-updates after status mutations
+  const { data: liveQuote } = useQuote(quote?.id ?? undefined)
+  const q = liveQuote ?? quote
+
+  const isBusy =
+    updateQuote.isPending || sendQuote.isPending ||
+    approveQuote.isPending || convertQuote.isPending;
 
   useEffect(() => {
     if (quote) {
-      setFormData({ ...quote });
+      setFormData({
+        notes:     quote.notes ?? "",
+        expiresAt: quote.expiresAt ? quote.expiresAt.split("T")[0] : "",
+      });
       setIsEditMode(false);
       setActiveTab("details");
+      setError("");
     }
   }, [quote]);
 
   if (!isOpen || !quote) return null;
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
-    setIsEditMode(false);
+    setError("");
+    updateQuote.mutate(
+      {
+        id: q!.id,
+        data: {
+          notes:     formData.notes || undefined,
+          expiresAt: formData.expiresAt || undefined,
+        },
+      },
+      {
+        onSuccess: () => setIsEditMode(false),
+        onError:   (err: any) => setError(err?.response?.data?.message ?? "Failed to save quote."),
+      },
+    );
   };
 
-  const statusCSS = QUO_CSS[quote.status] || "badge-neutral";
+  const handleSend = () => {
+    setError("");
+    sendQuote.mutate(q!.id, {
+      onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to send quote."),
+    });
+  };
+
+  const handleApprove = () => {
+    setError("");
+    approveQuote.mutate({ id: q!.id, approvedByName: 'Admin', approvedByEmail: 'admin@company.com' }, {
+      onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to approve quote."),
+    });
+  };
+
+  const handleConvert = () => {
+    setError("");
+    convertQuote.mutate(q!.id, {
+      onSuccess: () => onClose(),
+      onError:   (err: any) => setError(err?.response?.data?.message ?? "Failed to convert quote."),
+    });
+  };
+
+  const handleDownloadPdf = async () => {
+    setDownloading(true);
+    try {
+      const res = await api.get(`/finance/quotes/${q!.id}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${q!.quoteNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError('Failed to download PDF.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleViewPdf = async () => {
+    setDownloading(true);
+    try {
+      const res = await api.get(`/finance/quotes/${q!.id}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+    } catch {
+      setError('Failed to load PDF.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const statusCSS = QUO_CSS[q!.status] ?? "badge-neutral";
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
-    { id: "details", label: "Quote Details", icon: <FileText size={14} /> },
-    { id: "activity", label: "Activity", icon: <Calendar size={14} /> },
+    { id: "details",  label: "Quote Details", icon: <FileText size={14} /> },
+    { id: "activity", label: "Activity",      icon: <Calendar size={14} /> },
   ];
 
   return (
@@ -78,32 +160,31 @@ export default function QuoteDetailModal({
         style={{ height: 680 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-700 px-8 py-5 flex items-center justify-between shadow-lg">
+        {/* Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-700 px-8 py-5 flex items-center justify-between shadow-lg rounded-t-xl shrink-0">
           <div className="text-white flex-1">
             <div className="flex items-center gap-3 mb-1">
               <span className="text-green-200 text-sm font-semibold tracking-wider">
-                {quote.id}
+                {q!.quoteNumber}
               </span>
-              <span
-                className={`badge ${statusCSS} text-xs`}
-                style={{ fontSize: 11 }}
-              >
-                <span style={{ background: "currentColor" }} />
-                {quote.status}
+              <span className={`badge ${statusCSS} text-xs`} style={{ fontSize: 11 }}>
+                {q!.status}
               </span>
             </div>
             <h2 className="text-xl font-bold leading-tight">
-              {quote.customer}
+              {q!.title || q!.customerName || "Quote"}
             </h2>
             <p className="text-green-100 text-sm mt-0.5">
-              Service: {quote.service}
+              Customer: {q!.customerName ?? "\u2014"}
+              {q!.jobId && ` \u00b7 Job: ${q!.jobId}`}
             </p>
           </div>
           <div className="flex items-center gap-2">
             {!isEditMode ? (
               <button
                 onClick={() => setIsEditMode(true)}
-                className="flex items-center gap-1.5 text-green-100 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0"
+                disabled={isBusy || q!.status === "CONVERTED"}
+                className="flex items-center gap-1.5 text-green-100 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0 disabled:opacity-50"
               >
                 <Edit2 size={13} /> Edit
               </button>
@@ -111,16 +192,18 @@ export default function QuoteDetailModal({
               <>
                 <button
                   onClick={handleSave}
-                  className="flex items-center gap-1.5 text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0"
+                  disabled={isBusy}
+                  className="flex items-center gap-1.5 text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0 disabled:opacity-60"
                 >
-                  <Save size={13} /> Save
+                  {updateQuote.isPending
+                    ? <Loader2 size={13} className="animate-spin" />
+                    : <Save size={13} />}
+                  Save
                 </button>
                 <button
-                  onClick={() => {
-                    setFormData({ ...quote });
-                    setIsEditMode(false);
-                  }}
-                  className="flex items-center gap-1.5 text-green-100 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0"
+                  onClick={() => { setFormData({ notes: q!.notes ?? "", expiresAt: q!.expiresAt ? q!.expiresAt.split("T")[0] : "" }); setIsEditMode(false); setError(""); }}
+                  disabled={isBusy}
+                  className="flex items-center gap-1.5 text-green-100 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -156,107 +239,112 @@ export default function QuoteDetailModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-8 space-y-6">
+
+            {error && (
+              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                <AlertCircle size={14} />
+                {error}
+              </div>
+            )}
+
             {activeTab === "details" && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Quote Number
-                    </label>
-                    <input
-                      type="text"
-                      name="id"
-                      value={formData.id}
-                      onChange={handleChange}
-                      disabled={!isEditMode}
-                      className={!isEditMode ? inputView : inputEdit}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Customer
-                    </label>
-                    <input
-                      type="text"
-                      name="customer"
-                      value={formData.customer}
-                      onChange={handleChange}
-                      disabled={!isEditMode}
-                      className={!isEditMode ? inputView : inputEdit}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Service
-                    </label>
-                    <input
-                      type="text"
-                      name="service"
-                      value={formData.service}
-                      onChange={handleChange}
-                      disabled={!isEditMode}
-                      className={!isEditMode ? inputView : inputEdit}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Amount
-                    </label>
-                    <input
-                      type="text"
-                      name="amount"
-                      value={`$${formData.amount?.toLocaleString()}`}
-                      onChange={handleChange}
-                      disabled={!isEditMode}
-                      className={!isEditMode ? inputView : inputEdit}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleChange}
-                      disabled={!isEditMode}
-                      className={!isEditMode ? inputView : inputEdit}
-                    >
-                      <option value="draft">Draft</option>
-                      <option value="sent">Sent</option>
-                      <option value="accepted">Accepted</option>
-                      <option value="rejected">Rejected</option>
-                      <option value="expired">Expired</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Expiry Date
-                    </label>
-                    <input
-                      type="date"
-                      name="exp"
-                      value={formData.exp}
-                      onChange={handleChange}
-                      disabled={!isEditMode}
-                      className={!isEditMode ? inputView : inputEdit}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Quote Number
+                  </label>
+                  <input
+                    type="text"
+                  value={q!.quoteNumber}
+                    disabled
+                    className={inputView}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Customer
+                  </label>
+                  <input
+                    type="text"
+                    value={quote.customerName ?? "—"}
+                    disabled
+                    className={inputView}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={q!.title}
+                    disabled
+                    className={inputView}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Total
+                  </label>
+                  <input
+                    type="text"
+                    value={`$${decimalToNumber(q!.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    disabled
+                    className={inputView}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Status
+                  </label>
+                  <input
+                    type="text"
+                    value={q!.status}
+                    disabled
+                    className={inputView}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Expiry Date
+                  </label>
+                  <input
+                    type="date"
+                    name="expiresAt"
+                    value={formData.expiresAt}
+                    onChange={handleChange}
+                    disabled={!isEditMode || isBusy}
+                    className={!isEditMode ? inputView : inputEdit}
+                  />
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Notes
+                  </label>
+                  <textarea
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    disabled={!isEditMode || isBusy}
+                    rows={3}
+                    placeholder="Add notes…"
+                    className={`${!isEditMode ? inputView : inputEdit} resize-none`}
+                  />
+                </div>
+                {q!.jobId && (
                   <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Job Reference
                     </label>
                     <input
                       type="text"
-                      name="jobRef"
-                      value={formData.jobRef}
-                      onChange={handleChange}
-                      disabled={!isEditMode}
-                      className={!isEditMode ? inputView : inputEdit}
+                      value={q!.jobId}
+                      disabled
+                      className={inputView}
                     />
                   </div>
-                </div>
-              </>
+                )}
+              </div>
             )}
 
             {activeTab === "activity" && (
@@ -264,24 +352,83 @@ export default function QuoteDetailModal({
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <p className="text-sm text-gray-600 flex items-center gap-2">
                     <Calendar size={14} />
-                    No activity yet. This quote was just created.
+                    Created: {new Date(q!.createdAt).toLocaleString()}
                   </p>
                 </div>
+                {q!.expiresAt && (
+                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-700 flex items-center gap-2">
+                      <Calendar size={14} />
+                      Expires: {new Date(q!.expiresAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 rounded-b-xl shrink-0 flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            Close
-          </button>
-          <button className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
-            <Mail size={14} className="inline mr-1" /> Send Quote
-          </button>
+        {/* Footer actions */}
+        <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 rounded-b-xl shrink-0 flex items-center justify-between gap-2">
+          <div className="flex gap-2">
+            {/* Send Quote — only for DRAFT */}
+            {q!.status === "DRAFT" && (
+              <button
+                onClick={handleSend}
+                disabled={isBusy}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-60 border-0"
+              >
+                {sendQuote.isPending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                Send Quote
+              </button>
+            )}
+            {/* Approve — only for SENT */}
+            {q!.status === "SENT" && (
+              <button
+                onClick={handleApprove}
+                disabled={isBusy}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-60 border-0"
+              >
+                {approveQuote.isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                Approve
+              </button>
+            )}
+            {/* Convert to Invoice — only for ACCEPTED */}
+            {q!.status === "ACCEPTED" && (
+              <button
+                onClick={handleConvert}
+                disabled={isBusy}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors cursor-pointer disabled:opacity-60 border-0"
+              >
+                {convertQuote.isPending ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                Convert to Invoice
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleViewPdf}
+              disabled={downloading}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-60"
+            >
+              {downloading ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+              View PDF
+            </button>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={downloading}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-60"
+            >
+              {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              Download PDF
+            </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

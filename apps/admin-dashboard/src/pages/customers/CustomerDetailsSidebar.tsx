@@ -22,6 +22,13 @@ import {
   ExternalLink,
 } from "lucide-react";
 import AddAgreementModal from "./AddAgreementModal";
+import AddJobModal from "../jobs/AddJobModal";
+import { useUpdateCustomer } from "../../hooks/useCustomers";
+import { useCustomerAddresses, useSaveCustomerAddresses } from "../../hooks/useAddresses";
+import { useCustomerEquipment, useSaveCustomerEquipment } from "../../hooks/useEquipment";
+import { useJobs } from "../../hooks/useJobs";
+import { useQuotes, useInvoices } from "../../hooks/useFinance";
+import { decimalToNumber } from "../../hooks/useFinance";
 
 type TabType =
   | "contact"
@@ -125,146 +132,40 @@ function SectionHeader({
   );
 }
 
-const mockAddresses = [
-  {
-    id: 1,
-    type: "Site",
-    line1: "14 Elm Street",
-    line2: "Flat 3",
-    city: "London",
-    postcode: "E1 6RF",
-    primary: true,
-  },
-  {
-    id: 2,
-    type: "Billing",
-    line1: "88 King Road",
-    line2: "",
-    city: "Manchester",
-    postcode: "M1 2AB",
-    primary: false,
-  },
-];
 const mockContacts = [{ id: 1, name: "", role: "Owner", email: "", phone: "" }];
-const mockEquipment = [
-  {
-    id: 1,
-    type: "Boiler",
-    brand: "Worcester",
-    model: "Greenstar 30i",
-    serial: "WB20-1104",
-    install: "2021-06-12",
-    warranty: "2026-06-12",
-  },
-  {
-    id: 2,
-    type: "AC Unit",
-    brand: "Daikin",
-    model: "Perfera 3.5kW",
-    serial: "DK-903A",
-    install: "2022-03-01",
-    warranty: "2027-03-01",
-  },
-];
-const mockJobs = [
-  {
-    id: "JOB-1204",
-    date: "2026-03-05",
-    service: "HVAC Maintenance",
-    tech: "Mike Davis",
-    status: "completed",
-    amount: 385,
-  },
-  {
-    id: "JOB-1188",
-    date: "2026-01-18",
-    service: "Boiler Service",
-    tech: "Tom Baker",
-    status: "completed",
-    amount: 275,
-  },
-  {
-    id: "JOB-1151",
-    date: "2025-11-02",
-    service: "AC Installation",
-    tech: "Anna Smith",
-    status: "invoiced",
-    amount: 2400,
-  },
-];
-const mockAgreements = [
-  {
-    id: "AGR-011",
-    name: "Annual Maintenance Plan",
-    nextService: "2026-06-15",
-    renewal: "2026-12-31",
-    status: "active",
-    value: 1200,
-    pdfUrl: "",
-    pdfName: "",
-    signatureEmail: "",
-    showSignPanel: false,
-  },
-];
-const mockReviews = [
-  {
-    id: 1,
-    rating: 5,
-    date: "2026-02-28",
-    comment: "Brilliant service! Very professional and punctual.",
-    replied: true,
-    replyText:
-      "Thank you so much! We are glad we could help and look forward to serving you again.",
-  },
-  {
-    id: 2,
-    rating: 4,
-    date: "2025-12-10",
-    comment: "Good work, would recommend.",
-    replied: false,
-  },
-];
-const mockTimeline = [
-  {
-    id: 1,
-    icon: Plus,
-    color: "#3B82F6",
-    label: "Lead Created",
-    desc: "Added manually by Super Admin.",
-    time: "Mar 1, 2026",
-  },
-  {
-    id: 2,
-    icon: Mail,
-    color: "#10B981",
-    label: "Email Sent",
-    desc: "Follow-up email sent via system.",
-    time: "Mar 2, 2026",
-  },
-  {
-    id: 3,
-    icon: CheckCircle2,
-    color: "#8B5CF6",
-    label: "Converted to Customer",
-    desc: "Lead status changed to WON.",
-    time: "Mar 4, 2026",
-  },
-  {
-    id: 4,
-    icon: Wrench,
-    color: "#F59E0B",
-    label: "Job Completed",
-    desc: "JOB-1204 HVAC Maintenance completed.",
-    time: "Mar 5, 2026",
-  },
-];
+const mockAgreements: any[] = [];
+const mockReviews: any[] = [];
+const mockTimeline: any[] = [];
 
 const JOB_CSS: Record<string, string> = {
-  completed: "badge-green",
-  invoiced: "badge-cyan",
-  in_progress: "badge-blue",
-  pending: "badge-amber",
-  cancelled: "badge-red",
+  COMPLETED: "badge-green",
+  INVOICED: "badge-cyan",
+  ON_SITE: "badge-blue",
+  EN_ROUTE: "badge-blue",
+  SCHEDULED: "badge-amber",
+  PENDING: "badge-amber",
+  CANCELLED: "badge-red",
+  PAID: "badge-green",
+  ON_HOLD: "badge-neutral",
+};
+
+const QUO_CSS: Record<string, string> = {
+  DRAFT: "badge-neutral",
+  SENT: "badge-blue",
+  ACCEPTED: "badge-green",
+  REJECTED: "badge-red",
+  EXPIRED: "badge-amber",
+  CONVERTED: "badge-cyan",
+};
+
+const INV_CSS: Record<string, string> = {
+  DRAFT: "badge-neutral",
+  SENT: "badge-blue",
+  PARTIALLY_PAID: "badge-amber",
+  PAID: "badge-green",
+  OVERDUE: "badge-red",
+  CANCELLED: "badge-red",
+  VOID: "badge-neutral",
 };
 
 export default function CustomerDetailsSidebar({
@@ -276,11 +177,12 @@ export default function CustomerDetailsSidebar({
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<any>({});
-  const [addresses, setAddresses] = useState(mockAddresses);
+  const [addresses, setAddresses] = useState<any[]>([]);
   const [contacts, setContacts] = useState(mockContacts);
-  const [equipment, setEquipment] = useState(mockEquipment);
+  const [equipment, setEquipment] = useState<any[]>([]);
   const [agreements, setAgreements] = useState(mockAgreements);
   const [isAddAgreementModalOpen, setIsAddAgreementModalOpen] = useState(false);
+  const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
   const [reviews, setReviews] = useState(mockReviews);
   const [showRequestPanel, setShowRequestPanel] = useState(false);
   const [requestForm, setRequestForm] = useState({
@@ -289,21 +191,41 @@ export default function CustomerDetailsSidebar({
     message: "",
   });
 
+  // Fetch real jobs and quotes for this customer
+  const customerId = person?.id ?? "";
+  const customerJobsQuery = useJobs({ customerId: customerId || undefined, limit: 50 });
+  const customerJobs = customerJobsQuery.data?.data ?? [];
+  const customerQuotesQuery = useQuotes({ customerId: customerId || undefined, limit: 50 });
+  const customerQuotes = customerQuotesQuery.data?.data ?? [];
+  const customerInvoicesQuery = useInvoices({ customerId: customerId || undefined, limit: 50 });
+  const customerInvoices = customerInvoicesQuery.data?.data ?? [];
+
+  // Fetch real addresses and equipment from API
+  const addressesQuery = useCustomerAddresses(customerId || undefined);
+  const equipmentQuery = useCustomerEquipment(customerId || undefined);
+  const saveAddresses = useSaveCustomerAddresses();
+  const saveEquipment = useSaveCustomerEquipment();
+
   useEffect(() => {
     if (isOpen && person) {
       document.body.style.overflow = "hidden";
-      setFormData({ ...person });
+      const fullName = `${person.firstName ?? ''} ${person.lastName ?? ''}`.trim();
+      setFormData({
+        ...person,
+        name: fullName,
+        whatsappNo: person.mobile || '',
+        customerSince: person.createdAt ? person.createdAt.split('T')[0] : '',
+        lastService: person.lastServiceDate ? person.lastServiceDate.split('T')[0] : '',
+      });
       setContacts([
         {
           id: 1,
-          name: person.name || "",
+          name: fullName,
           role: "Owner",
           email: person.email || "",
-          phone: person.phone || person.whatsappNo || "",
+          phone: person.phone || person.mobile || "",
         },
       ]);
-      setAddresses(mockAddresses);
-      setEquipment(mockEquipment);
       setAgreements(mockAgreements);
       setReviews(mockReviews);
       setActiveTab(initialTab);
@@ -316,6 +238,40 @@ export default function CustomerDetailsSidebar({
     };
   }, [isOpen, person, initialTab]);
 
+  // Sync addresses from API query into local state for editing
+  useEffect(() => {
+    if (addressesQuery.data) {
+      setAddresses(addressesQuery.data.map((a: any) => ({
+        id: a.id,
+        type: a.type || "Site",
+        line1: a.line1 || "",
+        line2: a.line2 || "",
+        city: a.city || "",
+        state: a.state || "",
+        postcode: a.postcode || "",
+        isPrimary: a.isPrimary || false,
+      })));
+    }
+  }, [addressesQuery.data]);
+
+  // Sync equipment from API query into local state for editing
+  useEffect(() => {
+    if (equipmentQuery.data) {
+      setEquipment(equipmentQuery.data.map((e: any) => ({
+        id: e.id,
+        type: e.type || "Boiler",
+        brand: e.brand || "",
+        model: e.model || "",
+        serial: e.serialNo || "",
+        install: e.installDate ? e.installDate.split("T")[0] : "",
+        warranty: e.warrantyEnd ? e.warrantyEnd.split("T")[0] : "",
+      })));
+    }
+  }, [equipmentQuery.data]);
+
+  // Hook must be called unconditionally — before any early returns
+  const updateCustomer = useUpdateCustomer();
+
   if (!isOpen || !person) return null;
 
   const handleChange = (
@@ -327,28 +283,72 @@ export default function CustomerDetailsSidebar({
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => setIsEditMode(false);
+  const handleSave = () => {
+    const nameParts = (formData.name || '').trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName  = nameParts.slice(1).join(' ') || '';
+    updateCustomer.mutate(
+      { id: person.id, data: {
+          firstName: firstName || undefined,
+          lastName:  lastName  || undefined,
+          email:  formData.email      || undefined,
+          phone:  formData.phone      || undefined,
+          mobile: formData.whatsappNo || undefined,
+          source: formData.source     || undefined,
+          type:   (formData.type as 'RESIDENTIAL' | 'COMMERCIAL') || undefined,
+          notes:  formData.notes || undefined,
+          engagementStatus: formData.engagementStatus || undefined,
+      }},
+      {
+        onSuccess: () => {
+          // Also save addresses if any exist or were modified
+          if (addresses.length > 0 || (addressesQuery.data && addressesQuery.data.length > 0)) {
+            saveAddresses.mutate({
+              customerId: person.id,
+              addresses: addresses
+                .filter((a: any) => a.line1?.trim())
+                .map((a: any) => ({
+                  type: a.type || 'Site',
+                  line1: a.line1,
+                  line2: a.line2 || undefined,
+                  city: a.city || undefined,
+                  state: a.state || undefined,
+                  postcode: a.postcode || undefined,
+                  isPrimary: a.isPrimary || false,
+                })),
+            });
+          }
+          // Also save equipment if any exist or were modified
+          if (equipment.length > 0 || (equipmentQuery.data && equipmentQuery.data.length > 0)) {
+            saveEquipment.mutate({
+              customerId: person.id,
+              equipment: equipment
+                .filter((e: any) => e.brand?.trim() || e.model?.trim() || e.serial?.trim())
+                .map((e: any) => ({
+                  type: e.type || 'Boiler',
+                  brand: e.brand || undefined,
+                  model: e.model || undefined,
+                  serialNo: e.serial || undefined,
+                  installDate: e.install || undefined,
+                  warrantyEnd: e.warranty || undefined,
+                })),
+            });
+          }
+          setIsEditMode(false);
+        },
+        onError:   (err: any) => console.error('Update customer failed:', err?.response?.data?.message ?? err.message),
+      }
+    );
+  };
 
+  const engagementOrder = ["ACTIVE", "QUOTE_SENT", "JOB_BOOKED", "INVOICE_SENT", "COMPLETED"];
+  const engagementIdx = engagementOrder.indexOf(formData.engagementStatus || "ACTIVE");
   const stages = [
-    { name: "New", status: person.status === "NEW" ? "active" : "completed" },
-    {
-      name: "Contacted",
-      status:
-        person.status === "CONTACTED"
-          ? "active"
-          : person.status === "NEW"
-            ? "pending"
-            : "completed",
-    },
-    {
-      name: "Qualified",
-      status: person.status === "QUALIFIED" ? "active" : "pending",
-    },
-    {
-      name: "Proposal",
-      status: person.status === "PROPOSAL_SENT" ? "active" : "pending",
-    },
-    { name: "Won", status: person.status === "WON" ? "active" : "pending" },
+    { name: "Active", status: engagementIdx > 0 ? "completed" : engagementIdx === 0 ? "active" : "pending" },
+    { name: "Quote Sent", status: engagementIdx > 1 ? "completed" : engagementIdx === 1 ? "active" : "pending" },
+    { name: "Job Booked", status: engagementIdx > 2 ? "completed" : engagementIdx === 2 ? "active" : "pending" },
+    { name: "Invoice Sent", status: engagementIdx > 3 ? "completed" : engagementIdx === 3 ? "active" : "pending" },
+    { name: "Completed", status: engagementIdx === 4 ? "active" : "pending" },
   ];
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
@@ -360,6 +360,19 @@ export default function CustomerDetailsSidebar({
     { id: "reviews", label: "Reviews", icon: <Star size={14} /> },
     { id: "activity", label: "Activity", icon: <Activity size={14} /> },
   ];
+
+  // Real activity timeline derived from the actual record — no DB activity log yet
+  const activityTimeline = (() => {
+    const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const events: Array<{ id: string; icon: any; color: string; label: string; desc: string; time: string }> = [];
+    events.push({
+      id: 'created', icon: Plus, color: '#3B82F6',
+      label: 'Customer Created',
+      desc: person.source ? `Customer added via ${person.source}.` : 'Customer added manually.',
+      time: fmt(person.createdAt),
+    });
+    return events;
+  })();
 
   return (
     <>
@@ -378,15 +391,19 @@ export default function CustomerDetailsSidebar({
                 {formData.name || "Details"}
               </h2>
               <select
-                value={formData.status || "Active"}
+                value={formData.engagementStatus || "ACTIVE"}
                 onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value })
+                  setFormData({ ...formData, engagementStatus: e.target.value })
                 }
                 disabled={!isEditMode}
                 className={`bg-white text-gray-900 text-xs px-2 py-1 rounded-md outline-none h-[28px] ${!isEditMode ? "opacity-90 cursor-default" : "cursor-pointer"}`}
               >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="ACTIVE">Active</option>
+                <option value="QUOTE_SENT">Quote Sent</option>
+                <option value="JOB_BOOKED">Job Booked</option>
+                <option value="INVOICE_SENT">Invoice Sent</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="INACTIVE">Inactive</option>
               </select>
             </div>
             <p className="text-blue-100 text-xs mt-1">
@@ -541,7 +558,7 @@ export default function CustomerDetailsSidebar({
                         Lifecycle
                       </p>
                       <div className="bg-[var(--blue-dim)] text-[var(--blue-light)] inline-block px-3 py-1.5 rounded-lg text-sm font-medium">
-                        {formData.status || "Active"}
+                        {(formData.engagementStatus || 'ACTIVE').replace(/_/g, ' ')}
                       </div>
                     </div>
                     {formData.assigned && (
@@ -597,14 +614,7 @@ export default function CustomerDetailsSidebar({
 
               {/* Right */}
               <div className="col-span-9 space-y-4">
-                {formData.status &&
-                  [
-                    "NEW",
-                    "CONTACTED",
-                    "QUALIFIED",
-                    "PROPOSAL_SENT",
-                    "WON",
-                  ].includes(formData.status) && (
+                {formData.engagementStatus !== 'INACTIVE' && (
                     <div
                       className="rounded-xl border border-gray-200 p-5 shadow-sm"
                       style={{ background: "#ffffff" }}
@@ -656,9 +666,9 @@ export default function CustomerDetailsSidebar({
                         className={`flex items-center justify-center gap-1.5 px-4 py-3 text-[12px] font-600 whitespace-nowrap transition-all border-b-[3px] bg-transparent cursor-pointer hover:bg-gray-50 rounded-t-lg ml-1 ${activeTab === tab.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500"}`}
                       >
                         {tab.icon} {tab.label}{" "}
-                        {tab.id === "jobs" && (
+                        {tab.id === "jobs" && customerJobs.length > 0 && (
                           <span className="text-red-500 ml-0.5">
-                            {mockJobs.length}
+                            {customerJobs.length}
                           </span>
                         )}
                       </button>
@@ -730,17 +740,15 @@ export default function CustomerDetailsSidebar({
                               onChange={handleChange}
                               as="select"
                               options={[
-                                "Residential",
-                                "Commercial",
-                                "Industrial",
-                                "Property Management",
+                                "RESIDENTIAL",
+                                "COMMERCIAL",
                               ]}
                               placeholder="Select Type"
                             />
                             <Field
                               label="Notes / Remarks"
-                              name="remarks"
-                              value={formData.remarks}
+                              name="notes"
+                              value={formData.notes}
                               isEdit={isEditMode}
                               onChange={handleChange}
                               as="textarea"
@@ -908,29 +916,34 @@ export default function CustomerDetailsSidebar({
                           icon={MapPin}
                           title="Site & Billing Addresses"
                           action={
-                            isEditMode && (
-                              <button
-                                className="flex items-center gap-1 text-[11px] font-600 text-blue-600 hover:text-blue-700"
-                                onClick={() =>
-                                  setAddresses((prev) => [
-                                    ...prev,
-                                    {
-                                      id: Date.now(),
-                                      type: "Site",
-                                      line1: "",
-                                      line2: "",
-                                      city: "",
-                                      postcode: "",
-                                      primary: false,
-                                    },
-                                  ])
-                                }
-                              >
-                                <Plus size={13} /> Add Address
-                              </button>
-                            )
+                            <button
+                              className="flex items-center gap-1 text-[11px] font-600 text-blue-600 hover:text-blue-700"
+                              onClick={() => {
+                                if (!isEditMode) setIsEditMode(true);
+                                setAddresses((prev) => [
+                                  ...prev,
+                                  {
+                                    id: Date.now(),
+                                    type: "Site",
+                                    line1: "",
+                                    line2: "",
+                                    city: "",
+                                    postcode: "",
+                                    primary: false,
+                                  },
+                                ]);
+                              }}
+                            >
+                              <Plus size={13} /> Add Address
+                            </button>
                           }
                         />
+                        {addresses.length === 0 && (
+                          <div className="text-center py-10 text-[var(--t4)] text-sm">
+                            <MapPin size={28} className="mx-auto mb-2 opacity-30" />
+                            No addresses yet. Click <b>Add Address</b> to add one.
+                          </div>
+                        )}
                         <div className="space-y-4">
                           {addresses.map((addr) => (
                             <div
@@ -981,6 +994,7 @@ export default function CustomerDetailsSidebar({
                                   { lbl: "Address Line 1", key: "line1" },
                                   { lbl: "Address Line 2", key: "line2" },
                                   { lbl: "City", key: "city" },
+                                  { lbl: "State", key: "state" },
                                   { lbl: "Postcode", key: "postcode" },
                                 ].map((f) => (
                                   <div key={f.key} className="space-y-1">
@@ -1189,50 +1203,124 @@ export default function CustomerDetailsSidebar({
                           icon={ClipboardList}
                           title="Job History"
                         />
+                        {/* Quotes for this customer */}
+                        {customerQuotes.length > 0 && (
+                          <div className="mb-6">
+                            <h4 className="text-xs font-700 text-gray-500 uppercase mb-3 flex items-center gap-2">
+                              <FileText size={14} className="text-green-500" />
+                              Quotes ({customerQuotes.length})
+                            </h4>
+                            <div className="space-y-2">
+                              {customerQuotes.map((q) => (
+                                <div
+                                  key={q.id}
+                                  className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                                  onClick={() => window.dispatchEvent(new CustomEvent("open-quote-detail", { detail: q }))}
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-600 text-gray-900 truncate">{q.title}</div>
+                                    <div className="text-xs text-gray-500 mt-0.5">{q.quoteNumber} · {new Date(q.createdAt).toLocaleDateString()}</div>
+                                  </div>
+                                  <div className="flex items-center gap-2 ml-3">
+                                    <span className="text-sm font-700 text-gray-900">${decimalToNumber(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className={`badge ${QUO_CSS[q.status] ?? "badge-neutral"}`}>{q.status}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Invoices for this customer */}
+                        {customerInvoices.length > 0 && (
+                          <div className="mb-6">
+                            <h4 className="text-xs font-700 text-gray-500 uppercase mb-3 flex items-center gap-2">
+                              <FileText size={14} className="text-blue-500" />
+                              Invoices ({customerInvoices.length})
+                            </h4>
+                            <div className="space-y-2">
+                              {customerInvoices.map((inv) => (
+                                <div
+                                  key={inv.id}
+                                  className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                                  onClick={() => window.dispatchEvent(new CustomEvent("open-invoice-detail", { detail: inv }))}
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-600 text-gray-900 truncate">{inv.invoiceNumber}</div>
+                                    <div className="text-xs text-gray-500 mt-0.5">
+                                      {inv.dueAt ? `Due ${new Date(inv.dueAt).toLocaleDateString()}` : new Date(inv.createdAt).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 ml-3">
+                                    <div className="text-right">
+                                      <span className="text-sm font-700 text-gray-900">${decimalToNumber(inv.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                      {decimalToNumber(inv.balanceDue) > 0 && (
+                                        <div className="text-[10px] text-amber-600">Due: ${decimalToNumber(inv.balanceDue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                      )}
+                                    </div>
+                                    <span className={`badge ${INV_CSS[inv.status] ?? "badge-neutral"}`}>{inv.status}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Jobs for this customer */}
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-xs font-700 text-gray-500 uppercase flex items-center gap-2">
+                            <ClipboardList size={14} className="text-blue-500" />
+                            Jobs ({customerJobs.length})
+                          </h4>
+                          <button
+                            onClick={() => setIsAddJobModalOpen(true)}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer border-0"
+                          >
+                            <Plus size={12} /> New Job
+                          </button>
+                        </div>
+                        {customerJobsQuery.isLoading && <div className="text-sm text-gray-400 py-4 text-center">Loading jobs...</div>}
                         <div className="table-container">
                           <table className="data-table">
                             <thead>
                               <tr>
-                                <th>Job ID</th>
+                                <th>Job</th>
                                 <th>Date</th>
-                                <th>Service</th>
-                                <th>Technician</th>
-                                <th>Amount</th>
                                 <th>Status</th>
                                 <th style={{ textAlign: "center" }}>View</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {mockJobs.map((j) => (
+                              {customerJobs.map((j) => (
                                 <tr key={j.id}>
                                   <td>
-                                    <span className="td-mono td-primary">
-                                      {j.id}
-                                    </span>
+                                    <div className="text-sm font-600 text-gray-900">{j.title}</div>
+                                    <div className="text-xs text-gray-500">{j.serviceAddress ?? j.customerAddress ?? ""}</div>
                                   </td>
-                                  <td className="text-sm text-3">{j.date}</td>
-                                  <td className="text-sm">{j.service}</td>
-                                  <td className="text-sm text-2">{j.tech}</td>
-                                  <td className="td-primary font-600">
-                                    ${j.amount}
-                                  </td>
+                                  <td className="text-sm text-3">{new Date(j.createdAt).toLocaleDateString()}</td>
                                   <td>
                                     <span
-                                      className={`badge ${JOB_CSS[j.status]}`}
+                                      className={`badge ${JOB_CSS[j.status] ?? "badge-neutral"}`}
                                     >
-                                      {j.status}
+                                      {j.status.replace(/_/g, " ")}
                                     </span>
                                   </td>
                                   <td style={{ textAlign: "center" }}>
                                     <button
                                       className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
                                       title="Open Job"
+                                      onClick={() => window.dispatchEvent(new CustomEvent("open-job-detail", { detail: j }))}
                                     >
                                       <ExternalLink size={13} />
                                     </button>
                                   </td>
                                 </tr>
                               ))}
+                              {!customerJobsQuery.isLoading && customerJobs.length === 0 && (
+                                <tr>
+                                  <td colSpan={4} className="text-center text-gray-400 py-6 text-sm">No jobs found for this customer</td>
+                                </tr>
+                              )}
                             </tbody>
                           </table>
                         </div>
@@ -1963,7 +2051,9 @@ export default function CustomerDetailsSidebar({
                           title="Activity Timeline"
                         />
                         <div className="relative space-y-5 before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-gray-200">
-                          {mockTimeline.map((item) => {
+                          {activityTimeline.length === 0 ? (
+                            <p className="text-sm text-[var(--t4)] text-center py-8">No activity recorded yet.</p>
+                          ) : activityTimeline.map((item) => {
                             const Icon = item.icon;
                             return (
                               <div
@@ -2008,6 +2098,19 @@ export default function CustomerDetailsSidebar({
         onClose={() => setIsAddAgreementModalOpen(false)}
         onCreated={(newAgr) => {
           setAgreements((prev) => [newAgr, ...prev]);
+        }}
+      />
+
+      <AddJobModal
+        isOpen={isAddJobModalOpen}
+        onClose={() => setIsAddJobModalOpen(false)}
+        preselectedCustomer={person ? {
+          id: person.id,
+          name: `${person.firstName ?? ''} ${person.lastName ?? ''}`.trim(),
+          address: [person.address, person.city, person.state, person.zipCode].filter(Boolean).join(', '),
+        } : undefined}
+        onCreated={() => {
+          customerJobsQuery.refetch();
         }}
       />
     </>

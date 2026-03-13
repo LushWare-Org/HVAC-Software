@@ -6,11 +6,19 @@ export class BookingsService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(companyId: string, status?: string) {
-    return this.prisma.booking.findMany({
+    const data = await this.prisma.booking.findMany({
       where: { companyId, ...(status && { status: status as any }) },
       include: { customer: { select: { id: true, firstName: true, lastName: true, phone: true } } },
       orderBy: { preferredDate: 'asc' },
     });
+    // Map to include customerName for frontend compatibility
+    const mapped = data.map((b: any) => ({
+      ...b,
+      customerName: b.customer ? `${b.customer.firstName} ${b.customer.lastName}`.trim() : b.guestName || '',
+      scheduledStart: b.preferredDate,
+      scheduledEnd: b.alternateDate,
+    }));
+    return { data: mapped, meta: { total: mapped.length, page: 1, limit: mapped.length, totalPages: 1 } };
   }
 
   async create(companyId: string, data: {

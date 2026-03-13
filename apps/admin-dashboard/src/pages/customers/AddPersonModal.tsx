@@ -1,25 +1,35 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { X, Loader2, AlertCircle } from "lucide-react";
+import { useCreateLead } from "../../hooks/useCustomers";
+import { useCreateCustomer } from "../../hooks/useCustomers";
 
 interface AddPersonModalProps {
     isOpen: boolean;
     onClose: () => void;
     type: "customer" | "lead";
+    onCreated?: (record: any) => void;
 }
 
 export default function AddPersonModal({
     isOpen,
     onClose,
     type,
+    onCreated,
 }: AddPersonModalProps) {
-    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError]   = useState<string>('');
     const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        customerType: "Residential",
-        source: "Website",
+        name:         "",
+        email:        "",
+        phone:        "",
+        customerType: "RESIDENTIAL",
+        source:       "WEBSITE",
+        serviceInterest: "",
     });
+
+    const createLead     = useCreateLead();
+    const createCustomer = useCreateCustomer();
+
+    const isLoading = type === 'lead' ? createLead.isPending : createCustomer.isPending;
 
     if (!isOpen) return null;
 
@@ -30,20 +40,74 @@ export default function AddPersonModal({
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async () => {
-        setIsLoading(true);
-        setTimeout(() => {
-            console.log(`Saved new ${type}`, formData);
-            setIsLoading(false);
-            onClose();
-            setFormData({
-                name: "",
-                email: "",
-                phone: "",
-                customerType: "Residential",
-                source: "Website",
-            });
-        }, 500);
+    const handleSubmit = () => {
+        setError('');
+
+        if (!formData.name.trim()) {
+            setError('Full name is required.');
+            return;
+        }
+
+        // Split "Full Name" into firstName / lastName
+        const parts     = formData.name.trim().split(/\s+/);
+        const firstName = parts[0];
+        const lastName  = parts.slice(1).join(' ') || '';
+
+        if (type === 'lead') {
+            createLead.mutate(
+                {
+                    firstName,
+                    lastName,
+                    email:           formData.email.trim() || undefined,
+                    phone:           formData.phone.trim() || undefined,
+                    source:          formData.source || undefined,
+                    serviceInterest: formData.serviceInterest.trim() || undefined,
+                },
+                {
+                    onSuccess: (record) => {
+                        onCreated?.(record);
+                        resetAndClose();
+                    },
+                    onError: (err: any) => {
+                        setError(err?.response?.data?.message ?? 'Failed to create lead. Please try again.');
+                    },
+                }
+            );
+        } else {
+            createCustomer.mutate(
+                {
+                    firstName,
+                    lastName,
+                    email:  formData.email.trim() || undefined,
+                    phone:  formData.phone.trim() || undefined,
+                    type:   formData.customerType as any,
+                    isActive: true,
+                    tags:   [],
+                },
+                {
+                    onSuccess: (record) => {
+                        onCreated?.(record);
+                        resetAndClose();
+                    },
+                    onError: (err: any) => {
+                        setError(err?.response?.data?.message ?? 'Failed to create customer. Please try again.');
+                    },
+                }
+            );
+        }
+    };
+
+    const resetAndClose = () => {
+        setFormData({
+            name:            "",
+            email:           "",
+            phone:           "",
+            customerType:    "RESIDENTIAL",
+            source:          "WEBSITE",
+            serviceInterest: "",
+        });
+        setError('');
+        onClose();
     };
 
     return (
@@ -75,10 +139,18 @@ export default function AddPersonModal({
                 {/* Form */}
                 <div className="flex-1 overflow-y-auto">
                     <div className="p-8 space-y-6">
+
+                        {error && (
+                            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                                <AlertCircle size={14} />
+                                {error}
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
+                            <div className="space-y-2 md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Full Name
+                                    Full Name <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -121,41 +193,60 @@ export default function AddPersonModal({
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Customer Type
-                                </label>
-                                <select
-                                    name="customerType"
-                                    value={formData.customerType}
-                                    onChange={handleChange}
-                                    disabled={isLoading}
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
-                                >
-                                    <option value="Residential">Residential</option>
-                                    <option value="Commercial">Commercial</option>
-                                </select>
-                            </div>
-
-                            {type === "lead" && (
+                            {type === "customer" && (
                                 <div className="space-y-2">
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Lead Source
+                                        Customer Type
                                     </label>
                                     <select
-                                        name="source"
-                                        value={formData.source}
+                                        name="customerType"
+                                        value={formData.customerType}
                                         onChange={handleChange}
                                         disabled={isLoading}
                                         className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
                                     >
-                                        <option value="Website">Website</option>
-                                        <option value="WhatsApp">WhatsApp</option>
-                                        <option value="Referral">Referral</option>
-                                        <option value="Ads">Facebook / Google Ads</option>
-                                        <option value="Other">Other</option>
+                                        <option value="RESIDENTIAL">Residential</option>
+                                        <option value="COMMERCIAL">Commercial</option>
+                                        <option value="INDUSTRIAL">Industrial</option>
                                     </select>
                                 </div>
+                            )}
+
+                            {type === "lead" && (
+                                <>
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Lead Source
+                                        </label>
+                                        <select
+                                            name="source"
+                                            value={formData.source}
+                                            onChange={handleChange}
+                                            disabled={isLoading}
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
+                                        >
+                                            <option value="WEBSITE">Website</option>
+                                            <option value="WHATSAPP">WhatsApp</option>
+                                            <option value="REFERRAL">Referral</option>
+                                            <option value="ADS">Facebook / Google Ads</option>
+                                            <option value="OTHER">Other</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Service Interest
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="serviceInterest"
+                                            value={formData.serviceInterest}
+                                            onChange={handleChange}
+                                            placeholder="e.g. HVAC Installation, AC Repair"
+                                            disabled={isLoading}
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
+                                        />
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>
@@ -169,34 +260,12 @@ export default function AddPersonModal({
                     >
                         Cancel
                     </button>
-                                {/* check this (me) */}
                     <button
                         onClick={handleSubmit}
                         disabled={isLoading}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center cursor-pointer border-0"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-60 flex items-center gap-2 cursor-pointer border-0"
                     >
-                        {isLoading ? (
-                            <svg
-                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                            >
-                                <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                ></circle>
-                                <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                            </svg>
-                        ) : null}
+                        {isLoading && <Loader2 size={14} className="animate-spin" />}
                         {isLoading
                             ? "Saving..."
                             : `Create ${type === "customer" ? "Customer" : "Lead"}`}

@@ -1,7 +1,7 @@
 # Trade & Service CRM — Project Decision Log
 
 > **Purpose:** Quick context-restoration file. Read this at the start of any new development session.
-> **Last Updated:** March 2026 | **Status:** ✅ Week 7 Done — Analytics Service complete | 🚧 Next: API-level user flow tests before frontend
+> **Last Updated:** March 2026 | **Status:** ✅ All 6 services + 107 flow tests passing | 🚧 Now: Frontend integration phase (admin-dashboard → API gateway → services)
 
 ---
 
@@ -277,17 +277,52 @@ Database-driven, extensible — adding new trades requires NO code changes, only
 - [ ] YOU: `pnpm test` (unit tests) + `pnpm test:e2e` (e2e tests)
 - [ ] YOU: `git add . && git commit -m "feat: Week 6 — Communication Service complete"`
 
-### Week 7 — Analytics Service (NEXT)
-- [ ] NestJS + PostgreSQL read replica
-- [ ] Revenue dashboards (daily/weekly/monthly/yearly aggregations)
-- [ ] Technician performance metrics (jobs/day, avg rating, completion rate)
-- [ ] Job type analytics + trade breakdown
-- [ ] Customer LTV, acquisition, retention metrics
-- [ ] Custom report builder + CSV/Excel export
+### Week 7 — Analytics Service ✅ DONE
+- [x] NestJS + PostgreSQL read replica (cross-schema raw SQL)
+- [x] Dashboard KPIs endpoint (8 concurrent queries)
+- [x] Revenue series, by-category, top-jobs, summary
+- [x] Technician leaderboard + individual metrics
+- [x] Jobs analytics: by-status, by-trade, by-zone, completion rates, trends
+- [x] Customer analytics: top-customers, acquisition-sources, churn-signals, segments
+- [x] Exports: revenue CSV, revenue Excel, jobs Excel, technician CSV
+- [x] 44 tests (24 unit + 20 E2E)
 
-### Week 8 — Integration & Launch (Pending)
+### Week 8 (Ongoing) — Flow Tests + Frontend Integration
+**Flow Tests:**
+- [x] All 107 flow tests passing (10 flows, runs in-band against live Docker services)
+- [x] Fixed 5 bugs found by tests: @MaxLength on taxRate, @HttpCode(OK), Decimal.toFixed, ValidateNested, customerId guard
+- [x] TypeScript compiles cleanly across all test files
+
+**Frontend — Admin Dashboard:**
+- [x] Colleague's implementation accepted into apps/admin-dashboard
+- [x] Feature list reviewed (9 pages: Dashboard, Customers, Jobs, Scheduling, Finance, Comms, Analytics, Settings, Team)
+- [x] Full gap analysis complete → see FRONTEND_INTEGRATION_PLAN.md
+- [x] nginx.conf updated: extended CORS headers to include x-test-* bypass headers
+- [x] vite.config.ts updated: added /api and /ws dev proxy → nginx gateway
+- [ ] **Phase 1:** Create src/lib/api.ts, queryClient.ts, extend AuthContext for dev bypass
+- [ ] **Phase 2:** Wire Dashboard + Analytics pages to live analytics service
+- [ ] **Phase 3:** Wire Customers + Jobs pages to CRM + job services
+- [ ] **Phase 4:** Wire Finance page to finance service
+- [ ] **Phase 5:** Wire Scheduling page + WebSocket to scheduling service
+- [ ] **Phase 6:** Wire Communications page to comms service
+- [ ] **Phase 7:** Resolve GAP 1 (UsersModule in CRM) + GAP 2 (CompanyModule) → wire Team + Settings
+- [ ] **Phase 8:** Auth0 SDK integration (swap dev bypass headers for real JWT)
+
+**Pending service setup (run once):**
+- [ ] `cd apps/analytics-service && pnpm install && npx prisma generate && npx prisma migrate dev`
+- [ ] `cd apps/comms-service && pnpm install && npx prisma generate` (MongoDB: `npx prisma db push`)
+- [ ] Start all 5 NestJS services on host (`pnpm dev` per service or use turbo)
+- [ ] `cd apps/scheduling-service && go run ./cmd/server` (port 3003)
+- [ ] Run DB migrations for all schemas (`psql` or `prisma migrate dev`)
+
+**Known Gaps to resolve (see FRONTEND_INTEGRATION_PLAN.md §6):**
+- [ ] GAP 1: Add UsersModule to CRM service (GET/PATCH /crm/users/me, list company users by role)
+- [ ] GAP 2: Add CompanyModule to CRM service (GET/PATCH /crm/companies/me)
+- [ ] GAP 3: Verify scheduling service test-bypass auth works (Go middleware)
+- [ ] GAP 4: Decide Job "amount" strategy (invoice lookup vs estimatedValue field)
+
+**Future:**
 - [ ] Technician React Native app (Expo SDK 51)
-- [ ] Admin dashboard UI (React 18 + shadcn/ui)
 - [ ] Customer portal (Next.js 14 App Router)
 - [ ] Full integration + load testing
 - [ ] Security audit + prod deploy (Docker Swarm or AWS ECS Fargate)

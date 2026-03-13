@@ -1,11 +1,14 @@
-import React, { useState } from "react";
-import { X, Wrench, Calendar } from "lucide-react";
-import { TECHNICIANS } from "./technicians";
+import React, { useState, useEffect } from "react";
+import { X, Wrench, Calendar, Loader2, AlertCircle } from "lucide-react";
+import { useCreateJob, useJobTypes } from "../../hooks/useJobs";
+import { useCustomers } from "../../hooks/useCustomers";
+import MapPicker from "../../components/MapPicker";
 
 interface AddJobModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreated?: (job: any) => void;
+  preselectedCustomer?: { id: string; name: string; address?: string };
 }
 
 type TabType = "basic" | "scheduling";
@@ -14,22 +17,42 @@ export default function AddJobModal({
   isOpen,
   onClose,
   onCreated,
+  preselectedCustomer,
 }: AddJobModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("basic");
-  const [formData, setFormData] = useState({
-    customer: "",
-    address: "",
-    service: "",
+  const [error, setError]         = useState<string>('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [formData, setFormData]   = useState({
+    title: "",
     description: "",
-    type: "Maintenance",
-    tech: "",
-    priority: "normal",
-    status: "scheduled",
+    priority: "NORMAL",
+    jobTypeId: "",
+    customerId: "",
+    customerName: "",
+    serviceAddress: "",
     date: new Date().toISOString().split("T")[0],
-    time: "09:00 AM",
-    amount: "",
+    time: "09:00",
+    lat: 6.9271,
+    lng: 79.8612,
   });
+
+  const createJob = useCreateJob();
+  const jobTypesQuery = useJobTypes();
+  const jobTypes = jobTypesQuery.data ?? [];
+  const customersQuery = useCustomers({ page: 1, limit: 50, search: customerSearch || undefined });
+  const customers = customersQuery.data?.data ?? [];
+
+  // Pre-fill customer when opened from customer detail
+  useEffect(() => {
+    if (isOpen && preselectedCustomer) {
+      setFormData(prev => ({
+        ...prev,
+        customerId: preselectedCustomer.id,
+        customerName: preselectedCustomer.name,
+        serviceAddress: preselectedCustomer.address || prev.serviceAddress,
+      }));
+    }
+  }, [isOpen, preselectedCustomer]);
 
   if (!isOpen) return null;
 
@@ -42,33 +65,82 @@ export default function AddJobModal({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      const newJob = {
-        id: `JOB-${String(Date.now()).slice(-4)}`,
-        ...formData,
-        amount: parseFloat(formData.amount) || 0,
-        color: "#3B82F6",
-      };
-      onCreated?.(newJob);
-      setIsLoading(false);
-      onClose();
-      setFormData({
-        customer: "",
-        address: "",
-        service: "",
-        description: "",
-        type: "Maintenance",
-        tech: "",
-        priority: "normal",
-        status: "scheduled",
-        date: new Date().toISOString().split("T")[0],
-        time: "09:00 AM",
-        amount: "",
-      });
-      setActiveTab("basic");
-    }, 500);
+  const handleCustomerSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = e.target.value;
+    if (!id) {
+      setFormData(prev => ({ ...prev, customerId: '', customerName: '', serviceAddress: '' }));
+      return;
+    }
+    const c = customers.find((c: any) => c.id === id);
+    if (c) {
+      const name = `${c.firstName} ${c.lastName}`.trim();
+      const addr = [c.address, c.city, c.state, c.zipCode].filter(Boolean).join(', ');
+      setFormData(prev => ({ ...prev, customerId: c.id, customerName: name, serviceAddress: addr || 'N/A' }));
+    }
+  };
+
+  const handleSubmit = () => {
+    setError('');
+
+    if (!formData.title.trim()) {
+      setError('Job title is required.');
+      return;
+    }
+    if (!formData.customerId) {
+      setError('Please select a customer.');
+      return;
+    }
+    if (!formData.serviceAddress.trim()) {
+      setError('Service address is required.');
+      return;
+    }
+
+    // Build scheduledStart ISO string
+    let scheduledStart: string | undefined;
+    if (formData.date) {
+      const dt = new Date(`${formData.date}T${formData.time || '09:00'}:00`);
+      if (!isNaN(dt.getTime())) scheduledStart = dt.toISOString();
+    }
+
+    createJob.mutate(
+      {
+        title:              formData.title.trim(),
+        description:        formData.description.trim() || undefined,
+        priority:           formData.priority.toUpperCase() as any,
+        jobTypeId:          formData.jobTypeId || undefined,
+        customerId:         formData.customerId,
+        customerName:       formData.customerName,
+        serviceAddress:     formData.serviceAddress,
+        scheduledStart,
+        serviceLatitude:    formData.lat,
+        serviceLongitude:   formData.lng,
+      } as any,
+      {
+        onSuccess: (newJob) => {
+          onCreated?.(newJob);
+          onClose();
+          setFormData({
+            title: "",
+            description: "",
+            priority: "NORMAL",
+            jobTypeId: "",
+            customerId: "",
+            customerName: "",
+            serviceAddress: "",
+            date: new Date().toISOString().split("T")[0],
+            time: "09:00",
+            lat: 6.9271,
+            lng: 79.8612,
+          });
+          setActiveTab("basic");
+          setError('');
+        },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message;
+          setError(Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Failed to create job. Please try again.'));
+        },
+      }
+    );
   };
 
   const inputCls =
@@ -76,12 +148,10 @@ export default function AddJobModal({
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: "basic", label: "Job Details", icon: <Wrench size={14} /> },
-    {
-      id: "scheduling",
-      label: "Schedule & Cost",
-      icon: <Calendar size={14} />,
-    },
+    { id: "scheduling", label: "Schedule & Cost", icon: <Calendar size={14} /> },
   ];
+
+  const isLoading = createJob.isPending;
 
   return (
     <div
@@ -96,9 +166,7 @@ export default function AddJobModal({
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5 flex items-center justify-between rounded-t-xl shrink-0">
           <div className="text-white">
             <h2 className="text-2xl font-bold">Create New Job</h2>
-            <p className="text-blue-100 text-sm mt-0.5">
-              Schedule a new service job
-            </p>
+            <p className="text-blue-100 text-sm mt-0.5">Schedule a new service job</p>
           </div>
           <button
             onClick={onClose}
@@ -128,47 +196,68 @@ export default function AddJobModal({
 
         <div className="flex-1 overflow-y-auto">
           <div className="p-8 space-y-5">
+
+            {error && (
+              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                <AlertCircle size={14} />
+                {error}
+              </div>
+            )}
+
             {activeTab === "basic" && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Customer Name
+                      Customer <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      name="customer"
-                      value={formData.customer}
-                      onChange={handleChange}
-                      placeholder="e.g. John Doe"
+                      placeholder="Search customers…"
+                      value={customerSearch}
+                      onChange={e => setCustomerSearch(e.target.value)}
+                      disabled={isLoading}
+                      className={`${inputCls} mb-1.5`}
+                      style={{ marginBottom: 6 }}
+                    />
+                    <select
+                      value={formData.customerId}
+                      onChange={handleCustomerSelect}
                       disabled={isLoading}
                       className={inputCls}
-                    />
+                    >
+                      <option value="">— Select Customer —</option>
+                      {customers.map((c: any) => (
+                        <option key={c.id} value={c.id}>
+                          {c.firstName} {c.lastName}{c.email ? ` (${c.email})` : ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Service
+                      Service Address <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      name="service"
-                      value={formData.service}
+                      name="serviceAddress"
+                      value={formData.serviceAddress}
                       onChange={handleChange}
-                      placeholder="e.g. HVAC Maintenance"
+                      placeholder="123 Main St, City, State"
                       disabled={isLoading}
                       className={inputCls}
                     />
                   </div>
                   <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Address
+                      Job Title <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      name="address"
-                      value={formData.address}
+                      name="title"
+                      value={formData.title}
                       onChange={handleChange}
-                      placeholder="e.g. 1234 Oak Lane, Dallas TX"
+                      placeholder="e.g. HVAC Maintenance — John Doe"
                       disabled={isLoading}
                       className={inputCls}
                     />
@@ -189,23 +278,6 @@ export default function AddJobModal({
                   </div>
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Job Type
-                    </label>
-                    <select
-                      name="type"
-                      value={formData.type}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={inputCls}
-                    >
-                      <option value="Maintenance">Maintenance</option>
-                      <option value="Installation">Installation</option>
-                      <option value="Repair">Repair</option>
-                      <option value="Emergency">Emergency</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Priority
                     </label>
                     <select
@@ -215,9 +287,29 @@ export default function AddJobModal({
                       disabled={isLoading}
                       className={inputCls}
                     >
-                      <option value="normal">Normal</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
+                      <option value="LOW">Low</option>
+                      <option value="NORMAL">Normal</option>
+                      <option value="HIGH">High</option>
+                      <option value="EMERGENCY">Emergency</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Job Type
+                    </label>
+                    <select
+                      name="jobTypeId"
+                      value={formData.jobTypeId}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={inputCls}
+                    >
+                      <option value="">— Select Type —</option>
+                      {jobTypes.map((jt: any) => (
+                        <option key={jt.id} value={jt.id}>
+                          {jt.name} ({jt.trade})
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -227,39 +319,6 @@ export default function AddJobModal({
             {activeTab === "scheduling" && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Technician
-                    </label>
-                    <select
-                      name="tech"
-                      value={formData.tech}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={inputCls}
-                    >
-                      <option value="">Select Technician</option>
-                      {TECHNICIANS.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Amount ($)
-                    </label>
-                    <input
-                      type="number"
-                      name="amount"
-                      value={formData.amount}
-                      onChange={handleChange}
-                      placeholder="0.00"
-                      disabled={isLoading}
-                      className={inputCls}
-                    />
-                  </div>
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Scheduled Date
@@ -278,32 +337,22 @@ export default function AddJobModal({
                       Scheduled Time
                     </label>
                     <input
-                      type="text"
+                      type="time"
                       name="time"
                       value={formData.time}
                       onChange={handleChange}
-                      placeholder="e.g. 10:00 AM"
                       disabled={isLoading}
                       className={inputCls}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={inputCls}
-                    >
-                      <option value="scheduled">Scheduled</option>
-                      <option value="pending">Pending</option>
-                      <option value="in_progress">In Progress</option>
-                    </select>
-                  </div>
                 </div>
+                <MapPicker
+                  label="Service Location (GPS for Dispatch)"
+                  lat={formData.lat}
+                  lng={formData.lng}
+                  onChange={(lat, lng) => setFormData(prev => ({ ...prev, lat, lng }))}
+                  height="240px"
+                />
               </>
             )}
           </div>
@@ -320,30 +369,9 @@ export default function AddJobModal({
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center cursor-pointer border-0"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-60 flex items-center gap-2 cursor-pointer border-0"
           >
-            {isLoading ? (
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            ) : null}
+            {isLoading && <Loader2 size={14} className="animate-spin" />}
             {isLoading ? "Creating..." : "Create Job"}
           </button>
         </div>

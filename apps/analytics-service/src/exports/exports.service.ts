@@ -52,8 +52,8 @@ export class ExportsService {
           p.amount::TEXT,
           p."paymentMethod"::TEXT,
           p.status::TEXT
-        FROM   finance.payments p
-        JOIN   finance.invoices i ON i.id = p."invoiceId"
+        FROM   finance."Payment" p
+        JOIN   finance."Invoice" i ON i.id = p."invoiceId"
         WHERE  i."companyId" = ${companyId}
           AND  p."paidAt" BETWEEN ${from} AND ${to}
         ORDER  BY p."paidAt" DESC
@@ -99,8 +99,8 @@ export class ExportsService {
           p."paidAt",
           p.amount::TEXT,
           p."paymentMethod"::TEXT
-        FROM   finance.payments p
-        JOIN   finance.invoices i ON i.id = p."invoiceId"
+        FROM   finance."Payment" p
+        JOIN   finance."Invoice" i ON i.id = p."invoiceId"
         WHERE  i."companyId" = ${companyId}
           AND  p.status = 'SUCCEEDED'
           AND  p."paidAt" BETWEEN ${from} AND ${to}
@@ -209,8 +209,8 @@ export class ExportsService {
           COALESCE(SUM(p.amount), 0)::TEXT AS revenue
         FROM   jobs.jobs j
         LEFT   JOIN jobs.job_types jt  ON jt.id = j."jobTypeId"
-        LEFT   JOIN finance.invoices i ON i."jobId" = j.id AND i.status = 'PAID'
-        LEFT   JOIN finance.payments p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN finance."Invoice" i ON i."jobId" = j.id AND i.status = 'PAID'
+        LEFT   JOIN finance."Payment" p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         WHERE  j."companyId" = ${companyId}
           AND  j."createdAt" BETWEEN ${from} AND ${to}
         GROUP  BY j.id, j."jobNumber", j."customerName", j."serviceAddress",
@@ -304,8 +304,8 @@ export class ExportsService {
             EXTRACT(EPOCH FROM (j."actualEnd" - j."actualStart")) / 60.0
           )::NUMERIC, 0)::TEXT                                              AS "avgDurationMins"
         FROM   jobs.jobs j
-        LEFT   JOIN finance.invoices i ON i."jobId" = j.id
-        LEFT   JOIN finance.payments p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN finance."Invoice" i ON i."jobId" = j.id
+        LEFT   JOIN finance."Payment" p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         LEFT   JOIN crm.reviews      r ON r."jobId" = j.id
         WHERE  j."companyId" = ${companyId}
           AND  j."assignedToId" IS NOT NULL

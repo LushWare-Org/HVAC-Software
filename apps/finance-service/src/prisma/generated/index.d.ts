@@ -59,7 +59,8 @@ export namespace $Enums {
   VIEWED: 'VIEWED',
   ACCEPTED: 'ACCEPTED',
   DECLINED: 'DECLINED',
-  EXPIRED: 'EXPIRED'
+  EXPIRED: 'EXPIRED',
+  CONVERTED: 'CONVERTED'
 };
 
 export type QuoteStatus = (typeof QuoteStatus)[keyof typeof QuoteStatus]

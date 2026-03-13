@@ -88,10 +88,10 @@ export class CustomerAnalyticsService {
         FROM   crm.customers c
         LEFT   JOIN jobs.jobs j         ON j."customerId" = c.id
           AND  j."completedAt" BETWEEN ${from} AND ${to}
-        LEFT   JOIN finance.invoices i  ON i."customerId" = c.id
+        LEFT   JOIN finance."Invoice" i  ON i."customerId" = c.id
           AND  i.status IN ('PAID')
           AND  i."paidAt" BETWEEN ${from} AND ${to}
-        LEFT   JOIN finance.payments p  ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN finance."Payment" p  ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         LEFT   JOIN crm.reviews r       ON r."customerId" = c.id
           AND  r."createdAt" BETWEEN ${from} AND ${to}
         WHERE  c."companyId" = ${companyId}
@@ -185,9 +185,9 @@ export class CustomerAnalyticsService {
         FROM   crm.customers c
         LEFT   JOIN jobs.jobs j        ON j."customerId" = c.id
           AND  j.status IN ('COMPLETED','INVOICED','PAID')
-        LEFT   JOIN finance.invoices i ON i."customerId" = c.id
+        LEFT   JOIN finance."Invoice" i ON i."customerId" = c.id
           AND  i.status = 'PAID'
-        LEFT   JOIN finance.payments p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN finance."Payment" p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         WHERE  c."companyId" = ${companyId}
           AND  c."isActive" = TRUE
         GROUP  BY c.id, c."firstName", c."lastName", c.email
@@ -235,9 +235,9 @@ export class CustomerAnalyticsService {
         FROM   crm.customers c
         LEFT   JOIN jobs.jobs j        ON j."customerId" = c.id
           AND  j."completedAt" BETWEEN ${from} AND ${to}
-        LEFT   JOIN finance.invoices i ON i."customerId" = c.id AND i.status = 'PAID'
+        LEFT   JOIN finance."Invoice" i ON i."customerId" = c.id AND i.status = 'PAID'
           AND  i."paidAt" BETWEEN ${from} AND ${to}
-        LEFT   JOIN finance.payments p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN finance."Payment" p ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
         WHERE  c."companyId" = ${companyId}
           AND  c."isActive" = TRUE
         GROUP  BY c.type

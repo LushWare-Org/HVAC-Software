@@ -8,6 +8,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -94,6 +95,22 @@ export class NotificationsController {
       page: Number(page),
       limit: Number(limit),
     });
+  }
+
+  // ── Mark all notifications as read ────────────────────────────────────────
+
+  @Patch('read-all')
+  @ApiOperation({ summary: 'Mark all notifications as read' })
+  markAllRead(@CurrentUser() user: AuthUser) {
+    return this.notificationsService.markAllRead(user.companyId);
+  }
+
+  // ── Mark single notification as read ────────────────────────────────────
+
+  @Patch(':id/read')
+  @ApiOperation({ summary: 'Mark a notification as read' })
+  markRead(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.notificationsService.markRead(user.companyId, id);
   }
 
   // ── Stats ─────────────────────────────────────────────────────────────────

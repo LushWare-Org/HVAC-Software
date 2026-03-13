@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bell, Search, Sun, Moon, Monitor, ChevronDown, User, Settings as SettingsIcon, LogOut, Calendar, Plus, ArrowRight, Download, RefreshCw, LayoutDashboard, CalendarDays, MapPin } from 'lucide-react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
+import { useAuth } from '../contexts/AuthContext'
 import AddJobModal from '../pages/jobs/AddJobModal'
 import JobDetailModal from '../pages/jobs/JobDetailModal'
 import InvoiceDetailModal from '../pages/finance/InvoiceDetailModal'
 import QuoteDetailModal from '../pages/finance/QuoteDetailModal'
 import ExpenseDetailModal from '../pages/finance/ExpenseDetailModal'
+import AddInvoiceModal from '../pages/finance/AddInvoiceModal'
+import AddQuoteModal from '../pages/finance/AddQuoteModal'
 import SchedulingDetailModal from '../pages/scheduling/SchedulingDetailModal'
 import TechnicianDetailModal from '../pages/scheduling/TechnicianDetailModal'
 
@@ -54,6 +57,10 @@ export default function Topbar() {
     const [selectedScheduling, setSelectedScheduling] = useState<any>(null)
     const [isTechnicianDetailOpen, setIsTechnicianDetailOpen] = useState(false)
     const [selectedTechnician, setSelectedTechnician] = useState<any>(null)
+
+    // Finance creation from job context
+    const [isAddQuoteFromJobOpen, setIsAddQuoteFromJobOpen] = useState(false)
+    const [isAddInvoiceFromJobOpen, setIsAddInvoiceFromJobOpen] = useState(false)
 
     useEffect(() => {
         const handler = (e: Event) => {
@@ -120,10 +127,12 @@ export default function Topbar() {
         return () => window.removeEventListener('open-technician-detail', handler)
     }, [])
 
-    const MOCK_USER = {
-        name: 'Sarah Anderson',
-        role: 'Super Admin',
-        initials: 'SA',
+    const { user: authUser, logout } = useAuth()
+    const navigate = useNavigate()
+    const currentUser = {
+        name: authUser?.name ?? 'User',
+        role: (authUser?.role ?? 'admin').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        initials: (authUser?.name ?? 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
     }
 
     const getPageHeader = () => {
@@ -136,6 +145,7 @@ export default function Topbar() {
             case '/communications': return { title: 'Communications', sub: 'Customer messaging and marketing automations' }
             case '/analytics': return { title: 'Analytics', sub: 'Business intelligence and performance insights' }
             case '/settings': return { title: 'Settings', sub: '' }
+            case '/profile': return { title: 'My Profile', sub: 'Manage your account and preferences' }
             case '/team': return { title: 'Team Management', sub: '' }
             default: return { title: 'Admin Platform', sub: '' }
         }
@@ -305,22 +315,27 @@ export default function Topbar() {
                         </div>
                     </div>
 
+                    {pathname !== '/' && (
+                        <div className={`flex items-center gap-3 border-l pl-4 ml-2 ${isLight ? 'border-slate-200' : 'border-[var(--bd)]'}`}>
+                            {getPageActions()}
+                        </div>
+                    )}
+
                     {/* User Menu */}
-                    {pathname === '/' && (
-                        <div ref={user.ref} className="relative">
+                    <div ref={user.ref} className="relative">
                             <button
                                 onClick={() => { user.setOpen(o => !o); notif.setOpen(false) }}
                                 className={`flex items-center gap-3 px-3 py-1.5 border rounded-xl transition-colors duration-150 ${btnClass}`}
                             >
                                 <div className="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-lg text-white text-[13px] font-bold flex-shrink-0 shadow-sm">
-                                    {MOCK_USER.initials}
+                                    {currentUser.initials}
                                 </div>
                                 <div className="hidden sm:flex flex-col items-start pr-1">
                                     <span className={`text-[14px] font-semibold leading-tight ${isLight ? 'text-slate-800' : 'text-[var(--t1)]'}`}>
-                                        {MOCK_USER.name}
+                                        {currentUser.name}
                                     </span>
                                     <span className={`text-[12px] font-medium leading-tight ${isLight ? 'text-slate-500' : 'text-[var(--t3)]'}`}>
-                                        {MOCK_USER.role}
+                                        {currentUser.role}
                                     </span>
                                 </div>
                                 <ChevronDown size={16} className={isLight ? 'text-slate-400' : 'text-[var(--t3)]'} />
@@ -333,33 +348,30 @@ export default function Topbar() {
                                     </div>
                                     <div className="p-2">
                                         {[
-                                            { icon: User, label: 'Profile' },
-                                            { icon: SettingsIcon, label: 'Settings' }
+                                            { icon: User, label: 'Profile', path: '/profile' },
+                                            { icon: SettingsIcon, label: 'Settings', path: '/settings' }
                                         ].map((item) => {
                                             const Icon = item.icon
                                             return (
-                                                <button key={item.label} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors text-[14px] text-left font-medium bg-transparent border-0 cursor-pointer mb-0.5 ${isLight ? 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' : 'text-[var(--t2)] hover:bg-[var(--bg-hover)] hover:text-[var(--t1)]'}`}>
+                                                <button
+                                                    key={item.label}
+                                                    onClick={() => { navigate(item.path); user.setOpen(false) }}
+                                                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors text-[14px] text-left font-medium bg-transparent border-0 cursor-pointer mb-0.5 ${isLight ? 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' : 'text-[var(--t2)] hover:bg-[var(--bg-hover)] hover:text-[var(--t1)]'}`}
+                                                >
                                                     <Icon size={16} className={isLight ? 'text-slate-400' : 'text-[var(--t3)]'} />
                                                     {item.label}
                                                 </button>
                                             )
                                         })}
                                         <div className={`h-px my-2 ${isLight ? 'bg-slate-100' : 'bg-[var(--bd)]'}`} />
-                                        <button className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors text-[13px] text-left font-medium text-red-500 hover:bg-red-500/10 bg-transparent border-0 cursor-pointer`}>
+                                        <button onClick={logout} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors text-[13px] text-left font-medium text-red-500 hover:bg-red-500/10 bg-transparent border-0 cursor-pointer`}>
                                             <LogOut size={14} className="text-red-500" />
                                             Logout
                                         </button>
                                     </div>
                                 </div>
                             )}
-                        </div>
-                    )}
-
-                    {pathname !== '/' && (
-                        <div className={`flex items-center gap-3 border-l pl-4 ml-2 ${isLight ? 'border-slate-200' : 'border-[var(--bd)]'}`}>
-                            {getPageActions()}
-                        </div>
-                    )}
+                    </div>
                 </div>
             </header>
 
@@ -371,6 +383,8 @@ export default function Topbar() {
                 isOpen={isDetailOpen}
                 onClose={() => setIsDetailOpen(false)}
                 job={selectedJob}
+                onCreateQuote={() => { setIsDetailOpen(false); setIsAddQuoteFromJobOpen(true); }}
+                onCreateInvoice={() => { setIsDetailOpen(false); setIsAddInvoiceFromJobOpen(true); }}
             />
             <InvoiceDetailModal
                 isOpen={isInvoiceDetailOpen}
@@ -397,6 +411,10 @@ export default function Topbar() {
                 onClose={() => setIsTechnicianDetailOpen(false)}
                 technician={selectedTechnician}
             />
+
+            {/* Finance creation from job context */}
+            <AddQuoteModal isOpen={isAddQuoteFromJobOpen} onClose={() => setIsAddQuoteFromJobOpen(false)} />
+            <AddInvoiceModal isOpen={isAddInvoiceFromJobOpen} onClose={() => setIsAddInvoiceFromJobOpen(false)} />
         </>
     )
 }

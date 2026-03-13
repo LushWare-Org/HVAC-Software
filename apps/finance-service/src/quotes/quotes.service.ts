@@ -14,18 +14,21 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { PdfService } from '../pdf/pdf.service';
+import { NotificationClientService } from '../notification-client/notification-client.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QuoteStatus, DiscountType } from '../prisma/generated';
 
 // ── Valid status transitions ───────────────────────────────────────────────
 const QUOTE_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
-  DRAFT:    [QuoteStatus.SENT],
-  SENT:     [QuoteStatus.VIEWED, QuoteStatus.ACCEPTED, QuoteStatus.DECLINED, QuoteStatus.EXPIRED],
-  VIEWED:   [QuoteStatus.ACCEPTED, QuoteStatus.DECLINED, QuoteStatus.EXPIRED],
-  ACCEPTED: [],                            // terminal (can convert to invoice)
-  DECLINED: [],                            // terminal
-  EXPIRED:  [],                            // terminal
+  DRAFT:     [QuoteStatus.SENT],
+  SENT:      [QuoteStatus.VIEWED, QuoteStatus.ACCEPTED, QuoteStatus.DECLINED, QuoteStatus.EXPIRED],
+  VIEWED:    [QuoteStatus.ACCEPTED, QuoteStatus.DECLINED, QuoteStatus.EXPIRED],
+  ACCEPTED:  [QuoteStatus.CONVERTED],     // can convert to invoice
+  DECLINED:  [],                            // terminal
+  EXPIRED:   [],                            // terminal
+  CONVERTED: [],                            // terminal
 };
 
 // ── Sequential quote-number generator ────────────────────────────────────
@@ -42,6 +45,8 @@ export class QuotesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly pdfService: PdfService,
+    private readonly notificationClient: NotificationClientService,
   ) {}
 
   // ── List ─────────────────────────────────────────────────────────────────
@@ -67,7 +72,7 @@ export class QuotesService {
       }),
       this.prisma.quote.count({ where }),
     ]);
-    return { items, total, page, limit };
+    return { data: items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   // ── Single ───────────────────────────────────────────────────────────────
@@ -204,7 +209,7 @@ export class QuotesService {
     }
 
     const approvalToken = randomUUID();
-    return this.prisma.quote.update({
+    const updated = await this.prisma.quote.update({
       where: { id },
       data: {
         status: QuoteStatus.SENT,
@@ -213,6 +218,25 @@ export class QuotesService {
       },
       include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
     });
+
+    // Generate email HTML from the quote template and send via comms-service
+    if (quote.customerEmail) {
+      const companyName = process.env.COMPANY_NAME ?? 'T&S Services';
+      const companyAddress = process.env.COMPANY_ADDRESS ?? '';
+      const emailHtml = this.pdfService.renderQuoteHtml(updated as any, companyName, companyAddress);
+
+      this.notificationClient.sendEmail({
+        recipientId: quote.customerId,
+        recipientName: quote.customerName ?? undefined,
+        recipientEmail: quote.customerEmail,
+        subject: `Quote ${quote.quoteNumber} from ${companyName}`,
+        htmlBody: emailHtml,
+        customerId: quote.customerId,
+        quoteId: id,
+      });
+    }
+
+    return updated;
   }
 
   // ── Mark as viewed (called when customer opens the link) ─────────────────
@@ -293,44 +317,53 @@ export class QuotesService {
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 30);
 
-    return this.prisma.invoice.create({
-      data: {
-        companyId,
-        invoiceNumber,
-        quoteId: id,
-        jobId: quote.jobId,
-        customerId: quote.customerId,
-        customerName: quote.customerName,
-        customerEmail: quote.customerEmail,
-        subtotal: quote.subtotal,
-        discountAmount: quote.discountAmount,
-        taxRate: quote.taxRate,
-        taxAmount: quote.taxAmount,
-        total: quote.total,
-        balanceDue: quote.total,
-        amountPaid: 0,
-        dueDate,
-        notes: quote.notes,
-        terms: quote.terms,
-        createdByUserId,
-        lineItems: {
-          create: quote.lineItems.map((li) => ({
-            description: li.description,
-            category: li.category,
-            quantity: li.quantity,
-            unitPrice: li.unitPrice,
-            lineTotal: li.lineTotal,
-            taxable: li.taxable,
-            sortOrder: li.sortOrder,
-          })),
+    const invoice = await this.prisma.$transaction(async (tx) => {
+      const inv = await tx.invoice.create({
+        data: {
+          companyId,
+          invoiceNumber,
+          quoteId: id,
+          jobId: quote.jobId,
+          customerId: quote.customerId,
+          customerName: quote.customerName,
+          customerEmail: quote.customerEmail,
+          subtotal: quote.subtotal,
+          discountAmount: quote.discountAmount,
+          taxRate: quote.taxRate,
+          taxAmount: quote.taxAmount,
+          total: quote.total,
+          balanceDue: quote.total,
+          amountPaid: 0,
+          dueDate,
+          notes: quote.notes,
+          terms: quote.terms,
+          createdByUserId,
+          lineItems: {
+            create: quote.lineItems.map((li) => ({
+              description: li.description,
+              category: li.category,
+              quantity: li.quantity,
+              unitPrice: li.unitPrice,
+              lineTotal: li.lineTotal,
+              taxable: li.taxable,
+              sortOrder: li.sortOrder,
+            })),
+          },
         },
-      },
-      include: {
-        lineItems: { orderBy: { sortOrder: 'asc' } },
-        payments: true,
-        quote: { select: { quoteNumber: true } },
-      },
+        include: {
+          lineItems: { orderBy: { sortOrder: 'asc' } },
+          payments: true,
+          quote: { select: { quoteNumber: true } },
+        },
+      });
+      await tx.quote.update({
+        where: { id },
+        data: { status: QuoteStatus.CONVERTED },
+      });
+      return inv;
     });
+
+    return invoice;
   }
 
   // ── Delete (draft only) ───────────────────────────────────────────────────

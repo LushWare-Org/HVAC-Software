@@ -48,7 +48,7 @@ export class ExpensesService {
       }),
       this.prisma.expense.count({ where }),
     ]);
-    return { items, total, page, limit };
+    return { data: items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(companyId: string, id: string) {

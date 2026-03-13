@@ -3,7 +3,7 @@ import { PrismaClient } from '../src/prisma/generated';
 const prisma = new PrismaClient();
 
 // Use the same demo company ID from CRM seed
-const DEMO_COMPANY_ID = process.env.SEED_COMPANY_ID ?? 'demo-company-001';
+const DEMO_COMPANY_ID = process.env.SEED_COMPANY_ID ?? 'co-demo-001';
 
 async function main() {
   console.log('Seeding job-service database...');
