@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Put, Patch, Delete,
-  Param, Body, Query, UseGuards, HttpCode, HttpStatus, Res,
+  Param, Body, Query, UseGuards, HttpCode, HttpStatus, Res, DefaultValuePipe, ParseIntPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
 import {
@@ -27,6 +27,12 @@ class ApproveByIdDto {
   @IsOptional() @IsString() approvalToken?: string;  // accepted but not used here
 }
 
+class DeclineByIdDto {
+  @IsOptional() @IsString() declinedByName?: string;
+  @IsOptional() @IsString() declinedByEmail?: string;
+  @IsOptional() @IsString() reason?: string;
+}
+
 @ApiTags('Quotes')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -49,8 +55,8 @@ export class QuotesController {
     @CurrentUser() user: AuthUser,
     @Query('status') status?: QuoteStatus,
     @Query('customerId') customerId?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
     return this.quotesService.findAll(user.companyId, { status, customerId, page, limit });
   }
@@ -105,7 +111,7 @@ export class QuotesController {
   // ── Approve by ID (test/admin endpoint) ──────────────────────────────────
   @Post(':id/approve')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Approve a quote directly by ID (no token required)' })
   approveById(
     @CurrentUser() user: AuthUser,
@@ -117,6 +123,27 @@ export class QuotesController {
       id,
       dto.approvedByName ?? 'Unknown',
       dto.approvedByEmail ?? 'noreply@example.com',
+      user.role === Role.CUSTOMER ? user.customerId : undefined,
+    );
+  }
+
+  // ── Decline by ID (portal/customer endpoint) ────────────────────────────
+  @Post(':id/decline')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
+  @ApiOperation({ summary: 'Decline a quote directly by ID' })
+  declineById(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: DeclineByIdDto,
+  ) {
+    return this.quotesService.declineById(
+      user.companyId,
+      id,
+      dto.declinedByName ?? 'Unknown',
+      dto.declinedByEmail ?? 'noreply@example.com',
+      user.role === Role.CUSTOMER ? user.customerId : undefined,
+      dto.reason,
     );
   }
 

@@ -9,12 +9,14 @@
  *  - PushProcessor (@tscrm/queue QueueName.SEND_PUSH)
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { AuthUser } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
 import { Channel, DeliveryStatus } from '../prisma/generated';
 import { QueueName } from '@tscrm/queue';
+import { EmailService } from '../email/email.service';
 
 // ── Job payload types (shared with processors) ─────────────────────────────
 
@@ -25,6 +27,12 @@ export interface SmsJobPayload {
   body: string;
 }
 
+export interface EmailAttachment {
+  filename: string;
+  contentType: string;
+  contentBase64: string;
+}
+
 export interface EmailJobPayload {
   notificationId: string;
   companyId: string;
@@ -32,6 +40,7 @@ export interface EmailJobPayload {
   toName?: string;
   subject: string;
   htmlBody: string;
+  attachments?: EmailAttachment[];
 }
 
 export interface PushJobPayload {
@@ -68,6 +77,7 @@ export interface SendEmailRequest {
   recipientEmail: string;
   subject: string;
   htmlBody: string;
+  attachments?: EmailAttachment[];
   scheduledAt?: Date;
 }
 
@@ -84,12 +94,30 @@ export interface SendPushRequest {
   scheduledAt?: Date;
 }
 
+export interface InAppRecipient {
+  recipientId: string;
+  recipientName?: string;
+  customerId?: string;
+  role?: string;
+}
+
+export interface SendInAppRequest {
+  companyId: string;
+  sender: AuthUser;
+  title: string;
+  body: string;
+  type?: string;
+  roles?: string[];
+  recipients: InAppRecipient[];
+}
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
     @InjectQueue(QueueName.SEND_SMS) private readonly smsQueue: Queue,
     @InjectQueue(QueueName.SEND_EMAIL) private readonly emailQueue: Queue,
     @InjectQueue(QueueName.SEND_PUSH) private readonly pushQueue: Queue,
@@ -151,9 +179,75 @@ export class NotificationsService {
       },
     });
 
-    const delay = req.scheduledAt
-      ? Math.max(0, req.scheduledAt.getTime() - Date.now())
-      : 0;
+    // For immediate send requests, deliver now and return real outcome.
+    // Keep queue path only for scheduled emails.
+    if (!req.scheduledAt) {
+      await this.prisma.notification.update({
+        where: { id: notification.id },
+        data: { status: DeliveryStatus.SENT, sentAt: new Date() },
+      });
+
+      const result = await this.emailService.send({
+        to: req.recipientEmail,
+        toName: req.recipientName,
+        subject: req.subject,
+        htmlBody: req.htmlBody,
+        attachments: req.attachments,
+      });
+
+      if (result.success) {
+        const delivered = await this.prisma.notification.update({
+          where: { id: notification.id },
+          data: {
+            status: DeliveryStatus.DELIVERED,
+            deliveredAt: new Date(),
+            externalId: result.externalId,
+          },
+        });
+
+        await this.prisma.deliveryLog.create({
+          data: {
+            companyId: req.companyId,
+            notificationId: notification.id,
+            channel: Channel.EMAIL,
+            recipient: req.recipientEmail,
+            status: DeliveryStatus.DELIVERED,
+            provider: result.provider ?? 'unknown',
+            externalId: result.externalId,
+            durationMs: result.durationMs,
+          },
+        });
+
+        this.logger.log(`Email delivered to ${req.recipientEmail}`);
+        return delivered;
+      }
+
+      await this.prisma.notification.update({
+        where: { id: notification.id },
+        data: {
+          status: DeliveryStatus.FAILED,
+          failedAt: new Date(),
+          error: result.error,
+        },
+      });
+
+      await this.prisma.deliveryLog.create({
+        data: {
+          companyId: req.companyId,
+          notificationId: notification.id,
+          channel: Channel.EMAIL,
+          recipient: req.recipientEmail,
+          status: DeliveryStatus.FAILED,
+          provider: result.provider ?? 'unknown',
+          durationMs: result.durationMs,
+          error: result.error,
+        },
+      });
+
+      throw new BadRequestException(result.error ?? 'Email delivery failed');
+    }
+
+    const delay = Math.max(0, req.scheduledAt.getTime() - Date.now());
 
     const payload: EmailJobPayload = {
       notificationId: notification.id,
@@ -162,6 +256,7 @@ export class NotificationsService {
       toName: req.recipientName,
       subject: req.subject,
       htmlBody: req.htmlBody,
+      attachments: req.attachments,
     };
 
     await this.emailQueue.add('send-email', payload, { delay });
@@ -204,17 +299,73 @@ export class NotificationsService {
     return notification;
   }
 
+  async sendInApp(req: SendInAppRequest) {
+    const uniqueRecipients = req.recipients.filter((recipient, index, list) => (
+      list.findIndex((candidate) => candidate.recipientId === recipient.recipientId) === index
+    ));
+
+    if (uniqueRecipients.length === 0) {
+      throw new BadRequestException('At least one notification recipient is required');
+    }
+
+    const notifications = await Promise.all(
+      uniqueRecipients.map((recipient) => this.prisma.notification.create({
+        data: {
+          companyId: req.companyId,
+          customerId: recipient.customerId,
+          recipientId: recipient.recipientId,
+          recipientName: recipient.recipientName,
+          channel: Channel.IN_APP,
+          title: req.title,
+          body: req.body,
+          status: DeliveryStatus.SENT,
+          isRead: false,
+          type: req.type ?? 'info',
+        },
+      })),
+    );
+
+    const senderCopy = await this.prisma.notification.create({
+      data: {
+        companyId: req.companyId,
+        recipientId: req.sender.userId,
+        recipientName: req.sender.name,
+        channel: Channel.IN_APP,
+        title: req.title,
+        body: req.body,
+        status: DeliveryStatus.SENT,
+        isRead: true,
+        type: 'sent',
+        providerResponse: JSON.stringify({
+          recipientCount: notifications.length,
+          roles: req.roles ?? [],
+        }),
+      },
+    });
+
+    this.logger.log(`In-app broadcast sent by ${req.sender.userId} to ${notifications.length} recipients`);
+
+    return {
+      count: notifications.length,
+      roles: req.roles ?? [],
+      data: [...notifications, senderCopy],
+    };
+  }
+
   // ── List / stats / read ────────────────────────────────────────────────
 
   async findAll(
     companyId: string,
+    user: AuthUser,
     params: { channel?: Channel; status?: DeliveryStatus; page?: number; limit?: number },
   ) {
     const { channel, status, page = 1, limit = 20 } = params;
     const skip = (page - 1) * limit;
+    const recipientId = user.role === 'customer' ? (user.customerId ?? user.userId) : user.userId;
     const where = {
       companyId,
-      ...(channel ? { channel } : {}),
+      recipientId,
+      channel: channel ?? Channel.IN_APP,
       ...(status ? { status } : {}),
     };
     const [items, total] = await Promise.all([
@@ -227,31 +378,49 @@ export class NotificationsService {
       this.prisma.notification.count({ where }),
     ]);
     // Map to frontend-expected shape
-    const data = items.map((n) => ({
-      id: n.id,
-      companyId: n.companyId,
-      userId: n.recipientId,
-      title: n.title ?? n.subject ?? `${n.channel} notification`,
-      body: n.body,
-      isRead: n.isRead,
-      type: n.type ?? (n.status === 'FAILED' ? 'error' : 'info'),
-      referenceId: n.customerId ?? n.jobId ?? undefined,
-      referenceType: n.customerId ? 'customer' : n.jobId ? 'job' : undefined,
-      createdAt: n.createdAt.toISOString(),
-    }));
+    const data = items.map((n) => {
+      const metadata = (() => {
+        if (!n.providerResponse) return undefined;
+        try {
+          return JSON.parse(n.providerResponse) as { recipientCount?: number; roles?: string[] };
+        } catch {
+          return undefined;
+        }
+      })();
+
+      return {
+        id: n.id,
+        companyId: n.companyId,
+        userId: n.recipientId,
+        title: n.title ?? n.subject ?? `${n.channel} notification`,
+        body: n.body,
+        isRead: n.isRead,
+        type: n.type ?? (n.status === 'FAILED' ? 'error' : 'info'),
+        referenceId: n.customerId ?? n.jobId ?? undefined,
+        referenceType: n.customerId ? 'customer' : n.jobId ? 'job' : undefined,
+        createdAt: n.createdAt.toISOString(),
+        channel: n.channel,
+        status: n.status,
+        recipientName: n.recipientName,
+        sentRecipientCount: metadata?.recipientCount,
+        sentRoles: metadata?.roles,
+      };
+    });
     return { data, total, page, limit };
   }
 
-  async markRead(companyId: string, id: string) {
+  async markRead(companyId: string, user: AuthUser, id: string) {
+    const recipientId = user.role === 'customer' ? (user.customerId ?? user.userId) : user.userId;
     return this.prisma.notification.updateMany({
-      where: { id, companyId },
+      where: { id, companyId, recipientId, channel: Channel.IN_APP },
       data: { isRead: true },
     });
   }
 
-  async markAllRead(companyId: string) {
+  async markAllRead(companyId: string, user: AuthUser) {
+    const recipientId = user.role === 'customer' ? (user.customerId ?? user.userId) : user.userId;
     return this.prisma.notification.updateMany({
-      where: { companyId, isRead: false },
+      where: { companyId, recipientId, channel: Channel.IN_APP, isRead: false },
       data: { isRead: true },
     });
   }

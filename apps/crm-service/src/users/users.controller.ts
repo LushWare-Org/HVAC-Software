@@ -66,6 +66,15 @@ export class UsersController {
     return this.usersService.create(user.companyId, body);
   }
 
+  @Patch('me')
+  @ApiOperation({ summary: 'Update current user profile (name/phone)' })
+  updateMe(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { name?: string; phone?: string },
+  ) {
+    return this.usersService.updateMe(user.companyId, user.userId, body);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update a user' })
   update(

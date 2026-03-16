@@ -60,6 +60,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       companyId: payload['company_id'] as string,
       role: payload['role'] as Role,
       name: payload.name,
+      customerId: payload['customer_id'] as string | undefined,
     };
   }
 }

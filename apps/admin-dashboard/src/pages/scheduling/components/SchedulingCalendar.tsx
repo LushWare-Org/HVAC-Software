@@ -11,7 +11,7 @@ import { AddScheduleModal } from './AddScheduleModal';
 
 interface SchedulingCalendarProps {
     schedules?: Record<string, Record<string, { start: number; span: number; label: string; id: string }[]>>;
-    techs?: Array<{ name: string; color: string; role: string; status: string; statusLabel: string; jobs: number; nextAvailable: string; area: string; currentJob: string }>;
+    techs?: Array<{ id: string; name: string; color: string; role: string; status: string; statusLabel: string; jobs: number; nextAvailable: string; area: string; currentJob: string }>;
 }
 
 const MOCK_APPOINTMENTS = Array.from({ length: 40 }).map((_, i) => {

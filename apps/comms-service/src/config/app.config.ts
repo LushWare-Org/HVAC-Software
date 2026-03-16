@@ -11,6 +11,18 @@ export default () => ({
     fromEmail: process.env.SENDGRID_FROM_EMAIL ?? 'no-reply@tscrm.com',
     fromName: process.env.SENDGRID_FROM_NAME ?? 'T&S Services',
   },
+  email: {
+    provider: (process.env.EMAIL_PROVIDER ?? 'auto').toLowerCase(), // auto | smtp | sendgrid
+  },
+  smtp: {
+    host: process.env.SMTP_HOST ?? '',
+    port: parseInt(process.env.SMTP_PORT ?? '587', 10),
+    secure: (process.env.SMTP_SECURE ?? 'false').toLowerCase() === 'true',
+    user: process.env.SMTP_USER ?? '',
+    pass: process.env.SMTP_PASS ?? '',
+    fromEmail: process.env.SMTP_FROM_EMAIL ?? process.env.SENDGRID_FROM_EMAIL ?? 'no-reply@tscrm.com',
+    fromName: process.env.SMTP_FROM_NAME ?? process.env.SENDGRID_FROM_NAME ?? 'T&S Services',
+  },
   firebase: {
     projectId: process.env.FIREBASE_PROJECT_ID ?? '',
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL ?? '',

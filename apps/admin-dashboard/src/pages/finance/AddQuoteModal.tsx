@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { X, AlertCircle, Loader2, Plus, Trash2, Search } from "lucide-react";
 import { useCreateQuote } from "../../hooks/useFinance";
 import { useCustomers } from "../../hooks/useCustomers";
 import { useJobs } from "../../hooks/useJobs";
+import { useToast } from "../../contexts/ToastContext";
 import { customerName as fmtCustomerName } from "../../types/api";
 import type { Customer, Job } from "../../types/api";
 
@@ -32,6 +33,7 @@ const inputClass =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none";
 
 export default function AddQuoteModal({ isOpen, onClose }: AddQuoteModalProps) {
+  const { showError, showSuccess, showInfo } = useToast();
   const [error, setError] = useState("");
   const [title, setTitle] = useState("");
   const [customerNameVal, setCustomerNameVal] = useState("");
@@ -91,11 +93,11 @@ export default function AddQuoteModal({ isOpen, onClose }: AddQuoteModalProps) {
 
   const handleSubmit = () => {
     setError("");
-    if (!title.trim()) { setError("Title is required."); return; }
-    if (!customerId.trim()) { setError("Please select a customer."); return; }
-    if (!customerNameVal.trim()) { setError("Customer name is required."); return; }
-    if (!customerEmail.trim()) { setError("Customer email is required."); return; }
-    if (lineItems.length === 0 || !lineItems[0].description) { setError("At least one line item is required."); return; }
+    if (!title.trim()) { setError("Title is required."); showInfo("Add a quote title before saving.", "Title Required"); return; }
+    if (!customerId.trim()) { setError("Please select a customer."); showInfo("Select a customer before creating a quote.", "Customer Required"); return; }
+    if (!customerNameVal.trim()) { setError("Customer name is required."); showError("Customer name is required."); return; }
+    if (!customerEmail.trim()) { setError("Customer email is required."); showInfo("Add customer email to send this quote later.", "Email Required"); return; }
+    if (lineItems.length === 0 || !lineItems[0].description) { setError("At least one line item is required."); showInfo("Add at least one quote line item.", "Line Items Required"); return; }
 
     createQuote.mutate(
       {
@@ -118,12 +120,17 @@ export default function AddQuoteModal({ isOpen, onClose }: AddQuoteModalProps) {
       } as any,
       {
         onSuccess: () => {
+          showSuccess("Quote created successfully.", "Quote Ready");
           onClose();
           setTitle(""); setCustomerNameVal(""); setCustomerEmail(""); setCustomerId("");
           setJobId(""); setNotes(""); setValidUntil(""); setJobSearch("");
           setLineItems([{ description: "", category: "LABOUR", quantity: 1, unitPrice: 0 }]);
         },
-        onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to create quote."),
+        onError: (err: any) => {
+          const message = err?.response?.data?.message ?? "Failed to create quote.";
+          setError(message);
+          showError(message);
+        },
       },
     );
   };
@@ -211,9 +218,17 @@ export default function AddQuoteModal({ isOpen, onClose }: AddQuoteModalProps) {
                     setJobSearch(e.target.value);
                     setShowJobDropdown(true);
                   }}
-                  onFocus={() => setShowJobDropdown(true)}
+                  onFocus={() => {
+                    if (!customerId) {
+                      setShowJobDropdown(false);
+                      showInfo("Select a customer first to view their jobs.", "Choose Customer First");
+                      return;
+                    }
+                    setShowJobDropdown(true);
+                  }}
                   onBlur={() => setTimeout(() => setShowJobDropdown(false), 200)}
-                  placeholder="Search jobs..."
+                  placeholder={customerId ? "Select or search customer's jobs..." : "Select customer first"}
+                  disabled={!customerId}
                   className={inputClass}
                 />
                 <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -224,10 +239,10 @@ export default function AddQuoteModal({ isOpen, onClose }: AddQuoteModalProps) {
                   <button onClick={() => { setJobId(""); setJobSearch(""); }} className="text-xs text-red-500 bg-transparent border-0 cursor-pointer underline">Clear</button>
                 </div>
               )}
-              {showJobDropdown && !jobId && (
+              {showJobDropdown && !jobId && customerId && (
                 <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {jobsQuery.isLoading && <div className="p-3 text-sm text-gray-400">Loading...</div>}
-                  {jobs.length === 0 && !jobsQuery.isLoading && <div className="p-3 text-sm text-gray-400">No jobs found</div>}
+                  {jobs.length === 0 && !jobsQuery.isLoading && <div className="p-3 text-sm text-gray-400">No jobs found for selected customer</div>}
                   {jobs.map(j => (
                     <button key={j.id} onClick={() => selectJob(j)} className="w-full text-left px-3 py-2 hover:bg-green-50 transition-colors flex items-center justify-between bg-transparent border-0 cursor-pointer">
                       <div>

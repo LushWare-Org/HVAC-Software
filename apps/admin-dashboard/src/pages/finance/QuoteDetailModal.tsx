@@ -6,6 +6,7 @@ import {
 import {
   useUpdateQuote, useSendQuote, useApproveQuote, useConvertQuote, useQuote, decimalToNumber,
 } from "../../hooks/useFinance";
+import { useToast } from "../../contexts/ToastContext";
 import api from "../../lib/api";
 import type { Quote } from "../../types/api";
 
@@ -19,7 +20,7 @@ type TabType = "details" | "activity";
 
 const QUO_CSS: Record<string, string> = {
   DRAFT: "badge-neutral", SENT: "badge-blue", ACCEPTED: "badge-green",
-  REJECTED: "badge-red", EXPIRED: "badge-amber", CONVERTED: "badge-cyan",
+  REJECTED: "badge-red", DECLINED: "badge-red", EXPIRED: "badge-amber", CONVERTED: "badge-cyan",
 };
 
 const inputView =
@@ -32,6 +33,7 @@ export default function QuoteDetailModal({
   onClose,
   quote,
 }: QuoteDetailModalProps) {
+  const { showError, showSuccess, showInfo } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [isEditMode, setIsEditMode] = useState(false);
   const [error, setError] = useState("");
@@ -83,31 +85,61 @@ export default function QuoteDetailModal({
         },
       },
       {
-        onSuccess: () => setIsEditMode(false),
-        onError:   (err: any) => setError(err?.response?.data?.message ?? "Failed to save quote."),
+        onSuccess: () => {
+          setIsEditMode(false);
+          showSuccess("Quote details saved successfully.", "Quote Updated");
+        },
+        onError:   (err: any) => {
+          const message = err?.response?.data?.message ?? "Failed to save quote.";
+          setError(message);
+          showError(message);
+        },
       },
     );
   };
 
   const handleSend = () => {
     setError("");
+    if (!q?.customerEmail?.trim()) {
+      const message = "Customer email is required before sending this quote.";
+      setError(message);
+      showInfo(message, "Missing Customer Email");
+      return;
+    }
     sendQuote.mutate(q!.id, {
-      onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to send quote."),
+      onSuccess: () => showSuccess("Quote email sent with PDF attachment.", "Quote Sent"),
+      onError: (err: any) => {
+        const message = err?.response?.data?.message ?? "Failed to send quote.";
+        setError(message);
+        showError(message);
+      },
     });
   };
 
   const handleApprove = () => {
     setError("");
     approveQuote.mutate({ id: q!.id, approvedByName: 'Admin', approvedByEmail: 'admin@company.com' }, {
-      onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to approve quote."),
+      onSuccess: () => showSuccess("Quote approved successfully.", "Quote Approved"),
+      onError: (err: any) => {
+        const message = err?.response?.data?.message ?? "Failed to approve quote.";
+        setError(message);
+        showError(message);
+      },
     });
   };
 
   const handleConvert = () => {
     setError("");
     convertQuote.mutate(q!.id, {
-      onSuccess: () => onClose(),
-      onError:   (err: any) => setError(err?.response?.data?.message ?? "Failed to convert quote."),
+      onSuccess: () => {
+        showSuccess("Quote converted to invoice.", "Conversion Complete");
+        onClose();
+      },
+      onError:   (err: any) => {
+        const message = err?.response?.data?.message ?? "Failed to convert quote.";
+        setError(message);
+        showError(message);
+      },
     });
   };
 
@@ -124,7 +156,9 @@ export default function QuoteDetailModal({
       a.remove();
       URL.revokeObjectURL(url);
     } catch {
-      setError('Failed to download PDF.');
+      const message = 'Failed to download PDF.';
+      setError(message);
+      showError(message);
     } finally {
       setDownloading(false);
     }
@@ -137,13 +171,16 @@ export default function QuoteDetailModal({
       const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       window.open(url, '_blank');
     } catch {
-      setError('Failed to load PDF.');
+      const message = 'Failed to load PDF.';
+      setError(message);
+      showError(message);
     } finally {
       setDownloading(false);
     }
   };
 
   const statusCSS = QUO_CSS[q!.status] ?? "badge-neutral";
+  const canSendQuote = ["DRAFT", "SENT", "VIEWED", "ACCEPTED"].includes(q!.status);
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: "details",  label: "Quote Details", icon: <FileText size={14} /> },
@@ -246,7 +283,6 @@ export default function QuoteDetailModal({
                 {error}
               </div>
             )}
-
             {activeTab === "details" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
@@ -371,15 +407,15 @@ export default function QuoteDetailModal({
         {/* Footer actions */}
         <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 rounded-b-xl shrink-0 flex items-center justify-between gap-2">
           <div className="flex gap-2">
-            {/* Send Quote — only for DRAFT */}
-            {q!.status === "DRAFT" && (
+            {/* Send/Resend Quote */}
+            {canSendQuote && (
               <button
                 onClick={handleSend}
                 disabled={isBusy}
                 className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-60 border-0"
               >
                 {sendQuote.isPending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
-                Send Quote
+                {q!.status === "DRAFT" ? "Send Quote" : "Resend Quote"}
               </button>
             )}
             {/* Approve — only for SENT */}

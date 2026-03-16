@@ -75,6 +75,7 @@ function buildDispatchMap(assignments: { technicianId: string; jobId: string; sc
 function adaptTechForCalendar(t: Technician, index: number) {
     const si = techStatusInfo(t.isActive ? 'AVAILABLE' : 'OFFLINE')
     return {
+        id:            t.id,
         name:          t.name,
         color:         techColor(index),
         role:          t.skills?.length ? t.skills[0] : 'Technician',
@@ -316,7 +317,7 @@ export default function Scheduling() {
                                             <div className="flex items-center gap-2" style={{ padding: '0 4px' }}>
                                                 <div className="min-w-0">
                                                     <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tech.name}</div>
-                                                    <div style={{ fontSize: 10, color: 'var(--t4)' }}>{tech.role ?? 'Technician'}</div>
+                                                    <div style={{ fontSize: 10, color: 'var(--t4)' }}>{tech.skills?.[0] ?? 'Technician'}</div>
                                                 </div>
                                             </div>
 
@@ -337,7 +338,7 @@ export default function Scheduling() {
                                                                             id:          apptId,
                                                                             label:       job.label,
                                                                             techName:    tech.name,
-                                                                            role:        tech.role ?? 'Technician',
+                                                                            role:        tech.skills?.[0] ?? 'Technician',
                                                                             status:      'scheduled',
                                                                         },
                                                                     }))

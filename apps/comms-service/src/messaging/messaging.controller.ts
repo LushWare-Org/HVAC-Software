@@ -1,5 +1,6 @@
 import {
   Body,
+  ForbiddenException,
   Controller,
   Get,
   Headers,
@@ -12,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
-import { AuthUser } from '@tscrm/types';
+import { AuthUser, Role } from '@tscrm/types';
 import { Request } from 'express';
 import { MessagingService } from './messaging.service';
 import {
@@ -35,7 +36,13 @@ export class MessagingController {
   @Post('threads')
   @ApiOperation({ summary: 'Create or retrieve an active thread for a customer' })
   createThread(@CurrentUser() user: AuthUser, @Body() dto: CreateThreadDto) {
-    return this.service.createThread(user.companyId, dto);
+    if (user.role === Role.CUSTOMER && !user.customerId) {
+      throw new ForbiddenException('Customer account is not linked to a customer profile');
+    }
+    const effectiveDto = user.role === Role.CUSTOMER
+      ? { ...dto, customerId: user.customerId!, customerName: dto.customerName || user.name || user.email }
+      : dto;
+    return this.service.createThread(user.companyId, effectiveDto);
   }
 
   @Get('threads')
@@ -46,17 +53,20 @@ export class MessagingController {
     @Query('page') page = 1,
     @Query('limit') limit = 20,
   ) {
+    const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
     return this.service.findThreads(user.companyId, {
       status,
       page: Number(page),
       limit: Number(limit),
+      customerId,
     });
   }
 
   @Get('threads/:id')
   @ApiOperation({ summary: 'Get thread with all messages' })
   findThread(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.service.findThread(user.companyId, id);
+    const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
+    return this.service.findThread(user.companyId, id, customerId);
   }
 
   @Patch('threads/:id/status')
@@ -66,13 +76,15 @@ export class MessagingController {
     @Param('id') id: string,
     @Body() dto: UpdateThreadStatusDto,
   ) {
-    return this.service.updateThreadStatus(user.companyId, id, dto.status as ThreadStatus);
+    const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
+    return this.service.updateThreadStatus(user.companyId, id, dto.status as ThreadStatus, customerId);
   }
 
   @Patch('threads/:id/read')
   @ApiOperation({ summary: 'Mark all messages in thread as read (resets unreadCount)' })
   markRead(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.service.markThreadRead(user.companyId, id);
+    const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
+    return this.service.markThreadRead(user.companyId, id, customerId);
   }
 
   // ── Messages ──────────────────────────────────────────────────────────────
@@ -84,7 +96,15 @@ export class MessagingController {
     @Param('id') threadId: string,
     @Body() dto: SendMessageDto,
   ) {
-    return this.service.sendMessage(user.companyId, threadId, user.userId, user.name ?? user.email ?? '', dto);
+    return this.service.sendMessage(
+      user.companyId,
+      threadId,
+      user.userId,
+      user.name ?? user.email ?? '',
+      dto,
+      user.role,
+      user.customerId,
+    );
   }
 }
 

@@ -308,7 +308,13 @@ function AddMemberModal({ onClose }: { onClose: () => void }) {
                         onClose()
                     }
                 },
-                onError: (err: any) => setError(err?.response?.data?.message ?? 'Failed to create member'),
+                onError: (err: any) => {
+                    const apiMessage = err?.response?.data?.message
+                    const text = Array.isArray(apiMessage)
+                        ? apiMessage.join(', ')
+                        : (typeof apiMessage === 'string' ? apiMessage : 'Failed to create member')
+                    setError(text)
+                },
             }
         )
     }

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { X, AlertCircle, Loader2, Search } from "lucide-react";
 import { useCreateExpense } from "../../hooks/useFinance";
 import { useJobs } from "../../hooks/useJobs";
+import { useToast } from "../../contexts/ToastContext";
 import type { Job } from "../../types/api";
 
 interface AddExpenseModalProps {
@@ -23,6 +24,7 @@ const inputClass =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none";
 
 export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProps) {
+  const { showError, showSuccess, showInfo } = useToast();
   const [error, setError] = useState("");
   const [category, setCategory] = useState("PARTS");
   const [vendor, setVendor] = useState("");
@@ -55,9 +57,9 @@ export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProp
 
   const handleSubmit = () => {
     setError("");
-    if (!category) { setError("Category is required."); return; }
-    if (!amount || parseFloat(amount) <= 0) { setError("A valid amount is required."); return; }
-    if (!date) { setError("Date is required."); return; }
+    if (!category) { setError("Category is required."); showInfo("Select an expense category.", "Category Required"); return; }
+    if (!amount || parseFloat(amount) <= 0) { setError("A valid amount is required."); showInfo("Enter a valid expense amount.", "Amount Required"); return; }
+    if (!date) { setError("Date is required."); showInfo("Select an expense date.", "Date Required"); return; }
 
     createExpense.mutate(
       {
@@ -70,9 +72,14 @@ export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProp
       } as any,
       {
         onSuccess: () => {
+          showSuccess("Expense logged successfully.", "Expense Saved");
           handleClose();
         },
-        onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to create expense."),
+        onError: (err: any) => {
+          const message = err?.response?.data?.message ?? "Failed to create expense.";
+          setError(message);
+          showError(message);
+        },
       },
     );
   };

@@ -20,6 +20,7 @@ export interface JwtPayload {
   role: Role;            // injected via Auth0 Actions
   name?: string;
   picture?: string;
+  customer_id?: string;  // set for CUSTOMER role — links to crm.customers.id
   iss: string;
   aud: string | string[];
   iat: number;
@@ -28,11 +29,12 @@ export interface JwtPayload {
 
 // ---- Authenticated user attached to request ----
 export interface AuthUser {
-  userId: string;        // Auth0 sub
+  userId: string;        // Auth0 sub / local user id
   email: string;
   companyId: string;
   role: Role;
   name?: string;
+  customerId?: string;   // Set for CUSTOMER role — links to crm.customers.id
 }
 
 // ---- Multi-tenant base interface (all DB entities extend this) ----
@@ -45,23 +47,23 @@ export interface TenantEntity {
 
 // ---- Job Status (shared between job-service and other services) ----
 export enum JobStatus {
-  PENDING = 'pending',
-  SCHEDULED = 'scheduled',
-  EN_ROUTE = 'en_route',
-  ON_SITE = 'on_site',
-  COMPLETED = 'completed',
-  INVOICED = 'invoiced',
-  PAID = 'paid',
-  CANCELLED = 'cancelled',
-  ON_HOLD = 'on_hold',
+  PENDING = 'PENDING',
+  SCHEDULED = 'SCHEDULED',
+  EN_ROUTE = 'EN_ROUTE',
+  ON_SITE = 'ON_SITE',
+  COMPLETED = 'COMPLETED',
+  INVOICED = 'INVOICED',
+  PAID = 'PAID',
+  CANCELLED = 'CANCELLED',
+  ON_HOLD = 'ON_HOLD',
 }
 
 // ---- Job Priority ----
 export enum JobPriority {
-  LOW = 'low',
-  NORMAL = 'normal',
-  HIGH = 'high',
-  EMERGENCY = 'emergency',
+  LOW = 'LOW',
+  NORMAL = 'NORMAL',
+  HIGH = 'HIGH',
+  EMERGENCY = 'EMERGENCY',
 }
 
 // ---- Trade Types ----
@@ -74,32 +76,32 @@ export enum TradeType {
 
 // ---- Lead Status ----
 export enum LeadStatus {
-  NEW = 'new',
-  CONTACTED = 'contacted',
-  QUALIFIED = 'qualified',
-  PROPOSAL_SENT = 'proposal_sent',
-  WON = 'won',
-  LOST = 'lost',
+  NEW = 'NEW',
+  CONTACTED = 'CONTACTED',
+  QUALIFIED = 'QUALIFIED',
+  PROPOSAL_SENT = 'PROPOSAL_SENT',
+  WON = 'WON',
+  LOST = 'LOST',
 }
 
 // ---- Invoice Status ----
 export enum InvoiceStatus {
-  DRAFT = 'draft',
-  SENT = 'sent',
-  PARTIALLY_PAID = 'partially_paid',
-  PAID = 'paid',
-  OVERDUE = 'overdue',
-  VOID = 'void',
+  DRAFT = 'DRAFT',
+  SENT = 'SENT',
+  PARTIALLY_PAID = 'PARTIALLY_PAID',
+  PAID = 'PAID',
+  OVERDUE = 'OVERDUE',
+  VOID = 'VOID',
 }
 
 // ---- Quote Status ----
 export enum QuoteStatus {
-  DRAFT = 'draft',
-  SENT = 'sent',
-  VIEWED = 'viewed',
-  ACCEPTED = 'accepted',
-  DECLINED = 'declined',
-  EXPIRED = 'expired',
+  DRAFT = 'DRAFT',
+  SENT = 'SENT',
+  VIEWED = 'VIEWED',
+  ACCEPTED = 'ACCEPTED',
+  DECLINED = 'DECLINED',
+  EXPIRED = 'EXPIRED',
 }
 
 // ---- Pagination ----

@@ -26,6 +26,7 @@ import {
   SendSmsDto,
   SendEmailDto,
   SendPushDto,
+  SendInAppNotificationDto,
   NotificationChannelFilter,
   NotificationStatusFilter,
 } from './dto/send-notification.dto';
@@ -74,6 +75,20 @@ export class NotificationsController {
     });
   }
 
+  @Post('in-app')
+  @ApiOperation({ summary: 'Send an in-app notification broadcast' })
+  sendInApp(@CurrentUser() user: AuthUser, @Body() dto: SendInAppNotificationDto) {
+    return this.notificationsService.sendInApp({
+      companyId: user.companyId,
+      sender: user,
+      title: dto.title,
+      body: dto.body,
+      type: dto.type,
+      roles: dto.roles,
+      recipients: dto.recipients,
+    });
+  }
+
   // ── List ──────────────────────────────────────────────────────────────────
 
   @Get()
@@ -89,7 +104,7 @@ export class NotificationsController {
     @Query('page') page = 1,
     @Query('limit') limit = 20,
   ) {
-    return this.notificationsService.findAll(user.companyId, {
+    return this.notificationsService.findAll(user.companyId, user, {
       channel,
       status,
       page: Number(page),
@@ -102,7 +117,7 @@ export class NotificationsController {
   @Patch('read-all')
   @ApiOperation({ summary: 'Mark all notifications as read' })
   markAllRead(@CurrentUser() user: AuthUser) {
-    return this.notificationsService.markAllRead(user.companyId);
+    return this.notificationsService.markAllRead(user.companyId, user);
   }
 
   // ── Mark single notification as read ────────────────────────────────────
@@ -110,7 +125,7 @@ export class NotificationsController {
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark a notification as read' })
   markRead(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.notificationsService.markRead(user.companyId, id);
+    return this.notificationsService.markRead(user.companyId, user, id);
   }
 
   // ── Stats ─────────────────────────────────────────────────────────────────

@@ -8,9 +8,9 @@ import {
   Briefcase,
   Loader2,
   CheckCircle,
-  AlertCircle,
 } from "lucide-react";
 import { useUpdateExpense, decimalToNumber } from "../../hooks/useFinance";
+import { useToast } from "../../contexts/ToastContext";
 
 interface ExpenseDetailModalProps {
   isOpen: boolean;
@@ -41,6 +41,7 @@ export default function ExpenseDetailModal({
   onClose,
   expense,
 }: ExpenseDetailModalProps) {
+  const { showError, showSuccess } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<any>({});
@@ -90,6 +91,10 @@ export default function ExpenseDetailModal({
           setIsEditMode(false);
           setSaveSuccess(true);
           setTimeout(() => setSaveSuccess(false), 2000);
+          showSuccess("Expense updated successfully.", "Expense Saved");
+        },
+        onError: (err: any) => {
+          showError(err?.response?.data?.message ?? "Failed to update expense.");
         },
       },
     );
@@ -314,7 +319,16 @@ export default function ExpenseDetailModal({
               onClick={() => {
                 updateExpense.mutate(
                   { id: expense.id, data: { status: "APPROVED" } as any },
-                  { onSuccess: () => { setSaveSuccess(true); setTimeout(() => { setSaveSuccess(false); onClose(); }, 1000); } },
+                  {
+                    onSuccess: () => {
+                      setSaveSuccess(true);
+                      showSuccess("Expense approved successfully.", "Expense Approved");
+                      setTimeout(() => { setSaveSuccess(false); onClose(); }, 1000);
+                    },
+                    onError: (err: any) => {
+                      showError(err?.response?.data?.message ?? "Failed to approve expense.");
+                    },
+                  },
                 );
               }}
               disabled={updateExpense.isPending}

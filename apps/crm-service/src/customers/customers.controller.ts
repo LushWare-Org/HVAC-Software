@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Body,
@@ -37,6 +38,23 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 @Controller('customers')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
+
+  // ---- Customer Portal: Get own profile ----
+  @Get('me')
+  @ApiOperation({ summary: 'Get current customer portal user\'s customer profile' })
+  getMe(@CurrentUser() user: AuthUser) {
+    return this.customersService.findMe(user.companyId, user.userId);
+  }
+
+  // ---- Customer Portal: Update own profile ----
+  @Patch('me')
+  @ApiOperation({ summary: 'Update current customer portal user\'s customer profile' })
+  updateMe(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: { firstName?: string; lastName?: string; phone?: string; mobile?: string; address?: string; city?: string; state?: string; zipCode?: string },
+  ) {
+    return this.customersService.updateMe(user.companyId, user.userId, dto);
+  }
 
   // ---- Create ----
   @Post()

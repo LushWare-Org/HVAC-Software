@@ -1,6 +1,6 @@
 import { Body, Controller, Post, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 import { CurrentUser, JwtAuthGuard } from '@tscrm/auth-client';
 import { AuthUser } from '@tscrm/types';
 import { AuthService } from './auth.service';
@@ -8,6 +8,18 @@ import { AuthService } from './auth.service';
 class LoginDto {
   @IsEmail() email!: string;
   @IsString() @MinLength(6) password!: string;
+}
+
+class RegisterDto {
+  @IsString() companyId!: string;
+  @IsString() @MinLength(2) name!: string;
+  @IsEmail() email!: string;
+  @IsOptional() @IsString() phone?: string;
+  @IsString() @MinLength(8) password!: string;
+  @IsOptional() @IsString() address?: string;
+  @IsOptional() @IsString() city?: string;
+  @IsOptional() @IsString() state?: string;
+  @IsOptional() @IsString() zipCode?: string;
 }
 
 class ChangePasswordDto {
@@ -25,6 +37,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Log in with email and password' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto.email, dto.password);
+  }
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Customer self-registration — creates user + customer record + lead' })
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 
   @Post('change-password')

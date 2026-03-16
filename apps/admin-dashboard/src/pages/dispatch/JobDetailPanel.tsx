@@ -97,6 +97,7 @@ export default function JobDetailPanel({
   };
 
   const status = STATUS_MAP[job?.status ?? "PENDING"] ?? STATUS_MAP.PENDING;
+  const assignedTechName = technician?.name ?? assignment?.technicianName ?? job?.assignedToName ?? "Unassigned";
 
   return (
     <div className="fixed inset-0 z-[99999] flex" onClick={onClose}>
@@ -141,7 +142,7 @@ export default function JobDetailPanel({
               <h2 className="text-lg font-bold text-white leading-tight">{job.title}</h2>
               <p className="text-blue-100 text-sm mt-1">
                 {job.customerName ?? "No customer"}
-                {job.assignedToName && ` · Tech: ${job.assignedToName}`}
+                {assignedTechName !== "Unassigned" && ` · Tech: ${assignedTechName}`}
               </p>
             </>
           ) : (
@@ -187,7 +188,7 @@ export default function JobDetailPanel({
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <InfoCard icon={User} label="Customer" value={job.customerName ?? "—"} />
-                  <InfoCard icon={User} label="Technician" value={job.assignedToName ?? "Unassigned"} />
+                  <InfoCard icon={User} label="Technician" value={assignedTechName} />
                   <InfoCard icon={MapPin} label="Address" value={job.serviceAddress ?? job.customerAddress ?? "—"} full />
                   {job.jobTypeName && <InfoCard icon={Wrench} label="Job Type" value={job.jobTypeName} />}
                   <InfoCard icon={Calendar} label="Scheduled Start" value={job.scheduledStart ? new Date(job.scheduledStart).toLocaleString() : "—"} />

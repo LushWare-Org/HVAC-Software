@@ -4,8 +4,9 @@
   "private": true,
   "description": "Trade & Service CRM — Field Service Management Platform",
   "scripts": {
+    "preinstall": "node -e \"const ua=process.env.npm_config_user_agent||''; if(!ua.includes('pnpm')){console.error('This repo uses pnpm. Run: pnpm install'); process.exit(1)}\"",
     "build": "turbo run build",
-    "dev": "turbo run dev --filter=!admin-dashboard",
+    "dev": "turbo run dev --filter=!admin-dashboard --concurrency=12",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "type-check": "turbo run type-check",

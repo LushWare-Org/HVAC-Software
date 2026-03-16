@@ -90,13 +90,19 @@ func JWTMiddleware(auth0Domain, audience string) gin.HandlerFunc {
 			}
 		}
 
-		// 1. Extract the Bearer token
+		// 1. Extract token. For browser WebSocket requests, allow a query token
+		// because custom Authorization headers are not available in native WS API.
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing Authorization header"})
+		tokenStr := ""
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
+		} else if c.Request.URL.Path == "/ws" {
+			tokenStr = strings.TrimSpace(c.Query("access_token"))
+		}
+		if tokenStr == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing Authorization token"})
 			return
 		}
-		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// 2. Peek at the JWT header to determine algorithm (HS256 vs RS256)
 		var parsedToken jwt.Token

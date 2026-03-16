@@ -135,7 +135,7 @@ function SectionHeader({
 const mockContacts = [{ id: 1, name: "", role: "Owner", email: "", phone: "" }];
 const mockAgreements: any[] = [];
 const mockReviews: any[] = [];
-const mockTimeline: any[] = [];
+
 
 const JOB_CSS: Record<string, string> = {
   COMPLETED: "badge-green",
@@ -152,7 +152,9 @@ const JOB_CSS: Record<string, string> = {
 const QUO_CSS: Record<string, string> = {
   DRAFT: "badge-neutral",
   SENT: "badge-blue",
+  VIEWED: "badge-blue",
   ACCEPTED: "badge-green",
+  DECLINED: "badge-red",
   REJECTED: "badge-red",
   EXPIRED: "badge-amber",
   CONVERTED: "badge-cyan",
@@ -194,11 +196,17 @@ export default function CustomerDetailsSidebar({
   // Fetch real jobs and quotes for this customer
   const customerId = person?.id ?? "";
   const customerJobsQuery = useJobs({ customerId: customerId || undefined, limit: 50 });
-  const customerJobs = customerJobsQuery.data?.data ?? [];
+  const customerJobs = [...(customerJobsQuery.data?.data ?? [])].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
   const customerQuotesQuery = useQuotes({ customerId: customerId || undefined, limit: 50 });
-  const customerQuotes = customerQuotesQuery.data?.data ?? [];
+  const customerQuotes = [...(customerQuotesQuery.data?.data ?? [])].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
   const customerInvoicesQuery = useInvoices({ customerId: customerId || undefined, limit: 50 });
-  const customerInvoices = customerInvoicesQuery.data?.data ?? [];
+  const customerInvoices = [...(customerInvoicesQuery.data?.data ?? [])].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
   // Fetch real addresses and equipment from API
   const addressesQuery = useCustomerAddresses(customerId || undefined);

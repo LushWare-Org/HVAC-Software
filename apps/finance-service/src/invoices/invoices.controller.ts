@@ -1,7 +1,7 @@
 import {
   Controller, Get, Post, Patch, Delete,
   Param, Body, Query, UseGuards, HttpCode, HttpStatus,
-  Res, Req, Headers,
+  Res, Req, Headers, DefaultValuePipe, ParseIntPipe,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
@@ -21,6 +21,10 @@ class ManualPaymentDto {
   @IsNumber() @Min(0.01) amount!: number;
   @IsEnum(PaymentMethod) method!: PaymentMethod;
   @IsOptional() @IsString() notes?: string;
+}
+
+class CustomerInvoiceDecisionDto {
+  @IsOptional() @IsString() reason?: string;
 }
 
 @ApiTags('Invoices')
@@ -44,8 +48,8 @@ export class InvoicesController {
     @CurrentUser() user: AuthUser,
     @Query('status') status?: InvoiceStatus,
     @Query('customerId') customerId?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
     return this.invoicesService.findAll(user.companyId, { status, customerId, page, limit });
   }
@@ -97,10 +101,40 @@ export class InvoicesController {
 
   // ── Stripe: Create Payment Intent ─────────────────────────────────────────
   @Post(':id/payment-intent')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Create a Stripe payment intent for online payment' })
   createPaymentIntent(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.invoicesService.createPaymentIntent(user.companyId, id);
+  }
+
+  // ── Customer approve / decline actions ───────────────────────────────────
+  @Post(':id/approve')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
+  @ApiOperation({ summary: 'Customer approves invoice review (records decision)' })
+  approveByCustomer(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.invoicesService.approveByCustomer(
+      user.companyId,
+      id,
+      user.name ?? 'Customer',
+      user.email ?? 'customer@portal.local',
+    );
+  }
+
+  @Post(':id/decline')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
+  @ApiOperation({ summary: 'Customer declines an invoice (marks as VOID with note)' })
+  declineByCustomer(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: CustomerInvoiceDecisionDto,
+  ) {
+    return this.invoicesService.declineByCustomer(
+      user.companyId,
+      id,
+      user.name ?? 'Customer',
+      user.email ?? 'customer@portal.local',
+      dto.reason,
+    );
   }
 
   // ── Record Manual Payment ─────────────────────────────────────────────────

@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw } from 'lucide-react'
-import { useInvoices, useQuotes, useExpenses, useFinanceKpis, decimalToNumber, useDeleteExpense } from '../../hooks/useFinance'
+import { useInvoices, useQuotes, useExpenses, useFinanceKpis, decimalToNumber, useDeleteExpense, useSendInvoice } from '../../hooks/useFinance'
 import { useJobs } from '../../hooks/useJobs'
+import { useToast } from '../../contexts/ToastContext'
 import type { Invoice, Quote, Expense } from '../../types/api'
 import AddQuoteModal from './AddQuoteModal'
 import AddInvoiceModal from './AddInvoiceModal'
@@ -17,8 +18,8 @@ const INV_CSS: Record<string, string> = {
 }
 const QUO_CSS: Record<string, string> = {
   DRAFT: 'badge-neutral', SENT: 'badge-blue', ACCEPTED: 'badge-green',
-  REJECTED: 'badge-red', EXPIRED: 'badge-amber', CONVERTED: 'badge-cyan',
-  sent: 'badge-blue', accepted: 'badge-green', draft: 'badge-neutral', rejected: 'badge-red', expired: 'badge-amber',
+  REJECTED: 'badge-red', DECLINED: 'badge-red', EXPIRED: 'badge-amber', CONVERTED: 'badge-cyan',
+  sent: 'badge-blue', accepted: 'badge-green', draft: 'badge-neutral', rejected: 'badge-red', declined: 'badge-red', expired: 'badge-amber',
 }
 const EXP_CSS: Record<string, string> = {
   PAID: 'badge-green', PENDING: 'badge-amber', APPROVED: 'badge-blue', REJECTED: 'badge-red',
@@ -35,6 +36,7 @@ function fmtDecimal(val: string | number | undefined | null): string {
 }
 
 export default function Finance() {
+  const { showError, showSuccess } = useToast()
   const [tab, setTab] = useState<'invoices' | 'quotes' | 'expenses'>('invoices')
   const [isExpanded, setIsExpanded] = useState(false)
   const [invPage, setInvPage] = useState(1)
@@ -87,6 +89,7 @@ export default function Finance() {
 
   const kpi = kpiQuery.data
   const deleteExpense = useDeleteExpense()
+  const sendInvoice = useSendInvoice()
 
   return (
     <div className="anim-fade-up">
@@ -174,11 +177,28 @@ export default function Finance() {
                       <td className="td-primary font-600">{fmtDecimal(inv.total)}</td>
                       <td className="text-sm text-3">{inv.issuedAt ? new Date(inv.issuedAt).toLocaleDateString() : '—'}</td>
                       <td className="text-sm">{inv.dueAt ? new Date(inv.dueAt).toLocaleDateString() : '—'}</td>
-                      <td><span className={`badge ${INV_CSS[inv.status] ?? 'badge-neutral'}`}>{inv.status.toLowerCase()}</span></td>
+                      <td>
+                        <span className={`badge ${INV_CSS[String(inv.status ?? '').toUpperCase()] ?? INV_CSS[String(inv.status ?? '').toLowerCase()] ?? 'badge-neutral'}`}>
+                          {String(inv.status ?? 'unknown').toLowerCase()}
+                        </span>
+                      </td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="flex gap-1 justify-end">
                           <button onClick={e => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-invoice-detail", { detail: inv })); }} className="p-2 hover:bg-emerald-50 rounded-lg text-emerald-600 transition-colors" title="View Invoice"><Eye size={14} strokeWidth={2.5} /></button>
-                          <button onClick={e => e.stopPropagation()} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Send Email"><Mail size={14} strokeWidth={2.5} /></button>
+                          <button
+                            onClick={e => {
+                              e.stopPropagation()
+                              sendInvoice.mutate(inv.id, {
+                                onSuccess: () => showSuccess('Invoice email sent with PDF attachment.', 'Invoice Sent'),
+                                onError: (err: any) => showError(err?.response?.data?.message ?? 'Failed to send invoice.'),
+                              })
+                            }}
+                            className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors"
+                            title={inv.status === 'DRAFT' ? 'Send Invoice' : 'Resend Invoice'}
+                            disabled={sendInvoice.isPending || inv.status === 'VOID'}
+                          >
+                            <Mail size={14} strokeWidth={2.5} />
+                          </button>
                           <button onClick={e => e.stopPropagation()} className="p-2 hover:bg-slate-50 rounded-lg text-slate-600 transition-colors" title="Edit Invoice"><Edit2 size={14} strokeWidth={2.5} /></button>
                         </div>
                       </td>
@@ -209,7 +229,7 @@ export default function Finance() {
               <select className="select" style={{ width: 140 }} value={quoStatus} onChange={e => { setQuoStatus(e.target.value); setQuoPage(1); }}>
                 <option value="all">All Status</option>
                 <option value="sent">Sent</option><option value="accepted">Accepted</option>
-                <option value="draft">Draft</option><option value="rejected">Rejected</option><option value="expired">Expired</option>
+                <option value="draft">Draft</option><option value="declined">Declined</option><option value="expired">Expired</option>
               </select>
               <div className="flex items-center gap-2 ml-auto">
                 <button className="btn btn-primary btn-sm" onClick={() => setIsAddQuoteOpen(true)}><Plus size={12} /> Create Quote</button>
@@ -244,7 +264,11 @@ export default function Finance() {
                       <td>{q.title}</td>
                       <td className="td-primary font-600">{fmtDecimal(q.total)}</td>
                       <td className="text-sm text-3">{q.expiresAt ? new Date(q.expiresAt).toLocaleDateString() : '—'}</td>
-                      <td><span className={`badge ${QUO_CSS[q.status] ?? 'badge-neutral'}`}>{q.status.toLowerCase()}</span></td>
+                      <td>
+                        <span className={`badge ${QUO_CSS[String(q.status ?? '').toUpperCase()] ?? QUO_CSS[String(q.status ?? '').toLowerCase()] ?? 'badge-neutral'}`}>
+                          {String(q.status ?? 'unknown').toLowerCase()}
+                        </span>
+                      </td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="flex gap-1 justify-end">
                           <button onClick={e => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-quote-detail", { detail: q })); }} className="p-2 hover:bg-emerald-50 rounded-lg text-emerald-600 transition-colors" title="View Quote"><Eye size={14} strokeWidth={2.5} /></button>
@@ -313,12 +337,29 @@ export default function Finance() {
                       <td className="text-sm text-2">{exp.vendor ?? '—'}</td>
                       <td className="text-sm text-3">{exp.date ? new Date(exp.date).toLocaleDateString() : '—'}</td>
                       <td className="td-primary font-700">{fmtDecimal(exp.amount)}</td>
-                      <td><span className={`badge ${EXP_CSS[exp.status] ?? 'badge-neutral'}`}>{exp.status.toLowerCase()}</span></td>
+                      <td>
+                        <span className={`badge ${EXP_CSS[String(exp.status ?? '').toUpperCase()] ?? EXP_CSS[String(exp.status ?? '').toLowerCase()] ?? 'badge-neutral'}`}>
+                          {String(exp.status ?? 'unknown').toLowerCase()}
+                        </span>
+                      </td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="flex gap-1 justify-end">
                           <button onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-expense-detail", { detail: exp })); }} className="p-2 hover:bg-slate-50 rounded-lg text-slate-600 transition-colors" title="View Receipt"><Receipt size={14} strokeWidth={2.5} /></button>
                           <button onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-expense-detail", { detail: exp })); }} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Edit Expense"><Edit2 size={14} strokeWidth={2.5} /></button>
-                          <button onClick={(e) => { e.stopPropagation(); if (confirm('Delete this expense?')) deleteExpense.mutate(exp.id); }} className="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-colors" title="Delete Expense"><Trash2 size={14} strokeWidth={2.5} /></button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (!confirm('Delete this expense?')) return
+                              deleteExpense.mutate(exp.id, {
+                                onSuccess: () => showSuccess('Expense removed successfully.', 'Expense Deleted'),
+                                onError: (err: any) => showError(err?.response?.data?.message ?? 'Failed to delete expense.'),
+                              })
+                            }}
+                            className="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-colors"
+                            title="Delete Expense"
+                          >
+                            <Trash2 size={14} strokeWidth={2.5} />
+                          </button>
                         </div>
                       </td>
                     </tr>

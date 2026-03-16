@@ -20,7 +20,6 @@ import type {
   Notification,
   PaginatedResponse,
   ThreadStatus,
-  MessageChannel,
 } from '../types/api'
 
 // ─── Thread list ───────────────────────────────────────────────────────────────
@@ -67,7 +66,7 @@ export function useThread(threadId: string | null) {
 
 export function useCreateThread() {
   return useMutation({
-    mutationFn: async (data: { customerId?: string; customerName?: string; channel: MessageChannel; customerPhone?: string; customerEmail?: string }) => {
+    mutationFn: async (data: { customerId?: string; customerName?: string; customerPhone?: string; customerEmail?: string }) => {
       const res = await api.post('/comms/messaging/threads', data)
       return res.data as MessageThread
     },
@@ -132,6 +131,29 @@ export function useNotifications(limit = 20) {
       return res.data
     },
     staleTime: 30 * 1000,
+  })
+}
+
+export function useSendInAppNotification() {
+  return useMutation({
+    mutationFn: async (data: {
+      title: string
+      body: string
+      type?: string
+      roles?: string[]
+      recipients: Array<{
+        recipientId: string
+        recipientName?: string
+        customerId?: string
+        role?: string
+      }>
+    }) => {
+      const res = await api.post('/comms/notifications/in-app', data)
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
   })
 }
 

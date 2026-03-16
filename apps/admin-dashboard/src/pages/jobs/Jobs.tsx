@@ -51,7 +51,7 @@ function Skeleton({ h = 14 }: { h?: number }) {
 export default function Jobs() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterTech, setFilterTech] = useState("all");
+  const [filterTech] = useState("all");
   const [isExpanded, setIsExpanded] = useState(false);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;

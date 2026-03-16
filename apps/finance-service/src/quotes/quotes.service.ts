@@ -10,6 +10,7 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
@@ -55,7 +56,9 @@ export class QuotesService {
     companyId: string,
     params: { status?: QuoteStatus; customerId?: string; page?: number; limit?: number },
   ) {
-    const { status, customerId, page = 1, limit = 20 } = params;
+    const { status, customerId } = params;
+    const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
+    const limit = Number.isFinite(Number(params.limit)) ? Math.min(100, Math.max(1, Math.trunc(Number(params.limit)))) : 20;
     const skip = (page - 1) * limit;
     const where = {
       companyId,
@@ -201,38 +204,85 @@ export class QuotesService {
 
   async send(companyId: string, id: string) {
     const quote = await this.findOne(companyId, id);
-    if (quote.status === QuoteStatus.SENT || quote.status === QuoteStatus.VIEWED) {
-      return quote; // idempotent — already sent
-    }
-    if (quote.status !== QuoteStatus.DRAFT) {
-      throw new BadRequestException(`Can only send a DRAFT quote, current status: ${quote.status}`);
+    if (([QuoteStatus.DECLINED, QuoteStatus.EXPIRED, QuoteStatus.CONVERTED] as QuoteStatus[]).includes(quote.status)) {
+      throw new BadRequestException(`Quote cannot be sent from status: ${quote.status}`);
     }
 
-    const approvalToken = randomUUID();
+    const approvalToken = quote.approvalToken ?? randomUUID();
+    const nextStatus = quote.status === QuoteStatus.DRAFT ? QuoteStatus.SENT : quote.status;
+
     const updated = await this.prisma.quote.update({
       where: { id },
       data: {
-        status: QuoteStatus.SENT,
+        status: nextStatus,
         sentAt: new Date(),
         approvalToken,
       },
       include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
     });
 
-    // Generate email HTML from the quote template and send via comms-service
-    if (quote.customerEmail) {
+    // Send a customer-facing email and attach the generated PDF for direct download.
+    const recipientEmail = updated.customerEmail?.trim();
+    if (!recipientEmail) {
+      throw new BadRequestException('Customer email is required before sending this quote');
+    }
+    if (!/^\S+@\S+\.\S+$/.test(recipientEmail)) {
+      throw new BadRequestException('Customer email format is invalid');
+    }
+
+    {
       const companyName = process.env.COMPANY_NAME ?? 'T&S Services';
       const companyAddress = process.env.COMPANY_ADDRESS ?? '';
-      const emailHtml = this.pdfService.renderQuoteHtml(updated as any, companyName, companyAddress);
+      const total = Number(updated.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const validUntil = updated.validUntil ? new Date(updated.validUntil).toLocaleDateString() : 'Upon receipt';
+      const emailHtml = `
+        <div style="margin:0;background:#f4f6fb;padding:32px 18px;font-family:Arial,sans-serif;color:#14213d;">
+          <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #dbe3f0;border-radius:20px;overflow:hidden;box-shadow:0 20px 45px rgba(15,23,42,0.08);">
+            <div style="padding:28px 32px;background:linear-gradient(135deg,#0f766e,#0f766e 45%,#0b4f4a);color:#ffffff;">
+              <div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;opacity:0.82;margin-bottom:10px;">Quote attached</div>
+              <h2 style="margin:0;font-size:28px;line-height:1.15;">${updated.quoteNumber}</h2>
+              <p style="margin:10px 0 0 0;font-size:14px;line-height:1.6;max-width:440px;color:rgba(255,255,255,0.9);">Your quotation from ${companyName} is ready for review. A PDF copy is attached for your records.</p>
+            </div>
+            <div style="padding:30px 32px;">
+              <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;">Hello ${updated.customerName ?? 'Customer'},</p>
+              <p style="margin:0 0 18px 0;font-size:14px;line-height:1.7;color:#475569;">We have prepared a quote for <strong style="color:#14213d;">${updated.title}</strong>. Please review the attached PDF and confirm approval in your customer portal when ready.</p>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 22px 0;">
+                <div style="border:1px solid #dbe3f0;border-radius:14px;padding:16px 18px;background:#f8fafc;">
+                  <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-bottom:6px;">Quoted amount</div>
+                  <div style="font-size:22px;font-weight:700;color:#0f172a;">$${total}</div>
+                </div>
+                <div style="border:1px solid #dbe3f0;border-radius:14px;padding:16px 18px;background:#f8fafc;">
+                  <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-bottom:6px;">Valid until</div>
+                  <div style="font-size:18px;font-weight:700;color:#0f172a;">${validUntil}</div>
+                </div>
+              </div>
+              <div style="border:1px solid #dbe3f0;border-radius:16px;padding:18px 20px;background:#ffffff;">
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0f766e;margin-bottom:8px;">Next step</div>
+                <p style="margin:0;font-size:14px;line-height:1.7;color:#475569;">Approve the quote in your portal to keep the work moving. If you need revisions or clarification, reply to this email and our team will assist promptly.</p>
+              </div>
+              <p style="margin:22px 0 0 0;font-size:13px;line-height:1.7;color:#64748b;">${companyAddress}</p>
+            </div>
+          </div>
+        </div>
+      `;
 
-      this.notificationClient.sendEmail({
-        recipientId: quote.customerId,
-        recipientName: quote.customerName ?? undefined,
-        recipientEmail: quote.customerEmail,
-        subject: `Quote ${quote.quoteNumber} from ${companyName}`,
+      const quotePdf = await this.pdfService.generateQuotePdf(updated as any, companyName, companyAddress);
+      await this.notificationClient.sendEmail({
+        companyId,
+        recipientId: updated.customerId ?? updated.id,
+        recipientName: updated.customerName ?? undefined,
+        recipientEmail,
+        subject: `Quote ${updated.quoteNumber} from ${companyName}`,
         htmlBody: emailHtml,
-        customerId: quote.customerId,
+        customerId: updated.customerId ?? undefined,
         quoteId: id,
+        attachments: [
+          {
+            filename: `${updated.quoteNumber}.pdf`,
+            contentType: 'application/pdf',
+            contentBase64: quotePdf.toString('base64'),
+          },
+        ],
       });
     }
 
@@ -252,8 +302,17 @@ export class QuotesService {
 
   // ── Approve by ID (admin/test — no token required) ───────────────────────
 
-  async approveById(companyId: string, id: string, name: string, email: string) {
+  async approveById(
+    companyId: string,
+    id: string,
+    name: string,
+    email: string,
+    expectedCustomerId?: string,
+  ) {
     const quote = await this.findOne(companyId, id);
+    if (expectedCustomerId && quote.customerId !== expectedCustomerId) {
+      throw new ForbiddenException('You do not have access to approve this quote');
+    }
     if (quote.status === QuoteStatus.ACCEPTED) return quote; // idempotent
     if (!([QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.VIEWED] as QuoteStatus[]).includes(quote.status)) {
       throw new BadRequestException(`Quote cannot be approved in status: ${quote.status}`);
@@ -265,6 +324,38 @@ export class QuotesService {
         approvedAt: new Date(),
         approvedByName: name,
         approvedByEmail: email,
+      },
+      include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
+    });
+  }
+
+  // ── Decline by ID (portal/customer) ──────────────────────────────────────
+
+  async declineById(
+    companyId: string,
+    id: string,
+    name: string,
+    email: string,
+    expectedCustomerId?: string,
+    reason?: string,
+  ) {
+    const quote = await this.findOne(companyId, id);
+    if (expectedCustomerId && quote.customerId !== expectedCustomerId) {
+      throw new ForbiddenException('You do not have access to decline this quote');
+    }
+    if (quote.status === QuoteStatus.DECLINED) return quote; // idempotent
+    if (!([QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.VIEWED] as QuoteStatus[]).includes(quote.status)) {
+      throw new BadRequestException(`Quote cannot be declined in status: ${quote.status}`);
+    }
+
+    const decisionLine = `Customer declined on ${new Date().toISOString()} by ${name} (${email})${reason ? ` — ${reason}` : ''}`;
+    const existingNotes = quote.notes?.trim();
+
+    return this.prisma.quote.update({
+      where: { id },
+      data: {
+        status: QuoteStatus.DECLINED,
+        notes: existingNotes ? `${existingNotes}\n\n${decisionLine}` : decisionLine,
       },
       include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
     });

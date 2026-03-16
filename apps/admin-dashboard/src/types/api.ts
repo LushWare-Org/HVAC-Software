@@ -184,6 +184,7 @@ export interface Invoice {
   invoiceNumber: string
   customerId?: string
   customerName?: string
+  customerEmail?: string
   jobId?: string
   jobTitle?: string
   status: InvoiceStatus
@@ -205,6 +206,7 @@ export interface Quote {
   title: string
   customerId?: string
   customerName?: string
+  customerEmail?: string
   jobId?: string
   jobTitle?: string
   status: QuoteStatus
@@ -341,12 +343,12 @@ export type ThreadStatus = 'ACTIVE' | 'RESOLVED' | 'SPAM'
 /** A single message inside a thread (direction always present here) */
 export interface ThreadMessage {
   id: string
-  threadId: string
-  companyId: string
+  threadId?: string
+  companyId?: string
   body: string
   subject?: string
   direction: 'INBOUND' | 'OUTBOUND'
-  status: MessageStatus
+  status?: MessageStatus
   sentAt?: string
   createdAt: string
 }
@@ -359,7 +361,7 @@ export interface MessageThread {
   customerName?: string
   customerPhone?: string
   customerEmail?: string
-  channel: MessageChannel
+  channel?: MessageChannel
   status: ThreadStatus
   lastMessageAt?: string
   unreadCount?: number
@@ -400,6 +402,11 @@ export interface Notification {
   referenceId?: string
   referenceType?: string
   createdAt: string
+  channel?: MessageChannel
+  status?: MessageStatus | 'QUEUED' | 'BOUNCED'
+  recipientName?: string
+  sentRecipientCount?: number
+  sentRoles?: string[]
 }
 
 // ─── Analytics Service ─────────────────────────────────────────────────────────

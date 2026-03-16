@@ -12,6 +12,7 @@
 
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -61,13 +62,14 @@ export class MessagingService {
 
   async findThreads(
     companyId: string,
-    params: { status?: ThreadStatus; page?: number; limit?: number },
+    params: { status?: ThreadStatus; page?: number; limit?: number; customerId?: string },
   ) {
-    const { status, page = 1, limit = 20 } = params;
+    const { status, page = 1, limit = 20, customerId } = params;
     const skip = (page - 1) * limit;
     const where = {
       companyId,
       ...(status ? { status } : {}),
+      ...(customerId ? { customerId } : {}),
     };
     const [items, total] = await Promise.all([
       this.prisma.messageThread.findMany({
@@ -78,27 +80,31 @@ export class MessagingService {
       }),
       this.prisma.messageThread.count({ where }),
     ]);
-    return { items, total, page, limit };
+    return { data: items.map((thread) => this.enrichThread(thread)), total, page, limit };
   }
 
-  async findThread(companyId: string, id: string) {
+  async findThread(companyId: string, id: string, customerId?: string) {
     const thread = await this.prisma.messageThread.findFirst({
-      where: { id, companyId },
+      where: {
+        id,
+        companyId,
+        ...(customerId ? { customerId } : {}),
+      },
     });
     if (!thread) throw new NotFoundException(`Thread ${id} not found`);
-    return thread;
+    return this.enrichThread(thread);
   }
 
-  async updateThreadStatus(companyId: string, id: string, status: ThreadStatus) {
-    await this.findThread(companyId, id);
+  async updateThreadStatus(companyId: string, id: string, status: ThreadStatus, customerId?: string) {
+    await this.findThread(companyId, id, customerId);
     return this.prisma.messageThread.update({
       where: { id },
       data: { status },
     });
   }
 
-  async markThreadRead(companyId: string, id: string) {
-    await this.findThread(companyId, id);
+  async markThreadRead(companyId: string, id: string, customerId?: string) {
+    await this.findThread(companyId, id, customerId);
     return this.prisma.messageThread.update({
       where: { id },
       data: { unreadCount: 0 },
@@ -117,47 +123,46 @@ export class MessagingService {
     senderId: string,
     senderName: string,
     dto: SendMessageDto,
+    senderRole?: string,
+    senderCustomerId?: string,
   ) {
-    const thread = await this.findThread(companyId, threadId);
+    const customerScope = senderRole?.toLowerCase() === 'customer' ? senderCustomerId : undefined;
+    const thread = await this.findThread(companyId, threadId, customerScope);
 
-    if (!thread.customerPhone) {
-      throw new BadRequestException('Thread has no customer phone number for SMS');
+    if (!dto.body?.trim()) {
+      throw new BadRequestException('Message body is required');
     }
+
+    const customerSender = senderRole?.toLowerCase() === 'customer' || senderCustomerId === thread.customerId;
+    if (customerSender && senderCustomerId && thread.customerId !== senderCustomerId) {
+      throw new ForbiddenException('You can only send messages to your own thread');
+    }
+
+    const direction = customerSender ? MessageDirection.INBOUND : MessageDirection.OUTBOUND;
 
     const message = {
       id: uuidv4(),
       senderId,
       senderName,
-      direction: MessageDirection.OUTBOUND,
-      body: dto.body,
-      channel: Channel.SMS,
+      direction,
+      body: dto.body.trim(),
+      channel: Channel.IN_APP,
       mediaUrls: dto.mediaUrls ?? [],
       createdAt: new Date(),
+      sentAt: new Date(),
     };
-
-    // Deliver via Twilio
-    const result = await this.smsService.send(thread.customerPhone, dto.body);
 
     const updatedThread = await this.prisma.messageThread.update({
       where: { id: threadId },
       data: {
-        messages: {
-          push: {
-            ...message,
-            twilioSid: result.externalId,
-            sentAt: result.success ? new Date() : undefined,
-          },
-        },
+        messages: { push: message },
         lastMessageAt: new Date(),
-        lastMessageBody: dto.body.substring(0, 100),
+        lastMessageBody: message.body.substring(0, 100),
+        unreadCount: customerSender ? { increment: 1 } : 0,
       },
     });
 
-    if (!result.success) {
-      this.logger.warn(`SMS delivery failed for thread ${threadId}: ${result.error}`);
-    }
-
-    return updatedThread;
+    return this.enrichThread(updatedThread);
   }
 
   // ── Inbound Webhook ───────────────────────────────────────────────────────
@@ -238,5 +243,13 @@ export class MessagingService {
     });
 
     this.logger.log(`Inbound SMS stored: thread ${thread.id} | SID ${payload.MessageSid}`);
+  }
+
+  private enrichThread<T extends { messages?: any[] }>(thread: T): T & { channel: Channel } {
+    const lastMessage = Array.isArray(thread.messages) && thread.messages.length > 0
+      ? thread.messages[thread.messages.length - 1]
+      : undefined;
+    const channel = (lastMessage?.channel as Channel | undefined) ?? Channel.IN_APP;
+    return { ...thread, channel };
   }
 }

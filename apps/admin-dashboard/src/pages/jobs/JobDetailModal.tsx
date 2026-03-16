@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useUpdateJobStatus, useJob } from "../../hooks/useJobs";
 import { useInvoices, useQuotes, useSendInvoice, useSendQuote, decimalToNumber } from "../../hooks/useFinance";
-import type { Job, JobStatus } from "../../types/api";
+import type { Job } from "../../types/api";
 
 interface JobDetailModalProps {
   isOpen: boolean;
@@ -43,10 +43,6 @@ const inputView =
 const inputEdit =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none";
 
-const STATUS_ORDER: string[] = [
-  "PENDING", "SCHEDULED", "EN_ROUTE", "ON_SITE", "COMPLETED", "INVOICED", "PAID", "CANCELLED", "ON_HOLD",
-];
-
 // Must mirror the backend STATUS_TRANSITIONS exactly
 const STATUS_TRANSITIONS: Record<string, string[]> = {
   PENDING:   ["SCHEDULED", "ON_HOLD", "CANCELLED"],
@@ -61,19 +57,6 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   IN_PROGRESS: ["COMPLETED", "ON_HOLD", "CANCELLED"], // frontend alias for ON_SITE
 };
 
-// Map friendly status names to actual backend enum values
-const BACKEND_STATUS: Record<string, string> = {
-  PENDING: 'PENDING',
-  SCHEDULED: 'SCHEDULED',
-  EN_ROUTE: 'EN_ROUTE',
-  ON_SITE: 'ON_SITE',
-  IN_PROGRESS: 'ON_SITE',
-  COMPLETED: 'COMPLETED',
-  INVOICED: 'INVOICED',
-  PAID: 'PAID',
-  CANCELLED: 'CANCELLED',
-  ON_HOLD: 'ON_HOLD',
-};
 
 export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, onCreateInvoice }: JobDetailModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>("overview");

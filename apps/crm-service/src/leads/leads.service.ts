@@ -92,6 +92,23 @@ export class LeadsService {
       }
     }
 
+    if (status === 'WON' && lead.customerId) {
+      const linkedCustomer = await this.prisma.customer.findFirst({
+        where: { id: lead.customerId, companyId },
+        select: { id: true, tags: true },
+      });
+
+      if (linkedCustomer) {
+        await this.prisma.customer.update({
+          where: { id: linkedCustomer.id },
+          data: {
+            engagementStatus: 'ACTIVE',
+            tags: { set: linkedCustomer.tags.filter((tag) => tag !== 'portal-signup') },
+          },
+        });
+      }
+    }
+
     return this.prisma.lead.update({ where: { id }, data: updateData });
   }
 
@@ -162,6 +179,26 @@ export class LeadsService {
               isPrimary: a.isPrimary,
             })),
           });
+        }
+      }
+
+      if (rest.status === 'WON') {
+        const linkedCustomerId = (updateData.customerId ?? lead.customerId) as string | undefined;
+        if (linkedCustomerId) {
+          const linkedCustomer = await tx.customer.findFirst({
+            where: { id: linkedCustomerId, companyId },
+            select: { id: true, tags: true },
+          });
+
+          if (linkedCustomer) {
+            await tx.customer.update({
+              where: { id: linkedCustomer.id },
+              data: {
+                engagementStatus: 'ACTIVE',
+                tags: { set: linkedCustomer.tags.filter((tag) => tag !== 'portal-signup') },
+              },
+            });
+          }
         }
       }
 

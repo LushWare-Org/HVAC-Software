@@ -6,6 +6,7 @@ import {
 import {
   useUpdateInvoice, useSendInvoice, useRecordPayment, useVoidInvoice, useInvoice, decimalToNumber,
 } from "../../hooks/useFinance";
+import { useToast } from "../../contexts/ToastContext";
 import api from "../../lib/api";
 import type { Invoice } from "../../types/api";
 
@@ -32,6 +33,7 @@ export default function InvoiceDetailModal({
   onClose,
   invoice,
 }: InvoiceDetailModalProps) {
+  const { showError, showSuccess, showInfo } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [isEditMode, setIsEditMode]   = useState(false);
   const [error, setError]             = useState("");
@@ -89,16 +91,34 @@ export default function InvoiceDetailModal({
         },
       },
       {
-        onSuccess: () => setIsEditMode(false),
-        onError:   (err: any) => setError(err?.response?.data?.message ?? "Failed to save invoice."),
+        onSuccess: () => {
+          setIsEditMode(false);
+          showSuccess("Invoice details saved successfully.", "Invoice Updated");
+        },
+        onError:   (err: any) => {
+          const message = err?.response?.data?.message ?? "Failed to save invoice.";
+          setError(message);
+          showError(message);
+        },
       },
     );
   };
 
   const handleSend = () => {
     setError("");
+    if (!inv?.customerEmail?.trim()) {
+      const message = "Customer email is required before sending this invoice.";
+      setError(message);
+      showInfo(message, "Missing Customer Email");
+      return;
+    }
     sendInvoice.mutate(inv!.id, {
-      onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to send invoice."),
+      onSuccess: () => showSuccess("Invoice email sent with PDF attachment.", "Invoice Sent"),
+      onError: (err: any) => {
+        const message = err?.response?.data?.message ?? "Failed to send invoice.";
+        setError(message);
+        showError(message);
+      },
     });
   };
 
@@ -106,7 +126,9 @@ export default function InvoiceDetailModal({
     setError("");
     const amount = parseFloat(payAmount);
     if (!payAmount || isNaN(amount) || amount <= 0) {
-      setError("Please enter a valid payment amount.");
+      const message = "Please enter a valid payment amount.";
+      setError(message);
+      showInfo(message, "Invalid Payment Amount");
       return;
     }
     recordPayment.mutate(
@@ -116,8 +138,13 @@ export default function InvoiceDetailModal({
           setPayAmount("");
           setPayReference("");
           setError("");
+          showSuccess("Payment recorded successfully.", "Payment Captured");
         },
-        onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to record payment."),
+        onError: (err: any) => {
+          const message = err?.response?.data?.message ?? "Failed to record payment.";
+          setError(message);
+          showError(message);
+        },
       },
     );
   };
@@ -127,8 +154,15 @@ export default function InvoiceDetailModal({
     voidInvoice.mutate(
       { id: inv!.id, reason: "Voided via admin dashboard" },
       {
-        onSuccess: () => onClose(),
-        onError:   (err: any) => setError(err?.response?.data?.message ?? "Failed to void invoice."),
+        onSuccess: () => {
+          showSuccess("Invoice has been voided.", "Invoice Voided");
+          onClose();
+        },
+        onError:   (err: any) => {
+          const message = err?.response?.data?.message ?? "Failed to void invoice.";
+          setError(message);
+          showError(message);
+        },
       },
     );
   };
@@ -146,7 +180,9 @@ export default function InvoiceDetailModal({
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      setError('Failed to download PDF.');
+      const message = 'Failed to download PDF.';
+      setError(message);
+      showError(message);
     } finally {
       setDownloading(false);
     }
@@ -159,7 +195,9 @@ export default function InvoiceDetailModal({
       const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       window.open(url, '_blank');
     } catch (err: any) {
-      setError('Failed to open PDF.');
+      const message = 'Failed to open PDF.';
+      setError(message);
+      showError(message);
     } finally {
       setDownloading(false);
     }
@@ -175,6 +213,7 @@ export default function InvoiceDetailModal({
 
   const canRecordPayment = ["SENT", "PARTIALLY_PAID", "OVERDUE"].includes(inv!.status);
   const canVoid = ["DRAFT", "SENT"].includes(inv!.status);
+  const canSendInvoice = inv!.status !== "VOID";
 
   return (
     <div
@@ -272,7 +311,6 @@ export default function InvoiceDetailModal({
                 {error}
               </div>
             )}
-
             {activeTab === "details" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
@@ -419,15 +457,15 @@ export default function InvoiceDetailModal({
         {/* Footer actions */}
         <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 rounded-b-xl shrink-0 flex items-center justify-between gap-2">
           <div className="flex gap-2">
-            {/* Send Invoice — only for DRAFT */}
-            {inv!.status === "DRAFT" && (
+            {/* Send/Resend Invoice */}
+            {canSendInvoice && (
               <button
                 onClick={handleSend}
                 disabled={isBusy}
                 className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-60 border-0"
               >
                 {sendInvoice.isPending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
-                Send Invoice
+                {inv!.status === "DRAFT" ? "Send Invoice" : "Resend Invoice"}
               </button>
             )}
             {/* Record Payment shortcut — for unpaid invoices */}

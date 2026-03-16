@@ -25,7 +25,26 @@ export class BookingsService {
     serviceType: string; description?: string; preferredDate: Date; alternateDate?: Date;
     customerId?: string; guestName?: string; guestEmail?: string; guestPhone?: string; notes?: string;
   }) {
-    return this.prisma.booking.create({ data: { ...data, companyId } });
+    const booking = await this.prisma.booking.create({ data: { ...data, companyId } });
+
+    if (data.customerId) {
+      const linkedCustomer = await this.prisma.customer.findFirst({
+        where: { id: data.customerId, companyId },
+        select: { id: true, tags: true },
+      });
+
+      if (linkedCustomer) {
+        await this.prisma.customer.update({
+          where: { id: linkedCustomer.id },
+          data: {
+            engagementStatus: 'JOB_BOOKED',
+            tags: { set: linkedCustomer.tags.filter((tag) => tag !== 'portal-signup') },
+          },
+        });
+      }
+    }
+
+    return booking;
   }
 
   async confirm(companyId: string, id: string) {

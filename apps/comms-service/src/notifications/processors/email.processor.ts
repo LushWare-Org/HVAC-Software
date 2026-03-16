@@ -23,7 +23,7 @@ export class EmailProcessor extends WorkerHost {
   }
 
   async process(job: Job<EmailJobPayload>): Promise<void> {
-    const { notificationId, companyId, to, toName, subject, htmlBody } = job.data;
+    const { notificationId, companyId, to, toName, subject, htmlBody, attachments } = job.data;
     this.logger.log(`Processing email job ${job.id} for notification ${notificationId}`);
 
     await this.prisma.notification.update({
@@ -31,7 +31,7 @@ export class EmailProcessor extends WorkerHost {
       data: { status: DeliveryStatus.SENT, sentAt: new Date() },
     });
 
-    const result = await this.emailService.send({ to, toName, subject, htmlBody });
+    const result = await this.emailService.send({ to, toName, subject, htmlBody, attachments });
 
     if (result.success) {
       await this.prisma.notification.update({

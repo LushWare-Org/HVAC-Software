@@ -12,14 +12,7 @@ import AddInvoiceModal from '../pages/finance/AddInvoiceModal'
 import AddQuoteModal from '../pages/finance/AddQuoteModal'
 import SchedulingDetailModal from '../pages/scheduling/SchedulingDetailModal'
 import TechnicianDetailModal from '../pages/scheduling/TechnicianDetailModal'
-
-const NOTIFICATIONS = [
-    { id: 1, type: 'success', title: 'Job Completed', msg: 'JOB-1202 marked complete by Anna Smith', time: '2 min ago', read: false },
-    { id: 2, type: 'info', title: 'New Booking', msg: 'Sarah Williams booked AC Installation', time: '18 min ago', read: false },
-    { id: 3, type: 'warning', title: 'Payment Overdue', msg: 'INV-0876 is 30+ days overdue — $1,400', time: '1 hr ago', read: false },
-    { id: 4, type: 'info', title: 'Invoice Sent', msg: 'INV-0892 sent to Robert Chen', time: '2 hrs ago', read: true },
-    { id: 5, type: 'success', title: '5-Star Review', msg: 'Maria Garcia left a 5-star review', time: '3 hrs ago', read: true },
-]
+import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '../hooks/useComms'
 
 function useDropdown() {
     const [open, setOpen] = useState(false)
@@ -42,7 +35,11 @@ export default function Topbar() {
     const user = useDropdown()
     const [searchParams, setSearchParams] = useSearchParams()
     const currentView = searchParams.get('view') || 'dispatch'
-    const unread = NOTIFICATIONS.filter(n => !n.read).length
+    const notificationsQuery = useNotifications(8)
+    const markNotificationRead = useMarkNotificationRead()
+    const markAllNotificationsRead = useMarkAllNotificationsRead()
+    const notifications = notificationsQuery.data?.data ?? []
+    const unread = notifications.filter(n => !n.isRead).length
     const isLight = theme === 'light'
     const [isAddJobOpen, setIsAddJobOpen] = useState(false)
     const [isDetailOpen, setIsDetailOpen] = useState(false)
@@ -294,19 +291,44 @@ export default function Topbar() {
                             {notif.open && (
                                 <div className={`absolute top-[calc(100%+8px)] right-0 w-80 border rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.15)] z-50 overflow-hidden ${dropdownBg}`}>
                                     <div className={`p-4 border-b ${dividerBorder}`}>
-                                        <div className={`text-sm font-semibold ${dropdownText}`}>Notifications</div>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className={`text-sm font-semibold ${dropdownText}`}>Notifications</div>
+                                            {unread > 0 && (
+                                                <button
+                                                    onClick={() => markAllNotificationsRead.mutate()}
+                                                    className="text-[11px] font-semibold text-blue-500 hover:text-blue-400 transition-colors bg-transparent border-0 cursor-pointer"
+                                                >
+                                                    Mark all read
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="max-h-80 overflow-y-auto">
-                                        {NOTIFICATIONS.slice(0, 5).map((n) => (
-                                            <div key={n.id} className={`p-3 border-b ${dividerBorder} cursor-pointer transition-colors duration-150 ${n.read ? 'bg-transparent' : dropdownUnreadBg} ${dropdownHover}`}>
-                                                <div className={`text-[13px] font-semibold mb-0.5 ${dropdownText}`}>{n.title}</div>
-                                                <div className={`text-xs leading-relaxed mb-1 ${dropdownTextMuted}`}>{n.msg}</div>
-                                                <div className={`text-[11px] ${dropdownTime}`}>{n.time}</div>
+                                        {notifications.length === 0 && (
+                                            <div className={`p-4 text-xs ${dropdownTextMuted}`}>
+                                                No notifications yet.
                                             </div>
+                                        )}
+                                        {notifications.map((n) => (
+                                            <button
+                                                key={n.id}
+                                                onClick={() => markNotificationRead.mutate(n.id)}
+                                                className={`w-full text-left p-3 border-b ${dividerBorder} transition-colors duration-150 ${n.isRead ? 'bg-transparent' : dropdownUnreadBg} ${dropdownHover} bg-transparent cursor-pointer`}
+                                            >
+                                                <div className={`text-[13px] font-semibold mb-0.5 ${dropdownText}`}>{n.title}</div>
+                                                <div className={`text-xs leading-relaxed mb-1 ${dropdownTextMuted}`}>{n.body}</div>
+                                                <div className={`text-[11px] ${dropdownTime}`}>{new Date(n.createdAt).toLocaleString()}</div>
+                                            </button>
                                         ))}
                                     </div>
                                     <div className={`p-3 border-t text-center ${dividerBorder}`}>
-                                        <button className="text-xs text-blue-500 font-medium hover:text-blue-400 transition-colors bg-transparent border-0 cursor-pointer">
+                                        <button
+                                            onClick={() => {
+                                                navigate('/communications')
+                                                notif.setOpen(false)
+                                            }}
+                                            className="text-xs text-blue-500 font-medium hover:text-blue-400 transition-colors bg-transparent border-0 cursor-pointer"
+                                        >
                                             View all notifications
                                         </button>
                                     </div>

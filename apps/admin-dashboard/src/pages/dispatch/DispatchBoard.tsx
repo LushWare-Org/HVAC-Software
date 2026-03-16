@@ -17,7 +17,7 @@ import {
   Zap, UserPlus, MapPin, Star, Briefcase,
   CheckCircle2, Clock, AlertCircle, Loader2, Navigation,
   Users, Wrench, RefreshCw, Search, X, Truck, Phone,
-  Award, Activity, Target, Plus, Map,
+  Award, Activity, Target, Plus, Map, CalendarDays,
 } from "lucide-react";
 import {
   useTechnicians, useSmartAssign, useManualAssign,
@@ -33,6 +33,7 @@ import CreateJobModal from "./CreateJobModal";
 import JobDetailPanel from "./JobDetailPanel";
 import AddQuoteModal from "../finance/AddQuoteModal";
 import AddInvoiceModal from "../finance/AddInvoiceModal";
+import DispatchCalendar from "./DispatchCalendar";
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
 
@@ -67,17 +68,11 @@ function ScoreBadge({ score }: { score: number }) {
 
 function SuggestionsPanel({
   suggestions,
-  jobId,
-  jobLat,
-  jobLng,
   onPick,
   isPending,
   onDismiss,
 }: {
   suggestions: ScoredTechnician[];
-  jobId: string;
-  jobLat: number;
-  jobLng: number;
   onPick: (techId: string) => void;
   isPending: boolean;
   onDismiss: () => void;
@@ -214,7 +209,16 @@ function AssignmentTimeline({ assignment }: { assignment: any }) {
 // Main DispatchBoard Component
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type ViewTab = "unassigned" | "active" | "technicians" | "map";
+function timeElapsed(dateStr: string) {
+  const ms = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`;
+}
+
+type ViewTab = "unassigned" | "active" | "technicians" | "calendar" | "map";
 
 // Lazy-load map to avoid loading leaflet on initial page load
 const DispatchMap = lazy(() => import("./DispatchMap"));
@@ -244,10 +248,30 @@ export default function DispatchBoard() {
 
   const pendingJobsQuery = useJobs({ status: "PENDING", limit: 50 });
   const pendingJobs: Job[] = pendingJobsQuery.data?.data ?? [];
+  const allJobsQuery = useJobs({ limit: 200 });
+  const allJobs: Job[] = allJobsQuery.data?.data ?? [];
 
   const allAssignmentsQuery = useAllTechAssignments(techIds);
   const allAssignments = allAssignmentsQuery.data ?? [];
   const activeAssignments = allAssignments.filter(a => ["ASSIGNED", "EN_ROUTE", "ON_SITE"].includes(a.status));
+  const assignmentByJobId = useMemo(() => {
+    return allAssignments.reduce<Record<string, typeof allAssignments[number]>>((acc, assignment) => {
+      const current = acc[assignment.jobId];
+      if (!current) {
+        acc[assignment.jobId] = assignment;
+        return acc;
+      }
+
+      const currentTime = new Date(current.updatedAt ?? current.assignedAt ?? 0).getTime();
+      const nextTime = new Date(assignment.updatedAt ?? assignment.assignedAt ?? 0).getTime();
+      if (nextTime >= currentTime) {
+        acc[assignment.jobId] = assignment;
+      }
+      return acc;
+    }, {});
+  }, [allAssignments]);
+  const assignedJobs = allJobs.filter(job => !!assignmentByJobId[job.id]);
+  const unassignedJobs = allJobs.filter(job => !assignmentByJobId[job.id]);
 
   // Mutations
   const smartAssign = useSmartAssign();
@@ -262,7 +286,6 @@ export default function DispatchBoard() {
   // Finance modals from job context
   const [showQuoteFromJob, setShowQuoteFromJob] = useState(false);
   const [showInvoiceFromJob, setShowInvoiceFromJob] = useState(false);
-  const [financeJobContext, setFinanceJobContext] = useState<Job | null>(null);
 
   // Auto-dismiss success messages after 4 seconds
   const showSuccess = (msg: string) => {
@@ -335,7 +358,7 @@ export default function DispatchBoard() {
 
   const handleManualAssign = (jobId: string, techId: string) => {
     setError("");
-    const job = pendingJobs.find(j => j.id === jobId);
+    const job = allJobs.find(j => j.id === jobId) ?? pendingJobs.find(j => j.id === jobId);
     const lat = job?.serviceLatitude ? parseFloat(job.serviceLatitude) : 40.7128;
     const lng = job?.serviceLongitude ? parseFloat(job.serviceLongitude) : -74.006;
     manualAssign.mutate(
@@ -345,10 +368,16 @@ export default function DispatchBoard() {
           updateJobStatus.mutate({ id: jobId, status: "SCHEDULED", statusNote: "Manually assigned via dispatch board" });
           showSuccess("Job manually assigned!");
           pendingJobsQuery.refetch();
+          allJobsQuery.refetch();
         },
         onError: (err: any) => setError(err?.response?.data?.error ?? "Assignment failed."),
       },
     );
+  };
+
+  const handleOpenJob = (job: Job, assignment?: typeof allAssignments[number]) => {
+    setSelectedJob(job);
+    setSelectedAssignment(assignment ?? null);
   };
 
   // Map assignment status → job status
@@ -377,9 +406,43 @@ export default function DispatchBoard() {
 
   // ─── Filtered data ─────────────────────────────────────────────────────────
 
-  const filteredPendingJobs = pendingJobs.filter(j =>
-    !search || j.title.toLowerCase().includes(search.toLowerCase()) || j.customerName?.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredPendingJobs = pendingJobs
+    .filter(j =>
+      !search || j.title.toLowerCase().includes(search.toLowerCase()) || j.customerName?.toLowerCase().includes(search.toLowerCase()),
+    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const nowMs = Date.now();
+  const futurePendingJobs = filteredPendingJobs.filter((job) => {
+    if (!job.scheduledStart) return true;
+    return new Date(job.scheduledStart).getTime() >= nowMs;
+  });
+  const pastPendingJobs = filteredPendingJobs
+    .filter((job) => !!job.scheduledStart && new Date(job.scheduledStart).getTime() < nowMs)
+    .sort((a, b) => new Date(b.scheduledStart ?? 0).getTime() - new Date(a.scheduledStart ?? 0).getTime());
+
+  const activeAssignmentsWithJob = activeAssignments
+    .map(a => ({
+      assignment: a,
+      technician: techs.find(t => t.id === a.technicianId),
+      job: allJobs.find(j => j.id === (a as any).jobId),
+    }))
+    .filter(({ assignment, technician, job }) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return [
+        technician?.name,
+        job?.title,
+        job?.id,
+        job?.customerName,
+        (assignment as any).jobId,
+      ].some(v => String(v ?? '').toLowerCase().includes(q));
+    })
+    .sort((a, b) => {
+      const aTime = new Date((a.assignment as any).assignedAt ?? 0).getTime();
+      const bTime = new Date((b.assignment as any).assignedAt ?? 0).getTime();
+      return bTime - aTime;
+    });
 
   const filteredTechs = techs.filter(t =>
     !search || t.name.toLowerCase().includes(search.toLowerCase()),
@@ -456,9 +519,6 @@ export default function DispatchBoard() {
       {suggestions && pendingJobId && (
         <SuggestionsPanel
           suggestions={suggestions}
-          jobId={pendingJobId}
-          jobLat={pendingJobLat}
-          jobLng={pendingJobLng}
           onPick={handlePickSuggestion}
           isPending={manualAssign.isPending}
           onDismiss={() => { setSuggestions(null); setPendingJobId(null); }}
@@ -475,6 +535,9 @@ export default function DispatchBoard() {
         </button>
         <button className={`tab-btn ${tab === "technicians" ? "active" : ""}`} onClick={() => setTab("technicians")}>
           <Users size={14} /> Technicians <span className="tab-count">{techs.length}</span>
+        </button>
+        <button className={`tab-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>
+          <CalendarDays size={14} /> Calendar View
         </button>
         <button className={`tab-btn ${tab === "map" ? "active" : ""}`} onClick={() => setTab("map")}>
           <Map size={14} /> Map View
@@ -500,15 +563,15 @@ export default function DispatchBoard() {
           <div className="card-body-flush mt-2">
             {pendingJobsQuery.isLoading ? (
               <div className="flex items-center justify-center py-16 text-[var(--t4)]"><Loader2 size={24} className="animate-spin mr-2" /> Loading jobs…</div>
-            ) : filteredPendingJobs.length === 0 ? (
+            ) : futurePendingJobs.length === 0 ? (
               <div className="text-center py-16 text-[var(--t4)]">
                 <CheckCircle2 size={32} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-medium">All jobs have been assigned!</p>
-                <p className="text-xs mt-1">No pending jobs waiting for dispatch.</p>
+                <p className="text-sm font-medium">No upcoming jobs waiting for dispatch.</p>
+                <p className="text-xs mt-1">Future jobs are clear. Review past unassigned jobs in the section below.</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {filteredPendingJobs.map(job => (
+                {futurePendingJobs.map(job => (
                   <div key={job.id} className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--bg-hover)] transition-colors group">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -535,6 +598,11 @@ export default function DispatchBoard() {
                         <span className="flex items-center gap-1"><Users size={11} /> {job.customerName ?? "—"}</span>
                         <span className="flex items-center gap-1"><MapPin size={11} /> {job.serviceAddress ?? job.customerAddress ?? "No address"}</span>
                         {job.scheduledStart && <span className="flex items-center gap-1"><Clock size={11} /> {new Date(job.scheduledStart).toLocaleDateString()} {new Date(job.scheduledStart).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
+                            {job.scheduledStart && new Date(job.scheduledStart) < new Date() && (
+                              <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 border border-red-200">
+                                Overdue
+                              </span>
+                            )}
                       </div>
                     </div>
 
@@ -566,6 +634,58 @@ export default function DispatchBoard() {
                 ))}
               </div>
             )}
+
+            {pastPendingJobs.length > 0 && (
+              <div className="border-t border-gray-200 bg-gray-50 px-5 py-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--t1)]">Past Unassigned Jobs</h4>
+                    <p className="text-xs text-[var(--t3)] mt-1">These job windows are already in the past and are shown separately for follow-up, review, or rescheduling.</p>
+                  </div>
+                  <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                    {pastPendingJobs.length} overdue
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {pastPendingJobs.map((job) => {
+                    const scheduled = job.scheduledStart ? new Date(job.scheduledStart) : null;
+                    const overdueMs = scheduled ? Date.now() - scheduled.getTime() : 0;
+                    const overdueHours = Math.floor(overdueMs / (1000 * 60 * 60));
+                    const overdueDays = Math.floor(overdueHours / 24);
+                    const overdueLabel = overdueDays > 0
+                      ? `${overdueDays}d ${overdueHours % 24}h overdue`
+                      : `${Math.max(overdueHours, 1)}h overdue`;
+
+                    return (
+                      <div key={job.id} className="rounded-xl border border-red-200 bg-white p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm font-bold text-[var(--t1)] truncate">{job.title}</p>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">Past</span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--t3)]">
+                              <span className="flex items-center gap-1"><Users size={11} /> {job.customerName ?? '—'}</span>
+                              <span className="flex items-center gap-1"><MapPin size={11} /> {job.serviceAddress ?? job.customerAddress ?? 'No address'}</span>
+                              <span className="flex items-center gap-1"><Clock size={11} /> {scheduled ? `${scheduled.toLocaleDateString()} ${scheduled.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'No schedule'}</span>
+                              <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 text-[10px] font-semibold">{overdueLabel}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleOpenJob(job, assignmentByJobId[job.id])}
+                            className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-xs font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -575,8 +695,8 @@ export default function DispatchBoard() {
         <div className="card anim-fade-in">
           <div className="card-body" style={{ paddingBottom: 0 }}>
             <div className="filter-bar">
-              <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search assignments…" value={search} onChange={e => setSearch(e.target.value)} /></div>
-              <button className="btn btn-secondary btn-sm flex items-center gap-1.5" onClick={() => allAssignmentsQuery.refetch()}>
+              <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search jobs, customer, technician…" value={search} onChange={e => setSearch(e.target.value)} /></div>
+              <button className="btn btn-secondary btn-sm flex items-center gap-1.5" onClick={() => { allAssignmentsQuery.refetch(); allJobsQuery.refetch(); }}>
                 <RefreshCw size={12} /> Refresh
               </button>
             </div>
@@ -584,7 +704,7 @@ export default function DispatchBoard() {
           <div className="card-body-flush mt-2">
             {allAssignmentsQuery.isLoading ? (
               <div className="flex items-center justify-center py-16 text-[var(--t4)]"><Loader2 size={24} className="animate-spin mr-2" /> Loading…</div>
-            ) : activeAssignments.length === 0 ? (
+            ) : activeAssignmentsWithJob.length === 0 ? (
               <div className="text-center py-16 text-[var(--t4)]">
                 <Briefcase size={32} className="mx-auto mb-3 opacity-30" />
                 <p className="text-sm font-medium">No active assignments</p>
@@ -592,24 +712,28 @@ export default function DispatchBoard() {
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {activeAssignments.map(a => {
-                  const tech = techs.find(t => t.id === a.technicianId);
+                {activeAssignmentsWithJob.map(({ assignment: a, technician: tech, job }) => {
                   const next = ASSIGN_STATUS_NEXT[a.status];
                   return (
                     <div
                       key={a.id}
                       className="px-5 py-4 hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
-                      onClick={() => { setSelectedAssignment(a); setSelectedJob({ id: (a as any).jobId } as Job); }}
+                      onClick={() => {
+                        if (job) {
+                          handleOpenJob(job, a);
+                          return;
+                        }
+                        setSelectedAssignment(a);
+                        setSelectedJob(({ id: (a as any).jobId, title: 'Job' }) as Job);
+                      }}
                     >
                       <div className="flex items-start gap-4">
-                        {/* Technician avatar */}
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
-                          {tech?.name?.charAt(0) ?? "?"}
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                          <Briefcase size={16} />
                         </div>
-                        {/* Main info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-bold text-[var(--t1)]">{tech?.name ?? "Unknown"}</p>
+                            <p className="text-sm font-bold text-[var(--t1)]">{job?.title ?? 'Job details unavailable'}</p>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${ASSIGN_STATUS_CSS[a.status] ?? "bg-gray-100 text-gray-600"}`}>
                               {a.status.replace("_", " ")}
                             </span>
@@ -625,10 +749,17 @@ export default function DispatchBoard() {
                               <span className="text-[9px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Auto</span>
                             )}
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-[var(--t3)] mb-2">
-                            <span className="flex items-center gap-1 font-mono text-[10px]"><Briefcase size={10} /> {(a as any).jobId?.slice(0, 12)}…</span>
-                            {(a as any).scheduledStart && (
-                              <span className="flex items-center gap-1"><Clock size={10} /> {new Date((a as any).scheduledStart).toLocaleString()}</span>
+                          <div className="flex items-center gap-4 text-xs text-[var(--t3)] mb-2 flex-wrap">
+                            <span className="flex items-center gap-1 font-mono text-[10px]"><Briefcase size={10} /> {job?.id ? `${job.id.slice(0, 12)}...` : `${(a as any).jobId?.slice(0, 12)}...`}</span>
+                            <span className="flex items-center gap-1"><Users size={10} /> {job?.customerName ?? 'Customer unavailable'}</span>
+                            <span className="flex items-center gap-1"><Wrench size={10} /> {tech?.name ?? 'Technician unavailable'}</span>
+                            {(a as any).assignedAt && (
+                              <span className="flex items-center gap-1 font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                <Clock size={9} /> {timeElapsed((a as any).assignedAt)} elapsed
+                              </span>
+                            )}
+                            {(a as any).assignedByName && (
+                              <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">By {(a as any).assignedByName}</span>
                             )}
                             {tech?.phone && <span className="flex items-center gap-1"><Phone size={10} /> {tech.phone}</span>}
                           </div>
@@ -685,6 +816,7 @@ export default function DispatchBoard() {
                 {filteredTechs.map(t => {
                   const techAssignments = allAssignments.filter(a => a.technicianId === t.id && ["ASSIGNED", "EN_ROUTE", "ON_SITE"].includes(a.status));
                   const hasGPS = !!t.currentLocation;
+                  const activeJobTitles = techAssignments.map(a => allJobs.find(j => j.id === (a as any).jobId)?.title).filter((v): v is string => !!v);
                   return (
                     <div key={t.id} className="rounded-xl border border-gray-200 bg-white p-5 hover:shadow-md transition-shadow space-y-3">
                       <div className="flex items-center gap-3">
@@ -743,12 +875,47 @@ export default function DispatchBoard() {
                           <Navigation size={8} /> {t.currentLocation!.lat.toFixed(4)}, {t.currentLocation!.lng.toFixed(4)}
                         </p>
                       )}
+                      {/* Active job titles */}
+                      {activeJobTitles.length > 0 && (
+                        <div>
+                          <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold mb-1">Active Jobs</p>
+                          <div className="flex flex-col gap-1">
+                            {activeJobTitles.map((title, i) => (
+                              <div key={i} className="flex items-center gap-1.5 text-[10px] text-gray-700 bg-blue-50 border border-blue-100 rounded-lg px-2 py-1.5">
+                                <Briefcase size={9} className="text-blue-400 shrink-0" />
+                                <span className="truncate">{title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {tab === "calendar" && (
+        <div className="anim-fade-in">
+          <DispatchCalendar
+            jobs={allJobs}
+            technicians={techs}
+            assignmentByJobId={assignmentByJobId}
+            onAssign={handleManualAssign}
+            onSmartAssign={handleSmartAssign}
+            onPickSuggestion={handlePickSuggestion}
+            onDismissSuggestions={() => {
+              setSuggestions(null);
+              setPendingJobId(null);
+            }}
+            isAssigning={manualAssign.isPending}
+            smartAssigningJobId={smartAssign.isPending ? pendingJobId : pendingJobId}
+              smartSuggestions={suggestions ?? null}
+            onOpenJob={handleOpenJob}
+          />
         </div>
       )}
 
@@ -761,7 +928,12 @@ export default function DispatchBoard() {
                 <Loader2 size={24} className="animate-spin mr-2" /> Loading map…
               </div>
             }>
-              <DispatchMap technicians={techs} jobs={pendingJobs} />
+              <DispatchMap
+                technicians={techs}
+                assignedJobs={assignedJobs}
+                unassignedJobs={unassignedJobs}
+                assignmentByJobId={assignmentByJobId}
+              />
             </Suspense>
           </div>
         </div>
@@ -778,14 +950,12 @@ export default function DispatchBoard() {
           technician={selectedAssignment ? techs.find(t => t.id === selectedAssignment.technicianId) : undefined}
           isOpen={!!selectedJob}
           onClose={() => { setSelectedJob(null); setSelectedAssignment(null); }}
-          onCreateQuote={(job) => {
-            setFinanceJobContext(job);
+          onCreateQuote={() => {
             setShowQuoteFromJob(true);
             setSelectedJob(null);
             setSelectedAssignment(null);
           }}
-          onCreateInvoice={(job) => {
-            setFinanceJobContext(job);
+          onCreateInvoice={() => {
             setShowInvoiceFromJob(true);
             setSelectedJob(null);
             setSelectedAssignment(null);
@@ -794,8 +964,8 @@ export default function DispatchBoard() {
       )}
 
       {/* Finance modals from job context */}
-      <AddQuoteModal isOpen={showQuoteFromJob} onClose={() => { setShowQuoteFromJob(false); setFinanceJobContext(null); }} />
-      <AddInvoiceModal isOpen={showInvoiceFromJob} onClose={() => { setShowInvoiceFromJob(false); setFinanceJobContext(null); }} />
+      <AddQuoteModal isOpen={showQuoteFromJob} onClose={() => { setShowQuoteFromJob(false); }} />
+      <AddInvoiceModal isOpen={showInvoiceFromJob} onClose={() => { setShowInvoiceFromJob(false); }} />
     </div>
   );
 }

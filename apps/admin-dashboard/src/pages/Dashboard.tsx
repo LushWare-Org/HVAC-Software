@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
     DollarSign, Briefcase, Users, CheckCircle,
     ArrowRight, Clock, ChevronLeft, ChevronRight, Eye, AlertCircle, RefreshCw
@@ -31,11 +31,6 @@ const JOB_STATUS_MAP: Record<string, { label: string; css: string }> = {
     cancelled:   { label: 'Cancelled',  css: 'badge-red' },
 }
 
-const TECH_STATUS_CSS: Record<string, string> = {
-    ON_JOB: 'badge-blue', on_job: 'badge-blue',
-    EN_ROUTE: 'badge-amber', en_route: 'badge-amber',
-    AVAILABLE: 'badge-green', available: 'badge-green',
-}
 
 const JOB_STATUS_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#6b7280', '#ef4444']
 

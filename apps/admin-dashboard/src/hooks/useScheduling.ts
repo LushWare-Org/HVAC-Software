@@ -115,14 +115,7 @@ export function useJobAssignments(jobId: string | null) {
 
 // ─── All assignments for a list of technicians ──────────────────────────────
 
-export type FlatAssignment = {
-  technicianId: string
-  jobId: string
-  scheduledStart?: string
-  scheduledEnd?: string
-  status: string
-  id: string
-}
+export type FlatAssignment = DispatchAssignment
 
 export function useAllTechAssignments(techIds: string[]) {
   return useQuery<FlatAssignment[]>({
@@ -238,15 +231,19 @@ export function useDispatchWebSocket() {
   const connect = () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return
 
-    // Browser WebSocket API cannot send custom headers, so pass bypass
-    // auth params as query string for dev mode (Go middleware reads them).
-    const params = new URLSearchParams({
-      'x-test-company-id': 'co-demo-001',
-      'x-test-user-id': 'user-admin-001',
-      'x-test-user-role': 'company_admin',
-    })
+    const token = localStorage.getItem('tscrm_token')
+    const params = new URLSearchParams()
+    if (token) {
+      params.set('access_token', token)
+    } else if (import.meta.env.DEV) {
+      // Fallback for local development setups that intentionally use BYPASS_AUTH.
+      params.set('x-test-company-id', 'co-demo-001')
+      params.set('x-test-user-id', 'user-admin-001')
+      params.set('x-test-user-role', 'company_admin')
+    }
     const wsBase = resolveDispatchWsBase()
-    const wsUrl = `${wsBase}/ws?${params}`
+    const qs = params.toString()
+    const wsUrl = qs ? `${wsBase}/ws?${qs}` : `${wsBase}/ws`
 
     setStatus('connecting')
     const ws = new WebSocket(wsUrl)

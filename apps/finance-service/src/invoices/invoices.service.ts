@@ -55,7 +55,9 @@ export class InvoicesService {
       limit?: number;
     },
   ) {
-    const { status, customerId, page = 1, limit = 20 } = params;
+    const { status, customerId } = params;
+    const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
+    const limit = Number.isFinite(Number(params.limit)) ? Math.min(100, Math.max(1, Math.trunc(Number(params.limit)))) : 20;
     const skip = (page - 1) * limit;
     const where = {
       companyId,
@@ -178,16 +180,79 @@ export class InvoicesService {
     });
   }
 
+  // ── Customer decision actions (portal) ───────────────────────────────────
+
+  async approveByCustomer(
+    companyId: string,
+    id: string,
+    customerName: string,
+    customerEmail: string,
+  ) {
+    const invoice = await this.findOne(companyId, id);
+    if (([InvoiceStatus.VOID, InvoiceStatus.PAID] as InvoiceStatus[]).includes(invoice.status)) {
+      throw new BadRequestException(`Invoice cannot be approved in status: ${invoice.status}`);
+    }
+
+    const decisionLine = `Customer approved on ${new Date().toISOString()} by ${customerName} (${customerEmail})`;
+    const existingNotes = invoice.notes?.trim();
+
+    return this.prisma.invoice.update({
+      where: { id },
+      data: {
+        notes: existingNotes ? `${existingNotes}\n\n${decisionLine}` : decisionLine,
+      },
+      include: {
+        lineItems: { orderBy: { sortOrder: 'asc' } },
+        payments: { orderBy: { createdAt: 'desc' } },
+        quote: { select: { quoteNumber: true } },
+      },
+    });
+  }
+
+  async declineByCustomer(
+    companyId: string,
+    id: string,
+    customerName: string,
+    customerEmail: string,
+    reason?: string,
+  ) {
+    const invoice = await this.findOne(companyId, id);
+    if (([InvoiceStatus.VOID, InvoiceStatus.PAID] as InvoiceStatus[]).includes(invoice.status)) {
+      throw new BadRequestException(`Invoice cannot be declined in status: ${invoice.status}`);
+    }
+
+    const decisionLine = `Customer declined on ${new Date().toISOString()} by ${customerName} (${customerEmail})${reason ? ` — ${reason}` : ''}`;
+    const existingNotes = invoice.notes?.trim();
+
+    return this.prisma.invoice.update({
+      where: { id },
+      data: {
+        status: InvoiceStatus.VOID,
+        voidedAt: new Date(),
+        notes: existingNotes ? `${existingNotes}\n\n${decisionLine}` : decisionLine,
+      },
+      include: {
+        lineItems: { orderBy: { sortOrder: 'asc' } },
+        payments: { orderBy: { createdAt: 'desc' } },
+        quote: { select: { quoteNumber: true } },
+      },
+    });
+  }
+
   // ── Send ──────────────────────────────────────────────────────────────────
 
   async send(companyId: string, id: string) {
     const invoice = await this.findOne(companyId, id);
-    if (invoice.status !== InvoiceStatus.DRAFT) {
-      throw new BadRequestException(`Invoice must be DRAFT to send, current: ${invoice.status}`);
+    if (invoice.status === InvoiceStatus.VOID) {
+      throw new BadRequestException('Cannot send a VOID invoice');
     }
+
     const updated = await this.prisma.invoice.update({
       where: { id },
-      data: { status: InvoiceStatus.SENT, sentAt: new Date() },
+      data: {
+        status: invoice.status === InvoiceStatus.DRAFT ? InvoiceStatus.SENT : invoice.status,
+        sentAt: new Date(),
+      },
       include: {
         lineItems: { orderBy: { sortOrder: 'asc' } },
         payments: { orderBy: { createdAt: 'desc' } },
@@ -195,20 +260,68 @@ export class InvoicesService {
       },
     });
 
-    // Generate email HTML from the invoice template and send via comms-service
-    if (invoice.customerEmail) {
+    // Send a concise billing email and attach the invoice PDF for download.
+    const recipientEmail = updated.customerEmail?.trim();
+    if (!recipientEmail) {
+      throw new BadRequestException('Customer email is required before sending this invoice');
+    }
+    if (!/^\S+@\S+\.\S+$/.test(recipientEmail)) {
+      throw new BadRequestException('Customer email format is invalid');
+    }
+
+    {
       const companyName = process.env.COMPANY_NAME ?? 'T&S Services';
       const companyAddress = process.env.COMPANY_ADDRESS ?? '';
-      const emailHtml = this.pdfService.renderInvoiceHtml(updated as any, companyName, companyAddress);
+      const total = Number(updated.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const dueDate = updated.dueDate ? new Date(updated.dueDate).toLocaleDateString() : '—';
+      const emailHtml = `
+        <div style="margin:0;background:#f4f6fb;padding:32px 18px;font-family:Arial,sans-serif;color:#14213d;">
+          <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #dbe3f0;border-radius:20px;overflow:hidden;box-shadow:0 20px 45px rgba(15,23,42,0.08);">
+            <div style="padding:28px 32px;background:linear-gradient(135deg,#1d4ed8,#1d4ed8 45%,#1e3a8a);color:#ffffff;">
+              <div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;opacity:0.82;margin-bottom:10px;">Invoice attached</div>
+              <h2 style="margin:0;font-size:28px;line-height:1.15;">${updated.invoiceNumber}</h2>
+              <p style="margin:10px 0 0 0;font-size:14px;line-height:1.6;max-width:460px;color:rgba(255,255,255,0.9);">Your invoice from ${companyName} is ready. A PDF copy is attached for your records and payment processing.</p>
+            </div>
+            <div style="padding:30px 32px;">
+              <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;">Hello ${updated.customerName ?? 'Customer'},</p>
+              <p style="margin:0 0 18px 0;font-size:14px;line-height:1.7;color:#475569;">Please find your invoice attached. The PDF is formatted for accounting records and vendor reconciliation.</p>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 22px 0;">
+                <div style="border:1px solid #dbe3f0;border-radius:14px;padding:16px 18px;background:#f8fafc;">
+                  <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-bottom:6px;">Invoice total</div>
+                  <div style="font-size:22px;font-weight:700;color:#0f172a;">$${total}</div>
+                </div>
+                <div style="border:1px solid #dbe3f0;border-radius:14px;padding:16px 18px;background:#f8fafc;">
+                  <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-bottom:6px;">Due date</div>
+                  <div style="font-size:18px;font-weight:700;color:#0f172a;">${dueDate}</div>
+                </div>
+              </div>
+              <div style="border:1px solid #dbe3f0;border-radius:16px;padding:18px 20px;background:#ffffff;">
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#1d4ed8;margin-bottom:8px;">Payment</div>
+                <p style="margin:0;font-size:14px;line-height:1.7;color:#475569;">Use your customer portal to pay securely online or reply to this email if you need clarification on any line item.</p>
+              </div>
+              <p style="margin:22px 0 0 0;font-size:13px;line-height:1.7;color:#64748b;">${companyAddress}</p>
+            </div>
+          </div>
+        </div>
+      `;
 
-      this.notificationClient.sendEmail({
-        recipientId: invoice.customerId,
-        recipientName: invoice.customerName ?? undefined,
-        recipientEmail: invoice.customerEmail,
-        subject: `Invoice ${invoice.invoiceNumber} from ${companyName}`,
+      const invoicePdf = await this.pdfService.generateInvoicePdf(updated as any, companyName, companyAddress);
+      await this.notificationClient.sendEmail({
+        companyId,
+        recipientId: updated.customerId ?? updated.id,
+        recipientName: updated.customerName ?? undefined,
+        recipientEmail,
+        subject: `Invoice ${updated.invoiceNumber} from ${companyName}`,
         htmlBody: emailHtml,
-        customerId: invoice.customerId,
+        customerId: updated.customerId ?? undefined,
         invoiceId: id,
+        attachments: [
+          {
+            filename: `${updated.invoiceNumber}.pdf`,
+            contentType: 'application/pdf',
+            contentBase64: invoicePdf.toString('base64'),
+          },
+        ],
       });
     }
 

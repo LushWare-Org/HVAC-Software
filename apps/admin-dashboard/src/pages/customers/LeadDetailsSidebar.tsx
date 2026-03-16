@@ -14,7 +14,6 @@ import {
   Wrench,
   Trash2,
   AlertCircle,
-  Loader2,
 } from "lucide-react";
 import { useUpdateLead } from "../../hooks/useCustomers";
 import { useLeadAddresses, useSaveLeadAddresses } from "../../hooks/useAddresses";
@@ -116,8 +115,6 @@ function SectionHeader({
 }
 
 const mockContacts = [{ id: 1, name: "", role: "Owner", email: "", phone: "" }];
-const mockTimeline: any[] = [];
-
 export default function LeadDetailsSidebar({
   person,
   isOpen,
@@ -127,10 +124,10 @@ export default function LeadDetailsSidebar({
   const [activeTab, setActiveTab] = useState<TabType>("contact");
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<any>({});
-  const [error, setError] = useState("");
   const [convertedCustomerId, setConvertedCustomerId] = useState<string | null>(null);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [contacts, setContacts] = useState(mockContacts);
+    const [_error, setError] = useState("");
   const updateLead = useUpdateLead();
 
   // Fetch real addresses from API

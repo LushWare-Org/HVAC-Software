@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '../prisma/generated';
+
+function isUniqueConstraintError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
 
 @Injectable()
 export class UsersService {
@@ -43,14 +48,33 @@ export class UsersService {
   }
 
   async create(companyId: string, data: { name: string; email: string; phone?: string; role?: string; auth0UserId?: string }) {
-    return this.prisma.companyUser.create({
-      data: { companyId, ...data },
-    });
+    try {
+      return await this.prisma.companyUser.create({
+        data: { companyId, ...data },
+      });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new ConflictException('A user with this email already exists in your company');
+      }
+      throw error;
+    }
+  }
+
+  async updateMe(companyId: string, userId: string, data: { name?: string; phone?: string }) {
+    const user = await this.findMe(companyId, userId);
+    return this.prisma.companyUser.update({ where: { id: user.id }, data });
   }
 
   async update(companyId: string, id: string, data: { name?: string; email?: string; phone?: string; role?: string; isActive?: boolean }) {
     await this.findOne(companyId, id); // ensure exists
-    return this.prisma.companyUser.update({ where: { id }, data });
+    try {
+      return await this.prisma.companyUser.update({ where: { id }, data });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new ConflictException('A user with this email already exists in your company');
+      }
+      throw error;
+    }
   }
 
   async remove(companyId: string, id: string) {

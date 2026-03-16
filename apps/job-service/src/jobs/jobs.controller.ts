@@ -1,7 +1,7 @@
 import {
   Controller, Get, Post, Put, Patch, Delete,
   Param, Body, Query, UseGuards, HttpCode, HttpStatus,
-  DefaultValuePipe, ParseIntPipe,
+  DefaultValuePipe, ParseIntPipe, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { IsOptional, IsString, IsArray, IsEnum, IsBoolean, IsDateString } from 'class-validator';
@@ -74,23 +74,45 @@ export class JobsController {
     @Query('dateTo') dateTo?: string,
     @Query('customerId') customerId?: string,
   ) {
+    // CUSTOMER role: force-filter to their own customerId for security
+    const effectiveCustomerId = user.role === Role.CUSTOMER
+      ? user.customerId
+      : customerId;
+
     return this.jobsService.findAll(user.companyId, page, limit, {
-      status, assignedToId, jobTypeId, search, dateFrom, dateTo, customerId,
+      status, assignedToId, jobTypeId, search, dateFrom, dateTo,
+      customerId: effectiveCustomerId,
     });
   }
 
   // ---- Get one ----
   @Get(':id')
   @ApiOperation({ summary: 'Get full job detail (with work orders, custom fields, history)' })
-  findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.jobsService.findOne(user.companyId, id);
+  async findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    const job = await this.jobsService.findOne(user.companyId, id) as any;
+    // CUSTOMER: verify they own this job
+    if (user.role === Role.CUSTOMER && job.customerId !== user.customerId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return job;
   }
 
   // ---- Create ----
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Create a new job' })
-  create(@CurrentUser() user: AuthUser, @Body() dto: CreateJobDto) {
+  async create(@CurrentUser() user: AuthUser, @Body() dto: CreateJobDto) {
+    if (user.role === Role.CUSTOMER) {
+      if (!user.customerId) {
+        throw new ForbiddenException('Customer account is not linked to a customer profile');
+      }
+      if (dto.customerId !== user.customerId) {
+        throw new ForbiddenException('Customers may only create jobs for their own account');
+      }
+      if (!dto.serviceAddress?.trim()) {
+        throw new BadRequestException('Service address is required');
+      }
+    }
     return this.jobsService.create(user, dto);
   }
 
@@ -108,22 +130,32 @@ export class JobsController {
 
   // ---- Combined PATCH (fields + optional status in one call) ----
   @Patch(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN)
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN, Role.CUSTOMER)
   @ApiOperation({ summary: 'Patch job: update fields and/or transition status in one request' })
   async patch(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
     @Body() dto: PatchJobDto,
   ) {
+    const job = await this.jobsService.findOne(user.companyId, id) as any;
+
+    // CUSTOMER role: can only cancel their own jobs
+    if (user.role === Role.CUSTOMER) {
+      if (job.customerId !== user.customerId) {
+        throw new ForbiddenException('Access denied');
+      }
+      if (dto.status && dto.status !== 'CANCELLED') {
+        throw new ForbiddenException('Customers may only cancel jobs');
+      }
+    }
+
     const { status, statusNote, gpsTrackingEnabled, completedAt, ...fields } = dto;
-    // Update scalar fields first (if any)
     const hasFields = Object.values(fields).some((v) => v !== undefined);
     if (hasFields || gpsTrackingEnabled !== undefined || completedAt !== undefined) {
       await this.jobsService.patchFields(user.companyId, id, {
         ...fields, gpsTrackingEnabled, completedAt,
       });
     }
-    // Then run status transition if requested
     if (status) {
       return this.jobsService.updateStatus(
         user.companyId, id, user, { status, note: statusNote },
