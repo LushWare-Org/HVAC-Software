@@ -17,6 +17,11 @@ export interface TeamMember {
   phone?: string
   role: string
   isActive: boolean
+  approvalStatus: string   // APPROVED | PENDING | REJECTED
+  approvalNote?: string
+  skills: string[]
+  latitude?: number
+  longitude?: number
   lastLoginAt?: string
   createdAt: string
   updatedAt: string
@@ -66,6 +71,7 @@ export function useCreateTeamMember() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team'] })
+      queryClient.invalidateQueries({ queryKey: ['scheduling', 'technicians'] })
     },
   })
 }
@@ -87,6 +93,42 @@ export function useDeleteTeamMember() {
     mutationFn: async (id: string) => {
       const res = await api.delete(`/crm/users/${id}`)
       return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team'] })
+    },
+  })
+}
+
+export function usePendingTechnicians() {
+  return useQuery<{ data: TeamMember[]; total: number }>({
+    queryKey: ['team', 'pending-technicians'],
+    queryFn: async () => {
+      const res = await api.get('/crm/users/pending-technicians')
+      return res.data
+    },
+    refetchInterval: 30_000, // poll every 30s
+  })
+}
+
+export function useApproveTechnician() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.post(`/crm/users/${id}/approve`)
+      return res.data as TeamMember
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team'] })
+      queryClient.invalidateQueries({ queryKey: ['scheduling', 'technicians'] })
+    },
+  })
+}
+
+export function useRejectTechnician() {
+  return useMutation({
+    mutationFn: async ({ id, note }: { id: string; note?: string }) => {
+      const res = await api.post(`/crm/users/${id}/reject`, { note })
+      return res.data as TeamMember
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team'] })

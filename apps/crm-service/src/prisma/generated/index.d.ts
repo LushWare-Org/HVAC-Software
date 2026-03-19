@@ -3079,8 +3079,20 @@ export namespace Prisma {
 
   export type AggregateCompanyUser = {
     _count: CompanyUserCountAggregateOutputType | null
+    _avg: CompanyUserAvgAggregateOutputType | null
+    _sum: CompanyUserSumAggregateOutputType | null
     _min: CompanyUserMinAggregateOutputType | null
     _max: CompanyUserMaxAggregateOutputType | null
+  }
+
+  export type CompanyUserAvgAggregateOutputType = {
+    latitude: number | null
+    longitude: number | null
+  }
+
+  export type CompanyUserSumAggregateOutputType = {
+    latitude: number | null
+    longitude: number | null
   }
 
   export type CompanyUserMinAggregateOutputType = {
@@ -3093,6 +3105,10 @@ export namespace Prisma {
     passwordHash: string | null
     role: string | null
     isActive: boolean | null
+    approvalStatus: string | null
+    approvalNote: string | null
+    latitude: number | null
+    longitude: number | null
     lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3108,6 +3124,10 @@ export namespace Prisma {
     passwordHash: string | null
     role: string | null
     isActive: boolean | null
+    approvalStatus: string | null
+    approvalNote: string | null
+    latitude: number | null
+    longitude: number | null
     lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3123,12 +3143,27 @@ export namespace Prisma {
     passwordHash: number
     role: number
     isActive: number
+    approvalStatus: number
+    approvalNote: number
+    skills: number
+    latitude: number
+    longitude: number
     lastLoginAt: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
+
+  export type CompanyUserAvgAggregateInputType = {
+    latitude?: true
+    longitude?: true
+  }
+
+  export type CompanyUserSumAggregateInputType = {
+    latitude?: true
+    longitude?: true
+  }
 
   export type CompanyUserMinAggregateInputType = {
     id?: true
@@ -3140,6 +3175,10 @@ export namespace Prisma {
     passwordHash?: true
     role?: true
     isActive?: true
+    approvalStatus?: true
+    approvalNote?: true
+    latitude?: true
+    longitude?: true
     lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
@@ -3155,6 +3194,10 @@ export namespace Prisma {
     passwordHash?: true
     role?: true
     isActive?: true
+    approvalStatus?: true
+    approvalNote?: true
+    latitude?: true
+    longitude?: true
     lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
@@ -3170,6 +3213,11 @@ export namespace Prisma {
     passwordHash?: true
     role?: true
     isActive?: true
+    approvalStatus?: true
+    approvalNote?: true
+    skills?: true
+    latitude?: true
+    longitude?: true
     lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
@@ -3214,6 +3262,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: CompanyUserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CompanyUserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: CompanyUserMinAggregateInputType
@@ -3244,6 +3304,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: CompanyUserCountAggregateInputType | true
+    _avg?: CompanyUserAvgAggregateInputType
+    _sum?: CompanyUserSumAggregateInputType
     _min?: CompanyUserMinAggregateInputType
     _max?: CompanyUserMaxAggregateInputType
   }
@@ -3258,10 +3320,17 @@ export namespace Prisma {
     passwordHash: string | null
     role: string
     isActive: boolean
+    approvalStatus: string
+    approvalNote: string | null
+    skills: string[]
+    latitude: number | null
+    longitude: number | null
     lastLoginAt: Date | null
     createdAt: Date
     updatedAt: Date
     _count: CompanyUserCountAggregateOutputType | null
+    _avg: CompanyUserAvgAggregateOutputType | null
+    _sum: CompanyUserSumAggregateOutputType | null
     _min: CompanyUserMinAggregateOutputType | null
     _max: CompanyUserMaxAggregateOutputType | null
   }
@@ -3290,6 +3359,11 @@ export namespace Prisma {
     passwordHash?: boolean
     role?: boolean
     isActive?: boolean
+    approvalStatus?: boolean
+    approvalNote?: boolean
+    skills?: boolean
+    latitude?: boolean
+    longitude?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3306,6 +3380,11 @@ export namespace Prisma {
     passwordHash?: boolean
     role?: boolean
     isActive?: boolean
+    approvalStatus?: boolean
+    approvalNote?: boolean
+    skills?: boolean
+    latitude?: boolean
+    longitude?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3322,6 +3401,11 @@ export namespace Prisma {
     passwordHash?: boolean
     role?: boolean
     isActive?: boolean
+    approvalStatus?: boolean
+    approvalNote?: boolean
+    skills?: boolean
+    latitude?: boolean
+    longitude?: boolean
     lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3349,6 +3433,11 @@ export namespace Prisma {
       passwordHash: string | null
       role: string
       isActive: boolean
+      approvalStatus: string
+      approvalNote: string | null
+      skills: string[]
+      latitude: number | null
+      longitude: number | null
       lastLoginAt: Date | null
       createdAt: Date
       updatedAt: Date
@@ -3755,6 +3844,11 @@ export namespace Prisma {
     readonly passwordHash: FieldRef<"CompanyUser", 'String'>
     readonly role: FieldRef<"CompanyUser", 'String'>
     readonly isActive: FieldRef<"CompanyUser", 'Boolean'>
+    readonly approvalStatus: FieldRef<"CompanyUser", 'String'>
+    readonly approvalNote: FieldRef<"CompanyUser", 'String'>
+    readonly skills: FieldRef<"CompanyUser", 'String[]'>
+    readonly latitude: FieldRef<"CompanyUser", 'Float'>
+    readonly longitude: FieldRef<"CompanyUser", 'Float'>
     readonly lastLoginAt: FieldRef<"CompanyUser", 'DateTime'>
     readonly createdAt: FieldRef<"CompanyUser", 'DateTime'>
     readonly updatedAt: FieldRef<"CompanyUser", 'DateTime'>
@@ -12922,6 +13016,11 @@ export namespace Prisma {
     passwordHash: 'passwordHash',
     role: 'role',
     isActive: 'isActive',
+    approvalStatus: 'approvalStatus',
+    approvalNote: 'approvalNote',
+    skills: 'skills',
+    latitude: 'latitude',
+    longitude: 'longitude',
     lastLoginAt: 'lastLoginAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -13160,6 +13259,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+  /**
    * Reference to a field of type 'CustomerType'
    */
   export type EnumCustomerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomerType'>
@@ -13254,20 +13367,6 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float'
-   */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float[]'
-   */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
   /**
    * Deep Input Types
@@ -13407,6 +13506,11 @@ export namespace Prisma {
     passwordHash?: StringNullableFilter<"CompanyUser"> | string | null
     role?: StringFilter<"CompanyUser"> | string
     isActive?: BoolFilter<"CompanyUser"> | boolean
+    approvalStatus?: StringFilter<"CompanyUser"> | string
+    approvalNote?: StringNullableFilter<"CompanyUser"> | string | null
+    skills?: StringNullableListFilter<"CompanyUser">
+    latitude?: FloatNullableFilter<"CompanyUser"> | number | null
+    longitude?: FloatNullableFilter<"CompanyUser"> | number | null
     lastLoginAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     createdAt?: DateTimeFilter<"CompanyUser"> | Date | string
     updatedAt?: DateTimeFilter<"CompanyUser"> | Date | string
@@ -13423,6 +13527,11 @@ export namespace Prisma {
     passwordHash?: SortOrderInput | SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    approvalStatus?: SortOrder
+    approvalNote?: SortOrderInput | SortOrder
+    skills?: SortOrder
+    latitude?: SortOrderInput | SortOrder
+    longitude?: SortOrderInput | SortOrder
     lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13443,6 +13552,11 @@ export namespace Prisma {
     passwordHash?: StringNullableFilter<"CompanyUser"> | string | null
     role?: StringFilter<"CompanyUser"> | string
     isActive?: BoolFilter<"CompanyUser"> | boolean
+    approvalStatus?: StringFilter<"CompanyUser"> | string
+    approvalNote?: StringNullableFilter<"CompanyUser"> | string | null
+    skills?: StringNullableListFilter<"CompanyUser">
+    latitude?: FloatNullableFilter<"CompanyUser"> | number | null
+    longitude?: FloatNullableFilter<"CompanyUser"> | number | null
     lastLoginAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     createdAt?: DateTimeFilter<"CompanyUser"> | Date | string
     updatedAt?: DateTimeFilter<"CompanyUser"> | Date | string
@@ -13459,12 +13573,19 @@ export namespace Prisma {
     passwordHash?: SortOrderInput | SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    approvalStatus?: SortOrder
+    approvalNote?: SortOrderInput | SortOrder
+    skills?: SortOrder
+    latitude?: SortOrderInput | SortOrder
+    longitude?: SortOrderInput | SortOrder
     lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: CompanyUserCountOrderByAggregateInput
+    _avg?: CompanyUserAvgOrderByAggregateInput
     _max?: CompanyUserMaxOrderByAggregateInput
     _min?: CompanyUserMinOrderByAggregateInput
+    _sum?: CompanyUserSumOrderByAggregateInput
   }
 
   export type CompanyUserScalarWhereWithAggregatesInput = {
@@ -13480,6 +13601,11 @@ export namespace Prisma {
     passwordHash?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
     role?: StringWithAggregatesFilter<"CompanyUser"> | string
     isActive?: BoolWithAggregatesFilter<"CompanyUser"> | boolean
+    approvalStatus?: StringWithAggregatesFilter<"CompanyUser"> | string
+    approvalNote?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
+    skills?: StringNullableListFilter<"CompanyUser">
+    latitude?: FloatNullableWithAggregatesFilter<"CompanyUser"> | number | null
+    longitude?: FloatNullableWithAggregatesFilter<"CompanyUser"> | number | null
     lastLoginAt?: DateTimeNullableWithAggregatesFilter<"CompanyUser"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"CompanyUser"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"CompanyUser"> | Date | string
@@ -14514,6 +14640,11 @@ export namespace Prisma {
     passwordHash?: string | null
     role?: string
     isActive?: boolean
+    approvalStatus?: string
+    approvalNote?: string | null
+    skills?: CompanyUserCreateskillsInput | string[]
+    latitude?: number | null
+    longitude?: number | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14530,6 +14661,11 @@ export namespace Prisma {
     passwordHash?: string | null
     role?: string
     isActive?: boolean
+    approvalStatus?: string
+    approvalNote?: string | null
+    skills?: CompanyUserCreateskillsInput | string[]
+    latitude?: number | null
+    longitude?: number | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14544,6 +14680,11 @@ export namespace Prisma {
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    approvalStatus?: StringFieldUpdateOperationsInput | string
+    approvalNote?: NullableStringFieldUpdateOperationsInput | string | null
+    skills?: CompanyUserUpdateskillsInput | string[]
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14560,6 +14701,11 @@ export namespace Prisma {
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    approvalStatus?: StringFieldUpdateOperationsInput | string
+    approvalNote?: NullableStringFieldUpdateOperationsInput | string | null
+    skills?: CompanyUserUpdateskillsInput | string[]
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14575,6 +14721,11 @@ export namespace Prisma {
     passwordHash?: string | null
     role?: string
     isActive?: boolean
+    approvalStatus?: string
+    approvalNote?: string | null
+    skills?: CompanyUserCreateskillsInput | string[]
+    latitude?: number | null
+    longitude?: number | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14589,6 +14740,11 @@ export namespace Prisma {
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    approvalStatus?: StringFieldUpdateOperationsInput | string
+    approvalNote?: NullableStringFieldUpdateOperationsInput | string | null
+    skills?: CompanyUserUpdateskillsInput | string[]
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14604,6 +14760,11 @@ export namespace Prisma {
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    approvalStatus?: StringFieldUpdateOperationsInput | string
+    approvalNote?: NullableStringFieldUpdateOperationsInput | string | null
+    skills?: CompanyUserUpdateskillsInput | string[]
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15863,6 +16024,25 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type CompanyRelationFilter = {
     is?: CompanyWhereInput
     isNot?: CompanyWhereInput
@@ -15883,9 +16063,19 @@ export namespace Prisma {
     passwordHash?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    approvalStatus?: SortOrder
+    approvalNote?: SortOrder
+    skills?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
     lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type CompanyUserAvgOrderByAggregateInput = {
+    latitude?: SortOrder
+    longitude?: SortOrder
   }
 
   export type CompanyUserMaxOrderByAggregateInput = {
@@ -15898,6 +16088,10 @@ export namespace Prisma {
     passwordHash?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    approvalStatus?: SortOrder
+    approvalNote?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
     lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -15913,9 +16107,34 @@ export namespace Prisma {
     passwordHash?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    approvalStatus?: SortOrder
+    approvalNote?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
     lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type CompanyUserSumOrderByAggregateInput = {
+    latitude?: SortOrder
+    longitude?: SortOrder
+  }
+
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type EnumCustomerTypeFilter<$PrismaModel = never> = {
@@ -15923,14 +16142,6 @@ export namespace Prisma {
     in?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
     notIn?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
     not?: NestedEnumCustomerTypeFilter<$PrismaModel> | $Enums.CustomerType
-  }
-
-  export type StringNullableListFilter<$PrismaModel = never> = {
-    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    has?: string | StringFieldRefInput<$PrismaModel> | null
-    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
-    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
   }
 
   export type EnumCustomerEngagementStatusFilter<$PrismaModel = never> = {
@@ -16827,10 +17038,27 @@ export namespace Prisma {
     deleteMany?: CompanyUserScalarWhereInput | CompanyUserScalarWhereInput[]
   }
 
+  export type CompanyUserCreateskillsInput = {
+    set: string[]
+  }
+
   export type CompanyCreateNestedOneWithoutUsersInput = {
     create?: XOR<CompanyCreateWithoutUsersInput, CompanyUncheckedCreateWithoutUsersInput>
     connectOrCreate?: CompanyCreateOrConnectWithoutUsersInput
     connect?: CompanyWhereUniqueInput
+  }
+
+  export type CompanyUserUpdateskillsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type NullableFloatFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type CompanyUpdateOneRequiredWithoutUsersNestedInput = {
@@ -17561,6 +17789,33 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
   export type NestedEnumCustomerTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.CustomerType | EnumCustomerTypeFieldRefInput<$PrismaModel>
     in?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
@@ -17955,6 +18210,11 @@ export namespace Prisma {
     passwordHash?: string | null
     role?: string
     isActive?: boolean
+    approvalStatus?: string
+    approvalNote?: string | null
+    skills?: CompanyUserCreateskillsInput | string[]
+    latitude?: number | null
+    longitude?: number | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -17969,6 +18229,11 @@ export namespace Prisma {
     passwordHash?: string | null
     role?: string
     isActive?: boolean
+    approvalStatus?: string
+    approvalNote?: string | null
+    skills?: CompanyUserCreateskillsInput | string[]
+    latitude?: number | null
+    longitude?: number | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18203,6 +18468,11 @@ export namespace Prisma {
     passwordHash?: StringNullableFilter<"CompanyUser"> | string | null
     role?: StringFilter<"CompanyUser"> | string
     isActive?: BoolFilter<"CompanyUser"> | boolean
+    approvalStatus?: StringFilter<"CompanyUser"> | string
+    approvalNote?: StringNullableFilter<"CompanyUser"> | string | null
+    skills?: StringNullableListFilter<"CompanyUser">
+    latitude?: FloatNullableFilter<"CompanyUser"> | number | null
+    longitude?: FloatNullableFilter<"CompanyUser"> | number | null
     lastLoginAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     createdAt?: DateTimeFilter<"CompanyUser"> | Date | string
     updatedAt?: DateTimeFilter<"CompanyUser"> | Date | string
@@ -20496,6 +20766,11 @@ export namespace Prisma {
     passwordHash?: string | null
     role?: string
     isActive?: boolean
+    approvalStatus?: string
+    approvalNote?: string | null
+    skills?: CompanyUserCreateskillsInput | string[]
+    latitude?: number | null
+    longitude?: number | null
     lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20796,6 +21071,11 @@ export namespace Prisma {
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    approvalStatus?: StringFieldUpdateOperationsInput | string
+    approvalNote?: NullableStringFieldUpdateOperationsInput | string | null
+    skills?: CompanyUserUpdateskillsInput | string[]
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20810,6 +21090,11 @@ export namespace Prisma {
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    approvalStatus?: StringFieldUpdateOperationsInput | string
+    approvalNote?: NullableStringFieldUpdateOperationsInput | string | null
+    skills?: CompanyUserUpdateskillsInput | string[]
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20824,6 +21109,11 @@ export namespace Prisma {
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    approvalStatus?: StringFieldUpdateOperationsInput | string
+    approvalNote?: NullableStringFieldUpdateOperationsInput | string | null
+    skills?: CompanyUserUpdateskillsInput | string[]
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

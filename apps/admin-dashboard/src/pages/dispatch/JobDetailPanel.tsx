@@ -10,9 +10,10 @@ import { useState } from "react";
 import {
   X, MapPin, User, Calendar, Clock, DollarSign, FileText,
   Briefcase, Wrench, ArrowRight, Loader2, CheckCircle2,
-  AlertCircle, Send, Receipt, Truck, Star,
+  AlertCircle, Send, Receipt, Truck, Star, RefreshCw,
 } from "lucide-react";
 import { useJob, useUpdateJobStatus } from "../../hooks/useJobs";
+import { useTechnicians, useManualAssign } from "../../hooks/useScheduling";
 import type { Job, DispatchAssignment, Technician } from "../../types/api";
 
 interface JobDetailPanelProps {
@@ -57,7 +58,10 @@ export default function JobDetailPanel({
 }: JobDetailPanelProps) {
   const { data: job, isLoading } = useJob(jobId);
   const updateJobStatus = useUpdateJobStatus();
+  const { data: technicians } = useTechnicians();
+  const manualAssign = useManualAssign();
   const [error, setError] = useState("");
+  const [showReassign, setShowReassign] = useState(false);
 
   if (!isOpen) return null;
 
@@ -273,19 +277,110 @@ export default function JobDetailPanel({
                       ))}
                     </div>
                   </div>
+                  {/* Reassign button */}
+                  {assignment && assignment.status !== 'COMPLETED' && assignment.status !== 'CANCELLED' && (
+                    <div className="mt-3">
+                      {!showReassign ? (
+                        <button
+                          onClick={() => setShowReassign(true)}
+                          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer w-full justify-center"
+                        >
+                          <RefreshCw size={12} /> Reassign Technician
+                        </button>
+                      ) : (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+                          <p className="text-xs font-bold text-amber-800">Select new technician:</p>
+                          <select
+                            className="w-full text-sm border border-amber-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-amber-500 outline-none"
+                            defaultValue=""
+                            onChange={e => {
+                              if (e.target.value && job) {
+                                manualAssign.mutate({
+                                  jobId: job.id,
+                                  technicianId: e.target.value,
+                                  jobLatitude: job.serviceLatitude ?? 0,
+                                  jobLongitude: job.serviceLongitude ?? 0,
+                                }, {
+                                  onSuccess: () => {
+                                    setShowReassign(false)
+                                  },
+                                })
+                              }
+                            }}
+                          >
+                            <option value="" disabled>Choose technician…</option>
+                            {technicians?.filter(t => t.id !== assignment?.technicianId).map(t => (
+                              <option key={t.id} value={t.id}>{t.name} {t.phone ? `(${t.phone})` : ''}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => setShowReassign(false)}
+                            className="text-xs text-gray-500 hover:text-gray-700 cursor-pointer bg-transparent border-0"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* GPS Info */}
+              {/* Assign technician for unassigned jobs */}
+              {!assignment && job && (
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Briefcase size={12} /> Assign Technician
+                  </h3>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                    <p className="text-sm text-amber-800">This job is unassigned. Select a technician to assign:</p>
+                    <select
+                      className="w-full text-sm border border-amber-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-amber-500 outline-none"
+                      defaultValue=""
+                      onChange={e => {
+                        if (e.target.value) {
+                          manualAssign.mutate({
+                            jobId: job.id,
+                            technicianId: e.target.value,
+                            jobLatitude: job.serviceLatitude ?? 0,
+                            jobLongitude: job.serviceLongitude ?? 0,
+                          })
+                        }
+                      }}
+                    >
+                      <option value="" disabled>Choose technician…</option>
+                      {technicians?.map(t => (
+                        <option key={t.id} value={t.id}>{t.name} {t.phone ? `(${t.phone})` : ''}</option>
+                      ))}
+                    </select>
+                    {manualAssign.isPending && (
+                      <div className="flex items-center gap-2 text-xs text-amber-600">
+                        <Loader2 size={12} className="animate-spin" /> Assigning...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Location with Map */}
               {(job.serviceLatitude && job.serviceLongitude) && (
                 <div className="space-y-2">
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                     <MapPin size={12} /> Location
                   </h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 border border-gray-100 rounded-lg p-3">
-                    <MapPin size={14} className="text-emerald-500 shrink-0" />
-                    <span>{job.serviceLatitude}, {job.serviceLongitude}</span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-emerald-50 text-emerald-600 border border-emerald-200 ml-auto">GPS</span>
+                  <div className="rounded-xl overflow-hidden border border-gray-200">
+                    <iframe
+                      width="100%"
+                      height="200"
+                      frameBorder="0"
+                      scrolling="no"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(job.serviceLongitude)-0.01},${Number(job.serviceLatitude)-0.008},${Number(job.serviceLongitude)+0.01},${Number(job.serviceLatitude)+0.008}&layer=mapnik&marker=${job.serviceLatitude},${job.serviceLongitude}`}
+                      style={{ borderRadius: '12px' }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <MapPin size={11} className="text-emerald-500" />
+                    <span>{job.serviceAddress ?? `${job.serviceLatitude}, ${job.serviceLongitude}`}</span>
                   </div>
                 </div>
               )}

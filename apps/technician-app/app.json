@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "T&S Technician",
+    "slug": "ts-technician",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "tstechnician",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.tscrm.technician",
+      "infoPlist": {
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to track job routes and help dispatchers assign nearby jobs.",
+        "NSLocationWhenInUseUsageDescription": "We need your location to show your position on the map and calculate distances to job sites.",
+        "NSCameraUsageDescription": "Take photos of job sites, equipment, and receipts.",
+        "NSPhotoLibraryUsageDescription": "Select photos from your library for job documentation.",
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+      }
+    },
+    "android": {
+      "package": "com.tscrm.technician",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow T&S Technician to use your location for route tracking and job dispatch.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow T&S Technician to take photos for job documentation."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2563EB"
+        }
+      ],
+      "expo-task-manager"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

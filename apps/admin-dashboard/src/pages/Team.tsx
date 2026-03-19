@@ -1,10 +1,13 @@
-import { Edit2, Trash2, Lock, Users, Shield, Briefcase, Maximize2, Minimize2, Search, ChevronLeft, ChevronRight, Mail, Plus, X, Loader2, AlertCircle, RefreshCw, UserPlus, MapPin } from 'lucide-react'
+import { Edit2, Trash2, Lock, Users, Shield, Briefcase, Maximize2, Minimize2, Search, ChevronLeft, ChevronRight, Mail, Plus, X, Loader2, AlertCircle, RefreshCw, UserPlus, MapPin, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import {
     useTeamMembers,
     useCreateTeamMember,
     useUpdateTeamMember,
     useDeleteTeamMember,
+    usePendingTechnicians,
+    useApproveTechnician,
+    useRejectTechnician,
     type TeamMember,
 } from '../hooks/useTeam'
 import { useCreateTechnician } from '../hooks/useScheduling'
@@ -36,6 +39,14 @@ export default function Team() {
     const membersQuery = useTeamMembers({ limit: 200 })
     const deleteMember = useDeleteTeamMember()
     const updateMember = useUpdateTeamMember()
+    const pendingQuery = usePendingTechnicians()
+    const approve = useApproveTechnician()
+    const reject = useRejectTechnician()
+    const [rejectTarget, setRejectTarget] = useState<TeamMember | null>(null)
+    const [rejectNote, setRejectNote] = useState('')
+    const [viewTech, setViewTech] = useState<TeamMember | null>(null)
+
+    const pendingTechs: TeamMember[] = pendingQuery.data?.data ?? []
 
     const allMembers: TeamMember[] = membersQuery.data?.data ?? []
 
@@ -82,7 +93,8 @@ export default function Team() {
                         { l: 'Admins', v: membersQuery.isLoading ? '—' : adminCount, icon: Shield, role: 'admin', showBg: true },
                         { l: 'Technicians', v: membersQuery.isLoading ? '—' : techCount, icon: Briefcase, role: 'technician', showBg: true },
                         { l: 'Dispatchers', v: membersQuery.isLoading ? '—' : dispatchCount, icon: Briefcase, role: 'dispatcher', showBg: true },
-                    ].map(k => {
+                        { l: 'Pending Approvals', v: pendingQuery.isLoading ? '—' : pendingTechs.length, icon: Clock, role: null, showBg: false, highlight: !pendingQuery.isLoading && pendingTechs.length > 0 },
+                    ].map((k: any) => {
                         const isActive = selectedRole === k.role
                         const applyActiveBg = isActive && k.showBg
                         return (
@@ -93,8 +105,8 @@ export default function Team() {
                                     padding: '16px 20px',
                                     borderRadius: 'var(--r-md)',
                                     cursor: 'pointer',
-                                    background: applyActiveBg ? 'var(--green-dim)' : undefined,
-                                    borderColor: applyActiveBg ? 'var(--green-dim)' : undefined
+                                    background: applyActiveBg ? 'var(--green-dim)' : k.highlight ? 'var(--yellow-dim, #2a2000)' : undefined,
+                                    borderColor: applyActiveBg ? 'var(--green-dim)' : k.highlight ? '#f59e0b44' : undefined,
                                 }}
                                 onClick={() => { setSelectedRole(isActive ? null : k.role); setPage(1) }}
                             >
@@ -115,6 +127,105 @@ export default function Team() {
                     <button onClick={() => membersQuery.refetch()} style={{ marginLeft: 8, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--red)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }}>
                         <RefreshCw size={12} /> Retry
                     </button>
+                </div>
+            )}
+
+            {/* ── Pending Approvals Banner ──────────────────────────────── */}
+            {pendingTechs.length > 0 && (
+                <div className="card mb-5 anim-fade-in" style={{ borderColor: 'var(--yellow, #f59e0b)', borderWidth: 1 }}>
+                    <div className="card-body" style={{ paddingBottom: 12 }}>
+                        <div className="flex items-center gap-2 mb-4">
+                            <Clock size={16} color="var(--yellow, #f59e0b)" />
+                            <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>
+                                Pending Technician Applications
+                            </h3>
+                            <span style={{ marginLeft: 'auto', background: '#f59e0b22', color: '#f59e0b', borderRadius: 20, padding: '2px 10px', fontSize: 12, fontWeight: 600 }}>
+                                {pendingTechs.length} awaiting review
+                            </span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {pendingTechs.map(tech => (
+                                <div
+                                    key={tech.id}
+                                    onClick={() => setViewTech(tech)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'var(--bg-active)', borderRadius: 'var(--r-md)', border: '1px solid var(--bd)', cursor: 'pointer', transition: 'background 0.15s' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = 'var(--bg-active)')}
+                                >
+                                    <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 17, fontWeight: 700, color: 'var(--blue)' }}>
+                                        {tech.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: 600, color: 'var(--t1)', fontSize: 14 }}>{tech.name}</div>
+                                        <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>{tech.email}{tech.phone ? ` · ${tech.phone}` : ''}</div>
+                                        {tech.skills?.length > 0 && (
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
+                                                {tech.skills.slice(0, 4).map(s => <span key={s} style={{ fontSize: 11, background: 'var(--blue-dim)', color: 'var(--blue)', borderRadius: 4, padding: '1px 7px' }}>{s}</span>)}
+                                                {tech.skills.length > 4 && <span style={{ fontSize: 11, color: 'var(--t4)' }}>+{tech.skills.length - 4} more</span>}
+                                            </div>
+                                        )}
+                                        <div style={{ fontSize: 11, color: 'var(--t4)', marginTop: 3 }}>
+                                            Applied {new Date(tech.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            {tech.latitude ? ' · 📍 Location provided' : ' · No location'}
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 8, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                                        <button className="btn btn-primary btn-sm" style={{ background: 'var(--green)', borderColor: 'var(--green)' }} onClick={() => approve.mutate(tech.id)} disabled={approve.isPending}>
+                                            {approve.isPending ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                                            <span style={{ marginLeft: 4 }}>Approve</span>
+                                        </button>
+                                        <button className="btn btn-secondary btn-sm" style={{ color: 'var(--red)', borderColor: 'var(--red)' }} onClick={() => { setRejectTarget(tech); setRejectNote('') }}>
+                                            <XCircle size={13} />
+                                            <span style={{ marginLeft: 4 }}>Reject</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Reject Modal ──────────────────────────────────────────────── */}
+            {rejectTarget && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setRejectTarget(null)}>
+                    <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-5 border-b border-[var(--bd)]">
+                            <h2 className="text-lg font-semibold text-[var(--t1)]">Reject Application</h2>
+                            <button onClick={() => setRejectTarget(null)} className="topbar-icon-btn"><X size={18} /></button>
+                        </div>
+                        <div className="p-5 flex flex-col gap-4">
+                            <p style={{ fontSize: 14, color: 'var(--t2)' }}>
+                                You are rejecting <strong>{rejectTarget.name}</strong>'s application. They will be notified.
+                            </p>
+                            <div>
+                                <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--t2)', display: 'block', marginBottom: 6 }}>Reason (optional)</label>
+                                <textarea
+                                    rows={3}
+                                    placeholder="e.g. Insufficient experience in required trade area..."
+                                    value={rejectNote}
+                                    onChange={e => setRejectNote(e.target.value)}
+                                    style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1px solid var(--bd)', borderRadius: 'var(--r)', background: 'transparent', color: 'var(--t1)', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-end gap-3 p-5 border-t border-[var(--bd)]">
+                            <button className="btn btn-secondary" onClick={() => setRejectTarget(null)}>Cancel</button>
+                            <button
+                                className="btn btn-primary"
+                                style={{ background: 'var(--red)', borderColor: 'var(--red)' }}
+                                onClick={() => {
+                                    reject.mutate({ id: rejectTarget.id, note: rejectNote || undefined }, {
+                                        onSuccess: () => setRejectTarget(null),
+                                    })
+                                }}
+                                disabled={reject.isPending}
+                            >
+                                {reject.isPending ? <Loader2 size={14} className="animate-spin mr-2" /> : <XCircle size={14} className="mr-2" />}
+                                Confirm Rejection
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -254,6 +365,17 @@ export default function Team() {
 
             {/* ── Edit Member Modal ─────────────────────────────────────── */}
             {editMember && <EditMemberModal member={editMember} onClose={() => setEditMember(null)} />}
+
+            {/* ── Pending Tech Detail Modal ─────────────────────────────── */}
+            {viewTech && (
+                <PendingTechModal
+                    tech={viewTech}
+                    onClose={() => setViewTech(null)}
+                    onApprove={(id) => { approve.mutate(id); setViewTech(null) }}
+                    onReject={(tech) => { setViewTech(null); setRejectTarget(tech); setRejectNote('') }}
+                    approving={approve.isPending}
+                />
+            )}
         </div>
     )
 }
@@ -413,6 +535,118 @@ function AddMemberModal({ onClose }: { onClose: () => void }) {
                     <button className="btn btn-primary" onClick={handleSubmit} disabled={create.isPending || createTechnician.isPending}>
                         {(create.isPending || createTechnician.isPending) ? <Loader2 size={14} className="animate-spin mr-2" /> : <UserPlus size={14} className="mr-2" />}
                         Add Member
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// ─── Pending Tech Detail Modal ────────────────────────────────────────────────
+
+function PendingTechModal({
+    tech, onClose, onApprove, onReject, approving,
+}: {
+    tech: TeamMember
+    onClose: () => void
+    onApprove: (id: string) => void
+    onReject: (tech: TeamMember) => void
+    approving: boolean
+}) {
+    const hasLocation = !!(tech.latitude && tech.longitude)
+    const mapSrc = hasLocation
+        ? `https://www.openstreetmap.org/export/embed.html?bbox=${tech.longitude! - 0.05},${tech.latitude! - 0.05},${tech.longitude! + 0.05},${tech.latitude! + 0.05}&layer=mapnik&marker=${tech.latitude},${tech.longitude}`
+        : null
+
+    return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
+            <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-2xl w-full max-w-xl mx-4 flex flex-col max-h-[92vh]" onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div className="flex items-center gap-3 p-5 border-b border-[var(--bd)] shrink-0">
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--blue)', flexShrink: 0 }}>
+                        {tech.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{tech.name}</h2>
+                        <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>Technician Application</div>
+                    </div>
+                    <span style={{ background: '#f59e0b22', color: '#f59e0b', borderRadius: 20, padding: '3px 12px', fontSize: 12, fontWeight: 600 }}>Pending Review</span>
+                    <button onClick={onClose} className="topbar-icon-btn ml-2"><X size={18} /></button>
+                </div>
+
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+                    {/* Contact info */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        {[
+                            { icon: '📧', label: 'Email', value: tech.email },
+                            { icon: '📞', label: 'Phone', value: tech.phone || 'Not provided' },
+                            { icon: '📅', label: 'Applied', value: new Date(tech.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) },
+                            { icon: '🆔', label: 'User ID', value: tech.id.slice(0, 8) + '…' },
+                        ].map(row => (
+                            <div key={row.label} style={{ background: 'var(--bg-active)', borderRadius: 8, padding: '10px 14px', border: '1px solid var(--bd)' }}>
+                                <div style={{ fontSize: 11, color: 'var(--t4)', marginBottom: 4 }}>{row.icon} {row.label}</div>
+                                <div style={{ fontSize: 13, color: 'var(--t1)', fontWeight: 500, wordBreak: 'break-all' }}>{row.value}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Skills */}
+                    {tech.skills?.length > 0 && (
+                        <div>
+                            <div style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Briefcase size={13} /> Skills & Trades
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                {tech.skills.map(s => (
+                                    <span key={s} style={{ fontSize: 12, background: 'var(--blue-dim)', color: 'var(--blue)', borderRadius: 6, padding: '4px 10px', fontWeight: 500 }}>{s}</span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Map */}
+                    <div>
+                        <div style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <MapPin size={13} /> Home / Base Location
+                        </div>
+                        {mapSrc ? (
+                            <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid var(--bd)' }}>
+                                <iframe
+                                    src={mapSrc}
+                                    style={{ width: '100%', height: 220, border: 'none', display: 'block' }}
+                                    title="Technician location"
+                                />
+                                <div style={{ padding: '8px 12px', background: 'var(--bg-active)', fontSize: 12, color: 'var(--t3)' }}>
+                                    📍 {tech.latitude?.toFixed(5)}, {tech.longitude?.toFixed(5)}
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ padding: '20px', background: 'var(--bg-active)', borderRadius: 8, border: '1px solid var(--bd)', textAlign: 'center', color: 'var(--t4)', fontSize: 13 }}>
+                                No location provided
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-end gap-3 p-5 border-t border-[var(--bd)] shrink-0">
+                    <button className="btn btn-secondary" onClick={onClose}>Close</button>
+                    <button
+                        className="btn btn-secondary"
+                        style={{ color: 'var(--red)', borderColor: 'var(--red)' }}
+                        onClick={() => onReject(tech)}
+                    >
+                        <XCircle size={14} className="mr-1.5" /> Reject
+                    </button>
+                    <button
+                        className="btn btn-primary"
+                        style={{ background: 'var(--green)', borderColor: 'var(--green)' }}
+                        onClick={() => onApprove(tech.id)}
+                        disabled={approving}
+                    >
+                        {approving ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <CheckCircle size={14} className="mr-1.5" />}
+                        Approve Technician
                     </button>
                 </div>
             </div>

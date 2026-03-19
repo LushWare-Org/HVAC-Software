@@ -105,7 +105,38 @@ func (r *TechnicianRepository) FindByUserID(ctx context.Context, companyID, user
 }
 
 // ListActive returns all active technicians for a company.
+// It first auto-syncs any CRM users with role='technician' that don't yet have
+// a scheduling profile — this covers both admin-created and self-registered
+// approved technicians, ensuring they all appear in the dispatch board.
 func (r *TechnicianRepository) ListActive(ctx context.Context, companyID string) ([]*models.Technician, error) {
+	// Auto-create scheduling profiles for approved active CRM technicians
+	// that don't have one yet. ON CONFLICT DO NOTHING makes this idempotent.
+	// Note: scheduling columns (company_id, user_id) are TEXT since migration 002,
+	// and CRM columns (companyId, id) are also TEXT — no UUID casts needed.
+	_, syncErr := r.db.Exec(ctx, `
+		INSERT INTO scheduling.technicians (company_id, user_id, name, phone, skills)
+		SELECT
+			cu."companyId",
+			cu.id,
+			cu.name,
+			COALESCE(cu.phone, ''),
+			COALESCE(cu.skills, ARRAY[]::text[])
+		FROM crm.company_users cu
+		WHERE cu."companyId" = $1
+		  AND cu.role = 'technician'
+		  AND cu."isActive" = true
+		  AND cu."approvalStatus" = 'APPROVED'
+		  AND NOT EXISTS (
+		    SELECT 1 FROM scheduling.technicians st
+		    WHERE st.user_id = cu.id
+		      AND st.company_id = cu."companyId"
+		  )
+		ON CONFLICT (company_id, user_id) DO NOTHING`, companyID)
+	if syncErr != nil {
+		// Log but don't fail — still return whatever scheduling records exist
+		fmt.Printf("[WARN] CRM→scheduling auto-sync failed: %v\n", syncErr)
+	}
+
 	rows, err := r.db.Query(ctx, `
 		SELECT id, company_id, user_id, name, phone, avatar_url, skills,
 		       max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
@@ -118,6 +149,41 @@ func (r *TechnicianRepository) ListActive(ctx context.Context, companyID string)
 	}
 	defer rows.Close()
 	return collectTechnicians(rows)
+}
+
+// SyncOneFromCRM creates a scheduling profile for a single CRM user if they are
+// an approved active technician. Returns the created profile or nil if not eligible.
+func (r *TechnicianRepository) SyncOneFromCRM(ctx context.Context, companyID, userID string) (*models.Technician, error) {
+	row := r.db.QueryRow(ctx, `
+		WITH inserted AS (
+			INSERT INTO scheduling.technicians (company_id, user_id, name, phone, skills)
+			SELECT
+				cu."companyId",
+				cu.id,
+				cu.name,
+				COALESCE(cu.phone, ''),
+				COALESCE(cu.skills, ARRAY[]::text[])
+			FROM crm.company_users cu
+			WHERE cu."companyId" = $1
+			  AND cu.id = $2
+			  AND cu.role = 'technician'
+			  AND cu."isActive" = true
+			  AND cu."approvalStatus" = 'APPROVED'
+			ON CONFLICT (company_id, user_id) DO UPDATE SET
+				is_active = TRUE,
+				name = EXCLUDED.name,
+				updated_at = NOW()
+			RETURNING id, company_id, user_id, name, phone, avatar_url, skills,
+			          max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
+			          created_at, updated_at
+		)
+		SELECT * FROM inserted`, companyID, userID)
+
+	t, err := scanTechnician(row)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }
 
 // FindCandidatesNearby returns active technicians within maxDistanceKm of a job location.

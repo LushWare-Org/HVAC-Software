@@ -227,6 +227,33 @@ func (r *AssignmentRepository) InsertGPSPoint(
 	return err
 }
 
+// SyncJobAssignment updates the job in the jobs schema to reflect the new assignment.
+// Uses cross-schema query since all services share the same PostgreSQL instance.
+func (r *AssignmentRepository) SyncJobAssignment(ctx context.Context, companyID, jobID, techUserID, techName string) error {
+	_, err := r.db.Exec(ctx, `
+		UPDATE jobs.jobs SET
+			"assignedToId" = $1,
+			"assignedToName" = $2,
+			status = CASE WHEN status = 'PENDING' THEN 'SCHEDULED' ELSE status END,
+			"updatedAt" = NOW()
+		WHERE id = $3 AND "companyId" = $4`,
+		techUserID, techName, jobID, companyID)
+	return err
+}
+
+// GetTechnicianUserInfo returns the userId and name from the scheduling.technicians table.
+func (r *AssignmentRepository) GetTechnicianUserInfo(ctx context.Context, techID string) (userID, name string, err error) {
+	err = r.db.QueryRow(ctx,
+		`SELECT user_id, name FROM scheduling.technicians WHERE id = $1`, techID).
+		Scan(&userID, &name)
+	return
+}
+
+// DB exposes the underlying connection pool for ad-hoc cross-schema queries.
+func (r *AssignmentRepository) DB() *pgxpool.Pool {
+	return r.db
+}
+
 // ---- scanners ----
 
 func scanAssignment(row pgx.Row) (*models.DispatchAssignment, error) {

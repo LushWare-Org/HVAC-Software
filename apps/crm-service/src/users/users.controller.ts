@@ -45,6 +45,12 @@ export class UsersController {
     });
   }
 
+  @Get('pending-technicians')
+  @ApiOperation({ summary: 'List technicians awaiting approval' })
+  getPendingTechnicians(@CurrentUser() user: AuthUser) {
+    return this.usersService.getPendingTechnicians(user.companyId);
+  }
+
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
   getMe(@CurrentUser() user: AuthUser) {
@@ -64,6 +70,22 @@ export class UsersController {
     @Body() body: { name: string; email: string; phone?: string; role?: string },
   ) {
     return this.usersService.create(user.companyId, body);
+  }
+
+  @Post(':id/approve')
+  @ApiOperation({ summary: 'Approve a pending technician application' })
+  approve(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.usersService.approveTechnician(user.companyId, id);
+  }
+
+  @Post(':id/reject')
+  @ApiOperation({ summary: 'Reject a pending technician application' })
+  reject(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body: { note?: string },
+  ) {
+    return this.usersService.rejectTechnician(user.companyId, id, body.note);
   }
 
   @Patch('me')

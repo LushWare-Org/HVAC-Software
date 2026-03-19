@@ -1,6 +1,6 @@
 import { Body, Controller, Post, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional, IsArray, IsNumber } from 'class-validator';
 import { CurrentUser, JwtAuthGuard } from '@tscrm/auth-client';
 import { AuthUser } from '@tscrm/types';
 import { AuthService } from './auth.service';
@@ -20,6 +20,18 @@ class RegisterDto {
   @IsOptional() @IsString() city?: string;
   @IsOptional() @IsString() state?: string;
   @IsOptional() @IsString() zipCode?: string;
+}
+
+class RegisterTechnicianDto {
+  @IsString() companyId!: string;
+  @IsString() @MinLength(2) name!: string;
+  @IsEmail() email!: string;
+  @IsString() phone!: string;
+  @IsString() @MinLength(8) password!: string;
+  @IsOptional() @IsArray() skills?: string[];
+  @IsOptional() @IsNumber() latitude?: number;
+  @IsOptional() @IsNumber() longitude?: number;
+  @IsOptional() @IsString() notes?: string;
 }
 
 class ChangePasswordDto {
@@ -44,6 +56,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Customer self-registration — creates user + customer record + lead' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Post('register-technician')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Technician self-registration — creates pending account awaiting admin approval' })
+  registerTechnician(@Body() dto: RegisterTechnicianDto) {
+    return this.authService.registerTechnician(dto);
   }
 
   @Post('change-password')

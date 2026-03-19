@@ -1,11 +1,17 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"math"
+	"net/http"
+	"os"
 	"sort"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/tscrm/scheduling-service/internal/config"
 	"github.com/tscrm/scheduling-service/internal/models"
 	"github.com/tscrm/scheduling-service/internal/repository"
@@ -41,6 +47,102 @@ func NewAssignmentService(
 	hub *ws.Hub,
 ) *AssignmentService {
 	return &AssignmentService{cfg: cfg, techRepo: techRepo, assignRepo: assignRepo, hub: hub}
+}
+
+// commsBaseURL returns the base URL for the comms service.
+func commsBaseURL() string {
+	if u := os.Getenv("COMMS_SERVICE_URL"); u != "" {
+		return u
+	}
+	return "http://localhost:3005"
+}
+
+// systemToken generates a short-lived JWT for service-to-service calls.
+func systemToken(companyID string) string {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "tscrm-local-jwt-secret-change-in-production"
+	}
+	claims := jwt.MapClaims{
+		"sub":        "system-scheduling",
+		"company_id": companyID,
+		"role":       "company_admin",
+		"name":       "Scheduling Service",
+		"iss":        "tscrm-local",
+		"exp":        time.Now().Add(5 * time.Minute).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, _ := token.SignedString([]byte(secret))
+	return signed
+}
+
+// sendAssignmentNotification sends in-app + email notifications to the assigned technician.
+// Runs in a goroutine so it does not block the assignment response.
+func (s *AssignmentService) sendAssignmentNotification(companyID, techUserID, techName, jobID, jobTitle string) {
+	go func() {
+		token := systemToken(companyID)
+		base := commsBaseURL()
+
+		// 1. Send in-app notification
+		inAppBody, _ := json.Marshal(map[string]interface{}{
+			"title": "New Job Assigned",
+			"body":  fmt.Sprintf("You have been assigned to job: %s", jobTitle),
+			"type":  "JOB_ASSIGNED",
+			"recipients": []map[string]string{
+				{"recipientId": techUserID, "recipientName": techName},
+			},
+		})
+		req, _ := http.NewRequest("POST", base+"/notifications/in-app", bytes.NewReader(inAppBody))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			fmt.Printf("[WARN] Failed to send in-app notification: %v\n", err)
+		} else {
+			resp.Body.Close()
+		}
+
+		// 2. Send email notification - need technician's email from CRM
+		var email string
+		_ = s.assignRepo.DB().QueryRow(context.Background(),
+			`SELECT email FROM crm.company_users WHERE id = $1`, techUserID).Scan(&email)
+
+		if email != "" {
+			htmlBody := fmt.Sprintf(`
+				<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#0f1117;color:#e2e8f0;border-radius:12px;">
+					<h1 style="color:#3b82f6;font-size:22px;margin-bottom:8px;">New Job Assigned</h1>
+					<p style="font-size:16px;line-height:1.6;margin-bottom:16px;">Hi <strong>%s</strong>,</p>
+					<p style="font-size:15px;line-height:1.7;color:#94a3b8;">
+						You have been assigned a new job: <strong>%s</strong>.
+						Open the T&amp;S Technician app to view the full details and get started.
+					</p>
+					<div style="margin:28px 0;padding:20px;background:#1e293b;border-radius:8px;border-left:4px solid #3b82f6;">
+						<p style="margin:0;font-size:14px;color:#cbd5e1;">
+							Open the <strong>T&amp;S Technician</strong> app to view job details, navigate to the location, and update your status.
+						</p>
+					</div>
+					<hr style="border:none;border-top:1px solid #1e293b;margin:24px 0;" />
+					<p style="font-size:12px;color:#475569;">T&amp;S Services - T&amp;S CRM</p>
+				</div>`, techName, jobTitle)
+
+			emailBody, _ := json.Marshal(map[string]interface{}{
+				"recipientId":    techUserID,
+				"recipientName":  techName,
+				"recipientEmail": email,
+				"subject":        fmt.Sprintf("New Job Assigned: %s", jobTitle),
+				"htmlBody":       htmlBody,
+			})
+			req2, _ := http.NewRequest("POST", base+"/notifications/email", bytes.NewReader(emailBody))
+			req2.Header.Set("Content-Type", "application/json")
+			req2.Header.Set("Authorization", "Bearer "+token)
+			resp2, err2 := http.DefaultClient.Do(req2)
+			if err2 != nil {
+				fmt.Printf("[WARN] Failed to send assignment email: %v\n", err2)
+			} else {
+				resp2.Body.Close()
+			}
+		}
+	}()
 }
 
 // AssignJob is the main entry point for Phase 1 scheduling.
@@ -117,6 +219,22 @@ func (s *AssignmentService) AssignJob(
 			Payload:   assignment,
 		})
 
+		// Sync job service with assignment info
+		techUserID, techName, _ := s.assignRepo.GetTechnicianUserInfo(ctx, best.Technician.ID)
+		if techUserID != "" {
+			if syncErr := s.assignRepo.SyncJobAssignment(ctx, companyID, req.JobID, techUserID, techName); syncErr != nil {
+				fmt.Printf("[WARN] Failed to sync job assignment: %v\n", syncErr)
+			}
+			// Get job title for notification
+			var jobTitle string
+			_ = s.assignRepo.DB().QueryRow(ctx,
+				`SELECT title FROM jobs.jobs WHERE id = $1`, req.JobID).Scan(&jobTitle)
+			if jobTitle == "" {
+				jobTitle = req.JobID
+			}
+			s.sendAssignmentNotification(companyID, techUserID, techName, req.JobID, jobTitle)
+		}
+
 		return &models.AssignResponse{
 			AutoAssigned: true,
 			Assignment:   assignment,
@@ -188,6 +306,22 @@ func (s *AssignmentService) ManualAssign(
 		CompanyID: companyID,
 		Payload:   assignment,
 	})
+
+	// Sync job service with assignment info
+	techUserID, techName, _ := s.assignRepo.GetTechnicianUserInfo(ctx, req.TechnicianID)
+	if techUserID != "" {
+		if syncErr := s.assignRepo.SyncJobAssignment(ctx, companyID, req.JobID, techUserID, techName); syncErr != nil {
+			fmt.Printf("[WARN] Failed to sync job assignment: %v\n", syncErr)
+		}
+		// Get job title for notification
+		var jobTitle string
+		_ = s.assignRepo.DB().QueryRow(ctx,
+			`SELECT title FROM jobs.jobs WHERE id = $1`, req.JobID).Scan(&jobTitle)
+		if jobTitle == "" {
+			jobTitle = req.JobID
+		}
+		s.sendAssignmentNotification(companyID, techUserID, techName, req.JobID, jobTitle)
+	}
 
 	return assignment, nil
 }

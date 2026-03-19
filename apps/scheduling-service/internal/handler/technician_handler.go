@@ -106,16 +106,24 @@ func (h *TechnicianHandler) Update(c *gin.Context) {
 // GET /technicians/me
 // Convenience endpoint: returns the calling technician's own profile.
 // Useful for the mobile app to self-identify on first launch.
+// If no scheduling profile exists yet, auto-syncs from CRM for approved technicians.
 func (h *TechnicianHandler) GetMe(c *gin.Context) {
 	claims := middleware.GetClaims(c)
+	ctx := c.Request.Context()
 
-	t, err := h.repo.FindByUserID(c.Request.Context(), claims.CompanyID, claims.UserID)
+	t, err := h.repo.FindByUserID(ctx, claims.CompanyID, claims.UserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	if t == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "no technician profile found for this user"})
+		// Profile missing — try auto-syncing this specific user from CRM
+		created, syncErr := h.repo.SyncOneFromCRM(ctx, claims.CompanyID, claims.UserID)
+		if syncErr != nil || created == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "no technician profile found for this user"})
+			return
+		}
+		c.JSON(http.StatusOK, created)
 		return
 	}
 

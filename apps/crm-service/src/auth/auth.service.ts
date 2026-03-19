@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
@@ -11,8 +11,9 @@ export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
   async login(email: string, password: string) {
+    // Allow pending technicians to attempt login (so we can show them the right message)
     const user = await this.prisma.companyUser.findFirst({
-      where: { email, isActive: true },
+      where: { email },
     });
 
     if (!user || !user.passwordHash) {
@@ -22,6 +23,28 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Pending approval — technician self-registered but not yet approved
+    if (user.role === 'technician' && user.approvalStatus === 'PENDING') {
+      throw new ForbiddenException({
+        code: 'PENDING_APPROVAL',
+        message: 'Your account is pending admin approval. Please wait for your account to be activated.',
+        user: { id: user.id, name: user.name, email: user.email },
+      });
+    }
+
+    // Rejected — admin rejected the application
+    if (user.role === 'technician' && user.approvalStatus === 'REJECTED') {
+      throw new ForbiddenException({
+        code: 'ACCOUNT_REJECTED',
+        message: user.approvalNote ?? 'Your application was not approved. Please contact the admin for more information.',
+      });
+    }
+
+    // Deactivated account
+    if (!user.isActive) {
+      throw new UnauthorizedException('Your account has been deactivated. Please contact your administrator.');
     }
 
     // Update last login
@@ -174,6 +197,54 @@ export class AuthService {
         phone: user.phone,
         customerId: customer.id,
       },
+    };
+  }
+
+  /**
+   * Technician self-registration.
+   * Creates a CompanyUser (role=technician, approvalStatus=PENDING, isActive=false).
+   * Does NOT issue a JWT — admin must approve before login is allowed.
+   */
+  async registerTechnician(dto: {
+    companyId: string;
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    skills?: string[];
+    latitude?: number;
+    longitude?: number;
+    notes?: string;
+  }) {
+    const existing = await this.prisma.companyUser.findFirst({
+      where: { companyId: dto.companyId, email: dto.email },
+    });
+    if (existing) {
+      throw new ConflictException('An account with this email already exists');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 12);
+
+    const user = await this.prisma.companyUser.create({
+      data: {
+        companyId: dto.companyId,
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone,
+        passwordHash,
+        role: 'technician',
+        isActive: false,
+        approvalStatus: 'PENDING',
+        skills: dto.skills ?? [],
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Application submitted. An admin will review and approve your account.',
+      userId: user.id,
     };
   }
 

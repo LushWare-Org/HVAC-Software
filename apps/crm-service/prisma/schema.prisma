@@ -53,11 +53,16 @@ model CompanyUser {
   email        String
   phone        String?
   passwordHash String?
-  role         String   @default("technician") // super_admin, company_admin, office_manager, dispatcher, technician
-  isActive     Boolean  @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role           String   @default("technician") // super_admin, company_admin, office_manager, dispatcher, technician
+  isActive       Boolean  @default(true)
+  approvalStatus String   @default("APPROVED")   // APPROVED | PENDING | REJECTED (PENDING for self-registered technicians)
+  approvalNote   String?                          // rejection reason or admin notes
+  skills         String[] @default([])            // technician skills submitted at signup
+  latitude       Float?                           // location submitted at signup
+  longitude      Float?
+  lastLoginAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@unique([companyId, email])
   @@index([companyId])

@@ -572,7 +572,7 @@ export default function DispatchBoard() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {futurePendingJobs.map(job => (
-                  <div key={job.id} className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--bg-hover)] transition-colors group">
+                  <div key={job.id} className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--bg-hover)] transition-colors group cursor-pointer" onClick={() => handleOpenJob(job, assignmentByJobId[job.id])}>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-bold text-[var(--t1)] truncate">{job.title}</p>
@@ -609,6 +609,7 @@ export default function DispatchBoard() {
                     {/* Manual assign dropdown */}
                     <select
                       defaultValue=""
+                      onClick={e => e.stopPropagation()}
                       onChange={e => { if (e.target.value) handleManualAssign(job.id, e.target.value); e.target.value = ""; }}
                       className="text-xs border rounded-lg px-2 py-1.5 bg-white text-gray-600 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
                       style={{ minWidth: 150 }}
@@ -621,7 +622,7 @@ export default function DispatchBoard() {
 
                     {/* Smart assign button */}
                     <button
-                      onClick={() => handleSmartAssign(job)}
+                      onClick={(e) => { e.stopPropagation(); handleSmartAssign(job); }}
                       disabled={smartAssign.isPending && pendingJobId === job.id}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer border-0 shadow-sm"
                     >
