@@ -258,12 +258,42 @@ export function useDispatchWebSocket() {
       try {
         const event: DispatchEvent = JSON.parse(e.data)
         setLastEvent(event)
-        // Invalidate relevant queries on meaningful events
+
         if (event.type === 'ASSIGNMENT_CREATED' || event.type === 'ASSIGNMENT_STATUS_CHANGED') {
           queryClient.invalidateQueries({ queryKey: ['scheduling'] })
           queryClient.invalidateQueries({ queryKey: ['jobs'] })
         }
-        if (event.type === 'TECHNICIAN_ONLINE' || event.type === 'GPS_UPDATE') {
+
+        if (event.type === 'GPS_UPDATE') {
+          // Directly patch the technician in the query cache — no HTTP round-trip needed.
+          // The WS payload already contains the fresh position.
+          const p = event.payload as {
+            technicianId: string
+            lat: number
+            lng: number
+            speedKmh?: number
+            headingDeg?: number
+            batteryPct?: number
+            capturedAt?: string
+          }
+          queryClient.setQueryData<Technician[]>(['scheduling', 'technicians'], (prev) => {
+            if (!prev) return prev
+            return prev.map((t) =>
+              t.id === p.technicianId
+                ? {
+                    ...t,
+                    currentLocation: { lat: p.lat, lng: p.lng },
+                    speedKmh: p.speedKmh,
+                    headingDeg: p.headingDeg,
+                    batteryPct: p.batteryPct,
+                    locationUpdatedAt: p.capturedAt ?? new Date().toISOString(),
+                  }
+                : t,
+            )
+          })
+        }
+
+        if (event.type === 'TECHNICIAN_ONLINE') {
           queryClient.invalidateQueries({ queryKey: ['scheduling', 'technicians'] })
         }
       } catch {

@@ -240,6 +240,7 @@ export interface TradeTemplate {
   name: string
   description?: string
   estimatedDurationMins?: number
+  requiredParts?: { inventoryItemId: string; name: string; qty: number }[]
   tasks: TemplateTask[]
   customFields: CustomFieldDef[]
 }
@@ -392,6 +393,7 @@ export interface ThreadMessage {
   id: string
   body: string
   direction: 'INBOUND' | 'OUTBOUND'
+  senderId?: string
   senderName?: string
   createdAt: string
   status?: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED'
@@ -400,10 +402,17 @@ export interface ThreadMessage {
 export interface MessageThread {
   id: string
   companyId: string
+  // Customer thread fields
   customerId?: string
   customerName?: string
   customerPhone?: string
   customerEmail?: string
+  // Staff/internal thread fields
+  participantIds?: string[]
+  participantNames?: string[]
+  subject?: string
+  // Common fields
+  jobId?: string
   channel?: 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP'
   status: ThreadStatus
   lastMessageAt?: string

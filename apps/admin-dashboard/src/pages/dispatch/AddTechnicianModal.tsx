@@ -7,6 +7,7 @@ import {
   X, UserPlus, AlertCircle, Loader2, MapPin, Plus, Trash2,
 } from "lucide-react";
 import { useCreateTechnician } from "../../hooks/useScheduling";
+import { useEnsureVan } from "../../hooks/useInventory";
 import MapPicker from "../../components/MapPicker";
 
 // Common trade skills for quick-add chips
@@ -22,6 +23,7 @@ interface Props {
 
 export default function AddTechnicianModal({ isOpen, onClose }: Props) {
   const create = useCreateTechnician();
+  const ensureVan = useEnsureVan();
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
@@ -65,7 +67,9 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
         longitude: form.lng,
       },
       {
-        onSuccess: () => {
+        onSuccess: (_, variables) => {
+          // Auto-create van for the new technician
+          ensureVan.mutate({ technicianId: variables.userId, technicianName: variables.name });
           onClose();
           setForm({ name: "", phone: "", maxDailyJobs: 5, lat: 6.9271, lng: 79.8612 });
           setSkills([]);

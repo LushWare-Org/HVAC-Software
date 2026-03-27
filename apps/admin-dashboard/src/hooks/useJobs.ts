@@ -119,6 +119,18 @@ export function useUpdateJobStatus() {
   })
 }
 
+export function useUpdateJobTags() {
+  return useMutation({
+    mutationFn: async ({ id, tags }: { id: string; tags: string[] }) => {
+      const res = await api.patch(`/jobs/jobs/${id}`, { tags })
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    },
+  })
+}
+
 // ─── Job types (for filter dropdown) ──────────────────────────────────────────
 
 export function useJobTypes() {
@@ -129,5 +141,148 @@ export function useJobTypes() {
       return res.data
     },
     staleTime: 10 * 60 * 1000, // job types rarely change
+  })
+}
+
+export function useJobTemplates(jobTypeId: string | null) {
+  return useQuery<any[]>({
+    queryKey: ['job-templates', jobTypeId],
+    queryFn: async () => {
+      const res = await api.get(`/jobs/trade/job-types/${jobTypeId}/templates`)
+      return res.data
+    },
+    enabled: !!jobTypeId,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+// ─── Work Orders (checklist / tasks / line items) ─────────────────────────────
+
+export interface WorkOrderTask {
+  id: string            // this is WorkOrderTaskCompletion.id — used as taskCompletionId
+  taskName: string
+  description?: string
+  taskOrder: number
+  isRequired: boolean
+  isAdHoc?: boolean
+  photoRequired?: boolean
+  safetyNote?: string
+  estimatedMins?: number
+  isCompleted: boolean
+  completedAt?: string
+  notes?: string
+  photoUrl?: string
+}
+
+export interface WorkOrderLineItem {
+  id: string
+  description: string
+  category: string
+  quantity: number
+  unitPrice: number | string
+  taxable: boolean
+  total: number | string
+}
+
+export interface WorkOrder {
+  id: string
+  jobId: string
+  technicianId?: string
+  technicianName?: string
+  status: string
+  checkedInAt?: string
+  checkedOutAt?: string
+  notes?: string
+  tasks: WorkOrderTask[]
+  lineItems: WorkOrderLineItem[]
+  createdAt: string
+  updatedAt: string
+}
+
+// Normalize the API response: backend returns `taskCompletions`, frontend uses `tasks`
+function normalizeWorkOrder(raw: any): WorkOrder {
+  return {
+    ...raw,
+    tasks: (raw.taskCompletions ?? raw.tasks ?? []).map((tc: any) => ({
+      id: tc.id,
+      taskName: tc.taskName,
+      taskOrder: tc.taskOrder ?? 0,
+      isRequired: tc.isRequired ?? false,
+      isAdHoc: tc.isAdHoc ?? false,
+      isCompleted: tc.isCompleted ?? false,
+      completedAt: tc.completedAt ?? undefined,
+      notes: tc.notes ?? undefined,
+      photoUrl: tc.photoUrl ?? undefined,
+    })),
+  }
+}
+
+export function useWorkOrdersByJob(jobId: string | undefined) {
+  return useQuery<WorkOrder[]>({
+    queryKey: ['work-orders', jobId],
+    queryFn: async () => {
+      const res = await api.get(`/jobs/work-orders/by-job/${jobId}`)
+      const raw: any[] = Array.isArray(res.data) ? res.data : []
+      return raw.map(normalizeWorkOrder)
+    },
+    enabled: !!jobId,
+  })
+}
+
+export function useCreateWorkOrder() {
+  return useMutation({
+    mutationFn: async ({ jobId }: { jobId: string }) => {
+      const res = await api.post('/jobs/work-orders', { jobId })
+      return res.data
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['work-orders', data.jobId] })
+    },
+  })
+}
+
+// taskCompletionId = the WorkOrderTaskCompletion.id (the `id` field on each task object)
+export function useUpdateWorkOrderTask() {
+  return useMutation({
+    mutationFn: async ({
+      workOrderId,
+      taskCompletionId,
+      isCompleted,
+      notes,
+    }: {
+      workOrderId: string
+      taskCompletionId: string
+      isCompleted: boolean
+      notes?: string
+    }) => {
+      const res = await api.patch(
+        `/jobs/work-orders/${workOrderId}/tasks/${taskCompletionId}`,
+        { isCompleted, ...(notes !== undefined && { notes }) },
+      )
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+    },
+  })
+}
+
+export function useAddWorkOrderTask() {
+  return useMutation({
+    mutationFn: async ({
+      workOrderId,
+      taskName,
+      isRequired,
+    }: {
+      workOrderId: string
+      taskName: string
+      isRequired?: boolean
+    }) => {
+      const res = await api.post(`/jobs/work-orders/${workOrderId}/tasks`, { taskName, isRequired })
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+    },
   })
 }

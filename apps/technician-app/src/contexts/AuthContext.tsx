@@ -67,7 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (error) => {
         if (error.response?.status === 401) {
           const url = String(error.config?.url ?? '')
-          if (!url.includes('/auth/login')) await _clearSession()
+          // Don't auto-logout for background/non-critical routes (GPS, scheduling)
+          const isBackgroundRoute = url.includes('/scheduling/gps') || url.includes('/scheduling/technicians')
+          if (!url.includes('/auth/login') && !isBackgroundRoute) await _clearSession()
         }
         return Promise.reject(error)
       },

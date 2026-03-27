@@ -627,6 +627,7 @@ export default function CustomerDetailsSidebar({
                       className="rounded-xl border border-gray-200 p-5 shadow-sm"
                       style={{ background: "#ffffff" }}
                     >
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Customer Engagement Pipeline</p>
                       <div className="relative pt-2 pb-1">
                         <div className="absolute top-5 left-[10%] right-[10%] h-[2px] bg-gray-300" />
                         <div className="relative z-10 flex justify-between">

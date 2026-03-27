@@ -42,16 +42,18 @@ export class InvoicesController {
   @ApiOperation({ summary: 'List all invoices for this company' })
   @ApiQuery({ name: 'status', enum: InvoiceStatus, required: false })
   @ApiQuery({ name: 'customerId', required: false })
+  @ApiQuery({ name: 'jobId', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('status') status?: InvoiceStatus,
     @Query('customerId') customerId?: string,
+    @Query('jobId') jobId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    return this.invoicesService.findAll(user.companyId, { status, customerId, page, limit });
+    return this.invoicesService.findAll(user.companyId, { status, customerId, jobId, page, limit });
   }
 
   // ── Single ────────────────────────────────────────────────────────────────

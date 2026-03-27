@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock, Loader2, AlertCircle } from 'lucide-react'
+import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock, Loader2, AlertCircle, ClipboardList, ChevronDown, ChevronRight } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useMyProfile, useUpdateMyProfile, useCompany, useUpdateCompany } from '../hooks/useSettings'
+import { useJobTypes, useJobTemplates } from '../hooks/useJobs'
 
 export default function Settings() {
-    const [tab, setTab] = useState<'profile' | 'company' | 'notifications' | 'appearance' | 'security'>('profile')
+    const [tab, setTab] = useState<'profile' | 'company' | 'notifications' | 'appearance' | 'security' | 'templates'>('profile')
     const { theme, setTheme } = useTheme()
 
     // ---- Profile ----
@@ -162,6 +163,9 @@ export default function Settings() {
                 </button>
                 <button className={`tab-btn ${tab === 'security' ? 'active' : ''}`} onClick={() => setTab('security')}>
                     <Shield size={14} /> Security
+                </button>
+                <button className={`tab-btn ${tab === 'templates' ? 'active' : ''}`} onClick={() => setTab('templates')}>
+                    <ClipboardList size={14} /> Job Templates
                 </button>
             </div>
 
@@ -387,6 +391,131 @@ export default function Settings() {
                             <button className="btn btn-primary btn-sm" onClick={handlePasswordUpdate}>Update Password</button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Job Templates */}
+            {tab === 'templates' && <JobTemplatesTab />}
+        </div>
+    )
+}
+
+function JobTemplatesTab() {
+    const { data: jobTypes = [], isLoading } = useJobTypes()
+    const [expandedType, setExpandedType] = useState<string | null>(null)
+
+    if (isLoading) {
+        return (
+            <div className="card anim-fade-in">
+                <div className="card-header"><div className="card-title">Job Templates</div></div>
+                <div className="card-body" style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                    <Loader2 size={24} className="spin" style={{ color: 'var(--t3)' }} />
+                </div>
+            </div>
+        )
+    }
+
+    if (jobTypes.length === 0) {
+        return (
+            <div className="card anim-fade-in">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title">Job Templates</div>
+                        <div className="card-subtitle">Reusable checklists and task lists for each job type</div>
+                    </div>
+                </div>
+                <div className="card-body" style={{ textAlign: 'center', padding: 48, color: 'var(--t3)' }}>
+                    <ClipboardList size={36} style={{ marginBottom: 12, opacity: 0.4 }} />
+                    <p style={{ fontSize: 14, fontWeight: 500 }}>No job types set up yet.</p>
+                    <p style={{ fontSize: 13, marginTop: 6 }}>Job types and their templates are created by your administrator.</p>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="card anim-fade-in">
+            <div className="card-header">
+                <div>
+                    <div className="card-title">Job Templates</div>
+                    <div className="card-subtitle">Reusable checklists and task lists attached to each job type</div>
+                </div>
+            </div>
+            <div className="card-body" style={{ padding: 0 }}>
+                {jobTypes.map((jt: any, i: number) => (
+                    <JobTypeRow
+                        key={jt.id}
+                        jobType={jt}
+                        expanded={expandedType === jt.id}
+                        onToggle={() => setExpandedType(expandedType === jt.id ? null : jt.id)}
+                        isLast={i === jobTypes.length - 1}
+                    />
+                ))}
+            </div>
+        </div>
+    )
+}
+
+function JobTypeRow({ jobType, expanded, onToggle, isLast }: { jobType: any; expanded: boolean; onToggle: () => void; isLast: boolean }) {
+    const { data: templates = [], isLoading } = useJobTemplates(expanded ? jobType.id : null)
+
+    return (
+        <div style={{ borderBottom: isLast ? 'none' : '1px solid var(--bd)' }}>
+            <button
+                onClick={onToggle}
+                style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', padding: '16px 24px', background: 'none', border: 'none',
+                    cursor: 'pointer', fontFamily: 'inherit', color: 'var(--t1)',
+                    transition: 'background var(--dur)',
+                }}
+                className="hover:bg-[var(--bg-hover)]"
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {expanded ? <ChevronDown size={16} style={{ color: 'var(--t3)' }} /> : <ChevronRight size={16} style={{ color: 'var(--t3)' }} />}
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>{jobType.name}</span>
+                    {jobType.trade && <span className="badge badge-neutral" style={{ fontSize: 11 }}>{jobType.trade}</span>}
+                </div>
+                <span style={{ fontSize: 12, color: 'var(--t3)' }}>
+                    {expanded ? 'Click to collapse' : 'Click to view templates'}
+                </span>
+            </button>
+            {expanded && (
+                <div style={{ padding: '0 24px 20px 24px', background: 'var(--bg2)' }}>
+                    {isLoading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--t3)', fontSize: 13, padding: '12px 0' }}>
+                            <Loader2 size={14} className="spin" /> Loading templates…
+                        </div>
+                    ) : templates.length === 0 ? (
+                        <p style={{ fontSize: 13, color: 'var(--t3)', padding: '12px 0' }}>No templates for this job type.</p>
+                    ) : templates.map((tmpl: any) => (
+                        <div key={tmpl.id} style={{ background: 'var(--bg)', border: '1px solid var(--bd)', borderRadius: 10, padding: '14px 18px', marginBottom: 10 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{tmpl.name}</span>
+                                {tmpl.estimatedDurationMins && (
+                                    <span style={{ fontSize: 12, color: 'var(--t3)' }}>{tmpl.estimatedDurationMins} min</span>
+                                )}
+                            </div>
+                            {tmpl.description && <p style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 10 }}>{tmpl.description}</p>}
+                            {tmpl.tasks && tmpl.tasks.length > 0 && (
+                                <div style={{ marginTop: 8 }}>
+                                    <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                                        Tasks ({tmpl.tasks.length})
+                                    </p>
+                                    {tmpl.tasks.map((task: any, idx: number) => (
+                                        <div key={task.id ?? idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6, fontSize: 13 }}>
+                                            <span style={{ color: 'var(--t3)', minWidth: 20, fontWeight: 600 }}>{task.taskOrder ?? idx + 1}.</span>
+                                            <div>
+                                                <span style={{ color: 'var(--t1)', fontWeight: 500 }}>{task.taskName}</span>
+                                                {task.isRequired && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--red)', marginLeft: 6 }}>REQUIRED</span>}
+                                                {task.description && <p style={{ fontSize: 12, color: 'var(--t3)', margin: '2px 0 0 0' }}>{task.description}</p>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
             )}
         </div>

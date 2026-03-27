@@ -42,12 +42,19 @@ class TaskDto {
   @IsOptional() @IsInt() estimatedMins?: number;
 }
 
+class RequiredPartDto {
+  @IsString() inventoryItemId!: string;
+  @IsString() name!: string;
+  @IsInt() @Min(1) qty!: number;
+}
+
 class CreateTemplateDto {
   @IsString() jobTypeId!: string;
   @IsString() name!: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsInt() estimatedDurationMins?: number;
   @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => TaskDto) tasks?: TaskDto[];
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => RequiredPartDto) requiredParts?: RequiredPartDto[];
 }
 
 class UpdateTemplateDto {
@@ -55,6 +62,7 @@ class UpdateTemplateDto {
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsInt() estimatedDurationMins?: number;
   @IsOptional() @IsBoolean() isActive?: boolean;
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => RequiredPartDto) requiredParts?: RequiredPartDto[];
 }
 
 class CreateCustomFieldDto {

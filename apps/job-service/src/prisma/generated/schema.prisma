@@ -340,10 +340,12 @@ model WorkOrderTaskCompletion {
   id             String    @id @default(uuid())
   workOrderId    String
   workOrder      WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  templateTaskId String // ref to job_template_tasks.id
+  templateTaskId String? // null for ad-hoc tasks added by admins
+  isAdHoc        Boolean   @default(false)
   taskName       String // denormalised for record-keeping
+  isRequired     Boolean   @default(false)
   isCompleted    Boolean   @default(false)
-  photoUrl       String? // S3 key of required photo
+  photoUrl       String?
   notes          String?
   completedAt    DateTime?
 

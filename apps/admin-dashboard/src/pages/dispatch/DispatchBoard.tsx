@@ -12,7 +12,8 @@
  *  6. Map overview of technicians + job sites
  */
 
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, lazy, Suspense, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Zap, UserPlus, MapPin, Star, Briefcase,
   CheckCircle2, Clock, AlertCircle, Loader2, Navigation,
@@ -224,6 +225,7 @@ type ViewTab = "unassigned" | "active" | "technicians" | "calendar" | "map";
 const DispatchMap = lazy(() => import("./DispatchMap"));
 
 export default function DispatchBoard() {
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<ViewTab>("unassigned");
   const [search, setSearch] = useState("");
   const [showAddTech, setShowAddTech] = useState(false);
@@ -250,6 +252,16 @@ export default function DispatchBoard() {
   const pendingJobs: Job[] = pendingJobsQuery.data?.data ?? [];
   const allJobsQuery = useJobs({ limit: 200 });
   const allJobs: Job[] = allJobsQuery.data?.data ?? [];
+
+  // Open a specific job when navigated from job modal with ?job=<id>
+  useEffect(() => {
+    const jobId = searchParams.get("job");
+    if (!jobId || allJobs.length === 0) return;
+    const found = allJobs.find(j => j.id === jobId) ?? pendingJobs.find(j => j.id === jobId);
+    if (found) {
+      setSelectedJob(found);
+    }
+  }, [searchParams, allJobs, pendingJobs]);
 
   const allAssignmentsQuery = useAllTechAssignments(techIds);
   const allAssignments = allAssignmentsQuery.data ?? [];

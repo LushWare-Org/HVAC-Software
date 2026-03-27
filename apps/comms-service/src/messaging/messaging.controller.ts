@@ -16,6 +16,7 @@ import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
 import { AuthUser, Role } from '@tscrm/types';
 import { Request } from 'express';
 import { MessagingService } from './messaging.service';
+import { MessagingGateway } from './messaging.gateway';
 import {
   CreateThreadDto,
   SendMessageDto,
@@ -29,12 +30,15 @@ import { ThreadStatus } from '../prisma/generated';
 @UseGuards(JwtAuthGuard)
 @Controller('messaging')
 export class MessagingController {
-  constructor(private readonly service: MessagingService) {}
+  constructor(
+    private readonly service: MessagingService,
+    private readonly gateway: MessagingGateway,
+  ) {}
 
   // ── Threads ───────────────────────────────────────────────────────────────
 
   @Post('threads')
-  @ApiOperation({ summary: 'Create or retrieve an active thread for a customer' })
+  @ApiOperation({ summary: 'Create or retrieve an active thread for a customer or staff' })
   createThread(@CurrentUser() user: AuthUser, @Body() dto: CreateThreadDto) {
     if (user.role === Role.CUSTOMER && !user.customerId) {
       throw new ForbiddenException('Customer account is not linked to a customer profile');
@@ -42,7 +46,7 @@ export class MessagingController {
     const effectiveDto = user.role === Role.CUSTOMER
       ? { ...dto, customerId: user.customerId!, customerName: dto.customerName || user.name || user.email }
       : dto;
-    return this.service.createThread(user.companyId, effectiveDto);
+    return this.service.createThread(user.companyId, effectiveDto, user.userId);
   }
 
   @Get('threads')
@@ -59,6 +63,7 @@ export class MessagingController {
       page: Number(page),
       limit: Number(limit),
       customerId,
+      userId: user.userId,
     });
   }
 
@@ -90,13 +95,13 @@ export class MessagingController {
   // ── Messages ──────────────────────────────────────────────────────────────
 
   @Post('threads/:id/messages')
-  @ApiOperation({ summary: 'Send a message from staff to customer' })
-  sendMessage(
+  @ApiOperation({ summary: 'Send a message (staff↔customer or staff↔staff)' })
+  async sendMessage(
     @CurrentUser() user: AuthUser,
     @Param('id') threadId: string,
     @Body() dto: SendMessageDto,
   ) {
-    return this.service.sendMessage(
+    const updatedThread = await this.service.sendMessage(
       user.companyId,
       threadId,
       user.userId,
@@ -105,6 +110,24 @@ export class MessagingController {
       user.role,
       user.customerId,
     );
+
+    // Broadcast via WebSocket for real-time delivery
+    const messages = updatedThread.messages ?? [];
+    const newMessage = messages[messages.length - 1];
+    if (newMessage) {
+      this.gateway.broadcastToThread(threadId, 'new_message', {
+        threadId,
+        message: newMessage,
+      });
+      this.gateway.broadcastToThread(threadId, 'thread_updated', {
+        threadId,
+        lastMessageBody: updatedThread.lastMessageBody,
+        lastMessageAt: updatedThread.lastMessageAt,
+        unreadCount: updatedThread.unreadCount,
+      });
+    }
+
+    return updatedThread;
   }
 }
 

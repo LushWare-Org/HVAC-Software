@@ -12974,7 +12974,9 @@ export namespace Prisma {
     id: string | null
     workOrderId: string | null
     templateTaskId: string | null
+    isAdHoc: boolean | null
     taskName: string | null
+    isRequired: boolean | null
     isCompleted: boolean | null
     photoUrl: string | null
     notes: string | null
@@ -12985,7 +12987,9 @@ export namespace Prisma {
     id: string | null
     workOrderId: string | null
     templateTaskId: string | null
+    isAdHoc: boolean | null
     taskName: string | null
+    isRequired: boolean | null
     isCompleted: boolean | null
     photoUrl: string | null
     notes: string | null
@@ -12996,7 +13000,9 @@ export namespace Prisma {
     id: number
     workOrderId: number
     templateTaskId: number
+    isAdHoc: number
     taskName: number
+    isRequired: number
     isCompleted: number
     photoUrl: number
     notes: number
@@ -13009,7 +13015,9 @@ export namespace Prisma {
     id?: true
     workOrderId?: true
     templateTaskId?: true
+    isAdHoc?: true
     taskName?: true
+    isRequired?: true
     isCompleted?: true
     photoUrl?: true
     notes?: true
@@ -13020,7 +13028,9 @@ export namespace Prisma {
     id?: true
     workOrderId?: true
     templateTaskId?: true
+    isAdHoc?: true
     taskName?: true
+    isRequired?: true
     isCompleted?: true
     photoUrl?: true
     notes?: true
@@ -13031,7 +13041,9 @@ export namespace Prisma {
     id?: true
     workOrderId?: true
     templateTaskId?: true
+    isAdHoc?: true
     taskName?: true
+    isRequired?: true
     isCompleted?: true
     photoUrl?: true
     notes?: true
@@ -13114,8 +13126,10 @@ export namespace Prisma {
   export type WorkOrderTaskCompletionGroupByOutputType = {
     id: string
     workOrderId: string
-    templateTaskId: string
+    templateTaskId: string | null
+    isAdHoc: boolean
     taskName: string
+    isRequired: boolean
     isCompleted: boolean
     photoUrl: string | null
     notes: string | null
@@ -13143,7 +13157,9 @@ export namespace Prisma {
     id?: boolean
     workOrderId?: boolean
     templateTaskId?: boolean
+    isAdHoc?: boolean
     taskName?: boolean
+    isRequired?: boolean
     isCompleted?: boolean
     photoUrl?: boolean
     notes?: boolean
@@ -13155,7 +13171,9 @@ export namespace Prisma {
     id?: boolean
     workOrderId?: boolean
     templateTaskId?: boolean
+    isAdHoc?: boolean
     taskName?: boolean
+    isRequired?: boolean
     isCompleted?: boolean
     photoUrl?: boolean
     notes?: boolean
@@ -13167,7 +13185,9 @@ export namespace Prisma {
     id?: boolean
     workOrderId?: boolean
     templateTaskId?: boolean
+    isAdHoc?: boolean
     taskName?: boolean
+    isRequired?: boolean
     isCompleted?: boolean
     photoUrl?: boolean
     notes?: boolean
@@ -13189,8 +13209,10 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       workOrderId: string
-      templateTaskId: string
+      templateTaskId: string | null
+      isAdHoc: boolean
       taskName: string
+      isRequired: boolean
       isCompleted: boolean
       photoUrl: string | null
       notes: string | null
@@ -13592,7 +13614,9 @@ export namespace Prisma {
     readonly id: FieldRef<"WorkOrderTaskCompletion", 'String'>
     readonly workOrderId: FieldRef<"WorkOrderTaskCompletion", 'String'>
     readonly templateTaskId: FieldRef<"WorkOrderTaskCompletion", 'String'>
+    readonly isAdHoc: FieldRef<"WorkOrderTaskCompletion", 'Boolean'>
     readonly taskName: FieldRef<"WorkOrderTaskCompletion", 'String'>
+    readonly isRequired: FieldRef<"WorkOrderTaskCompletion", 'Boolean'>
     readonly isCompleted: FieldRef<"WorkOrderTaskCompletion", 'Boolean'>
     readonly photoUrl: FieldRef<"WorkOrderTaskCompletion", 'String'>
     readonly notes: FieldRef<"WorkOrderTaskCompletion", 'String'>
@@ -15191,7 +15215,9 @@ export namespace Prisma {
     id: 'id',
     workOrderId: 'workOrderId',
     templateTaskId: 'templateTaskId',
+    isAdHoc: 'isAdHoc',
     taskName: 'taskName',
+    isRequired: 'isRequired',
     isCompleted: 'isCompleted',
     photoUrl: 'photoUrl',
     notes: 'notes',
@@ -16443,8 +16469,10 @@ export namespace Prisma {
     NOT?: WorkOrderTaskCompletionWhereInput | WorkOrderTaskCompletionWhereInput[]
     id?: StringFilter<"WorkOrderTaskCompletion"> | string
     workOrderId?: StringFilter<"WorkOrderTaskCompletion"> | string
-    templateTaskId?: StringFilter<"WorkOrderTaskCompletion"> | string
+    templateTaskId?: StringNullableFilter<"WorkOrderTaskCompletion"> | string | null
+    isAdHoc?: BoolFilter<"WorkOrderTaskCompletion"> | boolean
     taskName?: StringFilter<"WorkOrderTaskCompletion"> | string
+    isRequired?: BoolFilter<"WorkOrderTaskCompletion"> | boolean
     isCompleted?: BoolFilter<"WorkOrderTaskCompletion"> | boolean
     photoUrl?: StringNullableFilter<"WorkOrderTaskCompletion"> | string | null
     notes?: StringNullableFilter<"WorkOrderTaskCompletion"> | string | null
@@ -16455,8 +16483,10 @@ export namespace Prisma {
   export type WorkOrderTaskCompletionOrderByWithRelationInput = {
     id?: SortOrder
     workOrderId?: SortOrder
-    templateTaskId?: SortOrder
+    templateTaskId?: SortOrderInput | SortOrder
+    isAdHoc?: SortOrder
     taskName?: SortOrder
+    isRequired?: SortOrder
     isCompleted?: SortOrder
     photoUrl?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
@@ -16470,8 +16500,10 @@ export namespace Prisma {
     OR?: WorkOrderTaskCompletionWhereInput[]
     NOT?: WorkOrderTaskCompletionWhereInput | WorkOrderTaskCompletionWhereInput[]
     workOrderId?: StringFilter<"WorkOrderTaskCompletion"> | string
-    templateTaskId?: StringFilter<"WorkOrderTaskCompletion"> | string
+    templateTaskId?: StringNullableFilter<"WorkOrderTaskCompletion"> | string | null
+    isAdHoc?: BoolFilter<"WorkOrderTaskCompletion"> | boolean
     taskName?: StringFilter<"WorkOrderTaskCompletion"> | string
+    isRequired?: BoolFilter<"WorkOrderTaskCompletion"> | boolean
     isCompleted?: BoolFilter<"WorkOrderTaskCompletion"> | boolean
     photoUrl?: StringNullableFilter<"WorkOrderTaskCompletion"> | string | null
     notes?: StringNullableFilter<"WorkOrderTaskCompletion"> | string | null
@@ -16482,8 +16514,10 @@ export namespace Prisma {
   export type WorkOrderTaskCompletionOrderByWithAggregationInput = {
     id?: SortOrder
     workOrderId?: SortOrder
-    templateTaskId?: SortOrder
+    templateTaskId?: SortOrderInput | SortOrder
+    isAdHoc?: SortOrder
     taskName?: SortOrder
+    isRequired?: SortOrder
     isCompleted?: SortOrder
     photoUrl?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
@@ -16499,8 +16533,10 @@ export namespace Prisma {
     NOT?: WorkOrderTaskCompletionScalarWhereWithAggregatesInput | WorkOrderTaskCompletionScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"WorkOrderTaskCompletion"> | string
     workOrderId?: StringWithAggregatesFilter<"WorkOrderTaskCompletion"> | string
-    templateTaskId?: StringWithAggregatesFilter<"WorkOrderTaskCompletion"> | string
+    templateTaskId?: StringNullableWithAggregatesFilter<"WorkOrderTaskCompletion"> | string | null
+    isAdHoc?: BoolWithAggregatesFilter<"WorkOrderTaskCompletion"> | boolean
     taskName?: StringWithAggregatesFilter<"WorkOrderTaskCompletion"> | string
+    isRequired?: BoolWithAggregatesFilter<"WorkOrderTaskCompletion"> | boolean
     isCompleted?: BoolWithAggregatesFilter<"WorkOrderTaskCompletion"> | boolean
     photoUrl?: StringNullableWithAggregatesFilter<"WorkOrderTaskCompletion"> | string | null
     notes?: StringNullableWithAggregatesFilter<"WorkOrderTaskCompletion"> | string | null
@@ -17742,8 +17778,10 @@ export namespace Prisma {
 
   export type WorkOrderTaskCompletionCreateInput = {
     id?: string
-    templateTaskId: string
+    templateTaskId?: string | null
+    isAdHoc?: boolean
     taskName: string
+    isRequired?: boolean
     isCompleted?: boolean
     photoUrl?: string | null
     notes?: string | null
@@ -17754,8 +17792,10 @@ export namespace Prisma {
   export type WorkOrderTaskCompletionUncheckedCreateInput = {
     id?: string
     workOrderId: string
-    templateTaskId: string
+    templateTaskId?: string | null
+    isAdHoc?: boolean
     taskName: string
+    isRequired?: boolean
     isCompleted?: boolean
     photoUrl?: string | null
     notes?: string | null
@@ -17764,8 +17804,10 @@ export namespace Prisma {
 
   export type WorkOrderTaskCompletionUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    templateTaskId?: StringFieldUpdateOperationsInput | string
+    templateTaskId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAdHoc?: BoolFieldUpdateOperationsInput | boolean
     taskName?: StringFieldUpdateOperationsInput | string
+    isRequired?: BoolFieldUpdateOperationsInput | boolean
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17776,8 +17818,10 @@ export namespace Prisma {
   export type WorkOrderTaskCompletionUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     workOrderId?: StringFieldUpdateOperationsInput | string
-    templateTaskId?: StringFieldUpdateOperationsInput | string
+    templateTaskId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAdHoc?: BoolFieldUpdateOperationsInput | boolean
     taskName?: StringFieldUpdateOperationsInput | string
+    isRequired?: BoolFieldUpdateOperationsInput | boolean
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17787,8 +17831,10 @@ export namespace Prisma {
   export type WorkOrderTaskCompletionCreateManyInput = {
     id?: string
     workOrderId: string
-    templateTaskId: string
+    templateTaskId?: string | null
+    isAdHoc?: boolean
     taskName: string
+    isRequired?: boolean
     isCompleted?: boolean
     photoUrl?: string | null
     notes?: string | null
@@ -17797,8 +17843,10 @@ export namespace Prisma {
 
   export type WorkOrderTaskCompletionUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    templateTaskId?: StringFieldUpdateOperationsInput | string
+    templateTaskId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAdHoc?: BoolFieldUpdateOperationsInput | boolean
     taskName?: StringFieldUpdateOperationsInput | string
+    isRequired?: BoolFieldUpdateOperationsInput | boolean
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17808,8 +17856,10 @@ export namespace Prisma {
   export type WorkOrderTaskCompletionUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     workOrderId?: StringFieldUpdateOperationsInput | string
-    templateTaskId?: StringFieldUpdateOperationsInput | string
+    templateTaskId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAdHoc?: BoolFieldUpdateOperationsInput | boolean
     taskName?: StringFieldUpdateOperationsInput | string
+    isRequired?: BoolFieldUpdateOperationsInput | boolean
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -19058,7 +19108,9 @@ export namespace Prisma {
     id?: SortOrder
     workOrderId?: SortOrder
     templateTaskId?: SortOrder
+    isAdHoc?: SortOrder
     taskName?: SortOrder
+    isRequired?: SortOrder
     isCompleted?: SortOrder
     photoUrl?: SortOrder
     notes?: SortOrder
@@ -19069,7 +19121,9 @@ export namespace Prisma {
     id?: SortOrder
     workOrderId?: SortOrder
     templateTaskId?: SortOrder
+    isAdHoc?: SortOrder
     taskName?: SortOrder
+    isRequired?: SortOrder
     isCompleted?: SortOrder
     photoUrl?: SortOrder
     notes?: SortOrder
@@ -19080,7 +19134,9 @@ export namespace Prisma {
     id?: SortOrder
     workOrderId?: SortOrder
     templateTaskId?: SortOrder
+    isAdHoc?: SortOrder
     taskName?: SortOrder
+    isRequired?: SortOrder
     isCompleted?: SortOrder
     photoUrl?: SortOrder
     notes?: SortOrder
@@ -22355,8 +22411,10 @@ export namespace Prisma {
 
   export type WorkOrderTaskCompletionCreateWithoutWorkOrderInput = {
     id?: string
-    templateTaskId: string
+    templateTaskId?: string | null
+    isAdHoc?: boolean
     taskName: string
+    isRequired?: boolean
     isCompleted?: boolean
     photoUrl?: string | null
     notes?: string | null
@@ -22365,8 +22423,10 @@ export namespace Prisma {
 
   export type WorkOrderTaskCompletionUncheckedCreateWithoutWorkOrderInput = {
     id?: string
-    templateTaskId: string
+    templateTaskId?: string | null
+    isAdHoc?: boolean
     taskName: string
+    isRequired?: boolean
     isCompleted?: boolean
     photoUrl?: string | null
     notes?: string | null
@@ -22516,8 +22576,10 @@ export namespace Prisma {
     NOT?: WorkOrderTaskCompletionScalarWhereInput | WorkOrderTaskCompletionScalarWhereInput[]
     id?: StringFilter<"WorkOrderTaskCompletion"> | string
     workOrderId?: StringFilter<"WorkOrderTaskCompletion"> | string
-    templateTaskId?: StringFilter<"WorkOrderTaskCompletion"> | string
+    templateTaskId?: StringNullableFilter<"WorkOrderTaskCompletion"> | string | null
+    isAdHoc?: BoolFilter<"WorkOrderTaskCompletion"> | boolean
     taskName?: StringFilter<"WorkOrderTaskCompletion"> | string
+    isRequired?: BoolFilter<"WorkOrderTaskCompletion"> | boolean
     isCompleted?: BoolFilter<"WorkOrderTaskCompletion"> | boolean
     photoUrl?: StringNullableFilter<"WorkOrderTaskCompletion"> | string | null
     notes?: StringNullableFilter<"WorkOrderTaskCompletion"> | string | null
@@ -23536,8 +23598,10 @@ export namespace Prisma {
 
   export type WorkOrderTaskCompletionCreateManyWorkOrderInput = {
     id?: string
-    templateTaskId: string
+    templateTaskId?: string | null
+    isAdHoc?: boolean
     taskName: string
+    isRequired?: boolean
     isCompleted?: boolean
     photoUrl?: string | null
     notes?: string | null
@@ -23582,8 +23646,10 @@ export namespace Prisma {
 
   export type WorkOrderTaskCompletionUpdateWithoutWorkOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
-    templateTaskId?: StringFieldUpdateOperationsInput | string
+    templateTaskId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAdHoc?: BoolFieldUpdateOperationsInput | boolean
     taskName?: StringFieldUpdateOperationsInput | string
+    isRequired?: BoolFieldUpdateOperationsInput | boolean
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23592,8 +23658,10 @@ export namespace Prisma {
 
   export type WorkOrderTaskCompletionUncheckedUpdateWithoutWorkOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
-    templateTaskId?: StringFieldUpdateOperationsInput | string
+    templateTaskId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAdHoc?: BoolFieldUpdateOperationsInput | boolean
     taskName?: StringFieldUpdateOperationsInput | string
+    isRequired?: BoolFieldUpdateOperationsInput | boolean
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23602,8 +23670,10 @@ export namespace Prisma {
 
   export type WorkOrderTaskCompletionUncheckedUpdateManyWithoutWorkOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
-    templateTaskId?: StringFieldUpdateOperationsInput | string
+    templateTaskId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAdHoc?: BoolFieldUpdateOperationsInput | boolean
     taskName?: StringFieldUpdateOperationsInput | string
+    isRequired?: BoolFieldUpdateOperationsInput | boolean
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null

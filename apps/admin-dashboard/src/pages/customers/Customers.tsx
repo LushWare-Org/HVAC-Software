@@ -244,8 +244,7 @@ export default function Customers() {
                         <td>
                           <div className="flex items-center gap-1">
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(c, "customer"); }} title="View Details"><Edit size={15} /></button>
-                            <button className="flex items-center justify-center p-1.5 text-[var(--green)] hover:bg-green-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Call"><Phone size={15} /></button>
-                            <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email"><Mail size={15} /></button>
+                            <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); window.location.href = `mailto:${c.email}`; }}><Mail size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete" onClick={e => { e.stopPropagation(); confirmDelete("customer", c.id, customerName(c)); }}><Trash2 size={15} /></button>
                           </div>
                         </td>
@@ -287,12 +286,13 @@ export default function Customers() {
             <div className="card-body-flush mt-4">
               <div className="table-container">
                 <table className="data-table">
-                  <thead><tr><th>Lead</th><th>Service Interest</th><th>Source</th><th>Est. Revenue</th><th>Status</th><th>Assigned To</th><th>Created</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Lead</th><th>Location</th><th>Service Interest</th><th>Source</th><th>Est. Revenue</th><th>Status</th><th>Assigned To</th><th>Created</th><th>Actions</th></tr></thead>
                   <tbody>
-                    {leadsQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 8 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
+                    {leadsQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
                     {!leadsQuery.isLoading && leads.map(l => (
                       <tr key={l.id} onClick={() => handleViewClick(l, "lead")} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
                         <td><div className="cell-user"><div><div className="cell-name">{leadName(l)}</div><div className="cell-email">{l.email}</div></div></div></td>
+                        <td><div className="flex items-center gap-1.5 text-sm text-[var(--t2)]"><MapPin size={12} className="text-[var(--t4)]" />{l.customer?.city ?? '—'}{l.customer?.state ? `, ${l.customer.state}` : ''}</div></td>
                         <td>{l.serviceInterest ?? '—'}</td>
                         <td><span className="badge badge-neutral">{l.source ?? '—'}</span></td>
                         <td className="td-primary font-600">{l.estimatedValue != null ? fmt(l.estimatedValue) : '—'}</td>
@@ -302,14 +302,13 @@ export default function Customers() {
                         <td>
                           <div className="flex items-center gap-1">
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(l, "lead"); }} title="View"><Edit size={15} /></button>
-                            <button className="flex items-center justify-center p-1.5 text-[var(--green)] hover:bg-green-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Call"><Phone size={15} /></button>
-                            <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email"><Mail size={15} /></button>
+                            <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); if (l.email) window.location.href = `mailto:${l.email}`; }}><Mail size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete" onClick={e => { e.stopPropagation(); confirmDelete("lead", l.id, leadName(l)); }}><Trash2 size={15} /></button>
                           </div>
                         </td>
                       </tr>
                     ))}
-                    {!leadsQuery.isLoading && leads.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No leads found</td></tr>}
+                    {!leadsQuery.isLoading && leads.length === 0 && <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No leads found</td></tr>}
                   </tbody>
                 </table>
               </div>

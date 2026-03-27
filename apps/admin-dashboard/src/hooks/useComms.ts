@@ -42,7 +42,8 @@ export function useThreads(filters: ThreadFilters = {}) {
       const res = await api.get('/comms/messaging/threads', { params })
       return res.data
     },
-    staleTime: 15 * 1000, // conversations refresh frequently
+    staleTime: 10 * 1000,
+    refetchInterval: 10 * 1000, // Poll for updates
   })
 }
 
@@ -56,17 +57,24 @@ export function useThread(threadId: string | null) {
       return res.data
     },
     enabled: !!threadId,
-    staleTime: 10 * 1000,
+    staleTime: 0,
+    refetchInterval: 5 * 1000, // Poll for new messages
   })
 }
 
 // ─── Create or retrieve a thread ──────────────────────────────────────────────
-// POST /messaging/threads — returns an existing thread for the customer/channel combo
-// or creates a new one.
 
 export function useCreateThread() {
   return useMutation({
-    mutationFn: async (data: { customerId?: string; customerName?: string; customerPhone?: string; customerEmail?: string }) => {
+    mutationFn: async (data: {
+      customerId?: string;
+      customerName?: string;
+      customerPhone?: string;
+      customerEmail?: string;
+      participantIds?: string[];
+      participantNames?: string[];
+      subject?: string;
+    }) => {
       const res = await api.post('/comms/messaging/threads', data)
       return res.data as MessageThread
     },
@@ -80,13 +88,16 @@ export function useCreateThread() {
 
 export function useSendThreadMessage() {
   return useMutation({
-    mutationFn: async ({ threadId, body, subject }: { threadId: string; body: string; subject?: string }) => {
-      const res = await api.post(`/comms/messaging/threads/${threadId}/messages`, { body, subject })
+    mutationFn: async ({ threadId, body }: { threadId: string; body: string }) => {
+      const res = await api.post<MessageThreadDetail>(
+        `/comms/messaging/threads/${threadId}/messages`,
+        { body },
+      )
       return res.data
     },
-    onSuccess: (_data, vars) => {
-      // Refresh this thread's messages + thread list
-      queryClient.invalidateQueries({ queryKey: ['threads', vars.threadId] })
+    onSuccess: (data, vars) => {
+      // Set the thread data directly from the response for instant UI update
+      queryClient.setQueryData(['threads', vars.threadId], data)
       queryClient.invalidateQueries({ queryKey: ['threads'] })
     },
   })

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import { X, Wrench, Calendar, FileText, DollarSign, User, Clock } from 'lucide-react'
-import { useJobAssignments, useMyJob, useTechnician } from '../../hooks/useCustomerPortal'
+import { useJobAssignments, useMyJob, useTechnician, useJobInvoices, useJobQuotes } from '../../hooks/useCustomerPortal'
 import type { Job } from '../../types/api'
 
 interface JobDetailModalProps {
@@ -10,7 +10,7 @@ interface JobDetailModalProps {
   onCancel?: () => void
 }
 
-type TabType = 'overview' | 'schedule' | 'notes'
+type TabType = 'overview' | 'schedule' | 'documents' | 'notes'
 
 const STATUS_MAP: Record<string, { label: string; css: string }> = {
   COMPLETED: { label: 'Completed', css: 'badge-green' },
@@ -55,6 +55,8 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
   const { data } = useMyJob(initialJob.id)
   const job = data ?? initialJob
   const { data: assignmentData } = useJobAssignments(job?.id ?? null)
+  const { data: jobInvoices = [] } = useJobInvoices(job?.id ?? null)
+  const { data: jobQuotes = [] } = useJobQuotes(job?.id ?? null)
 
   const assignment = [...(assignmentData?.data ?? [])]
     .sort((a, b) => new Date(b.assignedAt ?? b.createdAt).getTime() - new Date(a.assignedAt ?? a.createdAt).getTime())[0]
@@ -83,13 +85,14 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
   const assignmentRecord = history.find(h => ['SCHEDULED', 'EN_ROUTE', 'ON_SITE'].includes(h.toStatus))
   const technicianName = technician?.name || assignment?.technicianName || job.assignedToName || 'Not assigned yet'
   const assignedAt = assignment?.assignedAt ?? assignmentRecord?.createdAt ?? job.scheduledStart
-  const assignedBy = assignment?.assignedBy
-    ? (assignmentRecord?.changedByName || 'Dispatch team')
-    : (assignmentRecord?.changedByName || latestUpdate?.changedByName || 'Auto dispatch')
+  // Use assignedByName from dispatch assignment if available; fallback to T&S Team
+  // (avoid showing the customer's own name as "Assigned By")
+  const assignedBy = assignment?.assignedByName || (assignment ? 'T&S Team' : 'Pending assignment')
 
-  const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
+  const tabs: { id: TabType; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'overview', label: 'Overview', icon: <Wrench size={14} /> },
     { id: 'schedule', label: 'Schedule & Cost', icon: <Calendar size={14} /> },
+    { id: 'documents', label: 'Quotes & Invoices', icon: <DollarSign size={14} />, badge: jobInvoices.length + jobQuotes.length || undefined },
     { id: 'notes', label: 'Notes', icon: <FileText size={14} /> },
   ]
 
@@ -176,7 +179,7 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
                 display: 'flex',
                 alignItems: 'center',
                 gap: 7,
-                padding: '13px 22px',
+                padding: '13px 18px',
                 fontSize: 13,
                 fontWeight: activeTab === t.id ? 600 : 500,
                 border: 'none',
@@ -190,6 +193,11 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
               }}
             >
               {t.icon} {t.label}
+              {t.badge ? (
+                <span style={{ background: '#2563EB', color: '#fff', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '1px 6px', minWidth: 16, textAlign: 'center' }}>
+                  {t.badge}
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
@@ -247,6 +255,51 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 10 }}>
                     <span style={{ color: '#6B7280' }}>{row.label}</span>
                     <span style={{ fontWeight: 600, color: '#111827' }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'documents' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {/* Quotes */}
+              <div>
+                <h4 style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Quotes</h4>
+                {jobQuotes.length === 0 ? (
+                  <p style={{ color: '#9CA3AF', fontSize: 13 }}>No quotes for this job.</p>
+                ) : jobQuotes.map((q) => (
+                  <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 10, border: '1px solid #E5E7EB', marginBottom: 8, background: '#FAFAFA' }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{q.quoteNumber}</div>
+                      <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{q.title}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>${Number(q.total).toFixed(2)}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: q.status === 'ACCEPTED' ? '#D1FAE5' : q.status === 'DECLINED' ? '#FEE2E2' : '#EFF6FF', color: q.status === 'ACCEPTED' ? '#065F46' : q.status === 'DECLINED' ? '#B91C1C' : '#1D4ED8' }}>
+                        {q.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Invoices */}
+              <div>
+                <h4 style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Invoices</h4>
+                {jobInvoices.length === 0 ? (
+                  <p style={{ color: '#9CA3AF', fontSize: 13 }}>No invoices for this job.</p>
+                ) : jobInvoices.map((inv) => (
+                  <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 10, border: '1px solid #E5E7EB', marginBottom: 8, background: '#FAFAFA' }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{inv.invoiceNumber}</div>
+                      <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>Due: {inv.dueDate ? fmtDate(inv.dueDate) : '—'}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>${Number(inv.total).toFixed(2)}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: inv.status === 'PAID' ? '#D1FAE5' : inv.status === 'OVERDUE' ? '#FEE2E2' : '#EFF6FF', color: inv.status === 'PAID' ? '#065F46' : inv.status === 'OVERDUE' ? '#B91C1C' : '#1D4ED8' }}>
+                        {inv.status}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>

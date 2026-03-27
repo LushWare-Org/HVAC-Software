@@ -1,11 +1,17 @@
-import { IsString, IsOptional, IsPhoneNumber, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateThreadDto {
-  @ApiProperty() @IsString() customerId!: string;
-  @ApiProperty() @IsString() customerName!: string;
+  // Customer thread fields (optional for staff-to-staff threads)
+  @ApiPropertyOptional() @IsOptional() @IsString() customerId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() customerName?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() customerPhone?: string;
   @ApiPropertyOptional() @IsOptional() @IsEmail() customerEmail?: string;
+  // Staff/internal thread fields
+  @ApiPropertyOptional() @IsOptional() @IsArray() @IsString({ each: true }) participantIds?: string[];
+  @ApiPropertyOptional() @IsOptional() @IsArray() @IsString({ each: true }) participantNames?: string[];
+  @ApiPropertyOptional() @IsOptional() @IsString() subject?: string;
+  // Job context
   @ApiPropertyOptional() @IsOptional() @IsString() jobId?: string;
 }
 

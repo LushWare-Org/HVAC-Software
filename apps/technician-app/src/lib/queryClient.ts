@@ -56,4 +56,9 @@ export const queryKeys = {
 
   // Analytics
   myMetrics: (techId: string) => ['metrics', techId] as const,
+
+  // Inventory
+  inventoryLocations: ['inventory', 'locations'] as const,
+  vanStock: (locationId: string) => ['inventory', 'vanStock', locationId] as const,
+  inventoryMovements: (filters?: Record<string, unknown>) => ['inventory', 'movements', filters] as const,
 } as const

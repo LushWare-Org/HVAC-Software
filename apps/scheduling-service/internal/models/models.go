@@ -131,6 +131,7 @@ type AssignJobRequest struct {
 	JobLatitude    float64  `json:"jobLatitude"`
 	JobLongitude   float64  `json:"jobLongitude"`
 	RequiredSkills []string `json:"requiredSkills"`
+	RequiredParts  []string `json:"requiredParts"` // inventory item IDs
 	ScheduledStart *string  `json:"scheduledStart"` // ISO8601
 	ScheduledEnd   *string  `json:"scheduledEnd"`
 }
@@ -156,6 +157,7 @@ type ScoredTechnician struct {
 	DistanceScore float64    `json:"distanceScore"`
 	WorkloadScore float64    `json:"workloadScore"`
 	RatingScore   float64    `json:"ratingScore"`
+	PartsScore    float64    `json:"partsScore"`
 }
 
 // AssignResponse — result of POST /dispatch/assign

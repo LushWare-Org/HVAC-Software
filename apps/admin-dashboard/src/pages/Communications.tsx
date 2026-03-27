@@ -177,9 +177,22 @@ export default function Communications() {
     const canSubmitNotification = canBroadcast && notificationTitle.trim() && notificationBody.trim() && resolvedRecipients.length > 0
 
     // ── Filter and sort thread list ──────────────────────────────────────────────
+    function getThreadDisplayName(t: MessageThread): string {
+        if (t.customerName) return t.customerName
+        if (t.customerPhone) return t.customerPhone
+        if (t.customerEmail) return t.customerEmail
+        if ((t as any).subject) return (t as any).subject
+        if ((t as any).participantNames?.length) {
+            return (t as any).participantNames
+                .filter((n: string) => n !== user?.name)
+                .join(', ') || 'Team Chat'
+        }
+        return 'Unknown'
+    }
+
     const filteredThreads = allThreads
         .filter(t => {
-            const name = t.customerName ?? t.customerPhone ?? t.customerEmail ?? ''
+            const name = getThreadDisplayName(t)
             return name.toLowerCase().includes(searchQuery.toLowerCase())
         })
         .sort((a, b) => {
@@ -308,7 +321,8 @@ export default function Communications() {
 
                                 {/* Thread rows */}
                                 {!threadsQuery.isLoading && filteredThreads.map(thread => {
-                                    const name       = thread.customerName ?? thread.customerPhone ?? thread.customerEmail ?? 'Unknown'
+                                    const name       = getThreadDisplayName(thread)
+                                    const isStaff    = !thread.customerId && ((thread as any).participantIds?.length ?? 0) > 0
                                     const isSelected = selectedThreadId === thread.id
                                     const unread     = thread.unreadCount ?? 0
                                     const lastTime   = thread.lastMessageAt ?? thread.updatedAt
@@ -319,7 +333,7 @@ export default function Communications() {
                                             className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors border-l-[3px] ${isSelected ? 'bg-[var(--blue-glow)] border-[var(--blue)]' : 'border-transparent'}`}
                                             onClick={() => setSelectedThreadId(thread.id)}
                                         >
-                                            <div className="w-[38px] h-[38px] rounded-full bg-[var(--blue-dim)] text-[var(--blue)] flex items-center justify-center text-sm font-semibold shrink-0">
+                                            <div className={`w-[38px] h-[38px] rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${isStaff ? 'bg-purple-100 text-purple-600' : 'bg-[var(--blue-dim)] text-[var(--blue)]'}`}>
                                                 {getInitials(name)}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -333,7 +347,7 @@ export default function Communications() {
                                                     <p className="text-[13px] text-[var(--t3)] truncate">{thread.lastMessageBody}</p>
                                                 )}
                                                 <div className="flex items-center gap-1.5 mt-1">
-                                                    <span className="text-[10px] text-[var(--t4)] uppercase font-semibold">{thread.channel ?? 'IN_APP'}</span>
+                                                    <span className="text-[10px] text-[var(--t4)] uppercase font-semibold">{isStaff ? 'TEAM' : (thread.channel ?? 'IN_APP')}</span>
                                                     {thread.status !== 'ACTIVE' && (
                                                         <span className={`badge ${THREAD_STATUS_BADGE[thread.status]} text-[9px] px-1.5 py-0`}>{thread.status}</span>
                                                     )}
@@ -364,17 +378,23 @@ export default function Communications() {
                                     {/* Header */}
                                     <div className="p-4 border-b border-[var(--bd)] flex items-center justify-between shrink-0 h-[73px]">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-[38px] h-[38px] rounded-full bg-[var(--blue-dim)] text-[var(--blue)] flex items-center justify-center text-sm font-semibold shrink-0">
-                                                {getInitials(selectedThread.customerName ?? selectedThread.customerPhone ?? 'U')}
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-[var(--t1)] text-[15px]">
-                                                    {selectedThread.customerName ?? selectedThread.customerPhone ?? selectedThread.customerEmail ?? 'Unknown'}
-                                                </p>
-                                                <p className="text-xs text-[var(--t3)] mt-px">
-                                                    {(selectedThread.channel ?? 'IN_APP')} · {selectedThread.customerPhone ?? selectedThread.customerEmail ?? 'In-app chat'}
-                                                </p>
-                                            </div>
+                                            {(() => {
+                                                const detailIsStaff = !selectedThread.customerId && ((selectedThread as any).participantIds?.length ?? 0) > 0
+                                                const detailName = getThreadDisplayName(selectedThread as any)
+                                                return (
+                                                    <>
+                                                        <div className={`w-[38px] h-[38px] rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${detailIsStaff ? 'bg-purple-100 text-purple-600' : 'bg-[var(--blue-dim)] text-[var(--blue)]'}`}>
+                                                            {getInitials(detailName)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-semibold text-[var(--t1)] text-[15px]">{detailName}</p>
+                                                            <p className="text-xs text-[var(--t3)] mt-px">
+                                                                {detailIsStaff ? 'Team Chat' : `${selectedThread.channel ?? 'IN_APP'} · ${selectedThread.customerPhone ?? selectedThread.customerEmail ?? 'In-app chat'}`}
+                                                            </p>
+                                                        </div>
+                                                    </>
+                                                )
+                                            })()}
                                         </div>
                                         <div className="flex gap-2">
                                             {selectedThread.status === 'ACTIVE' && (
@@ -402,10 +422,16 @@ export default function Communications() {
                                         )}
 
                                         {!threadQuery.isLoading && (selectedThread.messages ?? []).map(msg => {
-                                            const isOutbound = msg.direction === 'OUTBOUND'
+                                            const detailIsStaff2 = !selectedThread.customerId && ((selectedThread as any).participantIds?.length ?? 0) > 0
+                                            const isOutbound = detailIsStaff2
+                                                ? msg.senderId === user?.id
+                                                : msg.direction === 'OUTBOUND'
                                             return (
                                                 <div key={msg.id} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
                                                     <div className={`max-w-[75%] p-[14px] rounded-2xl ${isOutbound ? 'bg-[var(--blue)] text-white rounded-tr-sm' : 'bg-[var(--bg-card-2)] text-[var(--t1)] rounded-tl-sm'}`}>
+                                                        {!isOutbound && msg.senderName && (
+                                                            <p className="text-[12px] font-semibold mb-1 text-[var(--blue)]">{msg.senderName}</p>
+                                                        )}
                                                         <p className="text-[14px] leading-relaxed">{msg.body}</p>
                                                         <div className={`flex items-center gap-1 mt-1.5 justify-end ${isOutbound ? 'text-blue-100' : 'text-[var(--t4)]'}`}>
                                                             <span className="text-[11px]">{fmtTime(msg.createdAt)}</span>

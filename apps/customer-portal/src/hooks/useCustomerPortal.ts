@@ -322,6 +322,28 @@ export function useMyQuotes(filters?: {
   })
 }
 
+export function useJobInvoices(jobId: string | null) {
+  return useQuery<Invoice[]>({
+    queryKey: ['customer', 'job-invoices', jobId],
+    queryFn: async () => {
+      const { data } = await api.get(`/finance/invoices?jobId=${jobId}&limit=50`)
+      return data?.data ?? []
+    },
+    enabled: !!jobId,
+  })
+}
+
+export function useJobQuotes(jobId: string | null) {
+  return useQuery<Quote[]>({
+    queryKey: ['customer', 'job-quotes', jobId],
+    queryFn: async () => {
+      const { data } = await api.get(`/finance/quotes?jobId=${jobId}&limit=50`)
+      return data?.data ?? []
+    },
+    enabled: !!jobId,
+  })
+}
+
 export function useMyInvoice(invoiceId: string | null) {
   return useQuery<Invoice>({
     queryKey: keys.invoice(invoiceId!),

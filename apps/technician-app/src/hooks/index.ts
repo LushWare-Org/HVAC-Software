@@ -8,3 +8,4 @@ export { useThreads, useThreadDetail, useSendMessage, useMarkThreadRead, useCrea
 export { useMyExpenses, useExpenseDetail, useCreateExpense } from './useExpenses'
 export { useCustomerDetail } from './useCustomer'
 export { useGPSTracking, requestLocationPermissions, getCurrentLocation } from './useGPS'
+export { useLocations, useMyVanLocation, useVanStock, useMyMovements, useConfirmTransfer, toNumber } from './useInventory'

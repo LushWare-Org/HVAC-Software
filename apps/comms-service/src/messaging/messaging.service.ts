@@ -34,18 +34,45 @@ export class MessagingService {
 
   // ── Threads ───────────────────────────────────────────────────────────────
 
-  async createThread(companyId: string, dto: CreateThreadDto) {
-    // Check for existing open thread for same customer
-    const existing = await this.prisma.messageThread.findFirst({
-      where: {
-        companyId,
-        customerId: dto.customerId,
-        status: ThreadStatus.ACTIVE,
-        ...(dto.jobId ? { jobId: dto.jobId } : {}),
-      },
-    });
+  async createThread(companyId: string, dto: CreateThreadDto, creatorId?: string) {
+    const isCustomerThread = !!dto.customerId;
 
-    if (existing) return existing;
+    if (isCustomerThread) {
+      // Check for existing open thread for same customer
+      const existing = await this.prisma.messageThread.findFirst({
+        where: {
+          companyId,
+          customerId: dto.customerId,
+          status: ThreadStatus.ACTIVE,
+          ...(dto.jobId ? { jobId: dto.jobId } : {}),
+        },
+      });
+      if (existing) return existing;
+    } else if (dto.participantIds?.length) {
+      // Staff thread — check for existing thread with same participants
+      const allParticipants = creatorId
+        ? [...new Set([creatorId, ...dto.participantIds])].sort()
+        : [...dto.participantIds].sort();
+      const existing = await this.prisma.messageThread.findFirst({
+        where: {
+          companyId,
+          status: ThreadStatus.ACTIVE,
+          participantIds: { equals: allParticipants },
+        },
+      });
+      if (existing) return existing;
+
+      return this.prisma.messageThread.create({
+        data: {
+          companyId,
+          participantIds: allParticipants,
+          participantNames: dto.participantNames ?? [],
+          subject: dto.subject,
+          jobId: dto.jobId,
+          messages: [],
+        },
+      });
+    }
 
     return this.prisma.messageThread.create({
       data: {
@@ -54,6 +81,9 @@ export class MessagingService {
         customerName: dto.customerName,
         customerPhone: dto.customerPhone,
         customerEmail: dto.customerEmail,
+        participantIds: dto.participantIds ?? [],
+        participantNames: dto.participantNames ?? [],
+        subject: dto.subject,
         jobId: dto.jobId,
         messages: [],
       },
@@ -62,15 +92,37 @@ export class MessagingService {
 
   async findThreads(
     companyId: string,
-    params: { status?: ThreadStatus; page?: number; limit?: number; customerId?: string },
+    params: {
+      status?: ThreadStatus;
+      page?: number;
+      limit?: number;
+      customerId?: string;
+      userId?: string;
+    },
   ) {
-    const { status, page = 1, limit = 20, customerId } = params;
+    const { status, page = 1, limit = 20, customerId, userId } = params;
     const skip = (page - 1) * limit;
-    const where = {
+
+    let where: any = {
       companyId,
       ...(status ? { status } : {}),
-      ...(customerId ? { customerId } : {}),
     };
+
+    if (customerId) {
+      // Customer viewing their own threads
+      where.customerId = customerId;
+    } else if (userId) {
+      // Staff member — show customer threads + threads they participate in
+      where = {
+        companyId,
+        ...(status ? { status } : {}),
+        OR: [
+          { customerId: { not: null } },           // all customer threads (visible to staff)
+          { participantIds: { has: userId } },      // staff threads they're in
+        ],
+      };
+    }
+
     const [items, total] = await Promise.all([
       this.prisma.messageThread.findMany({
         where,
@@ -133,11 +185,17 @@ export class MessagingService {
       throw new BadRequestException('Message body is required');
     }
 
-    const customerSender = senderRole?.toLowerCase() === 'customer' || senderCustomerId === thread.customerId;
+    const isStaffThread = !thread.customerId && thread.participantIds?.length > 0;
+    const customerSender = !isStaffThread && (
+      senderRole?.toLowerCase() === 'customer' || senderCustomerId === thread.customerId
+    );
+
     if (customerSender && senderCustomerId && thread.customerId !== senderCustomerId) {
       throw new ForbiddenException('You can only send messages to your own thread');
     }
 
+    // In staff threads, direction is always OUTBOUND (from sender's perspective)
+    // In customer threads, INBOUND = customer sent, OUTBOUND = staff sent
     const direction = customerSender ? MessageDirection.INBOUND : MessageDirection.OUTBOUND;
 
     const message = {
@@ -158,7 +216,9 @@ export class MessagingService {
         messages: { push: message },
         lastMessageAt: new Date(),
         lastMessageBody: message.body.substring(0, 100),
-        unreadCount: customerSender ? { increment: 1 } : 0,
+        // In staff threads, increment unread for the other participant
+        // In customer threads, increment only when customer sends
+        unreadCount: customerSender || isStaffThread ? { increment: 1 } : 0,
       },
     });
 
@@ -223,7 +283,7 @@ export class MessagingService {
     const message = {
       id: uuidv4(),
       senderId: customerPhone,
-      senderName: thread.customerName,
+      senderName: thread.customerName ?? customerPhone,
       direction: MessageDirection.INBOUND,
       body,
       channel: Channel.SMS,

@@ -88,6 +88,8 @@ export interface Lead {
   convertedAt?: string
   createdAt: string
   updatedAt: string
+  // joined from linked customer record (for portal signups)
+  customer?: { id: string; firstName: string; lastName: string; city?: string; state?: string; address?: string }
 }
 
 export function leadName(l: Lead): string {
@@ -158,6 +160,20 @@ export interface Job {
   createdAt: string
   updatedAt: string
   statusHistory?: { id: string; fromStatus?: string; toStatus: string; changedById?: string; notes?: string; createdAt: string }[]
+}
+
+export interface JobTemplate {
+  id: string
+  companyId: string
+  jobTypeId: string
+  name: string
+  description?: string
+  estimatedDurationMins: number
+  version: number
+  isActive: boolean
+  requiredParts?: { inventoryItemId: string; name: string; qty: number }[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface JobStats {
@@ -269,6 +285,10 @@ export interface Technician {
   totalRatings: number
   lastSeenAt?: string
   currentLocation?: { lat: number; lng: number }
+  speedKmh?: number
+  headingDeg?: number
+  batteryPct?: number
+  locationUpdatedAt?: string
   createdAt: string
   updatedAt: string
 }
@@ -345,6 +365,8 @@ export interface ThreadMessage {
   id: string
   threadId?: string
   companyId?: string
+  senderId?: string
+  senderName?: string
   body: string
   subject?: string
   direction: 'INBOUND' | 'OUTBOUND'
@@ -361,6 +383,11 @@ export interface MessageThread {
   customerName?: string
   customerPhone?: string
   customerEmail?: string
+  // Staff/internal thread fields
+  participantIds?: string[]
+  participantNames?: string[]
+  subject?: string
+  jobId?: string
   channel?: MessageChannel
   status: ThreadStatus
   lastMessageAt?: string
@@ -461,4 +488,94 @@ export interface RevenueByCategory {
   category: string
   total: number
   percentage: number
+}
+
+// ─── Inventory Service ─────────────────────────────────────────────────────────
+
+export type ItemCategory = 'PART' | 'MATERIAL' | 'TOOL' | 'CONSUMABLE'
+export type LocationType = 'WAREHOUSE' | 'VAN'
+export type MovementType = 'INTAKE' | 'TRANSFER' | 'CONSUME' | 'ADJUST' | 'RETURN'
+export type PurchaseOrderStatus = 'DRAFT' | 'ORDERED' | 'PARTIAL' | 'RECEIVED' | 'CANCELLED'
+
+export interface InventoryItem {
+  id: string
+  companyId: string
+  priceBookItemId?: string
+  sku: string
+  name: string
+  description?: string
+  category: ItemCategory
+  unit: string
+  reorderPoint: number
+  reorderQty: number
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  stockLevels?: StockLevel[]
+}
+
+export interface StockLocation {
+  id: string
+  companyId: string
+  type: LocationType
+  name: string
+  technicianId?: string
+  isActive: boolean
+}
+
+export interface StockLevel {
+  id: string
+  inventoryItemId: string
+  inventoryItem?: InventoryItem
+  locationId: string
+  location?: StockLocation
+  quantity: number | string
+  reservedQty: number | string
+}
+
+export interface StockMovement {
+  id: string
+  companyId: string
+  inventoryItemId: string
+  inventoryItem?: { name: string; sku: string }
+  fromLocationId?: string
+  fromLocation?: { name: string; type: LocationType }
+  toLocationId?: string
+  toLocation?: { name: string; type: LocationType }
+  quantity: number | string
+  movementType: MovementType
+  referenceId?: string
+  referenceType?: string
+  notes?: string
+  performedBy: string
+  performedByName?: string
+  createdAt: string
+}
+
+export interface PurchaseOrder {
+  id: string
+  companyId: string
+  poNumber: string
+  supplierName: string
+  status: PurchaseOrderStatus
+  items: { inventoryItemId: string; qty: number; unitCost: number }[]
+  totalCost: number | string
+  notes?: string
+  orderedAt?: string
+  receivedAt?: string
+  createdBy: string
+  createdByName?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LowStockAlert {
+  inventoryItemId: string
+  itemName: string
+  sku: string
+  category: ItemCategory
+  currentQty: number
+  reorderPoint: number
+  reorderQty: number
+  deficit: number
 }

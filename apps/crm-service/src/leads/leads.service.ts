@@ -28,7 +28,7 @@ export class LeadsService {
     const [data, total] = await Promise.all([
       this.prisma.lead.findMany({
         where,
-        include: { customer: { select: { id: true, firstName: true, lastName: true } } },
+        include: { customer: { select: { id: true, firstName: true, lastName: true, city: true, state: true, address: true } } },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,

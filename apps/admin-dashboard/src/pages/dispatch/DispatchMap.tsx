@@ -3,10 +3,12 @@
  * Lazy-loaded from DispatchBoard to avoid loading Leaflet on initial page load.
  */
 
+import { useState } from 'react'
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import type { DispatchAssignment, Job, Technician } from '../../types/api'
+import type { DispatchAssignment, Job, Technician, StockLevel } from '../../types/api'
+import { useLocations, useLocationStock, decimalToNumber } from '../../hooks/useInventory'
 
 // Fix default marker icon (Leaflet + bundler issue)
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -56,6 +58,61 @@ function parseJobCoordinates(job: Job) {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
 
   return { lat, lng }
+}
+
+/** Inline van inventory summary shown inside technician popup */
+function VanInventorySummary({ technicianId }: { technicianId: string }) {
+  const { data: locations } = useLocations()
+  const vanLocation = locations?.find((l) => l.type === 'VAN' && l.technicianId === technicianId)
+  const { data: stockData } = useLocationStock(vanLocation?.id, { limit: 100 })
+  const [expanded, setExpanded] = useState(false)
+
+  if (!vanLocation || !stockData) return null
+
+  const items = stockData.data ?? []
+  const totalItems = items.length
+  const lowStock = items.filter(
+    (sl) => sl.inventoryItem && decimalToNumber(sl.quantity) <= (sl.inventoryItem.reorderPoint ?? 0),
+  ).length
+
+  return (
+    <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 6, marginTop: 4 }}>
+      <div
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <span style={{ fontWeight: 600, color: '#374151', fontSize: 11 }}>
+          📦 Van Stock: {totalItems} items
+          {lowStock > 0 && (
+            <span style={{ color: '#dc2626', marginLeft: 4 }}>· {lowStock} low</span>
+          )}
+        </span>
+        <span style={{ fontSize: 10, color: '#9ca3af' }}>{expanded ? '▲' : '▼'}</span>
+      </div>
+      {expanded && items.length > 0 && (
+        <div style={{ marginTop: 4, maxHeight: 120, overflowY: 'auto' }}>
+          {items.slice(0, 15).map((sl) => {
+            const qty = decimalToNumber(sl.quantity)
+            const isLow = sl.inventoryItem && qty <= (sl.inventoryItem.reorderPoint ?? 0)
+            return (
+              <div
+                key={sl.id}
+                style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0', fontSize: 10, color: isLow ? '#dc2626' : '#374151' }}
+              >
+                <span>{sl.inventoryItem?.name ?? 'Unknown'}</span>
+                <span style={{ fontWeight: 600 }}>{qty}</span>
+              </div>
+            )
+          })}
+          {items.length > 15 && (
+            <div style={{ fontSize: 9, color: '#9ca3af', textAlign: 'center' }}>
+              +{items.length - 15} more items
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function DispatchMap({ technicians, assignedJobs, unassignedJobs, assignmentByJobId }: Props) {
@@ -127,26 +184,62 @@ export default function DispatchMap({ technicians, assignedJobs, unassignedJobs,
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {techsWithGPS.map((t) => (
-            <Marker
-              key={`tech-${t.id}`}
-              position={[t.currentLocation!.lat, t.currentLocation!.lng]}
-              icon={techIcon}
-            >
-              <Popup>
-                <div className="text-xs space-y-1 min-w-[150px]">
-                  <p className="font-bold text-sm">{t.name}</p>
-                  {t.phone && <p className="text-gray-500">{t.phone}</p>}
-                  <p className="text-purple-600 font-medium">
-                    {t.isActive ? 'Active' : 'Inactive'} · Rating: {t.rating.toFixed(1)}
-                  </p>
-                  {t.skills?.length > 0 && (
-                    <p className="text-gray-500">{t.skills.join(', ')}</p>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+          {techsWithGPS.map((t) => {
+            const secondsAgo = t.locationUpdatedAt
+              ? Math.round((Date.now() - new Date(t.locationUpdatedAt).getTime()) / 1000)
+              : null
+            const isLive = secondsAgo !== null && secondsAgo < 120
+            const ageLabel = secondsAgo === null ? null
+              : secondsAgo < 60 ? `${secondsAgo}s ago`
+              : secondsAgo < 3600 ? `${Math.floor(secondsAgo / 60)}m ago`
+              : `${Math.floor(secondsAgo / 3600)}h ago`
+
+            return (
+              <Marker
+                key={`tech-${t.id}`}
+                position={[t.currentLocation!.lat, t.currentLocation!.lng]}
+                icon={techIcon}
+              >
+                <Popup>
+                  <div className="text-xs space-y-1.5 min-w-[170px]">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-bold text-sm">{t.name}</p>
+                      {isLive && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: '#dcfce7', color: '#16a34a', borderRadius: 9999, padding: '1px 6px', fontSize: 10, fontWeight: 600 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
+                          LIVE
+                        </span>
+                      )}
+                    </div>
+                    {t.phone && <p style={{ color: '#6b7280' }}>{t.phone}</p>}
+                    <p style={{ color: '#7c3aed', fontWeight: 500 }}>
+                      {t.isActive ? 'Active' : 'Inactive'} · ⭐ {t.rating.toFixed(1)}
+                    </p>
+                    {t.skills?.length > 0 && (
+                      <p style={{ color: '#6b7280' }}>{t.skills.join(', ')}</p>
+                    )}
+                    <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 6, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {t.speedKmh !== undefined && (
+                        <span style={{ color: '#374151' }}>🚗 {t.speedKmh.toFixed(0)} km/h</span>
+                      )}
+                      {t.headingDeg !== undefined && (
+                        <span style={{ color: '#374151' }}>🧭 {t.headingDeg.toFixed(0)}°</span>
+                      )}
+                      {t.batteryPct !== undefined && (
+                        <span style={{ color: t.batteryPct < 20 ? '#dc2626' : '#374151' }}>
+                          🔋 {t.batteryPct}%
+                        </span>
+                      )}
+                    </div>
+                    {ageLabel && (
+                      <p style={{ color: '#9ca3af', fontSize: 10 }}>Updated {ageLabel}</p>
+                    )}
+                    <VanInventorySummary technicianId={t.id} />
+                  </div>
+                </Popup>
+              </Marker>
+            )
+          })}
 
           {assignedWithGPS.map(({ job, coords }) => {
             const assignment = assignmentByJobId[job.id]

@@ -108,26 +108,33 @@ model Notification {
   @@index([scheduledAt])
 }
 
-// ── MessageThread — two-way conversation between company staff and a customer ─
+// ── MessageThread — two-way conversation between company staff and a customer,
+//    or between staff members (tech↔admin, tech↔dispatcher, etc.)
+//    When customerId is set → customer thread. Otherwise → staff/internal thread.
 
 model MessageThread {
-  id              String       @id @default(auto()) @map("_id") @db.ObjectId
-  companyId       String
-  customerId      String
-  customerName    String
-  customerPhone   String?
-  customerEmail   String?
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  companyId        String
+  // Customer thread fields (optional — absent for staff-to-staff threads)
+  customerId       String?
+  customerName     String?
+  customerPhone    String?
+  customerEmail    String?
+  // Staff/internal thread fields
+  participantIds   String[]     @default([]) // userId list for staff threads
+  participantNames String[]     @default([]) // display names (parallel to ids)
+  subject          String? // thread title for staff threads
   // Job context (optional)
-  jobId           String?
+  jobId            String?
   // Thread state
-  status          ThreadStatus @default(ACTIVE)
-  unreadCount     Int          @default(0) // unread by staff
-  lastMessageAt   DateTime?
-  lastMessageBody String?
+  status           ThreadStatus @default(ACTIVE)
+  unreadCount      Int          @default(0) // unread by staff
+  lastMessageAt    DateTime?
+  lastMessageBody  String?
   // Messages embedded as array (MongoDB document model)
-  messages        Message[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  messages         Message[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   @@index([companyId, customerId])
   @@index([companyId, status])

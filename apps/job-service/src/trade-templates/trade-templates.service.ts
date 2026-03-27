@@ -86,6 +86,7 @@ export class TradeTemplatesService {
       name: string;
       description?: string;
       estimatedDurationMins?: number;
+      requiredParts?: Array<{ inventoryItemId: string; name: string; qty: number }>;
       tasks?: Array<{
         taskName: string;
         description?: string;
@@ -117,6 +118,7 @@ export class TradeTemplatesService {
       description: string;
       estimatedDurationMins: number;
       isActive: boolean;
+      requiredParts: Array<{ inventoryItemId: string; name: string; qty: number }>;
     }>,
   ) {
     await this.findTemplateById(companyId, id);

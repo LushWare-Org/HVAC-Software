@@ -53,6 +53,7 @@ model JobTemplate {
   estimatedDurationMins Int      @default(60)
   version               Int      @default(1)
   isActive              Boolean  @default(true)
+  requiredParts         Json?            // [{inventoryItemId, name, qty}] — parts needed for this job type
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -337,15 +338,17 @@ enum WorkOrderStatus {
 
 // Tracks completion of each checklist task per work order
 model WorkOrderTaskCompletion {
-  id           String          @id @default(uuid())
-  workOrderId  String
-  workOrder    WorkOrder       @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  templateTaskId String        // ref to job_template_tasks.id
-  taskName     String          // denormalised for record-keeping
-  isCompleted  Boolean         @default(false)
-  photoUrl     String?         // S3 key of required photo
-  notes        String?
-  completedAt  DateTime?
+  id             String    @id @default(uuid())
+  workOrderId    String
+  workOrder      WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  templateTaskId String?   // null for ad-hoc tasks added by admins
+  isAdHoc        Boolean   @default(false)
+  taskName       String    // denormalised for record-keeping
+  isRequired     Boolean   @default(false)
+  isCompleted    Boolean   @default(false)
+  photoUrl       String?
+  notes          String?
+  completedAt    DateTime?
 
   @@index([workOrderId])
   @@map("work_order_task_completions")

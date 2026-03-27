@@ -115,7 +115,15 @@ export class CustomersService {
   }
 
   async remove(companyId: string, id: string) {
-    await this.findOne(companyId, id);
+    const customer = await this.findOne(companyId, id);
+
+    // Deactivate linked auth account if this was a portal-registered customer
+    if (customer.auth0UserId) {
+      await this.prisma.companyUser.updateMany({
+        where: { id: customer.auth0UserId, companyId },
+        data: { isActive: false },
+      });
+    }
 
     // Soft delete — preserve history
     return this.prisma.customer.update({
@@ -167,5 +175,66 @@ export class CustomersService {
   async updateMe(companyId: string, userId: string, dto: Partial<{ firstName: string; lastName: string; email: string; phone: string; mobile: string; address: string; city: string; state: string; zipCode: string; notes: string }>) {
     const customer = await this.findMe(companyId, userId);
     return this.prisma.customer.update({ where: { id: customer.id }, data: dto });
+  }
+
+  // ── Equipment CRUD ────────────────────────────────────────────────────────────
+
+  async getEquipment(companyId: string, customerId: string) {
+    await this.findOne(companyId, customerId); // verify customer belongs to company
+    return this.prisma.equipment.findMany({
+      where: { customerId, companyId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createEquipmentItem(
+    companyId: string,
+    customerId: string,
+    dto: { type: string; brand?: string; model?: string; serialNo?: string; installDate?: string; warrantyEnd?: string; notes?: string },
+  ) {
+    await this.findOne(companyId, customerId);
+    return this.prisma.equipment.create({
+      data: {
+        companyId,
+        customerId,
+        type: dto.type,
+        brand: dto.brand,
+        model: dto.model,
+        serialNo: dto.serialNo,
+        installDate: dto.installDate ? new Date(dto.installDate) : undefined,
+        warrantyEnd: dto.warrantyEnd ? new Date(dto.warrantyEnd) : undefined,
+        notes: dto.notes,
+      },
+    });
+  }
+
+  async updateEquipmentItem(
+    companyId: string,
+    customerId: string,
+    eqId: string,
+    dto: { type?: string; brand?: string; model?: string; serialNo?: string; installDate?: string; warrantyEnd?: string; notes?: string },
+  ) {
+    await this.findOne(companyId, customerId);
+    const eq = await this.prisma.equipment.findFirst({ where: { id: eqId, customerId, companyId } });
+    if (!eq) throw new NotFoundException(`Equipment ${eqId} not found`);
+    return this.prisma.equipment.update({
+      where: { id: eqId },
+      data: {
+        ...(dto.type !== undefined && { type: dto.type }),
+        ...(dto.brand !== undefined && { brand: dto.brand }),
+        ...(dto.model !== undefined && { model: dto.model }),
+        ...(dto.serialNo !== undefined && { serialNo: dto.serialNo }),
+        ...(dto.installDate !== undefined && { installDate: dto.installDate ? new Date(dto.installDate) : null }),
+        ...(dto.warrantyEnd !== undefined && { warrantyEnd: dto.warrantyEnd ? new Date(dto.warrantyEnd) : null }),
+        ...(dto.notes !== undefined && { notes: dto.notes }),
+      },
+    });
+  }
+
+  async deleteEquipmentItem(companyId: string, customerId: string, eqId: string) {
+    await this.findOne(companyId, customerId);
+    const eq = await this.prisma.equipment.findFirst({ where: { id: eqId, customerId, companyId } });
+    if (!eq) throw new NotFoundException(`Equipment ${eqId} not found`);
+    return this.prisma.equipment.delete({ where: { id: eqId } });
   }
 }

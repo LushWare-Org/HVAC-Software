@@ -10,8 +10,17 @@ export function useWorkOrdersByJob(jobId: string) {
   return useQuery({
     queryKey: queryKeys.workOrders(jobId),
     queryFn: async () => {
-      const res = await api.get<WorkOrder[]>(`/jobs/work-orders/by-job/${jobId}`)
-      return res.data
+      const res = await api.get<any[]>(`/jobs/work-orders/by-job/${jobId}`)
+      // Normalize backend field names to frontend types:
+      // taskCompletions → tasks, lineTotal → total
+      return res.data.map((wo: any) => ({
+        ...wo,
+        tasks: wo.taskCompletions ?? wo.tasks ?? [],
+        lineItems: (wo.lineItems ?? []).map((li: any) => ({
+          ...li,
+          total: li.lineTotal ?? li.total ?? 0,
+        })),
+      })) as WorkOrder[]
     },
     enabled: !!jobId,
   })
@@ -24,8 +33,16 @@ export function useWorkOrderDetail(workOrderId: string) {
   return useQuery({
     queryKey: queryKeys.workOrderDetail(workOrderId),
     queryFn: async () => {
-      const res = await api.get<WorkOrder>(`/jobs/work-orders/${workOrderId}`)
-      return res.data
+      const res = await api.get<any>(`/jobs/work-orders/${workOrderId}`)
+      const wo = res.data
+      return {
+        ...wo,
+        tasks: wo.taskCompletions ?? wo.tasks ?? [],
+        lineItems: (wo.lineItems ?? []).map((li: any) => ({
+          ...li,
+          total: li.lineTotal ?? li.total ?? 0,
+        })),
+      } as WorkOrder
     },
     enabled: !!workOrderId,
   })

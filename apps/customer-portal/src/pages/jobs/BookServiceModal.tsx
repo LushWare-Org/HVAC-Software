@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import { X, Wrench, Calendar, Plus, CheckCircle, MapPin } from 'lucide-react'
-import { useBookService, useSubmitJobRequest } from '../../hooks/useCustomerPortal'
+import { useBookService, useSubmitJobRequest, useCustomerProfile } from '../../hooks/useCustomerPortal'
 import MapPicker from '../../components/MapPicker'
 
 interface BookServiceModalProps {
@@ -30,6 +30,8 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
   const [submitted, setSubmitted] = useState(false)
   const { mutateAsync: bookService, isPending } = useBookService()
   const { mutateAsync: submitJobRequest, isPending: isSubmittingJob } = useSubmitJobRequest()
+  const { data: customerProfile } = useCustomerProfile()
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>('')
 
   const [formData, setFormData] = useState({
     serviceType: 'Maintenance',
@@ -57,8 +59,14 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
   }
 
   const handleSubmit = async () => {
+    // Use local time parsing so the customer's timezone is correctly applied
     const preferredDate = formData.preferredDate
-      ? `${formData.preferredDate}T${formData.preferredTime}:00.000Z`
+      ? new Date(`${formData.preferredDate}T${formData.preferredTime}:00`).toISOString()
+      : ''
+
+    const selectedEquipment = customerProfile?.equipment?.find(e => e.id === selectedEquipmentId)
+    const equipmentNote = selectedEquipment
+      ? `Equipment: ${selectedEquipment.brand ?? ''} ${selectedEquipment.type} ${selectedEquipment.model ?? ''}`.trim()
       : ''
 
     const requestTitle = `${formData.serviceType}${formData.title ? ` - ${formData.title}` : ''}`
@@ -67,7 +75,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
       serviceType: `${formData.serviceType}${formData.title ? ` - ${formData.title}` : ''}`,
       description: formData.description,
       preferredDate,
-      notes: formData.notes,
+      notes: [formData.notes, equipmentNote].filter(Boolean).join('\n'),
       urgency: formData.urgency,
       serviceAddress: formData.serviceAddress,
       serviceLatitude: formData.serviceLatitude,
@@ -83,6 +91,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
       priority: formData.urgency === 'EMERGENCY' ? 'EMERGENCY' : formData.urgency === 'HIGH' ? 'HIGH' : 'NORMAL',
       notes: [
         formData.notes,
+        equipmentNote,
         `Requested via customer portal`,
       ].filter(Boolean).join('\n'),
       scheduledStart: preferredDate || undefined,
@@ -244,11 +253,28 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
-                        rows={4}
+                        rows={3}
                         placeholder="Please describe the problem in detail"
                         style={{ ...inputStyle, resize: 'none', paddingTop: 10, lineHeight: 1.55 }}
                       />
                     </BF>
+                    {customerProfile?.equipment && customerProfile.equipment.length > 0 && (
+                      <BF label="Related Equipment (optional)" style={{ gridColumn: 'span 2' }}>
+                        <select
+                          value={selectedEquipmentId}
+                          onChange={e => setSelectedEquipmentId(e.target.value)}
+                          style={inputStyle}
+                        >
+                          <option value="">— None / Not applicable —</option>
+                          {customerProfile.equipment.map(eq => (
+                            <option key={eq.id} value={eq.id}>
+                              {[eq.brand, eq.type, eq.model].filter(Boolean).join(' ')}
+                              {eq.serialNo ? ` (S/N: ${eq.serialNo})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </BF>
+                    )}
                   </div>
                 </div>
               )}

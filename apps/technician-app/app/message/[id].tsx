@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View,
   Text,
@@ -11,21 +11,61 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius, Shadow } from '@/constants/theme'
+import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme'
 import { useThreadDetail, useSendMessage, useMarkThreadRead } from '@/hooks/useMessages'
+import { useSocket } from '@/hooks/useSocket'
+import { useAuth } from '@/contexts/AuthContext'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { formatTime, formatDate, getInitials } from '@/utils/format'
-import type { ThreadMessage } from '@/types/api'
+import { formatTime, getInitials } from '@/utils/format'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/queryClient'
+import type { ThreadMessage, MessageThread } from '@/types/api'
 
 export default function MessageDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
+  const { user } = useAuth()
   const [messageText, setMessageText] = useState('')
   const flatListRef = useRef<FlatList>(null)
+  const qc = useQueryClient()
 
-  const { data: thread, isLoading } = useThreadDetail(id!)
-  const sendMessage = useSendMessage()
+  const { data: thread, isLoading } = useThreadDetail(id ?? '')
+  const sendMessageMutation = useSendMessage()
   const markRead = useMarkThreadRead()
+
+  // WebSocket
+  const { isConnected, joinThread, leaveThread, onNewMessage, sendTyping } = useSocket()
+
+  // Join thread room on mount
+  useEffect(() => {
+    if (id && isConnected) {
+      joinThread(id)
+      return () => leaveThread(id)
+    }
+  }, [id, isConnected])
+
+  // Listen for new messages via WebSocket and update cache
+  useEffect(() => {
+    if (!id) return
+    const unsub = onNewMessage((data) => {
+      if (data.threadId !== id) return
+      // Only add if message isn't from us (avoids duplicate from optimistic update)
+      qc.setQueryData<MessageThread>(queryKeys.threadDetail(id), (old) => {
+        if (!old) return old
+        const existing = old.messages ?? []
+        // Skip if we already have this message (optimistic or duplicate)
+        if (existing.some((m) => m.id === data.message.id)) return old
+        // Also skip temp messages that match the same body (our optimistic msg)
+        return {
+          ...old,
+          messages: [...existing, data.message],
+          lastMessageBody: data.message.body,
+          lastMessageAt: data.message.createdAt,
+        }
+      })
+    })
+    return unsub
+  }, [id, onNewMessage])
 
   // Mark thread as read on mount
   useEffect(() => {
@@ -34,38 +74,56 @@ export default function MessageDetailScreen() {
     }
   }, [id, thread?.unreadCount])
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!messageText.trim() || !id) return
     const text = messageText.trim()
     setMessageText('')
+
     try {
-      await sendMessage.mutateAsync({ threadId: id, body: text })
+      await sendMessageMutation.mutateAsync({ threadId: id, body: text })
     } catch {
       setMessageText(text) // Restore on failure
     }
-  }
+  }, [messageText, id])
+
+  // Determine display name for the thread
+  const isStaffThread = !thread?.customerId && (thread?.participantIds?.length ?? 0) > 0
+  const threadDisplayName = isStaffThread
+    ? thread?.subject ??
+      thread?.participantNames?.filter((n) => n !== user?.name).join(', ') ??
+      'Team Chat'
+    : thread?.customerName ?? 'Conversation'
 
   const messages = thread?.messages ?? []
 
   const renderMessage = ({ item }: { item: ThreadMessage }) => {
-    const isOutbound = item.direction === 'OUTBOUND'
+    // In staff threads, check senderId; in customer threads, check direction
+    const isMine = isStaffThread
+      ? item.senderId === user?.id
+      : item.direction === 'OUTBOUND'
 
     return (
-      <View style={[styles.msgRow, isOutbound ? styles.msgRowRight : styles.msgRowLeft]}>
-        {!isOutbound && (
+      <View style={[styles.msgRow, isMine ? styles.msgRowRight : styles.msgRowLeft]}>
+        {!isMine && (
           <View style={styles.msgAvatar}>
-            <Text style={styles.msgAvatarText}>{getInitials(thread?.customerName)}</Text>
+            <Text style={styles.msgAvatarText}>
+              {getInitials(item.senderName ?? threadDisplayName)}
+            </Text>
           </View>
         )}
-        <View style={[styles.bubble, isOutbound ? styles.bubbleOut : styles.bubbleIn]}>
-          <Text style={[styles.bubbleText, isOutbound && styles.bubbleTextOut]}>
+        <View style={[styles.bubble, isMine ? styles.bubbleOut : styles.bubbleIn]}>
+          {/* Show sender name in group/staff threads */}
+          {!isMine && isStaffThread && item.senderName && (
+            <Text style={styles.senderLabel}>{item.senderName}</Text>
+          )}
+          <Text style={[styles.bubbleText, isMine && styles.bubbleTextOut]}>
             {item.body}
           </Text>
-          <Text style={[styles.bubbleTime, isOutbound && styles.bubbleTimeOut]}>
+          <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeOut]}>
             {formatTime(item.createdAt)}
-            {item.status === 'DELIVERED' && ' ✓✓'}
-            {item.status === 'READ' && ' ✓✓'}
-            {item.status === 'FAILED' && ' ✕'}
+            {item.status === 'DELIVERED' && ' \u2713\u2713'}
+            {item.status === 'READ' && ' \u2713\u2713'}
+            {item.status === 'FAILED' && ' \u2715'}
           </Text>
         </View>
       </View>
@@ -81,17 +139,17 @@ export default function MessageDetailScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>‹</Text>
+          <Text style={styles.backText}>{'\u2039'}</Text>
         </TouchableOpacity>
-        <View style={styles.headerAvatar}>
-          <Text style={styles.headerAvatarText}>{getInitials(thread?.customerName)}</Text>
+        <View style={[styles.headerAvatar, isStaffThread && styles.headerAvatarStaff]}>
+          <Text style={styles.headerAvatarText}>{getInitials(threadDisplayName)}</Text>
         </View>
         <View style={styles.headerInfo}>
           <Text style={styles.headerName} numberOfLines={1}>
-            {thread?.customerName ?? 'Conversation'}
+            {threadDisplayName}
           </Text>
           <Text style={styles.headerStatus}>
-            {thread?.status === 'ACTIVE' ? '● Active' : thread?.status}
+            {isConnected ? '\u25CF Connected' : '\u25CB Connecting...'}
           </Text>
         </View>
       </View>
@@ -122,21 +180,25 @@ export default function MessageDetailScreen() {
           <TextInput
             style={styles.messageInput}
             value={messageText}
-            onChangeText={setMessageText}
+            onChangeText={(text) => {
+              setMessageText(text)
+              if (id) sendTyping(id, text.length > 0)
+            }}
             placeholder="Type a message..."
             placeholderTextColor={Colors.textMuted}
             multiline
             maxLength={2000}
             returnKeyType="send"
             blurOnSubmit={false}
+            onSubmitEditing={handleSend}
           />
           <TouchableOpacity
             style={[styles.sendBtn, !messageText.trim() && styles.sendBtnDisabled]}
             onPress={handleSend}
-            disabled={!messageText.trim() || sendMessage.isPending}
+            disabled={!messageText.trim() || sendMessageMutation.isPending}
           >
             <Text style={styles.sendBtnText}>
-              {sendMessage.isPending ? '⏳' : '➤'}
+              {sendMessageMutation.isPending ? '\u23F3' : '\u27A4'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -155,7 +217,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.surface,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
@@ -169,6 +231,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
+  },
+  headerAvatarStaff: {
+    backgroundColor: '#7C3AED', // Purple for staff threads
   },
   headerAvatarText: { color: Colors.white, fontSize: FontSize.sm, fontWeight: FontWeight.bold },
   headerInfo: { flex: 1 },
@@ -216,6 +281,12 @@ const styles = StyleSheet.create({
   bubbleOut: {
     backgroundColor: Colors.primary,
     borderBottomRightRadius: 4,
+  },
+  senderLabel: {
+    fontSize: 11,
+    fontWeight: FontWeight.semibold,
+    color: Colors.primary,
+    marginBottom: 2,
   },
   bubbleText: {
     fontSize: FontSize.base,

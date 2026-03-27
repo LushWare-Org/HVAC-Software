@@ -6,18 +6,17 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  SectionList,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius, Shadow } from '@/constants/theme'
+import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme'
 import { useThreads, useCreateThread } from '@/hooks/useMessages'
 import { useMyJobs } from '@/hooks/useJobs'
 import { useAuth } from '@/contexts/AuthContext'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { formatRelative, getInitials, truncate } from '@/utils/format'
-import type { MessageThread, Job } from '@/types/api'
+import type { MessageThread } from '@/types/api'
 
 export default function MessagesScreen() {
   const router = useRouter()
@@ -38,20 +37,20 @@ export default function MessagesScreen() {
     return ids
   }, [myJobs])
 
-  // Filter threads: only show threads for MY customers (from assigned jobs)
-  // OR threads where I'm a participant
+  // Filter threads: show threads for MY customers, staff threads I'm in, or all customer threads (as technician)
   const myThreads = useMemo(() => {
     return threads.filter((t) => {
-      // Thread for a customer whose job I'm assigned to
+      // Customer thread for a customer whose job I'm assigned to
       if (t.customerId && myCustomerIds.has(t.customerId)) return true
-      // Thread I participated in (check messages)
+      // Staff thread I participate in
+      if (t.participantIds?.includes(user?.id ?? '')) return true
       return false
     })
-  }, [threads, myCustomerIds])
+  }, [threads, myCustomerIds, user?.id])
 
-  // Customers I have jobs with but NO thread yet — so tech can start a conversation
+  // Customers I have jobs with but NO thread yet
   const customersWithoutThread = useMemo(() => {
-    const threadCustomerIds = new Set(myThreads.map((t) => t.customerId))
+    const threadCustomerIds = new Set(myThreads.map((t) => t.customerId).filter(Boolean))
     const seen = new Set<string>()
     const result: { customerId: string; customerName: string; jobTitle: string }[] = []
     myJobs.forEach((j) => {
@@ -79,16 +78,31 @@ export default function MessagesScreen() {
       const thread = await createThread.mutateAsync({ customerId, customerName })
       router.push(`/message/${thread.id}`)
     } catch (err: any) {
-      // If thread already exists, comms service returns it
       if (err?.response?.data?.id) {
         router.push(`/message/${err.response.data.id}`)
       }
     }
   }
 
+  const getThreadDisplayName = (t: MessageThread): string => {
+    if (t.customerId && t.customerName) return t.customerName
+    if (t.subject) return t.subject
+    if (t.participantNames?.length) {
+      return t.participantNames.filter((n) => n !== user?.name).join(', ') || 'Team Chat'
+    }
+    return 'Conversation'
+  }
+
+  const isStaffThread = (t: MessageThread): boolean => {
+    return !t.customerId && (t.participantIds?.length ?? 0) > 0
+  }
+
   const renderThread = ({ item }: { item: MessageThread }) => {
-    // Find what job this thread relates to
-    const relatedJob = myJobs.find((j) => j.customerId === item.customerId)
+    const relatedJob = item.customerId
+      ? myJobs.find((j) => j.customerId === item.customerId)
+      : undefined
+    const displayName = getThreadDisplayName(item)
+    const staff = isStaffThread(item)
 
     return (
       <TouchableOpacity
@@ -96,27 +110,36 @@ export default function MessagesScreen() {
         onPress={() => router.push(`/message/${item.id}`)}
         activeOpacity={0.7}
       >
-        {/* Avatar */}
-        <View style={[styles.avatar, (item.unreadCount ?? 0) > 0 && styles.avatarUnread]}>
-          <Text style={styles.avatarText}>{getInitials(item.customerName)}</Text>
+        <View
+          style={[
+            styles.avatar,
+            (item.unreadCount ?? 0) > 0 && styles.avatarUnread,
+            staff && styles.avatarStaff,
+          ]}
+        >
+          <Text style={styles.avatarText}>{getInitials(displayName)}</Text>
         </View>
 
-        {/* Content */}
         <View style={styles.threadContent}>
           <View style={styles.threadTopRow}>
             <Text
               style={[styles.threadName, (item.unreadCount ?? 0) > 0 && styles.threadNameUnread]}
               numberOfLines={1}
             >
-              {item.customerName ?? 'Unknown'}
+              {displayName}
             </Text>
             <Text style={styles.threadTime}>
               {formatRelative(item.lastMessageAt ?? item.createdAt)}
             </Text>
           </View>
+          {staff && (
+            <Text style={[styles.jobRef, { color: '#7C3AED' }]} numberOfLines={1}>
+              Team Chat
+            </Text>
+          )}
           {relatedJob && (
             <Text style={styles.jobRef} numberOfLines={1}>
-              📋 {relatedJob.title}
+              {'\uD83D\uDCCB'} {relatedJob.title}
             </Text>
           )}
           <View style={styles.threadBottomRow}>
@@ -138,7 +161,7 @@ export default function MessagesScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Messages</Text>
-        <Text style={styles.headerSubtitle}>Conversations with your assigned customers</Text>
+        <Text style={styles.headerSubtitle}>Customer & team conversations</Text>
       </View>
 
       {isLoading && !threadsData ? (
@@ -167,9 +190,13 @@ export default function MessagesScreen() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.startChatName}>{c.customerName}</Text>
-                      <Text style={styles.startChatJob} numberOfLines={1}>📋 {c.jobTitle}</Text>
+                      <Text style={styles.startChatJob} numberOfLines={1}>
+                        {'\uD83D\uDCCB'} {c.jobTitle}
+                      </Text>
                     </View>
-                    <Text style={styles.startChatBtn}>💬 Chat</Text>
+                    <Text style={styles.startChatBtn}>
+                      {'\uD83D\uDCAC'} Chat
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -178,9 +205,9 @@ export default function MessagesScreen() {
           ListEmptyComponent={
             customersWithoutThread.length === 0 ? (
               <EmptyState
-                icon="💬"
+                icon={'\uD83D\uDCAC'}
                 title="No messages yet"
-                subtitle="When you're assigned jobs, you can message customers directly from here."
+                subtitle="When you're assigned jobs, you can message customers and team members here."
               />
             ) : null
           }
@@ -191,10 +218,7 @@ export default function MessagesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
+  safe: { flex: 1, backgroundColor: Colors.background },
   header: {
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
@@ -210,9 +234,7 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: 2,
   },
-  listContent: {
-    paddingBottom: 30,
-  },
+  listContent: { paddingBottom: 30 },
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.bold,
@@ -290,17 +312,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: Spacing.md,
   },
-  avatarUnread: {
-    backgroundColor: Colors.primary,
-  },
+  avatarUnread: { backgroundColor: Colors.primary },
+  avatarStaff: { backgroundColor: '#7C3AED' },
   avatarText: {
     color: Colors.white,
     fontSize: FontSize.base,
     fontWeight: FontWeight.semibold,
   },
-  threadContent: {
-    flex: 1,
-  },
+  threadContent: { flex: 1 },
   threadTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -313,9 +332,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     flex: 1,
   },
-  threadNameUnread: {
-    fontWeight: FontWeight.bold,
-  },
+  threadNameUnread: { fontWeight: FontWeight.bold },
   threadTime: {
     fontSize: FontSize.xs,
     color: Colors.textMuted,

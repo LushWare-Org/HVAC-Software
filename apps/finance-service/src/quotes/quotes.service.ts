@@ -54,9 +54,9 @@ export class QuotesService {
 
   async findAll(
     companyId: string,
-    params: { status?: QuoteStatus; customerId?: string; page?: number; limit?: number },
+    params: { status?: QuoteStatus; customerId?: string; jobId?: string; page?: number; limit?: number },
   ) {
-    const { status, customerId } = params;
+    const { status, customerId, jobId } = params;
     const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
     const limit = Number.isFinite(Number(params.limit)) ? Math.min(100, Math.max(1, Math.trunc(Number(params.limit)))) : 20;
     const skip = (page - 1) * limit;
@@ -64,6 +64,7 @@ export class QuotesService {
       companyId,
       ...(status ? { status } : {}),
       ...(customerId ? { customerId } : {}),
+      ...(jobId ? { jobId } : {}),
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.quote.findMany({

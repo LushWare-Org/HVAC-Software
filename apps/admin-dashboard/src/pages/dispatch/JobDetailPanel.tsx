@@ -298,8 +298,8 @@ export default function JobDetailPanel({
                                 manualAssign.mutate({
                                   jobId: job.id,
                                   technicianId: e.target.value,
-                                  jobLatitude: job.serviceLatitude ?? 0,
-                                  jobLongitude: job.serviceLongitude ?? 0,
+                                  jobLatitude: Number(job.serviceLatitude ?? 0),
+                                  jobLongitude: Number(job.serviceLongitude ?? 0),
                                 }, {
                                   onSuccess: () => {
                                     setShowReassign(false)
@@ -342,8 +342,8 @@ export default function JobDetailPanel({
                           manualAssign.mutate({
                             jobId: job.id,
                             technicianId: e.target.value,
-                            jobLatitude: job.serviceLatitude ?? 0,
-                            jobLongitude: job.serviceLongitude ?? 0,
+                            jobLatitude: Number(job.serviceLatitude ?? 0),
+                            jobLongitude: Number(job.serviceLongitude ?? 0),
                           })
                         }
                       }}

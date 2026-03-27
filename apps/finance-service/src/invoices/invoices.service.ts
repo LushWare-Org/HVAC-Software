@@ -51,11 +51,12 @@ export class InvoicesService {
     params: {
       status?: InvoiceStatus;
       customerId?: string;
+      jobId?: string;
       page?: number;
       limit?: number;
     },
   ) {
-    const { status, customerId } = params;
+    const { status, customerId, jobId } = params;
     const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
     const limit = Number.isFinite(Number(params.limit)) ? Math.min(100, Math.max(1, Math.trunc(Number(params.limit)))) : 20;
     const skip = (page - 1) * limit;
@@ -63,6 +64,7 @@ export class InvoicesService {
       companyId,
       ...(status ? { status } : {}),
       ...(customerId ? { customerId } : {}),
+      ...(jobId ? { jobId } : {}),
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.invoice.findMany({

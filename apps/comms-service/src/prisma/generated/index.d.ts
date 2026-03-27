@@ -2507,6 +2507,7 @@ export namespace Prisma {
     customerName: string | null
     customerPhone: string | null
     customerEmail: string | null
+    subject: string | null
     jobId: string | null
     status: $Enums.ThreadStatus | null
     unreadCount: number | null
@@ -2523,6 +2524,7 @@ export namespace Prisma {
     customerName: string | null
     customerPhone: string | null
     customerEmail: string | null
+    subject: string | null
     jobId: string | null
     status: $Enums.ThreadStatus | null
     unreadCount: number | null
@@ -2539,6 +2541,9 @@ export namespace Prisma {
     customerName: number
     customerPhone: number
     customerEmail: number
+    participantIds: number
+    participantNames: number
+    subject: number
     jobId: number
     status: number
     unreadCount: number
@@ -2565,6 +2570,7 @@ export namespace Prisma {
     customerName?: true
     customerPhone?: true
     customerEmail?: true
+    subject?: true
     jobId?: true
     status?: true
     unreadCount?: true
@@ -2581,6 +2587,7 @@ export namespace Prisma {
     customerName?: true
     customerPhone?: true
     customerEmail?: true
+    subject?: true
     jobId?: true
     status?: true
     unreadCount?: true
@@ -2597,6 +2604,9 @@ export namespace Prisma {
     customerName?: true
     customerPhone?: true
     customerEmail?: true
+    participantIds?: true
+    participantNames?: true
+    subject?: true
     jobId?: true
     status?: true
     unreadCount?: true
@@ -2696,10 +2706,13 @@ export namespace Prisma {
   export type MessageThreadGroupByOutputType = {
     id: string
     companyId: string
-    customerId: string
-    customerName: string
+    customerId: string | null
+    customerName: string | null
     customerPhone: string | null
     customerEmail: string | null
+    participantIds: string[]
+    participantNames: string[]
+    subject: string | null
     jobId: string | null
     status: $Enums.ThreadStatus
     unreadCount: number
@@ -2735,6 +2748,9 @@ export namespace Prisma {
     customerName?: boolean
     customerPhone?: boolean
     customerEmail?: boolean
+    participantIds?: boolean
+    participantNames?: boolean
+    subject?: boolean
     jobId?: boolean
     status?: boolean
     unreadCount?: boolean
@@ -2753,6 +2769,9 @@ export namespace Prisma {
     customerName?: boolean
     customerPhone?: boolean
     customerEmail?: boolean
+    participantIds?: boolean
+    participantNames?: boolean
+    subject?: boolean
     jobId?: boolean
     status?: boolean
     unreadCount?: boolean
@@ -2770,10 +2789,13 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       companyId: string
-      customerId: string
-      customerName: string
+      customerId: string | null
+      customerName: string | null
       customerPhone: string | null
       customerEmail: string | null
+      participantIds: string[]
+      participantNames: string[]
+      subject: string | null
       jobId: string | null
       status: $Enums.ThreadStatus
       unreadCount: number
@@ -3181,6 +3203,9 @@ export namespace Prisma {
     readonly customerName: FieldRef<"MessageThread", 'String'>
     readonly customerPhone: FieldRef<"MessageThread", 'String'>
     readonly customerEmail: FieldRef<"MessageThread", 'String'>
+    readonly participantIds: FieldRef<"MessageThread", 'String[]'>
+    readonly participantNames: FieldRef<"MessageThread", 'String[]'>
+    readonly subject: FieldRef<"MessageThread", 'String'>
     readonly jobId: FieldRef<"MessageThread", 'String'>
     readonly status: FieldRef<"MessageThread", 'ThreadStatus'>
     readonly unreadCount: FieldRef<"MessageThread", 'Int'>
@@ -6502,6 +6527,9 @@ export namespace Prisma {
     customerName: 'customerName',
     customerPhone: 'customerPhone',
     customerEmail: 'customerEmail',
+    participantIds: 'participantIds',
+    participantNames: 'participantNames',
+    subject: 'subject',
     jobId: 'jobId',
     status: 'status',
     unreadCount: 'unreadCount',
@@ -6906,10 +6934,13 @@ export namespace Prisma {
     NOT?: MessageThreadWhereInput | MessageThreadWhereInput[]
     id?: StringFilter<"MessageThread"> | string
     companyId?: StringFilter<"MessageThread"> | string
-    customerId?: StringFilter<"MessageThread"> | string
-    customerName?: StringFilter<"MessageThread"> | string
+    customerId?: StringNullableFilter<"MessageThread"> | string | null
+    customerName?: StringNullableFilter<"MessageThread"> | string | null
     customerPhone?: StringNullableFilter<"MessageThread"> | string | null
     customerEmail?: StringNullableFilter<"MessageThread"> | string | null
+    participantIds?: StringNullableListFilter<"MessageThread">
+    participantNames?: StringNullableListFilter<"MessageThread">
+    subject?: StringNullableFilter<"MessageThread"> | string | null
     jobId?: StringNullableFilter<"MessageThread"> | string | null
     status?: EnumThreadStatusFilter<"MessageThread"> | $Enums.ThreadStatus
     unreadCount?: IntFilter<"MessageThread"> | number
@@ -6927,6 +6958,9 @@ export namespace Prisma {
     customerName?: SortOrder
     customerPhone?: SortOrder
     customerEmail?: SortOrder
+    participantIds?: SortOrder
+    participantNames?: SortOrder
+    subject?: SortOrder
     jobId?: SortOrder
     status?: SortOrder
     unreadCount?: SortOrder
@@ -6943,10 +6977,13 @@ export namespace Prisma {
     OR?: MessageThreadWhereInput[]
     NOT?: MessageThreadWhereInput | MessageThreadWhereInput[]
     companyId?: StringFilter<"MessageThread"> | string
-    customerId?: StringFilter<"MessageThread"> | string
-    customerName?: StringFilter<"MessageThread"> | string
+    customerId?: StringNullableFilter<"MessageThread"> | string | null
+    customerName?: StringNullableFilter<"MessageThread"> | string | null
     customerPhone?: StringNullableFilter<"MessageThread"> | string | null
     customerEmail?: StringNullableFilter<"MessageThread"> | string | null
+    participantIds?: StringNullableListFilter<"MessageThread">
+    participantNames?: StringNullableListFilter<"MessageThread">
+    subject?: StringNullableFilter<"MessageThread"> | string | null
     jobId?: StringNullableFilter<"MessageThread"> | string | null
     status?: EnumThreadStatusFilter<"MessageThread"> | $Enums.ThreadStatus
     unreadCount?: IntFilter<"MessageThread"> | number
@@ -6964,6 +7001,9 @@ export namespace Prisma {
     customerName?: SortOrder
     customerPhone?: SortOrder
     customerEmail?: SortOrder
+    participantIds?: SortOrder
+    participantNames?: SortOrder
+    subject?: SortOrder
     jobId?: SortOrder
     status?: SortOrder
     unreadCount?: SortOrder
@@ -6984,10 +7024,13 @@ export namespace Prisma {
     NOT?: MessageThreadScalarWhereWithAggregatesInput | MessageThreadScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"MessageThread"> | string
     companyId?: StringWithAggregatesFilter<"MessageThread"> | string
-    customerId?: StringWithAggregatesFilter<"MessageThread"> | string
-    customerName?: StringWithAggregatesFilter<"MessageThread"> | string
+    customerId?: StringNullableWithAggregatesFilter<"MessageThread"> | string | null
+    customerName?: StringNullableWithAggregatesFilter<"MessageThread"> | string | null
     customerPhone?: StringNullableWithAggregatesFilter<"MessageThread"> | string | null
     customerEmail?: StringNullableWithAggregatesFilter<"MessageThread"> | string | null
+    participantIds?: StringNullableListFilter<"MessageThread">
+    participantNames?: StringNullableListFilter<"MessageThread">
+    subject?: StringNullableWithAggregatesFilter<"MessageThread"> | string | null
     jobId?: StringNullableWithAggregatesFilter<"MessageThread"> | string | null
     status?: EnumThreadStatusWithAggregatesFilter<"MessageThread"> | $Enums.ThreadStatus
     unreadCount?: IntWithAggregatesFilter<"MessageThread"> | number
@@ -7466,10 +7509,13 @@ export namespace Prisma {
   export type MessageThreadCreateInput = {
     id?: string
     companyId: string
-    customerId: string
-    customerName: string
+    customerId?: string | null
+    customerName?: string | null
     customerPhone?: string | null
     customerEmail?: string | null
+    participantIds?: MessageThreadCreateparticipantIdsInput | string[]
+    participantNames?: MessageThreadCreateparticipantNamesInput | string[]
+    subject?: string | null
     jobId?: string | null
     status?: $Enums.ThreadStatus
     unreadCount?: number
@@ -7483,10 +7529,13 @@ export namespace Prisma {
   export type MessageThreadUncheckedCreateInput = {
     id?: string
     companyId: string
-    customerId: string
-    customerName: string
+    customerId?: string | null
+    customerName?: string | null
     customerPhone?: string | null
     customerEmail?: string | null
+    participantIds?: MessageThreadCreateparticipantIdsInput | string[]
+    participantNames?: MessageThreadCreateparticipantNamesInput | string[]
+    subject?: string | null
     jobId?: string | null
     status?: $Enums.ThreadStatus
     unreadCount?: number
@@ -7499,10 +7548,13 @@ export namespace Prisma {
 
   export type MessageThreadUpdateInput = {
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
-    customerName?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    participantIds?: MessageThreadUpdateparticipantIdsInput | string[]
+    participantNames?: MessageThreadUpdateparticipantNamesInput | string[]
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumThreadStatusFieldUpdateOperationsInput | $Enums.ThreadStatus
     unreadCount?: IntFieldUpdateOperationsInput | number
@@ -7515,10 +7567,13 @@ export namespace Prisma {
 
   export type MessageThreadUncheckedUpdateInput = {
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
-    customerName?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    participantIds?: MessageThreadUpdateparticipantIdsInput | string[]
+    participantNames?: MessageThreadUpdateparticipantNamesInput | string[]
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumThreadStatusFieldUpdateOperationsInput | $Enums.ThreadStatus
     unreadCount?: IntFieldUpdateOperationsInput | number
@@ -7532,10 +7587,13 @@ export namespace Prisma {
   export type MessageThreadCreateManyInput = {
     id?: string
     companyId: string
-    customerId: string
-    customerName: string
+    customerId?: string | null
+    customerName?: string | null
     customerPhone?: string | null
     customerEmail?: string | null
+    participantIds?: MessageThreadCreateparticipantIdsInput | string[]
+    participantNames?: MessageThreadCreateparticipantNamesInput | string[]
+    subject?: string | null
     jobId?: string | null
     status?: $Enums.ThreadStatus
     unreadCount?: number
@@ -7548,10 +7606,13 @@ export namespace Prisma {
 
   export type MessageThreadUpdateManyMutationInput = {
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
-    customerName?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    participantIds?: MessageThreadUpdateparticipantIdsInput | string[]
+    participantNames?: MessageThreadUpdateparticipantNamesInput | string[]
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumThreadStatusFieldUpdateOperationsInput | $Enums.ThreadStatus
     unreadCount?: IntFieldUpdateOperationsInput | number
@@ -7564,10 +7625,13 @@ export namespace Prisma {
 
   export type MessageThreadUncheckedUpdateManyInput = {
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
-    customerName?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    participantIds?: MessageThreadUpdateparticipantIdsInput | string[]
+    participantNames?: MessageThreadUpdateparticipantNamesInput | string[]
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumThreadStatusFieldUpdateOperationsInput | $Enums.ThreadStatus
     unreadCount?: IntFieldUpdateOperationsInput | number
@@ -8131,6 +8195,14 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
   export type EnumThreadStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ThreadStatus | EnumThreadStatusFieldRefInput<$PrismaModel>
     in?: $Enums.ThreadStatus[] | ListEnumThreadStatusFieldRefInput<$PrismaModel>
@@ -8184,6 +8256,9 @@ export namespace Prisma {
     customerName?: SortOrder
     customerPhone?: SortOrder
     customerEmail?: SortOrder
+    participantIds?: SortOrder
+    participantNames?: SortOrder
+    subject?: SortOrder
     jobId?: SortOrder
     status?: SortOrder
     unreadCount?: SortOrder
@@ -8204,6 +8279,7 @@ export namespace Prisma {
     customerName?: SortOrder
     customerPhone?: SortOrder
     customerEmail?: SortOrder
+    subject?: SortOrder
     jobId?: SortOrder
     status?: SortOrder
     unreadCount?: SortOrder
@@ -8220,6 +8296,7 @@ export namespace Prisma {
     customerName?: SortOrder
     customerPhone?: SortOrder
     customerEmail?: SortOrder
+    subject?: SortOrder
     jobId?: SortOrder
     status?: SortOrder
     unreadCount?: SortOrder
@@ -8264,14 +8341,6 @@ export namespace Prisma {
     in?: $Enums.TemplateType[] | ListEnumTemplateTypeFieldRefInput<$PrismaModel>
     notIn?: $Enums.TemplateType[] | ListEnumTemplateTypeFieldRefInput<$PrismaModel>
     not?: NestedEnumTemplateTypeFilter<$PrismaModel> | $Enums.TemplateType
-  }
-
-  export type StringNullableListFilter<$PrismaModel = never> = {
-    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    has?: string | StringFieldRefInput<$PrismaModel> | null
-    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
-    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
   }
 
   export type NotificationTemplateCountOrderByAggregateInput = {
@@ -8506,6 +8575,14 @@ export namespace Prisma {
     set?: Date | string
   }
 
+  export type MessageThreadCreateparticipantIdsInput = {
+    set: string[]
+  }
+
+  export type MessageThreadCreateparticipantNamesInput = {
+    set: string[]
+  }
+
   export type MessageListCreateEnvelopeInput = {
     set?: MessageCreateInput | MessageCreateInput[]
   }
@@ -8523,6 +8600,16 @@ export namespace Prisma {
     deliveredAt?: Date | string | null
     readAt?: Date | string | null
     createdAt: Date | string
+  }
+
+  export type MessageThreadUpdateparticipantIdsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type MessageThreadUpdateparticipantNamesInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type EnumThreadStatusFieldUpdateOperationsInput = {

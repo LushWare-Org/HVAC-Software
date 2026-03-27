@@ -49,16 +49,18 @@ export class QuotesController {
   @ApiOperation({ summary: 'List all quotes for this company' })
   @ApiQuery({ name: 'status', enum: QuoteStatus, required: false })
   @ApiQuery({ name: 'customerId', required: false })
+  @ApiQuery({ name: 'jobId', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('status') status?: QuoteStatus,
     @Query('customerId') customerId?: string,
+    @Query('jobId') jobId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    return this.quotesService.findAll(user.companyId, { status, customerId, page, limit });
+    return this.quotesService.findAll(user.companyId, { status, customerId, jobId, page, limit });
   }
 
   // ── Single ────────────────────────────────────────────────────────────────

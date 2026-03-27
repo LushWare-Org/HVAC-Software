@@ -37,6 +37,7 @@ import { useJobDetail, useUpdateJobStatus, useUpdateJob, useUpdateCustomFields }
 import { useWorkOrdersByJob, useCompleteTask, useAddLineItem, useRemoveLineItem, usePriceBook, useCheckIn, useCheckOut } from '@/hooks/useWorkOrders'
 import { useJobAssignments, useUpdateAssignmentStatus } from '@/hooks/useSchedule'
 import { useCustomerDetail } from '@/hooks/useCustomer'
+import { useLocations, useMyVanLocation, useVanStock, useReturnStock, toNumber } from '@/hooks/useInventory'
 
 import {
   formatDateTime,
@@ -56,13 +57,14 @@ import {
 } from '@/utils/jobHelpers'
 import type { Job, WorkOrder, LineItemCategory, TaskCompletion, CustomFieldDef, CustomFieldValue } from '@/types/api'
 
-type TabKey = 'overview' | 'checklist' | 'parts' | 'fields' | 'notes'
+type TabKey = 'overview' | 'checklist' | 'parts' | 'equipment' | 'stock' | 'notes'
 
 const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: 'overview', label: 'Overview', icon: '📋' },
   { key: 'checklist', label: 'Checklist', icon: '✅' },
   { key: 'parts', label: 'Parts', icon: '🔧' },
-  { key: 'fields', label: 'Fields', icon: '📝' },
+  { key: 'equipment', label: 'Equipment', icon: '⚙️' },
+  { key: 'stock', label: 'Stock', icon: '📦' },
   { key: 'notes', label: 'Notes', icon: '📒' },
 ]
 
@@ -206,20 +208,23 @@ export default function JobDetailScreen() {
       </View>
 
       {/* Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll}>
-        <View style={styles.tabRow}>
-          {TABS.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => setActiveTab(tab.key)}
-            >
-              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-                {tab.icon} {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tabScroll}
+        contentContainerStyle={styles.tabRow}
+      >
+        {TABS.map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+            onPress={() => setActiveTab(tab.key)}
+          >
+            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+              {tab.icon} {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
 
       {/* Content */}
@@ -237,8 +242,11 @@ export default function JobDetailScreen() {
         {activeTab === 'parts' && (
           <PartsTab workOrder={workOrder} />
         )}
-        {activeTab === 'fields' && (
-          <CustomFieldsTab job={job} />
+        {activeTab === 'equipment' && (
+          <EquipmentTab customer={customer} />
+        )}
+        {activeTab === 'stock' && (
+          <VanStockTab job={job} workOrder={workOrder} />
         )}
         {activeTab === 'notes' && (
           <NotesTab job={job} />
@@ -1012,6 +1020,481 @@ function NotesTab({ job }: { job: Job }) {
   )
 }
 
+// ===== EQUIPMENT TAB =====
+function EquipmentTab({ customer }: { customer: any }) {
+  if (!customer) {
+    return <EmptyState icon="⚙️" title="Loading customer…" subtitle="Customer data is being fetched." />
+  }
+
+  const equipment: any[] = customer.equipment ?? []
+
+  if (equipment.length === 0) {
+    return (
+      <EmptyState
+        icon="⚙️"
+        title="No equipment on record"
+        subtitle="This customer has no equipment registered. Equipment can be added from the admin dashboard."
+      />
+    )
+  }
+
+  const FIELD_LABELS: Record<string, string> = {
+    type: 'Type',
+    brand: 'Brand',
+    model: 'Model',
+    serialNo: 'Serial No.',
+    installDate: 'Install Date',
+    warrantyExpiry: 'Warranty',
+    location: 'Location',
+    notes: 'Notes',
+  }
+
+  return (
+    <View>
+      <Text style={eqStyles.header}>⚙️ Customer Equipment ({equipment.length})</Text>
+      {equipment.map((eq, idx) => (
+        <View key={eq.id ?? idx} style={eqStyles.card}>
+          <View style={eqStyles.cardHeader}>
+            <Text style={eqStyles.eqType}>{eq.type ?? 'Equipment'}</Text>
+            {eq.brand && <Text style={eqStyles.eqBrand}>{eq.brand}</Text>}
+          </View>
+
+          {(['model', 'serialNo', 'location'] as const).map((field) =>
+            eq[field] ? (
+              <View key={field} style={eqStyles.row}>
+                <Text style={eqStyles.label}>{FIELD_LABELS[field]}</Text>
+                <Text style={eqStyles.value}>{eq[field]}</Text>
+              </View>
+            ) : null,
+          )}
+
+          {eq.installDate && (
+            <View style={eqStyles.row}>
+              <Text style={eqStyles.label}>Install Date</Text>
+              <Text style={eqStyles.value}>
+                {new Date(eq.installDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              </Text>
+            </View>
+          )}
+
+          {eq.warrantyExpiry && (
+            <View style={eqStyles.row}>
+              <Text style={eqStyles.label}>Warranty</Text>
+              <Text style={[
+                eqStyles.value,
+                new Date(eq.warrantyExpiry) < new Date() ? eqStyles.expired : eqStyles.valid,
+              ]}>
+                {new Date(eq.warrantyExpiry).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                {new Date(eq.warrantyExpiry) < new Date() ? ' (Expired)' : ' (Active)'}
+              </Text>
+            </View>
+          )}
+
+          {eq.notes && (
+            <View style={eqStyles.notesBox}>
+              <Text style={eqStyles.notesText}>📝 {eq.notes}</Text>
+            </View>
+          )}
+        </View>
+      ))}
+    </View>
+  )
+}
+
+const eqStyles = StyleSheet.create({
+  header: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold as any,
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: Spacing.md,
+  },
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Shadow.sm,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  eqType: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.bold as any,
+    color: Colors.textPrimary,
+  },
+  eqBrand: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
+    fontWeight: FontWeight.semibold as any,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  label: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  value: {
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.semibold as any,
+    flex: 1,
+    textAlign: 'right',
+  },
+  expired: { color: '#dc2626' },
+  valid: { color: '#16a34a' },
+  notesBox: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  notesText: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+  },
+})
+
+// ===== VAN STOCK TAB =====
+function VanStockTab({ job, workOrder }: { job: Job; workOrder?: WorkOrder }) {
+  const vanLocation = useMyVanLocation()
+  const { data: stockData, isLoading } = useVanStock(vanLocation?.id)
+  const { data: allLocations } = useLocations()
+  const updateJob = useUpdateJob()
+  const returnStock = useReturnStock()
+  const stockItems = stockData?.data ?? []
+  const [expandedReturnId, setExpandedReturnId] = useState<string | null>(null)
+  const [returnQty, setReturnQty] = useState<Record<string, number>>({})
+
+  // Find warehouse to return to
+  const warehouse = (allLocations ?? []).find((l: any) => l.type === 'WAREHOUSE')
+
+  const stocksCollected = (job.tags ?? []).includes('stocks-collected')
+
+  // Match work order line items (parts) against van stock
+  const requiredParts = (workOrder?.lineItems ?? []).filter(li => li.category === 'PART' || li.category === 'MATERIAL')
+
+  const handleMarkCollected = () => {
+    const currentTags = job.tags ?? []
+    if (!currentTags.includes('stocks-collected')) {
+      updateJob.mutate({
+        jobId: job.id,
+        data: { tags: [...currentTags, 'stocks-collected'] } as any,
+      })
+    }
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner message="Loading van stock..." />
+  }
+
+  if (!vanLocation) {
+    return (
+      <EmptyState
+        icon="🚚"
+        title="No van assigned"
+        subtitle="Contact your dispatcher to set up your van stock location."
+      />
+    )
+  }
+
+  return (
+    <View>
+      {/* Stocks Collected Banner */}
+      {stocksCollected ? (
+        <View style={stockStyles.collectedBanner}>
+          <Text style={stockStyles.collectedText}>✅ Stocks Collected</Text>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={stockStyles.collectBtn}
+          onPress={handleMarkCollected}
+          disabled={updateJob.isPending}
+          activeOpacity={0.7}
+        >
+          <Text style={stockStyles.collectBtnText}>
+            {updateJob.isPending ? '⏳ Updating…' : '📦 Mark Stocks Collected'}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Required Parts for this Job */}
+      {requiredParts.length > 0 && (
+        <View style={stockStyles.section}>
+          <Text style={stockStyles.sectionTitle}>📋 Required Parts for This Job</Text>
+          {requiredParts.map((part) => {
+            const vanItem = stockItems.find(s =>
+              s.inventoryItem?.name?.toLowerCase() === part.description?.toLowerCase()
+            )
+            const inVan = vanItem ? toNumber(vanItem.quantity) : 0
+            const needed = part.quantity ?? 1
+            const sufficient = inVan >= needed
+            return (
+              <View key={part.id} style={[stockStyles.stockRow, !sufficient && stockStyles.stockRowWarning]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={stockStyles.itemName}>{part.description}</Text>
+                  <Text style={stockStyles.itemMeta}>Need: {needed} · In van: {inVan}</Text>
+                </View>
+                <View style={[stockStyles.statusDot, { backgroundColor: sufficient ? Colors.success : '#ef4444' }]} />
+              </View>
+            )
+          })}
+        </View>
+      )}
+
+      {/* Full Van Stock with return capability */}
+      <View style={stockStyles.section}>
+        <Text style={stockStyles.sectionTitle}>🚚 My Van Stock ({stockItems.length} items)</Text>
+        {!warehouse && stockItems.length > 0 && (
+          <Text style={{ fontSize: 11, color: Colors.textSecondary, marginBottom: 8 }}>
+            ℹ️ Return to warehouse: contact dispatcher to link warehouse location.
+          </Text>
+        )}
+        {stockItems.length === 0 && (
+          <EmptyState icon="📦" title="Van is empty" subtitle="No stock has been transferred to your van yet." />
+        )}
+        {stockItems.map((sl) => {
+          const qty = toNumber(sl.quantity)
+          const item = sl.inventoryItem
+          const isLow = item && qty <= (item.reorderPoint ?? 0)
+          const isExpanded = expandedReturnId === sl.id
+          const maxReturn = qty
+          const qtyToReturn = returnQty[sl.id] ?? 1
+
+          const handleReturn = async () => {
+            if (!vanLocation || !warehouse) return
+            try {
+              await returnStock.mutateAsync({
+                inventoryItemId: sl.inventoryItemId,
+                fromLocationId: vanLocation.id,
+                toLocationId: warehouse.id,
+                quantity: qtyToReturn,
+                notes: `Return from Job ${job.jobNumber ?? job.id.slice(0, 8)}`,
+              })
+              setExpandedReturnId(null)
+            } catch {
+              Alert.alert('Error', 'Failed to return stock. Please try again.')
+            }
+          }
+
+          return (
+            <View key={sl.id}>
+              <View style={[stockStyles.stockRow, isLow && stockStyles.stockRowWarning]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={stockStyles.itemName}>{item?.name ?? 'Unknown'}</Text>
+                  <Text style={stockStyles.itemMeta}>{item?.sku} · {item?.category}</Text>
+                </View>
+                <View style={{ alignItems: 'flex-end', flexDirection: 'row', gap: 8 }}>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={[stockStyles.qtyText, isLow && { color: '#f59e0b' }]}>{qty}</Text>
+                    <Text style={stockStyles.unitText}>{item?.unit ?? 'pcs'}</Text>
+                  </View>
+                  {warehouse && qty > 0 && (
+                    <TouchableOpacity
+                      style={stockStyles.returnBadge}
+                      onPress={() => {
+                        setExpandedReturnId(isExpanded ? null : sl.id)
+                        setReturnQty(prev => ({ ...prev, [sl.id]: 1 }))
+                      }}
+                    >
+                      <Text style={stockStyles.returnBadgeText}>↩ Return</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
+              {/* Return form inline */}
+              {isExpanded && warehouse && (
+                <View style={stockStyles.returnForm}>
+                  <Text style={stockStyles.returnFormTitle}>Return to Warehouse</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 }}>
+                    <TouchableOpacity
+                      style={stockStyles.qtyBtn}
+                      onPress={() => setReturnQty(prev => ({ ...prev, [sl.id]: Math.max(1, (prev[sl.id] ?? 1) - 1) }))}
+                    >
+                      <Text style={stockStyles.qtyBtnText}>−</Text>
+                    </TouchableOpacity>
+                    <Text style={stockStyles.returnQtyText}>{qtyToReturn} / {maxReturn}</Text>
+                    <TouchableOpacity
+                      style={stockStyles.qtyBtn}
+                      onPress={() => setReturnQty(prev => ({ ...prev, [sl.id]: Math.min(maxReturn, (prev[sl.id] ?? 1) + 1) }))}
+                    >
+                      <Text style={stockStyles.qtyBtnText}>+</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[stockStyles.confirmReturnBtn, returnStock.isPending && { opacity: 0.6 }]}
+                      onPress={handleReturn}
+                      disabled={returnStock.isPending}
+                    >
+                      <Text style={stockStyles.confirmReturnText}>
+                        {returnStock.isPending ? 'Returning…' : 'Confirm Return'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          )
+        })}
+      </View>
+    </View>
+  )
+}
+
+const stockStyles = StyleSheet.create({
+  collectedBanner: {
+    backgroundColor: '#dcfce7',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#86efac',
+  },
+  collectedText: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.bold as any,
+    color: '#16a34a',
+  },
+  collectBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    alignItems: 'center',
+  },
+  collectBtnText: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.bold as any,
+    color: '#fff',
+  },
+  section: {
+    marginBottom: Spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold as any,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  stockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.xs,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  stockRowWarning: {
+    borderColor: '#fbbf24',
+    backgroundColor: '#fffbeb',
+  },
+  itemName: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold as any,
+    color: Colors.textPrimary,
+  },
+  itemMeta: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  qtyText: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.bold as any,
+    color: Colors.textPrimary,
+  },
+  unitText: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginLeft: Spacing.sm,
+  },
+  returnBadge: {
+    backgroundColor: '#eff6ff',
+    borderRadius: BorderRadius.sm,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  returnBadgeText: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.semibold as any,
+    color: Colors.primary,
+  },
+  returnForm: {
+    backgroundColor: '#eff6ff',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.xs,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  returnFormTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold as any,
+    color: Colors.primary,
+  },
+  qtyBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qtyBtnText: {
+    fontSize: FontSize.lg,
+    color: Colors.primary,
+    fontWeight: FontWeight.bold as any,
+  },
+  returnQtyText: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold as any,
+    color: Colors.textPrimary,
+    minWidth: 50,
+    textAlign: 'center',
+  },
+  confirmReturnBtn: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.sm,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  confirmReturnText: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold as any,
+    color: Colors.white,
+  },
+})
+
 // ===== STYLES =====
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
@@ -1022,7 +1505,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.sm,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -1032,13 +1516,26 @@ const styles = StyleSheet.create({
   topBarTitle: { fontSize: FontSize.md, fontWeight: FontWeight.semibold, color: Colors.textPrimary },
 
   // Tabs
-  tabScroll: { backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  tabRow: { flexDirection: 'row', paddingHorizontal: Spacing.md, gap: 4, paddingVertical: Spacing.sm },
+  tabScroll: {
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.md,
+    gap: 4,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
   tab: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.md,
     backgroundColor: 'transparent',
+    alignSelf: 'flex-start',
   },
   tabActive: { backgroundColor: Colors.primaryLight },
   tabText: { fontSize: FontSize.sm, color: Colors.textSecondary, fontWeight: FontWeight.medium },

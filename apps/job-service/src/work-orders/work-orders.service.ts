@@ -5,6 +5,17 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '@tscrm/types';
+import axios from 'axios';
+import * as jwt from 'jsonwebtoken';
+
+function systemToken(companyId: string): string {
+  const secret = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
+  return jwt.sign(
+    { sub: 'system-job-service', company_id: companyId, role: 'company_admin', name: 'Job Service', iss: 'tscrm-local' },
+    secret,
+    { expiresIn: '5m' },
+  );
+}
 
 @Injectable()
 export class WorkOrdersService {
@@ -19,8 +30,8 @@ export class WorkOrdersService {
     user: AuthUser,
     data: {
       jobId: string;
-      technicianId: string;
-      technicianName: string;
+      technicianId?: string;
+      technicianName?: string;
       scheduledStart?: string;
       scheduledEnd?: string;
     },
@@ -31,6 +42,10 @@ export class WorkOrdersService {
     });
     if (!job) throw new NotFoundException('Job not found');
 
+    // Derive technician from job assignment if not explicitly provided
+    const technicianId = data.technicianId || (job as any).assignedToId || user.userId;
+    const technicianName = data.technicianName || (job as any).assignedToName || user.name || 'Admin';
+
     const workOrderNumber = await this.generateWONumber(companyId);
 
     return this.prisma.workOrder.create({
@@ -38,16 +53,16 @@ export class WorkOrdersService {
         companyId,
         jobId: data.jobId,
         workOrderNumber,
-        technicianId: data.technicianId,
-        technicianName: data.technicianName,
+        technicianId,
+        technicianName,
         scheduledStart: data.scheduledStart ? new Date(data.scheduledStart) : undefined,
         scheduledEnd: data.scheduledEnd ? new Date(data.scheduledEnd) : undefined,
-        // Pre-populate task completions from the job template
         taskCompletions: job.template?.tasks?.length
           ? {
               create: job.template.tasks.map((task) => ({
                 templateTaskId: task.id,
                 taskName: task.taskName,
+                isRequired: (task as any).isRequired ?? false,
                 isCompleted: false,
               })),
             }
@@ -147,6 +162,27 @@ export class WorkOrdersService {
   }
 
   // ============================================================
+  // AD-HOC TASKS — admin/manager adds a task manually
+  // ============================================================
+
+  async addAdHocTask(
+    companyId: string,
+    workOrderId: string,
+    data: { taskName: string; isRequired?: boolean },
+  ) {
+    await this.findOne(companyId, workOrderId);
+    return this.prisma.workOrderTaskCompletion.create({
+      data: {
+        workOrderId,
+        taskName: data.taskName,
+        isRequired: data.isRequired ?? false,
+        isAdHoc: true,
+        isCompleted: false,
+      },
+    });
+  }
+
+  // ============================================================
   // LINE ITEMS — parts and labour used on-site
   // ============================================================
 
@@ -173,7 +209,7 @@ export class WorkOrdersService {
     }
 
     const lineTotal = data.quantity * data.unitPrice;
-    return this.prisma.workOrderLineItem.create({
+    const lineItem = await this.prisma.workOrderLineItem.create({
       data: {
         workOrderId,
         ...data,
@@ -181,6 +217,17 @@ export class WorkOrdersService {
         lineTotal,
       },
     });
+
+    // Fire-and-forget: auto-consume inventory for PART/MATERIAL line items
+    if (
+      data.priceBookItemId &&
+      (data.category === 'PART' || data.category === 'MATERIAL')
+    ) {
+      this.autoConsumeInventory(companyId, workOrderId, data.priceBookItemId, data.quantity)
+        .catch(() => {}); // swallow unhandled rejection
+    }
+
+    return lineItem;
   }
 
   async removeLineItem(companyId: string, workOrderId: string, lineItemId: string) {
@@ -207,6 +254,51 @@ export class WorkOrdersService {
       .filter((i) => i.taxable)
       .reduce((sum, item) => sum + Number(item.lineTotal), 0);
     return { workOrders, allLineItems, subtotal, taxableAmount };
+  }
+
+  // ============================================================
+  // INVENTORY AUTO-CONSUME (fire-and-forget)
+  // ============================================================
+
+  private async autoConsumeInventory(
+    companyId: string,
+    workOrderId: string,
+    priceBookItemId: string,
+    quantity: number,
+  ) {
+    try {
+      const wo = await this.prisma.workOrder.findFirst({ where: { id: workOrderId } });
+      if (!wo) return;
+
+      const token = systemToken(companyId);
+      const inventoryBase = process.env.INVENTORY_SERVICE_URL || 'http://localhost:3007';
+      const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+      // 1. Find inventory item by priceBookItemId
+      const itemsRes = await axios.get(`${inventoryBase}/items`, { headers, params: { priceBookItemId } });
+      const items = itemsRes.data?.data ?? itemsRes.data ?? [];
+      if (!items.length) return; // No matching inventory item
+      const inventoryItemId = items[0].id;
+
+      // 2. Find tech's van location
+      const locRes = await axios.get(`${inventoryBase}/locations`, { headers });
+      const locations = locRes.data?.data ?? locRes.data ?? [];
+      const vanLocation = locations.find((l: any) => l.type === 'VAN' && l.technicianId === wo.technicianId);
+      if (!vanLocation) return; // No van location for this tech
+
+      // 3. Consume inventory
+      await axios.post(`${inventoryBase}/movements/consume`, {
+        inventoryItemId,
+        locationId: vanLocation.id,
+        quantity,
+        referenceId: workOrderId,
+        referenceType: 'work_order',
+      }, { headers });
+
+      console.log(`[inventory] Auto-consumed ${quantity}x item ${inventoryItemId} from van ${vanLocation.name}`);
+    } catch (err: any) {
+      console.warn('[inventory] Auto-consume failed (non-blocking):', err?.message);
+    }
   }
 
   // ============================================================

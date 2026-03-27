@@ -17,10 +17,15 @@ enum PriceCategoryDto {
 
 class CreateWorkOrderDto {
   @IsString() jobId!: string;
-  @IsString() technicianId!: string;
-  @IsString() technicianName!: string;
+  @IsOptional() @IsString() technicianId?: string;
+  @IsOptional() @IsString() technicianName?: string;
   @IsOptional() @IsString() scheduledStart?: string;
   @IsOptional() @IsString() scheduledEnd?: string;
+}
+
+class AddAdHocTaskDto {
+  @IsString() taskName!: string;
+  @IsOptional() @IsBoolean() isRequired?: boolean;
 }
 
 class CompleteTaskDto {
@@ -98,9 +103,21 @@ export class WorkOrdersController {
     return this.svc.checkOut(user.companyId, id, dto.notes);
   }
 
+  // ---- Add ad-hoc task ----
+  @Post(':id/tasks')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Add an ad-hoc task to a work order' })
+  addAdHocTask(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: AddAdHocTaskDto,
+  ) {
+    return this.svc.addAdHocTask(user.companyId, id, dto);
+  }
+
   // ---- Mark task complete ----
   @Patch(':id/tasks/:taskCompletionId')
-  @Roles(Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER)
+  @Roles(Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'Mark a checklist task as complete/incomplete' })
   completeTask(
     @CurrentUser() user: AuthUser,

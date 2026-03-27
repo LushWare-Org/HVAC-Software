@@ -57,6 +57,14 @@ func commsBaseURL() string {
 	return "http://localhost:3005"
 }
 
+// inventoryBaseURL returns the base URL for the inventory service.
+func inventoryBaseURL() string {
+	if u := os.Getenv("INVENTORY_SERVICE_URL"); u != "" {
+		return u
+	}
+	return "http://localhost:3007"
+}
+
 // systemToken generates a short-lived JWT for service-to-service calls.
 func systemToken(companyID string) string {
 	secret := os.Getenv("JWT_SECRET")
@@ -145,6 +153,41 @@ func (s *AssignmentService) sendAssignmentNotification(companyID, techUserID, te
 	}()
 }
 
+// checkPartsAvailability calls inventory service to get parts score for a technician.
+// Returns 1.0 if all parts in van, 0.5 if in warehouse, 0.0 if out of stock.
+// Returns 100.0 if no required parts specified (doesn't penalize).
+func (s *AssignmentService) checkPartsAvailability(companyID string, technicianID string, requiredParts []string) float64 {
+	if len(requiredParts) == 0 {
+		return 100.0 // No parts required, full score
+	}
+
+	token := systemToken(companyID)
+	base := inventoryBaseURL()
+
+	// Build items JSON
+	itemsJSON, _ := json.Marshal(requiredParts)
+	url := fmt.Sprintf("%s/check-availability?technicianId=%s&items=%s", base, technicianID, string(itemsJSON))
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Printf("[WARN] Inventory availability check failed: %v\n", err)
+		return 50.0 // Default to mid-score on failure
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		PartsScore float64 `json:"partsScore"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return 50.0
+	}
+
+	return result.PartsScore * 100.0 // Convert 0-1 to 0-100 scale
+}
+
 // AssignJob is the main entry point for Phase 1 scheduling.
 // It scores all nearby technicians and either auto-assigns or returns suggestions.
 func (s *AssignmentService) AssignJob(
@@ -181,10 +224,16 @@ func (s *AssignmentService) AssignJob(
 	}
 
 	// 3. Score every candidate
+	hasParts := len(req.RequiredParts) > 0
+
 	scored := make([]models.ScoredTechnician, 0, len(candidates))
 	for _, c := range candidates {
 		activeJobs := activeJobCounts[c.Technician.ID]
-		st := scoreTechnician(c, activeJobs, s.cfg)
+		var partsScore float64
+		if hasParts {
+			partsScore = s.checkPartsAvailability(companyID, c.Technician.ID, req.RequiredParts)
+		}
+		st := scoreTechnician(c, activeJobs, s.cfg, partsScore, hasParts)
 		scored = append(scored, st)
 	}
 
@@ -281,7 +330,7 @@ func (s *AssignmentService) ManualAssign(
 			d := c.DistanceKm
 			distanceKm = &d
 			activeJobs, _ := s.techRepo.CountActiveJobsForTechnicians(ctx, companyID, []string{req.TechnicianID})
-			st := scoreTechnician(c, activeJobs[req.TechnicianID], s.cfg)
+			st := scoreTechnician(c, activeJobs[req.TechnicianID], s.cfg, 0, false)
 			score = &st.Score
 			break
 		}
@@ -352,10 +401,13 @@ func (s *AssignmentService) UpdateAssignmentStatus(
 // ============================================================
 
 // scoreTechnician computes the composite score for a candidate.
+// When hasParts is true, parts availability is factored into the scoring weights.
 func scoreTechnician(
 	c repository.TechnicianWithDistance,
 	activeJobs int,
 	cfg *config.Config,
+	partsScore float64,
+	hasParts bool,
 ) models.ScoredTechnician {
 	// Distance score: 100 when on-site, 0 when at max range
 	rawDistance := 100.0 - (c.DistanceKm/cfg.MaxDistanceKm)*100.0
@@ -368,8 +420,13 @@ func scoreTechnician(
 	// Rating score: linear 0–100 on a 0–5 scale
 	ratingScore := (c.Technician.Rating / 5.0) * 100.0
 
-	// Weighted composite
-	total := (distanceScore * 0.40) + (workloadScore * 0.35) + (ratingScore * 0.25)
+	// Weighted composite — adjust weights when parts are involved
+	var total float64
+	if hasParts {
+		total = (distanceScore * 0.30) + (workloadScore * 0.25) + (ratingScore * 0.20) + (partsScore * 0.25)
+	} else {
+		total = (distanceScore * 0.40) + (workloadScore * 0.35) + (ratingScore * 0.25)
+	}
 
 	return models.ScoredTechnician{
 		Technician:    c.Technician,
@@ -379,6 +436,7 @@ func scoreTechnician(
 		DistanceScore: roundTwoDP(distanceScore),
 		WorkloadScore: roundTwoDP(workloadScore),
 		RatingScore:   roundTwoDP(ratingScore),
+		PartsScore:    roundTwoDP(partsScore),
 	}
 }
 

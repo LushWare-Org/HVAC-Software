@@ -2,7 +2,7 @@ import { useLocation, Link } from 'react-router-dom'
 import {
     LayoutDashboard, Users, Wrench, CalendarDays, Zap,
     DollarSign, MessageSquare, BarChart3, Settings,
-    Menu, X, LogOut, Shield
+    Menu, X, LogOut, Shield, Package
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { usePendingTechnicians } from '../hooks/useTeam'
@@ -58,6 +58,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
                 { icon: DollarSign, label: 'Finance', path: '/finance' },
                 { icon: MessageSquare, label: 'Communications', path: '/communications', badge: 0 },
                 { icon: BarChart3, label: 'Analytics', path: '/analytics' },
+                { icon: Package, label: 'Inventory', path: '/inventory' },
             ],
         },
         {

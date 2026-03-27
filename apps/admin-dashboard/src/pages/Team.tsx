@@ -11,6 +11,7 @@ import {
     type TeamMember,
 } from '../hooks/useTeam'
 import { useCreateTechnician } from '../hooks/useScheduling'
+import { useEnsureVan } from '../hooks/useInventory'
 import MapPicker from '../components/MapPicker'
 
 const ROLE_MAP: Record<string, string> = {
@@ -42,9 +43,18 @@ export default function Team() {
     const pendingQuery = usePendingTechnicians()
     const approve = useApproveTechnician()
     const reject = useRejectTechnician()
+    const ensureVanOnApprove = useEnsureVan()
     const [rejectTarget, setRejectTarget] = useState<TeamMember | null>(null)
     const [rejectNote, setRejectNote] = useState('')
     const [viewTech, setViewTech] = useState<TeamMember | null>(null)
+
+    const handleApproveTech = (tech: TeamMember) => {
+        approve.mutate(tech.id, {
+            onSuccess: () => {
+                ensureVanOnApprove.mutate({ technicianId: tech.id, technicianName: tech.name })
+            },
+        })
+    }
 
     const pendingTechs: TeamMember[] = pendingQuery.data?.data ?? []
 
@@ -170,7 +180,7 @@ export default function Team() {
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 8, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                                        <button className="btn btn-primary btn-sm" style={{ background: 'var(--green)', borderColor: 'var(--green)' }} onClick={() => approve.mutate(tech.id)} disabled={approve.isPending}>
+                                        <button className="btn btn-primary btn-sm" style={{ background: 'var(--green)', borderColor: 'var(--green)' }} onClick={() => handleApproveTech(tech)} disabled={approve.isPending}>
                                             {approve.isPending ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
                                             <span style={{ marginLeft: 4 }}>Approve</span>
                                         </button>
@@ -371,7 +381,12 @@ export default function Team() {
                 <PendingTechModal
                     tech={viewTech}
                     onClose={() => setViewTech(null)}
-                    onApprove={(id) => { approve.mutate(id); setViewTech(null) }}
+                    onApprove={(id) => {
+                        const tech = pendingTechs.find(t => t.id === id) ?? allMembers.find(t => t.id === id)
+                        if (tech) handleApproveTech(tech)
+                        else approve.mutate(id)
+                        setViewTech(null)
+                    }}
                     onReject={(tech) => { setViewTech(null); setRejectTarget(tech); setRejectNote('') }}
                     approving={approve.isPending}
                 />
@@ -385,6 +400,7 @@ export default function Team() {
 function AddMemberModal({ onClose }: { onClose: () => void }) {
     const create = useCreateTeamMember()
     const createTechnician = useCreateTechnician()
+    const ensureVan = useEnsureVan()
     const [form, setForm] = useState({ name: '', email: '', phone: '', role: 'technician' })
     const [skills, setSkills] = useState<string[]>([])
     const [customSkill, setCustomSkill] = useState('')
@@ -423,7 +439,13 @@ function AddMemberModal({ onClose }: { onClose: () => void }) {
                             latitude: lat,
                             longitude: lng,
                         }, {
-                            onSuccess: () => onClose(),
+                            onSuccess: () => {
+                                // Auto-create van for the new technician
+                                ensureVan.mutate(
+                                    { technicianId: newUser.id, technicianName: form.name.trim() },
+                                    { onSettled: () => onClose() },
+                                )
+                            },
                             onError: () => onClose(), // still close even if scheduling fails
                         })
                     } else {

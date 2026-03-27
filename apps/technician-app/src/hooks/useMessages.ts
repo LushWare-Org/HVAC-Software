@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { queryKeys } from '@/lib/queryClient'
 import { useAuth } from '@/contexts/AuthContext'
-import type { MessageThread, PaginatedResponse } from '@/types/api'
+import type { MessageThread, ThreadMessage, PaginatedResponse } from '@/types/api'
 
 interface ThreadFilters {
   status?: string
@@ -42,23 +42,62 @@ export function useThreadDetail(threadId: string) {
       return res.data
     },
     enabled: !!threadId,
-    refetchInterval: 10000, // Poll for new messages every 10s
+    refetchInterval: 5000, // Poll for new messages every 5s
+    staleTime: 0, // Always refetch when invalidated
   })
 }
 
 /**
- * Send a message to a thread
+ * Send a message to a thread — optimistic update for instant UI
  */
 export function useSendMessage() {
   const qc = useQueryClient()
+  const { user } = useAuth()
+
   return useMutation({
     mutationFn: async ({ threadId, body }: { threadId: string; body: string }) => {
-      const res = await api.post(`/comms/messaging/threads/${threadId}/messages`, { body })
-      return { ...res.data, threadId }
+      const res = await api.post<MessageThread>(
+        `/comms/messaging/threads/${threadId}/messages`,
+        { body },
+      )
+      return res.data
+    },
+    onMutate: async ({ threadId, body }) => {
+      // Cancel outgoing refetches so they don't overwrite optimistic update
+      await qc.cancelQueries({ queryKey: queryKeys.threadDetail(threadId) })
+
+      const previous = qc.getQueryData<MessageThread>(queryKeys.threadDetail(threadId))
+
+      // Optimistically add message
+      if (previous) {
+        const optimisticMsg: ThreadMessage = {
+          id: `temp-${Date.now()}`,
+          body,
+          direction: 'OUTBOUND',
+          senderName: user?.name ?? 'You',
+          createdAt: new Date().toISOString(),
+          status: 'SENT',
+        }
+        qc.setQueryData<MessageThread>(queryKeys.threadDetail(threadId), {
+          ...previous,
+          messages: [...(previous.messages ?? []), optimisticMsg],
+          lastMessageBody: body.substring(0, 100),
+          lastMessageAt: new Date().toISOString(),
+        })
+      }
+
+      return { previous, threadId }
     },
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: queryKeys.threadDetail(data.threadId) })
+      // Replace cache with server response (has real message IDs)
+      qc.setQueryData(queryKeys.threadDetail(data.id), data)
       qc.invalidateQueries({ queryKey: ['threads'] })
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback on failure
+      if (context?.previous) {
+        qc.setQueryData(queryKeys.threadDetail(context.threadId), context.previous)
+      }
     },
   })
 }
@@ -80,16 +119,19 @@ export function useMarkThreadRead() {
 }
 
 /**
- * Create or get thread for a customer
+ * Create or get thread for a customer or staff member
  */
 export function useCreateThread() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ customerId, customerName }: { customerId: string; customerName: string }) => {
-      const res = await api.post<MessageThread>('/comms/messaging/threads', {
-        customerId,
-        customerName,
-      })
+    mutationFn: async (params: {
+      customerId?: string
+      customerName?: string
+      participantIds?: string[]
+      participantNames?: string[]
+      subject?: string
+    }) => {
+      const res = await api.post<MessageThread>('/comms/messaging/threads', params)
       return res.data
     },
     onSuccess: () => {
