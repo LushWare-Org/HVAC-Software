@@ -155,6 +155,24 @@ CREATE TABLE "reviews" (
     CONSTRAINT "reviews_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "company_users" (
+    "id" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
+    "auth0UserId" TEXT,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "phone" TEXT,
+    "passwordHash" TEXT,
+    "role" TEXT NOT NULL DEFAULT 'technician',
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "lastLoginAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "company_users_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "companies_email_key" ON "companies"("email");
 
@@ -226,3 +244,15 @@ ALTER TABLE "bookings" ADD CONSTRAINT "bookings_customerId_fkey" FOREIGN KEY ("c
 
 -- AddForeignKey
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "customers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- CreateIndex
+CREATE UNIQUE INDEX "company_users_companyId_email_key" ON "company_users"("companyId", "email");
+
+-- CreateIndex
+CREATE INDEX "company_users_companyId_idx" ON "company_users"("companyId");
+
+-- CreateIndex
+CREATE INDEX "company_users_companyId_role_idx" ON "company_users"("companyId", "role");
+
+-- AddForeignKey
+ALTER TABLE "company_users" ADD CONSTRAINT "company_users_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
