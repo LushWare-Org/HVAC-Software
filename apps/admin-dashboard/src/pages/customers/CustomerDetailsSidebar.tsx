@@ -389,7 +389,7 @@ export default function CustomerDetailsSidebar({
         onClick={onClose}
       />
       <div
-        className="fixed top-0 bottom-0 right-0 w-3/4 z-[210] flex flex-col shadow-2xl transition-transform transform duration-300 translate-x-0 border-l border-gray-200"
+        className="fixed top-0 bottom-0 right-0 w-full md:w-3/4 z-[210] flex flex-col shadow-2xl transition-transform transform duration-300 translate-x-0 border-l border-gray-200"
         style={{ background: "#ffffff" }}
       >
         <div className="sticky top-0 bg-[var(--blue)] px-6 py-4 flex items-center justify-between shadow-sm shrink-0">

@@ -102,9 +102,9 @@ export default function CreateJobModal({ isOpen, onClose }: Props) {
     "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white";
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 admin-modal-backdrop" onClick={onClose}>
       <div
-        className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col"
+        className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col admin-modal-box"
         style={{ maxHeight: "92vh" }}
         onClick={(e) => e.stopPropagation()}
       >

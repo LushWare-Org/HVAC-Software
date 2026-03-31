@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bell, Search, Sun, Moon, Monitor, ChevronDown, User, Settings as SettingsIcon, LogOut, Calendar, Plus, ArrowRight, Download, RefreshCw, LayoutDashboard, CalendarDays, MapPin } from 'lucide-react'
+import { Bell, Search, Sun, Moon, Monitor, ChevronDown, User, Settings as SettingsIcon, LogOut, Calendar, Plus, ArrowRight, Download, RefreshCw, LayoutDashboard, CalendarDays, MapPin, Menu } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -27,7 +27,12 @@ function useDropdown() {
     return { open, setOpen, ref }
 }
 
-export default function Topbar() {
+interface TopbarProps {
+    onMenuClick?: () => void
+    showMenu?: boolean
+}
+
+export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     const [search, setSearch] = useState('')
     const { pathname } = useLocation()
     const { theme, toggleTheme } = useTheme()
@@ -201,14 +206,25 @@ export default function Topbar() {
 
     return (
         <>
-            <header className={`h-20 border-b flex items-center justify-between px-6 gap-6 flex-shrink-0 sticky top-0 z-30 transition-colors duration-300 ${topbarBg}`}>
-                <div className="flex-1 min-w-0">
+            <header className={`admin-topbar h-20 border-b flex items-center justify-between px-6 gap-6 flex-shrink-0 sticky top-0 z-30 transition-colors duration-300 ${topbarBg}`}>
+                <div className="flex-1 min-w-0 flex items-center gap-3">
+                    {showMenu && (
+                        <button
+                            className="topbar-hamburger"
+                            onClick={onMenuClick}
+                            title="Menu"
+                        >
+                            <Menu size={20} />
+                        </button>
+                    )}
+                    <div className="min-w-0">
                     <h2 className={`text-2xl font-bold tracking-tight truncate ${isLight ? 'text-slate-900' : 'text-[var(--t1)]'}`}>
                         {headerParams.title}
                     </h2>
-                    <div className={`flex items-center gap-1.5 text-sm mt-1 font-medium ${isLight ? 'text-slate-500' : 'text-[var(--t3)]'}`}>
+                    <div className={`hidden sm:flex items-center gap-1.5 text-sm mt-1 font-medium ${isLight ? 'text-slate-500' : 'text-[var(--t3)]'}`}>
                         <Calendar size={14} />
                         <span>{dateStr}</span>
+                    </div>
                     </div>
                 </div>
 
@@ -289,7 +305,7 @@ export default function Topbar() {
                             </button>
 
                             {notif.open && (
-                                <div className={`absolute top-[calc(100%+8px)] right-0 w-80 border rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.15)] z-50 overflow-hidden ${dropdownBg}`}>
+                                <div className={`topbar-dropdown absolute top-[calc(100%+8px)] right-0 w-80 border rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.15)] z-50 overflow-hidden ${dropdownBg}`}>
                                     <div className={`p-4 border-b ${dividerBorder}`}>
                                         <div className="flex items-center justify-between gap-3">
                                             <div className={`text-sm font-semibold ${dropdownText}`}>Notifications</div>
@@ -364,7 +380,7 @@ export default function Topbar() {
                             </button>
 
                             {user.open && (
-                                <div className={`absolute top-[calc(100%+8px)] right-0 w-48 border rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.15)] z-50 overflow-hidden ${dropdownBg}`}>
+                                <div className={`topbar-dropdown absolute top-[calc(100%+8px)] right-0 w-48 border rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.15)] z-50 overflow-hidden ${dropdownBg}`}>
                                     <div className={`px-3.5 py-3 border-b ${dividerBorder}`}>
                                         <div className={`text-[13px] font-semibold ${dropdownText}`}>My Account</div>
                                     </div>

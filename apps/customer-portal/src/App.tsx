@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { ToastProvider } from './contexts/ToastContext'
@@ -13,6 +13,18 @@ import Messages from './pages/messages/Messages'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
 
+const MOBILE_BP = 768
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BP)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= MOBILE_BP)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+  return isMobile
+}
+
 // ─── Auth Guard ──────────────────────────────────────────────────────────────
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth()
@@ -25,18 +37,49 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
 // ─── App Shell (authenticated layout) ────────────────────────────────────────
 function AppShell() {
+  const isMobile = useIsMobile()
   const [collapsed, setCollapsed] = useState(true)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const isLogin = location.pathname === '/login'
+
+  // Close mobile sidebar on navigation
+  useEffect(() => {
+    if (isMobile) setMobileOpen(false)
+  }, [location.pathname, isMobile])
+
+  // Close mobile sidebar when switching to desktop
+  useEffect(() => {
+    if (!isMobile) setMobileOpen(false)
+  }, [isMobile])
+
+  const handleToggle = useCallback(() => {
+    if (isMobile) {
+      setMobileOpen(o => !o)
+    } else {
+      setCollapsed(c => !c)
+    }
+  }, [isMobile])
 
   if (isLogin) return <Login />
 
   return (
     <RequireAuth>
       <div className="app-shell">
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
-        <div className={`main-content${collapsed ? ' sidebar-collapsed' : ''}`}>
-          <Topbar />
+        {/* Mobile backdrop */}
+        {isMobile && (
+          <div
+            className={`sidebar-backdrop${mobileOpen ? ' visible' : ''}`}
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+        <Sidebar
+          collapsed={isMobile ? false : collapsed}
+          onToggle={handleToggle}
+          mobileOpen={isMobile ? mobileOpen : undefined}
+        />
+        <div className={`main-content${!isMobile && collapsed ? ' sidebar-collapsed' : ''}`}>
+          <Topbar onMenuClick={handleToggle} showMenu={isMobile} />
           <div className="page">
             <Routes>
               <Route path="/" element={<Dashboard />} />

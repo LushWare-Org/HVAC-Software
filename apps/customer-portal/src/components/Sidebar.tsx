@@ -15,6 +15,7 @@ import { useTheme } from '../contexts/ThemeContext'
 interface Props {
   collapsed: boolean
   onToggle: () => void
+  mobileOpen?: boolean // undefined = desktop mode, true/false = mobile mode
 }
 
 const NAV = [
@@ -32,7 +33,8 @@ const NAV = [
   },
 ]
 
-export default function Sidebar({ collapsed, onToggle }: Props) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
+  const isMobileMode = mobileOpen !== undefined
   const loc = useLocation()
   const { theme } = useTheme()
   const { user, logout } = useAuth()
@@ -48,14 +50,19 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
     : 'U'
 
   const isLight = theme === 'light'
+  const mobileClass = isMobileMode
+    ? (mobileOpen ? 'mobile-visible' : 'mobile-hidden')
+    : ''
+
   const sidebarClasses = [
     'fixed left-0 top-0 bottom-0 z-[200] flex flex-col overflow-hidden shadow-xl transform-gpu',
-    'transition-[width] duration-[var(--dur-slow)] ease-[var(--ease)]',
+    'transition-[width,transform] duration-[var(--dur-slow)] ease-[var(--ease)]',
     collapsed ? 'w-[var(--sidebar-w-col)]' : 'w-[var(--sidebar-w)]',
     isLight
       ? 'bg-gradient-to-b from-slate-900 to-slate-800 text-white'
       : 'bg-[var(--bg-surface)] text-[var(--t2)]',
     isLight ? 'border-r border-slate-700' : 'border-r border-[var(--bd)]',
+    mobileClass,
   ].join(' ')
 
   const headerBorder = isLight ? 'border-slate-700' : 'border-b border-[var(--bd)]'

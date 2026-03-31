@@ -74,6 +74,7 @@ export default function PayInvoiceModal({ onClose, invoice }: PayInvoiceModalPro
 
   const modal = (
     <div
+      className="cp-modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -88,6 +89,7 @@ export default function PayInvoiceModal({ onClose, invoice }: PayInvoiceModalPro
       onClick={onClose}
     >
       <div
+        className="cp-modal-container"
         style={{
           background: '#fff',
           borderRadius: 16,
@@ -102,6 +104,7 @@ export default function PayInvoiceModal({ onClose, invoice }: PayInvoiceModalPro
         onClick={e => e.stopPropagation()}
       >
         <div
+          className="cp-modal-header"
           style={{
             background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
             padding: '20px 24px',
@@ -208,7 +211,7 @@ export default function PayInvoiceModal({ onClose, invoice }: PayInvoiceModalPro
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Cardholder Name</label>
                     <input type="text" name="name" value={cardData.name} onChange={handleChange} placeholder="As shown on card" style={inputStyle} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div className="cp-modal-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div>
                       <label style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>Expiry Date</label>
                       <input type="text" name="expiry" value={cardData.expiry} onChange={handleChange} placeholder="MM / YY" maxLength={7} style={inputStyle} />
@@ -251,6 +254,7 @@ export default function PayInvoiceModal({ onClose, invoice }: PayInvoiceModalPro
 
         {!statusMessage && (
           <div
+            className="cp-modal-footer"
             style={{
               background: '#F9FAFB',
               borderTop: '1px solid #E5E7EB',

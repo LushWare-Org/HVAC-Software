@@ -49,3 +49,6 @@ prisma/generated/
 
 # Misc
 *.tsbuildinfo
+
+# Database export archives (share manually, not via git)
+exports/

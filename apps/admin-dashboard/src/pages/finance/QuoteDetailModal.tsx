@@ -189,11 +189,11 @@ export default function QuoteDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 admin-modal-backdrop"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl max-w-3xl w-full flex flex-col shadow-2xl"
+        className="bg-white rounded-xl max-w-3xl w-full flex flex-col shadow-2xl admin-modal-box"
         style={{ height: 680 }}
         onClick={(e) => e.stopPropagation()}
       >

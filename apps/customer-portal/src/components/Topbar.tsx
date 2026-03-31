@@ -9,6 +9,7 @@ import {
   LogOut,
   Calendar,
   RefreshCw,
+  Menu,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
@@ -37,7 +38,12 @@ function useDropdown() {
   return { open, setOpen, ref }
 }
 
-export default function Topbar() {
+interface TopbarProps {
+  onMenuClick?: () => void
+  showMenu?: boolean
+}
+
+export default function Topbar({ onMenuClick, showMenu }: TopbarProps) {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
@@ -69,11 +75,18 @@ export default function Topbar() {
 
   return (
     <header className="topbar">
-      <div className="topbar-left">
-        <div className="topbar-title">{pageTitle}</div>
-        <div className="topbar-subtitle">
-          <Calendar size={12} />
-          <span>{dateStr}</span>
+      <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {showMenu && (
+          <button className="topbar-hamburger" onClick={onMenuClick} title="Menu">
+            <Menu size={20} />
+          </button>
+        )}
+        <div>
+          <div className="topbar-title">{pageTitle}</div>
+          <div className="topbar-subtitle">
+            <Calendar size={12} />
+            <span>{dateStr}</span>
+          </div>
         </div>
       </div>
 

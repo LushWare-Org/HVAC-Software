@@ -284,7 +284,8 @@ export default function Scheduling() {
                                 </div>
                             </div>
 
-                            <div className="card-body" style={{ overflowX: 'auto' }}>
+                            <div className="card-body" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                              <div style={{ minWidth: 900 }}>
                                 {/* Hour headers */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '150px repeat(10, 1fr)', gap: 3, marginBottom: 4 }}>
                                     <div />
@@ -373,6 +374,7 @@ export default function Scheduling() {
                                         <div className="empty-title">No technicians found</div>
                                     </div>
                                 )}
+                              </div>
                             </div>
                         </div>
 

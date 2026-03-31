@@ -104,12 +104,12 @@ export default function JobDetailPanel({
   const assignedTechName = technician?.name ?? assignment?.technicianName ?? job?.assignedToName ?? "Unassigned";
 
   return (
-    <div className="fixed inset-0 z-[99999] flex" onClick={onClose}>
+    <div className="fixed inset-0 z-[99999] flex admin-modal-backdrop" onClick={onClose}>
       {/* Backdrop */}
       <div className="flex-1 bg-black/30 backdrop-blur-sm" />
       {/* Panel */}
       <div
-        className="w-full max-w-xl bg-white shadow-2xl flex flex-col animate-in slide-in-from-right"
+        className="w-full max-w-xl bg-white shadow-2xl flex flex-col animate-in slide-in-from-right admin-modal-box"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

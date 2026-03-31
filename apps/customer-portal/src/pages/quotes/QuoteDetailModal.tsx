@@ -85,6 +85,7 @@ export default function QuoteDetailModal({ quote: initialQuote, onClose }: Quote
 
   const modal = (
     <div
+      className="cp-modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -99,6 +100,7 @@ export default function QuoteDetailModal({ quote: initialQuote, onClose }: Quote
       onClick={onClose}
     >
       <div
+        className="cp-modal-container"
         style={{
           background: '#fff',
           borderRadius: 16,
@@ -114,6 +116,7 @@ export default function QuoteDetailModal({ quote: initialQuote, onClose }: Quote
         onClick={e => e.stopPropagation()}
       >
         <div
+          className="cp-modal-header"
           style={{
             background: 'linear-gradient(135deg, #0F766E, #0D9488)',
             padding: '20px 28px',
@@ -156,7 +159,7 @@ export default function QuoteDetailModal({ quote: initialQuote, onClose }: Quote
           </button>
         </div>
 
-        <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#F9FAFB', flexShrink: 0 }}>
+        <div className="cp-modal-tabs" style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#F9FAFB', flexShrink: 0 }}>
           {tabs.map(t => (
             <button
               key={t.id}
@@ -183,9 +186,9 @@ export default function QuoteDetailModal({ quote: initialQuote, onClose }: Quote
           ))}
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
+        <div className="cp-modal-body" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
           {activeTab === 'details' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <div className="cp-modal-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <Field label="Quote Number"><div style={fieldStyle}>{quote.quoteNumber}</div></Field>
               <Field label="Status"><span className={`badge ${status.css}`} style={{ fontSize: 13 }}>{status.label}</span></Field>
               <Field label="Created On"><div style={fieldStyle}>{fmtDate(quote.createdAt)}</div></Field>
@@ -203,14 +206,14 @@ export default function QuoteDetailModal({ quote: initialQuote, onClose }: Quote
 
           {activeTab === 'items' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 12, padding: '8px 0', borderBottom: '1px solid #E5E7EB' }}>
+              <div className="cp-modal-grid-4col" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 12, padding: '8px 0', borderBottom: '1px solid #E5E7EB' }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Qty</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Unit Price</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Amount</span>
               </div>
               {(quote.lineItems ?? []).map(item => (
-                <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 12, padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
+                <div key={item.id} className="cp-modal-grid-4col" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 12, padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
                   <span style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>{item.description}</span>
                   <span style={{ fontSize: 13, color: '#111827', fontWeight: 600, textAlign: 'right' }}>{item.quantity}</span>
                   <span style={{ fontSize: 13, color: '#111827', fontWeight: 600, textAlign: 'right' }}>{fmtMoney(item.unitPrice)}</span>
@@ -244,6 +247,7 @@ export default function QuoteDetailModal({ quote: initialQuote, onClose }: Quote
         </div>
 
         <div
+          className="cp-modal-footer"
           style={{
             background: '#F9FAFB',
             borderTop: '1px solid #E5E7EB',

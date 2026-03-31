@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
@@ -19,14 +19,51 @@ import Settings from './pages/Settings'
 import Team from './pages/Team'
 import Profile from './pages/Profile'
 
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint)
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${breakpoint}px)`)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [breakpoint])
+  return isMobile
+}
+
 function AuthenticatedApp() {
+  const isMobile = useIsMobile()
   const [collapsed, setCollapsed] = useState(true)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const location = useLocation()
+
+  // Close mobile sidebar on navigation
+  useEffect(() => {
+    if (isMobile) setMobileOpen(false)
+  }, [location.pathname, isMobile])
+
+  const handleToggle = useCallback(() => {
+    if (isMobile) {
+      setMobileOpen(prev => !prev)
+    } else {
+      setCollapsed(c => !c)
+    }
+  }, [isMobile])
 
   return (
     <div className="app-shell">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
-      <div className={`main-content${collapsed ? ' sidebar-collapsed' : ''}`}>
-        <Topbar />
+      {isMobile && (
+        <div
+          className={`sidebar-backdrop${mobileOpen ? ' visible' : ''}`}
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+      <Sidebar
+        collapsed={isMobile ? false : collapsed}
+        onToggle={handleToggle}
+        mobileOpen={isMobile ? mobileOpen : undefined}
+      />
+      <div className={`main-content${!isMobile && collapsed ? ' sidebar-collapsed' : ''}`}>
+        <Topbar onMenuClick={handleToggle} showMenu={isMobile} />
         <div className="page">
           <Routes>
             <Route path="/" element={<Dashboard />} />

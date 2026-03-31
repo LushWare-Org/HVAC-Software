@@ -119,7 +119,7 @@ export function AddScheduleModal({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[10001] flex items-center justify-center p-4"
+            className="fixed inset-0 z-[10001] flex items-center justify-center p-4 admin-modal-backdrop"
             role="dialog"
             aria-modal="true"
         >
@@ -127,7 +127,7 @@ export function AddScheduleModal({
                 className="absolute inset-0 bg-black/60 backdrop-blur-md anim-fade-in"
                 onClick={onClose}
             />
-            <div className="card w-full max-w-2xl shadow-2xl relative" onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-card)', border: '1px solid var(--bd)', position: 'relative', zIndex: 1 }}>
+            <div className="card w-full max-w-2xl shadow-2xl relative admin-modal-box" onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-card)', border: '1px solid var(--bd)', position: 'relative', zIndex: 1 }}>
                 <div className="card-header border-b border-[var(--bd)] flex items-center justify-between py-5 px-6 bg-gradient-to-r from-green-600 to-green-700">
                     <div className="text-white flex-1">
                         <h3 className="text-xl font-bold">Assign Job to Technician</h3>

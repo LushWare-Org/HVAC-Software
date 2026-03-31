@@ -172,7 +172,7 @@ export default function Dashboard() {
             )}
 
             {/* KPI Cards */}
-            <div className="kpi-grid mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+            <div className="kpi-grid mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
                 {statCards.map((stat, index) => {
                     const Icon = stat.icon
                     return (
@@ -284,7 +284,7 @@ export default function Dashboard() {
                                     </ResponsiveContainer>
                             )}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', marginTop: 12 }}>
+                        <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', marginTop: 12 }}>
                             {jobStatusData.map((item, index) => (
                                 <div key={item.name} className="flex items-center gap-2">
                                     <div style={{ width: 10, height: 10, borderRadius: '50%', background: JOB_STATUS_COLORS[index], flexShrink: 0 }} />

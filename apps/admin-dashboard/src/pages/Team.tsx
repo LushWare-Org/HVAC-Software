@@ -198,8 +198,8 @@ export default function Team() {
 
             {/* ── Reject Modal ──────────────────────────────────────────────── */}
             {rejectTarget && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setRejectTarget(null)}>
-                    <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 admin-modal-backdrop" onClick={() => setRejectTarget(null)}>
+                    <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-md mx-4 admin-modal-box" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-5 border-b border-[var(--bd)]">
                             <h2 className="text-lg font-semibold text-[var(--t1)]">Reject Application</h2>
                             <button onClick={() => setRejectTarget(null)} className="topbar-icon-btn"><X size={18} /></button>
@@ -466,8 +466,8 @@ function AddMemberModal({ onClose }: { onClose: () => void }) {
     const inputCls = "w-full px-3 py-2 text-sm border border-[var(--bd)] rounded-[var(--r)] bg-transparent text-[var(--t1)] outline-none focus:border-[var(--blue)]"
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
-            <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 admin-modal-backdrop" onClick={onClose}>
+            <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh] admin-modal-box" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-5 border-b border-[var(--bd)] shrink-0">
                     <h2 className="text-lg font-semibold text-[var(--t1)]">Add Team Member</h2>
                     <button onClick={onClose} className="topbar-icon-btn"><X size={18} /></button>
@@ -581,8 +581,8 @@ function PendingTechModal({
         : null
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-            <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-2xl w-full max-w-xl mx-4 flex flex-col max-h-[92vh]" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 admin-modal-backdrop" onClick={onClose}>
+            <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-2xl w-full max-w-xl mx-4 flex flex-col max-h-[92vh] admin-modal-box" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex items-center gap-3 p-5 border-b border-[var(--bd)] shrink-0">
                     <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--blue)', flexShrink: 0 }}>
@@ -599,7 +599,7 @@ function PendingTechModal({
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
                     {/* Contact info */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         {[
                             { icon: '📧', label: 'Email', value: tech.email },
                             { icon: '📞', label: 'Phone', value: tech.phone || 'Not provided' },
@@ -698,8 +698,8 @@ function EditMemberModal({ member, onClose }: { member: TeamMember; onClose: () 
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
-            <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 admin-modal-backdrop" onClick={onClose}>
+            <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-md mx-4 admin-modal-box" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-5 border-b border-[var(--bd)]">
                     <h2 className="text-lg font-semibold text-[var(--t1)]">Edit Team Member</h2>
                     <button onClick={onClose} className="topbar-icon-btn"><X size={18} /></button>

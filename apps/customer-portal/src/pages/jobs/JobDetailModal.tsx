@@ -98,6 +98,7 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
 
   const modal = (
     <div
+      className="cp-modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -112,6 +113,7 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
       onClick={onClose}
     >
       <div
+        className="cp-modal-container"
         style={{
           background: '#fff',
           borderRadius: 16,
@@ -127,6 +129,7 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
         onClick={e => e.stopPropagation()}
       >
         <div
+          className="cp-modal-header"
           style={{
             background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
             padding: '22px 28px',
@@ -170,7 +173,7 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
           </button>
         </div>
 
-        <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#F9FAFB', flexShrink: 0 }}>
+        <div className="cp-modal-tabs" style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#F9FAFB', flexShrink: 0 }}>
           {tabs.map(t => (
             <button
               key={t.id}
@@ -202,9 +205,9 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
           ))}
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
+        <div className="cp-modal-body" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
           {activeTab === 'overview' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <div className="cp-modal-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <InfoField label="Service" icon={<Wrench size={11} />}>
                 <div style={fieldStyle}>{job.title}</div>
               </InfoField>
@@ -235,7 +238,7 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
 
           {activeTab === 'schedule' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div className="cp-modal-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <InfoField label="Scheduled Date" icon={<Calendar size={11} />}>
                   <div style={fieldStyle}>{fmtDate(job.scheduledStart)}</div>
                 </InfoField>
@@ -318,6 +321,7 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
         </div>
 
         <div
+          className="cp-modal-footer"
           style={{
             background: '#F9FAFB',
             borderTop: '1px solid #E5E7EB',

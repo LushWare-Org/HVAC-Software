@@ -39,6 +39,7 @@ export default function CancelJobModal({ onClose, job }: CancelJobModalProps) {
 
   const modal = (
     <div
+      className="cp-modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -53,6 +54,7 @@ export default function CancelJobModal({ onClose, job }: CancelJobModalProps) {
       onClick={onClose}
     >
       <div
+        className="cp-modal-container"
         style={{
           background: '#fff',
           borderRadius: 16,
@@ -67,6 +69,7 @@ export default function CancelJobModal({ onClose, job }: CancelJobModalProps) {
         onClick={e => e.stopPropagation()}
       >
         <div
+          className="cp-modal-header"
           style={{
             background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
             padding: '20px 24px',
@@ -173,6 +176,7 @@ export default function CancelJobModal({ onClose, job }: CancelJobModalProps) {
         </div>
 
         <div
+          className="cp-modal-footer"
           style={{
             background: '#F9FAFB',
             borderTop: '1px solid #E5E7EB',

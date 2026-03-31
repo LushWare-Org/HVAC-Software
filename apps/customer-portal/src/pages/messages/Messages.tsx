@@ -78,8 +78,8 @@ export default function MessagesPage() {
       </div>
 
       {tab === 'chat' && (
-        <div className="card" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', minHeight: '68vh' }}>
-          <div style={{ borderRight: '1px solid var(--bd)', overflowY: 'auto' }}>
+        <div className="card chat-grid">
+          <div className="chat-thread-list" style={{ overflowY: 'auto' }}>
             <div style={{ padding: 14, borderBottom: '1px solid var(--bd)', fontSize: 12, color: 'var(--t3)' }}>Conversations</div>
             {threads.map(t => {
               const selected = t.id === selectedThreadId
@@ -108,7 +108,7 @@ export default function MessagesPage() {
             )}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="chat-main" style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: 14, borderBottom: '1px solid var(--bd)' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>{selectedThread?.customerName ?? 'Chat'}</div>
               <div style={{ fontSize: 12, color: 'var(--t3)' }}>In-app messaging with support team</div>

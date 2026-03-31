@@ -801,8 +801,8 @@ function NewMessageModal({ onClose, onThreadCreated }: { onClose: () => void; on
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
-            <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-lg mx-4" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 admin-modal-backdrop" onClick={onClose}>
+            <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-lg mx-4 admin-modal-box" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-[var(--bd)]">
                     <h2 className="text-lg font-semibold text-[var(--t1)]">New Conversation</h2>

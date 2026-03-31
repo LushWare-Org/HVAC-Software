@@ -337,7 +337,7 @@ export function SchedulingCalendar({ schedules, techs }: SchedulingCalendarProps
 
             {selectedDate && createPortal(
                 <div
-                    className="fixed inset-0 flex items-center justify-center p-4"
+                    className="fixed inset-0 flex items-center justify-center p-4 admin-modal-backdrop"
                     style={{ zIndex: (showAddScheduleModal || isDetailOpen) ? 9999 : 10000 }}
                     role="dialog"
                     aria-modal="true"
@@ -349,7 +349,7 @@ export function SchedulingCalendar({ schedules, techs }: SchedulingCalendarProps
                         />
                     )}
                     {/* Modal */}
-                    <div className="card w-full max-w-2xl shadow-2xl relative" onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-card)', border: '1px solid var(--bd)', maxHeight: '80vh', position: 'relative', zIndex: 1 }}>
+                    <div className="card w-full max-w-2xl shadow-2xl relative admin-modal-box" onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-card)', border: '1px solid var(--bd)', maxHeight: '80vh', position: 'relative', zIndex: 1 }}>
                         <div className="sticky top-0 card-header border-b border-[var(--bd)] flex items-center justify-between py-5 px-6 bg-gradient-to-r from-blue-600 to-blue-700">
                             <div className="text-white flex-1">
                                 <h3 className="text-xl font-bold">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</h3>

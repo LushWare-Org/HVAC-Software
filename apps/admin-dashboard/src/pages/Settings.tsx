@@ -191,7 +191,7 @@ export default function Settings() {
                             </div>
                         ) : (
                             <>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
+                                <div className="settings-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
                                     <div className="form-group">
                                         <label className="form-label">Name *</label>
                                         <input type="text" className="form-input" name="name" value={profileForm.name} onChange={handleProfileChange} />
@@ -241,7 +241,7 @@ export default function Settings() {
                             </div>
                         ) : (
                             <>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
+                                <div className="settings-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
                                     <div className="form-group">
                                         <label className="form-label">Company Name *</label>
                                         <input type="text" className="form-input" name="name" value={companyForm.name} onChange={handleCompanyChange} />
@@ -371,7 +371,7 @@ export default function Settings() {
                             <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <Lock size={16} /> Change Password
                             </h4>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 16 }}>
+                            <div className="settings-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 16 }}>
                                 <div className="form-group">
                                     <label className="form-label">Current Password</label>
                                     <input type="password" className="form-input" name="currentPassword" value={securitySettings.currentPassword} onChange={handleSecurityChange} placeholder="Enter current password" />

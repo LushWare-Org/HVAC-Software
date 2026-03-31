@@ -384,8 +384,8 @@ export default function Customers() {
 
       {/* Delete confirmation dialog */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center" onClick={() => setDeleteConfirm(null)}>
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center admin-modal-backdrop" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 admin-modal-box" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                 <Trash2 size={18} className="text-red-600" />

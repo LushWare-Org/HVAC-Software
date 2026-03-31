@@ -149,7 +149,7 @@ export default function Profile() {
                 <AlertCircle size={14} /> {saveError}
               </div>
             )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
+            <div className="form-grid-2col" style={{ marginBottom: 32 }}>
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label className="form-label">
                   <User size={12} style={{ display: 'inline', marginRight: 4 }} />
@@ -250,7 +250,7 @@ export default function Profile() {
                 </p>
               )}
               {passSuccess && <p style={{ color: 'var(--green)', marginBottom: 8, fontSize: 12 }}>{passSuccess}</p>}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 16 }}>
+              <div className="form-grid-2col" style={{ marginBottom: 16 }}>
                 <div className="form-group">
                   <label className="form-label">Current Password</label>
                   <input

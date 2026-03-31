@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Eye, EyeOff, Wrench, AlertCircle, ShieldCheck, Sparkles } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -6,12 +6,6 @@ import type { RegisterData } from '../contexts/AuthContext'
 
 const COMPANY_ID = import.meta.env.VITE_COMPANY_ID || 'demo-company-001'
 
-const panelStyles: CSSProperties = {
-  minHeight: '100vh',
-  display: 'grid',
-  gridTemplateColumns: '1.1fr 1fr',
-  background: 'radial-gradient(circle at 10% 20%, #c7d2fe 0%, #f1f5f9 35%, #e0f2fe 100%)',
-}
 
 export default function Login() {
   const { login, register, isLoading } = useAuth()
@@ -83,8 +77,9 @@ export default function Login() {
   }
 
   return (
-    <div style={panelStyles}>
+    <div className="login-grid">
       <section
+        className="login-hero"
         style={{
           padding: '3rem clamp(1.5rem, 4vw, 3rem)',
           display: 'flex',
@@ -213,7 +208,7 @@ export default function Login() {
                 <input className="form-input" type="text" placeholder="John Smith" value={regName} onChange={e => setRegName(e.target.value)} required />
               </Field>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="register-row-2col">
                 <Field label="Email *">
                   <input className="form-input" type="email" placeholder="you@example.com" value={regEmail} onChange={e => setRegEmail(e.target.value)} required />
                 </Field>
@@ -226,7 +221,7 @@ export default function Login() {
                 <input className="form-input" type="text" placeholder="123 Main Street" value={regAddress} onChange={e => setRegAddress(e.target.value)} />
               </Field>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+              <div className="register-row-city-zip">
                 <Field label="City">
                   <input className="form-input" type="text" placeholder="New York" value={regCity} onChange={e => setRegCity(e.target.value)} />
                 </Field>
@@ -235,7 +230,7 @@ export default function Login() {
                 </Field>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="register-row-2col">
                 <Field label="Password *">
                   <input className="form-input" type={showPass ? 'text' : 'password'} placeholder="Min 8 characters" value={regPassword} onChange={e => setRegPassword(e.target.value)} required minLength={8} />
                 </Field>
@@ -252,18 +247,6 @@ export default function Login() {
         </div>
       </section>
 
-      <style>{`
-        @media (max-width: 900px) {
-          .login-page-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-        @media (max-width: 900px) {
-          div[style*="grid-template-columns: 1.1fr 1fr"] {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
     </div>
   )
 }

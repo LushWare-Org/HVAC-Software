@@ -7,19 +7,25 @@ import {
 import { useTheme } from '../contexts/ThemeContext'
 import { usePendingTechnicians } from '../hooks/useTeam'
 
-interface Props { collapsed: boolean; onToggle: () => void }
+interface Props { collapsed: boolean; onToggle: () => void; mobileOpen?: boolean }
 
-export default function Sidebar({ collapsed, onToggle }: Props) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     const loc = useLocation()
     const { theme } = useTheme()
     const pendingQuery = usePendingTechnicians()
     const pendingCount = pendingQuery.data?.total ?? 0
 
     const isLight = theme === 'light'
+    const isMobileMode = mobileOpen !== undefined
+    const mobileClass = isMobileMode
+        ? (mobileOpen ? 'mobile-visible' : 'mobile-hidden')
+        : ''
+
     const sidebarClasses = [
         'fixed left-0 top-0 bottom-0 z-[200] flex flex-col overflow-hidden shadow-xl transform-gpu',
-        'transition-[width] duration-[var(--dur-slow)] ease-[var(--ease)]',
+        'transition-[width,transform] duration-[var(--dur-slow)] ease-[var(--ease)]',
         collapsed ? 'w-[var(--sidebar-w-col)]' : 'w-[var(--sidebar-w)]',
+        mobileClass,
         isLight
             ? 'bg-gradient-to-b from-slate-900 to-slate-800 text-white'
             : 'bg-[var(--bg-surface)] text-[var(--t2)]',

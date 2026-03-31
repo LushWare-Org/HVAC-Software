@@ -93,7 +93,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 20 }}>
+      <div className="dashboard-main-grid">
         <div className="card card-hover anim-fade-up delay-2">
           <div className="card-header">
             <div>
@@ -244,14 +244,10 @@ export default function Dashboard() {
 
       {pendingInvoices.length > 0 && (
         <div
-          className="card anim-fade-up delay-4"
+          className="card anim-fade-up delay-4 pending-banner"
           style={{
             borderColor: 'var(--amber)',
             padding: 20,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
             background: 'white',
           }}
         >

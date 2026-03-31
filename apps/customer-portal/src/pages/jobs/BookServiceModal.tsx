@@ -125,6 +125,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
 
   const modal = (
     <div
+      className="cp-modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -139,6 +140,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
       onClick={onClose}
     >
       <div
+        className="cp-modal-container"
         style={{
           background: '#fff',
           borderRadius: 16,
@@ -154,6 +156,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
         onClick={e => e.stopPropagation()}
       >
         <div
+          className="cp-modal-header"
           style={{
             background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
             padding: '20px 28px',
@@ -186,7 +189,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
           </button>
         </div>
 
-        <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#F9FAFB', flexShrink: 0 }}>
+        <div className="cp-modal-tabs" style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', background: '#F9FAFB', flexShrink: 0 }}>
           {tabs.map(t => (
             <button
               key={t.id}
@@ -213,7 +216,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
           ))}
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
+        <div className="cp-modal-body" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
           {submitted ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
               <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -228,7 +231,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
             <>
               {activeTab === 'service' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+                  <div className="cp-modal-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
                     <BF label="Service Type *">
                       <select name="serviceType" value={formData.serviceType} onChange={handleChange} style={inputStyle}>
                         <option value="Maintenance">Maintenance</option>
@@ -281,7 +284,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
 
               {activeTab === 'schedule' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+                  <div className="cp-modal-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
                     <BF label="Preferred Date *">
                       <input type="date" name="preferredDate" value={formData.preferredDate} onChange={handleChange} style={inputStyle} />
                     </BF>
@@ -334,6 +337,7 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
 
         {!submitted && (
           <div
+            className="cp-modal-footer"
             style={{
               background: '#F9FAFB',
               borderTop: '1px solid #E5E7EB',
