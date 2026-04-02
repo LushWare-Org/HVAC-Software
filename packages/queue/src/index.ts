@@ -1,8 +1,8 @@
-import { Queue, Worker, QueueOptions } from 'bullmq';
+﻿import { Queue, Worker, QueueOptions } from 'bullmq';
 import IORedis from 'ioredis';
 
 // ============================================================
-// @tscrm/queue — BullMQ queue names, factory, job type defs
+// @tscrm/queue â€” BullMQ queue names, factory, job type defs
 // ============================================================
 
 // ---- Named queues (one per domain concern) ----
@@ -16,6 +16,7 @@ export enum QueueName {
   APPOINTMENT_REMINDER = 'appointment-reminder',
   REVIEW_REQUEST = 'review-request',
   JOB_STATUS_NOTIFICATION = 'job-status-notification',
+  FOLLOWUP = 'followup-queue',
 }
 
 // ---- Redis connection factory (shared config) ----
@@ -47,3 +48,4 @@ export function createQueue(
 // ---- Worker factory (used inside comms-service processors) ----
 export { Worker, Queue };
 export type { QueueOptions };
+

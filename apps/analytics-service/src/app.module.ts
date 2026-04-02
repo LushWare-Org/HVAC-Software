@@ -1,19 +1,16 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from '@tscrm/auth-client';
 import appConfig from './app.config';
-
-// Core infra
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
-
-// Analytics modules (Week 7)
 import { DashboardModule } from './dashboard/dashboard.module';
 import { RevenueModule } from './revenue/revenue.module';
 import { TechnicianMetricsModule } from './technician-metrics/technician-metrics.module';
 import { JobsAnalyticsModule } from './jobs-analytics/jobs-analytics.module';
 import { CustomerAnalyticsModule } from './customer-analytics/customer-analytics.module';
 import { ExportsModule } from './exports/exports.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -25,14 +22,13 @@ import { ExportsModule } from './exports/exports.module';
     AuthModule,
     PrismaModule,
     HealthModule,
-
-    // Analytics feature modules
     DashboardModule,
     RevenueModule,
     TechnicianMetricsModule,
     JobsAnalyticsModule,
     CustomerAnalyticsModule,
     ExportsModule,
+    EventsModule,
   ],
 })
 export class AppModule {}

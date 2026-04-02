@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueName } from '@tscrm/queue';
 import { NotificationsService } from './notifications.service';
@@ -10,6 +10,7 @@ import { SmsModule } from '../sms/sms.module';
 import { EmailModule } from '../email/email.module';
 import { PushModule } from '../push/push.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { FollowupWorker } from '../workers/followup.worker';
 
 @Module({
   imports: [
@@ -21,10 +22,11 @@ import { PrismaModule } from '../prisma/prisma.module';
       { name: QueueName.SEND_SMS },
       { name: QueueName.SEND_EMAIL },
       { name: QueueName.SEND_PUSH },
+      { name: QueueName.FOLLOWUP },
     ),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService, SmsProcessor, EmailProcessor, PushProcessor],
+  providers: [NotificationsService, SmsProcessor, EmailProcessor, PushProcessor, FollowupWorker],
   exports: [NotificationsService],
 })
 export class NotificationsModule {}
