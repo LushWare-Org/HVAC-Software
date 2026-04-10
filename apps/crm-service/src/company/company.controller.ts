@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Get,
@@ -19,7 +19,7 @@ export class CompanyController {
 
   @Get()
   @ApiOperation({ summary: 'Get current company details' })
-  findOne(@CurrentUser() user: AuthUser) {
+  findOne(@CurrentUser() user: AuthUser): Promise<unknown> {
     return this.companyService.findOne(user.companyId);
   }
 
@@ -38,8 +38,9 @@ export class CompanyController {
       country?: string;
       website?: string;
       logoUrl?: string;
+      automaticFollowupEnabled?: boolean;
     },
-  ) {
+  ): Promise<unknown> {
     return this.companyService.update(user.companyId, body);
   }
 }

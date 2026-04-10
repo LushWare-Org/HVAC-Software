@@ -1,5 +1,5 @@
-// ============================================================
-// CRM Service — Prisma Schema
+﻿// ============================================================
+// CRM Service â€” Prisma Schema
 // Schema: crm (isolated from other services)
 // ============================================================
 
@@ -29,6 +29,7 @@ model Company {
   logoUrl     String?
   website     String?
   isActive    Boolean  @default(true)
+  automaticFollowupEnabled Boolean @default(true)
   trialEndsAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -336,3 +337,4 @@ model FollowupAttempt {
   @@index([companyId, status, triggeredAt])
   @@map("followup_attempts")
 }
+

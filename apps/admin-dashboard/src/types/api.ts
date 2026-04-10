@@ -1,12 +1,12 @@
-/**
- * api.ts — Shared TypeScript types mirroring the backend Prisma models + DTOs
+﻿/**
+ * api.ts â€” Shared TypeScript types mirroring the backend Prisma models + DTOs
  *
  * These are the shapes returned by the API (snake_case from JSON).
  * Status enums use UPPER_CASE as they come from the backend; the frontend
  * STATUS maps in each page normalise them to display labels & CSS classes.
  */
 
-// ─── Common ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Common â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface PaginatedResponse<T> {
   data: T[]
@@ -16,7 +16,7 @@ export interface PaginatedResponse<T> {
   totalPages: number
 }
 
-// ─── Auth/User (dev bypass) ───────────────────────────────────────────────────
+// â”€â”€â”€ Auth/User (dev bypass) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface DevUser {
   id: string
@@ -26,7 +26,7 @@ export interface DevUser {
   companyId: string
 }
 
-// ─── CRM Service ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ CRM Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type CustomerType = 'RESIDENTIAL' | 'COMMERCIAL' | 'INDUSTRIAL'
 
@@ -96,7 +96,7 @@ export function leadName(l: Lead): string {
   return `${l.firstName} ${l.lastName}`.trim()
 }
 
-// ─── Addresses & Equipment ────────────────────────────────────────────────────
+// â”€â”€â”€ Addresses & Equipment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface Address {
   id: string
@@ -129,7 +129,7 @@ export interface EquipmentRecord {
   updatedAt: string
 }
 
-// ─── Job Service ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Job Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type JobStatus = 'PENDING' | 'SCHEDULED' | 'EN_ROUTE' | 'ON_SITE' | 'IN_PROGRESS' | 'COMPLETED' | 'INVOICED' | 'PAID' | 'CANCELLED' | 'ON_HOLD'
 export type JobPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'EMERGENCY' | 'URGENT'
@@ -188,7 +188,7 @@ export interface JobStats {
   revenue: number
 }
 
-// ─── Finance Service ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Finance Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PARTIALLY_PAID' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'VOID'
 export type QuoteStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'CONVERTED'
@@ -250,7 +250,7 @@ export interface Expense {
   updatedAt: string
 }
 
-// ─── Scheduling Service ────────────────────────────────────────────────────────
+// â”€â”€â”€ Scheduling Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type AppointmentStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 
@@ -293,7 +293,7 @@ export interface Technician {
   updatedAt: string
 }
 
-// ─── Scheduling Service (Go) ───────────────────────────────────────────────────
+// â”€â”€â”€ Scheduling Service (Go) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type AssignmentStatus = 'SUGGESTED' | 'ASSIGNED' | 'EN_ROUTE' | 'ON_SITE' | 'COMPLETED' | 'CANCELLED'
 
@@ -354,7 +354,7 @@ export interface AssignResponse {
   suggestions?: ScoredTechnician[]
 }
 
-// ─── Communications Service ────────────────────────────────────────────────────
+// â”€â”€â”€ Communications Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type MessageStatus = 'SENT' | 'DELIVERED' | 'READ' | 'FAILED'
 export type MessageChannel = 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP'
@@ -397,12 +397,12 @@ export interface MessageThread {
   updatedAt: string
 }
 
-/** Thread detail with messages — GET /messaging/threads/:id */
+/** Thread detail with messages â€” GET /messaging/threads/:id */
 export interface MessageThreadDetail extends MessageThread {
   messages: ThreadMessage[]
 }
 
-/** Legacy flat Message — kept for backwards compat / notifications */
+/** Legacy flat Message â€” kept for backwards compat / notifications */
 export interface Message {
   id: string
   companyId: string
@@ -436,7 +436,7 @@ export interface Notification {
   sentRoles?: string[]
 }
 
-// ─── Analytics Service ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Analytics Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface KpiCard {
   label: string
@@ -490,7 +490,7 @@ export interface RevenueByCategory {
   percentage: number
 }
 
-// ─── Inventory Service ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Inventory Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type ItemCategory = 'PART' | 'MATERIAL' | 'TOOL' | 'CONSUMABLE'
 export type LocationType = 'WAREHOUSE' | 'VAN'
@@ -578,4 +578,23 @@ export interface LowStockAlert {
   reorderPoint: number
   reorderQty: number
   deficit: number
+}
+
+export interface CompanyProfile {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country: string
+  website?: string
+  logoUrl?: string
+  automaticFollowupEnabled: boolean
+  isActive: boolean
+  trialEndsAt?: string
+  createdAt: string
+  updatedAt: string
 }

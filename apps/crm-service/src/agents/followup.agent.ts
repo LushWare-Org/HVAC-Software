@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { FollowupAction, FollowupJobPayload } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
@@ -52,6 +52,8 @@ interface FollowupRunSummary {
 export class FollowupAgent {
   private readonly logger = new Logger(FollowupAgent.name);
   private readonly analyticsServiceUrl = process.env.ANALYTICS_SERVICE_URL ?? 'http://analytics-service:3006';
+  private automaticFollowupColumnExists?: boolean;
+  private followupAttemptsTableExists?: boolean;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -87,10 +89,78 @@ export class FollowupAgent {
     return summary;
   }
 
+  private async hasAutomaticFollowupColumn(): Promise<boolean> {
+    if (this.automaticFollowupColumnExists !== undefined) {
+      return this.automaticFollowupColumnExists;
+    }
+
+    const rows = await this.prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
+      `
+        SELECT EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = current_schema()
+            AND table_name = 'companies'
+            AND column_name = 'automaticFollowupEnabled'
+        ) AS exists
+      `,
+    );
+
+    this.automaticFollowupColumnExists = Boolean(rows[0]?.exists);
+    if (!this.automaticFollowupColumnExists) {
+      this.logger.warn('companies.automaticFollowupEnabled column is missing; automatic follow-up will remain enabled for all companies until the CRM migration is applied');
+    }
+
+    return this.automaticFollowupColumnExists;
+  }
+
+  private async hasFollowupAttemptsTable(): Promise<boolean> {
+    if (this.followupAttemptsTableExists !== undefined) {
+      return this.followupAttemptsTableExists;
+    }
+
+    const rows = await this.prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
+      `
+        SELECT EXISTS (
+          SELECT 1
+          FROM information_schema.tables
+          WHERE table_schema = current_schema()
+            AND table_name = 'followup_attempts'
+        ) AS exists
+      `,
+    );
+
+    this.followupAttemptsTableExists = Boolean(rows[0]?.exists);
+    if (!this.followupAttemptsTableExists) {
+      this.logger.warn('followup_attempts table is missing; duplicate suppression and follow-up audit persistence are disabled until the CRM migration is applied');
+    }
+
+    return this.followupAttemptsTableExists;
+  }
+
+  private async getEnabledCompanyIds(): Promise<string[]> {
+    const hasToggleColumn = await this.hasAutomaticFollowupColumn();
+    const whereClause = hasToggleColumn ? 'WHERE "automaticFollowupEnabled" = TRUE' : '';
+
+    const rows = await this.prisma.$queryRawUnsafe<Array<{ id: string }>>(
+      `
+        SELECT id
+        FROM companies
+        ${whereClause}
+      `,
+    );
+
+    return rows.map((row) => row.id);
+  }
+
   private async loadCustomerCandidates(): Promise<CustomerCandidate[]> {
+    const enabledCompanyIds = await this.getEnabledCompanyIds();
+    if (enabledCompanyIds.length === 0) return [];
+
     return this.prisma.customer.findMany({
       where: {
         isActive: true,
+        companyId: { in: enabledCompanyIds },
         NOT: {
           AND: [
             { source: 'portal' },
@@ -139,9 +209,12 @@ export class FollowupAgent {
 
   private async loadLeadCandidates(): Promise<LeadCandidate[]> {
     const cutoff = new Date(Date.now() - (3 * 24 * 60 * 60 * 1000));
+    const enabledCompanyIds = await this.getEnabledCompanyIds();
+    if (enabledCompanyIds.length === 0) return [];
 
     return this.prisma.lead.findMany({
       where: {
+        companyId: { in: enabledCompanyIds },
         status: {
           in: ['NEW', 'CONTACTED', 'QUALIFIED'],
         },
@@ -329,6 +402,10 @@ export class FollowupAgent {
   }
 
   private async hasRecentFollowup(companyId: string, entityType: EntityType, entityId: string): Promise<boolean> {
+    if (!(await this.hasFollowupAttemptsTable())) {
+      return false;
+    }
+
     const rows = await this.prisma.$queryRawUnsafe<Array<{ count: number }>>(
       `
         SELECT COUNT(*)::INT AS count
@@ -355,6 +432,10 @@ export class FollowupAgent {
     customerId: string | null;
     leadId: string | null;
   }): Promise<void> {
+    if (!(await this.hasFollowupAttemptsTable())) {
+      return;
+    }
+
     await this.prisma.$executeRawUnsafe(
       `
         INSERT INTO followup_attempts (
@@ -416,6 +497,10 @@ export class FollowupAgent {
   }
 
   private async markAttemptQueued(attemptId: string, jobId: string): Promise<void> {
+    if (!(await this.hasFollowupAttemptsTable())) {
+      return;
+    }
+
     await this.prisma.$executeRawUnsafe(
       `
         UPDATE followup_attempts
@@ -432,6 +517,10 @@ export class FollowupAgent {
   }
 
   private async markAttemptFailed(attemptId: string, errorMessage: string): Promise<void> {
+    if (!(await this.hasFollowupAttemptsTable())) {
+      return;
+    }
+
     await this.prisma.$executeRawUnsafe(
       `
         UPDATE followup_attempts
