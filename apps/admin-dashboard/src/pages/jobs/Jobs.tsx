@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
 import {
   Wrench, Clock, CheckCircle, FileText, Search, AlertTriangle,
-  Maximize2, Minimize2, Eye, Edit2, Phone, Mail, XCircle,
+  Maximize2, Minimize2, Edit2,
   ChevronLeft, ChevronRight, RefreshCw, AlertCircle,
-  ChevronDown, ChevronUp, Zap, ArrowUpDown, CalendarDays, Shield,
+  ChevronDown, ChevronUp, Zap, ArrowUpDown, CalendarDays, Shield, Trash2,
 } from "lucide-react";
-import { useJobs, useJobStats } from "../../hooks/useJobs";
+import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
 import type { Job } from "../../types/api";
 
 const STATUS: Record<string, { label: string; css: string }> = {
@@ -36,7 +36,7 @@ function Skeleton({ h = 14 }: { h?: number }) {
   return <div style={{ width: "100%", height: h, background: "var(--bg-hover)", borderRadius: 4 }} />;
 }
 
-function JobTable({ jobs, loading, onView }: { jobs: Job[]; loading: boolean; onView: (j: Job) => void }) {
+function JobTable({ jobs, loading, onView, onDelete }: { jobs: Job[]; loading: boolean; onView: (j: Job) => void; onDelete: (j: Job) => void }) {
   return (
     <table className="data-table">
       <thead>
@@ -110,11 +110,20 @@ function JobTable({ jobs, loading, onView }: { jobs: Job[]; loading: boolean; on
               <td className="text-right td-primary font-600">${Number(amount).toLocaleString()}</td>
               <td className="sticky-actions">
                 <div className="flex items-center gap-0.5 justify-center">
-                  <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="View Details" onClick={e => { e.stopPropagation(); onView(j); }}><Eye size={15} /></button>
-                  <button className="flex items-center justify-center p-1.5 text-[var(--amber)] hover:bg-amber-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Edit Job" onClick={e => { e.stopPropagation(); onView(j); }}><Edit2 size={15} /></button>
-                  <button className="flex items-center justify-center p-1.5 text-[var(--green)] hover:bg-green-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Call Customer" onClick={e => e.stopPropagation()}><Phone size={15} /></button>
-                  <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email Customer" onClick={e => e.stopPropagation()}><Mail size={15} /></button>
-                  <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Cancel Job" onClick={e => e.stopPropagation()}><XCircle size={15} /></button>
+                  <button
+                    className="flex items-center justify-center p-1.5 text-[var(--amber)] hover:bg-amber-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer"
+                    title="Edit Job"
+                    onClick={e => { e.stopPropagation(); onView(j); }}
+                  >
+                    <Edit2 size={15} />
+                  </button>
+                  <button
+                    className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer"
+                    title="Delete Job"
+                    onClick={e => { e.stopPropagation(); onDelete(j); }}
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               </td>
             </tr>
@@ -133,10 +142,12 @@ export default function Jobs() {
   const [showPast, setShowPast] = useState(false);
   const [pastPage, setPastPage] = useState(1);
   const [sortMode, setSortMode] = useState<'priority' | 'date'>('priority');
+  const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
   const PAST_PER_PAGE = 10;
 
   const statsQuery = useJobStats();
   const jobsQuery = useJobs({ limit: 200, search: search || undefined });
+  const deleteJob = useDeleteJob();
 
   const stats = statsQuery.data;
   const allJobs: Job[] = jobsQuery.data?.data ?? [];
@@ -193,6 +204,15 @@ export default function Jobs() {
 
   const handleViewJob = (job: Job) => {
     window.dispatchEvent(new CustomEvent("open-job-detail", { detail: job }));
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteJob.mutateAsync(deleteTarget.id);
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   const urgentCount = activeJobs.filter(j => j.priority === "EMERGENCY" || j.priority === "URGENT").length;
@@ -312,7 +332,7 @@ export default function Jobs() {
 
         <div className="card-body-flush">
           <div className="table-container jobs-table-container">
-            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} />
+            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} />
           </div>
         </div>
       </div>
@@ -340,7 +360,7 @@ export default function Jobs() {
           <>
             <div className="card-body-flush">
               <div className="table-container jobs-table-container">
-                <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} />
+                <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} />
               </div>
             </div>
 
@@ -359,6 +379,42 @@ export default function Jobs() {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[99999] admin-modal-backdrop" onClick={() => setDeleteTarget(null)}>
+          <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-2xl w-full max-w-md mx-4 flex flex-col admin-modal-box" onClick={e => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--red-dim)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Trash2 size={18} color="var(--red)" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: "var(--t1)" }}>Delete Job</div>
+                  <div style={{ fontSize: 13, color: "var(--t3)", marginTop: 2 }}>This action cannot be undone.</div>
+                </div>
+              </div>
+              <p style={{ fontSize: 14, color: "var(--t2)", lineHeight: 1.6 }}>
+                Are you sure you want to delete job <strong>{deleteTarget.title}</strong>
+                {deleteTarget.customerName ? <> for <strong>{deleteTarget.customerName}</strong></> : ""}?
+              </p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "16px 24px", borderTop: "1px solid var(--bd)" }}>
+              <button className="btn btn-secondary" onClick={() => setDeleteTarget(null)} disabled={deleteJob.isPending}>
+                Cancel
+              </button>
+              <button
+                className="btn"
+                style={{ background: "var(--red)", color: "#fff", borderColor: "var(--red)" }}
+                onClick={handleConfirmDelete}
+                disabled={deleteJob.isPending}
+              >
+                {deleteJob.isPending ? "Deleting…" : "Delete Job"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -20,7 +20,7 @@ import {
 } from "../../hooks/useEquipment";
 import {
   useLocations, useLocationStock, useInventoryItems,
-  useTransfer, useConsume, useEnsureVan, useCheckAvailability, decimalToNumber as invDecimal,
+  useTransfer, useConsume, useReturnStock, useEnsureVan, useCheckAvailability, decimalToNumber as invDecimal,
 } from "../../hooks/useInventory";
 import type { Job, EquipmentRecord } from "../../types/api";
 

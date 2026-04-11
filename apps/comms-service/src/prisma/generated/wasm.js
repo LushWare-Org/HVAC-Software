@@ -115,6 +115,13 @@ Prisma.NullTypes = {
  * Enums
  */
 
+exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
+  Serializable: 'Serializable'
+});
+
 exports.Prisma.NotificationScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
@@ -162,6 +169,22 @@ exports.Prisma.MessageThreadScalarFieldEnum = {
   lastMessageBody: 'lastMessageBody',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MessageScalarFieldEnum = {
+  id: 'id',
+  threadId: 'threadId',
+  senderId: 'senderId',
+  senderName: 'senderName',
+  direction: 'direction',
+  body: 'body',
+  channel: 'channel',
+  mediaUrls: 'mediaUrls',
+  twilioSid: 'twilioSid',
+  sentAt: 'sentAt',
+  deliveredAt: 'deliveredAt',
+  readAt: 'readAt',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.NotificationTemplateScalarFieldEnum = {
@@ -217,6 +240,11 @@ exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
 exports.Channel = exports.$Enums.Channel = {
   SMS: 'SMS',
   EMAIL: 'EMAIL',
@@ -239,6 +267,11 @@ exports.ThreadStatus = exports.$Enums.ThreadStatus = {
   SPAM: 'SPAM'
 };
 
+exports.MessageDirection = exports.$Enums.MessageDirection = {
+  OUTBOUND: 'OUTBOUND',
+  INBOUND: 'INBOUND'
+};
+
 exports.TemplateType = exports.$Enums.TemplateType = {
   APPOINTMENT_REMINDER: 'APPOINTMENT_REMINDER',
   JOB_STATUS_UPDATE: 'JOB_STATUS_UPDATE',
@@ -258,14 +291,10 @@ exports.AutomationTrigger = exports.$Enums.AutomationTrigger = {
   MANUAL: 'MANUAL'
 };
 
-exports.MessageDirection = exports.$Enums.MessageDirection = {
-  OUTBOUND: 'OUTBOUND',
-  INBOUND: 'INBOUND'
-};
-
 exports.Prisma.ModelName = {
   Notification: 'Notification',
   MessageThread: 'MessageThread',
+  Message: 'Message',
   NotificationTemplate: 'NotificationTemplate',
   AutomationRule: 'AutomationRule',
   DeliveryLog: 'DeliveryLog'

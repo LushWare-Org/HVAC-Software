@@ -1,13 +1,13 @@
 /**
- * MessagingService — Two-way SMS conversation threads between company staff and customers.
+ * MessagingService — Two-way conversation threads between company staff and customers.
  *
  * Architecture:
- *  - Outbound: Staff sends message via REST → stored as OUTBOUND message in thread → Twilio delivers
- *  - Inbound:  Twilio webhook → match thread by customer phone → store as INBOUND message → update unreadCount
+ *  - Outbound: Staff sends message via REST → stored as Message row → Twilio delivers
+ *  - Inbound:  Twilio webhook → match thread by customer phone → insert Message row
  *
- * MongoDB document model:
- *  - MessageThread has an embedded `messages Message[]` array (no separate collection)
- *  - Avoids join queries for the most common read (load thread with all messages)
+ * PostgreSQL relational model (migrated from MongoDB embedded documents):
+ *  - MessageThread — thread metadata, participant info, last message cache
+ *  - Message — individual messages, FK to MessageThread (onDelete: Cascade)
  */
 
 import {
@@ -22,6 +22,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SmsService } from '../sms/sms.service';
 import { CreateThreadDto, SendMessageDto, TwilioInboundWebhookDto } from './dto/messaging.dto';
 import { MessageDirection, ThreadStatus, Channel } from '../prisma/generated';
+
+const MESSAGES_INCLUDE = {
+  messages: { orderBy: { createdAt: 'asc' as const } },
+};
 
 @Injectable()
 export class MessagingService {
@@ -38,7 +42,6 @@ export class MessagingService {
     const isCustomerThread = !!dto.customerId;
 
     if (isCustomerThread) {
-      // Check for existing open thread for same customer
       const existing = await this.prisma.messageThread.findFirst({
         where: {
           companyId,
@@ -46,35 +49,38 @@ export class MessagingService {
           status: ThreadStatus.ACTIVE,
           ...(dto.jobId ? { jobId: dto.jobId } : {}),
         },
+        include: MESSAGES_INCLUDE,
       });
-      if (existing) return existing;
+      if (existing) return this.enrichThread(existing);
     } else if (dto.participantIds?.length) {
-      // Staff thread — check for existing thread with same participants
       const allParticipants = creatorId
         ? [...new Set([creatorId, ...dto.participantIds])].sort()
         : [...dto.participantIds].sort();
+
       const existing = await this.prisma.messageThread.findFirst({
         where: {
           companyId,
           status: ThreadStatus.ACTIVE,
           participantIds: { equals: allParticipants },
         },
+        include: MESSAGES_INCLUDE,
       });
-      if (existing) return existing;
+      if (existing) return this.enrichThread(existing);
 
-      return this.prisma.messageThread.create({
+      const thread = await this.prisma.messageThread.create({
         data: {
           companyId,
           participantIds: allParticipants,
           participantNames: dto.participantNames ?? [],
           subject: dto.subject,
           jobId: dto.jobId,
-          messages: [],
         },
+        include: MESSAGES_INCLUDE,
       });
+      return this.enrichThread(thread);
     }
 
-    return this.prisma.messageThread.create({
+    const thread = await this.prisma.messageThread.create({
       data: {
         companyId,
         customerId: dto.customerId,
@@ -85,9 +91,10 @@ export class MessagingService {
         participantNames: dto.participantNames ?? [],
         subject: dto.subject,
         jobId: dto.jobId,
-        messages: [],
       },
+      include: MESSAGES_INCLUDE,
     });
+    return this.enrichThread(thread);
   }
 
   async findThreads(
@@ -109,16 +116,14 @@ export class MessagingService {
     };
 
     if (customerId) {
-      // Customer viewing their own threads
       where.customerId = customerId;
     } else if (userId) {
-      // Staff member — show customer threads + threads they participate in
       where = {
         companyId,
         ...(status ? { status } : {}),
         OR: [
-          { customerId: { not: null } },           // all customer threads (visible to staff)
-          { participantIds: { has: userId } },      // staff threads they're in
+          { customerId: { not: null } },
+          { participantIds: { has: userId } },
         ],
       };
     }
@@ -129,10 +134,17 @@ export class MessagingService {
         orderBy: { lastMessageAt: 'desc' },
         skip,
         take: limit,
+        // Omit messages in list view for performance — load on thread open
       }),
       this.prisma.messageThread.count({ where }),
     ]);
-    return { data: items.map((thread) => this.enrichThread(thread)), total, page, limit };
+
+    return {
+      data: items.map((thread) => this.enrichThread(thread as any)),
+      total,
+      page,
+      limit,
+    };
   }
 
   async findThread(companyId: string, id: string, customerId?: string) {
@@ -142,6 +154,7 @@ export class MessagingService {
         companyId,
         ...(customerId ? { customerId } : {}),
       },
+      include: MESSAGES_INCLUDE,
     });
     if (!thread) throw new NotFoundException(`Thread ${id} not found`);
     return this.enrichThread(thread);
@@ -152,6 +165,7 @@ export class MessagingService {
     return this.prisma.messageThread.update({
       where: { id },
       data: { status },
+      include: MESSAGES_INCLUDE,
     });
   }
 
@@ -160,15 +174,12 @@ export class MessagingService {
     return this.prisma.messageThread.update({
       where: { id },
       data: { unreadCount: 0 },
+      include: MESSAGES_INCLUDE,
     });
   }
 
   // ── Messages ──────────────────────────────────────────────────────────────
 
-  /**
-   * Staff sends an outbound message to a customer.
-   * The message is stored in the thread and sent via Twilio.
-   */
   async sendMessage(
     companyId: string,
     threadId: string,
@@ -194,51 +205,48 @@ export class MessagingService {
       throw new ForbiddenException('You can only send messages to your own thread');
     }
 
-    // In staff threads, direction is always OUTBOUND (from sender's perspective)
-    // In customer threads, INBOUND = customer sent, OUTBOUND = staff sent
     const direction = customerSender ? MessageDirection.INBOUND : MessageDirection.OUTBOUND;
+    const now = new Date();
 
-    const message = {
-      id: uuidv4(),
-      senderId,
-      senderName,
-      direction,
-      body: dto.body.trim(),
-      channel: Channel.IN_APP,
-      mediaUrls: dto.mediaUrls ?? [],
-      createdAt: new Date(),
-      sentAt: new Date(),
-    };
+    // Create message row + update thread metadata in a single transaction
+    await this.prisma.$transaction([
+      this.prisma.message.create({
+        data: {
+          id: uuidv4(),
+          threadId,
+          senderId,
+          senderName,
+          direction,
+          body: dto.body.trim(),
+          channel: Channel.IN_APP,
+          mediaUrls: dto.mediaUrls ?? [],
+          sentAt: now,
+          createdAt: now,
+        },
+      }),
+      this.prisma.messageThread.update({
+        where: { id: threadId },
+        data: {
+          lastMessageAt: now,
+          lastMessageBody: dto.body.trim().substring(0, 100),
+          unreadCount: customerSender || isStaffThread ? { increment: 1 } : 0,
+          updatedAt: now,
+        },
+      }),
+    ]);
 
-    const updatedThread = await this.prisma.messageThread.update({
-      where: { id: threadId },
-      data: {
-        messages: { push: message },
-        lastMessageAt: new Date(),
-        lastMessageBody: message.body.substring(0, 100),
-        // In staff threads, increment unread for the other participant
-        // In customer threads, increment only when customer sends
-        unreadCount: customerSender || isStaffThread ? { increment: 1 } : 0,
-      },
-    });
-
-    return this.enrichThread(updatedThread);
+    // Return thread with all messages included (for controller broadcast)
+    return this.findThread(companyId, threadId);
   }
 
   // ── Inbound Webhook ───────────────────────────────────────────────────────
 
-  /**
-   * Handles inbound Twilio webhook.
-   * Finds the thread by customer phone → appends INBOUND message → increments unreadCount.
-   * Creates a new thread if none exists (handles first-time inbound).
-   */
   async handleInboundWebhook(
     companyId: string,
     payload: TwilioInboundWebhookDto,
     twilioSignature: string,
     webhookUrl: string,
   ): Promise<void> {
-    // Validate Twilio signature
     const isValid = this.smsService.validateWebhookSignature(
       webhookUrl,
       payload as unknown as Record<string, string>,
@@ -247,13 +255,12 @@ export class MessagingService {
 
     if (!isValid) {
       this.logger.warn(`Invalid Twilio signature from ${payload.From}`);
-      return; // silently ignore — prevents replay attacks
+      return;
     }
 
     const customerPhone = payload.From;
     const body = payload.Body ?? '';
 
-    // Collect media URLs from Twilio multipart fields
     const numMedia = parseInt(payload.NumMedia ?? '0', 10);
     const mediaUrls: string[] = [];
     for (let i = 0; i < numMedia; i++) {
@@ -261,7 +268,6 @@ export class MessagingService {
       if (url) mediaUrls.push(url);
     }
 
-    // Find or create thread
     let thread = await this.prisma.messageThread.findFirst({
       where: { companyId, customerPhone, status: ThreadStatus.ACTIVE },
       orderBy: { lastMessageAt: 'desc' },
@@ -271,36 +277,41 @@ export class MessagingService {
       thread = await this.prisma.messageThread.create({
         data: {
           companyId,
-          customerId: `phone:${customerPhone}`,  // placeholder until CRM linkage
+          customerId: `phone:${customerPhone}`,
           customerName: customerPhone,
           customerPhone,
-          messages: [],
         },
       });
       this.logger.log(`New inbound thread created for ${customerPhone}`);
     }
 
-    const message = {
-      id: uuidv4(),
-      senderId: customerPhone,
-      senderName: thread.customerName ?? customerPhone,
-      direction: MessageDirection.INBOUND,
-      body,
-      channel: Channel.SMS,
-      mediaUrls,
-      twilioSid: payload.MessageSid,
-      createdAt: new Date(),
-    };
+    const now = new Date();
 
-    await this.prisma.messageThread.update({
-      where: { id: thread.id },
-      data: {
-        messages: { push: message },
-        lastMessageAt: new Date(),
-        lastMessageBody: body.substring(0, 100),
-        unreadCount: { increment: 1 },
-      },
-    });
+    await this.prisma.$transaction([
+      this.prisma.message.create({
+        data: {
+          id: uuidv4(),
+          threadId: thread.id,
+          senderId: customerPhone,
+          senderName: thread.customerName ?? customerPhone,
+          direction: MessageDirection.INBOUND,
+          body,
+          channel: Channel.SMS,
+          mediaUrls,
+          twilioSid: payload.MessageSid,
+          createdAt: now,
+        },
+      }),
+      this.prisma.messageThread.update({
+        where: { id: thread.id },
+        data: {
+          lastMessageAt: now,
+          lastMessageBody: body.substring(0, 100),
+          unreadCount: { increment: 1 },
+          updatedAt: now,
+        },
+      }),
+    ]);
 
     this.logger.log(`Inbound SMS stored: thread ${thread.id} | SID ${payload.MessageSid}`);
   }

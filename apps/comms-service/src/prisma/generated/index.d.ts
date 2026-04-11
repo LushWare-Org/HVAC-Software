@@ -14,11 +14,6 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
 
 
 /**
- * Model Message
- * 
- */
-export type Message = $Result.DefaultSelection<Prisma.$MessagePayload>
-/**
  * Model Notification
  * 
  */
@@ -28,6 +23,11 @@ export type Notification = $Result.DefaultSelection<Prisma.$NotificationPayload>
  * 
  */
 export type MessageThread = $Result.DefaultSelection<Prisma.$MessageThreadPayload>
+/**
+ * Model Message
+ * 
+ */
+export type Message = $Result.DefaultSelection<Prisma.$MessagePayload>
 /**
  * Model NotificationTemplate
  * 
@@ -79,6 +79,14 @@ export const ThreadStatus: {
 export type ThreadStatus = (typeof ThreadStatus)[keyof typeof ThreadStatus]
 
 
+export const MessageDirection: {
+  OUTBOUND: 'OUTBOUND',
+  INBOUND: 'INBOUND'
+};
+
+export type MessageDirection = (typeof MessageDirection)[keyof typeof MessageDirection]
+
+
 export const TemplateType: {
   APPOINTMENT_REMINDER: 'APPOINTMENT_REMINDER',
   JOB_STATUS_UPDATE: 'JOB_STATUS_UPDATE',
@@ -103,14 +111,6 @@ export const AutomationTrigger: {
 
 export type AutomationTrigger = (typeof AutomationTrigger)[keyof typeof AutomationTrigger]
 
-
-export const MessageDirection: {
-  OUTBOUND: 'OUTBOUND',
-  INBOUND: 'INBOUND'
-};
-
-export type MessageDirection = (typeof MessageDirection)[keyof typeof MessageDirection]
-
 }
 
 export type Channel = $Enums.Channel
@@ -125,6 +125,10 @@ export type ThreadStatus = $Enums.ThreadStatus
 
 export const ThreadStatus: typeof $Enums.ThreadStatus
 
+export type MessageDirection = $Enums.MessageDirection
+
+export const MessageDirection: typeof $Enums.MessageDirection
+
 export type TemplateType = $Enums.TemplateType
 
 export const TemplateType: typeof $Enums.TemplateType
@@ -132,10 +136,6 @@ export const TemplateType: typeof $Enums.TemplateType
 export type AutomationTrigger = $Enums.AutomationTrigger
 
 export const AutomationTrigger: typeof $Enums.AutomationTrigger
-
-export type MessageDirection = $Enums.MessageDirection
-
-export const MessageDirection: typeof $Enums.MessageDirection
 
 /**
  * ##  Prisma Client ʲˢ
@@ -194,6 +194,53 @@ export class PrismaClient<
   $use(cb: Prisma.Middleware): void
 
 /**
+   * Executes a prepared raw query and returns the number of affected rows.
+   * @example
+   * ```
+   * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
+   * ```
+   * 
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<number>;
+
+  /**
+   * Executes a raw query and returns the number of affected rows.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
+   * ```
+   * 
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<number>;
+
+  /**
+   * Performs a prepared raw query and returns the `SELECT` data.
+   * @example
+   * ```
+   * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
+   * ```
+   * 
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<T>;
+
+  /**
+   * Performs a raw query and returns the `SELECT` data.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
+   * ```
+   * 
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<T>;
+
+
+  /**
    * Allows the running of a sequence of read/write operations that are guaranteed to either succeed or fail as a whole.
    * @example
    * ```
@@ -206,24 +253,10 @@ export class PrismaClient<
    * 
    * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
    */
-  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P]): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 
-  $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number }): $Utils.JsPromise<R>
+  $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<R>
 
-  /**
-   * Executes a raw MongoDB command and returns the result of it.
-   * @example
-   * ```
-   * const user = await prisma.$runCommandRaw({
-   *   aggregate: 'User',
-   *   pipeline: [{ $match: { name: 'Bob' } }, { $project: { email: true, _id: false } }],
-   *   explain: false,
-   * })
-   * ```
-   * 
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
-   */
-  $runCommandRaw(command: Prisma.InputJsonObject): Prisma.PrismaPromise<Prisma.JsonObject>
 
   $extends: $Extensions.ExtendsHook<"extends", Prisma.TypeMapCb, ExtArgs>
 
@@ -246,6 +279,16 @@ export class PrismaClient<
     * ```
     */
   get messageThread(): Prisma.MessageThreadDelegate<ExtArgs>;
+
+  /**
+   * `prisma.message`: Exposes CRUD operations for the **Message** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Messages
+    * const messages = await prisma.message.findMany()
+    * ```
+    */
+  get message(): Prisma.MessageDelegate<ExtArgs>;
 
   /**
    * `prisma.notificationTemplate`: Exposes CRUD operations for the **NotificationTemplate** model.
@@ -719,6 +762,7 @@ export namespace Prisma {
   export const ModelName: {
     Notification: 'Notification',
     MessageThread: 'MessageThread',
+    Message: 'Message',
     NotificationTemplate: 'NotificationTemplate',
     AutomationRule: 'AutomationRule',
     DeliveryLog: 'DeliveryLog'
@@ -737,8 +781,8 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "notification" | "messageThread" | "notificationTemplate" | "automationRule" | "deliveryLog"
-      txIsolationLevel: never
+      modelProps: "notification" | "messageThread" | "message" | "notificationTemplate" | "automationRule" | "deliveryLog"
+      txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
       Notification: {
@@ -773,6 +817,10 @@ export namespace Prisma {
             args: Prisma.NotificationCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          createManyAndReturn: {
+            args: Prisma.NotificationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationPayload>[]
+          }
           delete: {
             args: Prisma.NotificationDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$NotificationPayload>
@@ -800,14 +848,6 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.NotificationGroupByArgs<ExtArgs>
             result: $Utils.Optional<NotificationGroupByOutputType>[]
-          }
-          findRaw: {
-            args: Prisma.NotificationFindRawArgs<ExtArgs>
-            result: JsonObject
-          }
-          aggregateRaw: {
-            args: Prisma.NotificationAggregateRawArgs<ExtArgs>
-            result: JsonObject
           }
           count: {
             args: Prisma.NotificationCountArgs<ExtArgs>
@@ -847,6 +887,10 @@ export namespace Prisma {
             args: Prisma.MessageThreadCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          createManyAndReturn: {
+            args: Prisma.MessageThreadCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageThreadPayload>[]
+          }
           delete: {
             args: Prisma.MessageThreadDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$MessageThreadPayload>
@@ -875,17 +919,79 @@ export namespace Prisma {
             args: Prisma.MessageThreadGroupByArgs<ExtArgs>
             result: $Utils.Optional<MessageThreadGroupByOutputType>[]
           }
-          findRaw: {
-            args: Prisma.MessageThreadFindRawArgs<ExtArgs>
-            result: JsonObject
-          }
-          aggregateRaw: {
-            args: Prisma.MessageThreadAggregateRawArgs<ExtArgs>
-            result: JsonObject
-          }
           count: {
             args: Prisma.MessageThreadCountArgs<ExtArgs>
             result: $Utils.Optional<MessageThreadCountAggregateOutputType> | number
+          }
+        }
+      }
+      Message: {
+        payload: Prisma.$MessagePayload<ExtArgs>
+        fields: Prisma.MessageFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MessageFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MessageFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload>
+          }
+          findFirst: {
+            args: Prisma.MessageFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MessageFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload>
+          }
+          findMany: {
+            args: Prisma.MessageFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload>[]
+          }
+          create: {
+            args: Prisma.MessageCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload>
+          }
+          createMany: {
+            args: Prisma.MessageCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MessageCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload>[]
+          }
+          delete: {
+            args: Prisma.MessageDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload>
+          }
+          update: {
+            args: Prisma.MessageUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload>
+          }
+          deleteMany: {
+            args: Prisma.MessageDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MessageUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.MessageUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessagePayload>
+          }
+          aggregate: {
+            args: Prisma.MessageAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMessage>
+          }
+          groupBy: {
+            args: Prisma.MessageGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MessageGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MessageCountArgs<ExtArgs>
+            result: $Utils.Optional<MessageCountAggregateOutputType> | number
           }
         }
       }
@@ -921,6 +1027,10 @@ export namespace Prisma {
             args: Prisma.NotificationTemplateCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          createManyAndReturn: {
+            args: Prisma.NotificationTemplateCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificationTemplatePayload>[]
+          }
           delete: {
             args: Prisma.NotificationTemplateDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$NotificationTemplatePayload>
@@ -948,14 +1058,6 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.NotificationTemplateGroupByArgs<ExtArgs>
             result: $Utils.Optional<NotificationTemplateGroupByOutputType>[]
-          }
-          findRaw: {
-            args: Prisma.NotificationTemplateFindRawArgs<ExtArgs>
-            result: JsonObject
-          }
-          aggregateRaw: {
-            args: Prisma.NotificationTemplateAggregateRawArgs<ExtArgs>
-            result: JsonObject
           }
           count: {
             args: Prisma.NotificationTemplateCountArgs<ExtArgs>
@@ -995,6 +1097,10 @@ export namespace Prisma {
             args: Prisma.AutomationRuleCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          createManyAndReturn: {
+            args: Prisma.AutomationRuleCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationRulePayload>[]
+          }
           delete: {
             args: Prisma.AutomationRuleDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$AutomationRulePayload>
@@ -1022,14 +1128,6 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.AutomationRuleGroupByArgs<ExtArgs>
             result: $Utils.Optional<AutomationRuleGroupByOutputType>[]
-          }
-          findRaw: {
-            args: Prisma.AutomationRuleFindRawArgs<ExtArgs>
-            result: JsonObject
-          }
-          aggregateRaw: {
-            args: Prisma.AutomationRuleAggregateRawArgs<ExtArgs>
-            result: JsonObject
           }
           count: {
             args: Prisma.AutomationRuleCountArgs<ExtArgs>
@@ -1069,6 +1167,10 @@ export namespace Prisma {
             args: Prisma.DeliveryLogCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
+          createManyAndReturn: {
+            args: Prisma.DeliveryLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeliveryLogPayload>[]
+          }
           delete: {
             args: Prisma.DeliveryLogDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$DeliveryLogPayload>
@@ -1097,14 +1199,6 @@ export namespace Prisma {
             args: Prisma.DeliveryLogGroupByArgs<ExtArgs>
             result: $Utils.Optional<DeliveryLogGroupByOutputType>[]
           }
-          findRaw: {
-            args: Prisma.DeliveryLogFindRawArgs<ExtArgs>
-            result: JsonObject
-          }
-          aggregateRaw: {
-            args: Prisma.DeliveryLogAggregateRawArgs<ExtArgs>
-            result: JsonObject
-          }
           count: {
             args: Prisma.DeliveryLogCountArgs<ExtArgs>
             result: $Utils.Optional<DeliveryLogCountAggregateOutputType> | number
@@ -1116,9 +1210,21 @@ export namespace Prisma {
     other: {
       payload: any
       operations: {
-        $runCommandRaw: {
-          args: Prisma.InputJsonObject,
-          result: Prisma.JsonObject
+        $executeRaw: {
+          args: [query: TemplateStringsArray | Prisma.Sql, ...values: any[]],
+          result: any
+        }
+        $executeRawUnsafe: {
+          args: [query: string, ...values: any[]],
+          result: any
+        }
+        $queryRaw: {
+          args: [query: TemplateStringsArray | Prisma.Sql, ...values: any[]],
+          result: any
+        }
+        $queryRawUnsafe: {
+          args: [query: string, ...values: any[]],
+          result: any
         }
       }
     }
@@ -1164,6 +1270,7 @@ export namespace Prisma {
     transactionOptions?: {
       maxWait?: number
       timeout?: number
+      isolationLevel?: Prisma.TransactionIsolationLevel
     }
   }
 
@@ -1254,107 +1361,40 @@ export namespace Prisma {
    */
 
 
+  /**
+   * Count Type MessageThreadCountOutputType
+   */
+
+  export type MessageThreadCountOutputType = {
+    messages: number
+  }
+
+  export type MessageThreadCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    messages?: boolean | MessageThreadCountOutputTypeCountMessagesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * MessageThreadCountOutputType without action
+   */
+  export type MessageThreadCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageThreadCountOutputType
+     */
+    select?: MessageThreadCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * MessageThreadCountOutputType without action
+   */
+  export type MessageThreadCountOutputTypeCountMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MessageWhereInput
+  }
+
 
   /**
    * Models
    */
-
-  /**
-   * Model Message
-   */
-
-
-
-
-
-  export type MessageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    senderId?: boolean
-    senderName?: boolean
-    direction?: boolean
-    body?: boolean
-    channel?: boolean
-    mediaUrls?: boolean
-    twilioSid?: boolean
-    sentAt?: boolean
-    deliveredAt?: boolean
-    readAt?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["message"]>
-
-
-  export type MessageSelectScalar = {
-    id?: boolean
-    senderId?: boolean
-    senderName?: boolean
-    direction?: boolean
-    body?: boolean
-    channel?: boolean
-    mediaUrls?: boolean
-    twilioSid?: boolean
-    sentAt?: boolean
-    deliveredAt?: boolean
-    readAt?: boolean
-    createdAt?: boolean
-  }
-
-
-  export type $MessagePayload = {
-    name: "Message"
-    objects: {}
-    scalars: {
-      id: string
-      senderId: string
-      senderName: string
-      direction: $Enums.MessageDirection
-      body: string
-      channel: $Enums.Channel
-      mediaUrls: string[]
-      twilioSid: string | null
-      sentAt: Date | null
-      deliveredAt: Date | null
-      readAt: Date | null
-      createdAt: Date
-    }
-    composites: {}
-  }
-
-  type MessageGetPayload<S extends boolean | null | undefined | MessageDefaultArgs> = $Result.GetResult<Prisma.$MessagePayload, S>
-
-
-
-
-
-  /**
-   * Fields of the Message model
-   */ 
-  interface MessageFieldRefs {
-    readonly id: FieldRef<"Message", 'String'>
-    readonly senderId: FieldRef<"Message", 'String'>
-    readonly senderName: FieldRef<"Message", 'String'>
-    readonly direction: FieldRef<"Message", 'MessageDirection'>
-    readonly body: FieldRef<"Message", 'String'>
-    readonly channel: FieldRef<"Message", 'Channel'>
-    readonly mediaUrls: FieldRef<"Message", 'String[]'>
-    readonly twilioSid: FieldRef<"Message", 'String'>
-    readonly sentAt: FieldRef<"Message", 'DateTime'>
-    readonly deliveredAt: FieldRef<"Message", 'DateTime'>
-    readonly readAt: FieldRef<"Message", 'DateTime'>
-    readonly createdAt: FieldRef<"Message", 'DateTime'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * Message without action
-   */
-  export type MessageDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Message
-     */
-    select?: MessageSelect<ExtArgs> | null
-  }
-
 
   /**
    * Model Notification
@@ -1698,6 +1738,35 @@ export namespace Prisma {
     updatedAt?: boolean
   }, ExtArgs["result"]["notification"]>
 
+  export type NotificationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    jobId?: boolean
+    invoiceId?: boolean
+    quoteId?: boolean
+    recipientId?: boolean
+    recipientName?: boolean
+    recipientEmail?: boolean
+    recipientPhone?: boolean
+    recipientPushToken?: boolean
+    channel?: boolean
+    subject?: boolean
+    body?: boolean
+    status?: boolean
+    externalId?: boolean
+    providerResponse?: boolean
+    error?: boolean
+    isRead?: boolean
+    title?: boolean
+    type?: boolean
+    scheduledAt?: boolean
+    sentAt?: boolean
+    deliveredAt?: boolean
+    failedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["notification"]>
 
   export type NotificationSelectScalar = {
     id?: boolean
@@ -1879,6 +1948,30 @@ export namespace Prisma {
     createMany<T extends NotificationCreateManyArgs>(args?: SelectSubset<T, NotificationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Create many Notifications and returns the data saved in the database.
+     * @param {NotificationCreateManyAndReturnArgs} args - Arguments to create many Notifications.
+     * @example
+     * // Create many Notifications
+     * const notification = await prisma.notification.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Notifications and only return the `id`
+     * const notificationWithIdOnly = await prisma.notification.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends NotificationCreateManyAndReturnArgs>(args?: SelectSubset<T, NotificationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
      * Delete a Notification.
      * @param {NotificationDeleteArgs} args - Arguments to delete one Notification.
      * @example
@@ -1960,29 +2053,6 @@ export namespace Prisma {
      * })
      */
     upsert<T extends NotificationUpsertArgs>(args: SelectSubset<T, NotificationUpsertArgs<ExtArgs>>): Prisma__NotificationClient<$Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
-
-    /**
-     * Find zero or more Notifications that matches the filter.
-     * @param {NotificationFindRawArgs} args - Select which filters you would like to apply.
-     * @example
-     * const notification = await prisma.notification.findRaw({
-     *   filter: { age: { $gt: 25 } } 
-     * })
-     */
-    findRaw(args?: NotificationFindRawArgs): Prisma.PrismaPromise<JsonObject>
-
-    /**
-     * Perform aggregation operations on a Notification.
-     * @param {NotificationAggregateRawArgs} args - Select which aggregations you would like to apply.
-     * @example
-     * const notification = await prisma.notification.aggregateRaw({
-     *   pipeline: [
-     *     { $match: { status: "registered" } },
-     *     { $group: { _id: "$country", total: { $sum: 1 } } }
-     *   ]
-     * })
-     */
-    aggregateRaw(args?: NotificationAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -2361,6 +2431,22 @@ export namespace Prisma {
      * The data used to create many Notifications.
      */
     data: NotificationCreateManyInput | NotificationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Notification createManyAndReturn
+   */
+  export type NotificationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notification
+     */
+    select?: NotificationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many Notifications.
+     */
+    data: NotificationCreateManyInput | NotificationCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -2439,34 +2525,6 @@ export namespace Prisma {
      * Filter which Notifications to delete
      */
     where?: NotificationWhereInput
-  }
-
-  /**
-   * Notification findRaw
-   */
-  export type NotificationFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
-     */
-    filter?: InputJsonValue
-    /**
-     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
-   * Notification aggregateRaw
-   */
-  export type NotificationAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
-     */
-    pipeline?: InputJsonValue[]
-    /**
-     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
   }
 
   /**
@@ -2756,11 +2814,30 @@ export namespace Prisma {
     unreadCount?: boolean
     lastMessageAt?: boolean
     lastMessageBody?: boolean
-    messages?: boolean | MessageDefaultArgs<ExtArgs>
+    createdAt?: boolean
+    updatedAt?: boolean
+    messages?: boolean | MessageThread$messagesArgs<ExtArgs>
+    _count?: boolean | MessageThreadCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["messageThread"]>
+
+  export type MessageThreadSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    customerName?: boolean
+    customerPhone?: boolean
+    customerEmail?: boolean
+    participantIds?: boolean
+    participantNames?: boolean
+    subject?: boolean
+    jobId?: boolean
+    status?: boolean
+    unreadCount?: boolean
+    lastMessageAt?: boolean
+    lastMessageBody?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["messageThread"]>
-
 
   export type MessageThreadSelectScalar = {
     id?: boolean
@@ -2781,11 +2858,17 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type MessageThreadInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type MessageThreadInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    messages?: boolean | MessageThread$messagesArgs<ExtArgs>
+    _count?: boolean | MessageThreadCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type MessageThreadIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $MessageThreadPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "MessageThread"
-    objects: {}
+    objects: {
+      messages: Prisma.$MessagePayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       companyId: string
@@ -2804,9 +2887,7 @@ export namespace Prisma {
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["messageThread"]>
-    composites: {
-      messages: Prisma.$MessagePayload[]
-    }
+    composites: {}
   }
 
   type MessageThreadGetPayload<S extends boolean | null | undefined | MessageThreadDefaultArgs> = $Result.GetResult<Prisma.$MessageThreadPayload, S>
@@ -2923,6 +3004,30 @@ export namespace Prisma {
     createMany<T extends MessageThreadCreateManyArgs>(args?: SelectSubset<T, MessageThreadCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Create many MessageThreads and returns the data saved in the database.
+     * @param {MessageThreadCreateManyAndReturnArgs} args - Arguments to create many MessageThreads.
+     * @example
+     * // Create many MessageThreads
+     * const messageThread = await prisma.messageThread.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MessageThreads and only return the `id`
+     * const messageThreadWithIdOnly = await prisma.messageThread.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MessageThreadCreateManyAndReturnArgs>(args?: SelectSubset<T, MessageThreadCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessageThreadPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
      * Delete a MessageThread.
      * @param {MessageThreadDeleteArgs} args - Arguments to delete one MessageThread.
      * @example
@@ -3004,29 +3109,6 @@ export namespace Prisma {
      * })
      */
     upsert<T extends MessageThreadUpsertArgs>(args: SelectSubset<T, MessageThreadUpsertArgs<ExtArgs>>): Prisma__MessageThreadClient<$Result.GetResult<Prisma.$MessageThreadPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
-
-    /**
-     * Find zero or more MessageThreads that matches the filter.
-     * @param {MessageThreadFindRawArgs} args - Select which filters you would like to apply.
-     * @example
-     * const messageThread = await prisma.messageThread.findRaw({
-     *   filter: { age: { $gt: 25 } } 
-     * })
-     */
-    findRaw(args?: MessageThreadFindRawArgs): Prisma.PrismaPromise<JsonObject>
-
-    /**
-     * Perform aggregation operations on a MessageThread.
-     * @param {MessageThreadAggregateRawArgs} args - Select which aggregations you would like to apply.
-     * @example
-     * const messageThread = await prisma.messageThread.aggregateRaw({
-     *   pipeline: [
-     *     { $match: { status: "registered" } },
-     *     { $group: { _id: "$country", total: { $sum: 1 } } }
-     *   ]
-     * })
-     */
-    aggregateRaw(args?: MessageThreadAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -3168,6 +3250,7 @@ export namespace Prisma {
    */
   export interface Prisma__MessageThreadClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    messages<T extends MessageThread$messagesArgs<ExtArgs> = {}>(args?: Subset<T, MessageThread$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3418,6 +3501,22 @@ export namespace Prisma {
      * The data used to create many MessageThreads.
      */
     data: MessageThreadCreateManyInput | MessageThreadCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MessageThread createManyAndReturn
+   */
+  export type MessageThreadCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageThread
+     */
+    select?: MessageThreadSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many MessageThreads.
+     */
+    data: MessageThreadCreateManyInput | MessageThreadCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -3511,31 +3610,23 @@ export namespace Prisma {
   }
 
   /**
-   * MessageThread findRaw
+   * MessageThread.messages
    */
-  export type MessageThreadFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type MessageThread$messagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     * Select specific fields to fetch from the Message
      */
-    filter?: InputJsonValue
+    select?: MessageSelect<ExtArgs> | null
     /**
-     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     * Choose, which related nodes to fetch as well
      */
-    options?: InputJsonValue
-  }
-
-  /**
-   * MessageThread aggregateRaw
-   */
-  export type MessageThreadAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
-     */
-    pipeline?: InputJsonValue[]
-    /**
-     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
+    include?: MessageInclude<ExtArgs> | null
+    where?: MessageWhereInput
+    orderBy?: MessageOrderByWithRelationInput | MessageOrderByWithRelationInput[]
+    cursor?: MessageWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MessageScalarFieldEnum | MessageScalarFieldEnum[]
   }
 
   /**
@@ -3550,6 +3641,1031 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: MessageThreadInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Message
+   */
+
+  export type AggregateMessage = {
+    _count: MessageCountAggregateOutputType | null
+    _min: MessageMinAggregateOutputType | null
+    _max: MessageMaxAggregateOutputType | null
+  }
+
+  export type MessageMinAggregateOutputType = {
+    id: string | null
+    threadId: string | null
+    senderId: string | null
+    senderName: string | null
+    direction: $Enums.MessageDirection | null
+    body: string | null
+    channel: $Enums.Channel | null
+    twilioSid: string | null
+    sentAt: Date | null
+    deliveredAt: Date | null
+    readAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type MessageMaxAggregateOutputType = {
+    id: string | null
+    threadId: string | null
+    senderId: string | null
+    senderName: string | null
+    direction: $Enums.MessageDirection | null
+    body: string | null
+    channel: $Enums.Channel | null
+    twilioSid: string | null
+    sentAt: Date | null
+    deliveredAt: Date | null
+    readAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type MessageCountAggregateOutputType = {
+    id: number
+    threadId: number
+    senderId: number
+    senderName: number
+    direction: number
+    body: number
+    channel: number
+    mediaUrls: number
+    twilioSid: number
+    sentAt: number
+    deliveredAt: number
+    readAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type MessageMinAggregateInputType = {
+    id?: true
+    threadId?: true
+    senderId?: true
+    senderName?: true
+    direction?: true
+    body?: true
+    channel?: true
+    twilioSid?: true
+    sentAt?: true
+    deliveredAt?: true
+    readAt?: true
+    createdAt?: true
+  }
+
+  export type MessageMaxAggregateInputType = {
+    id?: true
+    threadId?: true
+    senderId?: true
+    senderName?: true
+    direction?: true
+    body?: true
+    channel?: true
+    twilioSid?: true
+    sentAt?: true
+    deliveredAt?: true
+    readAt?: true
+    createdAt?: true
+  }
+
+  export type MessageCountAggregateInputType = {
+    id?: true
+    threadId?: true
+    senderId?: true
+    senderName?: true
+    direction?: true
+    body?: true
+    channel?: true
+    mediaUrls?: true
+    twilioSid?: true
+    sentAt?: true
+    deliveredAt?: true
+    readAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type MessageAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Message to aggregate.
+     */
+    where?: MessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Messages to fetch.
+     */
+    orderBy?: MessageOrderByWithRelationInput | MessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Messages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Messages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Messages
+    **/
+    _count?: true | MessageCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MessageMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MessageMaxAggregateInputType
+  }
+
+  export type GetMessageAggregateType<T extends MessageAggregateArgs> = {
+        [P in keyof T & keyof AggregateMessage]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMessage[P]>
+      : GetScalarType<T[P], AggregateMessage[P]>
+  }
+
+
+
+
+  export type MessageGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MessageWhereInput
+    orderBy?: MessageOrderByWithAggregationInput | MessageOrderByWithAggregationInput[]
+    by: MessageScalarFieldEnum[] | MessageScalarFieldEnum
+    having?: MessageScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MessageCountAggregateInputType | true
+    _min?: MessageMinAggregateInputType
+    _max?: MessageMaxAggregateInputType
+  }
+
+  export type MessageGroupByOutputType = {
+    id: string
+    threadId: string
+    senderId: string
+    senderName: string
+    direction: $Enums.MessageDirection
+    body: string
+    channel: $Enums.Channel
+    mediaUrls: string[]
+    twilioSid: string | null
+    sentAt: Date | null
+    deliveredAt: Date | null
+    readAt: Date | null
+    createdAt: Date
+    _count: MessageCountAggregateOutputType | null
+    _min: MessageMinAggregateOutputType | null
+    _max: MessageMaxAggregateOutputType | null
+  }
+
+  type GetMessageGroupByPayload<T extends MessageGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MessageGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MessageGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MessageGroupByOutputType[P]>
+            : GetScalarType<T[P], MessageGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MessageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    threadId?: boolean
+    senderId?: boolean
+    senderName?: boolean
+    direction?: boolean
+    body?: boolean
+    channel?: boolean
+    mediaUrls?: boolean
+    twilioSid?: boolean
+    sentAt?: boolean
+    deliveredAt?: boolean
+    readAt?: boolean
+    createdAt?: boolean
+    thread?: boolean | MessageThreadDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["message"]>
+
+  export type MessageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    threadId?: boolean
+    senderId?: boolean
+    senderName?: boolean
+    direction?: boolean
+    body?: boolean
+    channel?: boolean
+    mediaUrls?: boolean
+    twilioSid?: boolean
+    sentAt?: boolean
+    deliveredAt?: boolean
+    readAt?: boolean
+    createdAt?: boolean
+    thread?: boolean | MessageThreadDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["message"]>
+
+  export type MessageSelectScalar = {
+    id?: boolean
+    threadId?: boolean
+    senderId?: boolean
+    senderName?: boolean
+    direction?: boolean
+    body?: boolean
+    channel?: boolean
+    mediaUrls?: boolean
+    twilioSid?: boolean
+    sentAt?: boolean
+    deliveredAt?: boolean
+    readAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type MessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    thread?: boolean | MessageThreadDefaultArgs<ExtArgs>
+  }
+  export type MessageIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    thread?: boolean | MessageThreadDefaultArgs<ExtArgs>
+  }
+
+  export type $MessagePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Message"
+    objects: {
+      thread: Prisma.$MessageThreadPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      threadId: string
+      senderId: string
+      senderName: string
+      direction: $Enums.MessageDirection
+      body: string
+      channel: $Enums.Channel
+      mediaUrls: string[]
+      twilioSid: string | null
+      sentAt: Date | null
+      deliveredAt: Date | null
+      readAt: Date | null
+      createdAt: Date
+    }, ExtArgs["result"]["message"]>
+    composites: {}
+  }
+
+  type MessageGetPayload<S extends boolean | null | undefined | MessageDefaultArgs> = $Result.GetResult<Prisma.$MessagePayload, S>
+
+  type MessageCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<MessageFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: MessageCountAggregateInputType | true
+    }
+
+  export interface MessageDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Message'], meta: { name: 'Message' } }
+    /**
+     * Find zero or one Message that matches the filter.
+     * @param {MessageFindUniqueArgs} args - Arguments to find a Message
+     * @example
+     * // Get one Message
+     * const message = await prisma.message.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MessageFindUniqueArgs>(args: SelectSubset<T, MessageFindUniqueArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Message that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {MessageFindUniqueOrThrowArgs} args - Arguments to find a Message
+     * @example
+     * // Get one Message
+     * const message = await prisma.message.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MessageFindUniqueOrThrowArgs>(args: SelectSubset<T, MessageFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Message that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageFindFirstArgs} args - Arguments to find a Message
+     * @example
+     * // Get one Message
+     * const message = await prisma.message.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MessageFindFirstArgs>(args?: SelectSubset<T, MessageFindFirstArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Message that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageFindFirstOrThrowArgs} args - Arguments to find a Message
+     * @example
+     * // Get one Message
+     * const message = await prisma.message.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MessageFindFirstOrThrowArgs>(args?: SelectSubset<T, MessageFindFirstOrThrowArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Messages that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Messages
+     * const messages = await prisma.message.findMany()
+     * 
+     * // Get first 10 Messages
+     * const messages = await prisma.message.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const messageWithIdOnly = await prisma.message.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MessageFindManyArgs>(args?: SelectSubset<T, MessageFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Message.
+     * @param {MessageCreateArgs} args - Arguments to create a Message.
+     * @example
+     * // Create one Message
+     * const Message = await prisma.message.create({
+     *   data: {
+     *     // ... data to create a Message
+     *   }
+     * })
+     * 
+     */
+    create<T extends MessageCreateArgs>(args: SelectSubset<T, MessageCreateArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Messages.
+     * @param {MessageCreateManyArgs} args - Arguments to create many Messages.
+     * @example
+     * // Create many Messages
+     * const message = await prisma.message.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MessageCreateManyArgs>(args?: SelectSubset<T, MessageCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Messages and returns the data saved in the database.
+     * @param {MessageCreateManyAndReturnArgs} args - Arguments to create many Messages.
+     * @example
+     * // Create many Messages
+     * const message = await prisma.message.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Messages and only return the `id`
+     * const messageWithIdOnly = await prisma.message.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MessageCreateManyAndReturnArgs>(args?: SelectSubset<T, MessageCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a Message.
+     * @param {MessageDeleteArgs} args - Arguments to delete one Message.
+     * @example
+     * // Delete one Message
+     * const Message = await prisma.message.delete({
+     *   where: {
+     *     // ... filter to delete one Message
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MessageDeleteArgs>(args: SelectSubset<T, MessageDeleteArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Message.
+     * @param {MessageUpdateArgs} args - Arguments to update one Message.
+     * @example
+     * // Update one Message
+     * const message = await prisma.message.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MessageUpdateArgs>(args: SelectSubset<T, MessageUpdateArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Messages.
+     * @param {MessageDeleteManyArgs} args - Arguments to filter Messages to delete.
+     * @example
+     * // Delete a few Messages
+     * const { count } = await prisma.message.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MessageDeleteManyArgs>(args?: SelectSubset<T, MessageDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Messages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Messages
+     * const message = await prisma.message.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MessageUpdateManyArgs>(args: SelectSubset<T, MessageUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Message.
+     * @param {MessageUpsertArgs} args - Arguments to update or create a Message.
+     * @example
+     * // Update or create a Message
+     * const message = await prisma.message.upsert({
+     *   create: {
+     *     // ... data to create a Message
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Message we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MessageUpsertArgs>(args: SelectSubset<T, MessageUpsertArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Messages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageCountArgs} args - Arguments to filter Messages to count.
+     * @example
+     * // Count the number of Messages
+     * const count = await prisma.message.count({
+     *   where: {
+     *     // ... the filter for the Messages we want to count
+     *   }
+     * })
+    **/
+    count<T extends MessageCountArgs>(
+      args?: Subset<T, MessageCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MessageCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Message.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MessageAggregateArgs>(args: Subset<T, MessageAggregateArgs>): Prisma.PrismaPromise<GetMessageAggregateType<T>>
+
+    /**
+     * Group by Message.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MessageGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MessageGroupByArgs['orderBy'] }
+        : { orderBy?: MessageGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MessageGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMessageGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Message model
+   */
+  readonly fields: MessageFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Message.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MessageClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    thread<T extends MessageThreadDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MessageThreadDefaultArgs<ExtArgs>>): Prisma__MessageThreadClient<$Result.GetResult<Prisma.$MessageThreadPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Message model
+   */ 
+  interface MessageFieldRefs {
+    readonly id: FieldRef<"Message", 'String'>
+    readonly threadId: FieldRef<"Message", 'String'>
+    readonly senderId: FieldRef<"Message", 'String'>
+    readonly senderName: FieldRef<"Message", 'String'>
+    readonly direction: FieldRef<"Message", 'MessageDirection'>
+    readonly body: FieldRef<"Message", 'String'>
+    readonly channel: FieldRef<"Message", 'Channel'>
+    readonly mediaUrls: FieldRef<"Message", 'String[]'>
+    readonly twilioSid: FieldRef<"Message", 'String'>
+    readonly sentAt: FieldRef<"Message", 'DateTime'>
+    readonly deliveredAt: FieldRef<"Message", 'DateTime'>
+    readonly readAt: FieldRef<"Message", 'DateTime'>
+    readonly createdAt: FieldRef<"Message", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Message findUnique
+   */
+  export type MessageFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    /**
+     * Filter, which Message to fetch.
+     */
+    where: MessageWhereUniqueInput
+  }
+
+  /**
+   * Message findUniqueOrThrow
+   */
+  export type MessageFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    /**
+     * Filter, which Message to fetch.
+     */
+    where: MessageWhereUniqueInput
+  }
+
+  /**
+   * Message findFirst
+   */
+  export type MessageFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    /**
+     * Filter, which Message to fetch.
+     */
+    where?: MessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Messages to fetch.
+     */
+    orderBy?: MessageOrderByWithRelationInput | MessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Messages.
+     */
+    cursor?: MessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Messages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Messages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Messages.
+     */
+    distinct?: MessageScalarFieldEnum | MessageScalarFieldEnum[]
+  }
+
+  /**
+   * Message findFirstOrThrow
+   */
+  export type MessageFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    /**
+     * Filter, which Message to fetch.
+     */
+    where?: MessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Messages to fetch.
+     */
+    orderBy?: MessageOrderByWithRelationInput | MessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Messages.
+     */
+    cursor?: MessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Messages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Messages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Messages.
+     */
+    distinct?: MessageScalarFieldEnum | MessageScalarFieldEnum[]
+  }
+
+  /**
+   * Message findMany
+   */
+  export type MessageFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    /**
+     * Filter, which Messages to fetch.
+     */
+    where?: MessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Messages to fetch.
+     */
+    orderBy?: MessageOrderByWithRelationInput | MessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Messages.
+     */
+    cursor?: MessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Messages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Messages.
+     */
+    skip?: number
+    distinct?: MessageScalarFieldEnum | MessageScalarFieldEnum[]
+  }
+
+  /**
+   * Message create
+   */
+  export type MessageCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Message.
+     */
+    data: XOR<MessageCreateInput, MessageUncheckedCreateInput>
+  }
+
+  /**
+   * Message createMany
+   */
+  export type MessageCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Messages.
+     */
+    data: MessageCreateManyInput | MessageCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Message createManyAndReturn
+   */
+  export type MessageCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many Messages.
+     */
+    data: MessageCreateManyInput | MessageCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Message update
+   */
+  export type MessageUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Message.
+     */
+    data: XOR<MessageUpdateInput, MessageUncheckedUpdateInput>
+    /**
+     * Choose, which Message to update.
+     */
+    where: MessageWhereUniqueInput
+  }
+
+  /**
+   * Message updateMany
+   */
+  export type MessageUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Messages.
+     */
+    data: XOR<MessageUpdateManyMutationInput, MessageUncheckedUpdateManyInput>
+    /**
+     * Filter which Messages to update
+     */
+    where?: MessageWhereInput
+  }
+
+  /**
+   * Message upsert
+   */
+  export type MessageUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Message to update in case it exists.
+     */
+    where: MessageWhereUniqueInput
+    /**
+     * In case the Message found by the `where` argument doesn't exist, create a new Message with this data.
+     */
+    create: XOR<MessageCreateInput, MessageUncheckedCreateInput>
+    /**
+     * In case the Message was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MessageUpdateInput, MessageUncheckedUpdateInput>
+  }
+
+  /**
+   * Message delete
+   */
+  export type MessageDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    /**
+     * Filter which Message to delete.
+     */
+    where: MessageWhereUniqueInput
+  }
+
+  /**
+   * Message deleteMany
+   */
+  export type MessageDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Messages to delete
+     */
+    where?: MessageWhereInput
+  }
+
+  /**
+   * Message without action
+   */
+  export type MessageDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
   }
 
 
@@ -3771,6 +4887,20 @@ export namespace Prisma {
     updatedAt?: boolean
   }, ExtArgs["result"]["notificationTemplate"]>
 
+  export type NotificationTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    type?: boolean
+    channel?: boolean
+    subject?: boolean
+    body?: boolean
+    variables?: boolean
+    isActive?: boolean
+    isDefault?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["notificationTemplate"]>
 
   export type NotificationTemplateSelectScalar = {
     id?: boolean
@@ -3922,6 +5052,30 @@ export namespace Prisma {
     createMany<T extends NotificationTemplateCreateManyArgs>(args?: SelectSubset<T, NotificationTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Create many NotificationTemplates and returns the data saved in the database.
+     * @param {NotificationTemplateCreateManyAndReturnArgs} args - Arguments to create many NotificationTemplates.
+     * @example
+     * // Create many NotificationTemplates
+     * const notificationTemplate = await prisma.notificationTemplate.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many NotificationTemplates and only return the `id`
+     * const notificationTemplateWithIdOnly = await prisma.notificationTemplate.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends NotificationTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, NotificationTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificationTemplatePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
      * Delete a NotificationTemplate.
      * @param {NotificationTemplateDeleteArgs} args - Arguments to delete one NotificationTemplate.
      * @example
@@ -4003,29 +5157,6 @@ export namespace Prisma {
      * })
      */
     upsert<T extends NotificationTemplateUpsertArgs>(args: SelectSubset<T, NotificationTemplateUpsertArgs<ExtArgs>>): Prisma__NotificationTemplateClient<$Result.GetResult<Prisma.$NotificationTemplatePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
-
-    /**
-     * Find zero or more NotificationTemplates that matches the filter.
-     * @param {NotificationTemplateFindRawArgs} args - Select which filters you would like to apply.
-     * @example
-     * const notificationTemplate = await prisma.notificationTemplate.findRaw({
-     *   filter: { age: { $gt: 25 } } 
-     * })
-     */
-    findRaw(args?: NotificationTemplateFindRawArgs): Prisma.PrismaPromise<JsonObject>
-
-    /**
-     * Perform aggregation operations on a NotificationTemplate.
-     * @param {NotificationTemplateAggregateRawArgs} args - Select which aggregations you would like to apply.
-     * @example
-     * const notificationTemplate = await prisma.notificationTemplate.aggregateRaw({
-     *   pipeline: [
-     *     { $match: { status: "registered" } },
-     *     { $group: { _id: "$country", total: { $sum: 1 } } }
-     *   ]
-     * })
-     */
-    aggregateRaw(args?: NotificationTemplateAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -4389,6 +5520,22 @@ export namespace Prisma {
      * The data used to create many NotificationTemplates.
      */
     data: NotificationTemplateCreateManyInput | NotificationTemplateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * NotificationTemplate createManyAndReturn
+   */
+  export type NotificationTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the NotificationTemplate
+     */
+    select?: NotificationTemplateSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many NotificationTemplates.
+     */
+    data: NotificationTemplateCreateManyInput | NotificationTemplateCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -4467,34 +5614,6 @@ export namespace Prisma {
      * Filter which NotificationTemplates to delete
      */
     where?: NotificationTemplateWhereInput
-  }
-
-  /**
-   * NotificationTemplate findRaw
-   */
-  export type NotificationTemplateFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
-     */
-    filter?: InputJsonValue
-    /**
-     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
-   * NotificationTemplate aggregateRaw
-   */
-  export type NotificationTemplateAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
-     */
-    pipeline?: InputJsonValue[]
-    /**
-     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
   }
 
   /**
@@ -4748,6 +5867,18 @@ export namespace Prisma {
     updatedAt?: boolean
   }, ExtArgs["result"]["automationRule"]>
 
+  export type AutomationRuleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    isActive?: boolean
+    trigger?: boolean
+    conditions?: boolean
+    actions?: boolean
+    delayMinutes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["automationRule"]>
 
   export type AutomationRuleSelectScalar = {
     id?: boolean
@@ -4895,6 +6026,30 @@ export namespace Prisma {
     createMany<T extends AutomationRuleCreateManyArgs>(args?: SelectSubset<T, AutomationRuleCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Create many AutomationRules and returns the data saved in the database.
+     * @param {AutomationRuleCreateManyAndReturnArgs} args - Arguments to create many AutomationRules.
+     * @example
+     * // Create many AutomationRules
+     * const automationRule = await prisma.automationRule.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AutomationRules and only return the `id`
+     * const automationRuleWithIdOnly = await prisma.automationRule.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AutomationRuleCreateManyAndReturnArgs>(args?: SelectSubset<T, AutomationRuleCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationRulePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
      * Delete a AutomationRule.
      * @param {AutomationRuleDeleteArgs} args - Arguments to delete one AutomationRule.
      * @example
@@ -4976,29 +6131,6 @@ export namespace Prisma {
      * })
      */
     upsert<T extends AutomationRuleUpsertArgs>(args: SelectSubset<T, AutomationRuleUpsertArgs<ExtArgs>>): Prisma__AutomationRuleClient<$Result.GetResult<Prisma.$AutomationRulePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
-
-    /**
-     * Find zero or more AutomationRules that matches the filter.
-     * @param {AutomationRuleFindRawArgs} args - Select which filters you would like to apply.
-     * @example
-     * const automationRule = await prisma.automationRule.findRaw({
-     *   filter: { age: { $gt: 25 } } 
-     * })
-     */
-    findRaw(args?: AutomationRuleFindRawArgs): Prisma.PrismaPromise<JsonObject>
-
-    /**
-     * Perform aggregation operations on a AutomationRule.
-     * @param {AutomationRuleAggregateRawArgs} args - Select which aggregations you would like to apply.
-     * @example
-     * const automationRule = await prisma.automationRule.aggregateRaw({
-     *   pipeline: [
-     *     { $match: { status: "registered" } },
-     *     { $group: { _id: "$country", total: { $sum: 1 } } }
-     *   ]
-     * })
-     */
-    aggregateRaw(args?: AutomationRuleAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -5360,6 +6492,22 @@ export namespace Prisma {
      * The data used to create many AutomationRules.
      */
     data: AutomationRuleCreateManyInput | AutomationRuleCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AutomationRule createManyAndReturn
+   */
+  export type AutomationRuleCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationRule
+     */
+    select?: AutomationRuleSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many AutomationRules.
+     */
+    data: AutomationRuleCreateManyInput | AutomationRuleCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -5438,34 +6586,6 @@ export namespace Prisma {
      * Filter which AutomationRules to delete
      */
     where?: AutomationRuleWhereInput
-  }
-
-  /**
-   * AutomationRule findRaw
-   */
-  export type AutomationRuleFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
-     */
-    filter?: InputJsonValue
-    /**
-     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
-   * AutomationRule aggregateRaw
-   */
-  export type AutomationRuleAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
-     */
-    pipeline?: InputJsonValue[]
-    /**
-     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
   }
 
   /**
@@ -5743,6 +6863,21 @@ export namespace Prisma {
     createdAt?: boolean
   }, ExtArgs["result"]["deliveryLog"]>
 
+  export type DeliveryLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    notificationId?: boolean
+    channel?: boolean
+    recipient?: boolean
+    status?: boolean
+    provider?: boolean
+    externalId?: boolean
+    requestPayload?: boolean
+    responsePayload?: boolean
+    durationMs?: boolean
+    error?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["deliveryLog"]>
 
   export type DeliveryLogSelectScalar = {
     id?: boolean
@@ -5896,6 +7031,30 @@ export namespace Prisma {
     createMany<T extends DeliveryLogCreateManyArgs>(args?: SelectSubset<T, DeliveryLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
+     * Create many DeliveryLogs and returns the data saved in the database.
+     * @param {DeliveryLogCreateManyAndReturnArgs} args - Arguments to create many DeliveryLogs.
+     * @example
+     * // Create many DeliveryLogs
+     * const deliveryLog = await prisma.deliveryLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many DeliveryLogs and only return the `id`
+     * const deliveryLogWithIdOnly = await prisma.deliveryLog.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DeliveryLogCreateManyAndReturnArgs>(args?: SelectSubset<T, DeliveryLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DeliveryLogPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
      * Delete a DeliveryLog.
      * @param {DeliveryLogDeleteArgs} args - Arguments to delete one DeliveryLog.
      * @example
@@ -5977,29 +7136,6 @@ export namespace Prisma {
      * })
      */
     upsert<T extends DeliveryLogUpsertArgs>(args: SelectSubset<T, DeliveryLogUpsertArgs<ExtArgs>>): Prisma__DeliveryLogClient<$Result.GetResult<Prisma.$DeliveryLogPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
-
-    /**
-     * Find zero or more DeliveryLogs that matches the filter.
-     * @param {DeliveryLogFindRawArgs} args - Select which filters you would like to apply.
-     * @example
-     * const deliveryLog = await prisma.deliveryLog.findRaw({
-     *   filter: { age: { $gt: 25 } } 
-     * })
-     */
-    findRaw(args?: DeliveryLogFindRawArgs): Prisma.PrismaPromise<JsonObject>
-
-    /**
-     * Perform aggregation operations on a DeliveryLog.
-     * @param {DeliveryLogAggregateRawArgs} args - Select which aggregations you would like to apply.
-     * @example
-     * const deliveryLog = await prisma.deliveryLog.aggregateRaw({
-     *   pipeline: [
-     *     { $match: { status: "registered" } },
-     *     { $group: { _id: "$country", total: { $sum: 1 } } }
-     *   ]
-     * })
-     */
-    aggregateRaw(args?: DeliveryLogAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -6364,6 +7500,22 @@ export namespace Prisma {
      * The data used to create many DeliveryLogs.
      */
     data: DeliveryLogCreateManyInput | DeliveryLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * DeliveryLog createManyAndReturn
+   */
+  export type DeliveryLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeliveryLog
+     */
+    select?: DeliveryLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many DeliveryLogs.
+     */
+    data: DeliveryLogCreateManyInput | DeliveryLogCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -6445,34 +7597,6 @@ export namespace Prisma {
   }
 
   /**
-   * DeliveryLog findRaw
-   */
-  export type DeliveryLogFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
-     */
-    filter?: InputJsonValue
-    /**
-     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
-   * DeliveryLog aggregateRaw
-   */
-  export type DeliveryLogAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
-     */
-    pipeline?: InputJsonValue[]
-    /**
-     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
-     */
-    options?: InputJsonValue
-  }
-
-  /**
    * DeliveryLog without action
    */
   export type DeliveryLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6486,6 +7610,16 @@ export namespace Prisma {
   /**
    * Enums
    */
+
+  export const TransactionIsolationLevel: {
+    ReadUncommitted: 'ReadUncommitted',
+    ReadCommitted: 'ReadCommitted',
+    RepeatableRead: 'RepeatableRead',
+    Serializable: 'Serializable'
+  };
+
+  export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
 
   export const NotificationScalarFieldEnum: {
     id: 'id',
@@ -6540,6 +7674,25 @@ export namespace Prisma {
   };
 
   export type MessageThreadScalarFieldEnum = (typeof MessageThreadScalarFieldEnum)[keyof typeof MessageThreadScalarFieldEnum]
+
+
+  export const MessageScalarFieldEnum: {
+    id: 'id',
+    threadId: 'threadId',
+    senderId: 'senderId',
+    senderName: 'senderName',
+    direction: 'direction',
+    body: 'body',
+    channel: 'channel',
+    mediaUrls: 'mediaUrls',
+    twilioSid: 'twilioSid',
+    sentAt: 'sentAt',
+    deliveredAt: 'deliveredAt',
+    readAt: 'readAt',
+    createdAt: 'createdAt'
+  };
+
+  export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
 
 
   export const NotificationTemplateScalarFieldEnum: {
@@ -6609,6 +7762,14 @@ export namespace Prisma {
   };
 
   export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+  export const NullsOrder: {
+    first: 'first',
+    last: 'last'
+  };
+
+  export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
   /**
@@ -6708,6 +7869,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'MessageDirection'
+   */
+  export type EnumMessageDirectionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MessageDirection'>
+    
+
+
+  /**
+   * Reference to a field of type 'MessageDirection[]'
+   */
+  export type ListEnumMessageDirectionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MessageDirection[]'>
+    
+
+
+  /**
    * Reference to a field of type 'TemplateType'
    */
   export type EnumTemplateTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TemplateType'>
@@ -6746,20 +7921,6 @@ export namespace Prisma {
    * Reference to a field of type 'Float[]'
    */
   export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'MessageDirection'
-   */
-  export type EnumMessageDirectionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MessageDirection'>
-    
-
-
-  /**
-   * Reference to a field of type 'MessageDirection[]'
-   */
-  export type ListEnumMessageDirectionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MessageDirection[]'>
     
   /**
    * Deep Input Types
@@ -6802,29 +7963,29 @@ export namespace Prisma {
   export type NotificationOrderByWithRelationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    customerId?: SortOrder
-    jobId?: SortOrder
-    invoiceId?: SortOrder
-    quoteId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    jobId?: SortOrderInput | SortOrder
+    invoiceId?: SortOrderInput | SortOrder
+    quoteId?: SortOrderInput | SortOrder
     recipientId?: SortOrder
-    recipientName?: SortOrder
-    recipientEmail?: SortOrder
-    recipientPhone?: SortOrder
-    recipientPushToken?: SortOrder
+    recipientName?: SortOrderInput | SortOrder
+    recipientEmail?: SortOrderInput | SortOrder
+    recipientPhone?: SortOrderInput | SortOrder
+    recipientPushToken?: SortOrderInput | SortOrder
     channel?: SortOrder
-    subject?: SortOrder
+    subject?: SortOrderInput | SortOrder
     body?: SortOrder
     status?: SortOrder
-    externalId?: SortOrder
-    providerResponse?: SortOrder
-    error?: SortOrder
+    externalId?: SortOrderInput | SortOrder
+    providerResponse?: SortOrderInput | SortOrder
+    error?: SortOrderInput | SortOrder
     isRead?: SortOrder
-    title?: SortOrder
-    type?: SortOrder
-    scheduledAt?: SortOrder
-    sentAt?: SortOrder
-    deliveredAt?: SortOrder
-    failedAt?: SortOrder
+    title?: SortOrderInput | SortOrder
+    type?: SortOrderInput | SortOrder
+    scheduledAt?: SortOrderInput | SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    deliveredAt?: SortOrderInput | SortOrder
+    failedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -6865,29 +8026,29 @@ export namespace Prisma {
   export type NotificationOrderByWithAggregationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    customerId?: SortOrder
-    jobId?: SortOrder
-    invoiceId?: SortOrder
-    quoteId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    jobId?: SortOrderInput | SortOrder
+    invoiceId?: SortOrderInput | SortOrder
+    quoteId?: SortOrderInput | SortOrder
     recipientId?: SortOrder
-    recipientName?: SortOrder
-    recipientEmail?: SortOrder
-    recipientPhone?: SortOrder
-    recipientPushToken?: SortOrder
+    recipientName?: SortOrderInput | SortOrder
+    recipientEmail?: SortOrderInput | SortOrder
+    recipientPhone?: SortOrderInput | SortOrder
+    recipientPushToken?: SortOrderInput | SortOrder
     channel?: SortOrder
-    subject?: SortOrder
+    subject?: SortOrderInput | SortOrder
     body?: SortOrder
     status?: SortOrder
-    externalId?: SortOrder
-    providerResponse?: SortOrder
-    error?: SortOrder
+    externalId?: SortOrderInput | SortOrder
+    providerResponse?: SortOrderInput | SortOrder
+    error?: SortOrderInput | SortOrder
     isRead?: SortOrder
-    title?: SortOrder
-    type?: SortOrder
-    scheduledAt?: SortOrder
-    sentAt?: SortOrder
-    deliveredAt?: SortOrder
-    failedAt?: SortOrder
+    title?: SortOrderInput | SortOrder
+    type?: SortOrderInput | SortOrder
+    scheduledAt?: SortOrderInput | SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    deliveredAt?: SortOrderInput | SortOrder
+    failedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: NotificationCountOrderByAggregateInput
@@ -6946,29 +8107,29 @@ export namespace Prisma {
     unreadCount?: IntFilter<"MessageThread"> | number
     lastMessageAt?: DateTimeNullableFilter<"MessageThread"> | Date | string | null
     lastMessageBody?: StringNullableFilter<"MessageThread"> | string | null
-    messages?: MessageCompositeListFilter | MessageObjectEqualityInput[]
     createdAt?: DateTimeFilter<"MessageThread"> | Date | string
     updatedAt?: DateTimeFilter<"MessageThread"> | Date | string
+    messages?: MessageListRelationFilter
   }
 
   export type MessageThreadOrderByWithRelationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    customerId?: SortOrder
-    customerName?: SortOrder
-    customerPhone?: SortOrder
-    customerEmail?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    customerName?: SortOrderInput | SortOrder
+    customerPhone?: SortOrderInput | SortOrder
+    customerEmail?: SortOrderInput | SortOrder
     participantIds?: SortOrder
     participantNames?: SortOrder
-    subject?: SortOrder
-    jobId?: SortOrder
+    subject?: SortOrderInput | SortOrder
+    jobId?: SortOrderInput | SortOrder
     status?: SortOrder
     unreadCount?: SortOrder
-    lastMessageAt?: SortOrder
-    lastMessageBody?: SortOrder
-    messages?: MessageOrderByCompositeAggregateInput
+    lastMessageAt?: SortOrderInput | SortOrder
+    lastMessageBody?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    messages?: MessageOrderByRelationAggregateInput
   }
 
   export type MessageThreadWhereUniqueInput = Prisma.AtLeast<{
@@ -6989,26 +8150,26 @@ export namespace Prisma {
     unreadCount?: IntFilter<"MessageThread"> | number
     lastMessageAt?: DateTimeNullableFilter<"MessageThread"> | Date | string | null
     lastMessageBody?: StringNullableFilter<"MessageThread"> | string | null
-    messages?: MessageCompositeListFilter | MessageObjectEqualityInput[]
     createdAt?: DateTimeFilter<"MessageThread"> | Date | string
     updatedAt?: DateTimeFilter<"MessageThread"> | Date | string
+    messages?: MessageListRelationFilter
   }, "id">
 
   export type MessageThreadOrderByWithAggregationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    customerId?: SortOrder
-    customerName?: SortOrder
-    customerPhone?: SortOrder
-    customerEmail?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    customerName?: SortOrderInput | SortOrder
+    customerPhone?: SortOrderInput | SortOrder
+    customerEmail?: SortOrderInput | SortOrder
     participantIds?: SortOrder
     participantNames?: SortOrder
-    subject?: SortOrder
-    jobId?: SortOrder
+    subject?: SortOrderInput | SortOrder
+    jobId?: SortOrderInput | SortOrder
     status?: SortOrder
     unreadCount?: SortOrder
-    lastMessageAt?: SortOrder
-    lastMessageBody?: SortOrder
+    lastMessageAt?: SortOrderInput | SortOrder
+    lastMessageBody?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: MessageThreadCountOrderByAggregateInput
@@ -7040,6 +8201,101 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"MessageThread"> | Date | string
   }
 
+  export type MessageWhereInput = {
+    AND?: MessageWhereInput | MessageWhereInput[]
+    OR?: MessageWhereInput[]
+    NOT?: MessageWhereInput | MessageWhereInput[]
+    id?: StringFilter<"Message"> | string
+    threadId?: StringFilter<"Message"> | string
+    senderId?: StringFilter<"Message"> | string
+    senderName?: StringFilter<"Message"> | string
+    direction?: EnumMessageDirectionFilter<"Message"> | $Enums.MessageDirection
+    body?: StringFilter<"Message"> | string
+    channel?: EnumChannelFilter<"Message"> | $Enums.Channel
+    mediaUrls?: StringNullableListFilter<"Message">
+    twilioSid?: StringNullableFilter<"Message"> | string | null
+    sentAt?: DateTimeNullableFilter<"Message"> | Date | string | null
+    deliveredAt?: DateTimeNullableFilter<"Message"> | Date | string | null
+    readAt?: DateTimeNullableFilter<"Message"> | Date | string | null
+    createdAt?: DateTimeFilter<"Message"> | Date | string
+    thread?: XOR<MessageThreadRelationFilter, MessageThreadWhereInput>
+  }
+
+  export type MessageOrderByWithRelationInput = {
+    id?: SortOrder
+    threadId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    direction?: SortOrder
+    body?: SortOrder
+    channel?: SortOrder
+    mediaUrls?: SortOrder
+    twilioSid?: SortOrderInput | SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    deliveredAt?: SortOrderInput | SortOrder
+    readAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    thread?: MessageThreadOrderByWithRelationInput
+  }
+
+  export type MessageWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: MessageWhereInput | MessageWhereInput[]
+    OR?: MessageWhereInput[]
+    NOT?: MessageWhereInput | MessageWhereInput[]
+    threadId?: StringFilter<"Message"> | string
+    senderId?: StringFilter<"Message"> | string
+    senderName?: StringFilter<"Message"> | string
+    direction?: EnumMessageDirectionFilter<"Message"> | $Enums.MessageDirection
+    body?: StringFilter<"Message"> | string
+    channel?: EnumChannelFilter<"Message"> | $Enums.Channel
+    mediaUrls?: StringNullableListFilter<"Message">
+    twilioSid?: StringNullableFilter<"Message"> | string | null
+    sentAt?: DateTimeNullableFilter<"Message"> | Date | string | null
+    deliveredAt?: DateTimeNullableFilter<"Message"> | Date | string | null
+    readAt?: DateTimeNullableFilter<"Message"> | Date | string | null
+    createdAt?: DateTimeFilter<"Message"> | Date | string
+    thread?: XOR<MessageThreadRelationFilter, MessageThreadWhereInput>
+  }, "id">
+
+  export type MessageOrderByWithAggregationInput = {
+    id?: SortOrder
+    threadId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    direction?: SortOrder
+    body?: SortOrder
+    channel?: SortOrder
+    mediaUrls?: SortOrder
+    twilioSid?: SortOrderInput | SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    deliveredAt?: SortOrderInput | SortOrder
+    readAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: MessageCountOrderByAggregateInput
+    _max?: MessageMaxOrderByAggregateInput
+    _min?: MessageMinOrderByAggregateInput
+  }
+
+  export type MessageScalarWhereWithAggregatesInput = {
+    AND?: MessageScalarWhereWithAggregatesInput | MessageScalarWhereWithAggregatesInput[]
+    OR?: MessageScalarWhereWithAggregatesInput[]
+    NOT?: MessageScalarWhereWithAggregatesInput | MessageScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Message"> | string
+    threadId?: StringWithAggregatesFilter<"Message"> | string
+    senderId?: StringWithAggregatesFilter<"Message"> | string
+    senderName?: StringWithAggregatesFilter<"Message"> | string
+    direction?: EnumMessageDirectionWithAggregatesFilter<"Message"> | $Enums.MessageDirection
+    body?: StringWithAggregatesFilter<"Message"> | string
+    channel?: EnumChannelWithAggregatesFilter<"Message"> | $Enums.Channel
+    mediaUrls?: StringNullableListFilter<"Message">
+    twilioSid?: StringNullableWithAggregatesFilter<"Message"> | string | null
+    sentAt?: DateTimeNullableWithAggregatesFilter<"Message"> | Date | string | null
+    deliveredAt?: DateTimeNullableWithAggregatesFilter<"Message"> | Date | string | null
+    readAt?: DateTimeNullableWithAggregatesFilter<"Message"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Message"> | Date | string
+  }
+
   export type NotificationTemplateWhereInput = {
     AND?: NotificationTemplateWhereInput | NotificationTemplateWhereInput[]
     OR?: NotificationTemplateWhereInput[]
@@ -7064,7 +8320,7 @@ export namespace Prisma {
     name?: SortOrder
     type?: SortOrder
     channel?: SortOrder
-    subject?: SortOrder
+    subject?: SortOrderInput | SortOrder
     body?: SortOrder
     variables?: SortOrder
     isActive?: SortOrder
@@ -7097,7 +8353,7 @@ export namespace Prisma {
     name?: SortOrder
     type?: SortOrder
     channel?: SortOrder
-    subject?: SortOrder
+    subject?: SortOrderInput | SortOrder
     body?: SortOrder
     variables?: SortOrder
     isActive?: SortOrder
@@ -7228,16 +8484,16 @@ export namespace Prisma {
   export type DeliveryLogOrderByWithRelationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    notificationId?: SortOrder
+    notificationId?: SortOrderInput | SortOrder
     channel?: SortOrder
     recipient?: SortOrder
     status?: SortOrder
     provider?: SortOrder
-    externalId?: SortOrder
-    requestPayload?: SortOrder
-    responsePayload?: SortOrder
-    durationMs?: SortOrder
-    error?: SortOrder
+    externalId?: SortOrderInput | SortOrder
+    requestPayload?: SortOrderInput | SortOrder
+    responsePayload?: SortOrderInput | SortOrder
+    durationMs?: SortOrderInput | SortOrder
+    error?: SortOrderInput | SortOrder
     createdAt?: SortOrder
   }
 
@@ -7263,16 +8519,16 @@ export namespace Prisma {
   export type DeliveryLogOrderByWithAggregationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    notificationId?: SortOrder
+    notificationId?: SortOrderInput | SortOrder
     channel?: SortOrder
     recipient?: SortOrder
     status?: SortOrder
     provider?: SortOrder
-    externalId?: SortOrder
-    requestPayload?: SortOrder
-    responsePayload?: SortOrder
-    durationMs?: SortOrder
-    error?: SortOrder
+    externalId?: SortOrderInput | SortOrder
+    requestPayload?: SortOrderInput | SortOrder
+    responsePayload?: SortOrderInput | SortOrder
+    durationMs?: SortOrderInput | SortOrder
+    error?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: DeliveryLogCountOrderByAggregateInput
     _avg?: DeliveryLogAvgOrderByAggregateInput
@@ -7361,6 +8617,7 @@ export namespace Prisma {
   }
 
   export type NotificationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7390,6 +8647,7 @@ export namespace Prisma {
   }
 
   export type NotificationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7449,6 +8707,7 @@ export namespace Prisma {
   }
 
   export type NotificationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7478,6 +8737,7 @@ export namespace Prisma {
   }
 
   export type NotificationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7521,9 +8781,9 @@ export namespace Prisma {
     unreadCount?: number
     lastMessageAt?: Date | string | null
     lastMessageBody?: string | null
-    messages?: XOR<MessageListCreateEnvelopeInput, MessageCreateInput> | MessageCreateInput[]
     createdAt?: Date | string
     updatedAt?: Date | string
+    messages?: MessageCreateNestedManyWithoutThreadInput
   }
 
   export type MessageThreadUncheckedCreateInput = {
@@ -7541,12 +8801,13 @@ export namespace Prisma {
     unreadCount?: number
     lastMessageAt?: Date | string | null
     lastMessageBody?: string | null
-    messages?: XOR<MessageListCreateEnvelopeInput, MessageCreateInput> | MessageCreateInput[]
     createdAt?: Date | string
     updatedAt?: Date | string
+    messages?: MessageUncheckedCreateNestedManyWithoutThreadInput
   }
 
   export type MessageThreadUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     customerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7560,12 +8821,13 @@ export namespace Prisma {
     unreadCount?: IntFieldUpdateOperationsInput | number
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastMessageBody?: NullableStringFieldUpdateOperationsInput | string | null
-    messages?: XOR<MessageListUpdateEnvelopeInput, MessageCreateInput> | MessageCreateInput[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messages?: MessageUpdateManyWithoutThreadNestedInput
   }
 
   export type MessageThreadUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     customerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7579,9 +8841,9 @@ export namespace Prisma {
     unreadCount?: IntFieldUpdateOperationsInput | number
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastMessageBody?: NullableStringFieldUpdateOperationsInput | string | null
-    messages?: XOR<MessageListUpdateEnvelopeInput, MessageCreateInput> | MessageCreateInput[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messages?: MessageUncheckedUpdateManyWithoutThreadNestedInput
   }
 
   export type MessageThreadCreateManyInput = {
@@ -7599,12 +8861,12 @@ export namespace Prisma {
     unreadCount?: number
     lastMessageAt?: Date | string | null
     lastMessageBody?: string | null
-    messages?: XOR<MessageListCreateEnvelopeInput, MessageCreateInput> | MessageCreateInput[]
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
   export type MessageThreadUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     customerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7618,12 +8880,12 @@ export namespace Prisma {
     unreadCount?: IntFieldUpdateOperationsInput | number
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastMessageBody?: NullableStringFieldUpdateOperationsInput | string | null
-    messages?: XOR<MessageListUpdateEnvelopeInput, MessageCreateInput> | MessageCreateInput[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type MessageThreadUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     customerName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7637,9 +8899,119 @@ export namespace Prisma {
     unreadCount?: IntFieldUpdateOperationsInput | number
     lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastMessageBody?: NullableStringFieldUpdateOperationsInput | string | null
-    messages?: XOR<MessageListUpdateEnvelopeInput, MessageCreateInput> | MessageCreateInput[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MessageCreateInput = {
+    id?: string
+    senderId: string
+    senderName: string
+    direction: $Enums.MessageDirection
+    body: string
+    channel: $Enums.Channel
+    mediaUrls?: MessageCreatemediaUrlsInput | string[]
+    twilioSid?: string | null
+    sentAt?: Date | string | null
+    deliveredAt?: Date | string | null
+    readAt?: Date | string | null
+    createdAt?: Date | string
+    thread: MessageThreadCreateNestedOneWithoutMessagesInput
+  }
+
+  export type MessageUncheckedCreateInput = {
+    id?: string
+    threadId: string
+    senderId: string
+    senderName: string
+    direction: $Enums.MessageDirection
+    body: string
+    channel: $Enums.Channel
+    mediaUrls?: MessageCreatemediaUrlsInput | string[]
+    twilioSid?: string | null
+    sentAt?: Date | string | null
+    deliveredAt?: Date | string | null
+    readAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type MessageUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    direction?: EnumMessageDirectionFieldUpdateOperationsInput | $Enums.MessageDirection
+    body?: StringFieldUpdateOperationsInput | string
+    channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
+    mediaUrls?: MessageUpdatemediaUrlsInput | string[]
+    twilioSid?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    readAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    thread?: MessageThreadUpdateOneRequiredWithoutMessagesNestedInput
+  }
+
+  export type MessageUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    threadId?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    direction?: EnumMessageDirectionFieldUpdateOperationsInput | $Enums.MessageDirection
+    body?: StringFieldUpdateOperationsInput | string
+    channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
+    mediaUrls?: MessageUpdatemediaUrlsInput | string[]
+    twilioSid?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    readAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MessageCreateManyInput = {
+    id?: string
+    threadId: string
+    senderId: string
+    senderName: string
+    direction: $Enums.MessageDirection
+    body: string
+    channel: $Enums.Channel
+    mediaUrls?: MessageCreatemediaUrlsInput | string[]
+    twilioSid?: string | null
+    sentAt?: Date | string | null
+    deliveredAt?: Date | string | null
+    readAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type MessageUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    direction?: EnumMessageDirectionFieldUpdateOperationsInput | $Enums.MessageDirection
+    body?: StringFieldUpdateOperationsInput | string
+    channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
+    mediaUrls?: MessageUpdatemediaUrlsInput | string[]
+    twilioSid?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    readAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MessageUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    threadId?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    direction?: EnumMessageDirectionFieldUpdateOperationsInput | $Enums.MessageDirection
+    body?: StringFieldUpdateOperationsInput | string
+    channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
+    mediaUrls?: MessageUpdatemediaUrlsInput | string[]
+    twilioSid?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    readAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type NotificationTemplateCreateInput = {
@@ -7673,6 +9045,7 @@ export namespace Prisma {
   }
 
   export type NotificationTemplateUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumTemplateTypeFieldUpdateOperationsInput | $Enums.TemplateType
@@ -7687,6 +9060,7 @@ export namespace Prisma {
   }
 
   export type NotificationTemplateUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumTemplateTypeFieldUpdateOperationsInput | $Enums.TemplateType
@@ -7716,6 +9090,7 @@ export namespace Prisma {
   }
 
   export type NotificationTemplateUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumTemplateTypeFieldUpdateOperationsInput | $Enums.TemplateType
@@ -7730,6 +9105,7 @@ export namespace Prisma {
   }
 
   export type NotificationTemplateUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     type?: EnumTemplateTypeFieldUpdateOperationsInput | $Enums.TemplateType
@@ -7770,6 +9146,7 @@ export namespace Prisma {
   }
 
   export type AutomationRuleUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -7782,6 +9159,7 @@ export namespace Prisma {
   }
 
   export type AutomationRuleUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -7807,6 +9185,7 @@ export namespace Prisma {
   }
 
   export type AutomationRuleUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -7819,6 +9198,7 @@ export namespace Prisma {
   }
 
   export type AutomationRuleUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -7863,6 +9243,7 @@ export namespace Prisma {
   }
 
   export type DeliveryLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     notificationId?: NullableStringFieldUpdateOperationsInput | string | null
     channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
@@ -7878,6 +9259,7 @@ export namespace Prisma {
   }
 
   export type DeliveryLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     notificationId?: NullableStringFieldUpdateOperationsInput | string | null
     channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
@@ -7909,6 +9291,7 @@ export namespace Prisma {
   }
 
   export type DeliveryLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     notificationId?: NullableStringFieldUpdateOperationsInput | string | null
     channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
@@ -7924,6 +9307,7 @@ export namespace Prisma {
   }
 
   export type DeliveryLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     notificationId?: NullableStringFieldUpdateOperationsInput | string | null
     channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
@@ -7966,7 +9350,6 @@ export namespace Prisma {
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
-    isSet?: boolean
   }
 
   export type EnumChannelFilter<$PrismaModel = never> = {
@@ -7997,7 +9380,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-    isSet?: boolean
   }
 
   export type DateTimeFilter<$PrismaModel = never> = {
@@ -8009,6 +9391,11 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
   }
 
   export type NotificationCountOrderByAggregateInput = {
@@ -8135,7 +9522,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
-    isSet?: boolean
   }
 
   export type EnumChannelWithAggregatesFilter<$PrismaModel = never> = {
@@ -8178,7 +9564,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
-    isSet?: boolean
   }
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -8221,31 +9606,13 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type MessageCompositeListFilter = {
-    equals?: MessageObjectEqualityInput[]
+  export type MessageListRelationFilter = {
     every?: MessageWhereInput
     some?: MessageWhereInput
     none?: MessageWhereInput
-    isEmpty?: boolean
-    isSet?: boolean
   }
 
-  export type MessageObjectEqualityInput = {
-    id: string
-    senderId: string
-    senderName: string
-    direction: $Enums.MessageDirection
-    body: string
-    channel: $Enums.Channel
-    mediaUrls?: string[]
-    twilioSid?: string | null
-    sentAt?: Date | string | null
-    deliveredAt?: Date | string | null
-    readAt?: Date | string | null
-    createdAt: Date | string
-  }
-
-  export type MessageOrderByCompositeAggregateInput = {
+  export type MessageOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -8334,6 +9701,74 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type EnumMessageDirectionFilter<$PrismaModel = never> = {
+    equals?: $Enums.MessageDirection | EnumMessageDirectionFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
+    not?: NestedEnumMessageDirectionFilter<$PrismaModel> | $Enums.MessageDirection
+  }
+
+  export type MessageThreadRelationFilter = {
+    is?: MessageThreadWhereInput
+    isNot?: MessageThreadWhereInput
+  }
+
+  export type MessageCountOrderByAggregateInput = {
+    id?: SortOrder
+    threadId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    direction?: SortOrder
+    body?: SortOrder
+    channel?: SortOrder
+    mediaUrls?: SortOrder
+    twilioSid?: SortOrder
+    sentAt?: SortOrder
+    deliveredAt?: SortOrder
+    readAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type MessageMaxOrderByAggregateInput = {
+    id?: SortOrder
+    threadId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    direction?: SortOrder
+    body?: SortOrder
+    channel?: SortOrder
+    twilioSid?: SortOrder
+    sentAt?: SortOrder
+    deliveredAt?: SortOrder
+    readAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type MessageMinOrderByAggregateInput = {
+    id?: SortOrder
+    threadId?: SortOrder
+    senderId?: SortOrder
+    senderName?: SortOrder
+    direction?: SortOrder
+    body?: SortOrder
+    channel?: SortOrder
+    twilioSid?: SortOrder
+    sentAt?: SortOrder
+    deliveredAt?: SortOrder
+    readAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type EnumMessageDirectionWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MessageDirection | EnumMessageDirectionFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
+    not?: NestedEnumMessageDirectionWithAggregatesFilter<$PrismaModel> | $Enums.MessageDirection
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMessageDirectionFilter<$PrismaModel>
+    _max?: NestedEnumMessageDirectionFilter<$PrismaModel>
   }
 
   export type EnumTemplateTypeFilter<$PrismaModel = never> = {
@@ -8469,7 +9904,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
-    isSet?: boolean
   }
 
   export type DeliveryLogCountOrderByAggregateInput = {
@@ -8542,7 +9976,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-    isSet?: boolean
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -8551,7 +9984,6 @@ export namespace Prisma {
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
-    unset?: boolean
   }
 
   export type EnumChannelFieldUpdateOperationsInput = {
@@ -8568,7 +10000,6 @@ export namespace Prisma {
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
     set?: Date | string | null
-    unset?: boolean
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -8583,23 +10014,18 @@ export namespace Prisma {
     set: string[]
   }
 
-  export type MessageListCreateEnvelopeInput = {
-    set?: MessageCreateInput | MessageCreateInput[]
+  export type MessageCreateNestedManyWithoutThreadInput = {
+    create?: XOR<MessageCreateWithoutThreadInput, MessageUncheckedCreateWithoutThreadInput> | MessageCreateWithoutThreadInput[] | MessageUncheckedCreateWithoutThreadInput[]
+    connectOrCreate?: MessageCreateOrConnectWithoutThreadInput | MessageCreateOrConnectWithoutThreadInput[]
+    createMany?: MessageCreateManyThreadInputEnvelope
+    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
   }
 
-  export type MessageCreateInput = {
-    id: string
-    senderId: string
-    senderName: string
-    direction: $Enums.MessageDirection
-    body: string
-    channel: $Enums.Channel
-    mediaUrls?: MessageCreatemediaUrlsInput | string[]
-    twilioSid?: string | null
-    sentAt?: Date | string | null
-    deliveredAt?: Date | string | null
-    readAt?: Date | string | null
-    createdAt: Date | string
+  export type MessageUncheckedCreateNestedManyWithoutThreadInput = {
+    create?: XOR<MessageCreateWithoutThreadInput, MessageUncheckedCreateWithoutThreadInput> | MessageCreateWithoutThreadInput[] | MessageUncheckedCreateWithoutThreadInput[]
+    connectOrCreate?: MessageCreateOrConnectWithoutThreadInput | MessageCreateOrConnectWithoutThreadInput[]
+    createMany?: MessageCreateManyThreadInputEnvelope
+    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
   }
 
   export type MessageThreadUpdateparticipantIdsInput = {
@@ -8624,11 +10050,59 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type MessageListUpdateEnvelopeInput = {
-    set?: MessageCreateInput | MessageCreateInput[]
-    push?: MessageCreateInput | MessageCreateInput[]
-    updateMany?: MessageUpdateManyInput
-    deleteMany?: MessageDeleteManyInput
+  export type MessageUpdateManyWithoutThreadNestedInput = {
+    create?: XOR<MessageCreateWithoutThreadInput, MessageUncheckedCreateWithoutThreadInput> | MessageCreateWithoutThreadInput[] | MessageUncheckedCreateWithoutThreadInput[]
+    connectOrCreate?: MessageCreateOrConnectWithoutThreadInput | MessageCreateOrConnectWithoutThreadInput[]
+    upsert?: MessageUpsertWithWhereUniqueWithoutThreadInput | MessageUpsertWithWhereUniqueWithoutThreadInput[]
+    createMany?: MessageCreateManyThreadInputEnvelope
+    set?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    disconnect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    delete?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    update?: MessageUpdateWithWhereUniqueWithoutThreadInput | MessageUpdateWithWhereUniqueWithoutThreadInput[]
+    updateMany?: MessageUpdateManyWithWhereWithoutThreadInput | MessageUpdateManyWithWhereWithoutThreadInput[]
+    deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
+  }
+
+  export type MessageUncheckedUpdateManyWithoutThreadNestedInput = {
+    create?: XOR<MessageCreateWithoutThreadInput, MessageUncheckedCreateWithoutThreadInput> | MessageCreateWithoutThreadInput[] | MessageUncheckedCreateWithoutThreadInput[]
+    connectOrCreate?: MessageCreateOrConnectWithoutThreadInput | MessageCreateOrConnectWithoutThreadInput[]
+    upsert?: MessageUpsertWithWhereUniqueWithoutThreadInput | MessageUpsertWithWhereUniqueWithoutThreadInput[]
+    createMany?: MessageCreateManyThreadInputEnvelope
+    set?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    disconnect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    delete?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    update?: MessageUpdateWithWhereUniqueWithoutThreadInput | MessageUpdateWithWhereUniqueWithoutThreadInput[]
+    updateMany?: MessageUpdateManyWithWhereWithoutThreadInput | MessageUpdateManyWithWhereWithoutThreadInput[]
+    deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
+  }
+
+  export type MessageCreatemediaUrlsInput = {
+    set: string[]
+  }
+
+  export type MessageThreadCreateNestedOneWithoutMessagesInput = {
+    create?: XOR<MessageThreadCreateWithoutMessagesInput, MessageThreadUncheckedCreateWithoutMessagesInput>
+    connectOrCreate?: MessageThreadCreateOrConnectWithoutMessagesInput
+    connect?: MessageThreadWhereUniqueInput
+  }
+
+  export type EnumMessageDirectionFieldUpdateOperationsInput = {
+    set?: $Enums.MessageDirection
+  }
+
+  export type MessageUpdatemediaUrlsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type MessageThreadUpdateOneRequiredWithoutMessagesNestedInput = {
+    create?: XOR<MessageThreadCreateWithoutMessagesInput, MessageThreadUncheckedCreateWithoutMessagesInput>
+    connectOrCreate?: MessageThreadCreateOrConnectWithoutMessagesInput
+    upsert?: MessageThreadUpsertWithoutMessagesInput
+    connect?: MessageThreadWhereUniqueInput
+    update?: XOR<XOR<MessageThreadUpdateToOneWithWhereWithoutMessagesInput, MessageThreadUpdateWithoutMessagesInput>, MessageThreadUncheckedUpdateWithoutMessagesInput>
   }
 
   export type NotificationTemplateCreatevariablesInput = {
@@ -8654,7 +10128,6 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
-    unset?: boolean
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -8683,7 +10156,6 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
-    isSet?: boolean
   }
 
   export type NestedEnumChannelFilter<$PrismaModel = never> = {
@@ -8714,7 +10186,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-    isSet?: boolean
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -8771,7 +10242,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
-    isSet?: boolean
   }
 
   export type NestedIntNullableFilter<$PrismaModel = never> = {
@@ -8783,7 +10253,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
-    isSet?: boolean
   }
 
   export type NestedEnumChannelWithAggregatesFilter<$PrismaModel = never> = {
@@ -8826,7 +10295,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
-    isSet?: boolean
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -8848,24 +10316,6 @@ export namespace Prisma {
     in?: $Enums.ThreadStatus[] | ListEnumThreadStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.ThreadStatus[] | ListEnumThreadStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumThreadStatusFilter<$PrismaModel> | $Enums.ThreadStatus
-  }
-
-  export type MessageWhereInput = {
-    AND?: MessageWhereInput | MessageWhereInput[]
-    OR?: MessageWhereInput[]
-    NOT?: MessageWhereInput | MessageWhereInput[]
-    id?: StringFilter<"Message"> | string
-    senderId?: StringFilter<"Message"> | string
-    senderName?: StringFilter<"Message"> | string
-    direction?: EnumMessageDirectionFilter<"Message"> | $Enums.MessageDirection
-    body?: StringFilter<"Message"> | string
-    channel?: EnumChannelFilter<"Message"> | $Enums.Channel
-    mediaUrls?: StringNullableListFilter<"Message">
-    twilioSid?: StringNullableFilter<"Message"> | string | null
-    sentAt?: DateTimeNullableFilter<"Message"> | Date | string | null
-    deliveredAt?: DateTimeNullableFilter<"Message"> | Date | string | null
-    readAt?: DateTimeNullableFilter<"Message"> | Date | string | null
-    createdAt?: DateTimeFilter<"Message"> | Date | string
   }
 
   export type NestedEnumThreadStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -8903,6 +10353,23 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedEnumMessageDirectionFilter<$PrismaModel = never> = {
+    equals?: $Enums.MessageDirection | EnumMessageDirectionFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
+    not?: NestedEnumMessageDirectionFilter<$PrismaModel> | $Enums.MessageDirection
+  }
+
+  export type NestedEnumMessageDirectionWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MessageDirection | EnumMessageDirectionFieldRefInput<$PrismaModel>
+    in?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
+    not?: NestedEnumMessageDirectionWithAggregatesFilter<$PrismaModel> | $Enums.MessageDirection
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMessageDirectionFilter<$PrismaModel>
+    _max?: NestedEnumMessageDirectionFilter<$PrismaModel>
   }
 
   export type NestedEnumTemplateTypeFilter<$PrismaModel = never> = {
@@ -8953,7 +10420,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-    isSet?: boolean
   }
 
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
@@ -8965,30 +10431,191 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-    isSet?: boolean
   }
 
-  export type MessageCreatemediaUrlsInput = {
-    set: string[]
+  export type MessageCreateWithoutThreadInput = {
+    id?: string
+    senderId: string
+    senderName: string
+    direction: $Enums.MessageDirection
+    body: string
+    channel: $Enums.Channel
+    mediaUrls?: MessageCreatemediaUrlsInput | string[]
+    twilioSid?: string | null
+    sentAt?: Date | string | null
+    deliveredAt?: Date | string | null
+    readAt?: Date | string | null
+    createdAt?: Date | string
   }
 
-  export type MessageUpdateManyInput = {
-    where: MessageWhereInput
-    data: MessageUpdateInput
+  export type MessageUncheckedCreateWithoutThreadInput = {
+    id?: string
+    senderId: string
+    senderName: string
+    direction: $Enums.MessageDirection
+    body: string
+    channel: $Enums.Channel
+    mediaUrls?: MessageCreatemediaUrlsInput | string[]
+    twilioSid?: string | null
+    sentAt?: Date | string | null
+    deliveredAt?: Date | string | null
+    readAt?: Date | string | null
+    createdAt?: Date | string
   }
 
-  export type MessageDeleteManyInput = {
-    where: MessageWhereInput
+  export type MessageCreateOrConnectWithoutThreadInput = {
+    where: MessageWhereUniqueInput
+    create: XOR<MessageCreateWithoutThreadInput, MessageUncheckedCreateWithoutThreadInput>
   }
 
-  export type EnumMessageDirectionFilter<$PrismaModel = never> = {
-    equals?: $Enums.MessageDirection | EnumMessageDirectionFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
-    not?: NestedEnumMessageDirectionFilter<$PrismaModel> | $Enums.MessageDirection
+  export type MessageCreateManyThreadInputEnvelope = {
+    data: MessageCreateManyThreadInput | MessageCreateManyThreadInput[]
+    skipDuplicates?: boolean
   }
 
-  export type MessageUpdateInput = {
+  export type MessageUpsertWithWhereUniqueWithoutThreadInput = {
+    where: MessageWhereUniqueInput
+    update: XOR<MessageUpdateWithoutThreadInput, MessageUncheckedUpdateWithoutThreadInput>
+    create: XOR<MessageCreateWithoutThreadInput, MessageUncheckedCreateWithoutThreadInput>
+  }
+
+  export type MessageUpdateWithWhereUniqueWithoutThreadInput = {
+    where: MessageWhereUniqueInput
+    data: XOR<MessageUpdateWithoutThreadInput, MessageUncheckedUpdateWithoutThreadInput>
+  }
+
+  export type MessageUpdateManyWithWhereWithoutThreadInput = {
+    where: MessageScalarWhereInput
+    data: XOR<MessageUpdateManyMutationInput, MessageUncheckedUpdateManyWithoutThreadInput>
+  }
+
+  export type MessageScalarWhereInput = {
+    AND?: MessageScalarWhereInput | MessageScalarWhereInput[]
+    OR?: MessageScalarWhereInput[]
+    NOT?: MessageScalarWhereInput | MessageScalarWhereInput[]
+    id?: StringFilter<"Message"> | string
+    threadId?: StringFilter<"Message"> | string
+    senderId?: StringFilter<"Message"> | string
+    senderName?: StringFilter<"Message"> | string
+    direction?: EnumMessageDirectionFilter<"Message"> | $Enums.MessageDirection
+    body?: StringFilter<"Message"> | string
+    channel?: EnumChannelFilter<"Message"> | $Enums.Channel
+    mediaUrls?: StringNullableListFilter<"Message">
+    twilioSid?: StringNullableFilter<"Message"> | string | null
+    sentAt?: DateTimeNullableFilter<"Message"> | Date | string | null
+    deliveredAt?: DateTimeNullableFilter<"Message"> | Date | string | null
+    readAt?: DateTimeNullableFilter<"Message"> | Date | string | null
+    createdAt?: DateTimeFilter<"Message"> | Date | string
+  }
+
+  export type MessageThreadCreateWithoutMessagesInput = {
+    id?: string
+    companyId: string
+    customerId?: string | null
+    customerName?: string | null
+    customerPhone?: string | null
+    customerEmail?: string | null
+    participantIds?: MessageThreadCreateparticipantIdsInput | string[]
+    participantNames?: MessageThreadCreateparticipantNamesInput | string[]
+    subject?: string | null
+    jobId?: string | null
+    status?: $Enums.ThreadStatus
+    unreadCount?: number
+    lastMessageAt?: Date | string | null
+    lastMessageBody?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MessageThreadUncheckedCreateWithoutMessagesInput = {
+    id?: string
+    companyId: string
+    customerId?: string | null
+    customerName?: string | null
+    customerPhone?: string | null
+    customerEmail?: string | null
+    participantIds?: MessageThreadCreateparticipantIdsInput | string[]
+    participantNames?: MessageThreadCreateparticipantNamesInput | string[]
+    subject?: string | null
+    jobId?: string | null
+    status?: $Enums.ThreadStatus
+    unreadCount?: number
+    lastMessageAt?: Date | string | null
+    lastMessageBody?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MessageThreadCreateOrConnectWithoutMessagesInput = {
+    where: MessageThreadWhereUniqueInput
+    create: XOR<MessageThreadCreateWithoutMessagesInput, MessageThreadUncheckedCreateWithoutMessagesInput>
+  }
+
+  export type MessageThreadUpsertWithoutMessagesInput = {
+    update: XOR<MessageThreadUpdateWithoutMessagesInput, MessageThreadUncheckedUpdateWithoutMessagesInput>
+    create: XOR<MessageThreadCreateWithoutMessagesInput, MessageThreadUncheckedCreateWithoutMessagesInput>
+    where?: MessageThreadWhereInput
+  }
+
+  export type MessageThreadUpdateToOneWithWhereWithoutMessagesInput = {
+    where?: MessageThreadWhereInput
+    data: XOR<MessageThreadUpdateWithoutMessagesInput, MessageThreadUncheckedUpdateWithoutMessagesInput>
+  }
+
+  export type MessageThreadUpdateWithoutMessagesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    participantIds?: MessageThreadUpdateparticipantIdsInput | string[]
+    participantNames?: MessageThreadUpdateparticipantNamesInput | string[]
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    jobId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumThreadStatusFieldUpdateOperationsInput | $Enums.ThreadStatus
+    unreadCount?: IntFieldUpdateOperationsInput | number
+    lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastMessageBody?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MessageThreadUncheckedUpdateWithoutMessagesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
+    customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    participantIds?: MessageThreadUpdateparticipantIdsInput | string[]
+    participantNames?: MessageThreadUpdateparticipantNamesInput | string[]
+    subject?: NullableStringFieldUpdateOperationsInput | string | null
+    jobId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumThreadStatusFieldUpdateOperationsInput | $Enums.ThreadStatus
+    unreadCount?: IntFieldUpdateOperationsInput | number
+    lastMessageAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastMessageBody?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MessageCreateManyThreadInput = {
+    id?: string
+    senderId: string
+    senderName: string
+    direction: $Enums.MessageDirection
+    body: string
+    channel: $Enums.Channel
+    mediaUrls?: MessageCreatemediaUrlsInput | string[]
+    twilioSid?: string | null
+    sentAt?: Date | string | null
+    deliveredAt?: Date | string | null
+    readAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type MessageUpdateWithoutThreadInput = {
     id?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
     senderName?: StringFieldUpdateOperationsInput | string
@@ -9003,20 +10630,34 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type NestedEnumMessageDirectionFilter<$PrismaModel = never> = {
-    equals?: $Enums.MessageDirection | EnumMessageDirectionFieldRefInput<$PrismaModel>
-    in?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MessageDirection[] | ListEnumMessageDirectionFieldRefInput<$PrismaModel>
-    not?: NestedEnumMessageDirectionFilter<$PrismaModel> | $Enums.MessageDirection
+  export type MessageUncheckedUpdateWithoutThreadInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    direction?: EnumMessageDirectionFieldUpdateOperationsInput | $Enums.MessageDirection
+    body?: StringFieldUpdateOperationsInput | string
+    channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
+    mediaUrls?: MessageUpdatemediaUrlsInput | string[]
+    twilioSid?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    readAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type EnumMessageDirectionFieldUpdateOperationsInput = {
-    set?: $Enums.MessageDirection
-  }
-
-  export type MessageUpdatemediaUrlsInput = {
-    set?: string[]
-    push?: string | string[]
+  export type MessageUncheckedUpdateManyWithoutThreadInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    senderName?: StringFieldUpdateOperationsInput | string
+    direction?: EnumMessageDirectionFieldUpdateOperationsInput | $Enums.MessageDirection
+    body?: StringFieldUpdateOperationsInput | string
+    channel?: EnumChannelFieldUpdateOperationsInput | $Enums.Channel
+    mediaUrls?: MessageUpdatemediaUrlsInput | string[]
+    twilioSid?: NullableStringFieldUpdateOperationsInput | string | null
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    readAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 
@@ -9025,9 +10666,9 @@ export namespace Prisma {
    * Aliases for legacy arg types
    */
     /**
-     * @deprecated Use MessageDefaultArgs instead
+     * @deprecated Use MessageThreadCountOutputTypeDefaultArgs instead
      */
-    export type MessageArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = MessageDefaultArgs<ExtArgs>
+    export type MessageThreadCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = MessageThreadCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use NotificationDefaultArgs instead
      */
@@ -9036,6 +10677,10 @@ export namespace Prisma {
      * @deprecated Use MessageThreadDefaultArgs instead
      */
     export type MessageThreadArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = MessageThreadDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use MessageDefaultArgs instead
+     */
+    export type MessageArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = MessageDefaultArgs<ExtArgs>
     /**
      * @deprecated Use NotificationTemplateDefaultArgs instead
      */

@@ -131,6 +131,17 @@ export function useUpdateJobTags() {
   })
 }
 
+export function useDeleteJob() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/jobs/jobs/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    },
+  })
+}
+
 // ─── Job types (for filter dropdown) ──────────────────────────────────────────
 
 export function useJobTypes() {

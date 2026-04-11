@@ -17,28 +17,7 @@ CREATE SCHEMA IF NOT EXISTS scheduling;
 CREATE SCHEMA IF NOT EXISTS finance;
 CREATE SCHEMA IF NOT EXISTS analytics;
 CREATE SCHEMA IF NOT EXISTS inventory;
-
--- ---- Grant all privileges on schemas to app user ----
-GRANT ALL PRIVILEGES ON SCHEMA crm TO tscrm_user;
-GRANT ALL PRIVILEGES ON SCHEMA jobs TO tscrm_user;
-GRANT ALL PRIVILEGES ON SCHEMA scheduling TO tscrm_user;
-GRANT ALL PRIVILEGES ON SCHEMA finance TO tscrm_user;
-GRANT ALL PRIVILEGES ON SCHEMA analytics TO tscrm_user;
-GRANT ALL PRIVILEGES ON SCHEMA inventory TO tscrm_user;
-
--- Default privileges so future tables are also accessible
-ALTER DEFAULT PRIVILEGES IN SCHEMA crm GRANT ALL ON TABLES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA crm GRANT ALL ON SEQUENCES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA jobs GRANT ALL ON TABLES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA jobs GRANT ALL ON SEQUENCES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA scheduling GRANT ALL ON TABLES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA scheduling GRANT ALL ON SEQUENCES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA finance GRANT ALL ON TABLES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA finance GRANT ALL ON SEQUENCES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA analytics GRANT ALL ON TABLES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA analytics GRANT ALL ON SEQUENCES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA inventory GRANT ALL ON TABLES TO tscrm_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA inventory GRANT ALL ON SEQUENCES TO tscrm_user;
+CREATE SCHEMA IF NOT EXISTS comms;
 
 -- ============================================================
 -- Seed: Job Types (HVAC, Plumbing, Electrical)
@@ -53,5 +32,5 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA inventory GRANT ALL ON SEQUENCES TO tscrm_use
 -- Log initialization
 DO $$
 BEGIN
-  RAISE NOTICE 'T&S CRM database initialized: schemas (crm, jobs, scheduling, finance, analytics, inventory) + PostGIS ready.';
+  RAISE NOTICE 'T&S CRM database initialized: schemas (crm, jobs, scheduling, finance, analytics, inventory, comms) + PostGIS ready.';
 END $$;
