@@ -4,13 +4,17 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisCacheService } from '../redis-cache.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
 import { AuthUser, PaginatedResponse } from '@tscrm/types';
 
 @Injectable()
 export class JobsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: RedisCacheService,
+  ) {}
 
   // ============================================================
   // CREATE
@@ -59,6 +63,7 @@ export class JobsService {
       );
     }
 
+    await this.cache.del(`jobs:stats:${user.companyId}`);
     return this.findOne(user.companyId, job.id);
   }
 
@@ -202,6 +207,7 @@ export class JobsService {
         },
       });
 
+      await this.cache.del(`jobs:stats:${companyId}`);
       return updated;
     });
   }
@@ -304,6 +310,10 @@ export class JobsService {
   // ============================================================
 
   async getStats(companyId: string) {
+    const cacheKey = `jobs:stats:${companyId}`;
+    const cached = await this.cache.get<any>(cacheKey);
+    if (cached) return cached;
+
     const statuses = [
       'PENDING', 'SCHEDULED', 'EN_ROUTE', 'ON_SITE',
       'COMPLETED', 'INVOICED', 'PAID', 'CANCELLED', 'ON_HOLD',
@@ -330,7 +340,9 @@ export class JobsService {
       },
     });
 
-    return { byStatus: counts, scheduledToday };
+    const result = { byStatus: counts, scheduledToday };
+    await this.cache.set(cacheKey, result, 30); // 30-second cache
+    return result;
   }
 
   // ============================================================

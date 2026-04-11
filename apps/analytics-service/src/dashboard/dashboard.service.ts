@@ -15,6 +15,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisCacheService } from '../redis-cache.service';
 import { DateRangeDto } from './dto/dashboard.dto';
 import { Prisma } from '../prisma/generated';
 
@@ -39,10 +40,16 @@ export interface DashboardKpis {
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: RedisCacheService,
+  ) {}
 
   async getKpis(companyId: string, dto: DateRangeDto): Promise<DashboardKpis> {
     const { from, to } = this.normaliseDateRange(dto);
+    const cacheKey = `analytics:kpis:${companyId}:${from.toISOString()}:${to.toISOString()}`;
+    const cached = await this.cache.get<DashboardKpis>(cacheKey);
+    if (cached) return cached;
     const periodMs = to.getTime() - from.getTime();
     const priorFrom = new Date(from.getTime() - periodMs);
     const priorTo = new Date(from.getTime() - 1);
@@ -64,7 +71,7 @@ export class DashboardService {
       return Math.round(((curr - prior) / prior) * 100);
     };
 
-    return {
+    const result: DashboardKpis = {
       revenue: {
         label: 'Revenue',
         value: revenue,
@@ -105,6 +112,8 @@ export class DashboardService {
       },
       periodLabel: `${from.toLocaleDateString()} – ${to.toLocaleDateString()}`,
     };
+    await this.cache.set(cacheKey, result, 120); // 2-minute cache
+    return result;
   }
 
   // ── Private query helpers ───────────────────────────────────────────────────

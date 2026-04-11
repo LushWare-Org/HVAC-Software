@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from '@tscrm/auth-client';
 import appConfig from './app.config';
+import { RedisCacheService } from './redis-cache.service';
 
 // Core infra
 import { HealthModule } from './health/health.module';
@@ -34,5 +35,7 @@ import { ExportsModule } from './exports/exports.module';
     CustomerAnalyticsModule,
     ExportsModule,
   ],
+  providers: [RedisCacheService],
+  exports: [RedisCacheService],
 })
 export class AppModule {}
