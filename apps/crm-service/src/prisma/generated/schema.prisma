@@ -1,5 +1,5 @@
 // ============================================================
-// CRM Service — Prisma Schema
+// CRM Service â€” Prisma Schema
 // Schema: crm (isolated from other services)
 // ============================================================
 
@@ -17,21 +17,22 @@ datasource db {
 
 // ---- Companies (tenants) ----
 model Company {
-  id          String    @id @default(uuid())
-  name        String
-  email       String    @unique
-  phone       String?
-  address     String?
-  city        String?
-  state       String?
-  zipCode     String?
-  country     String    @default("US")
-  logoUrl     String?
-  website     String?
-  isActive    Boolean   @default(true)
-  trialEndsAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                       String    @id @default(uuid())
+  name                     String
+  email                    String    @unique
+  phone                    String?
+  address                  String?
+  city                     String?
+  state                    String?
+  zipCode                  String?
+  country                  String    @default("US")
+  logoUrl                  String?
+  website                  String?
+  isActive                 Boolean   @default(true)
+  automaticFollowupEnabled Boolean   @default(true)
+  trialEndsAt              DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   customers  Customer[]
   contacts   Contact[]
@@ -310,4 +311,29 @@ model Equipment {
 
   @@index([customerId])
   @@map("equipment")
+}
+
+model FollowupAttempt {
+  id               String    @id
+  companyId        String    @map("company_id")
+  entityType       String    @map("entity_type")
+  entityId         String    @map("entity_id")
+  customerId       String?   @map("customer_id")
+  leadId           String?   @map("lead_id")
+  action           String
+  status           String
+  churnProbability Float?    @map("churn_probability")
+  queueJobId       String?   @map("queue_job_id")
+  reason           String?
+  errorMessage     String?   @map("error_message")
+  metadata         Json?
+  triggeredAt      DateTime  @default(now()) @map("triggered_at")
+  queuedAt         DateTime? @map("queued_at")
+  failedAt         DateTime? @map("failed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([companyId, entityType, entityId, triggeredAt])
+  @@index([companyId, status, triggeredAt])
+  @@map("followup_attempts")
 }

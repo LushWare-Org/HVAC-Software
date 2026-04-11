@@ -53,6 +53,7 @@ model JobTemplate {
   estimatedDurationMins Int      @default(60)
   version               Int      @default(1)
   isActive              Boolean  @default(true)
+  requiredParts         Json? // [{inventoryItemId, name, qty}] — parts needed for this job type
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

@@ -63,6 +63,11 @@ export type Address = $Result.DefaultSelection<Prisma.$AddressPayload>
  * 
  */
 export type Equipment = $Result.DefaultSelection<Prisma.$EquipmentPayload>
+/**
+ * Model FollowupAttempt
+ * 
+ */
+export type FollowupAttempt = $Result.DefaultSelection<Prisma.$FollowupAttemptPayload>
 
 /**
  * Enums
@@ -363,6 +368,16 @@ export class PrismaClient<
     * ```
     */
   get equipment(): Prisma.EquipmentDelegate<ExtArgs>;
+
+  /**
+   * `prisma.followupAttempt`: Exposes CRUD operations for the **FollowupAttempt** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more FollowupAttempts
+    * const followupAttempts = await prisma.followupAttempt.findMany()
+    * ```
+    */
+  get followupAttempt(): Prisma.FollowupAttemptDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -813,7 +828,8 @@ export namespace Prisma {
     Booking: 'Booking',
     Review: 'Review',
     Address: 'Address',
-    Equipment: 'Equipment'
+    Equipment: 'Equipment',
+    FollowupAttempt: 'FollowupAttempt'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -829,7 +845,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "company" | "companyUser" | "customer" | "contact" | "lead" | "serviceAgreement" | "booking" | "review" | "address" | "equipment"
+      modelProps: "company" | "companyUser" | "customer" | "contact" | "lead" | "serviceAgreement" | "booking" | "review" | "address" | "equipment" | "followupAttempt"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1533,6 +1549,76 @@ export namespace Prisma {
           }
         }
       }
+      FollowupAttempt: {
+        payload: Prisma.$FollowupAttemptPayload<ExtArgs>
+        fields: Prisma.FollowupAttemptFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.FollowupAttemptFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.FollowupAttemptFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          findFirst: {
+            args: Prisma.FollowupAttemptFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.FollowupAttemptFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          findMany: {
+            args: Prisma.FollowupAttemptFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>[]
+          }
+          create: {
+            args: Prisma.FollowupAttemptCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          createMany: {
+            args: Prisma.FollowupAttemptCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.FollowupAttemptCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>[]
+          }
+          delete: {
+            args: Prisma.FollowupAttemptDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          update: {
+            args: Prisma.FollowupAttemptUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          deleteMany: {
+            args: Prisma.FollowupAttemptDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.FollowupAttemptUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.FollowupAttemptUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          aggregate: {
+            args: Prisma.FollowupAttemptAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateFollowupAttempt>
+          }
+          groupBy: {
+            args: Prisma.FollowupAttemptGroupByArgs<ExtArgs>
+            result: $Utils.Optional<FollowupAttemptGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.FollowupAttemptCountArgs<ExtArgs>
+            result: $Utils.Optional<FollowupAttemptCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1908,6 +1994,7 @@ export namespace Prisma {
     logoUrl: string | null
     website: string | null
     isActive: boolean | null
+    automaticFollowupEnabled: boolean | null
     trialEndsAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -1926,6 +2013,7 @@ export namespace Prisma {
     logoUrl: string | null
     website: string | null
     isActive: boolean | null
+    automaticFollowupEnabled: boolean | null
     trialEndsAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -1944,6 +2032,7 @@ export namespace Prisma {
     logoUrl: number
     website: number
     isActive: number
+    automaticFollowupEnabled: number
     trialEndsAt: number
     createdAt: number
     updatedAt: number
@@ -1964,6 +2053,7 @@ export namespace Prisma {
     logoUrl?: true
     website?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     trialEndsAt?: true
     createdAt?: true
     updatedAt?: true
@@ -1982,6 +2072,7 @@ export namespace Prisma {
     logoUrl?: true
     website?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     trialEndsAt?: true
     createdAt?: true
     updatedAt?: true
@@ -2000,6 +2091,7 @@ export namespace Prisma {
     logoUrl?: true
     website?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     trialEndsAt?: true
     createdAt?: true
     updatedAt?: true
@@ -2091,6 +2183,7 @@ export namespace Prisma {
     logoUrl: string | null
     website: string | null
     isActive: boolean
+    automaticFollowupEnabled: boolean
     trialEndsAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -2126,6 +2219,7 @@ export namespace Prisma {
     logoUrl?: boolean
     website?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2151,6 +2245,7 @@ export namespace Prisma {
     logoUrl?: boolean
     website?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2169,6 +2264,7 @@ export namespace Prisma {
     logoUrl?: boolean
     website?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2208,6 +2304,7 @@ export namespace Prisma {
       logoUrl: string | null
       website: string | null
       isActive: boolean
+      automaticFollowupEnabled: boolean
       trialEndsAt: Date | null
       createdAt: Date
       updatedAt: Date
@@ -2622,6 +2719,7 @@ export namespace Prisma {
     readonly logoUrl: FieldRef<"Company", 'String'>
     readonly website: FieldRef<"Company", 'String'>
     readonly isActive: FieldRef<"Company", 'Boolean'>
+    readonly automaticFollowupEnabled: FieldRef<"Company", 'Boolean'>
     readonly trialEndsAt: FieldRef<"Company", 'DateTime'>
     readonly createdAt: FieldRef<"Company", 'DateTime'>
     readonly updatedAt: FieldRef<"Company", 'DateTime'>
@@ -12972,6 +13070,1070 @@ export namespace Prisma {
 
 
   /**
+   * Model FollowupAttempt
+   */
+
+  export type AggregateFollowupAttempt = {
+    _count: FollowupAttemptCountAggregateOutputType | null
+    _avg: FollowupAttemptAvgAggregateOutputType | null
+    _sum: FollowupAttemptSumAggregateOutputType | null
+    _min: FollowupAttemptMinAggregateOutputType | null
+    _max: FollowupAttemptMaxAggregateOutputType | null
+  }
+
+  export type FollowupAttemptAvgAggregateOutputType = {
+    churnProbability: number | null
+  }
+
+  export type FollowupAttemptSumAggregateOutputType = {
+    churnProbability: number | null
+  }
+
+  export type FollowupAttemptMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    entityType: string | null
+    entityId: string | null
+    customerId: string | null
+    leadId: string | null
+    action: string | null
+    status: string | null
+    churnProbability: number | null
+    queueJobId: string | null
+    reason: string | null
+    errorMessage: string | null
+    triggeredAt: Date | null
+    queuedAt: Date | null
+    failedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type FollowupAttemptMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    entityType: string | null
+    entityId: string | null
+    customerId: string | null
+    leadId: string | null
+    action: string | null
+    status: string | null
+    churnProbability: number | null
+    queueJobId: string | null
+    reason: string | null
+    errorMessage: string | null
+    triggeredAt: Date | null
+    queuedAt: Date | null
+    failedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type FollowupAttemptCountAggregateOutputType = {
+    id: number
+    companyId: number
+    entityType: number
+    entityId: number
+    customerId: number
+    leadId: number
+    action: number
+    status: number
+    churnProbability: number
+    queueJobId: number
+    reason: number
+    errorMessage: number
+    metadata: number
+    triggeredAt: number
+    queuedAt: number
+    failedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type FollowupAttemptAvgAggregateInputType = {
+    churnProbability?: true
+  }
+
+  export type FollowupAttemptSumAggregateInputType = {
+    churnProbability?: true
+  }
+
+  export type FollowupAttemptMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    entityType?: true
+    entityId?: true
+    customerId?: true
+    leadId?: true
+    action?: true
+    status?: true
+    churnProbability?: true
+    queueJobId?: true
+    reason?: true
+    errorMessage?: true
+    triggeredAt?: true
+    queuedAt?: true
+    failedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type FollowupAttemptMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    entityType?: true
+    entityId?: true
+    customerId?: true
+    leadId?: true
+    action?: true
+    status?: true
+    churnProbability?: true
+    queueJobId?: true
+    reason?: true
+    errorMessage?: true
+    triggeredAt?: true
+    queuedAt?: true
+    failedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type FollowupAttemptCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    entityType?: true
+    entityId?: true
+    customerId?: true
+    leadId?: true
+    action?: true
+    status?: true
+    churnProbability?: true
+    queueJobId?: true
+    reason?: true
+    errorMessage?: true
+    metadata?: true
+    triggeredAt?: true
+    queuedAt?: true
+    failedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type FollowupAttemptAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FollowupAttempt to aggregate.
+     */
+    where?: FollowupAttemptWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FollowupAttempts to fetch.
+     */
+    orderBy?: FollowupAttemptOrderByWithRelationInput | FollowupAttemptOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: FollowupAttemptWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FollowupAttempts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FollowupAttempts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned FollowupAttempts
+    **/
+    _count?: true | FollowupAttemptCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: FollowupAttemptAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: FollowupAttemptSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: FollowupAttemptMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: FollowupAttemptMaxAggregateInputType
+  }
+
+  export type GetFollowupAttemptAggregateType<T extends FollowupAttemptAggregateArgs> = {
+        [P in keyof T & keyof AggregateFollowupAttempt]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateFollowupAttempt[P]>
+      : GetScalarType<T[P], AggregateFollowupAttempt[P]>
+  }
+
+
+
+
+  export type FollowupAttemptGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FollowupAttemptWhereInput
+    orderBy?: FollowupAttemptOrderByWithAggregationInput | FollowupAttemptOrderByWithAggregationInput[]
+    by: FollowupAttemptScalarFieldEnum[] | FollowupAttemptScalarFieldEnum
+    having?: FollowupAttemptScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: FollowupAttemptCountAggregateInputType | true
+    _avg?: FollowupAttemptAvgAggregateInputType
+    _sum?: FollowupAttemptSumAggregateInputType
+    _min?: FollowupAttemptMinAggregateInputType
+    _max?: FollowupAttemptMaxAggregateInputType
+  }
+
+  export type FollowupAttemptGroupByOutputType = {
+    id: string
+    companyId: string
+    entityType: string
+    entityId: string
+    customerId: string | null
+    leadId: string | null
+    action: string
+    status: string
+    churnProbability: number | null
+    queueJobId: string | null
+    reason: string | null
+    errorMessage: string | null
+    metadata: JsonValue | null
+    triggeredAt: Date
+    queuedAt: Date | null
+    failedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: FollowupAttemptCountAggregateOutputType | null
+    _avg: FollowupAttemptAvgAggregateOutputType | null
+    _sum: FollowupAttemptSumAggregateOutputType | null
+    _min: FollowupAttemptMinAggregateOutputType | null
+    _max: FollowupAttemptMaxAggregateOutputType | null
+  }
+
+  type GetFollowupAttemptGroupByPayload<T extends FollowupAttemptGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<FollowupAttemptGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof FollowupAttemptGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], FollowupAttemptGroupByOutputType[P]>
+            : GetScalarType<T[P], FollowupAttemptGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type FollowupAttemptSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    customerId?: boolean
+    leadId?: boolean
+    action?: boolean
+    status?: boolean
+    churnProbability?: boolean
+    queueJobId?: boolean
+    reason?: boolean
+    errorMessage?: boolean
+    metadata?: boolean
+    triggeredAt?: boolean
+    queuedAt?: boolean
+    failedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["followupAttempt"]>
+
+  export type FollowupAttemptSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    customerId?: boolean
+    leadId?: boolean
+    action?: boolean
+    status?: boolean
+    churnProbability?: boolean
+    queueJobId?: boolean
+    reason?: boolean
+    errorMessage?: boolean
+    metadata?: boolean
+    triggeredAt?: boolean
+    queuedAt?: boolean
+    failedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["followupAttempt"]>
+
+  export type FollowupAttemptSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    customerId?: boolean
+    leadId?: boolean
+    action?: boolean
+    status?: boolean
+    churnProbability?: boolean
+    queueJobId?: boolean
+    reason?: boolean
+    errorMessage?: boolean
+    metadata?: boolean
+    triggeredAt?: boolean
+    queuedAt?: boolean
+    failedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $FollowupAttemptPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "FollowupAttempt"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      entityType: string
+      entityId: string
+      customerId: string | null
+      leadId: string | null
+      action: string
+      status: string
+      churnProbability: number | null
+      queueJobId: string | null
+      reason: string | null
+      errorMessage: string | null
+      metadata: Prisma.JsonValue | null
+      triggeredAt: Date
+      queuedAt: Date | null
+      failedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["followupAttempt"]>
+    composites: {}
+  }
+
+  type FollowupAttemptGetPayload<S extends boolean | null | undefined | FollowupAttemptDefaultArgs> = $Result.GetResult<Prisma.$FollowupAttemptPayload, S>
+
+  type FollowupAttemptCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<FollowupAttemptFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: FollowupAttemptCountAggregateInputType | true
+    }
+
+  export interface FollowupAttemptDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FollowupAttempt'], meta: { name: 'FollowupAttempt' } }
+    /**
+     * Find zero or one FollowupAttempt that matches the filter.
+     * @param {FollowupAttemptFindUniqueArgs} args - Arguments to find a FollowupAttempt
+     * @example
+     * // Get one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends FollowupAttemptFindUniqueArgs>(args: SelectSubset<T, FollowupAttemptFindUniqueArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one FollowupAttempt that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {FollowupAttemptFindUniqueOrThrowArgs} args - Arguments to find a FollowupAttempt
+     * @example
+     * // Get one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends FollowupAttemptFindUniqueOrThrowArgs>(args: SelectSubset<T, FollowupAttemptFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first FollowupAttempt that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptFindFirstArgs} args - Arguments to find a FollowupAttempt
+     * @example
+     * // Get one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends FollowupAttemptFindFirstArgs>(args?: SelectSubset<T, FollowupAttemptFindFirstArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first FollowupAttempt that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptFindFirstOrThrowArgs} args - Arguments to find a FollowupAttempt
+     * @example
+     * // Get one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends FollowupAttemptFindFirstOrThrowArgs>(args?: SelectSubset<T, FollowupAttemptFindFirstOrThrowArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more FollowupAttempts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all FollowupAttempts
+     * const followupAttempts = await prisma.followupAttempt.findMany()
+     * 
+     * // Get first 10 FollowupAttempts
+     * const followupAttempts = await prisma.followupAttempt.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const followupAttemptWithIdOnly = await prisma.followupAttempt.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends FollowupAttemptFindManyArgs>(args?: SelectSubset<T, FollowupAttemptFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a FollowupAttempt.
+     * @param {FollowupAttemptCreateArgs} args - Arguments to create a FollowupAttempt.
+     * @example
+     * // Create one FollowupAttempt
+     * const FollowupAttempt = await prisma.followupAttempt.create({
+     *   data: {
+     *     // ... data to create a FollowupAttempt
+     *   }
+     * })
+     * 
+     */
+    create<T extends FollowupAttemptCreateArgs>(args: SelectSubset<T, FollowupAttemptCreateArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many FollowupAttempts.
+     * @param {FollowupAttemptCreateManyArgs} args - Arguments to create many FollowupAttempts.
+     * @example
+     * // Create many FollowupAttempts
+     * const followupAttempt = await prisma.followupAttempt.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends FollowupAttemptCreateManyArgs>(args?: SelectSubset<T, FollowupAttemptCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many FollowupAttempts and returns the data saved in the database.
+     * @param {FollowupAttemptCreateManyAndReturnArgs} args - Arguments to create many FollowupAttempts.
+     * @example
+     * // Create many FollowupAttempts
+     * const followupAttempt = await prisma.followupAttempt.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many FollowupAttempts and only return the `id`
+     * const followupAttemptWithIdOnly = await prisma.followupAttempt.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends FollowupAttemptCreateManyAndReturnArgs>(args?: SelectSubset<T, FollowupAttemptCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a FollowupAttempt.
+     * @param {FollowupAttemptDeleteArgs} args - Arguments to delete one FollowupAttempt.
+     * @example
+     * // Delete one FollowupAttempt
+     * const FollowupAttempt = await prisma.followupAttempt.delete({
+     *   where: {
+     *     // ... filter to delete one FollowupAttempt
+     *   }
+     * })
+     * 
+     */
+    delete<T extends FollowupAttemptDeleteArgs>(args: SelectSubset<T, FollowupAttemptDeleteArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one FollowupAttempt.
+     * @param {FollowupAttemptUpdateArgs} args - Arguments to update one FollowupAttempt.
+     * @example
+     * // Update one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends FollowupAttemptUpdateArgs>(args: SelectSubset<T, FollowupAttemptUpdateArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more FollowupAttempts.
+     * @param {FollowupAttemptDeleteManyArgs} args - Arguments to filter FollowupAttempts to delete.
+     * @example
+     * // Delete a few FollowupAttempts
+     * const { count } = await prisma.followupAttempt.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends FollowupAttemptDeleteManyArgs>(args?: SelectSubset<T, FollowupAttemptDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more FollowupAttempts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many FollowupAttempts
+     * const followupAttempt = await prisma.followupAttempt.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends FollowupAttemptUpdateManyArgs>(args: SelectSubset<T, FollowupAttemptUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one FollowupAttempt.
+     * @param {FollowupAttemptUpsertArgs} args - Arguments to update or create a FollowupAttempt.
+     * @example
+     * // Update or create a FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.upsert({
+     *   create: {
+     *     // ... data to create a FollowupAttempt
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the FollowupAttempt we want to update
+     *   }
+     * })
+     */
+    upsert<T extends FollowupAttemptUpsertArgs>(args: SelectSubset<T, FollowupAttemptUpsertArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of FollowupAttempts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptCountArgs} args - Arguments to filter FollowupAttempts to count.
+     * @example
+     * // Count the number of FollowupAttempts
+     * const count = await prisma.followupAttempt.count({
+     *   where: {
+     *     // ... the filter for the FollowupAttempts we want to count
+     *   }
+     * })
+    **/
+    count<T extends FollowupAttemptCountArgs>(
+      args?: Subset<T, FollowupAttemptCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], FollowupAttemptCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a FollowupAttempt.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends FollowupAttemptAggregateArgs>(args: Subset<T, FollowupAttemptAggregateArgs>): Prisma.PrismaPromise<GetFollowupAttemptAggregateType<T>>
+
+    /**
+     * Group by FollowupAttempt.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends FollowupAttemptGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: FollowupAttemptGroupByArgs['orderBy'] }
+        : { orderBy?: FollowupAttemptGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, FollowupAttemptGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFollowupAttemptGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the FollowupAttempt model
+   */
+  readonly fields: FollowupAttemptFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for FollowupAttempt.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__FollowupAttemptClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the FollowupAttempt model
+   */ 
+  interface FollowupAttemptFieldRefs {
+    readonly id: FieldRef<"FollowupAttempt", 'String'>
+    readonly companyId: FieldRef<"FollowupAttempt", 'String'>
+    readonly entityType: FieldRef<"FollowupAttempt", 'String'>
+    readonly entityId: FieldRef<"FollowupAttempt", 'String'>
+    readonly customerId: FieldRef<"FollowupAttempt", 'String'>
+    readonly leadId: FieldRef<"FollowupAttempt", 'String'>
+    readonly action: FieldRef<"FollowupAttempt", 'String'>
+    readonly status: FieldRef<"FollowupAttempt", 'String'>
+    readonly churnProbability: FieldRef<"FollowupAttempt", 'Float'>
+    readonly queueJobId: FieldRef<"FollowupAttempt", 'String'>
+    readonly reason: FieldRef<"FollowupAttempt", 'String'>
+    readonly errorMessage: FieldRef<"FollowupAttempt", 'String'>
+    readonly metadata: FieldRef<"FollowupAttempt", 'Json'>
+    readonly triggeredAt: FieldRef<"FollowupAttempt", 'DateTime'>
+    readonly queuedAt: FieldRef<"FollowupAttempt", 'DateTime'>
+    readonly failedAt: FieldRef<"FollowupAttempt", 'DateTime'>
+    readonly createdAt: FieldRef<"FollowupAttempt", 'DateTime'>
+    readonly updatedAt: FieldRef<"FollowupAttempt", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * FollowupAttempt findUnique
+   */
+  export type FollowupAttemptFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempt to fetch.
+     */
+    where: FollowupAttemptWhereUniqueInput
+  }
+
+  /**
+   * FollowupAttempt findUniqueOrThrow
+   */
+  export type FollowupAttemptFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempt to fetch.
+     */
+    where: FollowupAttemptWhereUniqueInput
+  }
+
+  /**
+   * FollowupAttempt findFirst
+   */
+  export type FollowupAttemptFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempt to fetch.
+     */
+    where?: FollowupAttemptWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FollowupAttempts to fetch.
+     */
+    orderBy?: FollowupAttemptOrderByWithRelationInput | FollowupAttemptOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FollowupAttempts.
+     */
+    cursor?: FollowupAttemptWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FollowupAttempts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FollowupAttempts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FollowupAttempts.
+     */
+    distinct?: FollowupAttemptScalarFieldEnum | FollowupAttemptScalarFieldEnum[]
+  }
+
+  /**
+   * FollowupAttempt findFirstOrThrow
+   */
+  export type FollowupAttemptFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempt to fetch.
+     */
+    where?: FollowupAttemptWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FollowupAttempts to fetch.
+     */
+    orderBy?: FollowupAttemptOrderByWithRelationInput | FollowupAttemptOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FollowupAttempts.
+     */
+    cursor?: FollowupAttemptWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FollowupAttempts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FollowupAttempts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FollowupAttempts.
+     */
+    distinct?: FollowupAttemptScalarFieldEnum | FollowupAttemptScalarFieldEnum[]
+  }
+
+  /**
+   * FollowupAttempt findMany
+   */
+  export type FollowupAttemptFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempts to fetch.
+     */
+    where?: FollowupAttemptWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FollowupAttempts to fetch.
+     */
+    orderBy?: FollowupAttemptOrderByWithRelationInput | FollowupAttemptOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing FollowupAttempts.
+     */
+    cursor?: FollowupAttemptWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FollowupAttempts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FollowupAttempts.
+     */
+    skip?: number
+    distinct?: FollowupAttemptScalarFieldEnum | FollowupAttemptScalarFieldEnum[]
+  }
+
+  /**
+   * FollowupAttempt create
+   */
+  export type FollowupAttemptCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * The data needed to create a FollowupAttempt.
+     */
+    data: XOR<FollowupAttemptCreateInput, FollowupAttemptUncheckedCreateInput>
+  }
+
+  /**
+   * FollowupAttempt createMany
+   */
+  export type FollowupAttemptCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many FollowupAttempts.
+     */
+    data: FollowupAttemptCreateManyInput | FollowupAttemptCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * FollowupAttempt createManyAndReturn
+   */
+  export type FollowupAttemptCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many FollowupAttempts.
+     */
+    data: FollowupAttemptCreateManyInput | FollowupAttemptCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * FollowupAttempt update
+   */
+  export type FollowupAttemptUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * The data needed to update a FollowupAttempt.
+     */
+    data: XOR<FollowupAttemptUpdateInput, FollowupAttemptUncheckedUpdateInput>
+    /**
+     * Choose, which FollowupAttempt to update.
+     */
+    where: FollowupAttemptWhereUniqueInput
+  }
+
+  /**
+   * FollowupAttempt updateMany
+   */
+  export type FollowupAttemptUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update FollowupAttempts.
+     */
+    data: XOR<FollowupAttemptUpdateManyMutationInput, FollowupAttemptUncheckedUpdateManyInput>
+    /**
+     * Filter which FollowupAttempts to update
+     */
+    where?: FollowupAttemptWhereInput
+  }
+
+  /**
+   * FollowupAttempt upsert
+   */
+  export type FollowupAttemptUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * The filter to search for the FollowupAttempt to update in case it exists.
+     */
+    where: FollowupAttemptWhereUniqueInput
+    /**
+     * In case the FollowupAttempt found by the `where` argument doesn't exist, create a new FollowupAttempt with this data.
+     */
+    create: XOR<FollowupAttemptCreateInput, FollowupAttemptUncheckedCreateInput>
+    /**
+     * In case the FollowupAttempt was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<FollowupAttemptUpdateInput, FollowupAttemptUncheckedUpdateInput>
+  }
+
+  /**
+   * FollowupAttempt delete
+   */
+  export type FollowupAttemptDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter which FollowupAttempt to delete.
+     */
+    where: FollowupAttemptWhereUniqueInput
+  }
+
+  /**
+   * FollowupAttempt deleteMany
+   */
+  export type FollowupAttemptDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FollowupAttempts to delete
+     */
+    where?: FollowupAttemptWhereInput
+  }
+
+  /**
+   * FollowupAttempt without action
+   */
+  export type FollowupAttemptDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -12998,6 +14160,7 @@ export namespace Prisma {
     logoUrl: 'logoUrl',
     website: 'website',
     isActive: 'isActive',
+    automaticFollowupEnabled: 'automaticFollowupEnabled',
     trialEndsAt: 'trialEndsAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -13194,12 +14357,44 @@ export namespace Prisma {
   export type EquipmentScalarFieldEnum = (typeof EquipmentScalarFieldEnum)[keyof typeof EquipmentScalarFieldEnum]
 
 
+  export const FollowupAttemptScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    entityType: 'entityType',
+    entityId: 'entityId',
+    customerId: 'customerId',
+    leadId: 'leadId',
+    action: 'action',
+    status: 'status',
+    churnProbability: 'churnProbability',
+    queueJobId: 'queueJobId',
+    reason: 'reason',
+    errorMessage: 'errorMessage',
+    metadata: 'metadata',
+    triggeredAt: 'triggeredAt',
+    queuedAt: 'queuedAt',
+    failedAt: 'failedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type FollowupAttemptScalarFieldEnum = (typeof FollowupAttemptScalarFieldEnum)[keyof typeof FollowupAttemptScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
   export const QueryMode: {
@@ -13216,6 +14411,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -13368,6 +14572,13 @@ export namespace Prisma {
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
   /**
    * Deep Input Types
    */
@@ -13389,6 +14600,7 @@ export namespace Prisma {
     logoUrl?: StringNullableFilter<"Company"> | string | null
     website?: StringNullableFilter<"Company"> | string | null
     isActive?: BoolFilter<"Company"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Company"> | boolean
     trialEndsAt?: DateTimeNullableFilter<"Company"> | Date | string | null
     createdAt?: DateTimeFilter<"Company"> | Date | string
     updatedAt?: DateTimeFilter<"Company"> | Date | string
@@ -13413,6 +14625,7 @@ export namespace Prisma {
     logoUrl?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13440,6 +14653,7 @@ export namespace Prisma {
     logoUrl?: StringNullableFilter<"Company"> | string | null
     website?: StringNullableFilter<"Company"> | string | null
     isActive?: BoolFilter<"Company"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Company"> | boolean
     trialEndsAt?: DateTimeNullableFilter<"Company"> | Date | string | null
     createdAt?: DateTimeFilter<"Company"> | Date | string
     updatedAt?: DateTimeFilter<"Company"> | Date | string
@@ -13464,6 +14678,7 @@ export namespace Prisma {
     logoUrl?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13488,6 +14703,7 @@ export namespace Prisma {
     logoUrl?: StringNullableWithAggregatesFilter<"Company"> | string | null
     website?: StringNullableWithAggregatesFilter<"Company"> | string | null
     isActive?: BoolWithAggregatesFilter<"Company"> | boolean
+    automaticFollowupEnabled?: BoolWithAggregatesFilter<"Company"> | boolean
     trialEndsAt?: DateTimeNullableWithAggregatesFilter<"Company"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Company"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Company"> | Date | string
@@ -14481,6 +15697,125 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Equipment"> | Date | string
   }
 
+  export type FollowupAttemptWhereInput = {
+    AND?: FollowupAttemptWhereInput | FollowupAttemptWhereInput[]
+    OR?: FollowupAttemptWhereInput[]
+    NOT?: FollowupAttemptWhereInput | FollowupAttemptWhereInput[]
+    id?: StringFilter<"FollowupAttempt"> | string
+    companyId?: StringFilter<"FollowupAttempt"> | string
+    entityType?: StringFilter<"FollowupAttempt"> | string
+    entityId?: StringFilter<"FollowupAttempt"> | string
+    customerId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    leadId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    action?: StringFilter<"FollowupAttempt"> | string
+    status?: StringFilter<"FollowupAttempt"> | string
+    churnProbability?: FloatNullableFilter<"FollowupAttempt"> | number | null
+    queueJobId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    reason?: StringNullableFilter<"FollowupAttempt"> | string | null
+    errorMessage?: StringNullableFilter<"FollowupAttempt"> | string | null
+    metadata?: JsonNullableFilter<"FollowupAttempt">
+    triggeredAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+    queuedAt?: DateTimeNullableFilter<"FollowupAttempt"> | Date | string | null
+    failedAt?: DateTimeNullableFilter<"FollowupAttempt"> | Date | string | null
+    createdAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+    updatedAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+  }
+
+  export type FollowupAttemptOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    leadId?: SortOrderInput | SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrderInput | SortOrder
+    queueJobId?: SortOrderInput | SortOrder
+    reason?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrderInput | SortOrder
+    failedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FollowupAttemptWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: FollowupAttemptWhereInput | FollowupAttemptWhereInput[]
+    OR?: FollowupAttemptWhereInput[]
+    NOT?: FollowupAttemptWhereInput | FollowupAttemptWhereInput[]
+    companyId?: StringFilter<"FollowupAttempt"> | string
+    entityType?: StringFilter<"FollowupAttempt"> | string
+    entityId?: StringFilter<"FollowupAttempt"> | string
+    customerId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    leadId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    action?: StringFilter<"FollowupAttempt"> | string
+    status?: StringFilter<"FollowupAttempt"> | string
+    churnProbability?: FloatNullableFilter<"FollowupAttempt"> | number | null
+    queueJobId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    reason?: StringNullableFilter<"FollowupAttempt"> | string | null
+    errorMessage?: StringNullableFilter<"FollowupAttempt"> | string | null
+    metadata?: JsonNullableFilter<"FollowupAttempt">
+    triggeredAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+    queuedAt?: DateTimeNullableFilter<"FollowupAttempt"> | Date | string | null
+    failedAt?: DateTimeNullableFilter<"FollowupAttempt"> | Date | string | null
+    createdAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+    updatedAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+  }, "id">
+
+  export type FollowupAttemptOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    leadId?: SortOrderInput | SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrderInput | SortOrder
+    queueJobId?: SortOrderInput | SortOrder
+    reason?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrderInput | SortOrder
+    failedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: FollowupAttemptCountOrderByAggregateInput
+    _avg?: FollowupAttemptAvgOrderByAggregateInput
+    _max?: FollowupAttemptMaxOrderByAggregateInput
+    _min?: FollowupAttemptMinOrderByAggregateInput
+    _sum?: FollowupAttemptSumOrderByAggregateInput
+  }
+
+  export type FollowupAttemptScalarWhereWithAggregatesInput = {
+    AND?: FollowupAttemptScalarWhereWithAggregatesInput | FollowupAttemptScalarWhereWithAggregatesInput[]
+    OR?: FollowupAttemptScalarWhereWithAggregatesInput[]
+    NOT?: FollowupAttemptScalarWhereWithAggregatesInput | FollowupAttemptScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    companyId?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    entityType?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    entityId?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    customerId?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    leadId?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    action?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    status?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    churnProbability?: FloatNullableWithAggregatesFilter<"FollowupAttempt"> | number | null
+    queueJobId?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    reason?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    errorMessage?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    metadata?: JsonNullableWithAggregatesFilter<"FollowupAttempt">
+    triggeredAt?: DateTimeWithAggregatesFilter<"FollowupAttempt"> | Date | string
+    queuedAt?: DateTimeNullableWithAggregatesFilter<"FollowupAttempt"> | Date | string | null
+    failedAt?: DateTimeNullableWithAggregatesFilter<"FollowupAttempt"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"FollowupAttempt"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"FollowupAttempt"> | Date | string
+  }
+
   export type CompanyCreateInput = {
     id?: string
     name: string
@@ -14494,6 +15829,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14518,6 +15854,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14542,6 +15879,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14566,6 +15904,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14590,6 +15929,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14608,6 +15948,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14626,6 +15967,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15776,6 +17118,153 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type FollowupAttemptCreateInput = {
+    id: string
+    companyId: string
+    entityType: string
+    entityId: string
+    customerId?: string | null
+    leadId?: string | null
+    action: string
+    status: string
+    churnProbability?: number | null
+    queueJobId?: string | null
+    reason?: string | null
+    errorMessage?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: Date | string
+    queuedAt?: Date | string | null
+    failedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FollowupAttemptUncheckedCreateInput = {
+    id: string
+    companyId: string
+    entityType: string
+    entityId: string
+    customerId?: string | null
+    leadId?: string | null
+    action: string
+    status: string
+    churnProbability?: number | null
+    queueJobId?: string | null
+    reason?: string | null
+    errorMessage?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: Date | string
+    queuedAt?: Date | string | null
+    failedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FollowupAttemptUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    leadId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    churnProbability?: NullableFloatFieldUpdateOperationsInput | number | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    queuedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FollowupAttemptUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    leadId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    churnProbability?: NullableFloatFieldUpdateOperationsInput | number | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    queuedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FollowupAttemptCreateManyInput = {
+    id: string
+    companyId: string
+    entityType: string
+    entityId: string
+    customerId?: string | null
+    leadId?: string | null
+    action: string
+    status: string
+    churnProbability?: number | null
+    queueJobId?: string | null
+    reason?: string | null
+    errorMessage?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: Date | string
+    queuedAt?: Date | string | null
+    failedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FollowupAttemptUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    leadId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    churnProbability?: NullableFloatFieldUpdateOperationsInput | number | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    queuedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FollowupAttemptUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    leadId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    churnProbability?: NullableFloatFieldUpdateOperationsInput | number | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    queuedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -15911,6 +17400,7 @@ export namespace Prisma {
     logoUrl?: SortOrder
     website?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -15929,6 +17419,7 @@ export namespace Prisma {
     logoUrl?: SortOrder
     website?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -15947,6 +17438,7 @@ export namespace Prisma {
     logoUrl?: SortOrder
     website?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -16764,6 +18256,122 @@ export namespace Prisma {
     notes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+  export type JsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type FollowupAttemptCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrder
+    leadId?: SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrder
+    queueJobId?: SortOrder
+    reason?: SortOrder
+    errorMessage?: SortOrder
+    metadata?: SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrder
+    failedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FollowupAttemptAvgOrderByAggregateInput = {
+    churnProbability?: SortOrder
+  }
+
+  export type FollowupAttemptMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrder
+    leadId?: SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrder
+    queueJobId?: SortOrder
+    reason?: SortOrder
+    errorMessage?: SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrder
+    failedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FollowupAttemptMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrder
+    leadId?: SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrder
+    queueJobId?: SortOrder
+    reason?: SortOrder
+    errorMessage?: SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrder
+    failedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FollowupAttemptSumOrderByAggregateInput = {
+    churnProbability?: SortOrder
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type CustomerCreateNestedManyWithoutCompanyInput = {
@@ -17954,6 +19562,28 @@ export namespace Prisma {
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type CustomerCreateWithoutCompanyInput = {
     id?: string
@@ -18491,6 +20121,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18514,6 +20145,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18553,6 +20185,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18576,6 +20209,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18599,6 +20233,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18622,6 +20257,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18955,6 +20591,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18978,6 +20615,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19168,6 +20806,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19191,6 +20830,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19293,6 +20933,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19316,6 +20957,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19408,6 +21050,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19431,6 +21074,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19573,6 +21217,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19596,6 +21241,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19704,6 +21350,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19727,6 +21374,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19829,6 +21477,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19852,6 +21501,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19944,6 +21594,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19967,6 +21618,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20069,6 +21721,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20092,6 +21745,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21682,6 +23336,10 @@ export namespace Prisma {
      * @deprecated Use EquipmentDefaultArgs instead
      */
     export type EquipmentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = EquipmentDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use FollowupAttemptDefaultArgs instead
+     */
+    export type FollowupAttemptArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = FollowupAttemptDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

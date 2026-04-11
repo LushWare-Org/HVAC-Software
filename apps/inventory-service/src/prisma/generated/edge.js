@@ -229,7 +229,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/ravishan/Desktop/Lush/T&SBCRM/apps/inventory-service/src/prisma/generated",
+      "value": "D:\\Web Development\\LushWare Org\\HVAC Software\\HVAC-Software\\apps\\inventory-service\\src\\prisma\\generated",
       "fromEnvVar": null
     },
     "config": {
@@ -238,16 +238,17 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin-arm64",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/ravishan/Desktop/Lush/T&SBCRM/apps/inventory-service/prisma/schema.prisma",
+    "sourceFilePath": "D:\\Web Development\\LushWare Org\\HVAC Software\\HVAC-Software\\apps\\inventory-service\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
   "clientVersion": "5.22.0",
@@ -256,6 +257,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
