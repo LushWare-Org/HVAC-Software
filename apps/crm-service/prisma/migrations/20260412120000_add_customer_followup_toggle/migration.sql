@@ -1,3 +1,3 @@
 -- AlterTable
-ALTER TABLE "companies"
+ALTER TABLE "customers"
 ADD COLUMN "automaticFollowupEnabled" BOOLEAN NOT NULL DEFAULT true;

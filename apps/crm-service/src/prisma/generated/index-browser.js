@@ -178,6 +178,7 @@ exports.Prisma.CustomerScalarFieldEnum = {
   source: 'source',
   tags: 'tags',
   isActive: 'isActive',
+  automaticFollowupEnabled: 'automaticFollowupEnabled',
   engagementStatus: 'engagementStatus',
   auth0UserId: 'auth0UserId',
   createdAt: 'createdAt',

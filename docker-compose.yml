@@ -1,7 +1,7 @@
 # ============================================================
 # T&S CRM — Docker Compose (INFRASTRUCTURE ONLY)
 # Services (NestJS apps) run on the HOST for hot-reload.
-# This file brings up: PostgreSQL, Redis, MongoDB, MinIO, Nginx
+# This file brings up: PostgreSQL, Redis, MongoDB, MinIO, Nginx, churn inference
 # ============================================================
 
 services:
@@ -86,6 +86,23 @@ services:
     command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------
+  # Churn Service — FastAPI inference used by CRM follow-ups
+  # Host CRM dev process reaches this at http://localhost:8000
+  # ----------------------------------------------------------
+  churn-service:
+    build:
+      context: ./apps/churn-service
+    container_name: tscrm_churn_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -2,15 +2,22 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput } from '../ai/churn.client';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PaginatedResponse } from '@tscrm/types';
 
 @Injectable()
 export class CustomersService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(CustomersService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private churnClient: ChurnClient,
+  ) {}
 
   private provisionalPortalSignupFilter = {
     AND: [
@@ -64,16 +71,14 @@ export class CustomersService {
       }),
     };
 
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.customer.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: [{ createdAt: 'desc' }],
-        include: { _count: { select: { contacts: true } } },
-      }),
-      this.prisma.customer.count({ where }),
-    ]);
+    const data = await this.prisma.customer.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: [{ createdAt: 'desc' }],
+      include: { _count: { select: { contacts: true } } },
+    });
+    const total = await this.prisma.customer.count({ where });
 
     return {
       data,
@@ -133,28 +138,137 @@ export class CustomersService {
   }
 
   async getStats(companyId: string) {
-    const [total, residential, commercial, withAgreements] =
-      await this.prisma.$transaction([
-        this.prisma.customer.count({
-          where: { companyId, isActive: true, NOT: this.provisionalPortalSignupFilter },
-        }),
-        this.prisma.customer.count({
-          where: { companyId, isActive: true, type: 'RESIDENTIAL', NOT: this.provisionalPortalSignupFilter },
-        }),
-        this.prisma.customer.count({
-          where: { companyId, isActive: true, type: 'COMMERCIAL', NOT: this.provisionalPortalSignupFilter },
-        }),
-        this.prisma.customer.count({
-          where: {
-            companyId,
-            isActive: true,
-            NOT: this.provisionalPortalSignupFilter,
-            agreements: { some: { status: 'ACTIVE' } },
-          },
-        }),
-      ]);
+    const total = await this.prisma.customer.count({
+      where: { companyId, isActive: true, NOT: this.provisionalPortalSignupFilter },
+    });
+    const residential = await this.prisma.customer.count({
+      where: {
+        companyId,
+        isActive: true,
+        type: 'RESIDENTIAL',
+        NOT: this.provisionalPortalSignupFilter,
+      },
+    });
+    const commercial = await this.prisma.customer.count({
+      where: {
+        companyId,
+        isActive: true,
+        type: 'COMMERCIAL',
+        NOT: this.provisionalPortalSignupFilter,
+      },
+    });
+    const withAgreements = await this.prisma.customer.count({
+      where: {
+        companyId,
+        isActive: true,
+        NOT: this.provisionalPortalSignupFilter,
+        agreements: { some: { status: 'ACTIVE' } },
+      },
+    });
 
     return { total, residential, commercial, withAgreements };
+  }
+
+  async getStatusSummary(companyId: string, id: string) {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id, companyId },
+      include: {
+        bookings: {
+          where: { status: { in: ['CONFIRMED', 'CONVERTED'] } },
+          orderBy: { preferredDate: 'desc' },
+          take: 24,
+          select: { preferredDate: true, status: true },
+        },
+        agreements: {
+          where: { status: 'ACTIVE' },
+          select: { value: true, endDate: true },
+        },
+        equipment: {
+          orderBy: [{ installDate: 'asc' }, { createdAt: 'asc' }],
+          select: { installDate: true, createdAt: true, type: true },
+        },
+        reviews: {
+          orderBy: { createdAt: 'desc' },
+          take: 12,
+          select: { rating: true },
+        },
+        _count: {
+          select: { bookings: true, agreements: true, equipment: true },
+        },
+      },
+    });
+
+    if (!customer) {
+      throw new NotFoundException(`Customer ${id} not found`);
+    }
+
+    const now = new Date();
+    const daysSinceLastService = this.computeDaysSinceLastService(customer.bookings, customer.createdAt, now);
+    const serviceCountLastYear = this.computeServiceCountLastYear(customer.bookings, now);
+    const avgMonthlySpend = this.computeAverageMonthlySpend(customer.agreements);
+    const customerTenureDays = this.computeDaysBetween(customer.createdAt, now);
+    const equipmentAgeDays = this.computeEquipmentAgeDays(customer.equipment, now);
+    const failureHistory = customer.reviews.filter((review) => review.rating <= 2).length;
+
+    const churnInput: ChurnPredictionInput = {
+      days_since_last_service: daysSinceLastService,
+      service_count_last_year: serviceCountLastYear,
+      avg_monthly_spend: avgMonthlySpend,
+      customer_tenure_days: customerTenureDays,
+    };
+    const failureInput: FailurePredictionInput = {
+      equipment_age_days: equipmentAgeDays,
+      days_since_last_service: daysSinceLastService,
+      service_count_last_year: serviceCountLastYear,
+      usage_intensity: Math.max(1, serviceCountLastYear + customer._count.equipment),
+      failure_history: failureHistory,
+    };
+
+    let prediction = this.computeFallbackPrediction(churnInput, failureInput);
+    let predictionSource: 'model' | 'fallback' = 'fallback';
+
+    try {
+      prediction = await this.churnClient.predictRevenue({ churn: churnInput, failure: failureInput });
+      predictionSource = 'model';
+    } catch (error) {
+      this.logger.warn(`Status summary model unavailable for customer ${customer.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    const currentStatus = this.describeCurrentStatus(customer, daysSinceLastService);
+    const churnLevel = this.riskLevel(prediction.churn_probability);
+    const failureLevel = this.riskLevel(prediction.failure_probability);
+    const proposedNextStep = this.describeNextStep(
+      prediction.recommended_action,
+      prediction.churn_probability,
+      prediction.failure_probability,
+      daysSinceLastService,
+      customer.automaticFollowupEnabled,
+    );
+
+    return {
+      customerId: customer.id,
+      currentStatus,
+      churnPrediction: {
+        probability: prediction.churn_probability,
+        level: churnLevel,
+        summary: `${churnLevel} churn risk`,
+      },
+      failurePrediction: {
+        probability: prediction.failure_probability,
+        level: failureLevel,
+        summary: `${failureLevel} equipment failure risk`,
+      },
+      revenueRisk: prediction.revenue_risk,
+      proposedNextStep,
+      predictionSource,
+      signals: {
+        daysSinceLastService,
+        serviceCountLastYear,
+        avgMonthlySpend,
+        equipmentCount: customer._count.equipment,
+        activeAgreementCount: customer.agreements.length,
+      },
+    };
   }
 
   // Called by customer portal: find Customer linked to the portal user's account
@@ -175,6 +289,85 @@ export class CustomersService {
   async updateMe(companyId: string, userId: string, dto: Partial<{ firstName: string; lastName: string; email: string; phone: string; mobile: string; address: string; city: string; state: string; zipCode: string; notes: string }>) {
     const customer = await this.findMe(companyId, userId);
     return this.prisma.customer.update({ where: { id: customer.id }, data: dto });
+  }
+
+  private computeDaysSinceLastService(bookings: Array<{ preferredDate: Date }>, fallbackDate: Date, now: Date): number {
+    return this.computeDaysBetween(bookings[0]?.preferredDate ?? fallbackDate, now);
+  }
+
+  private computeServiceCountLastYear(bookings: Array<{ preferredDate: Date }>, now: Date): number {
+    const oneYearAgo = new Date(now.getTime() - (365 * 24 * 60 * 60 * 1000));
+    return bookings.filter((booking) => booking.preferredDate >= oneYearAgo).length;
+  }
+
+  private computeAverageMonthlySpend(agreements: Array<{ value: unknown }>): number {
+    const annualValue = agreements.reduce((sum, agreement) => sum + Number(agreement.value ?? 0), 0);
+    return annualValue > 0 ? Number((annualValue / 12).toFixed(2)) : 0;
+  }
+
+  private computeEquipmentAgeDays(equipment: Array<{ installDate: Date | null; createdAt: Date }>, now: Date): number {
+    if (equipment.length === 0) return 0;
+    const oldestKnownDate = equipment[0].installDate ?? equipment[0].createdAt;
+    return this.computeDaysBetween(oldestKnownDate, now);
+  }
+
+  private computeDaysBetween(start: Date, end: Date): number {
+    return Math.max(0, Math.floor((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)));
+  }
+
+  private computeFallbackPrediction(churn: ChurnPredictionInput, failure: FailurePredictionInput) {
+    const churnProbability = Math.min(
+      0.95,
+      (churn.days_since_last_service > 180 ? 0.45 : churn.days_since_last_service > 90 ? 0.25 : 0.08) +
+        (churn.service_count_last_year === 0 ? 0.25 : 0) +
+        (churn.customer_tenure_days < 90 ? 0.08 : 0),
+    );
+    const failureProbability = Math.min(
+      0.95,
+      (failure.equipment_age_days > 3650 ? 0.45 : failure.equipment_age_days > 1825 ? 0.25 : 0.08) +
+        (failure.days_since_last_service > 180 ? 0.2 : 0) +
+        Math.min(0.2, failure.failure_history * 0.08),
+    );
+
+    return {
+      churn_probability: Number(churnProbability.toFixed(3)),
+      failure_probability: Number(failureProbability.toFixed(3)),
+      revenue_risk: Number(((churnProbability * churn.avg_monthly_spend * 12) + (failureProbability * 200)).toFixed(2)),
+      recommended_action: this.recommendFallbackAction(churnProbability, failureProbability),
+    };
+  }
+
+  private recommendFallbackAction(churnProbability: number, failureProbability: number): string {
+    if (churnProbability > 0.7 && failureProbability > 0.7) return 'URGENT_INTERVENTION';
+    if (churnProbability > 0.7) return 'RETENTION';
+    if (failureProbability > 0.7) return 'MAINTENANCE';
+    if (churnProbability > 0.45) return 'REENGAGEMENT';
+    return 'NONE';
+  }
+
+  private riskLevel(probability: number): 'Low' | 'Medium' | 'High' {
+    if (probability >= 0.7) return 'High';
+    if (probability >= 0.4) return 'Medium';
+    return 'Low';
+  }
+
+  private describeCurrentStatus(customer: { isActive: boolean; engagementStatus: string; automaticFollowupEnabled: boolean }, daysSinceLastService: number): string {
+    if (!customer.isActive) return 'Inactive customer record';
+    if (customer.engagementStatus === 'INACTIVE') return 'Inactive engagement';
+    if (daysSinceLastService > 180) return `No confirmed service for ${daysSinceLastService} days`;
+    if (daysSinceLastService > 90) return `Service is overdue by ${daysSinceLastService} days`;
+    if (!customer.automaticFollowupEnabled) return 'Active, automatic follow-up paused';
+    return `Active, last confirmed service ${daysSinceLastService} days ago`;
+  }
+
+  private describeNextStep(action: string, churnProbability: number, failureProbability: number, daysSinceLastService: number, automaticFollowupEnabled: boolean): string {
+    if (!automaticFollowupEnabled) return 'Review manually because automatic follow-up is paused.';
+    if (action === 'URGENT_INTERVENTION') return 'Call today, schedule maintenance, and assign a retention owner.';
+    if (action === 'RETENTION') return 'Send a retention offer and book a check-in call.';
+    if (action === 'MAINTENANCE') return 'Schedule preventive maintenance before the next breakdown risk window.';
+    if (action === 'REENGAGEMENT' || daysSinceLastService > 90) return 'Send a re-engagement message and offer a service slot.';
+    if (churnProbability >= 0.4 || failureProbability >= 0.4) return 'Monitor this week and prepare a targeted follow-up.';
+    return 'No immediate action. Keep standard follow-up cadence.';
   }
 
   // ── Equipment CRUD ────────────────────────────────────────────────────────────

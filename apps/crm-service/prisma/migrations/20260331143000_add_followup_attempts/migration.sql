@@ -1,4 +1,4 @@
-﻿-- CreateTable
+-- CreateTable
 CREATE TABLE "followup_attempts" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,

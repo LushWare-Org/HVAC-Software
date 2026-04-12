@@ -94,6 +94,17 @@ export class CustomersController {
     return this.customersService.getStats(user.companyId);
   }
 
+  // ---- Hover summary ----
+  @Get(':id/status-summary')
+  @ApiOperation({ summary: 'Get customer status, churn risk, failure risk, and next step summary' })
+  @ApiParam({ name: 'id', type: String })
+  getStatusSummary(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.customersService.getStatusSummary(user.companyId, id);
+  }
+
   // ---- Get one ----
   @Get(':id')
   @ApiOperation({ summary: 'Get a single customer with contacts and history' })

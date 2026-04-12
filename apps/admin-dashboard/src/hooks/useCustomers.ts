@@ -6,7 +6,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
 import api from '../lib/api'
 import { queryClient } from '../lib/queryClient'
-import type { Customer, Lead, PaginatedResponse } from '../types/api'
+import type { Customer, CustomerStatusSummary, Lead, PaginatedResponse } from '../types/api'
 
 // ─── Customers ────────────────────────────────────────────────────────────────
 
@@ -48,6 +48,18 @@ export function useCustomer(id: string) {
       return res.data
     },
     enabled: !!id,
+  })
+}
+
+export function useCustomerStatusSummary(id?: string | null) {
+  return useQuery<CustomerStatusSummary>({
+    queryKey: ['customers', id, 'status-summary'],
+    queryFn: async () => {
+      const res = await api.get(`/crm/customers/${id}/status-summary`)
+      return res.data
+    },
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
   })
 }
 

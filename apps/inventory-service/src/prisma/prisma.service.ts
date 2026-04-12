@@ -1,4 +1,9 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  INestApplication,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { PrismaClient } from './generated';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -73,6 +78,17 @@ function resolveInventoryDatabaseUrl(): string {
   );
 }
 
+function withPrismaPoolParams(databaseUrl: string): string {
+  const url = new URL(databaseUrl);
+  if (!url.searchParams.has('connection_limit')) {
+    url.searchParams.set('connection_limit', process.env.PRISMA_CONNECTION_LIMIT ?? '5');
+  }
+  if (!url.searchParams.has('pool_timeout')) {
+    url.searchParams.set('pool_timeout', process.env.PRISMA_POOL_TIMEOUT ?? '20');
+  }
+  return url.toString();
+}
+
 @Injectable()
 export class PrismaService
   extends PrismaClient
@@ -80,7 +96,7 @@ export class PrismaService
 {
   constructor() {
     super({
-      datasources: { db: { url: resolveInventoryDatabaseUrl() } },
+      datasources: { db: { url: withPrismaPoolParams(resolveInventoryDatabaseUrl()) } },
       log:
         process.env.NODE_ENV === 'development'
           ? ['warn', 'error']
@@ -94,5 +110,9 @@ export class PrismaService
 
   async onModuleDestroy() {
     await this.$disconnect();
+  }
+
+  enableShutdownHooks(app: INestApplication): void {
+    app.enableShutdownHooks();
   }
 }

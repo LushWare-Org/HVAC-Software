@@ -1,5 +1,6 @@
 ﻿import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { FollowupAgent } from '../agents/followup.agent';
+import { PrismaService } from '../prisma/prisma.service';
 
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
@@ -9,7 +10,10 @@ export class FollowupCron implements OnModuleInit, OnModuleDestroy {
   private intervalHandle?: NodeJS.Timeout;
   private isRunning = false;
 
-  constructor(private readonly followupAgent: FollowupAgent) {}
+  constructor(
+    private readonly followupAgent: FollowupAgent,
+    private readonly prisma: PrismaService,
+  ) {}
 
   onModuleInit(): void {
     this.intervalHandle = setInterval(() => {
@@ -32,9 +36,14 @@ export class FollowupCron implements OnModuleInit, OnModuleDestroy {
     }
 
     this.isRunning = true;
-    this.logger.log('Starting follow-up cycle');
 
     try {
+      if (!(await this.prisma.ensureRequiredSchemaReady())) {
+        this.logger.warn('Skipping follow-up cycle because the CRM database schema is not ready');
+        return;
+      }
+
+      this.logger.log('Starting follow-up cycle');
       const summary = await this.followupAgent.run();
       this.logger.log(`Follow-up cycle completed: ${JSON.stringify(summary)}`);
     } catch (error) {

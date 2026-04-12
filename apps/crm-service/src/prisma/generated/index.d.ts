@@ -4308,6 +4308,7 @@ export namespace Prisma {
     notes: string | null
     source: string | null
     isActive: boolean | null
+    automaticFollowupEnabled: boolean | null
     engagementStatus: $Enums.CustomerEngagementStatus | null
     auth0UserId: string | null
     createdAt: Date | null
@@ -4330,6 +4331,7 @@ export namespace Prisma {
     notes: string | null
     source: string | null
     isActive: boolean | null
+    automaticFollowupEnabled: boolean | null
     engagementStatus: $Enums.CustomerEngagementStatus | null
     auth0UserId: string | null
     createdAt: Date | null
@@ -4353,6 +4355,7 @@ export namespace Prisma {
     source: number
     tags: number
     isActive: number
+    automaticFollowupEnabled: number
     engagementStatus: number
     auth0UserId: number
     createdAt: number
@@ -4377,6 +4380,7 @@ export namespace Prisma {
     notes?: true
     source?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     engagementStatus?: true
     auth0UserId?: true
     createdAt?: true
@@ -4399,6 +4403,7 @@ export namespace Prisma {
     notes?: true
     source?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     engagementStatus?: true
     auth0UserId?: true
     createdAt?: true
@@ -4422,6 +4427,7 @@ export namespace Prisma {
     source?: true
     tags?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     engagementStatus?: true
     auth0UserId?: true
     createdAt?: true
@@ -4518,6 +4524,7 @@ export namespace Prisma {
     source: string | null
     tags: string[]
     isActive: boolean
+    automaticFollowupEnabled: boolean
     engagementStatus: $Enums.CustomerEngagementStatus
     auth0UserId: string | null
     createdAt: Date
@@ -4558,6 +4565,7 @@ export namespace Prisma {
     source?: boolean
     tags?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: boolean
     auth0UserId?: boolean
     createdAt?: boolean
@@ -4590,6 +4598,7 @@ export namespace Prisma {
     source?: boolean
     tags?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: boolean
     auth0UserId?: boolean
     createdAt?: boolean
@@ -4614,6 +4623,7 @@ export namespace Prisma {
     source?: boolean
     tags?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: boolean
     auth0UserId?: boolean
     createdAt?: boolean
@@ -4664,6 +4674,7 @@ export namespace Prisma {
       source: string | null
       tags: string[]
       isActive: boolean
+      automaticFollowupEnabled: boolean
       engagementStatus: $Enums.CustomerEngagementStatus
       auth0UserId: string | null
       createdAt: Date
@@ -5085,6 +5096,7 @@ export namespace Prisma {
     readonly source: FieldRef<"Customer", 'String'>
     readonly tags: FieldRef<"Customer", 'String[]'>
     readonly isActive: FieldRef<"Customer", 'Boolean'>
+    readonly automaticFollowupEnabled: FieldRef<"Customer", 'Boolean'>
     readonly engagementStatus: FieldRef<"Customer", 'CustomerEngagementStatus'>
     readonly auth0UserId: FieldRef<"Customer", 'String'>
     readonly createdAt: FieldRef<"Customer", 'DateTime'>
@@ -14209,6 +14221,7 @@ export namespace Prisma {
     source: 'source',
     tags: 'tags',
     isActive: 'isActive',
+    automaticFollowupEnabled: 'automaticFollowupEnabled',
     engagementStatus: 'engagementStatus',
     auth0UserId: 'auth0UserId',
     createdAt: 'createdAt',
@@ -14847,6 +14860,7 @@ export namespace Prisma {
     source?: StringNullableFilter<"Customer"> | string | null
     tags?: StringNullableListFilter<"Customer">
     isActive?: BoolFilter<"Customer"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableFilter<"Customer"> | string | null
     createdAt?: DateTimeFilter<"Customer"> | Date | string
@@ -14878,6 +14892,7 @@ export namespace Prisma {
     source?: SortOrderInput | SortOrder
     tags?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -14912,6 +14927,7 @@ export namespace Prisma {
     source?: StringNullableFilter<"Customer"> | string | null
     tags?: StringNullableListFilter<"Customer">
     isActive?: BoolFilter<"Customer"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableFilter<"Customer"> | string | null
     createdAt?: DateTimeFilter<"Customer"> | Date | string
@@ -14943,6 +14959,7 @@ export namespace Prisma {
     source?: SortOrderInput | SortOrder
     tags?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -14972,6 +14989,7 @@ export namespace Prisma {
     source?: StringNullableWithAggregatesFilter<"Customer"> | string | null
     tags?: StringNullableListFilter<"Customer">
     isActive?: BoolWithAggregatesFilter<"Customer"> | boolean
+    automaticFollowupEnabled?: BoolWithAggregatesFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusWithAggregatesFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableWithAggregatesFilter<"Customer"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Customer"> | Date | string
@@ -16128,6 +16146,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -16159,6 +16178,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -16188,6 +16208,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16219,6 +16240,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16249,6 +16271,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -16271,6 +16294,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16294,6 +16318,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17690,6 +17715,7 @@ export namespace Prisma {
     source?: SortOrder
     tags?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrder
     createdAt?: SortOrder
@@ -17712,6 +17738,7 @@ export namespace Prisma {
     notes?: SortOrder
     source?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrder
     createdAt?: SortOrder
@@ -17734,6 +17761,7 @@ export namespace Prisma {
     notes?: SortOrder
     source?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrder
     createdAt?: SortOrder
@@ -19601,6 +19629,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -19630,6 +19659,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -19915,6 +19945,7 @@ export namespace Prisma {
     source?: StringNullableFilter<"Customer"> | string | null
     tags?: StringNullableListFilter<"Customer">
     isActive?: BoolFilter<"Customer"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableFilter<"Customer"> | string | null
     createdAt?: DateTimeFilter<"Customer"> | Date | string
@@ -20862,6 +20893,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20892,6 +20924,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20995,6 +21028,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21025,6 +21059,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21106,6 +21141,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -21136,6 +21172,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -21279,6 +21316,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21309,6 +21347,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21406,6 +21445,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -21436,6 +21476,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -21539,6 +21580,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21569,6 +21611,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21650,6 +21693,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -21680,6 +21724,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -21783,6 +21828,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21813,6 +21859,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21841,6 +21888,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -21871,6 +21919,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -21915,6 +21964,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21945,6 +21995,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21973,6 +22024,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -22003,6 +22055,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -22094,6 +22147,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22124,6 +22178,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22205,6 +22260,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -22235,6 +22291,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -22279,6 +22336,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22309,6 +22367,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22337,6 +22396,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -22446,6 +22506,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22475,6 +22536,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22504,6 +22566,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

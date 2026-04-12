@@ -25,16 +25,14 @@ export class LeadsService {
       ];
     }
 
-    const [data, total] = await Promise.all([
-      this.prisma.lead.findMany({
-        where,
-        include: { customer: { select: { id: true, firstName: true, lastName: true, city: true, state: true, address: true } } },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      this.prisma.lead.count({ where }),
-    ]);
+    const data = await this.prisma.lead.findMany({
+      where,
+      include: { customer: { select: { id: true, firstName: true, lastName: true, city: true, state: true, address: true } } },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    });
+    const total = await this.prisma.lead.count({ where });
 
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
@@ -214,12 +212,17 @@ export class LeadsService {
 
   async getPipelineSummary(companyId: string) {
     const statuses = ['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL_SENT', 'WON', 'LOST'];
-    const counts = await Promise.all(
-      statuses.map(async (status) => ({
-        status,
-        count: await this.prisma.lead.count({ where: { companyId, status: status as any } }),
-      })),
+    const groupedCounts = await this.prisma.lead.groupBy({
+      by: ['status'],
+      where: { companyId, status: { in: statuses as any } },
+      _count: { _all: true },
+    });
+    const countsByStatus = new Map(
+      groupedCounts.map((item) => [item.status, item._count._all]),
     );
-    return counts;
+    return statuses.map((status) => ({
+      status,
+      count: countsByStatus.get(status as any) ?? 0,
+    }));
   }
 }

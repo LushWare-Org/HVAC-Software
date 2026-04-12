@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 interface CompanyRow {
@@ -32,19 +32,7 @@ export class CompanyService {
       return this.automaticFollowupColumnExists;
     }
 
-    const rows = await this.prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
-      `
-        SELECT EXISTS (
-          SELECT 1
-          FROM information_schema.columns
-          WHERE table_schema = current_schema()
-            AND table_name = 'companies'
-            AND column_name = 'automaticFollowupEnabled'
-        ) AS exists
-      `,
-    );
-
-    this.automaticFollowupColumnExists = Boolean(rows[0]?.exists);
+    this.automaticFollowupColumnExists = await this.prisma.columnExists('companies', 'automaticFollowupEnabled');
     if (!this.automaticFollowupColumnExists) {
       this.logger.warn('companies.automaticFollowupEnabled column is missing; defaulting automatic follow-up to enabled until the CRM migration is applied');
     }
@@ -53,10 +41,15 @@ export class CompanyService {
   }
 
   private async findCompanyRow(companyId: string): Promise<CompanyRow | null> {
+    if (!(await this.prisma.tableExists('companies'))) {
+      throw new ServiceUnavailableException('CRM database schema is not ready; run crm-service Prisma migrations');
+    }
+
     const hasToggleColumn = await this.hasAutomaticFollowupColumn();
     const selectAutomaticFollowup = hasToggleColumn
       ? '"automaticFollowupEnabled"'
       : 'TRUE AS "automaticFollowupEnabled"';
+    const companiesTable = this.prisma.tableRef('companies');
 
     const rows = await this.prisma.$queryRawUnsafe<CompanyRow[]>(
       `
@@ -77,7 +70,7 @@ export class CompanyService {
           "trialEndsAt",
           "createdAt",
           "updatedAt"
-        FROM companies
+        FROM ${companiesTable}
         WHERE id = $1
         LIMIT 1
       `,
@@ -116,7 +109,7 @@ export class CompanyService {
 
     await this.prisma.$executeRawUnsafe(
       `
-        UPDATE companies
+        UPDATE ${this.prisma.tableRef('companies')}
         SET
           name = $2,
           email = $3,

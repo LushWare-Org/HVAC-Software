@@ -99,4 +99,9 @@ export class CreateCustomerDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  automaticFollowupEnabled?: boolean;
 }

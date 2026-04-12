@@ -22,9 +22,9 @@ import {
 import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
 import LeadDetailsSidebar from "./LeadDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
-import { useCustomers, useLeads, useAgreements, useDeleteCustomer, useDeleteLead } from "../../hooks/useCustomers";
+import { useCustomers, useLeads, useAgreements, useDeleteCustomer, useDeleteLead, useUpdateCustomer, useCustomerStatusSummary } from "../../hooks/useCustomers";
 import { customerName, leadName } from "../../types/api";
-import type { Customer, Lead } from "../../types/api";
+import type { Customer, CustomerStatusSummary, Lead } from "../../types/api";
 import api from "../../lib/api";
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
@@ -53,6 +53,135 @@ function Skeleton({ h = 14 }: { h?: number }) {
   return <div style={{ width: '100%', height: h, background: 'var(--bg-hover)', borderRadius: 4 }} />;
 }
 
+function FollowupToggle({ checked, disabled, onChange }: { checked: boolean; disabled?: boolean; onChange: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={checked ? "Disable automatic follow-up" : "Enable automatic follow-up"}
+      aria-pressed={checked}
+      disabled={disabled}
+      onClick={(e) => { e.stopPropagation(); onChange(); }}
+      style={{
+        width: 46,
+        height: 24,
+        borderRadius: 8,
+        border: `1px solid ${checked ? 'var(--blue)' : 'var(--bd)'}`,
+        background: checked ? 'var(--blue)' : 'var(--bg-card-2)',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        padding: 2,
+        opacity: disabled ? 0.6 : 1,
+        transition: 'background-color var(--dur), border-color var(--dur)',
+      }}
+    >
+      <span
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: 6,
+          background: 'white',
+          transform: checked ? 'translateX(20px)' : 'translateX(0)',
+          transition: 'transform var(--dur)',
+          boxShadow: 'var(--shadow-sm)',
+        }}
+      />
+    </button>
+  );
+}
+
+function pct(value: number) {
+  return `${Math.round(value * 100)}%`;
+}
+
+function riskColor(level: CustomerStatusSummary["churnPrediction"]["level"]) {
+  if (level === "High") return "var(--red)";
+  if (level === "Medium") return "var(--amber)";
+  return "var(--green)";
+}
+
+function CustomerHoverSummary({
+  summary,
+  loading,
+  error,
+  anchor,
+}: {
+  summary?: CustomerStatusSummary;
+  loading: boolean;
+  error: boolean;
+  anchor: { x: number; y: number };
+}) {
+  const left = typeof window === "undefined" ? anchor.x + 16 : Math.min(anchor.x + 16, window.innerWidth - 360);
+  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 260));
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        zIndex: 80,
+        top,
+        left: Math.max(12, left),
+        width: 340,
+        padding: 14,
+        borderRadius: 8,
+        border: "1px solid var(--border)",
+        background: "var(--bg-card)",
+        boxShadow: "0 18px 44px rgba(15, 23, 42, 0.18)",
+        color: "var(--t1)",
+        pointerEvents: "none",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--t3)", marginBottom: 10 }}>
+        Customer risk summary
+      </div>
+      {loading && (
+        <div style={{ display: "grid", gap: 8 }}>
+          <Skeleton h={16} />
+          <Skeleton h={16} />
+          <Skeleton h={16} />
+          <Skeleton h={30} />
+        </div>
+      )}
+      {!loading && error && (
+        <div style={{ color: "var(--red)", fontSize: 13 }}>
+          Summary unavailable right now.
+        </div>
+      )}
+      {!loading && !error && summary && (
+        <div style={{ display: "grid", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Current status</div>
+            <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2 }}>{summary.currentStatus}</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Failure prediction</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: riskColor(summary.failurePrediction.level), marginTop: 2 }}>
+                {summary.failurePrediction.level} ({pct(summary.failurePrediction.probability)})
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Churn prediction</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: riskColor(summary.churnPrediction.level), marginTop: 2 }}>
+                {summary.churnPrediction.level} ({pct(summary.churnPrediction.probability)})
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Proposed next step</div>
+            <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2, lineHeight: 1.4 }}>{summary.proposedNextStep}</div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, paddingTop: 8, borderTop: "1px solid var(--border)", fontSize: 12, color: "var(--t3)" }}>
+            <span>{summary.signals.daysSinceLastService} days since service</span>
+            <span>{summary.signals.serviceCountLastYear} services/year</span>
+            <span>{summary.predictionSource === "model" ? "AI model" : "Fallback"}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Customers() {
   const [tab, setTab] = useState<"customers" | "leads" | "agreements">("customers");
   const [search, setSearch] = useState("");
@@ -70,6 +199,7 @@ export default function Customers() {
   const [addType, setAddType] = useState<"customer" | "lead">("customer");
   const [sidebarTab, setSidebarTab] = useState<any>("contact");
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: "customer" | "lead"; id: string; name: string } | null>(null);
+  const [hoveredCustomer, setHoveredCustomer] = useState<{ id: string; x: number; y: number } | null>(null);
   const [customerPage, setCustomerPage] = useState(1);
   const [leadPage, setLeadPage] = useState(1);
   const [agreementPage, setAgreementPage] = useState(1);
@@ -98,6 +228,8 @@ export default function Customers() {
 
   const deleteCustomer = useDeleteCustomer();
   const deleteLead = useDeleteLead();
+  const updateCustomer = useUpdateCustomer();
+  const hoveredSummaryQuery = useCustomerStatusSummary(hoveredCustomer?.id);
 
   // ── Derived ──────────────────────────────────────────────────────────────────
 
@@ -134,6 +266,20 @@ export default function Customers() {
     } else {
       deleteLead.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) });
     }
+  };
+
+  const toggleCustomerFollowup = (customer: Customer) => {
+    const automaticFollowupEnabled = !(customer.automaticFollowupEnabled ?? true);
+    updateCustomer.mutate(
+      { id: customer.id, data: { automaticFollowupEnabled } },
+      {
+        onSuccess: (updated) => {
+          if (selectedPerson?.id === customer.id) {
+            setSelectedPerson(updated);
+          }
+        },
+      },
+    );
   };
 
   const handleLeadConverted = async (customerId: string) => {
@@ -216,14 +362,21 @@ export default function Customers() {
               <div className="table-container">
                 <table className="data-table">
                   <thead>
-                    <tr><th>Customer</th><th>Contact</th><th>Location</th><th>Status</th><th>Type</th><th>Jobs</th><th>Revenue</th><th>Since</th><th>Actions</th></tr>
+                    <tr><th>Customer</th><th>Contact</th><th>Location</th><th>Status</th><th>Type</th><th>Auto Follow-up</th><th>Jobs</th><th>Revenue</th><th>Since</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
                     {customersQuery.isLoading && Array.from({ length: 5 }).map((_, i) => (
-                      <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
+                      <tr key={i}>{Array.from({ length: 10 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
                     ))}
                     {!customersQuery.isLoading && customers.map(c => (
-                      <tr key={c.id} onClick={() => handleViewClick(c, "customer")} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
+                      <tr
+                        key={c.id}
+                        onClick={() => handleViewClick(c, "customer")}
+                        onMouseEnter={(e) => setHoveredCustomer({ id: c.id, x: e.clientX, y: e.clientY })}
+                        onMouseMove={(e) => setHoveredCustomer(current => current?.id === c.id ? { id: c.id, x: e.clientX, y: e.clientY } : current)}
+                        onMouseLeave={() => setHoveredCustomer(current => current?.id === c.id ? null : current)}
+                        className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                      >
                         <td>
                           <div className="cell-user"><div>
                             <div className="cell-name">{customerName(c)}</div>
@@ -238,6 +391,18 @@ export default function Customers() {
                           </span>
                         </td>
                         <td><span className={`badge ${c.type === "COMMERCIAL" ? "badge-violet" : "badge-blue"}`}>{c.type.charAt(0) + c.type.slice(1).toLowerCase()}</span></td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <FollowupToggle
+                              checked={c.automaticFollowupEnabled ?? true}
+                              disabled={updateCustomer.isPending}
+                              onChange={() => toggleCustomerFollowup(c)}
+                            />
+                            <span className="text-xs font-600 text-[var(--t3)]">
+                              {(c.automaticFollowupEnabled ?? true) ? "On" : "Off"}
+                            </span>
+                          </div>
+                        </td>
                         <td className="font-600">{c.totalJobs ?? '—'}</td>
                         <td className="font-600">{c.totalRevenue != null ? fmt(c.totalRevenue) : '—'}</td>
                         <td className="text-sm text-[var(--t3)]">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
@@ -251,7 +416,7 @@ export default function Customers() {
                       </tr>
                     ))}
                     {!customersQuery.isLoading && customers.length === 0 && (
-                      <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No customers found</td></tr>
+                      <tr><td colSpan={10} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No customers found</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -377,6 +542,15 @@ export default function Customers() {
           </div>
         )}
       </div>
+
+      {hoveredCustomer && (
+        <CustomerHoverSummary
+          anchor={{ x: hoveredCustomer.x, y: hoveredCustomer.y }}
+          summary={hoveredSummaryQuery.data}
+          loading={hoveredSummaryQuery.isLoading || hoveredSummaryQuery.isFetching}
+          error={hoveredSummaryQuery.isError}
+        />
+      )}
 
       <CustomerDetailsSidebar isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} person={selectedPerson} initialTab={sidebarTab} />
       <LeadDetailsSidebar isOpen={isLeadDetailsOpen} onClose={() => setIsLeadDetailsOpen(false)} person={selectedPerson} onConverted={handleLeadConverted} />

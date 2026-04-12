@@ -44,6 +44,7 @@ export interface Customer {
   zipCode?: string
   type: CustomerType
   isActive: boolean
+  automaticFollowupEnabled?: boolean
   notes?: string
   tags: string[]
   engagementStatus?: CustomerEngagementStatus
@@ -57,6 +58,31 @@ export interface Customer {
   // nested relations
   addresses?: Address[]
   equipment?: EquipmentRecord[]
+}
+
+export interface CustomerStatusSummary {
+  customerId: string
+  currentStatus: string
+  churnPrediction: {
+    probability: number
+    level: 'Low' | 'Medium' | 'High'
+    summary: string
+  }
+  failurePrediction: {
+    probability: number
+    level: 'Low' | 'Medium' | 'High'
+    summary: string
+  }
+  revenueRisk: number
+  proposedNextStep: string
+  predictionSource: 'model' | 'fallback'
+  signals: {
+    daysSinceLastService: number
+    serviceCountLastYear: number
+    avgMonthlySpend: number
+    equipmentCount: number
+    activeAgreementCount: number
+  }
 }
 
 // Convenience: full name helper

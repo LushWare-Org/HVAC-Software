@@ -47,17 +47,14 @@ export class DashboardService {
     const priorFrom = new Date(from.getTime() - periodMs);
     const priorTo = new Date(from.getTime() - 1);
 
-    const [revenue, priorRevenue, jobs, priorJobs, customers, rating, outstanding, leads] =
-      await Promise.all([
-        this.queryRevenue(companyId, from, to),
-        this.queryRevenue(companyId, priorFrom, priorTo),
-        this.queryJobsCompleted(companyId, from, to),
-        this.queryJobsCompleted(companyId, priorFrom, priorTo),
-        this.queryActiveCustomers(companyId),
-        this.queryAvgRating(companyId, from, to),
-        this.queryOutstandingInvoices(companyId),
-        this.queryLeadConversion(companyId, from, to),
-      ]);
+    const revenue = await this.queryRevenue(companyId, from, to);
+    const priorRevenue = await this.queryRevenue(companyId, priorFrom, priorTo);
+    const jobs = await this.queryJobsCompleted(companyId, from, to);
+    const priorJobs = await this.queryJobsCompleted(companyId, priorFrom, priorTo);
+    const customers = await this.queryActiveCustomers(companyId);
+    const rating = await this.queryAvgRating(companyId, from, to);
+    const outstanding = await this.queryOutstandingInvoices(companyId);
+    const leads = await this.queryLeadConversion(companyId, from, to);
 
     const trend = (curr: number, prior: number): number => {
       if (prior === 0) return curr > 0 ? 100 : 0;
