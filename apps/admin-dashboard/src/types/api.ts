@@ -63,6 +63,15 @@ export interface Customer {
 export interface CustomerStatusSummary {
   customerId: string
   currentStatus: string
+  upsellRecommendation?: {
+    id: string
+    recommendedOffer: string
+    confidence: number
+    status: string
+    priorityScore?: number | null
+    triggerSource?: string | null
+    createdAt: string
+  } | null
   churnPrediction: {
     probability: number
     level: 'Low' | 'Medium' | 'High'

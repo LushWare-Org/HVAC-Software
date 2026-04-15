@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput } from '../ai/churn.client';
+import { UpsellAgentService } from '../upsell/upsell-agent.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PaginatedResponse } from '@tscrm/types';
@@ -17,6 +18,7 @@ export class CustomersService {
   constructor(
     private prisma: PrismaService,
     private churnClient: ChurnClient,
+    private upsellAgent: UpsellAgentService,
   ) {}
 
   private provisionalPortalSignupFilter = {
@@ -113,10 +115,13 @@ export class CustomersService {
   async update(companyId: string, id: string, dto: UpdateCustomerDto) {
     await this.findOne(companyId, id); // ensures it exists + belongs to company
 
-    return this.prisma.customer.update({
+    const customer = await this.prisma.customer.update({
       where: { id },
       data: dto,
     });
+
+    void this.upsellAgent.processCustomerProfileUpdate(companyId, id);
+    return customer;
   }
 
   async remove(companyId: string, id: string) {
@@ -244,10 +249,21 @@ export class CustomersService {
       daysSinceLastService,
       customer.automaticFollowupEnabled,
     );
+    const upsellRecommendation =
+      await this.getLatestUpsellRecommendation(companyId, id) ??
+      this.computeInlineUpsellRecommendation({
+        equipmentAgeDays,
+        failureHistory,
+        daysSinceLastService,
+        avgMonthlySpend,
+        churnProbability: prediction.churn_probability,
+        failureProbability: prediction.failure_probability,
+      });
 
     return {
       customerId: customer.id,
       currentStatus,
+      upsellRecommendation,
       churnPrediction: {
         probability: prediction.churn_probability,
         level: churnLevel,
@@ -370,6 +386,109 @@ export class CustomersService {
     return 'No immediate action. Keep standard follow-up cadence.';
   }
 
+  private async getLatestUpsellRecommendation(companyId: string, customerId: string) {
+    if (!(await this.prisma.tableExists('upsell_recommendations'))) {
+      return null;
+    }
+
+    const rows = await this.prisma.$queryRawUnsafe<Array<{
+      id: string;
+      recommendedOffer: string;
+      confidence: number;
+      status: string;
+      priorityScore: number | null;
+      triggerSource: string | null;
+      createdAt: Date;
+    }>>(
+      `
+        SELECT
+          id,
+          recommended_offer AS "recommendedOffer",
+          confidence,
+          status,
+          priority_score AS "priorityScore",
+          trigger_source AS "triggerSource",
+          created_at AS "createdAt"
+        FROM ${this.prisma.tableRef('upsell_recommendations')}
+        WHERE company_id = $1
+          AND customer_id = $2
+        ORDER BY created_at DESC
+        LIMIT 1
+      `,
+      companyId,
+      customerId,
+    );
+
+    return rows[0] ?? null;
+  }
+
+  private computeInlineUpsellRecommendation(signals: {
+    equipmentAgeDays: number;
+    failureHistory: number;
+    daysSinceLastService: number;
+    avgMonthlySpend: number;
+    churnProbability: number;
+    failureProbability: number;
+  }) {
+    const equipmentAgeYears = signals.equipmentAgeDays / 365;
+    const scores: Record<string, number> = {
+      maintenance_plan: 0.25,
+      replacement: 0.2,
+      service: 0.2,
+    };
+
+    if (equipmentAgeYears > 8) {
+      scores.replacement += 0.45;
+    }
+
+    if (signals.failureHistory > 2) {
+      scores.maintenance_plan += 0.45;
+    }
+
+    if (signals.daysSinceLastService > 180) {
+      scores.service += 0.4;
+    }
+
+    if (signals.failureProbability >= 0.5) {
+      scores.maintenance_plan += 0.15;
+      if (equipmentAgeYears > 8) {
+        scores.replacement += 0.1;
+      }
+    }
+
+    if (signals.churnProbability >= 0.5) {
+      scores.maintenance_plan += 0.1;
+      scores.service += 0.1;
+    }
+
+    if (signals.avgMonthlySpend >= 250) {
+      scores.maintenance_plan += 0.08;
+    }
+
+    const total = Object.values(scores).reduce((sum, score) => sum + score, 0);
+    const normalizedScores = Object.fromEntries(
+      Object.entries(scores).map(([offer, score]) => [offer, Number((score / total).toFixed(4))]),
+    );
+    const [recommendedOffer, confidence] = Object.entries(normalizedScores)
+      .sort(([, left], [, right]) => right - left)[0];
+    const priorityScore = Math.min(
+      1,
+      (confidence * 0.7)
+        + (signals.churnProbability * 0.15)
+        + (signals.failureProbability * 0.15),
+    );
+
+    return {
+      id: 'inline',
+      recommendedOffer,
+      confidence,
+      status: 'generated',
+      priorityScore: Number(priorityScore.toFixed(4)),
+      triggerSource: 'status_summary',
+      createdAt: new Date(),
+    };
+  }
+
   // ── Equipment CRUD ────────────────────────────────────────────────────────────
 
   async getEquipment(companyId: string, customerId: string) {
@@ -386,7 +505,7 @@ export class CustomersService {
     dto: { type: string; brand?: string; model?: string; serialNo?: string; installDate?: string; warrantyEnd?: string; notes?: string },
   ) {
     await this.findOne(companyId, customerId);
-    return this.prisma.equipment.create({
+    const equipment = await this.prisma.equipment.create({
       data: {
         companyId,
         customerId,
@@ -399,6 +518,9 @@ export class CustomersService {
         notes: dto.notes,
       },
     });
+
+    void this.upsellAgent.processCustomerProfileUpdate(companyId, customerId);
+    return equipment;
   }
 
   async updateEquipmentItem(
@@ -410,7 +532,7 @@ export class CustomersService {
     await this.findOne(companyId, customerId);
     const eq = await this.prisma.equipment.findFirst({ where: { id: eqId, customerId, companyId } });
     if (!eq) throw new NotFoundException(`Equipment ${eqId} not found`);
-    return this.prisma.equipment.update({
+    const equipment = await this.prisma.equipment.update({
       where: { id: eqId },
       data: {
         ...(dto.type !== undefined && { type: dto.type }),
@@ -422,12 +544,17 @@ export class CustomersService {
         ...(dto.notes !== undefined && { notes: dto.notes }),
       },
     });
+
+    void this.upsellAgent.processCustomerProfileUpdate(companyId, customerId);
+    return equipment;
   }
 
   async deleteEquipmentItem(companyId: string, customerId: string, eqId: string) {
     await this.findOne(companyId, customerId);
     const eq = await this.prisma.equipment.findFirst({ where: { id: eqId, customerId, companyId } });
     if (!eq) throw new NotFoundException(`Equipment ${eqId} not found`);
-    return this.prisma.equipment.delete({ where: { id: eqId } });
+    const deleted = await this.prisma.equipment.delete({ where: { id: eqId } });
+    void this.upsellAgent.processCustomerProfileUpdate(companyId, customerId);
+    return deleted;
   }
 }

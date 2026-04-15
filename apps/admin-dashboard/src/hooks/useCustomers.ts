@@ -59,7 +59,7 @@ export function useCustomerStatusSummary(id?: string | null) {
       return res.data
     },
     enabled: !!id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 }
 

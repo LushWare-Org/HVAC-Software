@@ -57,6 +57,8 @@ export class FollowupWorker extends WorkerHost {
         return 'Time to book your next HVAC service';
       case 'LEAD_FOLLOWUP':
         return 'Ready to schedule your first HVAC visit?';
+      case 'UPSELL':
+        return 'A service recommendation is ready for your HVAC system';
       default:
         return 'HVAC follow-up';
     }
@@ -70,6 +72,8 @@ export class FollowupWorker extends WorkerHost {
         return 'It has been a while since your last HVAC service. Schedule maintenance to keep your system efficient.';
       case 'LEAD_FOLLOWUP':
         return 'Need help with your HVAC system? Reply to book your first service visit with our team.';
+      case 'UPSELL':
+        return 'Based on your service history, we have a recommendation to help keep your HVAC system reliable. Reply to schedule a quick review.';
       default:
         return 'Our HVAC team is ready to help with your next service.';
     }

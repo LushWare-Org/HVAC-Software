@@ -7,8 +7,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from schemas import ChurnInput, ChurnResponse, FailureInput, FailureResponse
-from services import compute_revenue_risk, predict_churn, predict_failure, recommend_action
+from schemas import ChurnInput, ChurnResponse, FailureInput, FailureResponse, UpsellInput, UpsellResponse
+from services import compute_revenue_risk, predict_churn, predict_failure, recommend_action, recommend_offer
 from utils.logger import get_logger
 from utils.model_loader import preload_models
 
@@ -157,3 +157,13 @@ async def predict_revenue_endpoint(payload: RevenueRequest) -> RevenueResponse:
         revenue_risk=revenue_risk,
         recommended_action=recommend_action(churn_probability, failure_probability),
     )
+
+
+@app.post("/recommend-offer", response_model=UpsellResponse)
+async def recommend_offer_endpoint(payload: UpsellInput) -> UpsellResponse:
+    try:
+        recommendation = recommend_offer(payload)
+    except AttributeError as exc:
+        raise HTTPException(status_code=400, detail="Invalid upsell feature payload") from exc
+
+    return UpsellResponse(**recommendation)

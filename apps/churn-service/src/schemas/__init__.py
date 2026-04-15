@@ -18,8 +18,11 @@ def _load_module(file_name: str, module_name: str) -> ModuleType:
 
 _churn_schema = _load_module("churn.schema.py", "churn_schema")
 _failure_schema = _load_module("failure.schema.py", "failure_schema")
+_upsell_schema = _load_module("upsell.schema.py", "upsell_schema")
 
 ChurnInput = _churn_schema.ChurnInput
 ChurnResponse = _churn_schema.ChurnResponse
 FailureInput = _failure_schema.FailureInput
 FailureResponse = _failure_schema.FailureResponse
+UpsellInput = _upsell_schema.UpsellInput
+UpsellResponse = _upsell_schema.UpsellResponse

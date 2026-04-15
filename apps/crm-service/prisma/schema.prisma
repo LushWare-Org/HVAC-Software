@@ -103,6 +103,7 @@ model Customer {
   reviews     Review[]
   addresses   Address[]
   equipment   Equipment[]
+  upsellRecommendations UpsellRecommendation[]
 
   @@index([companyId])
   @@index([companyId, email])
@@ -337,5 +338,27 @@ model FollowupAttempt {
   @@index([companyId, entityType, entityId, triggeredAt])
   @@index([companyId, status, triggeredAt])
   @@map("followup_attempts")
+}
+
+model UpsellRecommendation {
+  id               String   @id @default(uuid())
+  companyId        String   @map("company_id")
+  customerId       String   @map("customer_id")
+  customer         Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  recommendedOffer String   @map("recommended_offer")
+  confidence       Float
+  status           String   @default("pending")
+  allScores        Json?    @map("all_scores")
+  ruleOffer        String?  @map("rule_offer")
+  modelOffer       String?  @map("model_offer")
+  triggerSource    String?  @map("trigger_source")
+  priorityScore    Float?   @map("priority_score")
+  inputPayload     Json?    @map("input_payload")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId, customerId, createdAt])
+  @@index([companyId, status, priorityScore])
+  @@map("upsell_recommendations")
 }
 

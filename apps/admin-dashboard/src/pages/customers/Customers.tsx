@@ -94,10 +94,52 @@ function pct(value: number) {
   return `${Math.round(value * 100)}%`;
 }
 
+function offerLabel(value: string) {
+  return value
+    .split("_")
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function riskColor(level: CustomerStatusSummary["churnPrediction"]["level"]) {
   if (level === "High") return "var(--red)";
   if (level === "Medium") return "var(--amber)";
   return "var(--green)";
+}
+
+function inlineUpsellRecommendation(summary: CustomerStatusSummary) {
+  const scores: Record<string, number> = {
+    maintenance_plan: 0.25,
+    replacement: 0.2,
+    service: 0.2,
+  };
+
+  if (summary.signals.daysSinceLastService > 180) scores.service += 0.4;
+  if (summary.failurePrediction.probability >= 0.5) scores.maintenance_plan += 0.15;
+  if (summary.churnPrediction.probability >= 0.5) {
+    scores.maintenance_plan += 0.1;
+    scores.service += 0.1;
+  }
+  if (summary.signals.avgMonthlySpend >= 250) scores.maintenance_plan += 0.08;
+
+  const total = Object.values(scores).reduce((sum, score) => sum + score, 0);
+  const normalized = Object.fromEntries(
+    Object.entries(scores).map(([offer, score]) => [offer, score / total]),
+  );
+  const [recommendedOffer, confidence] = Object.entries(normalized).sort(([, a], [, b]) => b - a)[0];
+  const priorityScore = Math.min(
+    1,
+    (confidence * 0.7)
+      + (summary.churnPrediction.probability * 0.15)
+      + (summary.failurePrediction.probability * 0.15),
+  );
+
+  return {
+    recommendedOffer,
+    confidence,
+    priorityScore,
+    status: "live estimate",
+  };
 }
 
 function CustomerHoverSummary({
@@ -111,8 +153,8 @@ function CustomerHoverSummary({
   error: boolean;
   anchor: { x: number; y: number };
 }) {
-  const left = typeof window === "undefined" ? anchor.x + 16 : Math.min(anchor.x + 16, window.innerWidth - 360);
-  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 260));
+  const left = typeof window === "undefined" ? anchor.x + 16 : Math.min(anchor.x + 16, window.innerWidth - 380);
+  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 360));
 
   return (
     <div
@@ -149,10 +191,32 @@ function CustomerHoverSummary({
       )}
       {!loading && !error && summary && (
         <div style={{ display: "grid", gap: 10 }}>
+          {(() => {
+            const upsellRecommendation = summary.upsellRecommendation ?? inlineUpsellRecommendation(summary);
+
+            return (
+              <>
           <div>
             <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Current status</div>
             <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2 }}>{summary.currentStatus}</div>
           </div>
+          <div style={{ padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card-2)" }}>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Upsell recommendation</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
+              <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 700 }}>
+                {offerLabel(upsellRecommendation.recommendedOffer)}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--green)", fontWeight: 700 }}>
+                {pct(upsellRecommendation.confidence)}
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4, lineHeight: 1.35 }}>
+              Priority {pct(upsellRecommendation.priorityScore ?? upsellRecommendation.confidence)} - {upsellRecommendation.status === "generated" ? "live estimate" : upsellRecommendation.status}
+            </div>
+          </div>
+              </>
+            );
+          })()}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
               <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Failure prediction</div>
