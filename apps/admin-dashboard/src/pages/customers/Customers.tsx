@@ -142,6 +142,45 @@ function inlineUpsellRecommendation(summary: CustomerStatusSummary) {
   };
 }
 
+function inlineRetentionPrediction(summary: CustomerStatusSummary, upsellRecommendation: { confidence: number }) {
+  const pConvert = upsellRecommendation.confidence;
+  const ltv = summary.signals.avgMonthlySpend * 12;
+  const churnProbability = summary.churnPrediction.probability;
+  const score = pConvert * ltv * (1 - churnProbability);
+  let action = "no_action";
+
+  if (pConvert > 0.75 && ltv > 1500) {
+    action = "premium_contract_offer";
+  } else if (churnProbability > 0.7) {
+    action = "discount_retention_offer";
+  } else if (summary.failurePrediction.probability >= 0.7) {
+    action = "maintenance_plan_offer";
+  }
+
+  const offer =
+    action === "premium_contract_offer" ? { type: "premium", discount: 0 } :
+    action === "discount_retention_offer" ? { type: "discounted", discount: 20 } :
+    action === "maintenance_plan_offer" ? { type: "standard", discount: 10 } :
+    { type: "none", discount: 0 };
+
+  return {
+    pConvert,
+    ltv,
+    churnProbability,
+    score,
+    action,
+    offer,
+    recommendedChannel: "email",
+    priority: score > 1500 ? "high" : score >= 500 ? "medium" : "low",
+    triggerImmediately: summary.failurePrediction.probability >= 0.7,
+    reason:
+      action === "premium_contract_offer" ? "High conversion probability and high predicted lifetime value" :
+      action === "discount_retention_offer" ? "High churn probability" :
+      action === "maintenance_plan_offer" ? "High repair frequency" :
+      "Customer does not meet retention targeting thresholds",
+  };
+}
+
 function CustomerHoverSummary({
   summary,
   loading,
@@ -153,8 +192,8 @@ function CustomerHoverSummary({
   error: boolean;
   anchor: { x: number; y: number };
 }) {
-  const left = typeof window === "undefined" ? anchor.x + 16 : Math.min(anchor.x + 16, window.innerWidth - 380);
-  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 360));
+  const left = typeof window === "undefined" ? anchor.x + 16 : Math.min(anchor.x + 16, window.innerWidth - 400);
+  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 520));
 
   return (
     <div
@@ -163,7 +202,7 @@ function CustomerHoverSummary({
         zIndex: 80,
         top,
         left: Math.max(12, left),
-        width: 340,
+        width: 360,
         padding: 14,
         borderRadius: 8,
         border: "1px solid var(--border)",
@@ -193,6 +232,7 @@ function CustomerHoverSummary({
         <div style={{ display: "grid", gap: 10 }}>
           {(() => {
             const upsellRecommendation = summary.upsellRecommendation ?? inlineUpsellRecommendation(summary);
+            const retentionPrediction = summary.retentionPrediction ?? inlineRetentionPrediction(summary, upsellRecommendation);
 
             return (
               <>
@@ -212,6 +252,38 @@ function CustomerHoverSummary({
             </div>
             <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4, lineHeight: 1.35 }}>
               Priority {pct(upsellRecommendation.priorityScore ?? upsellRecommendation.confidence)} - {upsellRecommendation.status === "generated" ? "live estimate" : upsellRecommendation.status}
+            </div>
+          </div>
+          <div style={{ padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card-2)" }}>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Retention suggestion</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
+              <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 700 }}>
+                {offerLabel(retentionPrediction.action)}
+              </div>
+              <div style={{ fontSize: 12, color: retentionPrediction.priority === "high" ? "var(--red)" : retentionPrediction.priority === "medium" ? "var(--amber)" : "var(--green)", fontWeight: 700 }}>
+                {retentionPrediction.priority.toUpperCase()}
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
+              <div>
+                <div style={{ fontSize: 10, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Convert</div>
+                <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 700 }}>{pct(retentionPrediction.pConvert)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>LTV</div>
+                <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 700 }}>{fmt(Math.round(retentionPrediction.ltv))}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Score</div>
+                <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 700 }}>{Math.round(retentionPrediction.score)}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 8, lineHeight: 1.35 }}>
+              Offer: {offerLabel(retentionPrediction.offer.type)}{retentionPrediction.offer.discount > 0 ? `, ${retentionPrediction.offer.discount}% off` : ""} via {offerLabel(retentionPrediction.recommendedChannel)}
+              {retentionPrediction.triggerImmediately ? " - trigger now" : ""}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4, lineHeight: 1.35 }}>
+              {retentionPrediction.reason}
             </div>
           </div>
               </>

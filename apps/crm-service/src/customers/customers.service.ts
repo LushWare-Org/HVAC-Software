@@ -259,11 +259,23 @@ export class CustomersService {
         churnProbability: prediction.churn_probability,
         failureProbability: prediction.failure_probability,
       });
+    const retentionPrediction = this.computeRetentionPrediction({
+      customerId: customer.id,
+      avgMonthlySpend,
+      failureHistory,
+      churnProbability: prediction.churn_probability,
+      upsellConfidence: upsellRecommendation.confidence,
+      automaticFollowupEnabled: customer.automaticFollowupEnabled,
+      hasMobile: Boolean(customer.mobile),
+      hasPhone: Boolean(customer.phone),
+      hasEmail: Boolean(customer.email),
+    });
 
     return {
       customerId: customer.id,
       currentStatus,
       upsellRecommendation,
+      retentionPrediction,
       churnPrediction: {
         probability: prediction.churn_probability,
         level: churnLevel,
@@ -487,6 +499,75 @@ export class CustomersService {
       triggerSource: 'status_summary',
       createdAt: new Date(),
     };
+  }
+
+  private computeRetentionPrediction(signals: {
+    customerId: string;
+    avgMonthlySpend: number;
+    failureHistory: number;
+    churnProbability: number;
+    upsellConfidence: number;
+    automaticFollowupEnabled: boolean;
+    hasMobile: boolean;
+    hasPhone: boolean;
+    hasEmail: boolean;
+  }) {
+    const pConvert = this.clampProbability(signals.upsellConfidence);
+    const ltv = Number((signals.avgMonthlySpend * 12).toFixed(2));
+    const churnProbability = this.clampProbability(signals.churnProbability);
+    const score = Number((pConvert * ltv * (1 - churnProbability)).toFixed(2));
+    const recommendedChannel = this.recommendedRetentionChannel(signals);
+
+    let action = 'no_action';
+    if (pConvert > 0.75 && ltv > 1500) {
+      action = 'premium_contract_offer';
+    } else if (churnProbability > 0.7) {
+      action = 'discount_retention_offer';
+    } else if (signals.failureHistory >= 3) {
+      action = 'maintenance_plan_offer';
+    }
+
+    return {
+      customerId: signals.customerId,
+      pConvert: Number(pConvert.toFixed(4)),
+      ltv,
+      churnProbability: Number(churnProbability.toFixed(4)),
+      score,
+      action,
+      offer: this.retentionOffer(action),
+      recommendedChannel,
+      priority: score > 1500 ? 'high' : score >= 500 ? 'medium' : 'low',
+      triggerImmediately: signals.failureHistory >= 3,
+      reason: this.describeRetentionReason(action, signals.failureHistory, pConvert, signals.automaticFollowupEnabled),
+    };
+  }
+
+  private recommendedRetentionChannel(signals: { hasMobile: boolean; hasPhone: boolean; hasEmail: boolean }) {
+    if (signals.hasMobile) return 'whatsapp';
+    if (signals.hasEmail) return 'email';
+    if (signals.hasPhone) return 'call';
+    return 'email';
+  }
+
+  private retentionOffer(action: string) {
+    if (action === 'premium_contract_offer') return { type: 'premium', discount: 0 };
+    if (action === 'discount_retention_offer') return { type: 'discounted', discount: 20 };
+    if (action === 'maintenance_plan_offer') return { type: 'standard', discount: 10 };
+    return { type: 'none', discount: 0 };
+  }
+
+  private describeRetentionReason(action: string, failureHistory: number, pConvert: number, automaticFollowupEnabled: boolean) {
+    if (!automaticFollowupEnabled) return 'Manual review because automatic follow-up is paused';
+    if (action === 'premium_contract_offer') return 'High conversion probability and high predicted lifetime value';
+    if (action === 'discount_retention_offer') return 'High churn probability';
+    if (action === 'maintenance_plan_offer' && pConvert > 0.75) return 'High repair frequency and high conversion probability';
+    if (action === 'maintenance_plan_offer' || failureHistory >= 3) return 'High repair frequency';
+    return 'Customer does not meet retention targeting thresholds';
+  }
+
+  private clampProbability(value: number) {
+    if (!Number.isFinite(value)) return 0;
+    return Math.min(1, Math.max(0, value));
   }
 
   // ── Equipment CRUD ────────────────────────────────────────────────────────────

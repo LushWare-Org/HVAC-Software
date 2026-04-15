@@ -72,6 +72,22 @@ export interface CustomerStatusSummary {
     triggerSource?: string | null
     createdAt: string
   } | null
+  retentionPrediction?: {
+    customerId: string
+    pConvert: number
+    ltv: number
+    churnProbability: number
+    score: number
+    action: string
+    offer: {
+      type: string
+      discount: number
+    }
+    recommendedChannel: 'whatsapp' | 'email' | 'call'
+    priority: 'low' | 'medium' | 'high'
+    triggerImmediately: boolean
+    reason: string
+  } | null
   churnPrediction: {
     probability: number
     level: 'Low' | 'Medium' | 'High'
