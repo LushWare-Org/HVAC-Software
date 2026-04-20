@@ -60,6 +60,13 @@ class RevenueAgent:
             f"gap={state.demand_gap:.2f}, "
             f"source={state.demand_forecast_source}"
         )
+        print(
+            "UTILIZATION: "
+            f"predicted={state.utilization:.2f}, "
+            f"status={state.capacity_status}, "
+            f"idle_capacity={state.idle_capacity:.2f}, "
+            f"source={state.utilization_forecast_source}"
+        )
 
         decision = decide(state_payload)
         predictions = decision.metadata.get("predictions")

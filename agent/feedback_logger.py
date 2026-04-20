@@ -28,6 +28,9 @@ class FeedbackRecord:
     predicted_revenue: float
     actual_revenue: float | None
     expected_demand: float | None
+    utilization: float | None
+    capacity_status: str | None
+    idle_capacity: float | None
     actual_demand: float | None
     demand_gap: float | None
 
@@ -47,6 +50,8 @@ def log_feedback(
 
     state_payload = dict(state)
     expected_demand = _optional_float(state_payload.get("expected_demand"))
+    utilization = _optional_float(state_payload.get("utilization"))
+    idle_capacity = _optional_float(state_payload.get("idle_capacity"))
     demand_gap = _optional_float(state_payload.get("demand_gap"))
     realized_demand = actual_demand
     if realized_demand is None:
@@ -62,6 +67,9 @@ def log_feedback(
         predicted_revenue=decision.expected_revenue,
         actual_revenue=actual_revenue,
         expected_demand=expected_demand,
+        utilization=utilization,
+        capacity_status=_optional_string(state_payload.get("capacity_status")),
+        idle_capacity=idle_capacity,
         actual_demand=realized_demand,
         demand_gap=demand_gap,
     )
@@ -95,3 +103,10 @@ def _optional_float(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _optional_string(value: Any) -> str | None:
+    if value is None or value == "":
+        return None
+
+    return str(value)

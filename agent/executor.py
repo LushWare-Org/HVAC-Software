@@ -34,6 +34,7 @@ def execute_action(decision: Decision, state: Mapping[str, Any]) -> ExecutionRes
         ActionType.DISCOUNT_20: send_discount_offer,
         ActionType.CALL: create_call_task,
         ActionType.NONE: no_action,
+        ActionType.INCREASE_PRICE: increase_price,
         ActionType.TRIGGER_CAMPAIGN_LOW_DEMAND: trigger_campaign_low_demand,
         ActionType.GEO_TARGET_DISCOUNT: geo_target_discount,
         ActionType.SAME_DAY_OFFER: same_day_offer,
@@ -61,6 +62,19 @@ def send_discount_offer(decision: Decision, state: Mapping[str, Any]) -> Executi
     logger.info(message)
     print(f"ACTION: {message}")
     return _result(decision.action.value, "mocked", message, "discount-offer-mock")
+
+
+def increase_price(decision: Decision, state: Mapping[str, Any]) -> ExecutionResult:
+    """Mock price increase for constrained technician capacity."""
+
+    message = (
+        "Mock price increase applied "
+        f"(utilization={state['utilization']:.2f}, "
+        f"capacity_status={state.get('capacity_status', 'UNKNOWN')})"
+    )
+    logger.info(message)
+    print(f"ACTION: {message}")
+    return _result(decision.action.value, "mocked", message, "price-increase-mock")
 
 
 def trigger_campaign(decision: Decision, state: Mapping[str, Any]) -> ExecutionResult:

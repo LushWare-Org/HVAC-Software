@@ -19,6 +19,7 @@ ACTION_COSTS: dict[str, float] = {
     "discount_20": 800.0,
     "call": 100.0,
     "none": 0.0,
+    "increase_price": 0.0,
 }
 
 
@@ -27,6 +28,7 @@ class ActionType(str, Enum):
     DISCOUNT_20 = "discount_20"
     CALL = "call"
     NONE = "none"
+    INCREASE_PRICE = "increase_price"
     TRIGGER_CAMPAIGN_LOW_DEMAND = "trigger_campaign_low_demand"
     GEO_TARGET_DISCOUNT = "geo_target_discount"
     SAME_DAY_OFFER = "same_day_offer"
@@ -61,8 +63,11 @@ class ConstraintConfig:
 class ProactiveDemandConfig:
     """Thresholds for forecast-driven demand recovery actions."""
 
-    low_demand_gap_threshold: float = -10.0
-    proactive_action: str = "discount_20"
+    low_demand_gap_threshold: float = -20.0
+    low_utilization_threshold: float = 0.60
+    medium_utilization_threshold: float = 0.85
+    high_utilization_threshold: float = 0.90
+    discount_safety_threshold: float = 0.95
 
 
 @dataclass(frozen=True)
@@ -135,9 +140,13 @@ def apply_constraints(
     constraint_config = config or ConstraintConfig()
     normalized = _normalize_state(state)
 
-    if action not in MODEL_ACTIONS:
+    valid_actions = set(MODEL_ACTIONS) | {ActionType.INCREASE_PRICE.value}
+    if action not in valid_actions:
         logger.warning("Unknown model action '%s'; falling back to none", action)
         return "none"
+
+    if prevent_discounts(normalized) and action.startswith("discount_"):
+        return "increase_price"
 
     if normalized["churn_risk"] >= constraint_config.high_churn_threshold:
         return "call"
@@ -152,11 +161,11 @@ def apply_constraints(
 
 
 def decide(state: Mapping[str, Any]) -> Decision:
-    """Choose the next revenue action using action outcome predictions."""
+    """Choose the next revenue action using capacity rules, then ML scoring."""
 
-    proactive_decision = decide_proactive_demand(state)
-    if proactive_decision is not None:
-        return proactive_decision
+    capacity_decision = decide_capacity_aware(state)
+    if capacity_decision is not None:
+        return capacity_decision
 
     try:
         predictions = evaluate_actions(state)
@@ -179,7 +188,7 @@ def decide(state: Mapping[str, Any]) -> Decision:
             action=ActionType(final_action),
             reason=reason,
             priority=_priority_for_action(final_action, state),
-            expected_revenue=round(predictions[final_action], 2),
+            expected_revenue=round(predictions.get(final_action, predictions[best_action]), 2),
             metadata={
                 "policy": "action_effect_models.v1",
                 "model_path": str(DEFAULT_ACTION_MODEL_PATH),
@@ -204,11 +213,15 @@ def decide(state: Mapping[str, Any]) -> Decision:
         )
 
 
-def decide_proactive_demand(
+def prevent_discounts(state: Mapping[str, Any]) -> bool:
+    return _normalize_state(state)["utilization"] > 0.95
+
+
+def decide_capacity_aware(
     state: Mapping[str, Any],
     config: ProactiveDemandConfig | None = None,
 ) -> Decision | None:
-    """Trigger demand recovery before low demand reaches the live schedule."""
+    """Apply proactive capacity policy before normal action-effect scoring."""
 
     demand_config = config or ProactiveDemandConfig()
     normalized = _normalize_state(state)
@@ -216,28 +229,79 @@ def decide_proactive_demand(
     if normalized["capacity"] <= 0:
         return None
 
-    if normalized["demand_gap"] >= demand_config.low_demand_gap_threshold:
-        return None
+    if normalized["demand_gap"] < demand_config.low_demand_gap_threshold:
+        if normalized["utilization"] < demand_config.low_utilization_threshold:
+            return _capacity_decision(
+                action="discount_20",
+                state=state,
+                normalized=normalized,
+                trigger="low_demand_low_utilization",
+                reason="Demand is below capacity and technician utilization is low",
+                priority="high",
+            )
 
-    action = apply_constraints(demand_config.proactive_action, state)
+        if normalized["utilization"] < demand_config.medium_utilization_threshold:
+            return _capacity_decision(
+                action="discount_10",
+                state=state,
+                normalized=normalized,
+                trigger="low_demand_medium_utilization",
+                reason="Demand is below capacity with moderate technician utilization",
+                priority="medium",
+            )
+
+    if normalized["utilization"] > demand_config.high_utilization_threshold:
+        return _capacity_decision(
+            action="increase_price",
+            state=state,
+            normalized=normalized,
+            trigger="high_utilization",
+            reason="Technician utilization is high; preserving capacity and margin",
+            priority="high" if normalized["utilization"] > demand_config.discount_safety_threshold else "medium",
+        )
+
+    return None
+
+
+def decide_proactive_demand(
+    state: Mapping[str, Any],
+    config: ProactiveDemandConfig | None = None,
+) -> Decision | None:
+    """Backward-compatible alias for the capacity-aware proactive policy."""
+
+    return decide_capacity_aware(state, config=config)
+
+
+def _capacity_decision(
+    action: str,
+    state: Mapping[str, Any],
+    normalized: Mapping[str, float | int],
+    trigger: str,
+    reason: str,
+    priority: str,
+) -> Decision:
+    final_action = apply_constraints(action, state)
+
     return Decision(
-        action=ActionType(action),
-        reason=(
-            "Forecasted bookings are below available technician capacity; "
-            "triggering proactive demand recovery"
-        ),
-        priority="high" if normalized["demand_gap"] <= demand_config.low_demand_gap_threshold * 2 else "medium",
-        expected_revenue=round(normalized["expected_demand"] * normalized["ltv"] * 0.03, 2),
+        action=ActionType(final_action),
+        reason=reason if final_action == action else f"{reason}; safety constraints selected {final_action}",
+        priority=priority,
+        expected_revenue=_estimate_capacity_revenue(final_action, normalized),
         metadata={
-            "policy": "proactive_demand_forecast.v1",
-            "trigger": "low_future_demand",
+            "policy": "capacity_aware.v1",
+            "trigger": trigger,
             "expected_demand": normalized["expected_demand"],
             "capacity": normalized["capacity"],
             "demand_gap": normalized["demand_gap"],
-            "threshold": demand_config.low_demand_gap_threshold,
+            "utilization": normalized["utilization"],
+            "capacity_status": state.get("capacity_status"),
+            "idle_capacity": state.get("idle_capacity"),
             "forecast_available": normalized["demand_forecast_available"],
             "forecast_source": state.get("demand_forecast_source"),
-            "proactive_action": action,
+            "utilization_source": state.get("utilization_forecast_source"),
+            "proposed_action": action,
+            "final_action": final_action,
+            "discounts_prevented": action.startswith("discount_") and final_action != action,
             "future_actions_supported": [
                 ActionType.TRIGGER_CAMPAIGN_LOW_DEMAND.value,
                 ActionType.GEO_TARGET_DISCOUNT.value,
@@ -245,6 +309,22 @@ def decide_proactive_demand(
             ],
         },
     )
+
+
+def _estimate_capacity_revenue(action: str, normalized: Mapping[str, float | int]) -> float:
+    if action == "increase_price":
+        return round(float(normalized["expected_demand"]) * float(normalized["ltv"]) * 0.05, 2)
+
+    if action == "discount_20":
+        return round(float(normalized["idle_capacity"]) * float(normalized["capacity"]) * float(normalized["ltv"]) * 0.04, 2)
+
+    if action == "discount_10":
+        return round(float(normalized["idle_capacity"]) * float(normalized["capacity"]) * float(normalized["ltv"]) * 0.025, 2)
+
+    if action == "call":
+        return round(float(normalized["ltv"]) * float(normalized["churn_risk"]) * 0.20, 2)
+
+    return 0.0
 
 
 def decide_rule_based(state: Mapping[str, Any], config: RuleConfig | None = None) -> Decision:
@@ -394,6 +474,7 @@ def _normalize_state(state: Mapping[str, Any]) -> dict[str, float | int]:
         "expected_demand": max(0.0, _coerce_numeric(state.get("expected_demand", 0.0))),
         "capacity": max(0.0, _coerce_numeric(state.get("capacity", 0.0))),
         "demand_gap": _coerce_numeric(state.get("demand_gap", 0.0)),
+        "idle_capacity": max(0.0, _coerce_numeric(state.get("idle_capacity", 0.0))),
         "demand_forecast_available": bool(state.get("demand_forecast_available", False)),
     }
 
