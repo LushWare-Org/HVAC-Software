@@ -13,10 +13,19 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DEMAND_MODEL_PATH = PROJECT_ROOT / "models" / "demand_forecast_model.pkl"
 DEFAULT_UTILIZATION_MODEL_PATH = PROJECT_ROOT / "models" / "utilization_model.pkl"
+DEFAULT_PRICING_MODEL_PATH = PROJECT_ROOT / "models" / "pricing_model.pkl"
 DEFAULT_TOTAL_TECHNICIANS = 10
 DEFAULT_AVG_JOBS_PER_TECH = 7.0
 DEFAULT_AVG_JOB_DURATION = 1.5
 DEFAULT_TEMPERATURE = 82.0
+DEFAULT_CURRENT_PRICE = 150.0
+DEFAULT_MIN_PRICE = 100.0
+DEFAULT_MAX_PRICE = 250.0
+DEFAULT_MAX_DISCOUNT_PCT = 0.20
+DEFAULT_MAX_PRICE_SPIKE_PCT = 0.35
+DEFAULT_UNIT_COST = 70.0
+DEFAULT_MIN_MARGIN_PCT = 0.25
+DEFAULT_CANDIDATE_PRICES = (100.0, 120.0, 150.0, 180.0, 200.0, 250.0)
 
 
 @dataclass(frozen=True)
@@ -42,12 +51,20 @@ class RevenueState:
     demand_gap: float
     capacity_status: str
     idle_capacity: float
+    customer_segment: str
+    urgency: str
+    current_price: float
+    optimal_price: float
+    expected_revenue: float
     demand_forecast_available: bool
     demand_forecast_source: str
     utilization_forecast_available: bool
     utilization_forecast_source: str
+    pricing_model_available: bool
+    pricing_model_source: str
     demand_forecast_error: str | None = None
     utilization_forecast_error: str | None = None
+    pricing_model_error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -72,14 +89,22 @@ DEFAULT_MOCK_STATE = RevenueState(
     ),
     capacity_status="LOW",
     idle_capacity=0.48,
+    customer_segment="standard",
+    urgency="medium",
+    current_price=DEFAULT_CURRENT_PRICE,
+    optimal_price=DEFAULT_CURRENT_PRICE,
+    expected_revenue=0.0,
     demand_forecast_available=False,
     demand_forecast_source="default_mock",
     utilization_forecast_available=False,
     utilization_forecast_source="default_mock",
+    pricing_model_available=False,
+    pricing_model_source="default_mock",
 )
 
 _DEMAND_MODEL_CACHE: Any | None = None
 _UTILIZATION_MODEL_CACHE: Any | None = None
+_PRICING_MODEL_CACHE: Any | None = None
 
 
 def build_state(
@@ -147,6 +172,18 @@ def build_state(
         model_path=state_values.get("utilization_model_path", DEFAULT_UTILIZATION_MODEL_PATH),
     )
     utilization = utilization_forecast["utilization"]
+    pricing_state = {
+        **state_values,
+        "expected_demand": forecast["expected_demand"],
+        "utilization": utilization,
+        "current_price": state_values.get("current_price", DEFAULT_CURRENT_PRICE),
+        "customer_segment": state_values.get("customer_segment", DEFAULT_MOCK_STATE.customer_segment),
+        "urgency": state_values.get("urgency", DEFAULT_MOCK_STATE.urgency),
+    }
+    pricing = find_optimal_price(
+        pricing_state,
+        model_path=state_values.get("pricing_model_path", DEFAULT_PRICING_MODEL_PATH),
+    )
 
     return RevenueState(
         utilization=utilization,
@@ -163,12 +200,20 @@ def build_state(
         demand_gap=forecast["demand_gap"],
         capacity_status=capacity_status(utilization),
         idle_capacity=round(max(0.0, 1.0 - utilization), 2),
+        customer_segment=str(state_values.get("customer_segment", DEFAULT_MOCK_STATE.customer_segment)),
+        urgency=str(state_values.get("urgency", DEFAULT_MOCK_STATE.urgency)),
+        current_price=round(_guarded_price(state_values.get("current_price", DEFAULT_CURRENT_PRICE), state_values), 2),
+        optimal_price=pricing["optimal_price"],
+        expected_revenue=pricing["expected_revenue"],
         demand_forecast_available=forecast["available"],
         demand_forecast_source=forecast["source"],
         utilization_forecast_available=utilization_forecast["available"],
         utilization_forecast_source=utilization_forecast["source"],
+        pricing_model_available=pricing["available"],
+        pricing_model_source=pricing["source"],
         demand_forecast_error=forecast["error"],
         utilization_forecast_error=utilization_forecast["error"],
+        pricing_model_error=pricing["error"],
     )
 
 
@@ -200,6 +245,19 @@ def load_utilization_model(model_path: str | Path = DEFAULT_UTILIZATION_MODEL_PA
             _UTILIZATION_MODEL_CACHE = pickle.load(handle)
 
     return _UTILIZATION_MODEL_CACHE
+
+
+def load_pricing_model(model_path: str | Path = DEFAULT_PRICING_MODEL_PATH) -> Any:
+    """Load the dynamic pricing model from disk."""
+
+    global _PRICING_MODEL_CACHE
+
+    path = Path(model_path)
+    if _PRICING_MODEL_CACHE is None:
+        with path.open("rb") as handle:
+            _PRICING_MODEL_CACHE = pickle.load(handle)
+
+    return _PRICING_MODEL_CACHE
 
 
 def forecast_demand(
@@ -300,6 +358,70 @@ def build_utilization_features(state: Mapping[str, Any]) -> dict[str, float | in
     }
 
 
+def build_pricing_features(state: Mapping[str, Any], price: float) -> dict[str, float | int]:
+    """Create features for pricing_model.pkl, including price as a decision input."""
+
+    segment = str(state.get("customer_segment", DEFAULT_MOCK_STATE.customer_segment)).lower()
+    urgency = str(state.get("urgency", DEFAULT_MOCK_STATE.urgency)).lower()
+
+    features: dict[str, float | int] = {
+        "expected_demand": float(state.get("expected_demand", 0.0)),
+        "utilization": _clamp_probability(state.get("utilization", 0.0)),
+        "churn_risk": _clamp_probability(state.get("churn_risk", 0.0)),
+        "ltv": max(0.0, float(state.get("ltv", 0.0))),
+        "price": float(price),
+        "customer_segment_budget": 1 if segment == "budget" else 0,
+        "customer_segment_premium": 1 if segment == "premium" else 0,
+        "customer_segment_standard": 1 if segment not in {"budget", "premium"} else 0,
+        "urgency_high": 1 if urgency == "high" else 0,
+        "urgency_low": 1 if urgency == "low" else 0,
+        "urgency_medium": 1 if urgency not in {"high", "low"} else 0,
+    }
+    return features
+
+
+def find_optimal_price(
+    state: Mapping[str, Any],
+    model: Any | None = None,
+    model_path: str | Path = DEFAULT_PRICING_MODEL_PATH,
+) -> dict[str, Any]:
+    """Score candidate prices and return the guarded revenue-maximizing price."""
+
+    try:
+        pricing_model = model or load_pricing_model(model_path)
+        predicted_revenue: dict[float, float] = {}
+
+        for candidate_price in DEFAULT_CANDIDATE_PRICES:
+            price = _guarded_price(candidate_price, state)
+            features = build_pricing_features(state, price)
+            predicted_revenue[price] = _predict_pricing_revenue(pricing_model, features)
+
+        best_price = max(predicted_revenue, key=predicted_revenue.get)
+        return {
+            "optimal_price": round(best_price, 2),
+            "expected_revenue": round(predicted_revenue[best_price], 2),
+            "available": True,
+            "source": "pricing_model",
+            "error": None,
+            "candidate_revenues": {
+                str(round(price, 2)): round(revenue, 2)
+                for price, revenue in predicted_revenue.items()
+            },
+        }
+    except Exception as exc:
+        fallback_price = _guarded_price(state.get("current_price", DEFAULT_CURRENT_PRICE), state)
+        fallback_revenue = float(state.get("expected_demand", 0.0)) * fallback_price
+        logger.warning("Pricing optimization failed; using guarded current price: %s", exc)
+        return {
+            "optimal_price": round(fallback_price, 2),
+            "expected_revenue": round(fallback_revenue, 2),
+            "available": False,
+            "source": "current_price_fallback",
+            "error": f"{type(exc).__name__}: {exc}",
+            "candidate_revenues": {},
+        }
+
+
 def capacity_status(utilization: float) -> str:
     if utilization < 0.60:
         return "LOW"
@@ -375,6 +497,17 @@ def _predict_utilization(model: Any, features: Mapping[str, float | int]) -> flo
     return _clamp_probability(prediction)
 
 
+def _predict_pricing_revenue(model: Any, features: Mapping[str, float | int]) -> float:
+    feature_frame = _model_feature_frame(model, features)
+    raw_prediction = model.predict(feature_frame)
+    prediction = _prediction_to_float(raw_prediction)
+
+    if not math.isfinite(prediction):
+        raise ValueError(f"Pricing model returned a non-finite prediction: {prediction}")
+
+    return max(0.0, prediction)
+
+
 def _demand_feature_frame(model: Any, features: Mapping[str, float | int]) -> Any:
     return _model_feature_frame(model, features)
 
@@ -408,3 +541,32 @@ def _coerce_datetime(value: datetime | str | None) -> datetime:
         return datetime.fromisoformat(value)
 
     return datetime.now()
+
+
+def _guarded_price(price: Any, state: Mapping[str, Any]) -> float:
+    """Apply pricing safety guardrails before scoring or execution."""
+
+    candidate = max(0.0, float(price))
+    current_price = max(0.0, float(state.get("current_price", DEFAULT_CURRENT_PRICE)))
+    min_price = max(0.0, float(state.get("min_price", DEFAULT_MIN_PRICE)))
+    max_price = max(min_price, float(state.get("max_price", DEFAULT_MAX_PRICE)))
+    max_discount_pct = _clamp_probability(state.get("max_discount_pct", DEFAULT_MAX_DISCOUNT_PCT))
+    max_price_spike_pct = max(0.0, float(state.get("max_price_spike_pct", DEFAULT_MAX_PRICE_SPIKE_PCT)))
+    unit_cost = max(0.0, float(state.get("unit_cost", DEFAULT_UNIT_COST)))
+    min_margin_pct = _clamp_probability(state.get("min_margin_pct", DEFAULT_MIN_MARGIN_PCT))
+
+    if current_price > 0:
+        min_price = max(min_price, current_price * (1.0 - max_discount_pct))
+        max_price = min(max_price, current_price * (1.0 + max_price_spike_pct))
+
+    if min_margin_pct < 1.0:
+        margin_floor = unit_cost / (1.0 - min_margin_pct)
+        min_price = max(min_price, margin_floor)
+
+    if candidate < min_price:
+        candidate = min_price
+
+    if candidate > max_price:
+        candidate = max_price
+
+    return candidate

@@ -29,6 +29,8 @@ class FeedbackRecord:
     actual_revenue: float | None
     expected_demand: float | None
     utilization: float | None
+    optimal_price: float | None
+    pricing_expected_revenue: float | None
     capacity_status: str | None
     idle_capacity: float | None
     actual_demand: float | None
@@ -51,6 +53,8 @@ def log_feedback(
     state_payload = dict(state)
     expected_demand = _optional_float(state_payload.get("expected_demand"))
     utilization = _optional_float(state_payload.get("utilization"))
+    optimal_price = _optional_float(state_payload.get("optimal_price"))
+    pricing_expected_revenue = _optional_float(state_payload.get("expected_revenue"))
     idle_capacity = _optional_float(state_payload.get("idle_capacity"))
     demand_gap = _optional_float(state_payload.get("demand_gap"))
     realized_demand = actual_demand
@@ -68,6 +72,8 @@ def log_feedback(
         actual_revenue=actual_revenue,
         expected_demand=expected_demand,
         utilization=utilization,
+        optimal_price=optimal_price,
+        pricing_expected_revenue=pricing_expected_revenue,
         capacity_status=_optional_string(state_payload.get("capacity_status")),
         idle_capacity=idle_capacity,
         actual_demand=realized_demand,

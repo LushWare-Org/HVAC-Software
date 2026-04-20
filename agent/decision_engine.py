@@ -20,6 +20,8 @@ ACTION_COSTS: dict[str, float] = {
     "call": 100.0,
     "none": 0.0,
     "increase_price": 0.0,
+    "apply_dynamic_price": 0.0,
+    "discount_with_price_override": 800.0,
 }
 
 
@@ -29,6 +31,8 @@ class ActionType(str, Enum):
     CALL = "call"
     NONE = "none"
     INCREASE_PRICE = "increase_price"
+    APPLY_DYNAMIC_PRICE = "apply_dynamic_price"
+    DISCOUNT_WITH_PRICE_OVERRIDE = "discount_with_price_override"
     TRIGGER_CAMPAIGN_LOW_DEMAND = "trigger_campaign_low_demand"
     GEO_TARGET_DISCOUNT = "geo_target_discount"
     SAME_DAY_OFFER = "same_day_offer"
@@ -140,7 +144,11 @@ def apply_constraints(
     constraint_config = config or ConstraintConfig()
     normalized = _normalize_state(state)
 
-    valid_actions = set(MODEL_ACTIONS) | {ActionType.INCREASE_PRICE.value}
+    valid_actions = set(MODEL_ACTIONS) | {
+        ActionType.INCREASE_PRICE.value,
+        ActionType.APPLY_DYNAMIC_PRICE.value,
+        ActionType.DISCOUNT_WITH_PRICE_OVERRIDE.value,
+    }
     if action not in valid_actions:
         logger.warning("Unknown model action '%s'; falling back to none", action)
         return "none"
@@ -161,7 +169,7 @@ def apply_constraints(
 
 
 def decide(state: Mapping[str, Any]) -> Decision:
-    """Choose the next revenue action using capacity rules, then ML scoring."""
+    """Choose the next revenue action using capacity/pricing rules, then ML scoring."""
 
     capacity_decision = decide_capacity_aware(state)
     if capacity_decision is not None:
@@ -197,6 +205,8 @@ def decide(state: Mapping[str, Any]) -> Decision:
                 "net_predictions": net_predictions,
                 "model_best_action": best_action,
                 "final_action": final_action,
+                "optimal_price": state.get("optimal_price"),
+                "pricing_expected_revenue": state.get("expected_revenue"),
             },
         )
     except Exception as exc:
@@ -232,11 +242,11 @@ def decide_capacity_aware(
     if normalized["demand_gap"] < demand_config.low_demand_gap_threshold:
         if normalized["utilization"] < demand_config.low_utilization_threshold:
             return _capacity_decision(
-                action="discount_20",
+                action="discount_with_price_override",
                 state=state,
                 normalized=normalized,
                 trigger="low_demand_low_utilization",
-                reason="Demand is below capacity and technician utilization is low",
+                reason="Demand is below capacity and technician utilization is low; discounting with guarded dynamic price",
                 priority="high",
             )
 
@@ -250,14 +260,24 @@ def decide_capacity_aware(
                 priority="medium",
             )
 
-    if normalized["utilization"] > demand_config.high_utilization_threshold:
+    if normalized["utilization"] > demand_config.medium_utilization_threshold:
         return _capacity_decision(
             action="increase_price",
             state=state,
             normalized=normalized,
             trigger="high_utilization",
-            reason="Technician utilization is high; preserving capacity and margin",
+            reason="Technician utilization is high; applying optimized price to protect capacity and margin",
             priority="high" if normalized["utilization"] > demand_config.discount_safety_threshold else "medium",
+        )
+
+    if _should_apply_dynamic_price(normalized):
+        return _capacity_decision(
+            action="apply_dynamic_price",
+            state=state,
+            normalized=normalized,
+            trigger="pricing_model",
+            reason="Pricing model found a better guarded price for the current context",
+            priority="low",
         )
 
     return None
@@ -296,6 +316,9 @@ def _capacity_decision(
             "utilization": normalized["utilization"],
             "capacity_status": state.get("capacity_status"),
             "idle_capacity": state.get("idle_capacity"),
+            "current_price": normalized["current_price"],
+            "optimal_price": normalized["optimal_price"],
+            "pricing_expected_revenue": normalized["expected_revenue"],
             "forecast_available": normalized["demand_forecast_available"],
             "forecast_source": state.get("demand_forecast_source"),
             "utilization_source": state.get("utilization_forecast_source"),
@@ -312,10 +335,15 @@ def _capacity_decision(
 
 
 def _estimate_capacity_revenue(action: str, normalized: Mapping[str, float | int]) -> float:
+    if action in {"increase_price", "apply_dynamic_price", "discount_with_price_override"}:
+        pricing_revenue = float(normalized.get("expected_revenue", 0.0))
+        if pricing_revenue > 0:
+            return round(pricing_revenue, 2)
+
     if action == "increase_price":
         return round(float(normalized["expected_demand"]) * float(normalized["ltv"]) * 0.05, 2)
 
-    if action == "discount_20":
+    if action in {"discount_20", "discount_with_price_override"}:
         return round(float(normalized["idle_capacity"]) * float(normalized["capacity"]) * float(normalized["ltv"]) * 0.04, 2)
 
     if action == "discount_10":
@@ -451,6 +479,7 @@ def _priority_for_action(action: str, state: Mapping[str, Any]) -> str:
 
     if action in {
         "discount_20",
+        "discount_with_price_override",
         "call",
         "trigger_campaign_low_demand",
         "geo_target_discount",
@@ -464,6 +493,16 @@ def _priority_for_action(action: str, state: Mapping[str, Any]) -> str:
     return "low"
 
 
+def _should_apply_dynamic_price(normalized: Mapping[str, float | int]) -> bool:
+    optimal_price = float(normalized.get("optimal_price", 0.0))
+    current_price = float(normalized.get("current_price", 0.0))
+
+    if optimal_price <= 0 or current_price <= 0:
+        return False
+
+    return abs(optimal_price - current_price) / current_price >= 0.05
+
+
 def _normalize_state(state: Mapping[str, Any]) -> dict[str, float | int]:
     return {
         "utilization": _clamp_probability(state.get("utilization", 0.0)),
@@ -475,6 +514,9 @@ def _normalize_state(state: Mapping[str, Any]) -> dict[str, float | int]:
         "capacity": max(0.0, _coerce_numeric(state.get("capacity", 0.0))),
         "demand_gap": _coerce_numeric(state.get("demand_gap", 0.0)),
         "idle_capacity": max(0.0, _coerce_numeric(state.get("idle_capacity", 0.0))),
+        "current_price": max(0.0, _coerce_numeric(state.get("current_price", 0.0))),
+        "optimal_price": max(0.0, _coerce_numeric(state.get("optimal_price", 0.0))),
+        "expected_revenue": max(0.0, _coerce_numeric(state.get("expected_revenue", 0.0))),
         "demand_forecast_available": bool(state.get("demand_forecast_available", False)),
     }
 

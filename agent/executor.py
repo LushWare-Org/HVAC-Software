@@ -35,6 +35,8 @@ def execute_action(decision: Decision, state: Mapping[str, Any]) -> ExecutionRes
         ActionType.CALL: create_call_task,
         ActionType.NONE: no_action,
         ActionType.INCREASE_PRICE: increase_price,
+        ActionType.APPLY_DYNAMIC_PRICE: execute_dynamic_price,
+        ActionType.DISCOUNT_WITH_PRICE_OVERRIDE: discount_with_price_override,
         ActionType.TRIGGER_CAMPAIGN_LOW_DEMAND: trigger_campaign_low_demand,
         ActionType.GEO_TARGET_DISCOUNT: geo_target_discount,
         ActionType.SAME_DAY_OFFER: same_day_offer,
@@ -64,12 +66,48 @@ def send_discount_offer(decision: Decision, state: Mapping[str, Any]) -> Executi
     return _result(decision.action.value, "mocked", message, "discount-offer-mock")
 
 
+def apply_dynamic_price(price: float) -> None:
+    """Mock pricing system write; replace with catalog/API integration later."""
+
+    print(f"Setting price to {price:.2f}")
+
+
+def execute_dynamic_price(decision: Decision, state: Mapping[str, Any]) -> ExecutionResult:
+    """Apply the pricing model's guarded optimal price."""
+
+    price = float(state.get("optimal_price", state.get("current_price", 0.0)))
+    apply_dynamic_price(price)
+    message = (
+        "Mock dynamic price applied "
+        f"(optimal_price={price:.2f}, expected_revenue={state.get('expected_revenue', 0):.2f})"
+    )
+    logger.info(message)
+    print(f"ACTION: {message}")
+    return _result(decision.action.value, "mocked", message, "dynamic-price-mock")
+
+
+def discount_with_price_override(decision: Decision, state: Mapping[str, Any]) -> ExecutionResult:
+    """Send a discount while keeping the final price inside pricing guardrails."""
+
+    price = float(state.get("optimal_price", state.get("current_price", 0.0)))
+    apply_dynamic_price(price)
+    message = (
+        "Mock 20% discount offer sent with dynamic price override "
+        f"(optimal_price={price:.2f}, utilization={state['utilization']:.2f})"
+    )
+    logger.info(message)
+    print(f"ACTION: {message}")
+    return _result(decision.action.value, "mocked", message, "discount-price-override-mock")
+
+
 def increase_price(decision: Decision, state: Mapping[str, Any]) -> ExecutionResult:
     """Mock price increase for constrained technician capacity."""
 
+    price = float(state.get("optimal_price", state.get("current_price", 0.0)))
+    apply_dynamic_price(price)
     message = (
         "Mock price increase applied "
-        f"(utilization={state['utilization']:.2f}, "
+        f"(optimal_price={price:.2f}, utilization={state['utilization']:.2f}, "
         f"capacity_status={state.get('capacity_status', 'UNKNOWN')})"
     )
     logger.info(message)

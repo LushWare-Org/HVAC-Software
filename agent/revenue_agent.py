@@ -67,6 +67,13 @@ class RevenueAgent:
             f"idle_capacity={state.idle_capacity:.2f}, "
             f"source={state.utilization_forecast_source}"
         )
+        print(
+            "PRICING: "
+            f"current={state.current_price:.2f}, "
+            f"optimal={state.optimal_price:.2f}, "
+            f"expected_revenue={state.expected_revenue:.2f}, "
+            f"source={state.pricing_model_source}"
+        )
 
         decision = decide(state_payload)
         predictions = decision.metadata.get("predictions")
