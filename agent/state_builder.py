@@ -1,7 +1,20 @@
 from __future__ import annotations
 
+import logging
+import math
+import pickle
 from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Mapping
+
+logger = logging.getLogger(__name__)
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DEMAND_MODEL_PATH = PROJECT_ROOT / "models" / "demand_forecast_model.pkl"
+DEFAULT_TOTAL_TECHNICIANS = 10
+DEFAULT_AVG_JOBS_PER_TECH = 7.0
+DEFAULT_TEMPERATURE = 82.0
 
 
 @dataclass(frozen=True)
@@ -18,8 +31,16 @@ class RevenueState:
     ltv: float
     pending_quotes: int
     conversion_rate: float
+    total_technicians: int
+    avg_jobs_per_tech: float
+    capacity: float
+    expected_demand: float
+    demand_gap: float
+    demand_forecast_available: bool
+    demand_forecast_source: str
+    demand_forecast_error: str | None = None
 
-    def to_dict(self) -> dict[str, float | int]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -29,7 +50,16 @@ DEFAULT_MOCK_STATE = RevenueState(
     ltv=2450.00,
     pending_quotes=14,
     conversion_rate=0.31,
+    total_technicians=DEFAULT_TOTAL_TECHNICIANS,
+    avg_jobs_per_tech=DEFAULT_AVG_JOBS_PER_TECH,
+    capacity=DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH,
+    expected_demand=round(0.52 * DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH, 2),
+    demand_gap=round((0.52 * DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH) - (DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH), 2),
+    demand_forecast_available=False,
+    demand_forecast_source="default_mock",
 )
+
+_DEMAND_MODEL_CACHE: Any | None = None
 
 
 def build_state(
@@ -56,13 +86,107 @@ def build_state(
     if overrides:
         state_values.update(dict(overrides))
 
+    total_technicians = max(0, int(state_values.get("total_technicians", DEFAULT_TOTAL_TECHNICIANS)))
+    avg_jobs_per_tech = max(
+        0.0,
+        float(state_values.get("avg_jobs_per_tech", DEFAULT_AVG_JOBS_PER_TECH)),
+    )
+    capacity = total_technicians * avg_jobs_per_tech
+
+    forecast = forecast_demand(
+        utilization=_clamp_probability(state_values["utilization"]),
+        capacity=capacity,
+        model_path=state_values.get("demand_model_path", DEFAULT_DEMAND_MODEL_PATH),
+        now=state_values.get("forecast_time"),
+        temperature=state_values.get("temperature", DEFAULT_TEMPERATURE),
+    )
+
     return RevenueState(
         utilization=_clamp_probability(state_values["utilization"]),
         churn_risk=_clamp_probability(state_values["churn_risk"]),
         ltv=max(0.0, float(state_values["ltv"])),
         pending_quotes=max(0, int(state_values["pending_quotes"])),
         conversion_rate=_clamp_probability(state_values["conversion_rate"]),
+        total_technicians=total_technicians,
+        avg_jobs_per_tech=avg_jobs_per_tech,
+        capacity=round(capacity, 2),
+        expected_demand=forecast["expected_demand"],
+        demand_gap=forecast["demand_gap"],
+        demand_forecast_available=forecast["available"],
+        demand_forecast_source=forecast["source"],
+        demand_forecast_error=forecast["error"],
     )
+
+
+def load_demand_model(model_path: str | Path = DEFAULT_DEMAND_MODEL_PATH) -> Any:
+    """Load the demand forecasting model from disk.
+
+    Model loading stays in the state layer so the decision engine only receives
+    normalized business state, not forecasting implementation details.
+    """
+
+    global _DEMAND_MODEL_CACHE
+
+    path = Path(model_path)
+    if _DEMAND_MODEL_CACHE is None:
+        with path.open("rb") as handle:
+            _DEMAND_MODEL_CACHE = pickle.load(handle)
+
+    return _DEMAND_MODEL_CACHE
+
+
+def forecast_demand(
+    utilization: float,
+    capacity: float,
+    model_path: str | Path = DEFAULT_DEMAND_MODEL_PATH,
+    now: datetime | str | None = None,
+    temperature: Any = DEFAULT_TEMPERATURE,
+) -> dict[str, Any]:
+    """Predict future bookings and compare them with available job capacity."""
+
+    try:
+        model = load_demand_model(model_path)
+        features = build_demand_features(now=now, temperature=temperature)
+        expected_demand = _predict_demand(model, features)
+        return {
+            "expected_demand": round(expected_demand, 2),
+            "demand_gap": round(expected_demand - capacity, 2),
+            "available": True,
+            "source": "demand_forecast_model",
+            "error": None,
+        }
+    except Exception as exc:
+        fallback_demand = max(0.0, utilization * capacity)
+        logger.warning("Demand forecast failed; using utilization fallback: %s", exc)
+        return {
+            "expected_demand": round(fallback_demand, 2),
+            "demand_gap": round(fallback_demand - capacity, 2),
+            "available": False,
+            "source": "utilization_fallback",
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+
+
+def build_demand_features(
+    now: datetime | str | None = None,
+    temperature: Any = DEFAULT_TEMPERATURE,
+) -> dict[str, float | int]:
+    """Create the time/weather features expected by demand_forecast_model.pkl."""
+
+    forecast_time = _coerce_datetime(now)
+    hour = forecast_time.hour
+    month = forecast_time.month
+
+    return {
+        "hour": hour,
+        "day_of_week": forecast_time.weekday(),
+        "month": month,
+        "temperature": float(temperature or DEFAULT_TEMPERATURE),
+        "sin_hour": math.sin(2 * math.pi * hour / 24),
+        "cos_hour": math.cos(2 * math.pi * hour / 24),
+        "sin_month": math.sin(2 * math.pi * month / 12),
+        "cos_month": math.cos(2 * math.pi * month / 12),
+    }
 
 
 def _read_crm_signals(crm_client: Any) -> dict[str, float | int]:
@@ -73,6 +197,14 @@ def _read_crm_signals(crm_client: Any) -> dict[str, float | int]:
         return {
             "utilization": signals.get("utilization", DEFAULT_MOCK_STATE.utilization),
             "pending_quotes": signals.get("pending_quotes", DEFAULT_MOCK_STATE.pending_quotes),
+            "total_technicians": signals.get(
+                "total_technicians",
+                DEFAULT_MOCK_STATE.total_technicians,
+            ),
+            "avg_jobs_per_tech": signals.get(
+                "avg_jobs_per_tech",
+                DEFAULT_MOCK_STATE.avg_jobs_per_tech,
+            ),
         }
 
     return {}
@@ -99,3 +231,44 @@ def _clamp_probability(value: Any) -> float:
     number = float(value)
     return min(1.0, max(0.0, number))
 
+
+def _predict_demand(model: Any, features: Mapping[str, float | int]) -> float:
+    feature_frame = _demand_feature_frame(model, features)
+    raw_prediction = model.predict(feature_frame)
+    prediction = _prediction_to_float(raw_prediction)
+
+    if not math.isfinite(prediction):
+        raise ValueError(f"Demand model returned a non-finite prediction: {prediction}")
+
+    return max(0.0, prediction)
+
+
+def _demand_feature_frame(model: Any, features: Mapping[str, float | int]) -> Any:
+    try:
+        import pandas as pd
+    except ImportError as exc:
+        raise RuntimeError("pandas is required to evaluate demand forecasts") from exc
+
+    feature_names = [str(name) for name in getattr(model, "feature_names_in_", [])] or list(features)
+    row = {name: float(features.get(name, 0.0)) for name in feature_names}
+    return pd.DataFrame([row], columns=feature_names)
+
+
+def _prediction_to_float(raw_prediction: Any) -> float:
+    if hasattr(raw_prediction, "iloc"):
+        return float(raw_prediction.iloc[0])
+
+    try:
+        return float(raw_prediction[0])
+    except (TypeError, IndexError, KeyError):
+        return float(raw_prediction)
+
+
+def _coerce_datetime(value: datetime | str | None) -> datetime:
+    if isinstance(value, datetime):
+        return value
+
+    if isinstance(value, str) and value:
+        return datetime.fromisoformat(value)
+
+    return datetime.now()

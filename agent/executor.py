@@ -34,6 +34,9 @@ def execute_action(decision: Decision, state: Mapping[str, Any]) -> ExecutionRes
         ActionType.DISCOUNT_20: send_discount_offer,
         ActionType.CALL: create_call_task,
         ActionType.NONE: no_action,
+        ActionType.TRIGGER_CAMPAIGN_LOW_DEMAND: trigger_campaign_low_demand,
+        ActionType.GEO_TARGET_DISCOUNT: geo_target_discount,
+        ActionType.SAME_DAY_OFFER: same_day_offer,
         ActionType.SEND_DISCOUNT_OFFER: send_discount_offer,
         ActionType.CREATE_RETENTION_CALL_TASK: create_call_task,
         ActionType.FOLLOW_UP_PENDING_QUOTES: create_call_task,
@@ -70,6 +73,44 @@ def trigger_campaign(decision: Decision, state: Mapping[str, Any]) -> ExecutionR
     logger.info(message)
     print(f"ACTION: {message}")
     return _result(decision.action.value, "mocked", message, "campaign-mock")
+
+
+def trigger_campaign_low_demand(decision: Decision, state: Mapping[str, Any]) -> ExecutionResult:
+    """Mock campaign trigger for forecasted low-demand periods."""
+
+    message = (
+        "Mock low-demand campaign triggered "
+        f"(expected_demand={state.get('expected_demand', 0):.2f}, "
+        f"demand_gap={state.get('demand_gap', 0):.2f})"
+    )
+    logger.info(message)
+    print(f"ACTION: {message}")
+    return _result(decision.action.value, "mocked", message, "low-demand-campaign-mock")
+
+
+def geo_target_discount(decision: Decision, state: Mapping[str, Any]) -> ExecutionResult:
+    """Mock geo-targeted discount for underfilled future demand."""
+
+    message = (
+        "Mock geo-targeted discount launched "
+        f"(capacity={state.get('capacity', 0):.2f}, "
+        f"demand_gap={state.get('demand_gap', 0):.2f})"
+    )
+    logger.info(message)
+    print(f"ACTION: {message}")
+    return _result(decision.action.value, "mocked", message, "geo-discount-mock")
+
+
+def same_day_offer(decision: Decision, state: Mapping[str, Any]) -> ExecutionResult:
+    """Mock same-day offer for forecasted schedule slack."""
+
+    message = (
+        "Mock same-day offer sent "
+        f"(expected_demand={state.get('expected_demand', 0):.2f})"
+    )
+    logger.info(message)
+    print(f"ACTION: {message}")
+    return _result(decision.action.value, "mocked", message, "same-day-offer-mock")
 
 
 def create_call_task(decision: Decision, state: Mapping[str, Any]) -> ExecutionResult:

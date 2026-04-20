@@ -27,6 +27,9 @@ class ActionType(str, Enum):
     DISCOUNT_20 = "discount_20"
     CALL = "call"
     NONE = "none"
+    TRIGGER_CAMPAIGN_LOW_DEMAND = "trigger_campaign_low_demand"
+    GEO_TARGET_DISCOUNT = "geo_target_discount"
+    SAME_DAY_OFFER = "same_day_offer"
 
     # Backward-compatible action names used by the original rules.v1 engine.
     SEND_DISCOUNT_OFFER = "send_discount_offer"
@@ -52,6 +55,14 @@ class ConstraintConfig:
     low_ltv_threshold: float = 1000.00
     high_churn_threshold: float = 0.70
     minimum_discount_ltv: float = 500.00
+
+
+@dataclass(frozen=True)
+class ProactiveDemandConfig:
+    """Thresholds for forecast-driven demand recovery actions."""
+
+    low_demand_gap_threshold: float = -10.0
+    proactive_action: str = "discount_20"
 
 
 @dataclass(frozen=True)
@@ -143,6 +154,10 @@ def apply_constraints(
 def decide(state: Mapping[str, Any]) -> Decision:
     """Choose the next revenue action using action outcome predictions."""
 
+    proactive_decision = decide_proactive_demand(state)
+    if proactive_decision is not None:
+        return proactive_decision
+
     try:
         predictions = evaluate_actions(state)
         best_action = choose_best(predictions)
@@ -187,6 +202,48 @@ def decide(state: Mapping[str, Any]) -> Decision:
             expected_revenue=fallback_decision.expected_revenue,
             metadata=fallback_metadata,
         )
+
+
+def decide_proactive_demand(
+    state: Mapping[str, Any],
+    config: ProactiveDemandConfig | None = None,
+) -> Decision | None:
+    """Trigger demand recovery before low demand reaches the live schedule."""
+
+    demand_config = config or ProactiveDemandConfig()
+    normalized = _normalize_state(state)
+
+    if not normalized["demand_forecast_available"]:
+        return None
+
+    if normalized["demand_gap"] >= demand_config.low_demand_gap_threshold:
+        return None
+
+    action = apply_constraints(demand_config.proactive_action, state)
+    return Decision(
+        action=ActionType(action),
+        reason=(
+            "Forecasted bookings are below available technician capacity; "
+            "triggering proactive demand recovery"
+        ),
+        priority="high" if normalized["demand_gap"] <= demand_config.low_demand_gap_threshold * 2 else "medium",
+        expected_revenue=round(normalized["expected_demand"] * normalized["ltv"] * 0.03, 2),
+        metadata={
+            "policy": "proactive_demand_forecast.v1",
+            "trigger": "low_future_demand",
+            "expected_demand": normalized["expected_demand"],
+            "capacity": normalized["capacity"],
+            "demand_gap": normalized["demand_gap"],
+            "threshold": demand_config.low_demand_gap_threshold,
+            "forecast_source": state.get("demand_forecast_source"),
+            "proactive_action": action,
+            "future_actions_supported": [
+                ActionType.TRIGGER_CAMPAIGN_LOW_DEMAND.value,
+                ActionType.GEO_TARGET_DISCOUNT.value,
+                ActionType.SAME_DAY_OFFER.value,
+            ],
+        },
+    )
 
 
 def decide_rule_based(state: Mapping[str, Any], config: RuleConfig | None = None) -> Decision:
@@ -311,7 +368,13 @@ def _priority_for_action(action: str, state: Mapping[str, Any]) -> str:
     if action == "call" and normalized["churn_risk"] >= 0.70:
         return "high"
 
-    if action in {"discount_20", "call"}:
+    if action in {
+        "discount_20",
+        "call",
+        "trigger_campaign_low_demand",
+        "geo_target_discount",
+        "same_day_offer",
+    }:
         return "medium"
 
     if action == "discount_10" and normalized["utilization"] < 0.60:
@@ -327,6 +390,10 @@ def _normalize_state(state: Mapping[str, Any]) -> dict[str, float | int]:
         "ltv": max(0.0, _coerce_numeric(state.get("ltv", 0.0))),
         "pending_quotes": max(0, int(_coerce_numeric(state.get("pending_quotes", 0)))),
         "conversion_rate": _clamp_probability(state.get("conversion_rate", 0.0)),
+        "expected_demand": max(0.0, _coerce_numeric(state.get("expected_demand", 0.0))),
+        "capacity": max(0.0, _coerce_numeric(state.get("capacity", 0.0))),
+        "demand_gap": _coerce_numeric(state.get("demand_gap", 0.0)),
+        "demand_forecast_available": bool(state.get("demand_forecast_available", False)),
     }
 
 

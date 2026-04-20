@@ -47,11 +47,19 @@ class RevenueAgent:
         self,
         state_overrides: Mapping[str, Any] | None = None,
         actual_revenue: float | None = None,
+        actual_demand: float | None = None,
     ) -> AgentRunResult:
         state = build_state(overrides=state_overrides)
         state_payload = state.to_dict()
         print("STATE:")
         print(json.dumps(state_payload, indent=2, sort_keys=True))
+        print(
+            "DEMAND FORECAST: "
+            f"expected={state.expected_demand:.2f}, "
+            f"capacity={state.capacity:.2f}, "
+            f"gap={state.demand_gap:.2f}, "
+            f"source={state.demand_forecast_source}"
+        )
 
         decision = decide(state_payload)
         predictions = decision.metadata.get("predictions")
@@ -69,6 +77,7 @@ class RevenueAgent:
             execution=execution,
             log_path=self.feedback_log_path,
             actual_revenue=actual_revenue,
+            actual_demand=actual_demand,
         )
 
         return AgentRunResult(
@@ -108,6 +117,11 @@ def parse_args() -> Any:
         type=float,
         help="Optional realized revenue value to store with feedback.",
     )
+    parser.add_argument(
+        "--actual-demand",
+        type=float,
+        help="Optional realized booking count to store with feedback.",
+    )
     return parser.parse_args()
 
 
@@ -117,6 +131,7 @@ def main() -> None:
     agent.run(
         state_overrides=load_state_overrides(args.state_file),
         actual_revenue=args.actual_revenue,
+        actual_demand=args.actual_demand,
     )
 
 
