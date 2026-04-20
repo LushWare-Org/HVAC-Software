@@ -46,7 +46,7 @@ class RevenueState:
 
 DEFAULT_MOCK_STATE = RevenueState(
     utilization=0.52,
-    churn_risk=0.78,
+    churn_risk=0.42,
     ltv=2450.00,
     pending_quotes=14,
     conversion_rate=0.31,
@@ -54,7 +54,11 @@ DEFAULT_MOCK_STATE = RevenueState(
     avg_jobs_per_tech=DEFAULT_AVG_JOBS_PER_TECH,
     capacity=DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH,
     expected_demand=round(0.52 * DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH, 2),
-    demand_gap=round((0.52 * DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH) - (DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH), 2),
+    demand_gap=round(
+        (0.52 * DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH)
+        - (DEFAULT_TOTAL_TECHNICIANS * DEFAULT_AVG_JOBS_PER_TECH),
+        2,
+    ),
     demand_forecast_available=False,
     demand_forecast_source="default_mock",
 )

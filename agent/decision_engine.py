@@ -213,7 +213,7 @@ def decide_proactive_demand(
     demand_config = config or ProactiveDemandConfig()
     normalized = _normalize_state(state)
 
-    if not normalized["demand_forecast_available"]:
+    if normalized["capacity"] <= 0:
         return None
 
     if normalized["demand_gap"] >= demand_config.low_demand_gap_threshold:
@@ -235,6 +235,7 @@ def decide_proactive_demand(
             "capacity": normalized["capacity"],
             "demand_gap": normalized["demand_gap"],
             "threshold": demand_config.low_demand_gap_threshold,
+            "forecast_available": normalized["demand_forecast_available"],
             "forecast_source": state.get("demand_forecast_source"),
             "proactive_action": action,
             "future_actions_supported": [
