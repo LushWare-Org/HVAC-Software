@@ -31,18 +31,18 @@ if [[ "${1:-}" != "--yes" ]]; then
 fi
 
 echo -e "${YELLOW}Stopping Docker containers...${NC}"
-docker compose down -v 2>/dev/null || true
+docker-compose down -v 2>/dev/null || true
 
 echo -e "${YELLOW}Removing local database data...${NC}"
 rm -rf .docker-data/postgres .docker-data/mongodb .docker-data/redis
 
 echo -e "${YELLOW}Starting fresh Docker containers...${NC}"
-docker compose up -d postgres redis mongodb minio nginx
+docker-compose up -d postgres redis mongodb minio nginx
 
 # Wait for PostgreSQL
 echo -e "${YELLOW}Waiting for PostgreSQL...${NC}"
 RETRIES=30
-until docker compose exec -T postgres pg_isready -U tscrm_user -d tscrm &>/dev/null || [ $RETRIES -eq 0 ]; do
+until docker-compose exec -T postgres pg_isready -U tscrm_user -d tscrm &>/dev/null || [ $RETRIES -eq 0 ]; do
   RETRIES=$((RETRIES - 1))
   sleep 2
 done
@@ -50,7 +50,7 @@ done
 # Wait for MongoDB replica set
 echo -e "${YELLOW}Waiting for MongoDB replica set (~20s)...${NC}"
 RETRIES=20
-until docker compose exec -T mongodb mongosh --quiet --eval "rs.status().ok" 2>/dev/null | grep -q "1" || [ $RETRIES -eq 0 ]; do
+until docker-compose exec -T mongodb mongosh --quiet --eval "rs.status().ok" 2>/dev/null | grep -q "1" || [ $RETRIES -eq 0 ]; do
   RETRIES=$((RETRIES - 1))
   sleep 3
 done
@@ -73,4 +73,4 @@ echo ""
 echo -e "${GREEN}${BOLD}Database reset complete! All data is fresh.${NC}"
 
 # Start GUI tools
-docker compose up -d pgadmin mongo-express redisinsight 2>/dev/null || true
+docker-compose up -d pgadmin mongo-express redisinsight 2>/dev/null || true

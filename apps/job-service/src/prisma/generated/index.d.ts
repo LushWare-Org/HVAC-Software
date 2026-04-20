@@ -3297,6 +3297,7 @@ export namespace Prisma {
     estimatedDurationMins: number
     version: number
     isActive: number
+    requiredParts: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3348,6 +3349,7 @@ export namespace Prisma {
     estimatedDurationMins?: true
     version?: true
     isActive?: true
+    requiredParts?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3448,6 +3450,7 @@ export namespace Prisma {
     estimatedDurationMins: number
     version: number
     isActive: boolean
+    requiredParts: JsonValue | null
     createdAt: Date
     updatedAt: Date
     _count: JobTemplateCountAggregateOutputType | null
@@ -3480,6 +3483,7 @@ export namespace Prisma {
     estimatedDurationMins?: boolean
     version?: boolean
     isActive?: boolean
+    requiredParts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     jobType?: boolean | JobTypeDefaultArgs<ExtArgs>
@@ -3497,6 +3501,7 @@ export namespace Prisma {
     estimatedDurationMins?: boolean
     version?: boolean
     isActive?: boolean
+    requiredParts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     jobType?: boolean | JobTypeDefaultArgs<ExtArgs>
@@ -3511,6 +3516,7 @@ export namespace Prisma {
     estimatedDurationMins?: boolean
     version?: boolean
     isActive?: boolean
+    requiredParts?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
@@ -3541,6 +3547,7 @@ export namespace Prisma {
       estimatedDurationMins: number
       version: number
       isActive: boolean
+      requiredParts: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["jobTemplate"]>
@@ -3947,6 +3954,7 @@ export namespace Prisma {
     readonly estimatedDurationMins: FieldRef<"JobTemplate", 'Int'>
     readonly version: FieldRef<"JobTemplate", 'Int'>
     readonly isActive: FieldRef<"JobTemplate", 'Boolean'>
+    readonly requiredParts: FieldRef<"JobTemplate", 'Json'>
     readonly createdAt: FieldRef<"JobTemplate", 'DateTime'>
     readonly updatedAt: FieldRef<"JobTemplate", 'DateTime'>
   }
@@ -15049,6 +15057,7 @@ export namespace Prisma {
     estimatedDurationMins: 'estimatedDurationMins',
     version: 'version',
     isActive: 'isActive',
+    requiredParts: 'requiredParts',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -15346,6 +15355,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
    * Reference to a field of type 'CustomFieldType'
    */
   export type EnumCustomFieldTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomFieldType'>
@@ -15356,13 +15372,6 @@ export namespace Prisma {
    * Reference to a field of type 'CustomFieldType[]'
    */
   export type ListEnumCustomFieldTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomFieldType[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Json'
-   */
-  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
     
 
 
@@ -15573,6 +15582,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFilter<"JobTemplate"> | number
     version?: IntFilter<"JobTemplate"> | number
     isActive?: BoolFilter<"JobTemplate"> | boolean
+    requiredParts?: JsonNullableFilter<"JobTemplate">
     createdAt?: DateTimeFilter<"JobTemplate"> | Date | string
     updatedAt?: DateTimeFilter<"JobTemplate"> | Date | string
     jobType?: XOR<JobTypeRelationFilter, JobTypeWhereInput>
@@ -15589,6 +15599,7 @@ export namespace Prisma {
     estimatedDurationMins?: SortOrder
     version?: SortOrder
     isActive?: SortOrder
+    requiredParts?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     jobType?: JobTypeOrderByWithRelationInput
@@ -15608,6 +15619,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFilter<"JobTemplate"> | number
     version?: IntFilter<"JobTemplate"> | number
     isActive?: BoolFilter<"JobTemplate"> | boolean
+    requiredParts?: JsonNullableFilter<"JobTemplate">
     createdAt?: DateTimeFilter<"JobTemplate"> | Date | string
     updatedAt?: DateTimeFilter<"JobTemplate"> | Date | string
     jobType?: XOR<JobTypeRelationFilter, JobTypeWhereInput>
@@ -15624,6 +15636,7 @@ export namespace Prisma {
     estimatedDurationMins?: SortOrder
     version?: SortOrder
     isActive?: SortOrder
+    requiredParts?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: JobTemplateCountOrderByAggregateInput
@@ -15645,6 +15658,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntWithAggregatesFilter<"JobTemplate"> | number
     version?: IntWithAggregatesFilter<"JobTemplate"> | number
     isActive?: BoolWithAggregatesFilter<"JobTemplate"> | boolean
+    requiredParts?: JsonNullableWithAggregatesFilter<"JobTemplate">
     createdAt?: DateTimeWithAggregatesFilter<"JobTemplate"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"JobTemplate"> | Date | string
   }
@@ -16746,6 +16760,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     jobType: JobTypeCreateNestedOneWithoutTemplatesInput
@@ -16762,6 +16777,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tasks?: JobTemplateTaskUncheckedCreateNestedManyWithoutTemplateInput
@@ -16776,6 +16792,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     jobType?: JobTypeUpdateOneRequiredWithoutTemplatesNestedInput
@@ -16792,6 +16809,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tasks?: JobTemplateTaskUncheckedUpdateManyWithoutTemplateNestedInput
@@ -16807,6 +16825,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -16819,6 +16838,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -16832,6 +16852,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18175,6 +18196,28 @@ export namespace Prisma {
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
+  export type JsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type JobTypeRelationFilter = {
     is?: JobTypeWhereInput
@@ -18200,6 +18243,7 @@ export namespace Prisma {
     estimatedDurationMins?: SortOrder
     version?: SortOrder
     isActive?: SortOrder
+    requiredParts?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -18238,6 +18282,31 @@ export namespace Prisma {
   export type JobTemplateSumOrderByAggregateInput = {
     estimatedDurationMins?: SortOrder
     version?: SortOrder
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type IntNullableFilter<$PrismaModel = never> = {
@@ -18327,28 +18396,6 @@ export namespace Prisma {
     notIn?: $Enums.CustomFieldType[] | ListEnumCustomFieldTypeFieldRefInput<$PrismaModel>
     not?: NestedEnumCustomFieldTypeFilter<$PrismaModel> | $Enums.CustomFieldType
   }
-  export type JsonNullableFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type JobCustomFieldValueListRelationFilter = {
     every?: JobCustomFieldValueWhereInput
@@ -18424,31 +18471,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumCustomFieldTypeFilter<$PrismaModel>
     _max?: NestedEnumCustomFieldTypeFilter<$PrismaModel>
-  }
-  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedJsonNullableFilter<$PrismaModel>
-    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
   export type JsonFilter<$PrismaModel = never> = 
     | PatchUndefined<
@@ -20170,6 +20192,28 @@ export namespace Prisma {
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
@@ -20213,28 +20257,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumCustomFieldTypeFilter<$PrismaModel>
     _max?: NestedEnumCustomFieldTypeFilter<$PrismaModel>
-  }
-  export type NestedJsonNullableFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<NestedJsonNullableFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
-
-  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
   export type NestedJsonFilter<$PrismaModel = never> = 
     | PatchUndefined<
@@ -20448,6 +20470,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tasks?: JobTemplateTaskCreateNestedManyWithoutTemplateInput
@@ -20462,6 +20485,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tasks?: JobTemplateTaskUncheckedCreateNestedManyWithoutTemplateInput
@@ -20640,6 +20664,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFilter<"JobTemplate"> | number
     version?: IntFilter<"JobTemplate"> | number
     isActive?: BoolFilter<"JobTemplate"> | boolean
+    requiredParts?: JsonNullableFilter<"JobTemplate">
     createdAt?: DateTimeFilter<"JobTemplate"> | Date | string
     updatedAt?: DateTimeFilter<"JobTemplate"> | Date | string
   }
@@ -21000,6 +21025,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     jobType: JobTypeCreateNestedOneWithoutTemplatesInput
@@ -21015,6 +21041,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     jobs?: JobUncheckedCreateNestedManyWithoutTemplateInput
@@ -21044,6 +21071,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     jobType?: JobTypeUpdateOneRequiredWithoutTemplatesNestedInput
@@ -21059,6 +21087,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     jobs?: JobUncheckedUpdateManyWithoutTemplateNestedInput
@@ -21566,6 +21595,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     jobType: JobTypeCreateNestedOneWithoutTemplatesInput
@@ -21581,6 +21611,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tasks?: JobTemplateTaskUncheckedCreateNestedManyWithoutTemplateInput
@@ -21785,6 +21816,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     jobType?: JobTypeUpdateOneRequiredWithoutTemplatesNestedInput
@@ -21800,6 +21832,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tasks?: JobTemplateTaskUncheckedUpdateManyWithoutTemplateNestedInput
@@ -22858,6 +22891,7 @@ export namespace Prisma {
     estimatedDurationMins?: number
     version?: number
     isActive?: boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -22922,6 +22956,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tasks?: JobTemplateTaskUpdateManyWithoutTemplateNestedInput
@@ -22936,6 +22971,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tasks?: JobTemplateTaskUncheckedUpdateManyWithoutTemplateNestedInput
@@ -22950,6 +22986,7 @@ export namespace Prisma {
     estimatedDurationMins?: IntFieldUpdateOperationsInput | number
     version?: IntFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    requiredParts?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

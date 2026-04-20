@@ -1,6 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": [".env"],
+  "globalPassThroughEnv": ["LOCALAPPDATA", "GOCACHE", "APPDATA"],
+  "concurrency": "14",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

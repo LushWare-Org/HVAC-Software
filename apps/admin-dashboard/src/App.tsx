@@ -18,6 +18,7 @@ import Inventory from './pages/inventory/Inventory'
 import Settings from './pages/Settings'
 import Team from './pages/Team'
 import Profile from './pages/Profile'
+import Alerts from './pages/alerts/alerts'
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint)
@@ -71,6 +72,7 @@ function AuthenticatedApp() {
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/scheduling" element={<Scheduling />} />
             <Route path="/dispatch" element={<DispatchBoard />} />
+            <Route path="/alerts" element={<Alerts />} />
             <Route path="/finance" element={<Finance />} />
             <Route path="/communications" element={<Communications />} />
             <Route path="/analytics" element={<Analytics />} />

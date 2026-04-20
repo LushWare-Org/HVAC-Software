@@ -343,7 +343,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/ravishan/Desktop/Lush/T&SBCRM/apps/crm-service/src/prisma/generated",
+      "value": "C:\\Users\\SHALINI\\OneDrive - University of Colombo\\Documents\\LWOG\\HVAC-Software\\apps\\crm-service\\src\\prisma\\generated",
       "fromEnvVar": null
     },
     "config": {
@@ -352,12 +352,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin-arm64",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/ravishan/Desktop/Lush/T&SBCRM/apps/crm-service/prisma/schema.prisma",
+    "sourceFilePath": "C:\\Users\\SHALINI\\OneDrive - University of Colombo\\Documents\\LWOG\\HVAC-Software\\apps\\crm-service\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

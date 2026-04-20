@@ -77,12 +77,12 @@ else
   MISSING+=("Docker Desktop (https://docker.com/products/docker-desktop)")
 fi
 
-# Docker Compose
-if docker compose version &>/dev/null 2>&1; then
-  print_ok "Docker Compose $(docker compose version --short 2>/dev/null || echo 'available')"
+# docker-compose
+if docker-compose version &>/dev/null 2>&1; then
+  print_ok "docker-compose $(docker-compose version --short 2>/dev/null || echo 'available')"
 else
-  print_err "Docker Compose not found"
-  MISSING+=("Docker Compose (included with Docker Desktop)")
+  print_err "docker-compose not found"
+  MISSING+=("docker-compose (included with Docker Desktop)")
 fi
 
 # Docker running?
@@ -146,23 +146,23 @@ print_ok "All npm packages installed"
 print_step "Starting Docker infrastructure..."
 
 # Check if containers already running
-if docker compose ps --format json 2>/dev/null | grep -q '"running"'; then
+if docker-compose ps --format json 2>/dev/null | grep -q '"running"'; then
   print_info "Some containers already running — restarting..."
-  docker compose down --remove-orphans 2>/dev/null || true
+  docker-compose down --remove-orphans 2>/dev/null || true
 fi
 
-docker compose up -d postgres redis mongodb minio nginx
+docker-compose up -d postgres redis mongodb minio nginx
 print_ok "Docker containers starting..."
 
 # Wait for PostgreSQL
 print_info "Waiting for PostgreSQL to be healthy..."
 RETRIES=30
-until docker compose exec -T postgres pg_isready -U tscrm_user -d tscrm &>/dev/null || [ $RETRIES -eq 0 ]; do
+until docker-compose exec -T postgres pg_isready -U tscrm_user -d tscrm &>/dev/null || [ $RETRIES -eq 0 ]; do
   RETRIES=$((RETRIES - 1))
   sleep 2
 done
 if [ $RETRIES -eq 0 ]; then
-  print_err "PostgreSQL failed to start. Run: docker compose logs postgres"
+  print_err "PostgreSQL failed to start. Run: docker-compose logs postgres"
   exit 1
 fi
 print_ok "PostgreSQL is ready"
@@ -170,7 +170,7 @@ print_ok "PostgreSQL is ready"
 # Wait for Redis
 print_info "Waiting for Redis..."
 RETRIES=15
-until docker compose exec -T redis redis-cli ping 2>/dev/null | grep -q PONG || [ $RETRIES -eq 0 ]; do
+until docker-compose exec -T redis redis-cli ping 2>/dev/null | grep -q PONG || [ $RETRIES -eq 0 ]; do
   RETRIES=$((RETRIES - 1))
   sleep 2
 done
@@ -179,7 +179,7 @@ print_ok "Redis is ready"
 # Wait for MongoDB replica set
 print_info "Waiting for MongoDB replica set (this takes ~20s on first run)..."
 RETRIES=20
-until docker compose exec -T mongodb mongosh --quiet --eval "rs.status().ok" 2>/dev/null | grep -q "1" || [ $RETRIES -eq 0 ]; do
+until docker-compose exec -T mongodb mongosh --quiet --eval "rs.status().ok" 2>/dev/null | grep -q "1" || [ $RETRIES -eq 0 ]; do
   RETRIES=$((RETRIES - 1))
   sleep 3
 done
@@ -237,7 +237,7 @@ print_ok "Demo data seeded"
 print_step "Running health check..."
 
 # Start dev GUIs (pgAdmin, mongo-express, RedisInsight)
-docker compose up -d pgadmin mongo-express redisinsight 2>/dev/null || true
+docker-compose up -d pgadmin mongo-express redisinsight 2>/dev/null || true
 print_ok "Dev GUI tools starting"
 
 echo ""

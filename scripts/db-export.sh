@@ -35,7 +35,7 @@ echo ""
 for container in "$PG_CONTAINER" "$MONGO_CONTAINER"; do
   if ! docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
     echo "✗ Container '$container' is not running."
-    echo "  Start it with: docker compose up -d"
+    echo "  Start it with: docker-compose up -d"
     exit 1
   fi
 done
@@ -83,7 +83,7 @@ MongoDB:  tscrm_comms
 
 1. Make sure Docker is running and containers are up:
    \`\`\`
-   docker compose up -d
+   docker-compose up -d
    \`\`\`
 
 2. Run the import script from the project root:

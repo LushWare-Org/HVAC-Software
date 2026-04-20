@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "go build -o ./server ./cmd/server/...",
-    "dev": "go run ./cmd/server/...",
+    "build": "go env -w GOCACHE=\"%cd%/.gocache\" && go build -o ./server ./cmd/server/...",
+    "dev": "cross-env GOCACHE=\"C:/tmp/gocache\" LOCALAPPDATA=\"C:/Users/SHALINI/AppData/Local\" go run ./cmd/server/...",
     "start": "./server",
     "clean": "rm -f ./server"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
   }
 }

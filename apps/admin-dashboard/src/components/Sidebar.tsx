@@ -2,7 +2,7 @@ import { useLocation, Link } from 'react-router-dom'
 import {
     LayoutDashboard, Users, Wrench, CalendarDays, Zap,
     DollarSign, MessageSquare, BarChart3, Settings,
-    Menu, X, LogOut, Shield, Package
+    Menu, X, LogOut, Shield, Package, Bell
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { usePendingTechnicians } from '../hooks/useTeam'
@@ -53,6 +53,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
         },
         {
             items: [
+                { icon: Bell, label: 'Alerts', path: '/alerts' },
                 { icon: Users, label: 'Customers & CRM', path: '/customers' },
                 { icon: Wrench, label: 'Jobs', path: '/jobs', badge: 0 },
                 { icon: CalendarDays, label: 'Scheduling', path: '/scheduling' },
