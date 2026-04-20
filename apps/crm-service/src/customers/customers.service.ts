@@ -270,6 +270,26 @@ export class CustomersService {
       hasPhone: Boolean(customer.phone),
       hasEmail: Boolean(customer.email),
     });
+    const reasoning = this.buildStatusReasoning({
+      upsellRecommendation,
+      retentionPrediction,
+      churnProbability: prediction.churn_probability,
+      churnLevel,
+      failureProbability: prediction.failure_probability,
+      failureLevel,
+      proposedNextStep,
+      predictionSource,
+      recommendedAction: prediction.recommended_action,
+      signals: {
+        daysSinceLastService,
+        serviceCountLastYear,
+        avgMonthlySpend,
+        equipmentAgeDays,
+        equipmentCount: customer._count.equipment,
+        activeAgreementCount: customer.agreements.length,
+        failureHistory,
+      },
+    });
 
     return {
       customerId: customer.id,
@@ -289,6 +309,7 @@ export class CustomersService {
       revenueRisk: prediction.revenue_risk,
       proposedNextStep,
       predictionSource,
+      reasoning,
       signals: {
         daysSinceLastService,
         serviceCountLastYear,
@@ -563,6 +584,77 @@ export class CustomersService {
     if (action === 'maintenance_plan_offer' && pConvert > 0.75) return 'High repair frequency and high conversion probability';
     if (action === 'maintenance_plan_offer' || failureHistory >= 3) return 'High repair frequency';
     return 'Customer does not meet retention targeting thresholds';
+  }
+
+  private buildStatusReasoning(input: {
+    upsellRecommendation: {
+      recommendedOffer: string;
+      confidence: number;
+      priorityScore?: number | null;
+      status: string;
+      triggerSource?: string | null;
+    };
+    retentionPrediction: {
+      pConvert: number;
+      ltv: number;
+      churnProbability: number;
+      score: number;
+      action: string;
+      priority: string;
+      recommendedChannel: string;
+      triggerImmediately: boolean;
+      reason: string;
+    };
+    churnProbability: number;
+    churnLevel: 'Low' | 'Medium' | 'High';
+    failureProbability: number;
+    failureLevel: 'Low' | 'Medium' | 'High';
+    proposedNextStep: string;
+    predictionSource: 'model' | 'fallback';
+    recommendedAction: string;
+    signals: {
+      daysSinceLastService: number;
+      serviceCountLastYear: number;
+      avgMonthlySpend: number;
+      equipmentAgeDays: number;
+      equipmentCount: number;
+      activeAgreementCount: number;
+      failureHistory: number;
+    };
+  }) {
+    const sourceLabel = input.predictionSource === 'model' ? 'ML service' : 'fallback rule model';
+    const priorityScore = input.upsellRecommendation.priorityScore ?? input.upsellRecommendation.confidence;
+    const equipmentAgeYears = Number((input.signals.equipmentAgeDays / 365).toFixed(1));
+
+    return {
+      upsellRecommendation: {
+        ruleBased: [
+          `Scores consider service recency (${input.signals.daysSinceLastService} days), equipment risk (${input.failureLevel}), churn risk (${input.churnLevel}), and monthly spend (${input.signals.avgMonthlySpend}).`,
+          `Stored recommendations are used first; otherwise the inline rule engine weights maintenance plan, replacement, and service options.`,
+        ].join(' '),
+        mlResult: `Recommended ${input.upsellRecommendation.recommendedOffer} with ${this.formatProbability(input.upsellRecommendation.confidence)} confidence and ${this.formatProbability(priorityScore)} priority from ${input.upsellRecommendation.status}.`,
+        aiExplanation: `The recommendation favors ${input.upsellRecommendation.recommendedOffer} because the customer's recent service pattern, failure risk, churn risk, and value signals make that offer the most relevant next commercial action.`,
+      },
+      retentionSuggestion: {
+        ruleBased: `Retention action follows thresholds: premium contract when conversion is above 75% and annual value is above $1,500, retention discount when churn is above 70%, and maintenance plan when repeat failure history is high.`,
+        mlResult: `${sourceLabel} inputs produced ${this.formatProbability(input.retentionPrediction.pConvert)} conversion probability, $${input.retentionPrediction.ltv.toLocaleString()} predicted annual value, ${this.formatProbability(input.retentionPrediction.churnProbability)} churn probability, and score ${input.retentionPrediction.score}.`,
+        aiExplanation: `${input.retentionPrediction.reason}. The suggested action is ${input.retentionPrediction.action} at ${input.retentionPrediction.priority} priority via ${input.retentionPrediction.recommendedChannel}${input.retentionPrediction.triggerImmediately ? ', so it should be triggered immediately' : ''}.`,
+      },
+      failureAndChurnPrediction: {
+        ruleBased: `Fallback rules increase churn for long inactivity, no service in the last year, and new-customer uncertainty; failure risk rises with older equipment, long gaps since service, and poor review history.`,
+        mlResult: `${sourceLabel} returned ${input.churnLevel} churn risk (${this.formatProbability(input.churnProbability)}) and ${input.failureLevel} failure risk (${this.formatProbability(input.failureProbability)}). Equipment age is ${equipmentAgeYears} years across ${input.signals.equipmentCount} record(s).`,
+        aiExplanation: `The combined risk view means this customer is ${input.churnLevel.toLowerCase()} for churn and ${input.failureLevel.toLowerCase()} for equipment failure, so the system balances relationship recovery with preventive service timing.`,
+      },
+      proposedNextStep: {
+        ruleBased: `Next-step rules prioritize paused follow-up review, urgent intervention, retention offer, maintenance scheduling, re-engagement after 90 days, then monitoring or normal cadence.`,
+        mlResult: `${sourceLabel} recommended action ${input.recommendedAction}; the selected next step is: ${input.proposedNextStep}`,
+        aiExplanation: `This step is the operational translation of the prediction results, chosen to reduce revenue loss, prevent avoidable equipment issues, and keep outreach aligned with the customer's current risk level.`,
+      },
+    };
+  }
+
+  private formatProbability(value: number) {
+    return `${Math.round(this.clampProbability(value) * 100)}%`;
   }
 
   private clampProbability(value: number) {

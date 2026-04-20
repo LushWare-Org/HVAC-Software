@@ -101,6 +101,28 @@ export interface CustomerStatusSummary {
   revenueRisk: number
   proposedNextStep: string
   predictionSource: 'model' | 'fallback'
+  reasoning?: {
+    upsellRecommendation: {
+      ruleBased: string
+      mlResult: string
+      aiExplanation: string
+    }
+    retentionSuggestion: {
+      ruleBased: string
+      mlResult: string
+      aiExplanation: string
+    }
+    failureAndChurnPrediction: {
+      ruleBased: string
+      mlResult: string
+      aiExplanation: string
+    }
+    proposedNextStep: {
+      ruleBased: string
+      mlResult: string
+      aiExplanation: string
+    }
+  }
   signals: {
     daysSinceLastService: number
     serviceCountLastYear: number
