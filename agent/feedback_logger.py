@@ -21,7 +21,8 @@ DEFAULT_LOG_PATH = Path(__file__).resolve().parent / "logs" / "revenue_agent_fee
 class FeedbackRecord:
     timestamp: str
     state: dict[str, Any]
-    action: dict[str, Any]
+    action: str
+    decision: dict[str, Any]
     execution: dict[str, Any]
     predicted_revenue: float
     actual_revenue: float | None
@@ -42,7 +43,8 @@ def log_feedback(
     record = FeedbackRecord(
         timestamp=datetime.now(UTC).isoformat(),
         state=dict(state),
-        action=decision.to_dict(),
+        action=decision.action.value,
+        decision=decision.to_dict(),
         execution=execution.to_dict(),
         predicted_revenue=decision.expected_revenue,
         actual_revenue=actual_revenue,
@@ -55,4 +57,3 @@ def log_feedback(
 
     print(f"LOG: feedback recorded at {path}")
     return record
-

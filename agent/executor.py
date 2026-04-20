@@ -30,6 +30,10 @@ def execute_action(decision: Decision, state: Mapping[str, Any]) -> ExecutionRes
     """Route the selected action to the correct executor function."""
 
     handlers = {
+        ActionType.DISCOUNT_10: send_discount_offer,
+        ActionType.DISCOUNT_20: send_discount_offer,
+        ActionType.CALL: create_call_task,
+        ActionType.NONE: no_action,
         ActionType.SEND_DISCOUNT_OFFER: send_discount_offer,
         ActionType.CREATE_RETENTION_CALL_TASK: create_call_task,
         ActionType.FOLLOW_UP_PENDING_QUOTES: create_call_task,
@@ -46,9 +50,10 @@ def send_discount_offer(decision: Decision, state: Mapping[str, Any]) -> Executi
     integrations are available.
     """
 
+    discount_label = "20%" if decision.action == ActionType.DISCOUNT_20 else "10%"
     message = (
-        "Mock discount offer sent for low utilization "
-        f"(utilization={state['utilization']:.2f})"
+        f"Mock {discount_label} discount offer sent "
+        f"(utilization={state['utilization']:.2f}, ltv={state['ltv']:.2f})"
     )
     logger.info(message)
     print(f"ACTION: {message}")
@@ -103,4 +108,3 @@ def _result(action: str, status: str, message: str, external_id: str | None) -> 
         external_id=external_id,
         executed_at=datetime.now(UTC).isoformat(),
     )
-

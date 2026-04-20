@@ -54,6 +54,11 @@ class RevenueAgent:
         print(json.dumps(state_payload, indent=2, sort_keys=True))
 
         decision = decide(state_payload)
+        predictions = decision.metadata.get("predictions")
+        if predictions:
+            print("PREDICTIONS:")
+            print(json.dumps(predictions, indent=2, sort_keys=True))
+
         print("DECISION:")
         print(json.dumps(decision.to_dict(), indent=2, sort_keys=True))
 
