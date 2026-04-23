@@ -2,7 +2,8 @@ import { useState } from 'react'
 import {
     BarChart3, DollarSign, Wrench, TrendingUp,
     ChevronLeft, ChevronRight, Search, Maximize2, Minimize2,
-    Filter, AlertCircle, RefreshCw,
+    Filter, AlertCircle, RefreshCw, Bot, Target, Activity,
+    CheckCircle2, Percent, Database,
 } from 'lucide-react'
 import {
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -15,6 +16,9 @@ import {
     useTechLeaderboard,
     useCustomerAcquisition,
     useRevenueByCategory,
+    useRevenueAgentSummary,
+    useRevenueAgentTrends,
+    useRevenueAgentLogs,
 } from '../hooks/useAnalytics'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -23,6 +27,31 @@ const CURRENT_YEAR = new Date().getFullYear()
 const RECENT_YEARS = Array.from({ length: 10 }, (_, i) => CURRENT_YEAR - 9 + i)
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
+
+type ChartPayloadItem = {
+    color?: string
+    dataKey?: string
+    name?: string
+    value?: number | string
+}
+
+type ChartTipProps = {
+    active?: boolean
+    payload?: ChartPayloadItem[]
+    label?: string
+}
+
+type PieLabelProps = {
+    cx?: number | string
+    cy?: number | string
+    midAngle?: number
+    innerRadius?: number | string
+    outerRadius?: number | string
+    name?: string
+    percent?: number
+}
+
+type ChartView = 'monthly' | 'yearly'
 
 // Job status labels for pie chart
 const JOB_STATUS_LABELS: Record<string, string> = {
@@ -55,18 +84,59 @@ function chartDateRange(view: 'monthly' | 'yearly', month: string, year: string)
     }
 }
 
-const ChartTip = ({ active, payload, label }: any) => {
+const ChartTip = ({ active, payload, label }: ChartTipProps) => {
     if (!active || !payload?.length) return null
     return (
         <div style={{ background: 'var(--bg-card-2)', border: '1px solid var(--bd-md)', borderRadius: 8, padding: '10px 14px', boxShadow: 'var(--shadow-md)' }}>
             <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 4, fontWeight: 600 }}>{label}</div>
-            {payload.map((p: any) => (
+            {payload.map(p => (
                 <div key={p.dataKey || p.name} style={{ fontSize: 12, color: p.color ?? 'var(--t1)', fontWeight: 600, marginBottom: 2 }}>
                     {p.name}: {p.name === 'Revenue ($k)' ? `$${p.value}k` : p.value}
                 </div>
             ))}
         </div>
     )
+}
+
+const RevenueAgentTip = ({ active, payload, label }: ChartTipProps) => {
+    if (!active || !payload?.length) return null
+    return (
+        <div style={{ background: 'var(--bg-card-2)', border: '1px solid var(--bd-md)', borderRadius: 8, padding: '10px 14px', boxShadow: 'var(--shadow-md)' }}>
+            <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 4, fontWeight: 600 }}>{label}</div>
+            {payload.map(p => (
+                <div key={p.dataKey || p.name} style={{ fontSize: 12, color: p.color ?? 'var(--t1)', fontWeight: 600, marginBottom: 2 }}>
+                    {p.name}: {p.dataKey === 'impact' ? formatMoney(p.value) : `${Math.round(Number(p.value) * 100)}%`}
+                </div>
+            ))}
+        </div>
+    )
+}
+
+function formatPercent(value?: number) {
+    if (value == null || Number.isNaN(value)) return '0%'
+    return `${Math.round(value * 100)}%`
+}
+
+function formatMoney(value?: number | string) {
+    if (value == null || Number.isNaN(value)) return '$0'
+    return `$${Math.round(Number(value)).toLocaleString()}`
+}
+
+function formatNumber(value?: number) {
+    if (value == null || Number.isNaN(value)) return '0'
+    return Math.round(value).toLocaleString()
+}
+
+function formatDateTime(value?: string) {
+    if (!value) return '-'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return value
+    return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
+function actionLabel(value?: string) {
+    if (!value) return '-'
+    return value.replaceAll('_', ' ')
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -78,12 +148,12 @@ export default function Analytics() {
     const [sortBy, setSortBy]     = useState('revenue')
 
     // Revenue Overview (full-width chart) controls
-    const [revViewFull, setRevViewFull]   = useState<'monthly' | 'yearly'>('monthly')
+    const [revViewFull, setRevViewFull]   = useState<ChartView>('monthly')
     const [revYearFull, setRevYearFull]   = useState(CURRENT_YEAR.toString())
     const [revMonthFull, setRevMonthFull] = useState(String(new Date().getMonth()))
 
     // Revenue & Jobs (small chart) controls
-    const [trendView, setTrendView]   = useState<'monthly' | 'yearly'>('monthly')
+    const [trendView, setTrendView]   = useState<ChartView>('monthly')
     const [trendYear, setTrendYear]   = useState(CURRENT_YEAR.toString())
     const [trendMonth, setTrendMonth] = useState(String(new Date().getMonth()))
 
@@ -103,6 +173,9 @@ export default function Analytics() {
     const acquisitionQuery = useCustomerAcquisition()
     const leaderboardQuery = useTechLeaderboard(100)
     const categoryQuery    = useRevenueByCategory()
+    const revenueAgentSummaryQuery = useRevenueAgentSummary()
+    const revenueAgentTrendsQuery = useRevenueAgentTrends(14)
+    const revenueAgentLogsQuery = useRevenueAgentLogs(10)
 
     // ── Derived / mapped data ────────────────────────────────────────────────────
     // Revenue: values in dollars, display as $k
@@ -133,6 +206,17 @@ export default function Analytics() {
         name:  d.category,
         value: d.percentage,
     }))
+
+    const revenueAgentTrendData = (revenueAgentTrendsQuery.data ?? []).map(d => ({
+        date: d.date,
+        revenue: d.revenue_accuracy,
+        demand: d.demand_accuracy,
+        utilization: d.utilization_accuracy,
+        impact: d.pricing_impact,
+    }))
+
+    const revenueAgentLogs = revenueAgentLogsQuery.data ?? []
+    const revenueAgentSummary = revenueAgentSummaryQuery.data
 
     // Leaderboard: filter + sort client-side (full list already fetched)
     const allTechs     = leaderboardQuery.data ?? []
@@ -181,13 +265,141 @@ export default function Analytics() {
                         ))}
                     </div>
 
+                    <div className="card card-hover anim-fade-up delay-1 mb-5">
+                        <div className="card-header pb-2 border-b-0 flex flex-wrap gap-3 justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <Bot size={17} color="var(--blue)" />
+                                <div className="card-title text-[15px]">Revenue Agent Observability</div>
+                            </div>
+                            <button
+                                className="btn btn-secondary btn-sm flex items-center gap-1.5"
+                                onClick={() => {
+                                    revenueAgentSummaryQuery.refetch()
+                                    revenueAgentTrendsQuery.refetch()
+                                    revenueAgentLogsQuery.refetch()
+                                }}
+                            >
+                                <RefreshCw size={13} /> Refresh
+                            </button>
+                        </div>
+                        <div className="card-body">
+                            {revenueAgentSummaryQuery.isError && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: 'var(--red-dim)', borderRadius: 8, color: 'var(--red)', fontSize: 13, marginBottom: 16 }}>
+                                    <AlertCircle size={14} />
+                                    Revenue Agent API is unavailable. Start it with python -m api.analytics_routes.
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mb-5">
+                                {[
+                                    { icon: Target, label: 'Revenue Accuracy', value: formatPercent(revenueAgentSummary?.revenue_accuracy), loading: revenueAgentSummaryQuery.isLoading },
+                                    { icon: Activity, label: 'Demand Accuracy', value: formatPercent(revenueAgentSummary?.demand_accuracy), loading: revenueAgentSummaryQuery.isLoading },
+                                    { icon: Percent, label: 'Utilization Accuracy', value: formatPercent(revenueAgentSummary?.utilization_accuracy), loading: revenueAgentSummaryQuery.isLoading },
+                                    { icon: CheckCircle2, label: 'Action Success', value: formatPercent(revenueAgentSummary?.action_success_rate), loading: revenueAgentSummaryQuery.isLoading },
+                                    { icon: DollarSign, label: 'Pricing Impact', value: formatMoney(revenueAgentSummary?.pricing_impact), loading: revenueAgentSummaryQuery.isLoading },
+                                ].map(k => (
+                                    <div key={k.label} className="kpi-card" style={{ padding: '14px 16px', borderRadius: 'var(--r-md)' }}>
+                                        <div className="kpi-card-top" style={{ marginBottom: 10, alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div className="kpi-label" style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 500, margin: 0 }}>{k.label}</div>
+                                            <k.icon size={15} strokeWidth={1.7} color="var(--t3)" />
+                                        </div>
+                                        {k.loading ? <Skeleton h={24} /> : <div className="kpi-value" style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)' }}>{k.value}</div>}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(420px,0.8fr)] gap-5">
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="text-[13px] font-semibold text-[var(--t2)]">Accuracy Trend</div>
+                                        <div className="flex items-center gap-1.5 text-[12px] text-[var(--t3)]">
+                                            <Database size={13} /> {formatNumber(revenueAgentSummary?.sample_size)} runs
+                                        </div>
+                                    </div>
+                                    {revenueAgentTrendsQuery.isLoading ? <Skeleton h={260} /> : (
+                                        <div style={{ height: 260 }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={revenueAgentTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                    <defs>
+                                                        <linearGradient id="gAgentRevenue" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.22} />
+                                                            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.02} />
+                                                        </linearGradient>
+                                                        <linearGradient id="gAgentDemand" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#10B981" stopOpacity={0.18} />
+                                                            <stop offset="95%" stopColor="#10B981" stopOpacity={0.02} />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                                                    <XAxis dataKey="date" tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                                    <YAxis tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${Math.round(Number(v) * 100)}%`} domain={[0, 1]} />
+                                                    <Tooltip content={<RevenueAgentTip />} />
+                                                    <Area type="monotone" dataKey="revenue" name="Revenue accuracy" stroke="#3B82F6" strokeWidth={2} fill="url(#gAgentRevenue)" dot={false} activeDot={{ r: 4 }} />
+                                                    <Area type="monotone" dataKey="demand" name="Demand accuracy" stroke="#10B981" strokeWidth={2} fill="url(#gAgentDemand)" dot={false} activeDot={{ r: 4 }} />
+                                                    <Area type="monotone" dataKey="utilization" name="Utilization accuracy" stroke="#F59E0B" strokeWidth={2} fill="transparent" dot={false} activeDot={{ r: 4 }} />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="text-[13px] font-semibold text-[var(--t2)]">Recent Agent Runs</div>
+                                        <div className="text-[12px] text-[var(--t3)]">Latest 10</div>
+                                    </div>
+                                    <div className="table-container" style={{ maxHeight: 300 }}>
+                                        <table className="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Time</th>
+                                                    <th>Action</th>
+                                                    <th>Actual</th>
+                                                    <th>Impact</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {revenueAgentLogsQuery.isLoading && Array.from({ length: 4 }).map((_, i) => (
+                                                    <tr key={i}>{Array.from({ length: 4 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
+                                                ))}
+                                                {!revenueAgentLogsQuery.isLoading && revenueAgentLogs.map(log => {
+                                                    const impact = (log.actual_revenue ?? 0) - (log.baseline_revenue ?? 0)
+                                                    return (
+                                                        <tr key={`${log.timestamp}-${log.action}-${log.job_id ?? ''}`}>
+                                                            <td className="text-[12px] text-[var(--t3)]">{formatDateTime(log.timestamp)}</td>
+                                                            <td className="td-primary capitalize">{actionLabel(log.action)}</td>
+                                                            <td className="td-primary">{formatMoney(log.actual_revenue)}</td>
+                                                            <td style={{ color: impact >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 700 }}>
+                                                                {impact >= 0 ? '+' : ''}{formatMoney(impact)}
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                })}
+                                                {!revenueAgentLogsQuery.isLoading && revenueAgentLogs.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={4}>
+                                                            <div className="empty-state">
+                                                                <div className="empty-icon"><Bot size={22} /></div>
+                                                                <div className="empty-title">No Revenue Agent runs logged</div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* ── Revenue Overview (full width) ────────────────────────────── */}
                     <div className="card card-hover anim-fade-up delay-1 mb-5">
                         <div className="card-header pb-2 border-b-0 flex flex-wrap gap-4 justify-between items-center">
                             <div className="card-title text-[15px]">Revenue Overview</div>
                             <div className="flex gap-2 items-center">
                                 <select className="select text-xs h-[28px] px-2 py-0 min-h-0 bg-[var(--bg-surface)]" style={{ minWidth: 120 }}
-                                    value={revViewFull} onChange={e => setRevViewFull(e.target.value as any)}>
+                                    value={revViewFull} onChange={e => setRevViewFull(e.target.value as ChartView)}>
                                     <option value="monthly">Monthly</option>
                                     <option value="yearly">Yearly</option>
                                 </select>
@@ -233,7 +445,7 @@ export default function Analytics() {
                                 <div className="card-title text-[15px]">Revenue & Jobs</div>
                                 <div className="flex gap-2 items-center">
                                     <select className="select text-xs h-[28px] px-2 py-0 min-h-0 bg-[var(--bg-surface)]" style={{ minWidth: 120 }}
-                                        value={trendView} onChange={e => setTrendView(e.target.value as any)}>
+                                        value={trendView} onChange={e => setTrendView(e.target.value as ChartView)}>
                                         <option value="monthly">Monthly</option>
                                         <option value="yearly">Yearly</option>
                                     </select>
@@ -363,14 +575,19 @@ export default function Analytics() {
                                             <Pie
                                                 data={serviceCategoryData}
                                                 cx="50%" cy="50%" outerRadius={85} dataKey="value" stroke="none"
-                                                label={({ cx, cy, midAngle, innerRadius, outerRadius, name, percent }: any) => {
+                                                label={({ cx, cy, midAngle, innerRadius, outerRadius, name, percent }: PieLabelProps) => {
                                                     const R = Math.PI / 180
-                                                    const r = innerRadius + (outerRadius - innerRadius) * 1.5
-                                                    const x = cx + r * Math.cos(-midAngle * R)
-                                                    const y = cy + r * Math.sin(-midAngle * R)
+                                                    const centerX = Number(cx ?? 0)
+                                                    const centerY = Number(cy ?? 0)
+                                                    const inner = Number(innerRadius ?? 0)
+                                                    const outer = Number(outerRadius ?? 0)
+                                                    const angle = Number(midAngle ?? 0)
+                                                    const r = inner + (outer - inner) * 1.5
+                                                    const x = centerX + r * Math.cos(-angle * R)
+                                                    const y = centerY + r * Math.sin(-angle * R)
                                                     return (
-                                                        <text x={x} y={y} fill="var(--t1)" fontSize={11} fontWeight={600} textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-                                                            {`${name} ${(percent * 100).toFixed(0)}%`}
+                                                        <text x={x} y={y} fill="var(--t1)" fontSize={11} fontWeight={600} textAnchor={x > centerX ? 'start' : 'end'} dominantBaseline="central">
+                                                            {`${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`}
                                                         </text>
                                                     )
                                                 }}

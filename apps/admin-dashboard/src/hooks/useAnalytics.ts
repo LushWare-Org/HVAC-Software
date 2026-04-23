@@ -4,6 +4,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 import api from '../lib/api'
 import type {
   DashboardKpis,
@@ -12,6 +13,9 @@ import type {
   TechLeaderboard,
   CustomerAcquisition,
   RevenueByCategory,
+  RevenueAgentSummary,
+  RevenueAgentTrendPoint,
+  RevenueAgentLog,
 } from '../types/api'
 
 type Granularity = 'day' | 'week' | 'month' | 'quarter' | 'year'
@@ -107,5 +111,39 @@ export function useRevenueByCategory(from?: string, to?: string) {
       const res = await api.get('/analytics/revenue/by-category', { params })
       return res.data
     },
+  })
+}
+
+async function getRevenueAgentEndpoint<T>(path: string, params?: Record<string, string | number>): Promise<T> {
+  try {
+    const res = await api.get(`/analytics/revenue-agent${path}`, { params })
+    return res.data
+  } catch {
+    const res = await axios.get(`/revenue-agent-api/analytics${path}`, { params })
+    return res.data
+  }
+}
+
+export function useRevenueAgentSummary() {
+  return useQuery<RevenueAgentSummary>({
+    queryKey: ['analytics', 'revenue-agent', 'summary'],
+    queryFn: () => getRevenueAgentEndpoint<RevenueAgentSummary>('/summary'),
+    refetchInterval: 30000,
+  })
+}
+
+export function useRevenueAgentTrends(limit = 14) {
+  return useQuery<RevenueAgentTrendPoint[]>({
+    queryKey: ['analytics', 'revenue-agent', 'trends', limit],
+    queryFn: () => getRevenueAgentEndpoint<RevenueAgentTrendPoint[]>('/trends', { limit }),
+    refetchInterval: 30000,
+  })
+}
+
+export function useRevenueAgentLogs(limit = 10) {
+  return useQuery<RevenueAgentLog[]>({
+    queryKey: ['analytics', 'revenue-agent', 'logs', limit],
+    queryFn: () => getRevenueAgentEndpoint<RevenueAgentLog[]>('/logs', { limit }),
+    refetchInterval: 30000,
   })
 }

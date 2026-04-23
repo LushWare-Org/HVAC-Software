@@ -563,6 +563,44 @@ export interface RevenueByCategory {
   percentage: number
 }
 
+export interface RevenueAgentSummary {
+  revenue_accuracy: number
+  revenue_mean_error: number
+  demand_accuracy: number
+  utilization_accuracy: number
+  action_success_rate: number
+  pricing_impact: number
+  sample_size: number
+}
+
+export interface RevenueAgentTrendPoint {
+  date: string
+  revenue_accuracy: number
+  demand_accuracy: number
+  utilization_accuracy: number
+  action_success_rate: number
+  pricing_impact: number
+  sample_size: number
+}
+
+export interface RevenueAgentLog {
+  timestamp: string
+  action: string
+  predicted_revenue?: number
+  actual_revenue?: number
+  baseline_revenue?: number
+  expected_demand?: number
+  actual_demand?: number
+  utilization_predicted?: number
+  utilization_actual?: number
+  utilization?: number
+  optimal_price?: number
+  applied_price?: number
+  customer_id?: string | null
+  job_id?: string | null
+  capacity_status?: string | null
+}
+
 // â”€â”€â”€ Inventory Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type ItemCategory = 'PART' | 'MATERIAL' | 'TOOL' | 'CONSUMABLE'
