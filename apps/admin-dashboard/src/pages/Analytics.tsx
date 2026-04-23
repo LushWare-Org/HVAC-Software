@@ -20,6 +20,7 @@ import {
     useRevenueAgentTrends,
     useRevenueAgentLogs,
 } from '../hooks/useAnalytics'
+import RecommendationsPanel from '../components/RecommendationsPanel'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -244,6 +245,9 @@ export default function Analytics() {
 
             {!isExpanded && (
                 <>
+                    {/* ── AI Revenue Recommendations ──────────────────────────────── */}
+                    <RecommendationsPanel />
+
                     {/* ── KPI cards ───────────────────────────────────────────────── */}
                     <div className="kpi-grid mb-5">
                         {[

@@ -16,6 +16,7 @@ import type {
   RevenueAgentSummary,
   RevenueAgentTrendPoint,
   RevenueAgentLog,
+  Recommendation,
 } from '../types/api'
 
 type Granularity = 'day' | 'week' | 'month' | 'quarter' | 'year'
@@ -114,20 +115,34 @@ export function useRevenueByCategory(from?: string, to?: string) {
   })
 }
 
-async function getRevenueAgentEndpoint<T>(path: string, params?: Record<string, string | number>): Promise<T> {
+async function getRevenueAgentEndpoint<T>(path: string, params: Record<string, string | number> | undefined, fallback: T): Promise<T> {
   try {
     const res = await api.get(`/analytics/revenue-agent${path}`, { params })
     return res.data
   } catch {
-    const res = await axios.get(`/revenue-agent-api/analytics${path}`, { params })
-    return res.data
+    try {
+      const res = await axios.get(`/revenue-agent-api/analytics${path}`, { params })
+      return res.data
+    } catch {
+      return fallback
+    }
   }
+}
+
+const EMPTY_AGENT_SUMMARY: RevenueAgentSummary = {
+  revenue_accuracy: 0,
+  revenue_mean_error: 0,
+  demand_accuracy: 0,
+  utilization_accuracy: 0,
+  action_success_rate: 0,
+  pricing_impact: 0,
+  sample_size: 0,
 }
 
 export function useRevenueAgentSummary() {
   return useQuery<RevenueAgentSummary>({
     queryKey: ['analytics', 'revenue-agent', 'summary'],
-    queryFn: () => getRevenueAgentEndpoint<RevenueAgentSummary>('/summary'),
+    queryFn: () => getRevenueAgentEndpoint<RevenueAgentSummary>('/summary', undefined, EMPTY_AGENT_SUMMARY),
     refetchInterval: 30000,
   })
 }
@@ -135,7 +150,7 @@ export function useRevenueAgentSummary() {
 export function useRevenueAgentTrends(limit = 14) {
   return useQuery<RevenueAgentTrendPoint[]>({
     queryKey: ['analytics', 'revenue-agent', 'trends', limit],
-    queryFn: () => getRevenueAgentEndpoint<RevenueAgentTrendPoint[]>('/trends', { limit }),
+    queryFn: () => getRevenueAgentEndpoint<RevenueAgentTrendPoint[]>('/trends', { limit }, []),
     refetchInterval: 30000,
   })
 }
@@ -143,7 +158,20 @@ export function useRevenueAgentTrends(limit = 14) {
 export function useRevenueAgentLogs(limit = 10) {
   return useQuery<RevenueAgentLog[]>({
     queryKey: ['analytics', 'revenue-agent', 'logs', limit],
-    queryFn: () => getRevenueAgentEndpoint<RevenueAgentLog[]>('/logs', { limit }),
+    queryFn: () => getRevenueAgentEndpoint<RevenueAgentLog[]>('/logs', { limit }, []),
     refetchInterval: 30000,
+  })
+}
+
+// ─── AI Revenue Recommendations ───────────────────────────────────────────────
+
+export function useRecommendations() {
+  return useQuery<Recommendation[]>({
+    queryKey: ['analytics', 'recommendations'],
+    queryFn: async () => {
+      const res = await api.get('/analytics/recommendations')
+      return res.data
+    },
+    refetchInterval: 5 * 60 * 1000, // auto-refresh every 5 minutes
   })
 }

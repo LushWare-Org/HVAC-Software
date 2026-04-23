@@ -22,6 +22,7 @@ import {
 import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
 import LeadDetailsSidebar from "./LeadDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
+import RecommendationsPanel from "../../components/RecommendationsPanel";
 import { useCustomers, useLeads, useAgreements, useDeleteCustomer, useDeleteLead, useUpdateCustomer, useCustomerStatusSummary } from "../../hooks/useCustomers";
 import { customerName, leadName } from "../../types/api";
 import type { Customer, CustomerStatusSummary, Lead } from "../../types/api";
@@ -453,6 +454,8 @@ export default function Customers() {
             ))}
           </div>
         )}
+
+        {!isExpanded && <RecommendationsPanel filterActions={['call', 'geo_target_discount']} />}
 
         <div className="page-tabs">
           <button className={`tab-btn ${tab === "customers" ? "active" : ""}`} onClick={() => setTab("customers")}>

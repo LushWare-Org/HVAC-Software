@@ -11,6 +11,8 @@ import { JobsAnalyticsModule } from './jobs-analytics/jobs-analytics.module';
 import { CustomerAnalyticsModule } from './customer-analytics/customer-analytics.module';
 import { ExportsModule } from './exports/exports.module';
 import { EventsModule } from './events/events.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
+import { RevenueAgentModule } from './revenue-agent/revenue-agent.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { EventsModule } from './events/events.module';
     CustomerAnalyticsModule,
     ExportsModule,
     EventsModule,
+    RecommendationsModule,
+    RevenueAgentModule,
   ],
 })
 export class AppModule {}

@@ -7,6 +7,7 @@ import type { Invoice, Quote, Expense } from '../../types/api'
 import AddQuoteModal from './AddQuoteModal'
 import AddInvoiceModal from './AddInvoiceModal'
 import AddExpenseModal from './AddExpenseModal'
+import RecommendationsPanel from '../../components/RecommendationsPanel'
 
 // ─── Status CSS maps ──────────────────────────────────────────────────────────
 
@@ -114,6 +115,8 @@ export default function Finance() {
           ))}
         </div>
       )}
+
+      {!isExpanded && <RecommendationsPanel filterActions={['discount_20', 'increase_price', 'geo_target_discount']} />}
 
       <div className="page-tabs">
         <button className={`tab-btn ${tab === 'invoices' ? 'active' : ''}`} onClick={() => setTab('invoices')}>

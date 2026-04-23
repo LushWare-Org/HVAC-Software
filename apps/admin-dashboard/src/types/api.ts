@@ -583,6 +583,32 @@ export interface RevenueAgentTrendPoint {
   sample_size: number
 }
 
+export interface Recommendation {
+  id: string
+  title: string
+  description: string
+  action: string
+  actionLabel: string
+  impact: number
+  confidence: number
+  priority: 'high' | 'medium' | 'low'
+  reason: string
+  trend: 'up' | 'down' | 'neutral'
+  priorityScore: number
+}
+
+export interface ExecuteActionRequest {
+  action: string
+  params?: Record<string, unknown>
+}
+
+export interface ExecuteActionResponse {
+  success: boolean
+  action: string
+  executedAt: string
+  message: string
+}
+
 export interface RevenueAgentLog {
   timestamp: string
   action: string
