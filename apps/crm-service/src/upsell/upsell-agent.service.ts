@@ -379,16 +379,18 @@ export class UpsellAgentService {
   }
 
   private async hasRecommendationsTable(): Promise<boolean> {
-    if (this.recommendationsTableExists !== undefined) {
-      return this.recommendationsTableExists;
+    if (this.recommendationsTableExists) {
+      return true;
     }
 
-    this.recommendationsTableExists = await this.prisma.tableExists('upsell_recommendations');
-    if (!this.recommendationsTableExists) {
+    const tableExists = await this.prisma.tableExists('upsell_recommendations');
+    if (!tableExists) {
       this.logger.warn('upsell_recommendations table is missing; run CRM migrations to persist upsell recommendations');
+      return false;
     }
 
-    return this.recommendationsTableExists;
+    this.recommendationsTableExists = true;
+    return true;
   }
 
   private async hasRecentRecommendation(companyId: string, customerId: string): Promise<boolean> {

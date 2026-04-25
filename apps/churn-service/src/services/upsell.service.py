@@ -72,13 +72,13 @@ class UpsellModelRegistry:
     @classmethod
     def _find_artifact(cls, file_name: str) -> Path:
         service_models_dir = Path(__file__).resolve().parent.parent / "models"
-        repo_root = Path(__file__).resolve().parents[4]
-        requested_models_dir = repo_root / "Server" / "src" / "services" / "ai" / "models"
-
         candidates = [
             service_models_dir / file_name,
-            requested_models_dir / file_name,
         ]
+
+        parents = Path(__file__).resolve().parents
+        if len(parents) > 4:
+            candidates.append(parents[4] / "Server" / "src" / "services" / "ai" / "models" / file_name)
 
         for path in candidates:
             if path.exists():
