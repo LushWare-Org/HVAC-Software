@@ -47,6 +47,8 @@ class FeedbackRecord:
     utilization_actual: float | None
     demand_gap: float | None
     baseline_revenue: float | None
+    reward: float | None
+    bandit_selected: bool
     customer_id: str | None
     job_id: str | None
 
@@ -64,6 +66,8 @@ def log_feedback(
     actual_utilization: float | None = None,
     applied_price: float | None = None,
     baseline_revenue: float | None = None,
+    reward: float | None = None,
+    bandit_selected: bool = False,
     customer_id: str | None = None,
     job_id: str | None = None,
     mongo_uri: str | None = DEFAULT_MONGO_URI,
@@ -109,6 +113,8 @@ def log_feedback(
         utilization_actual=realized_utilization,
         demand_gap=demand_gap,
         baseline_revenue=baseline_revenue,
+        reward=reward,
+        bandit_selected=bandit_selected,
         customer_id=_optional_string(customer_id or state_payload.get("customer_id")),
         job_id=_optional_string(job_id or state_payload.get("job_id")),
     )

@@ -2,23 +2,32 @@ from __future__ import annotations
 
 import json
 import logging
+import random
 from argparse import ArgumentParser
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
 try:
+    from .bandit import ContextualBandit, load_bandit, save_bandit
     from .decision_engine import ActionType
-    from .decision_engine import Decision, decide
+    from .decision_engine import Decision, apply_constraints, decide
     from .executor import ExecutionResult, execute_action
     from .feedback_logger import DEFAULT_LOG_PATH, FeedbackRecord, log_feedback
     from .state_builder import RevenueState, build_state
 except ImportError:  # Allows `python revenue_agent.py` from inside agent/.
+    from bandit import ContextualBandit, load_bandit, save_bandit
     from decision_engine import ActionType
-    from decision_engine import Decision, decide
+    from decision_engine import Decision, apply_constraints, decide
     from executor import ExecutionResult, execute_action
     from feedback_logger import DEFAULT_LOG_PATH, FeedbackRecord, log_feedback
     from state_builder import RevenueState, build_state
+
+
+# Fraction of decisions driven by bandit exploration rather than ML exploitation.
+# At 0.2 the system tries new strategies 1-in-5 runs while the ML policy
+# dominates the remaining 80 %.  Decay this value over time as the bandit matures.
+BANDIT_EXPLORE_RATE: float = 0.2
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
@@ -80,14 +89,26 @@ class RevenueAgent:
             f"source={state.pricing_model_source}"
         )
 
+        # Load the latest persisted bandit so every run benefits from prior learning.
+        bandit = load_bandit()
+
         decision = decide(state_payload)
         predictions = decision.metadata.get("predictions")
         if predictions:
             print("PREDICTIONS:")
             print(json.dumps(predictions, indent=2, sort_keys=True))
 
+        # Hybrid decision: 20 % bandit exploration / 80 % ML exploitation.
+        # Capacity-aware decisions (high utilization, large demand gaps) are
+        # safety-critical and are never overridden by the bandit.
+        decision, bandit_selected = _apply_bandit_override(
+            decision, bandit, state_payload
+        )
+
         print("DECISION:")
         print(json.dumps(decision.to_dict(), indent=2, sort_keys=True))
+        if bandit_selected:
+            print(f"BANDIT: exploration active — action={decision.action.value}")
 
         execution = execute_action(decision, state_payload)
         applied_price = get_applied_price(state_payload, decision)
@@ -105,6 +126,17 @@ class RevenueAgent:
             realized_demand,
             applied_price,
         )
+
+        # Reward = incremental revenue gained over the do-nothing baseline.
+        # Using the difference rather than raw revenue removes the signal bias
+        # from normal seasonal variation so the bandit learns action impact.
+        reward = round(realized_revenue - baseline_revenue, 2)
+
+        # Update bandit Q-table and persist so the next run starts smarter.
+        bandit.update(state_payload, decision.action.value, reward)
+        save_bandit(bandit)
+        print(f"BANDIT: updated  action={decision.action.value}  reward={reward:.2f}  stats={bandit.stats()}")
+
         feedback = log_feedback(
             state=state_payload,
             decision=decision,
@@ -115,6 +147,8 @@ class RevenueAgent:
             actual_utilization=realized_utilization,
             applied_price=applied_price,
             baseline_revenue=baseline_revenue,
+            reward=reward,
+            bandit_selected=bandit_selected,
             customer_id=customer_id,
             job_id=job_id,
         )
@@ -125,6 +159,58 @@ class RevenueAgent:
             execution=execution,
             feedback=feedback,
         )
+
+
+def _is_learnable_decision(decision: Decision) -> bool:
+    """True when the decision came from the ML or rule-fallback policy.
+
+    Capacity-aware decisions (policy == "capacity_aware.v1") are safety-critical
+    operational responses that must not be overridden by bandit exploration.
+    """
+    return decision.metadata.get("policy") in {"action_effect_models.v1", "rules.v1"}
+
+
+def _apply_bandit_override(
+    base_decision: Decision,
+    bandit: ContextualBandit,
+    state: Mapping[str, Any],
+) -> tuple[Decision, bool]:
+    """Optionally replace the ML/rule decision with a bandit-selected action.
+
+    Returns the (possibly overridden) Decision and a bool indicating whether
+    the bandit drove the choice.  Capacity-aware decisions are always passed
+    through unchanged.
+    """
+    if not _is_learnable_decision(base_decision):
+        return base_decision, False
+
+    if random.random() >= BANDIT_EXPLORE_RATE:
+        return base_decision, False
+
+    raw_action = bandit.select_action(state)
+    constrained_action = apply_constraints(raw_action, state)
+
+    reason = f"Bandit exploration selected {raw_action}"
+    if constrained_action != raw_action:
+        reason += f"; safety constraints adjusted to {constrained_action}"
+
+    bandit_decision = Decision(
+        action=ActionType(constrained_action),
+        reason=reason,
+        priority=base_decision.priority,
+        # Reuse the ML expected_revenue as a reference; the bandit reward
+        # (actual − baseline) is a different signal logged separately.
+        expected_revenue=base_decision.expected_revenue,
+        metadata={
+            **base_decision.metadata,
+            "bandit_selected": True,
+            "bandit_raw_action": raw_action,
+            "bandit_constrained_action": constrained_action,
+            "bandit_stats": bandit.stats(),
+        },
+    )
+
+    return bandit_decision, True
 
 
 def load_state_overrides(path: str | Path | None) -> dict[str, Any] | None:
