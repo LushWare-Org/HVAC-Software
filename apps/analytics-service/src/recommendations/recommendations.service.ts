@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ActionExecutorService } from './action-executor.service';
+import { ExecutionLoggerService } from './execution-logger.service';
 
 export interface Recommendation {
   id: string;
@@ -19,6 +21,13 @@ export interface ExecuteActionResult {
   action: string;
   executedAt: string;
   message: string;
+  logId?: string;
+  result?: {
+    summary: string;
+    details: Record<string, unknown>;
+    affectedCount?: number;
+    estimatedRevenue?: number;
+  };
 }
 
 // Mock recommendations derived from the revenue agent's decision space.
@@ -95,6 +104,11 @@ const RAW_RECOMMENDATIONS: Omit<Recommendation, 'priorityScore'>[] = [
 export class RecommendationsService {
   private readonly logger = new Logger(RecommendationsService.name);
 
+  constructor(
+    private readonly executor: ActionExecutorService,
+    private readonly execLog: ExecutionLoggerService,
+  ) {}
+
   getRecommendations(_companyId: string): Recommendation[] {
     const scored = RAW_RECOMMENDATIONS.map((r) => ({
       ...r,
@@ -106,20 +120,35 @@ export class RecommendationsService {
       .slice(0, 5);
   }
 
-  executeAction(
+  async executeAction(
     companyId: string,
     action: string,
     params: Record<string, unknown>,
-  ): ExecuteActionResult {
+  ): Promise<ExecuteActionResult> {
     this.logger.log(
-      `[${companyId}] Executing action: ${action} | params: ${JSON.stringify(params)}`,
+      `[${companyId}] executing: ${action} | params: ${JSON.stringify(params)}`,
     );
 
-    return {
-      success: true,
-      action,
-      executedAt: new Date().toISOString(),
-      message: `Action "${action}" queued for execution.`,
-    };
+    try {
+      const result = await this.executor.run(companyId, action, params);
+      const log    = this.execLog.record(companyId, action, params, 'executed', result);
+
+      return {
+        success:    true,
+        action,
+        executedAt: log.timestamp,
+        message:    `Action "${action}" executed successfully.`,
+        logId:      log.id,
+        result,
+      };
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      this.execLog.record(companyId, action, params, 'failed', undefined, error);
+      throw err;
+    }
+  }
+
+  getExecutionLogs(companyId: string, limit?: number) {
+    return this.execLog.getByCompany(companyId, limit);
   }
 }
