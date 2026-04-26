@@ -737,6 +737,82 @@ export interface LowStockAlert {
   deficit: number
 }
 
+// ─── Bandit Observability Dashboard ─────────────────────────────────────────
+
+export type BanditAgent = 'revenue' | 'retention' | 'upsell' | 'followup'
+
+export interface BanditSummary {
+  avg_reward: number
+  exploration_rate: number
+  top_action: string | null
+  revenue_uplift: number
+  sample_size: number
+}
+
+export interface BanditRewardPoint {
+  date: string
+  avg_reward: number
+  count: number
+}
+
+export interface BanditActionRow {
+  action: string
+  count: number
+  pct: number
+}
+
+export interface BanditExplorationTrendPoint {
+  date: string
+  exploration_rate: number
+  count: number
+}
+
+export interface BanditExplorationData {
+  overall_rate: number
+  explored: number
+  exploited: number
+  total: number
+  trend: BanditExplorationTrendPoint[]
+}
+
+export interface BanditUpliftTrendPoint {
+  date: string
+  avg_uplift: number
+  total_uplift: number
+  count: number
+}
+
+export interface BanditRevenueImpact {
+  avg_uplift: number
+  total_uplift: number
+  sample_size: number
+  trend: BanditUpliftTrendPoint[]
+}
+
+export interface BanditContextRow {
+  state_key: (string | number)[]
+  action: string
+  avg_reward: number
+  count: number
+}
+
+export interface BanditRegretTrendPoint {
+  date: string
+  daily_regret: number
+  count: number
+  avg_daily_regret: number
+}
+
+export interface BanditRegret {
+  total_regret: number
+  avg_regret: number
+  sample_size: number
+  regret_by_agent: Record<string, number>
+  trend: BanditRegretTrendPoint[]
+}
+
+// ─── Company Profile ──────────────────────────────────────────────────────────
+
 export interface CompanyProfile {
   id: string
   name: string

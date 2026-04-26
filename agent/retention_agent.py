@@ -13,8 +13,10 @@ from typing import Any, Mapping
 
 try:
     from .retention_bandit import RetentionBandit, load_bandit, save_bandit
+    from .bandit_log import log_bandit_decision
 except ImportError:  # Allows `python retention_agent.py` from inside agent/
     from retention_bandit import RetentionBandit, load_bandit, save_bandit
+    from bandit_log import log_bandit_decision
 
 
 DEFAULT_LOG_PATH = Path(__file__).resolve().parent / "logs" / "retention_agent_feedback.jsonl"
@@ -348,6 +350,18 @@ class RetentionAgent:
         print(
             f"BANDIT: updated  action={action}  reward={reward:.2f}"
             f"  stats={bandit.stats()}"
+        )
+
+        # Write to unified bandit_logs collection for the observability dashboard.
+        log_bandit_decision(
+            agent="retention",
+            bandit=bandit,
+            state=state,
+            action=action,
+            reward=reward,
+            actual_revenue=actual_revenue,
+            baseline_revenue=baseline_revenue,
+            customer_id=customer_id,
         )
 
         # ── Step 8: Log outcome for training and analytics ─────────────

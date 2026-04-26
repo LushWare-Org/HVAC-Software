@@ -13,8 +13,10 @@ from typing import Any, Mapping
 
 try:
     from .upsell_bandit import UpsellBandit, load_bandit, save_bandit
+    from .bandit_log import log_bandit_decision
 except ImportError:  # Allows `python upsell_agent.py` from inside agent/
     from upsell_bandit import UpsellBandit, load_bandit, save_bandit
+    from bandit_log import log_bandit_decision
 
 
 DEFAULT_LOG_PATH = Path(__file__).resolve().parent / "logs" / "upsell_agent_feedback.jsonl"
@@ -418,6 +420,19 @@ class UpsellAgent:
         print(
             f"BANDIT: updated  action={upsell}  reward={reward:.2f}"
             f"  stats={bandit.stats()}"
+        )
+
+        # Write to unified bandit_logs collection for the observability dashboard.
+        # upsell_revenue maps to actual_revenue; upsell agent has no baseline concept.
+        log_bandit_decision(
+            agent="upsell",
+            bandit=bandit,
+            state=state,
+            action=upsell,
+            reward=reward,
+            actual_revenue=upsell_revenue,
+            baseline_revenue=None,
+            customer_id=customer_id,
         )
 
         # ── Step 8: Log outcome for training and analytics ─────────────

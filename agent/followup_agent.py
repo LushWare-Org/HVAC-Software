@@ -13,8 +13,10 @@ from typing import Any, Mapping
 
 try:
     from .followup_bandit import FollowUpBandit, load_bandit, save_bandit
+    from .bandit_log import log_bandit_decision
 except ImportError:  # Allows `python followup_agent.py` from inside agent/
     from followup_bandit import FollowUpBandit, load_bandit, save_bandit
+    from bandit_log import log_bandit_decision
 
 
 DEFAULT_LOG_PATH = Path(__file__).resolve().parent / "logs" / "followup_agent_feedback.jsonl"
@@ -296,6 +298,19 @@ class FollowUpAgent:
         print(
             f"BANDIT: updated  action={action}  reward={reward:.2f}"
             f"  stats={bandit.stats()}"
+        )
+
+        # Write to unified bandit_logs collection for the observability dashboard.
+        # Follow-up has no revenue signals — reward is engagement/booking score only.
+        log_bandit_decision(
+            agent="followup",
+            bandit=bandit,
+            state=state,
+            action=action,
+            reward=reward,
+            actual_revenue=None,
+            baseline_revenue=None,
+            customer_id=customer_id,
         )
 
         # ── Step 8: Log outcome for training and analytics ─────────────

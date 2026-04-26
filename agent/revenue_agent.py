@@ -10,6 +10,7 @@ from typing import Any, Mapping
 
 try:
     from .bandit import ContextualBandit, load_bandit, save_bandit
+    from .bandit_log import log_bandit_decision
     from .decision_engine import ActionType
     from .decision_engine import Decision, apply_constraints, decide
     from .executor import ExecutionResult, execute_action
@@ -17,6 +18,7 @@ try:
     from .state_builder import RevenueState, build_state
 except ImportError:  # Allows `python revenue_agent.py` from inside agent/.
     from bandit import ContextualBandit, load_bandit, save_bandit
+    from bandit_log import log_bandit_decision
     from decision_engine import ActionType
     from decision_engine import Decision, apply_constraints, decide
     from executor import ExecutionResult, execute_action
@@ -136,6 +138,18 @@ class RevenueAgent:
         bandit.update(state_payload, decision.action.value, reward)
         save_bandit(bandit)
         print(f"BANDIT: updated  action={decision.action.value}  reward={reward:.2f}  stats={bandit.stats()}")
+
+        # Write to unified bandit_logs collection for the observability dashboard.
+        log_bandit_decision(
+            agent="revenue",
+            bandit=bandit,
+            state=state_payload,
+            action=decision.action.value,
+            reward=reward,
+            actual_revenue=realized_revenue,
+            baseline_revenue=baseline_revenue,
+            customer_id=customer_id,
+        )
 
         feedback = log_feedback(
             state=state_payload,

@@ -14,6 +14,7 @@ import DispatchBoard from './pages/dispatch/DispatchBoard'
 import Finance from './pages/finance/Finance'
 import Communications from './pages/Communications'
 import Analytics from './pages/Analytics'
+import BanditDashboard from './pages/BanditDashboard'
 import Inventory from './pages/inventory/Inventory'
 import Settings from './pages/Settings'
 import Team from './pages/Team'
@@ -37,6 +38,7 @@ function AuthenticatedApp() {
             <Route path="/finance" element={<Finance />} />
             <Route path="/communications" element={<Communications />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/bandit-dashboard" element={<BanditDashboard />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/team" element={<Team />} />
