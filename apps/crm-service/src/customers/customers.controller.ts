@@ -140,6 +140,30 @@ export class CustomersController {
     return this.customersService.remove(user.companyId, id);
   }
 
+  // ── Per-customer recommendation execute endpoints ────────────────────────────
+
+  @Post(':id/followup')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Trigger an immediate follow-up action for a customer' })
+  @ApiParam({ name: 'id', type: String })
+  triggerFollowup(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.customersService.executeFollowup(user.companyId, id);
+  }
+
+  @Post(':id/retention')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Trigger a retention action for a customer' })
+  @ApiParam({ name: 'id', type: String })
+  triggerRetention(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.customersService.executeRetention(user.companyId, id);
+  }
+
   // ── Equipment endpoints ──────────────────────────────────────────────────────
 
   @Get(':id/equipment')

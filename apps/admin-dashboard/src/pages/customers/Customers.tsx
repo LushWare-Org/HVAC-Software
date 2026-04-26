@@ -18,11 +18,13 @@ import {
   Minimize2,
   RefreshCw,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
 import LeadDetailsSidebar from "./LeadDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
+import CustomerRecommendationsModal from "../../components/CustomerRecommendationsModal";
 import { useCustomers, useLeads, useAgreements, useDeleteCustomer, useDeleteLead, useUpdateCustomer, useCustomerStatusSummary } from "../../hooks/useCustomers";
 import { customerName, leadName } from "../../types/api";
 import type { Customer, CustomerStatusSummary, Lead } from "../../types/api";
@@ -337,6 +339,7 @@ export default function Customers() {
   const [sidebarTab, setSidebarTab] = useState<any>("contact");
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: "customer" | "lead"; id: string; name: string } | null>(null);
   const [hoveredCustomer, setHoveredCustomer] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [recCustomer, setRecCustomer] = useState<Customer | null>(null);
   const [customerPage, setCustomerPage] = useState(1);
   const [leadPage, setLeadPage] = useState(1);
   const [agreementPage, setAgreementPage] = useState(1);
@@ -547,6 +550,7 @@ export default function Customers() {
                         <td className="text-sm text-[var(--t3)]">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                         <td>
                           <div className="flex items-center gap-1">
+                            <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecCustomer(c); }} title="AI Recommendations"><Sparkles size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(c, "customer"); }} title="View Details"><Edit size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); window.location.href = `mailto:${c.email}`; }}><Mail size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete" onClick={e => { e.stopPropagation(); confirmDelete("customer", c.id, customerName(c)); }}><Trash2 size={15} /></button>
@@ -694,6 +698,10 @@ export default function Customers() {
       <CustomerDetailsSidebar isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} person={selectedPerson} initialTab={sidebarTab} />
       <LeadDetailsSidebar isOpen={isLeadDetailsOpen} onClose={() => setIsLeadDetailsOpen(false)} person={selectedPerson} onConverted={handleLeadConverted} />
       <AddPersonModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} type={addType} />
+
+      {recCustomer && (
+        <CustomerRecommendationsModal customer={recCustomer} onClose={() => setRecCustomer(null)} />
+      )}
 
       {/* Delete confirmation dialog */}
       {deleteConfirm && (

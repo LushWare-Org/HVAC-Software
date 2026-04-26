@@ -246,6 +246,114 @@ export class FollowupAgent {
     });
   }
 
+  async runForCustomer(companyId: string, customerId: string): Promise<{ queued: boolean; action?: string; reason?: string }> {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id: customerId, companyId, isActive: true },
+      select: {
+        id: true, companyId: true, firstName: true, lastName: true,
+        email: true, phone: true, mobile: true, createdAt: true, updatedAt: true, engagementStatus: true,
+        bookings: {
+          where: { status: { in: ['CONFIRMED', 'CONVERTED'] } },
+          orderBy: { preferredDate: 'desc' },
+          take: 24,
+          select: { preferredDate: true, status: true },
+        },
+        agreements: { where: { status: 'ACTIVE' }, select: { value: true } },
+      },
+    });
+
+    if (!customer) {
+      return { queued: false, reason: 'Customer not found or inactive' };
+    }
+
+    const daysSinceLastService = this.computeDaysSinceLastService(customer.bookings, customer.updatedAt);
+    const action = await this.determineCustomerAction(customer, daysSinceLastService);
+
+    if (!action) {
+      return { queued: false, reason: 'No follow-up action needed at this time' };
+    }
+
+    const recipientPhone = customer.mobile ?? customer.phone;
+    const recipientEmail = customer.email;
+
+    if (!recipientPhone && !recipientEmail) {
+      return { queued: false, reason: 'No contact channel available for this customer' };
+    }
+
+    const attemptId = randomUUID();
+    const payload: FollowupJobPayload = {
+      companyId: customer.companyId,
+      entityType: 'customer',
+      entityId: customer.id,
+      customerId: customer.id,
+      recipientId: customer.id,
+      recipientName: `${customer.firstName} ${customer.lastName}`.trim(),
+      recipientPhone: recipientPhone ?? undefined,
+      recipientEmail: recipientEmail ?? undefined,
+      action: action.action,
+      churnProb: action.churnProb,
+      reason: action.reason,
+      triggeredAt: new Date().toISOString(),
+    };
+
+    await this.createAttempt({ attemptId, payload, entityType: 'customer', entityId: customer.id, customerId: customer.id, leadId: null });
+
+    try {
+      const jobId = await this.followupProducer.enqueueFollowup(payload);
+      await this.markAttemptQueued(attemptId, jobId);
+      await this.logAnalyticsEvent(payload);
+      return { queued: true, action: action.action, reason: action.reason };
+    } catch (error) {
+      await this.markAttemptFailed(attemptId, error instanceof Error ? error.message : 'Unknown error');
+      return { queued: false, reason: error instanceof Error ? error.message : 'Failed to queue follow-up' };
+    }
+  }
+
+  async triggerRetentionForCustomer(companyId: string, customerId: string, reason: string): Promise<{ queued: boolean; reason?: string }> {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id: customerId, companyId, isActive: true },
+      select: { id: true, companyId: true, firstName: true, lastName: true, email: true, phone: true, mobile: true },
+    });
+
+    if (!customer) {
+      return { queued: false, reason: 'Customer not found' };
+    }
+
+    const recipientPhone = customer.mobile ?? customer.phone;
+    const recipientEmail = customer.email;
+
+    if (!recipientPhone && !recipientEmail) {
+      return { queued: false, reason: 'No contact channel available' };
+    }
+
+    const attemptId = randomUUID();
+    const payload: FollowupJobPayload = {
+      companyId: customer.companyId,
+      entityType: 'customer',
+      entityId: customer.id,
+      customerId: customer.id,
+      recipientId: customer.id,
+      recipientName: `${customer.firstName} ${customer.lastName}`.trim(),
+      recipientPhone: recipientPhone ?? undefined,
+      recipientEmail: recipientEmail ?? undefined,
+      action: 'RETENTION',
+      reason,
+      triggeredAt: new Date().toISOString(),
+    };
+
+    await this.createAttempt({ attemptId, payload, entityType: 'customer', entityId: customer.id, customerId: customer.id, leadId: null });
+
+    try {
+      const jobId = await this.followupProducer.enqueueFollowup(payload);
+      await this.markAttemptQueued(attemptId, jobId);
+      await this.logAnalyticsEvent(payload);
+      return { queued: true };
+    } catch (error) {
+      await this.markAttemptFailed(attemptId, error instanceof Error ? error.message : 'Unknown error');
+      return { queued: false, reason: error instanceof Error ? error.message : 'Failed to queue retention action' };
+    }
+  }
+
   private async processCustomer(customer: CustomerCandidate): Promise<keyof FollowupRunSummary> {
     if (await this.hasRecentFollowup(customer.companyId, 'customer', customer.id)) {
       return 'skipped';

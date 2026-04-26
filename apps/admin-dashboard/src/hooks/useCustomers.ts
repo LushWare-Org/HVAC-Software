@@ -98,6 +98,36 @@ export function useDeleteCustomer() {
   })
 }
 
+export function useExecuteFollowup() {
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await api.post(`/crm/customers/${customerId}/followup`)
+      return res.data as { queued: boolean; action?: string; reason?: string }
+    },
+  })
+}
+
+export function useExecuteRetention() {
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await api.post(`/crm/customers/${customerId}/retention`)
+      return res.data as { queued: boolean; reason?: string }
+    },
+  })
+}
+
+export function useExecuteUpsell() {
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await api.post(`/crm/upsell/customers/${customerId}/recommendations`)
+      return res.data as { status: string }
+    },
+    onSuccess: (_data, customerId) => {
+      queryClient.invalidateQueries({ queryKey: ['customers', customerId, 'status-summary'] })
+    },
+  })
+}
+
 // ─── Leads ────────────────────────────────────────────────────────────────────
 
 interface LeadFilters {

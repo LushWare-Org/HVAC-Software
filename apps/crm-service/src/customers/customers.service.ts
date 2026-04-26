@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput } from '../ai/churn.client';
 import { UpsellAgentService } from '../upsell/upsell-agent.service';
+import { FollowupAgent } from '../agents/followup.agent';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PaginatedResponse } from '@tscrm/types';
@@ -19,6 +20,7 @@ export class CustomersService {
     private prisma: PrismaService,
     private churnClient: ChurnClient,
     private upsellAgent: UpsellAgentService,
+    private followupAgent: FollowupAgent,
   ) {}
 
   private provisionalPortalSignupFilter = {
@@ -318,6 +320,16 @@ export class CustomersService {
         activeAgreementCount: customer.agreements.length,
       },
     };
+  }
+
+  async executeFollowup(companyId: string, customerId: string) {
+    return this.followupAgent.runForCustomer(companyId, customerId);
+  }
+
+  async executeRetention(companyId: string, customerId: string) {
+    const summary = await this.getStatusSummary(companyId, customerId);
+    const reason = summary.retentionPrediction?.reason ?? 'Manual retention action triggered';
+    return this.followupAgent.triggerRetentionForCustomer(companyId, customerId, reason);
   }
 
   // Called by customer portal: find Customer linked to the portal user's account
