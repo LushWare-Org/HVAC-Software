@@ -15,6 +15,121 @@ Current retention actions are:
 
 The agent combines conversion likelihood, predicted lifetime value, churn probability, repair frequency, and contact-channel preference into a structured retention recommendation.
 
+---
+
+## How the bandit optimizes decisions
+
+### What it is
+
+`RetentionBandit` in `agent/retention_bandit.py` is an **epsilon-greedy contextual multi-armed bandit**. The bandit **is the policy** for this agent — all churn-prevention strategy decisions flow through it directly. It maintains a Q-table of average incremental revenue rewards per `(state_context, action)` pair and steers future decisions toward the interventions that historically produce the most revenue lift per customer context bucket.
+
+### State representation
+
+Continuous and categorical state is discretized into a 4-tuple key:
+
+```
+churn_bucket    = clamp(int(churn_risk × 10), 0, 10)              # 11 buckets: 0.0–1.0
+ltv_bucket      = clamp(int(ltv / 500), 0, 20)                    # 21 buckets: every $500
+attempts_bucket = min(5, num_previous_retention_attempts)         # capped at 5
+segment         = str(customer_segment).lower()                   # premium | standard | budget
+```
+
+Dimensions were chosen because they capture the strongest retention signals: urgency of intervention (churn risk), how much revenue is at stake (LTV), contact fatigue (attempts), and preferred strategy type (segment).
+
+### Learnable actions
+
+```python
+RETENTION_ACTIONS = ("discount_10", "discount_20", "call_customer", "send_maintenance_offer", "no_action")
+```
+
+`no_action` is included so the bandit learns when proactive outreach costs more than it recovers — for instance, customers who are too far gone to save, or those who have been over-contacted.
+
+### Action selection — epsilon-greedy
+
+A hard safety gate fires before any stochastic choice:
+
+```
+If num_previous_retention_attempts > 5 → return no_action unconditionally
+```
+
+This prevents repeated contact that erodes customer trust regardless of what the Q-table has learned.
+
+When the gate does not fire:
+
+```
+With probability ε  (0.20) → explore: pick a random strategy
+With probability 1−ε (0.80) → exploit: pick argmax Q[state_key]
+```
+
+### Learning — incremental running average
+
+After each run the bandit updates using the Welford incremental mean:
+
+```
+N[state][action] += 1
+Q[state][action] += (reward − Q[state][action]) / N[state][action]
+```
+
+The reward signal is **incremental revenue** (`actual_revenue − baseline_revenue`):
+
+```
+baseline_revenue = (ltv / 24) × (1 − churn_risk)
+                   (expected monthly revenue if no action is taken)
+
+actual_revenue   = (ltv / 24) × discount_factor   if customer is retained
+                   0.0                              if customer churns
+
+reward           = actual_revenue − baseline_revenue
+```
+
+Discount factors penalise over-discounting: `discount_20` earns a lower reward than a `call_customer` that retains at full LTV. A negative reward means the intervention cost more (via discount margin) than it recovered relative to the no-action baseline.
+
+### Decision flow in `retention_agent.py`
+
+```
+1. Build state from CRM signals
+2. Load persisted bandit   (models/retention_bandit.pkl)
+3. bandit.select_action(state)                 ← safety gate → ε-greedy
+4. execute_retention_action(action, ...)       ← discount / call / maintenance offer
+5. Observe retention outcome                   ← retained = True / False
+6. baseline_revenue = monthly_ltv × (1 − churn_risk)
+7. actual_revenue   = monthly_ltv × discount_factor  (if retained, else 0.0)
+8. reward           = actual_revenue − baseline_revenue
+9. bandit.update(state, action, reward)        ← Welford update
+10. save_bandit()  →  models/retention_bandit.pkl
+```
+
+In batch mode (`run_batch`) the bandit is loaded and saved after each customer so every subsequent customer in the batch benefits from all learning accumulated by prior ones.
+
+### Persistence
+
+The bandit is serialized to `models/retention_bandit.pkl` via `joblib` after every run. `load_bandit()` restores it at the start of the next run. If the file is missing or corrupt, a fresh `RetentionBandit` is initialized automatically.
+
+### Observability
+
+`bandit.stats()` returns a compact summary logged after every update:
+
+```json
+{
+  "states_explored": 14,
+  "total_updates": 380,
+  "best_actions_per_state": {
+    "(8, 13, 1, 'premium')": "call_customer",
+    "(6, 2, 0, 'budget')": "discount_20"
+  }
+}
+```
+
+`bandit.top_actions(n)` returns the most-visited `(state, action)` pairs with Q values and visit counts. Over time the Q-table converges to learned optima such as:
+
+```
+(*, high_ltv, *, 'premium') → call_customer  (Q ≈ 180 — high-touch preferred, retains at full rate)
+(*, low_ltv,  *, 'budget')  → discount_20    (Q ≈ 25  — price sensitivity drives budget segment)
+(*,       *,  5, *)         → no_action      (safety gate — exhausted customers are never contacted)
+```
+
+---
+
 ## Current Runtime Status
 
 There are two retention implementations in the repo:

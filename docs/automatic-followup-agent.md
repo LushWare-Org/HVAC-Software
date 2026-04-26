@@ -14,6 +14,115 @@ Current production actions are:
 
 The shared payload type also supports `UPSELL`, which is produced by the Upsell Recommendation Agent and consumed by the same follow-up queue worker.
 
+---
+
+## How the bandit optimizes decisions
+
+### What it is
+
+`FollowUpBandit` in `agent/followup_bandit.py` is an **epsilon-greedy contextual multi-armed bandit**. Unlike the revenue agent where the bandit overrides a primary ML policy 20 % of the time, here the bandit **is the policy** — every channel selection decision flows through it directly. It maintains a Q-table of average response rewards per `(state_context, action)` pair and steers future decisions toward the channels that historically produce the most bookings.
+
+### State representation
+
+Continuous and categorical state is reduced to a discrete 4-tuple key:
+
+```
+days_bucket      = min(int(days_since_last_contact), 7)   # 8 buckets: 0–7 days
+attempts_bucket  = min(int(num_previous_attempts), 5)     # 6 buckets: 0–5 attempts
+lead_stage       = str(lead_stage).lower()                # new_lead | quote_sent | negotiation | churned
+customer_segment = str(customer_segment).lower()          # premium | standard | budget
+```
+
+Bucketing collapses similar customers so the bandit generalises across them rather than requiring a separate cell per unique profile. Dimensions were chosen because they capture the strongest follow-up signals: urgency (days), fatigue (attempts), pipeline position (stage), and value tier (segment).
+
+### Learnable actions
+
+```python
+FOLLOWUP_ACTIONS = ("call", "sms", "whatsapp", "email", "no_followup")
+```
+
+`no_followup` is included so the bandit can learn when silence is better than contact — for example, customers who have already responded or recently converted.
+
+### Action selection — epsilon-greedy
+
+A hard safety gate fires before any stochastic choice:
+
+```
+If num_previous_attempts > 5 → return no_followup unconditionally
+```
+
+This prevents the bandit from spamming customers during exploration regardless of what the Q-table has learned.
+
+When the gate does not fire:
+
+```
+With probability ε  (0.20) → explore: pick a random channel
+With probability 1−ε (0.80) → exploit: pick argmax Q[state_key]
+```
+
+### Learning — incremental running average
+
+After each run the bandit updates using the Welford incremental mean:
+
+```
+N[state][action] += 1
+Q[state][action] += (reward − Q[state][action]) / N[state][action]
+```
+
+The reward signal is engagement quality, not raw contact volume:
+
+| Outcome | Reward |
+|---------|--------|
+| Customer books a service | 10.0 |
+| Customer responds but does not book | 1.0 |
+| No response | 0.0 |
+
+Booking is weighted 10× higher than a response so the bandit prioritises channels that lead to actual revenue, not just engagement.
+
+### Decision flow in `followup_agent.py`
+
+```
+1. Build state from CRM signals
+2. Load persisted bandit   (models/followup_bandit.pkl)
+3. bandit.select_action(state)           ← safety gate → ε-greedy
+4. execute_followup(action, ...)         ← call / SMS / WhatsApp / email
+5. Observe customer response window      ← responded, booked
+6. reward = 10.0 if booked, 1.0 if responded, 0.0 otherwise
+7. bandit.update(state, action, reward)  ← Welford update
+8. save_bandit()  →  models/followup_bandit.pkl
+```
+
+In batch mode (`run_batch`) the bandit is loaded and saved after each customer so every subsequent customer in the batch benefits from the learning accumulated by all prior ones.
+
+### Persistence
+
+The bandit is serialized to `models/followup_bandit.pkl` via `joblib` after every run. `load_bandit()` restores it at the start of the next run. If the file is missing or corrupt, a fresh `FollowUpBandit` is initialized automatically.
+
+### Observability
+
+`bandit.stats()` returns a compact summary logged after every update:
+
+```json
+{
+  "states_explored": 8,
+  "total_updates": 215,
+  "best_actions_per_state": {
+    "(3, 2, 'quote_sent', 'premium')": "call",
+    "(7, 1, 'new_lead', 'budget')": "sms"
+  }
+}
+```
+
+`bandit.top_actions(n)` returns the most-visited `(state, action)` pairs with Q values and visit counts. Over time the Q-table converges to learned optima such as:
+
+```
+(*, *, *, 'premium') → call      (Q ≈ 2.1 — high-value customers respond to calls)
+(*, *, *, 'budget')  → sms       (Q ≈ 1.8 — SMS converts best for budget segment)
+(7, 5, *, *)         → call      (late follow-ups need a stronger touch)
+```
+
+---
+
 ## Production Flow
 
 1. ML models are loaded by `apps/churn-service`.

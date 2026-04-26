@@ -14,6 +14,126 @@ Current offer labels are:
 
 The agent can run as a daily batch, be triggered manually from the API, or run after customer/equipment profile changes.
 
+---
+
+## How the bandit optimizes decisions
+
+### What it is
+
+`UpsellBandit` in `agent/upsell_bandit.py` is an **epsilon-greedy contextual multi-armed bandit**. It runs as a hybrid alongside the rule-based predictor: 80 % of decisions use the rule predictor, 20 % are handed to the bandit for exploration. The bandit updates after **every** run regardless of which policy drove the decision, so it accumulates training signal from rule-driven outcomes and can eventually outperform the rules for specific customer context buckets.
+
+### State representation
+
+Continuous and categorical state is reduced to a discrete 4-tuple key:
+
+```
+service_type     = str(service_type).lower()                      # repair | annual_service | installation | inspection
+customer_segment = str(customer_segment).lower()                  # premium | standard | budget
+ltv_bucket       = clamp(int(ltv / 500), 0, 20)                   # 21 buckets: every $500
+job_bucket       = clamp(int(job_value / 50), 0, 20)              # 21 buckets: every $50
+```
+
+Dimensions were chosen because they capture the strongest upsell signals: natural offer affinity (service type), willingness to pay for premium options (segment), overall customer value (LTV), and current transaction size (job value).
+
+### Learnable actions
+
+```python
+UPSELL_ACTIONS = ("maintenance_plan", "extended_warranty", "premium_service_upgrade", "replacement_offer", "no_upsell")
+```
+
+`no_upsell` is included so the bandit learns when not upselling produces a better net reward — for example, low-value jobs, fatigued customers, or budget segments that reject offers and incur only offer cost.
+
+### Action selection — epsilon-greedy
+
+Two hard safety gates fire before any stochastic choice:
+
+```
+1. job_value < $100  → return no_upsell unconditionally
+   (small jobs signal the customer is already stretching their budget)
+
+2. num_previous_upsell_attempts > 3 → return no_upsell unconditionally
+   (prevents aggressive upsell cadences that damage trust)
+```
+
+When neither gate fires, standard ε-greedy applies:
+
+```
+With probability ε  (0.20) → explore: pick a random upsell
+With probability 1−ε (0.80) → exploit: pick argmax Q[state_key]
+```
+
+### Learning — incremental running average
+
+After each run the bandit updates using the Welford incremental mean:
+
+```
+N[state][action] += 1
+Q[state][action] += (reward − Q[state][action]) / N[state][action]
+```
+
+The reward signal is **net upsell revenue** (`upsell_revenue − offer_cost`):
+
+```
+upsell_revenue = fixed_base + job_value × multiplier   (if accepted)
+                 0.0                                    (if rejected)
+
+offer_cost     = fixed cost per offer type, incurred regardless of acceptance
+                 maintenance_plan: $25 | extended_warranty: $35
+                 premium_service_upgrade: $15 | replacement_offer: $60
+
+reward         = upsell_revenue − offer_cost
+```
+
+Offer costs penalise pushing expensive-to-present offers that rarely convert: a $60 replacement pitch that gets rejected costs more than a $25 maintenance plan that converts at a lower rate.
+
+### Hybrid decision flow in `upsell_agent.py`
+
+```
+1. Build state from CRM + job signals
+2. Load persisted bandit   (models/upsell_bandit.pkl)
+3. Rule predictor selects upsell based on service_type + segment affinity
+4. Draw random() < BANDIT_EXPLORE_RATE (0.20):
+     True  → bandit.select_action(state)   (bandit exploration)
+     False → use rule predictor's upsell   (exploitation)
+5. execute_upsell(upsell, ...)             ← present offer to customer
+6. Observe acceptance outcome              ← accepted = True / False
+7. reward = upsell_revenue − offer_cost
+8. bandit.update(state, upsell, reward)    ← always update, regardless of source
+9. save_bandit()  →  models/upsell_bandit.pkl
+```
+
+The key design decision at step 8 is that the bandit learns from all runs — both bandit-driven and rule-driven. This means it accumulates the data density needed to confidently replace the rules for high-traffic customer context buckets without requiring that every decision be a bandit exploration.
+
+### Persistence
+
+The bandit is serialized to `models/upsell_bandit.pkl` via `joblib` after every run. `load_bandit()` restores it at the start of the next run. If the file is missing or corrupt, a fresh `UpsellBandit` is initialized automatically.
+
+### Observability
+
+`bandit.stats()` returns a compact summary logged after every update:
+
+```json
+{
+  "states_explored": 10,
+  "total_updates": 295,
+  "best_actions_per_state": {
+    "('annual_service', 'premium', 14, 7)": "premium_service_upgrade",
+    "('repair', 'budget', 2, 3)": "maintenance_plan"
+  }
+}
+```
+
+`bandit.top_actions(n)` returns the most-visited `(state, action)` pairs with Q values and visit counts. Over time the Q-table converges to learned optima such as:
+
+```
+('repair',         'premium',  *, *) → replacement_offer       (Q ≈ 900 — repair reveals replacement need)
+('annual_service', 'standard', *, *) → maintenance_plan        (Q ≈ 90  — service visit → subscription)
+('installation',   *,          *, *) → extended_warranty       (Q ≈ 110 — new equipment → warranty fit)
+(*,                'budget',   *, *) → maintenance_plan        (Q ≈ 40  — value-tier anchor offer)
+```
+
+---
+
 ## Production Flow
 
 1. Upsell model artifacts are loaded by the Python inference service.
