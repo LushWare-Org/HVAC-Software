@@ -6,8 +6,24 @@ import (
 	"log"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+func ensureSchedulingExtensions(ctx context.Context, pool *pgxpool.Pool) {
+	queries := []string{
+		`CREATE EXTENSION IF NOT EXISTS postgis`,
+		`CREATE EXTENSION IF NOT EXISTS postgis_topology`,
+	}
+
+	for _, query := range queries {
+		if _, err := pool.Exec(ctx, query); err != nil {
+			log.Fatalf("❌ Failed to ensure PostGIS extension is installed: %v", err)
+		}
+	}
+
+	fmt.Println("✅ PostGIS extensions verified (scheduling database)")
+}
 
 // NewPostgresPool creates a pgx connection pool.
 // pgx/v5 is used instead of database/sql because:
@@ -27,6 +43,35 @@ func NewPostgresPool(ctx context.Context, databaseURL string) *pgxpool.Pool {
 	cfg.MaxConnIdleTime = 5 * time.Minute
 	cfg.HealthCheckPeriod = 1 * time.Minute
 
+	// ── pgbouncer (transaction pooling) compatibility ────────────────────────
+	// Supabase's pooler runs pgbouncer in transaction mode. Under transaction
+	// pooling, server-side prepared statements cached by pgx can collide across
+	// connections, producing:
+	//   SQLSTATE 42P05  prepared statement "stmtcache_…" already exists
+	// Disable both the statement-description and statement-prepare caches and
+	// force simple-protocol execution so queries run without PREPARE.
+	cfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeExec
+	cfg.ConnConfig.StatementCacheCapacity = 0
+	cfg.ConnConfig.DescriptionCacheCapacity = 0
+
+	// ── PostGIS search_path fix ───────────────────────────────────────────────
+	// Supabase installs PostGIS types (geometry, geography) and functions into
+	// the 'extensions' schema (or 'public'). When the connection targets a
+	// specific schema (e.g. scheduling), those types are not in the search_path,
+	// causing SQLSTATE 42704: type "geography" does not exist.
+	//
+	// AfterConnect runs once per new physical PostgreSQL connection (NOT per
+	// pgbouncer client request), so the SET persists for the lifetime of that
+	// physical connection — safe under pgbouncer transaction mode.
+	cfg.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		_, err := conn.Exec(ctx,
+			"SET search_path = scheduling, public, extensions")
+		if err != nil {
+			fmt.Printf("[WARN] Could not set search_path: %v\n", err)
+		}
+		return nil // non-fatal — worst case geography queries fall back to schema-free path
+	}
+
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		log.Fatalf("❌ Failed to connect to PostgreSQL: %v", err)
@@ -36,6 +81,8 @@ func NewPostgresPool(ctx context.Context, databaseURL string) *pgxpool.Pool {
 	if err := pool.Ping(ctx); err != nil {
 		log.Fatalf("❌ PostgreSQL ping failed: %v", err)
 	}
+
+	ensureSchedulingExtensions(ctx, pool)
 
 	fmt.Println("✅ PostgreSQL connected (scheduling schema)")
 	return pool

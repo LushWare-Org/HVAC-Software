@@ -200,28 +200,31 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 	requiredSkills []string,
 ) ([]TechnicianWithDistance, error) {
 
-	maxDistanceM := maxDistanceKm * 1000
-
+	// ST_DistanceSphere works on plain geometry (SRID 4326) and returns metres
+	// without requiring a ::geography cast — avoids SQLSTATE 42704 when the
+	// PostGIS 'geography' type is not in the connection's search_path.
 	rows, err := r.db.Query(ctx, `
-		SELECT t.id, t.company_id, t.user_id, t.name, t.phone, t.avatar_url, t.skills,
-		       t.max_daily_jobs, t.is_active, t.rating, t.total_ratings, t.last_seen_at,
-		       t.created_at, t.updated_at,
-		       ST_Distance(
-		         t.current_location::geography,
-		         ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography
-		       ) / 1000.0 AS distance_km
-		FROM scheduling.technicians t
-		WHERE t.company_id = $1
-		  AND t.is_active = TRUE
-		  AND t.current_location IS NOT NULL
-		  AND ST_DWithin(
-		        t.current_location::geography,
-		        ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography,
-		        $4
-		      )
-		ORDER BY distance_km ASC
+		SELECT sub.id, sub.company_id, sub.user_id, sub.name, sub.phone, sub.avatar_url,
+		       sub.skills, sub.max_daily_jobs, sub.is_active, sub.rating, sub.total_ratings,
+		       sub.last_seen_at, sub.created_at, sub.updated_at,
+		       sub.distance_km
+		FROM (
+		  SELECT t.id, t.company_id, t.user_id, t.name, t.phone, t.avatar_url,
+		         t.skills, t.max_daily_jobs, t.is_active, t.rating, t.total_ratings,
+		         t.last_seen_at, t.created_at, t.updated_at,
+		         ST_DistanceSphere(
+		           t.current_location,
+		           ST_SetSRID(ST_MakePoint($3, $2), 4326)
+		         ) / 1000.0 AS distance_km
+		  FROM scheduling.technicians t
+		  WHERE t.company_id = $1
+		    AND t.is_active = TRUE
+		    AND t.current_location IS NOT NULL
+		) sub
+		WHERE sub.distance_km <= $4
+		ORDER BY sub.distance_km ASC
 		LIMIT 20`,
-		companyID, jobLat, jobLng, maxDistanceM,
+		companyID, jobLat, jobLng, maxDistanceKm, // $4 is km now (not metres)
 	)
 	if err != nil {
 		return nil, err
@@ -385,6 +388,30 @@ func (r *TechnicianRepository) UpdateTechnician(
 		name, phone, avatarURL, skills, maxDailyJobs, isActive, id, companyID,
 	)
 	return scanTechnician(row)
+}
+
+// UpdateRating writes a pre-computed rating average and review count. Intended
+// to be called from crm-service when a customer posts / amends a JOB review so
+// the smart-assignment scorer picks up fresh feedback on the next dispatch run.
+//
+// Called from CRM without a JWT; the controller layer decides whether to gate
+// it (see routes note — registered as an unauthenticated internal endpoint).
+func (r *TechnicianRepository) UpdateRating(ctx context.Context, technicianID string, rating float64, totalRatings int) error {
+	tag, err := r.db.Exec(ctx, `
+		UPDATE scheduling.technicians
+		SET rating        = $1,
+		    total_ratings = $2,
+		    updated_at    = NOW()
+		WHERE id = $3`,
+		rating, totalRatings, technicianID,
+	)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("technician %s not found", technicianID)
+	}
+	return nil
 }
 
 // ---- helper types & functions ----

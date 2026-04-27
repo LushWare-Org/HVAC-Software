@@ -98,6 +98,10 @@ func main() {
 	// GPS ingestion (technician mobile app → dashboard)
 	r.POST("/gps", auth, gpsH.RecordGPS)
 
+	// Internal: CRM pushes updated review averages here (no JWT, private network).
+	// Keep this OUTSIDE the auth group so crm-service can call it with a plain fetch.
+	r.PATCH("/technicians/:id/rating-sync", techH.RatingSync)
+
 	// Technician profiles
 	// Note: role values MUST match @tscrm/types Role enum (lowercase snake_case injected by Auth0 Action)
 	tech := r.Group("/technicians", auth)

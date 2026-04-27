@@ -119,6 +119,14 @@ export const BookingStatus: {
 
 export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus]
 
+
+export const ReviewType: {
+  JOB: 'JOB',
+  COMPANY: 'COMPANY'
+};
+
+export type ReviewType = (typeof ReviewType)[keyof typeof ReviewType]
+
 }
 
 export type CustomerType = $Enums.CustomerType
@@ -140,6 +148,10 @@ export const AgreementStatus: typeof $Enums.AgreementStatus
 export type BookingStatus = $Enums.BookingStatus
 
 export const BookingStatus: typeof $Enums.BookingStatus
+
+export type ReviewType = $Enums.ReviewType
+
+export const ReviewType: typeof $Enums.ReviewType
 
 /**
  * ##  Prisma Client ʲˢ
@@ -9846,8 +9858,12 @@ export namespace Prisma {
   export type ReviewMinAggregateOutputType = {
     id: string | null
     companyId: string | null
+    type: $Enums.ReviewType | null
     customerId: string | null
+    customerName: string | null
     jobId: string | null
+    technicianId: string | null
+    technicianName: string | null
     rating: number | null
     comment: string | null
     platform: string | null
@@ -9861,8 +9877,12 @@ export namespace Prisma {
   export type ReviewMaxAggregateOutputType = {
     id: string | null
     companyId: string | null
+    type: $Enums.ReviewType | null
     customerId: string | null
+    customerName: string | null
     jobId: string | null
+    technicianId: string | null
+    technicianName: string | null
     rating: number | null
     comment: string | null
     platform: string | null
@@ -9876,8 +9896,12 @@ export namespace Prisma {
   export type ReviewCountAggregateOutputType = {
     id: number
     companyId: number
+    type: number
     customerId: number
+    customerName: number
     jobId: number
+    technicianId: number
+    technicianName: number
     rating: number
     comment: number
     platform: number
@@ -9901,8 +9925,12 @@ export namespace Prisma {
   export type ReviewMinAggregateInputType = {
     id?: true
     companyId?: true
+    type?: true
     customerId?: true
+    customerName?: true
     jobId?: true
+    technicianId?: true
+    technicianName?: true
     rating?: true
     comment?: true
     platform?: true
@@ -9916,8 +9944,12 @@ export namespace Prisma {
   export type ReviewMaxAggregateInputType = {
     id?: true
     companyId?: true
+    type?: true
     customerId?: true
+    customerName?: true
     jobId?: true
+    technicianId?: true
+    technicianName?: true
     rating?: true
     comment?: true
     platform?: true
@@ -9931,8 +9963,12 @@ export namespace Prisma {
   export type ReviewCountAggregateInputType = {
     id?: true
     companyId?: true
+    type?: true
     customerId?: true
+    customerName?: true
     jobId?: true
+    technicianId?: true
+    technicianName?: true
     rating?: true
     comment?: true
     platform?: true
@@ -10033,8 +10069,12 @@ export namespace Prisma {
   export type ReviewGroupByOutputType = {
     id: string
     companyId: string
+    type: $Enums.ReviewType
     customerId: string | null
+    customerName: string | null
     jobId: string | null
+    technicianId: string | null
+    technicianName: string | null
     rating: number
     comment: string | null
     platform: string
@@ -10067,8 +10107,12 @@ export namespace Prisma {
   export type ReviewSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     companyId?: boolean
+    type?: boolean
     customerId?: boolean
+    customerName?: boolean
     jobId?: boolean
+    technicianId?: boolean
+    technicianName?: boolean
     rating?: boolean
     comment?: boolean
     platform?: boolean
@@ -10083,8 +10127,12 @@ export namespace Prisma {
   export type ReviewSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     companyId?: boolean
+    type?: boolean
     customerId?: boolean
+    customerName?: boolean
     jobId?: boolean
+    technicianId?: boolean
+    technicianName?: boolean
     rating?: boolean
     comment?: boolean
     platform?: boolean
@@ -10099,8 +10147,12 @@ export namespace Prisma {
   export type ReviewSelectScalar = {
     id?: boolean
     companyId?: boolean
+    type?: boolean
     customerId?: boolean
+    customerName?: boolean
     jobId?: boolean
+    technicianId?: boolean
+    technicianName?: boolean
     rating?: boolean
     comment?: boolean
     platform?: boolean
@@ -10126,8 +10178,12 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       companyId: string
+      type: $Enums.ReviewType
       customerId: string | null
+      customerName: string | null
       jobId: string | null
+      technicianId: string | null
+      technicianName: string | null
       rating: number
       comment: string | null
       platform: string
@@ -10532,8 +10588,12 @@ export namespace Prisma {
   interface ReviewFieldRefs {
     readonly id: FieldRef<"Review", 'String'>
     readonly companyId: FieldRef<"Review", 'String'>
+    readonly type: FieldRef<"Review", 'ReviewType'>
     readonly customerId: FieldRef<"Review", 'String'>
+    readonly customerName: FieldRef<"Review", 'String'>
     readonly jobId: FieldRef<"Review", 'String'>
+    readonly technicianId: FieldRef<"Review", 'String'>
+    readonly technicianName: FieldRef<"Review", 'String'>
     readonly rating: FieldRef<"Review", 'Int'>
     readonly comment: FieldRef<"Review", 'String'>
     readonly platform: FieldRef<"Review", 'String'>
@@ -13142,8 +13202,12 @@ export namespace Prisma {
   export const ReviewScalarFieldEnum: {
     id: 'id',
     companyId: 'companyId',
+    type: 'type',
     customerId: 'customerId',
+    customerName: 'customerName',
     jobId: 'jobId',
+    technicianId: 'technicianId',
+    technicianName: 'technicianName',
     rating: 'rating',
     comment: 'comment',
     platform: 'platform',
@@ -13353,6 +13417,20 @@ export namespace Prisma {
    * Reference to a field of type 'BookingStatus[]'
    */
   export type ListEnumBookingStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BookingStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'ReviewType'
+   */
+  export type EnumReviewTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReviewType'>
+    
+
+
+  /**
+   * Reference to a field of type 'ReviewType[]'
+   */
+  export type ListEnumReviewTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReviewType[]'>
     
 
 
@@ -14207,8 +14285,12 @@ export namespace Prisma {
     NOT?: ReviewWhereInput | ReviewWhereInput[]
     id?: StringFilter<"Review"> | string
     companyId?: StringFilter<"Review"> | string
+    type?: EnumReviewTypeFilter<"Review"> | $Enums.ReviewType
     customerId?: StringNullableFilter<"Review"> | string | null
+    customerName?: StringNullableFilter<"Review"> | string | null
     jobId?: StringNullableFilter<"Review"> | string | null
+    technicianId?: StringNullableFilter<"Review"> | string | null
+    technicianName?: StringNullableFilter<"Review"> | string | null
     rating?: IntFilter<"Review"> | number
     comment?: StringNullableFilter<"Review"> | string | null
     platform?: StringFilter<"Review"> | string
@@ -14223,8 +14305,12 @@ export namespace Prisma {
   export type ReviewOrderByWithRelationInput = {
     id?: SortOrder
     companyId?: SortOrder
+    type?: SortOrder
     customerId?: SortOrderInput | SortOrder
+    customerName?: SortOrderInput | SortOrder
     jobId?: SortOrderInput | SortOrder
+    technicianId?: SortOrderInput | SortOrder
+    technicianName?: SortOrderInput | SortOrder
     rating?: SortOrder
     comment?: SortOrderInput | SortOrder
     platform?: SortOrder
@@ -14242,8 +14328,12 @@ export namespace Prisma {
     OR?: ReviewWhereInput[]
     NOT?: ReviewWhereInput | ReviewWhereInput[]
     companyId?: StringFilter<"Review"> | string
+    type?: EnumReviewTypeFilter<"Review"> | $Enums.ReviewType
     customerId?: StringNullableFilter<"Review"> | string | null
+    customerName?: StringNullableFilter<"Review"> | string | null
     jobId?: StringNullableFilter<"Review"> | string | null
+    technicianId?: StringNullableFilter<"Review"> | string | null
+    technicianName?: StringNullableFilter<"Review"> | string | null
     rating?: IntFilter<"Review"> | number
     comment?: StringNullableFilter<"Review"> | string | null
     platform?: StringFilter<"Review"> | string
@@ -14258,8 +14348,12 @@ export namespace Prisma {
   export type ReviewOrderByWithAggregationInput = {
     id?: SortOrder
     companyId?: SortOrder
+    type?: SortOrder
     customerId?: SortOrderInput | SortOrder
+    customerName?: SortOrderInput | SortOrder
     jobId?: SortOrderInput | SortOrder
+    technicianId?: SortOrderInput | SortOrder
+    technicianName?: SortOrderInput | SortOrder
     rating?: SortOrder
     comment?: SortOrderInput | SortOrder
     platform?: SortOrder
@@ -14281,8 +14375,12 @@ export namespace Prisma {
     NOT?: ReviewScalarWhereWithAggregatesInput | ReviewScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Review"> | string
     companyId?: StringWithAggregatesFilter<"Review"> | string
+    type?: EnumReviewTypeWithAggregatesFilter<"Review"> | $Enums.ReviewType
     customerId?: StringNullableWithAggregatesFilter<"Review"> | string | null
+    customerName?: StringNullableWithAggregatesFilter<"Review"> | string | null
     jobId?: StringNullableWithAggregatesFilter<"Review"> | string | null
+    technicianId?: StringNullableWithAggregatesFilter<"Review"> | string | null
+    technicianName?: StringNullableWithAggregatesFilter<"Review"> | string | null
     rating?: IntWithAggregatesFilter<"Review"> | number
     comment?: StringNullableWithAggregatesFilter<"Review"> | string | null
     platform?: StringWithAggregatesFilter<"Review"> | string
@@ -15461,7 +15559,11 @@ export namespace Prisma {
   export type ReviewCreateInput = {
     id?: string
     companyId: string
+    type?: $Enums.ReviewType
+    customerName?: string | null
     jobId?: string | null
+    technicianId?: string | null
+    technicianName?: string | null
     rating: number
     comment?: string | null
     platform?: string
@@ -15476,8 +15578,12 @@ export namespace Prisma {
   export type ReviewUncheckedCreateInput = {
     id?: string
     companyId: string
+    type?: $Enums.ReviewType
     customerId?: string | null
+    customerName?: string | null
     jobId?: string | null
+    technicianId?: string | null
+    technicianName?: string | null
     rating: number
     comment?: string | null
     platform?: string
@@ -15491,7 +15597,11 @@ export namespace Prisma {
   export type ReviewUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumReviewTypeFieldUpdateOperationsInput | $Enums.ReviewType
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianName?: NullableStringFieldUpdateOperationsInput | string | null
     rating?: IntFieldUpdateOperationsInput | number
     comment?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: StringFieldUpdateOperationsInput | string
@@ -15506,8 +15616,12 @@ export namespace Prisma {
   export type ReviewUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumReviewTypeFieldUpdateOperationsInput | $Enums.ReviewType
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianName?: NullableStringFieldUpdateOperationsInput | string | null
     rating?: IntFieldUpdateOperationsInput | number
     comment?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: StringFieldUpdateOperationsInput | string
@@ -15521,8 +15635,12 @@ export namespace Prisma {
   export type ReviewCreateManyInput = {
     id?: string
     companyId: string
+    type?: $Enums.ReviewType
     customerId?: string | null
+    customerName?: string | null
     jobId?: string | null
+    technicianId?: string | null
+    technicianName?: string | null
     rating: number
     comment?: string | null
     platform?: string
@@ -15536,7 +15654,11 @@ export namespace Prisma {
   export type ReviewUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumReviewTypeFieldUpdateOperationsInput | $Enums.ReviewType
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianName?: NullableStringFieldUpdateOperationsInput | string | null
     rating?: IntFieldUpdateOperationsInput | number
     comment?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: StringFieldUpdateOperationsInput | string
@@ -15550,8 +15672,12 @@ export namespace Prisma {
   export type ReviewUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumReviewTypeFieldUpdateOperationsInput | $Enums.ReviewType
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianName?: NullableStringFieldUpdateOperationsInput | string | null
     rating?: IntFieldUpdateOperationsInput | number
     comment?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: StringFieldUpdateOperationsInput | string
@@ -16588,6 +16714,13 @@ export namespace Prisma {
     _max?: NestedEnumBookingStatusFilter<$PrismaModel>
   }
 
+  export type EnumReviewTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.ReviewType | EnumReviewTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ReviewType[] | ListEnumReviewTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ReviewType[] | ListEnumReviewTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumReviewTypeFilter<$PrismaModel> | $Enums.ReviewType
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -16602,8 +16735,12 @@ export namespace Prisma {
   export type ReviewCountOrderByAggregateInput = {
     id?: SortOrder
     companyId?: SortOrder
+    type?: SortOrder
     customerId?: SortOrder
+    customerName?: SortOrder
     jobId?: SortOrder
+    technicianId?: SortOrder
+    technicianName?: SortOrder
     rating?: SortOrder
     comment?: SortOrder
     platform?: SortOrder
@@ -16621,8 +16758,12 @@ export namespace Prisma {
   export type ReviewMaxOrderByAggregateInput = {
     id?: SortOrder
     companyId?: SortOrder
+    type?: SortOrder
     customerId?: SortOrder
+    customerName?: SortOrder
     jobId?: SortOrder
+    technicianId?: SortOrder
+    technicianName?: SortOrder
     rating?: SortOrder
     comment?: SortOrder
     platform?: SortOrder
@@ -16636,8 +16777,12 @@ export namespace Prisma {
   export type ReviewMinOrderByAggregateInput = {
     id?: SortOrder
     companyId?: SortOrder
+    type?: SortOrder
     customerId?: SortOrder
+    customerName?: SortOrder
     jobId?: SortOrder
+    technicianId?: SortOrder
+    technicianName?: SortOrder
     rating?: SortOrder
     comment?: SortOrder
     platform?: SortOrder
@@ -16650,6 +16795,16 @@ export namespace Prisma {
 
   export type ReviewSumOrderByAggregateInput = {
     rating?: SortOrder
+  }
+
+  export type EnumReviewTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ReviewType | EnumReviewTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ReviewType[] | ListEnumReviewTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ReviewType[] | ListEnumReviewTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumReviewTypeWithAggregatesFilter<$PrismaModel> | $Enums.ReviewType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumReviewTypeFilter<$PrismaModel>
+    _max?: NestedEnumReviewTypeFilter<$PrismaModel>
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -17578,6 +17733,10 @@ export namespace Prisma {
     connect?: CustomerWhereUniqueInput
   }
 
+  export type EnumReviewTypeFieldUpdateOperationsInput = {
+    set?: $Enums.ReviewType
+  }
+
   export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
@@ -17926,6 +18085,23 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumBookingStatusFilter<$PrismaModel>
     _max?: NestedEnumBookingStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumReviewTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.ReviewType | EnumReviewTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ReviewType[] | ListEnumReviewTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ReviewType[] | ListEnumReviewTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumReviewTypeFilter<$PrismaModel> | $Enums.ReviewType
+  }
+
+  export type NestedEnumReviewTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ReviewType | EnumReviewTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ReviewType[] | ListEnumReviewTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ReviewType[] | ListEnumReviewTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumReviewTypeWithAggregatesFilter<$PrismaModel> | $Enums.ReviewType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumReviewTypeFilter<$PrismaModel>
+    _max?: NestedEnumReviewTypeFilter<$PrismaModel>
   }
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
@@ -18818,7 +18994,11 @@ export namespace Prisma {
   export type ReviewCreateWithoutCustomerInput = {
     id?: string
     companyId: string
+    type?: $Enums.ReviewType
+    customerName?: string | null
     jobId?: string | null
+    technicianId?: string | null
+    technicianName?: string | null
     rating: number
     comment?: string | null
     platform?: string
@@ -18832,7 +19012,11 @@ export namespace Prisma {
   export type ReviewUncheckedCreateWithoutCustomerInput = {
     id?: string
     companyId: string
+    type?: $Enums.ReviewType
+    customerName?: string | null
     jobId?: string | null
+    technicianId?: string | null
+    technicianName?: string | null
     rating: number
     comment?: string | null
     platform?: string
@@ -19074,8 +19258,12 @@ export namespace Prisma {
     NOT?: ReviewScalarWhereInput | ReviewScalarWhereInput[]
     id?: StringFilter<"Review"> | string
     companyId?: StringFilter<"Review"> | string
+    type?: EnumReviewTypeFilter<"Review"> | $Enums.ReviewType
     customerId?: StringNullableFilter<"Review"> | string | null
+    customerName?: StringNullableFilter<"Review"> | string | null
     jobId?: StringNullableFilter<"Review"> | string | null
+    technicianId?: StringNullableFilter<"Review"> | string | null
+    technicianName?: StringNullableFilter<"Review"> | string | null
     rating?: IntFilter<"Review"> | number
     comment?: StringNullableFilter<"Review"> | string | null
     platform?: StringFilter<"Review"> | string
@@ -21190,7 +21378,11 @@ export namespace Prisma {
   export type ReviewCreateManyCustomerInput = {
     id?: string
     companyId: string
+    type?: $Enums.ReviewType
+    customerName?: string | null
     jobId?: string | null
+    technicianId?: string | null
+    technicianName?: string | null
     rating: number
     comment?: string | null
     platform?: string
@@ -21439,7 +21631,11 @@ export namespace Prisma {
   export type ReviewUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumReviewTypeFieldUpdateOperationsInput | $Enums.ReviewType
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianName?: NullableStringFieldUpdateOperationsInput | string | null
     rating?: IntFieldUpdateOperationsInput | number
     comment?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: StringFieldUpdateOperationsInput | string
@@ -21453,7 +21649,11 @@ export namespace Prisma {
   export type ReviewUncheckedUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumReviewTypeFieldUpdateOperationsInput | $Enums.ReviewType
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianName?: NullableStringFieldUpdateOperationsInput | string | null
     rating?: IntFieldUpdateOperationsInput | number
     comment?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: StringFieldUpdateOperationsInput | string
@@ -21467,7 +21667,11 @@ export namespace Prisma {
   export type ReviewUncheckedUpdateManyWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumReviewTypeFieldUpdateOperationsInput | $Enums.ReviewType
+    customerName?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianId?: NullableStringFieldUpdateOperationsInput | string | null
+    technicianName?: NullableStringFieldUpdateOperationsInput | string | null
     rating?: IntFieldUpdateOperationsInput | number
     comment?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: StringFieldUpdateOperationsInput | string

@@ -13,6 +13,7 @@ import type {
   Technician,
   MessageThread,
   Notification,
+  Review, ReviewType, CompanyReviewStats,
 } from '../types/api'
 
 // ─── Query Key Factories ────────────────────────────────────────────────────
@@ -549,6 +550,45 @@ export function useMarkAllMyNotificationsRead() {
   })
 }
 
+export function useCreateMyThread() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: {
+      customerId?: string
+      customerName?: string
+      subject?: string
+      jobId?: string
+    }) => {
+      const { data: res } = await api.post('/comms/messaging/threads', data)
+      return res
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.threads() })
+    },
+  })
+}
+
+export function useDeleteMyThread() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (threadId: string) => {
+      const { data } = await api.delete(`/comms/messaging/threads/${threadId}`)
+      return data as { deleted: boolean; id: string }
+    },
+    onSuccess: (_data, threadId) => {
+      // Optimistically remove from thread list
+      qc.setQueriesData<PaginatedResponse<MessageThread>>(
+        { queryKey: keys.threads(), exact: false },
+        (old) =>
+          old
+            ? { ...old, data: old.data.filter((t) => t.id !== threadId) }
+            : old,
+      )
+      qc.removeQueries({ queryKey: keys.thread(threadId) })
+    },
+  })
+}
+
 // ─── Dashboard aggregations ──────────────────────────────────────────────────
 export function useCustomerDashboard() {
   const { user } = useAuth()
@@ -623,6 +663,44 @@ export function useCustomerDashboard() {
   }
 }
 
+// ─── My Equipment ────────────────────────────────────────────────────────────
+export function useMyEquipment() {
+  const { user } = useAuth()
+  return useQuery<import('../types/api').CustomerEquipment[]>({
+    queryKey: ['customer', 'equipment', user?.customerId],
+    queryFn: async () => {
+      const { data } = await api.get(`/crm/customers/${user!.customerId}/equipment`)
+      return data
+    },
+    enabled: !!user?.customerId,
+  })
+}
+
+export function useSaveMyEquipment() {
+  const qc = useQueryClient()
+  const { user } = useAuth()
+  return useMutation({
+    mutationFn: async (
+      equipment: Array<{
+        type?: string
+        brand?: string
+        model?: string
+        serialNo?: string
+        installDate?: string
+        warrantyEnd?: string
+        notes?: string
+      }>,
+    ) => {
+      const { data } = await api.put(`/crm/customers/${user!.customerId}/equipment`, { equipment })
+      return data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['customer', 'equipment', user?.customerId] })
+      qc.invalidateQueries({ queryKey: ['customer', 'profile'] })
+    },
+  })
+}
+
 // ─── User profile (CompanyUser record) ───────────────────────────────────────
 export function useMyUserProfile() {
   return useQuery({
@@ -642,6 +720,73 @@ export function useUpdateUserProfile() {
       return data
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['customer', 'user-profile'] }),
+  })
+}
+
+// ─── Reviews ─────────────────────────────────────────────────────────────────
+// Customers can rate individual jobs (one review per job, upserted) and the
+// company overall. Both feed the admin dashboard's Reviews section and the
+// technician's rating in scheduling's smart-assign scoring.
+
+export function useMyReviews() {
+  const { user } = useAuth()
+  return useQuery<Review[]>({
+    queryKey: ['customer', 'reviews', user?.customerId],
+    queryFn: async () => {
+      const { data } = await api.get(`/crm/reviews/customer/${user!.customerId}`)
+      return Array.isArray(data) ? data : data?.data ?? []
+    },
+    enabled: !!user?.customerId,
+  })
+}
+
+export function useJobReview(jobId: string | null) {
+  const { user } = useAuth()
+  return useQuery<Review | null>({
+    queryKey: ['customer', 'job-review', jobId, user?.customerId],
+    queryFn: async () => {
+      const { data } = await api.get(`/crm/reviews/job/${jobId}`)
+      const arr: Review[] = Array.isArray(data) ? data : data?.data ?? []
+      // Return only THIS customer's review for the job (server already filters
+      // for CUSTOMER role, but this makes client code straightforward).
+      return arr.find((r) => r.customerId === user?.customerId) ?? null
+    },
+    enabled: !!jobId && !!user?.customerId,
+  })
+}
+
+export function useCompanyReviewStats() {
+  return useQuery<CompanyReviewStats>({
+    queryKey: ['customer', 'review-stats', 'company'],
+    queryFn: async () => {
+      const { data } = await api.get('/crm/reviews/stats/company')
+      return data
+    },
+    staleTime: 60 * 1000,
+  })
+}
+
+export function useSubmitReview() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (dto: {
+      type:           ReviewType
+      rating:         number
+      comment?:       string
+      jobId?:         string
+      technicianId?:  string
+      technicianName?: string
+    }) => {
+      const { data } = await api.post('/crm/reviews', dto)
+      return data as Review
+    },
+    onSuccess: (_rev, vars) => {
+      qc.invalidateQueries({ queryKey: ['customer', 'reviews'] })
+      qc.invalidateQueries({ queryKey: ['customer', 'review-stats'] })
+      if (vars.jobId) {
+        qc.invalidateQueries({ queryKey: ['customer', 'job-review', vars.jobId] })
+      }
+    },
   })
 }
 

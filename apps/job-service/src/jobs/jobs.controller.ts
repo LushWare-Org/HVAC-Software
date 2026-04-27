@@ -177,6 +177,15 @@ export class JobsController {
     return this.jobsService.updateStatus(user.companyId, id, user, dto);
   }
 
+  // ---- Delete ----
+  @Delete(':id')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a job (admin/office manager only)' })
+  remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.jobsService.remove(user.companyId, id);
+  }
+
   // ---- Custom field values ----
   @Patch(':id/custom-fields')
   @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN)

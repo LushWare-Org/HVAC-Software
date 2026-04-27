@@ -14,6 +14,7 @@ import { Colors, Spacing, FontSize, FontWeight, BorderRadius, Shadow } from '@/c
 import { useAuth } from '@/contexts/AuthContext'
 import { useUserProfile, useTechnicianProfile, useUpdateProfile, useChangePassword } from '@/hooks/useProfile'
 import { useMyExpenses } from '@/hooks/useExpenses'
+import { useMyReviews, useMyReviewStats } from '@/hooks/useReviews'
 import { ActionButton } from '@/components/ActionButton'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { getInitials, formatPhone } from '@/utils/format'
@@ -23,6 +24,8 @@ export default function ProfileScreen() {
   const router = useRouter()
   const { data: techProfile } = useTechnicianProfile()
   const { data: expensesData } = useMyExpenses({ limit: 5 })
+  const { data: myReviews } = useMyReviews()
+  const { data: reviewStats } = useMyReviewStats()
   const updateProfile = useUpdateProfile()
   const changePassword = useChangePassword()
 
@@ -181,6 +184,51 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
+
+        {/* My Reviews */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>My Reviews</Text>
+            {reviewStats && reviewStats.totalRatings > 0 && (
+              <Text style={styles.reviewsAggregate}>
+                ⭐ {reviewStats.avgRating.toFixed(1)} · {reviewStats.totalRatings}
+              </Text>
+            )}
+          </View>
+
+          {(!myReviews || myReviews.length === 0) ? (
+            <View style={styles.reviewsEmpty}>
+              <Text style={styles.reviewsEmptyIcon}>⭐</Text>
+              <Text style={styles.reviewsEmptyTitle}>No reviews yet</Text>
+              <Text style={styles.reviewsEmptySub}>
+                Complete jobs to start receiving customer feedback.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.reviewsList}>
+              {myReviews.slice(0, 10).map((rv) => (
+                <View key={rv.id} style={styles.reviewCard}>
+                  <View style={styles.reviewCardTop}>
+                    <Text style={styles.reviewStars}>
+                      {'★'.repeat(rv.rating)}{'☆'.repeat(5 - rv.rating)}
+                    </Text>
+                    <Text style={styles.reviewDate}>
+                      {new Date(rv.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  {rv.customerName && (
+                    <Text style={styles.reviewCustomer}>{rv.customerName}</Text>
+                  )}
+                  {rv.comment ? (
+                    <Text style={styles.reviewComment}>"{rv.comment}"</Text>
+                  ) : (
+                    <Text style={styles.reviewCommentEmpty}>No comment</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
 
         {/* Security */}
         <View style={styles.section}>
@@ -464,5 +512,78 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     fontWeight: FontWeight.semibold,
     color: Colors.danger,
+  },
+  reviewsAggregate: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: '#D97706',
+  },
+  reviewsEmpty: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: Spacing.base,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  reviewsEmptyIcon: {
+    fontSize: 32,
+    marginBottom: Spacing.sm,
+    opacity: 0.4,
+  },
+  reviewsEmptyTitle: {
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
+  },
+  reviewsEmptySub: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  reviewsList: {
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+  },
+  reviewCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.base,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  reviewCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  reviewStars: {
+    fontSize: FontSize.base,
+    color: '#F59E0B',
+    letterSpacing: 1,
+  },
+  reviewDate: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+  },
+  reviewCustomer: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
+  reviewComment: {
+    fontSize: FontSize.sm,
+    color: Colors.textPrimary,
+    fontStyle: 'italic',
+    lineHeight: 19,
+  },
+  reviewCommentEmpty: {
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
   },
 })

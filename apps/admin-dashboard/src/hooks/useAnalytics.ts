@@ -12,6 +12,11 @@ import type {
   TechLeaderboard,
   CustomerAcquisition,
   RevenueByCategory,
+  RevenueSummary,
+  JobsByTrade,
+  JobVolumeTrend,
+  JobCompletionRates,
+  TopJob,
 } from '../types/api'
 
 type Granularity = 'day' | 'week' | 'month' | 'quarter' | 'year'
@@ -105,6 +110,85 @@ export function useRevenueByCategory(from?: string, to?: string) {
       if (from) params.from = from
       if (to) params.to = to
       const res = await api.get('/analytics/revenue/by-category', { params })
+      return res.data
+    },
+  })
+}
+
+// ─── Revenue summary ───────────────────────────────────────────────────────────
+
+export function useRevenueSummary(from?: string, to?: string) {
+  return useQuery<RevenueSummary>({
+    queryKey: ['analytics', 'revenue-summary', from, to],
+    queryFn: async () => {
+      const params: Record<string, string> = {}
+      if (from) params.from = from
+      if (to) params.to = to
+      const res = await api.get('/analytics/revenue/summary', { params })
+      return res.data
+    },
+  })
+}
+
+// ─── Jobs by trade type ────────────────────────────────────────────────────────
+
+export function useJobsByTrade(from?: string, to?: string) {
+  return useQuery<JobsByTrade[]>({
+    queryKey: ['analytics', 'jobs-by-trade', from, to],
+    queryFn: async () => {
+      const params: Record<string, string> = {}
+      if (from) params.from = from
+      if (to) params.to = to
+      const res = await api.get('/analytics/jobs-analytics/by-trade', { params })
+      return res.data
+    },
+  })
+}
+
+// ─── Job volume trends ────────────────────────────────────────────────────────
+
+export function useJobTrends(
+  granularity: Granularity = 'week',
+  from?: string,
+  to?: string,
+) {
+  return useQuery<JobVolumeTrend[]>({
+    queryKey: ['analytics', 'job-trends', granularity, from, to],
+    queryFn: async () => {
+      const params: Record<string, string> = { granularity }
+      if (from) params.from = from
+      if (to) params.to = to
+      const res = await api.get('/analytics/jobs-analytics/trends', { params })
+      return res.data
+    },
+  })
+}
+
+// ─── Job completion rates ─────────────────────────────────────────────────────
+
+export function useJobCompletionRates(from?: string, to?: string) {
+  return useQuery<JobCompletionRates>({
+    queryKey: ['analytics', 'job-completion-rates', from, to],
+    queryFn: async () => {
+      const params: Record<string, string> = {}
+      if (from) params.from = from
+      if (to) params.to = to
+      const res = await api.get('/analytics/jobs-analytics/completion-rates', { params })
+      return res.data
+    },
+  })
+}
+
+// ─── Top jobs ─────────────────────────────────────────────────────────────────
+
+export function useTopJobs(limit = 5, from?: string, to?: string) {
+  return useQuery<TopJob[]>({
+    queryKey: ['analytics', 'top-jobs', limit, from, to],
+    queryFn: async () => {
+      const params: Record<string, string | number> = { limit }
+      if (from) params.from = from
+      if (to) params.to = to
+      const res = await api.get('/analytics/revenue/top-jobs', { params })
       return res.data
     },
   })

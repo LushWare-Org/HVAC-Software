@@ -265,7 +265,10 @@ export default function DispatchBoard() {
 
   const allAssignmentsQuery = useAllTechAssignments(techIds);
   const allAssignments = allAssignmentsQuery.data ?? [];
-  const activeAssignments = allAssignments.filter(a => ["ASSIGNED", "EN_ROUTE", "ON_SITE"].includes(a.status));
+
+  // De-duplicate by jobId: when multiple assignment rows exist for the same job
+  // (e.g. after a tech reassignment where the old row wasn't yet cancelled),
+  // keep only the most-recently updated one per job.
   const assignmentByJobId = useMemo(() => {
     return allAssignments.reduce<Record<string, typeof allAssignments[number]>>((acc, assignment) => {
       const current = acc[assignment.jobId];
@@ -273,7 +276,6 @@ export default function DispatchBoard() {
         acc[assignment.jobId] = assignment;
         return acc;
       }
-
       const currentTime = new Date(current.updatedAt ?? current.assignedAt ?? 0).getTime();
       const nextTime = new Date(assignment.updatedAt ?? assignment.assignedAt ?? 0).getTime();
       if (nextTime >= currentTime) {
@@ -282,6 +284,14 @@ export default function DispatchBoard() {
       return acc;
     }, {});
   }, [allAssignments]);
+
+  // Derive active assignments from the de-duplicated map so that a reassigned
+  // job shows up exactly once (with the new tech), never twice.
+  const activeAssignments = useMemo(
+    () => Object.values(assignmentByJobId).filter(a => ["ASSIGNED", "EN_ROUTE", "ON_SITE"].includes(a.status)),
+    [assignmentByJobId],
+  );
+
   const assignedJobs = allJobs.filter(job => !!assignmentByJobId[job.id]);
   const unassignedJobs = allJobs.filter(job => !assignmentByJobId[job.id]);
 
@@ -433,7 +443,10 @@ export default function DispatchBoard() {
     .filter((job) => !!job.scheduledStart && new Date(job.scheduledStart).getTime() < nowMs)
     .sort((a, b) => new Date(b.scheduledStart ?? 0).getTime() - new Date(a.scheduledStart ?? 0).getTime());
 
-  const activeAssignmentsWithJob = activeAssignments
+  // Build the active-assignments list from the de-duplicated map.
+  // Using activeAssignments (already de-duped) guarantees each job appears once
+  // even if the raw DB still has stale rows from a previous tech reassignment.
+  const activeAssignmentsWithJob = useMemo(() => activeAssignments
     .map(a => ({
       assignment: a,
       technician: techs.find(t => t.id === a.technicianId),
@@ -454,7 +467,7 @@ export default function DispatchBoard() {
       const aTime = new Date((a.assignment as any).assignedAt ?? 0).getTime();
       const bTime = new Date((b.assignment as any).assignedAt ?? 0).getTime();
       return bTime - aTime;
-    });
+    }), [activeAssignments, techs, allJobs, search]);
 
   const filteredTechs = techs.filter(t =>
     !search || t.name.toLowerCase().includes(search.toLowerCase()),

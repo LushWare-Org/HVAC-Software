@@ -11,9 +11,11 @@ import {
   ArrowRight,
   ChevronLeft,
   Eye,
+  Star,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useCustomerDashboard, useJobTechnicianNames } from '../hooks/useCustomerPortal'
+import { useCustomerDashboard, useJobTechnicianNames, useCompanyReviewStats } from '../hooks/useCustomerPortal'
+import ReviewModal from '../components/ReviewModal'
 
 const JOB_STATUS: Record<string, { label: string; css: string }> = {
   PENDING: { label: 'Pending', css: 'badge-amber' },
@@ -44,7 +46,9 @@ function fmtDate(iso?: string) {
 
 export default function Dashboard() {
   const [page, setPage] = useState(1)
+  const [companyReviewOpen, setCompanyReviewOpen] = useState(false)
   const { data, isLoading } = useCustomerDashboard()
+  const { data: reviewStats } = useCompanyReviewStats()
 
   const recentJobs = data?.recentJobs ?? []
   const pendingInvoices = data?.pendingInvoiceItems ?? []
@@ -78,6 +82,56 @@ export default function Dashboard() {
 
   return (
     <div className="anim-fade-up">
+      {/* Rate the company banner — enjoyable nudge for overall feedback */}
+      <div
+        className="card card-hover anim-fade-up"
+        style={{
+          marginBottom: 16,
+          background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+          border: '1px solid #FCD34D',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 18px', gap: 16, flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: 10,
+            background: '#fff', display: 'grid', placeItems: 'center',
+            boxShadow: '0 2px 6px rgba(245,158,11,0.25)',
+          }}>
+            <Star size={22} fill="#F59E0B" color="#F59E0B" />
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#78350F' }}>
+              How are we doing?
+            </div>
+            <div style={{ fontSize: 12.5, color: '#92400E', marginTop: 2 }}>
+              {reviewStats?.companyReviews.totalRatings
+                ? `${reviewStats.companyReviews.avgRating.toFixed(1)}★ from ${reviewStats.companyReviews.totalRatings} customers — add yours`
+                : 'Share feedback about our service overall.'}
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => setCompanyReviewOpen(true)}
+          style={{
+            padding: '9px 18px', borderRadius: 9, border: 'none',
+            background: '#F59E0B', color: '#fff', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit',
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <Star size={13} fill="#fff" color="#fff" />
+          Rate our service
+        </button>
+      </div>
+
+      <ReviewModal
+        open={companyReviewOpen}
+        onClose={() => setCompanyReviewOpen(false)}
+        type="COMPANY"
+      />
+
       <div className="kpi-grid mb-5">
         {statCards.map((stat, index) => {
           const Icon = stat.icon

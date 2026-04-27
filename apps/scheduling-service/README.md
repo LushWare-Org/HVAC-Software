@@ -1,6 +1,6 @@
 # Scheduling & Dispatch Service
 
-**Tech:** Go 1.22 + Gin framework + PostGIS + Redis  
+**Tech:** Go 1.22 + Gin framework + Supabase Postgres + PostGIS + Redis  
 **Port:** 3003  
 **Status:** Stub — to be built in Week 4  
 
@@ -27,6 +27,11 @@ scheduling-service/
 ├── go.mod
 └── Dockerfile
 ```
+
+## Database
+- Uses the shared Supabase PostgreSQL instance only.
+- The scheduling schema is isolated with `search_path=scheduling,public`.
+- PostGIS is required for technician radius scoring and GPS queries.
 
 ## Week 4 plan
 1. Initialize Go module (go mod init)

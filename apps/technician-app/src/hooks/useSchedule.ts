@@ -1,11 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
+import gpsClient from '@/lib/gpsClient'
 import { queryKeys } from '@/lib/queryClient'
 import type { DispatchAssignment, AssignmentStatus, GpsPayload } from '@/types/api'
 import { useTechnicianProfile } from './useProfile'
 
 /**
- * Get my assignments (technician's schedule)
+ * Get my active assignments (technician schedule).
+ *
+ * Polls every 20 seconds so newly admin-assigned jobs appear quickly without
+ * requiring a manual pull-to-refresh. AppState foreground invalidation in
+ * _layout.tsx provides instant refresh when the app comes to foreground.
  */
 export function useMyAssignments(statusFilter?: string) {
   const { data: techProfile } = useTechnicianProfile()
@@ -19,14 +24,17 @@ export function useMyAssignments(statusFilter?: string) {
       const res = await api.get<{ data: DispatchAssignment[] }>(
         `/scheduling/dispatch/assignments/technician/${techId}?${params.toString()}`,
       )
-      return res.data.data ?? res.data
+      return (res.data.data ?? res.data) as DispatchAssignment[]
     },
     enabled: !!techId,
+    // Poll every 20s — catches admin-assigned jobs without manual refresh
+    refetchInterval: 20_000,
+    staleTime: 15_000,
   })
 }
 
 /**
- * Get assignment detail
+ * Get assignment detail by ID
  */
 export function useAssignmentDetail(assignmentId: string) {
   return useQuery({
@@ -40,7 +48,7 @@ export function useAssignmentDetail(assignmentId: string) {
 }
 
 /**
- * Get assignments for a specific job
+ * Get all assignments for a specific job
  */
 export function useJobAssignments(jobId: string) {
   return useQuery({
@@ -49,14 +57,16 @@ export function useJobAssignments(jobId: string) {
       const res = await api.get<{ data: DispatchAssignment[] }>(
         `/scheduling/dispatch/assignments/job/${jobId}`,
       )
-      return res.data.data ?? res.data
+      return (res.data.data ?? res.data) as DispatchAssignment[]
     },
     enabled: !!jobId,
+    refetchInterval: 20_000,
+    staleTime: 15_000,
   })
 }
 
 /**
- * Update assignment status (EN_ROUTE, ON_SITE, COMPLETED)
+ * Transition an assignment status (EN_ROUTE → ON_SITE → COMPLETED)
  */
 export function useUpdateAssignmentStatus() {
   const qc = useQueryClient()
@@ -84,13 +94,19 @@ export function useUpdateAssignmentStatus() {
 }
 
 /**
- * Send GPS location update
+ * Send a GPS location update to the scheduling service.
+ *
+ * Uses a dedicated axios instance with a 5s timeout (not the main 15s) so a
+ * slow scheduling endpoint doesn't stall the app's API queue or spam warnings.
+ * Failures are best-effort — the next interval tick will try again.
  */
 export function useSendGps() {
   return useMutation({
     mutationFn: async (payload: GpsPayload) => {
-      const res = await api.post('/scheduling/gps', payload)
+      const res = await gpsClient.post('/scheduling/gps', payload)
       return res.data
     },
+    // Silent — GPS is a background heartbeat; callers shouldn't react to errors
+    onError: () => {},
   })
 }

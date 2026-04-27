@@ -49,8 +49,13 @@ export default function MyJobs() {
   const [showCancel, setShowCancel] = useState(false)
   const [jobToCancel, setJobToCancel] = useState<Job | null>(null)
 
-  const { data, isLoading, refetch } = useMyJobs({ page, limit: ITEMS_PER_PAGE })
-  const jobs = data?.data ?? []
+  const { data, isLoading, refetch } = useMyJobs({ page: 1, limit: 200 })
+  const jobs = useMemo(
+    () => [...(data?.data ?? [])].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    ),
+    [data],
+  )
   const technicianNames = useJobTechnicianNames(jobs)
 
   const filtered = useMemo(() => {

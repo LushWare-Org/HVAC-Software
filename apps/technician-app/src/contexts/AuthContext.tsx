@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import api, { setAuthHeader } from '@/lib/api'
+import { setGpsAuthHeader } from '@/lib/gpsClient'
+import { clearPersistedQueryCache } from '@/lib/queryPersistence'
 import * as storage from '@/lib/storage'
 import type { TechUser, LoginResponse } from '@/types/api'
 
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setToken(savedToken)
           setUser(savedUser)
           setAuthHeader(savedToken)
+          setGpsAuthHeader(savedToken)
         } else {
           const pendingRaw = await storage.getRaw(PENDING_USER_KEY)
           if (pendingRaw) setPendingUser(JSON.parse(pendingRaw))
@@ -81,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(accessToken)
     setUser(userData)
     setAuthHeader(accessToken)
+    setGpsAuthHeader(accessToken)
     await storage.setToken(accessToken)
     await storage.setUser(userData)
     await storage.removeRaw(PENDING_USER_KEY)
@@ -91,6 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null)
     setUser(null)
     setAuthHeader(null)
+    setGpsAuthHeader(null)
+    clearPersistedQueryCache()
     await storage.clearAll()
   }
 

@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '../prisma/generated';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisCacheService } from '../redis-cache.service';
 import { CreateJobDto } from './dto/create-job.dto';
@@ -21,34 +22,48 @@ export class JobsService {
   // ============================================================
 
   async create(user: AuthUser, dto: CreateJobDto) {
-    const jobNumber = await this.generateJobNumber(user.companyId);
     const { customFields, ...rest } = dto;
 
-    const job = await this.prisma.job.create({
-      data: {
-        ...rest,
-        companyId: user.companyId,
-        jobNumber,
-        priority: (rest.priority ?? 'NORMAL') as any,
-        scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
-        scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
-        createdByUserId: user.userId,
-        statusHistory: {
-          create: {
-            toStatus: 'PENDING',
-            changedById: user.userId,
-            changedByName: user.name ?? user.email,
-            note: 'Job created',
+    // ── Retry on unique-constraint collision ────────────────────────────────
+    // generateJobNumber reads MAX(jobNumber) to avoid gaps, but two concurrent
+    // requests can still race and land on the same number. We retry up to 5×.
+    let job: any;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const jobNumber = await this.generateJobNumber(user.companyId);
+      try {
+        job = await this.prisma.job.create({
+          data: {
+            ...rest,
+            companyId: user.companyId,
+            jobNumber,
+            priority: (rest.priority ?? 'NORMAL') as any,
+            scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
+            scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
+            createdByUserId: user.userId,
+            statusHistory: {
+              create: {
+                toStatus: 'PENDING',
+                changedById: user.userId,
+                changedByName: user.name ?? user.email,
+                note: 'Job created',
+              },
+            },
           },
-        },
-        // If a template is specified, pre-create work order task completions
-      },
-      include: {
-        jobType: true,
-        template: { include: { tasks: { orderBy: { taskOrder: 'asc' } } } },
-        customFieldValues: { include: { fieldDef: true } },
-      },
-    });
+          include: {
+            jobType: true,
+            template: { include: { tasks: { orderBy: { taskOrder: 'asc' } } } },
+            customFieldValues: { include: { fieldDef: true } },
+          },
+        });
+        break; // success — exit retry loop
+      } catch (err: any) {
+        // P2002 = unique constraint violation (companyId, jobNumber collision)
+        const isUniqueViolation =
+          err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002';
+        if (!isUniqueViolation || attempt === 4) throw err;
+        // else: loop again with a freshly generated number
+      }
+    }
 
     // Save custom field values if provided
     if (customFields?.length) {
@@ -154,6 +169,25 @@ export class JobsService {
 
     if (!job) throw new NotFoundException(`Job ${id} not found`);
     return job;
+  }
+
+  // ============================================================
+  // DELETE
+  // ============================================================
+
+  async remove(companyId: string, id: string) {
+    const existing = await this.prisma.job.findFirst({
+      where: { id, companyId },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException(`Job ${id} not found`);
+    // WorkOrder relation lacks onDelete: Cascade — delete children explicitly.
+    // Other relations (CustomFieldValue, JobStatusHistory, JobPhoto) cascade.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.workOrder.deleteMany({ where: { jobId: id } });
+      await tx.job.delete({ where: { id } });
+    });
+    return { success: true, id };
   }
 
   // ============================================================
@@ -351,9 +385,23 @@ export class JobsService {
 
   private async generateJobNumber(companyId: string): Promise<string> {
     const year = new Date().getFullYear();
-    const count = await this.prisma.job.count({
-      where: { companyId, jobNumber: { startsWith: `JOB-${year}-` } },
+    const prefix = `JOB-${year}-`;
+
+    // Use MAX of the numeric suffix so deletes and gaps don't cause collisions.
+    // COUNT would return the same number if a job was deleted, breaking the unique constraint.
+    const last = await this.prisma.job.findFirst({
+      where: { companyId, jobNumber: { startsWith: prefix } },
+      orderBy: { jobNumber: 'desc' },
+      select: { jobNumber: true },
     });
-    return `JOB-${year}-${String(count + 1).padStart(4, '0')}`;
+
+    let next = 1;
+    if (last?.jobNumber) {
+      const suffix = last.jobNumber.replace(prefix, '');
+      const parsed = parseInt(suffix, 10);
+      if (!isNaN(parsed)) next = parsed + 1;
+    }
+
+    return `${prefix}${String(next).padStart(4, '0')}`;
   }
 }

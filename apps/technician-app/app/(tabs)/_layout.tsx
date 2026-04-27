@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router'
 import { Text, View, StyleSheet } from 'react-native'
 import { Colors, FontSize, FontWeight } from '@/constants/theme'
 import { useUnreadCount } from '@/hooks/useNotifications'
+import { useUnreadThreadsCount } from '@/hooks/useMessages'
 
 function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
   return (
@@ -18,6 +19,23 @@ function NotificationTabIcon({ focused }: { focused: boolean }) {
   return (
     <View>
       <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>🔔</Text>
+      {unreadCount > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </Text>
+        </View>
+      )}
+    </View>
+  )
+}
+
+function MessagesTabIcon({ focused }: { focused: boolean }) {
+  const unreadCount = useUnreadThreadsCount()
+
+  return (
+    <View>
+      <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>💬</Text>
       {unreadCount > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
@@ -62,17 +80,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="messages"
+        options={{
+          title: 'Messages',
+          tabBarIcon: ({ focused }) => <MessagesTabIcon focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="notifications"
         options={{
           title: 'Alerts',
           tabBarIcon: ({ focused }) => <NotificationTabIcon focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: 'Messages',
-          tabBarIcon: ({ focused }) => <TabIcon icon="💬" focused={focused} />,
         }}
       />
       <Tabs.Screen

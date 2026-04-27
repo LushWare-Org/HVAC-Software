@@ -246,6 +246,11 @@ func (s *AssignmentService) AssignJob(
 
 	// 5. Auto-assign if top score meets threshold
 	if best.Score >= s.cfg.AutoAssignThreshold {
+		// Cancel any existing active assignment before creating the new one.
+		// Reassigning a job must not leave a ghost "ASSIGNED" row for the old tech.
+		if _, err := s.assignRepo.CancelActiveForJob(ctx, companyID, req.JobID); err != nil {
+			return nil, fmt.Errorf("failed to cancel existing assignment: %w", err)
+		}
 		parsedStart, parsedEnd := parseTimes(req.ScheduledStart, req.ScheduledEnd)
 		assignment, err := s.assignRepo.Create(
 			ctx,
@@ -334,6 +339,13 @@ func (s *AssignmentService) ManualAssign(
 			score = &st.Score
 			break
 		}
+	}
+
+	// Cancel any existing active assignment for this job before creating the new one.
+	// This ensures that when a dispatcher reassigns a job, the previous tech's
+	// ASSIGNED row is cancelled rather than left as a duplicate active entry.
+	if _, err := s.assignRepo.CancelActiveForJob(ctx, companyID, req.JobID); err != nil {
+		return nil, fmt.Errorf("failed to cancel existing assignment: %w", err)
 	}
 
 	parsedStart, parsedEnd := parseTimes(req.ScheduledStart, req.ScheduledEnd)

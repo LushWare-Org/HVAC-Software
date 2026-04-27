@@ -121,11 +121,29 @@ export class DashboardService {
   private async queryRevenue(companyId: string, from: Date, to: Date): Promise<number> {
     const rows = await this.prisma.$queryRaw<{ total: string }[]>(
       Prisma.sql`
-        SELECT COALESCE(SUM(amount), 0)::TEXT AS total
-        FROM   finance."Payment"
-        WHERE  "companyId" = ${companyId}
-          AND  status = 'SUCCEEDED'
-          AND  "paidAt" BETWEEN ${from} AND ${to}
+        SELECT (
+          -- Stripe payments
+          COALESCE((
+            SELECT SUM(amount)
+            FROM   finance."Payment"
+            WHERE  "companyId" = ${companyId}
+              AND  status = 'SUCCEEDED'
+              AND  "paidAt" BETWEEN ${from} AND ${to}
+          ), 0)
+          +
+          -- Invoice totals where no succeeded payment exists (cash/check or Stripe not set up)
+          COALESCE((
+            SELECT SUM(i.total)
+            FROM   finance."Invoice" i
+            WHERE  i."companyId" = ${companyId}
+              AND  i.status NOT IN ('DRAFT','VOID')
+              AND  COALESCE(i."sentAt", i."createdAt") BETWEEN ${from} AND ${to}
+              AND  NOT EXISTS (
+                    SELECT 1 FROM finance."Payment" p
+                    WHERE  p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+                   )
+          ), 0)
+        )::TEXT AS total
       `,
     );
     return parseFloat(rows[0]?.total ?? '0');

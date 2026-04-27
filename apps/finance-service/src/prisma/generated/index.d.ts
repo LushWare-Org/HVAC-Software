@@ -4008,6 +4008,13 @@ export namespace Prisma {
     sentAt: Date | null
     paidAt: Date | null
     voidedAt: Date | null
+    approvedAt: Date | null
+    approvedByName: string | null
+    approvedByEmail: string | null
+    declinedAt: Date | null
+    declinedByName: string | null
+    declinedByEmail: string | null
+    declineReason: string | null
     createdByUserId: string | null
     recurringScheduleId: string | null
     createdAt: Date | null
@@ -4042,6 +4049,13 @@ export namespace Prisma {
     sentAt: Date | null
     paidAt: Date | null
     voidedAt: Date | null
+    approvedAt: Date | null
+    approvedByName: string | null
+    approvedByEmail: string | null
+    declinedAt: Date | null
+    declinedByName: string | null
+    declinedByEmail: string | null
+    declineReason: string | null
     createdByUserId: string | null
     recurringScheduleId: string | null
     createdAt: Date | null
@@ -4076,6 +4090,13 @@ export namespace Prisma {
     sentAt: number
     paidAt: number
     voidedAt: number
+    approvedAt: number
+    approvedByName: number
+    approvedByEmail: number
+    declinedAt: number
+    declinedByName: number
+    declinedByEmail: number
+    declineReason: number
     createdByUserId: number
     recurringScheduleId: number
     createdAt: number
@@ -4134,6 +4155,13 @@ export namespace Prisma {
     sentAt?: true
     paidAt?: true
     voidedAt?: true
+    approvedAt?: true
+    approvedByName?: true
+    approvedByEmail?: true
+    declinedAt?: true
+    declinedByName?: true
+    declinedByEmail?: true
+    declineReason?: true
     createdByUserId?: true
     recurringScheduleId?: true
     createdAt?: true
@@ -4168,6 +4196,13 @@ export namespace Prisma {
     sentAt?: true
     paidAt?: true
     voidedAt?: true
+    approvedAt?: true
+    approvedByName?: true
+    approvedByEmail?: true
+    declinedAt?: true
+    declinedByName?: true
+    declinedByEmail?: true
+    declineReason?: true
     createdByUserId?: true
     recurringScheduleId?: true
     createdAt?: true
@@ -4202,6 +4237,13 @@ export namespace Prisma {
     sentAt?: true
     paidAt?: true
     voidedAt?: true
+    approvedAt?: true
+    approvedByName?: true
+    approvedByEmail?: true
+    declinedAt?: true
+    declinedByName?: true
+    declinedByEmail?: true
+    declineReason?: true
     createdByUserId?: true
     recurringScheduleId?: true
     createdAt?: true
@@ -4323,6 +4365,13 @@ export namespace Prisma {
     sentAt: Date | null
     paidAt: Date | null
     voidedAt: Date | null
+    approvedAt: Date | null
+    approvedByName: string | null
+    approvedByEmail: string | null
+    declinedAt: Date | null
+    declinedByName: string | null
+    declinedByEmail: string | null
+    declineReason: string | null
     createdByUserId: string
     recurringScheduleId: string | null
     createdAt: Date
@@ -4376,6 +4425,13 @@ export namespace Prisma {
     sentAt?: boolean
     paidAt?: boolean
     voidedAt?: boolean
+    approvedAt?: boolean
+    approvedByName?: boolean
+    approvedByEmail?: boolean
+    declinedAt?: boolean
+    declinedByName?: boolean
+    declinedByEmail?: boolean
+    declineReason?: boolean
     createdByUserId?: boolean
     recurringScheduleId?: boolean
     createdAt?: boolean
@@ -4415,6 +4471,13 @@ export namespace Prisma {
     sentAt?: boolean
     paidAt?: boolean
     voidedAt?: boolean
+    approvedAt?: boolean
+    approvedByName?: boolean
+    approvedByEmail?: boolean
+    declinedAt?: boolean
+    declinedByName?: boolean
+    declinedByEmail?: boolean
+    declineReason?: boolean
     createdByUserId?: boolean
     recurringScheduleId?: boolean
     createdAt?: boolean
@@ -4451,6 +4514,13 @@ export namespace Prisma {
     sentAt?: boolean
     paidAt?: boolean
     voidedAt?: boolean
+    approvedAt?: boolean
+    approvedByName?: boolean
+    approvedByEmail?: boolean
+    declinedAt?: boolean
+    declinedByName?: boolean
+    declinedByEmail?: boolean
+    declineReason?: boolean
     createdByUserId?: boolean
     recurringScheduleId?: boolean
     createdAt?: boolean
@@ -4505,6 +4575,13 @@ export namespace Prisma {
       sentAt: Date | null
       paidAt: Date | null
       voidedAt: Date | null
+      approvedAt: Date | null
+      approvedByName: string | null
+      approvedByEmail: string | null
+      declinedAt: Date | null
+      declinedByName: string | null
+      declinedByEmail: string | null
+      declineReason: string | null
       createdByUserId: string
       recurringScheduleId: string | null
       createdAt: Date
@@ -4933,6 +5010,13 @@ export namespace Prisma {
     readonly sentAt: FieldRef<"Invoice", 'DateTime'>
     readonly paidAt: FieldRef<"Invoice", 'DateTime'>
     readonly voidedAt: FieldRef<"Invoice", 'DateTime'>
+    readonly approvedAt: FieldRef<"Invoice", 'DateTime'>
+    readonly approvedByName: FieldRef<"Invoice", 'String'>
+    readonly approvedByEmail: FieldRef<"Invoice", 'String'>
+    readonly declinedAt: FieldRef<"Invoice", 'DateTime'>
+    readonly declinedByName: FieldRef<"Invoice", 'String'>
+    readonly declinedByEmail: FieldRef<"Invoice", 'String'>
+    readonly declineReason: FieldRef<"Invoice", 'String'>
     readonly createdByUserId: FieldRef<"Invoice", 'String'>
     readonly recurringScheduleId: FieldRef<"Invoice", 'String'>
     readonly createdAt: FieldRef<"Invoice", 'DateTime'>
@@ -9624,6 +9708,13 @@ export namespace Prisma {
     sentAt: 'sentAt',
     paidAt: 'paidAt',
     voidedAt: 'voidedAt',
+    approvedAt: 'approvedAt',
+    approvedByName: 'approvedByName',
+    approvedByEmail: 'approvedByEmail',
+    declinedAt: 'declinedAt',
+    declinedByName: 'declinedByName',
+    declinedByEmail: 'declinedByEmail',
+    declineReason: 'declineReason',
     createdByUserId: 'createdByUserId',
     recurringScheduleId: 'recurringScheduleId',
     createdAt: 'createdAt',
@@ -10221,6 +10312,13 @@ export namespace Prisma {
     sentAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     paidAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     voidedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
+    approvedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
+    approvedByName?: StringNullableFilter<"Invoice"> | string | null
+    approvedByEmail?: StringNullableFilter<"Invoice"> | string | null
+    declinedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
+    declinedByName?: StringNullableFilter<"Invoice"> | string | null
+    declinedByEmail?: StringNullableFilter<"Invoice"> | string | null
+    declineReason?: StringNullableFilter<"Invoice"> | string | null
     createdByUserId?: StringFilter<"Invoice"> | string
     recurringScheduleId?: StringNullableFilter<"Invoice"> | string | null
     createdAt?: DateTimeFilter<"Invoice"> | Date | string
@@ -10259,6 +10357,13 @@ export namespace Prisma {
     sentAt?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     voidedAt?: SortOrderInput | SortOrder
+    approvedAt?: SortOrderInput | SortOrder
+    approvedByName?: SortOrderInput | SortOrder
+    approvedByEmail?: SortOrderInput | SortOrder
+    declinedAt?: SortOrderInput | SortOrder
+    declinedByName?: SortOrderInput | SortOrder
+    declinedByEmail?: SortOrderInput | SortOrder
+    declineReason?: SortOrderInput | SortOrder
     createdByUserId?: SortOrder
     recurringScheduleId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -10301,6 +10406,13 @@ export namespace Prisma {
     sentAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     paidAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     voidedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
+    approvedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
+    approvedByName?: StringNullableFilter<"Invoice"> | string | null
+    approvedByEmail?: StringNullableFilter<"Invoice"> | string | null
+    declinedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
+    declinedByName?: StringNullableFilter<"Invoice"> | string | null
+    declinedByEmail?: StringNullableFilter<"Invoice"> | string | null
+    declineReason?: StringNullableFilter<"Invoice"> | string | null
     createdByUserId?: StringFilter<"Invoice"> | string
     recurringScheduleId?: StringNullableFilter<"Invoice"> | string | null
     createdAt?: DateTimeFilter<"Invoice"> | Date | string
@@ -10339,6 +10451,13 @@ export namespace Prisma {
     sentAt?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     voidedAt?: SortOrderInput | SortOrder
+    approvedAt?: SortOrderInput | SortOrder
+    approvedByName?: SortOrderInput | SortOrder
+    approvedByEmail?: SortOrderInput | SortOrder
+    declinedAt?: SortOrderInput | SortOrder
+    declinedByName?: SortOrderInput | SortOrder
+    declinedByEmail?: SortOrderInput | SortOrder
+    declineReason?: SortOrderInput | SortOrder
     createdByUserId?: SortOrder
     recurringScheduleId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -10381,6 +10500,13 @@ export namespace Prisma {
     sentAt?: DateTimeNullableWithAggregatesFilter<"Invoice"> | Date | string | null
     paidAt?: DateTimeNullableWithAggregatesFilter<"Invoice"> | Date | string | null
     voidedAt?: DateTimeNullableWithAggregatesFilter<"Invoice"> | Date | string | null
+    approvedAt?: DateTimeNullableWithAggregatesFilter<"Invoice"> | Date | string | null
+    approvedByName?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
+    approvedByEmail?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
+    declinedAt?: DateTimeNullableWithAggregatesFilter<"Invoice"> | Date | string | null
+    declinedByName?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
+    declinedByEmail?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
+    declineReason?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     createdByUserId?: StringWithAggregatesFilter<"Invoice"> | string
     recurringScheduleId?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Invoice"> | Date | string
@@ -11106,6 +11232,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -11143,6 +11276,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     recurringScheduleId?: string | null
     createdAt?: Date | string
@@ -11178,6 +11318,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11215,6 +11362,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     recurringScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11251,6 +11405,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     recurringScheduleId?: string | null
     createdAt?: Date | string
@@ -11284,6 +11445,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11317,6 +11485,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     recurringScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12285,6 +12460,13 @@ export namespace Prisma {
     sentAt?: SortOrder
     paidAt?: SortOrder
     voidedAt?: SortOrder
+    approvedAt?: SortOrder
+    approvedByName?: SortOrder
+    approvedByEmail?: SortOrder
+    declinedAt?: SortOrder
+    declinedByName?: SortOrder
+    declinedByEmail?: SortOrder
+    declineReason?: SortOrder
     createdByUserId?: SortOrder
     recurringScheduleId?: SortOrder
     createdAt?: SortOrder
@@ -12330,6 +12512,13 @@ export namespace Prisma {
     sentAt?: SortOrder
     paidAt?: SortOrder
     voidedAt?: SortOrder
+    approvedAt?: SortOrder
+    approvedByName?: SortOrder
+    approvedByEmail?: SortOrder
+    declinedAt?: SortOrder
+    declinedByName?: SortOrder
+    declinedByEmail?: SortOrder
+    declineReason?: SortOrder
     createdByUserId?: SortOrder
     recurringScheduleId?: SortOrder
     createdAt?: SortOrder
@@ -12364,6 +12553,13 @@ export namespace Prisma {
     sentAt?: SortOrder
     paidAt?: SortOrder
     voidedAt?: SortOrder
+    approvedAt?: SortOrder
+    approvedByName?: SortOrder
+    approvedByEmail?: SortOrder
+    declinedAt?: SortOrder
+    declinedByName?: SortOrder
+    declinedByEmail?: SortOrder
+    declineReason?: SortOrder
     createdByUserId?: SortOrder
     recurringScheduleId?: SortOrder
     createdAt?: SortOrder
@@ -13470,6 +13666,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -13505,6 +13708,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     recurringScheduleId?: string | null
     createdAt?: Date | string
@@ -13601,6 +13811,13 @@ export namespace Prisma {
     sentAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     paidAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     voidedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
+    approvedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
+    approvedByName?: StringNullableFilter<"Invoice"> | string | null
+    approvedByEmail?: StringNullableFilter<"Invoice"> | string | null
+    declinedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
+    declinedByName?: StringNullableFilter<"Invoice"> | string | null
+    declinedByEmail?: StringNullableFilter<"Invoice"> | string | null
+    declineReason?: StringNullableFilter<"Invoice"> | string | null
     createdByUserId?: StringFilter<"Invoice"> | string
     recurringScheduleId?: StringNullableFilter<"Invoice"> | string | null
     createdAt?: DateTimeFilter<"Invoice"> | Date | string
@@ -14157,6 +14374,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14193,6 +14417,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     recurringScheduleId?: string | null
     createdAt?: Date | string
@@ -14243,6 +14474,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14279,6 +14517,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     recurringScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14313,6 +14558,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14349,6 +14601,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     recurringScheduleId?: string | null
     createdAt?: Date | string
@@ -14399,6 +14658,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14435,6 +14701,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     recurringScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14469,6 +14742,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14505,6 +14785,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14576,6 +14863,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     recurringScheduleId?: string | null
     createdAt?: Date | string
@@ -14642,6 +14936,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14677,6 +14978,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     recurringScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14712,6 +15020,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     recurringScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14846,6 +15161,13 @@ export namespace Prisma {
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
+    approvedAt?: Date | string | null
+    approvedByName?: string | null
+    approvedByEmail?: string | null
+    declinedAt?: Date | string | null
+    declinedByName?: string | null
+    declinedByEmail?: string | null
+    declineReason?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14878,6 +15200,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14914,6 +15243,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14949,6 +15285,13 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approvedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    approvedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    declinedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    declinedByEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    declineReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

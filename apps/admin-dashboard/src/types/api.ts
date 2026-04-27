@@ -490,6 +490,49 @@ export interface RevenueByCategory {
   percentage: number
 }
 
+export interface RevenueSummary {
+  collected: number
+  outstanding: number
+  overdue: number
+  refunded: number
+  totalInvoiced: number
+  collectionRate: number
+}
+
+export interface JobsByTrade {
+  tradeType: string
+  tradeSlug: string
+  jobCount: number
+  revenue: number
+  avgRating: number
+  completionRate: number
+}
+
+export interface JobVolumeTrend {
+  period: string
+  created: number
+  completed: number
+  cancelled: number
+}
+
+export interface JobCompletionRates {
+  totalJobs: number
+  completed: number
+  cancelled: number
+  onHold: number
+  completionRate: number
+  cancellationRate: number
+}
+
+export interface TopJob {
+  jobId: string
+  jobNumber: string
+  customerName: string
+  serviceAddress: string
+  completedAt: string
+  revenue: number
+}
+
 // ─── Inventory Service ─────────────────────────────────────────────────────────
 
 export type ItemCategory = 'PART' | 'MATERIAL' | 'TOOL' | 'CONSUMABLE'

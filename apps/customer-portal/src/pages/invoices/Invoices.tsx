@@ -251,8 +251,12 @@ export default function Invoices() {
                     const s = STATUS_MAP[invoice.status] || { label: invoice.status, css: 'badge-neutral' }
                     const outstanding = Number(invoice.total) - Number(invoice.amountPaid)
                     const canPay = ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
+                    const alreadyDecided =
+                      Boolean(invoice.approvedAt) ||
+                      Boolean(invoice.declinedAt) ||
+                      invoiceDecisionDone[invoice.id]
                     const canDecide =
-                      !invoiceDecisionDone[invoice.id] && ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
+                      !alreadyDecided && ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
                     const isRowPending = invoiceActionPendingId === invoice.id
                     return (
                       <tr key={invoice.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(invoice)}>

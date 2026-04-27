@@ -28,6 +28,7 @@ import { useCustomerAddresses, useSaveCustomerAddresses } from "../../hooks/useA
 import { useCustomerEquipment, useSaveCustomerEquipment } from "../../hooks/useEquipment";
 import { useJobs } from "../../hooks/useJobs";
 import { useQuotes, useInvoices } from "../../hooks/useFinance";
+import { useCustomerReviews } from "../../hooks/useReviews";
 import { decimalToNumber } from "../../hooks/useFinance";
 
 type TabType =
@@ -185,7 +186,6 @@ export default function CustomerDetailsSidebar({
   const [agreements, setAgreements] = useState(mockAgreements);
   const [isAddAgreementModalOpen, setIsAddAgreementModalOpen] = useState(false);
   const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
-  const [reviews, setReviews] = useState(mockReviews);
   const [showRequestPanel, setShowRequestPanel] = useState(false);
   const [requestForm, setRequestForm] = useState({
     email: "",
@@ -195,6 +195,26 @@ export default function CustomerDetailsSidebar({
 
   // Fetch real jobs and quotes for this customer
   const customerId = person?.id ?? "";
+
+  // Reviews — fetched AFTER customerId is defined to avoid TDZ crash.
+  // Local `setReviews` is a no-op bridge: the review list is read-only until
+  // we expose a PATCH /reviews/:id endpoint.
+  const reviewsQuery = useCustomerReviews(customerId || undefined);
+  const reviews = (reviewsQuery.data ?? []).map((r) => ({
+    id:            r.id,
+    rating:        r.rating,
+    comment:       r.comment ?? "",
+    channel:       r.platform,
+    date:          r.createdAt?.split("T")[0] ?? "",
+    jobId:         r.jobId,
+    technicianName: r.technicianName,
+    replied:       !!r.respondedAt,
+    replyText:     r.response ?? "",
+  }));
+  const setReviews: (u: any) => void = () => {
+    /* no-op — review mutations need a backend endpoint not yet available */
+  };
+
   const customerJobsQuery = useJobs({ customerId: customerId || undefined, limit: 50 });
   const customerJobs = [...(customerJobsQuery.data?.data ?? [])].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -207,6 +227,44 @@ export default function CustomerDetailsSidebar({
   const customerInvoices = [...(customerInvoicesQuery.data?.data ?? [])].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
+
+  // ── Customer Revenue Metrics (derived from real invoice data) ────────────────
+  // Computed from the invoices already fetched above — no extra API call needed.
+  //
+  // Total Lifetime Revenue: sum of amountPaid across ALL non-void/cancelled invoices.
+  //   Uses amountPaid (not total) so partially-paid invoices are counted correctly.
+  //
+  // YTD Revenue: same filter but only invoices where paidAt is in the current calendar year.
+  //   Falls back to createdAt year when paidAt is absent (e.g. partially-paid, still open).
+  //
+  // Outstanding Balance: sum of balanceDue for invoices in an open state
+  //   (SENT, PARTIALLY_PAID, OVERDUE). DRAFT invoices are excluded (not yet sent).
+  const CURRENT_YEAR = new Date().getFullYear();
+  const CLOSED_STATUSES = new Set(['VOID', 'CANCELLED']);
+  const OPEN_STATUSES   = new Set(['SENT', 'PARTIALLY_PAID', 'OVERDUE']);
+
+  const customerRevenue = customerInvoices.reduce(
+    (acc, inv) => {
+      const status    = inv.status as string;
+      const paid      = decimalToNumber(inv.amountPaid);
+      const balance   = decimalToNumber(inv.balanceDue);
+      const paidDate  = inv.paidAt ?? inv.updatedAt ?? inv.createdAt;
+      const paidYear  = new Date(paidDate).getFullYear();
+
+      if (!CLOSED_STATUSES.has(status)) {
+        acc.lifetime += paid;
+        if (paidYear === CURRENT_YEAR && paid > 0) acc.ytd += paid;
+      }
+      if (OPEN_STATUSES.has(status)) {
+        acc.outstanding += balance;
+      }
+      return acc;
+    },
+    { lifetime: 0, ytd: 0, outstanding: 0 },
+  );
+
+  const fmtMoney = (n: number) =>
+    n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
   // Fetch real addresses and equipment from API
   const addressesQuery = useCustomerAddresses(customerId || undefined);
@@ -235,7 +293,7 @@ export default function CustomerDetailsSidebar({
         },
       ]);
       setAgreements(mockAgreements);
-      setReviews(mockReviews);
+      // reviews now come from useCustomerReviews — no need to reset here
       setActiveTab(initialTab);
       setIsEditMode(false);
     } else {
@@ -597,7 +655,7 @@ export default function CustomerDetailsSidebar({
                         Total Lifetime
                       </p>
                       <div className="text-lg font-bold text-[var(--green)]">
-                        $14,250
+                        {customerInvoicesQuery.isLoading ? '—' : fmtMoney(customerRevenue.lifetime)}
                       </div>
                     </div>
                     <div>
@@ -605,7 +663,7 @@ export default function CustomerDetailsSidebar({
                         YTD Revenue
                       </p>
                       <div className="text-sm font-medium text-[var(--t2)]">
-                        $3,400
+                        {customerInvoicesQuery.isLoading ? '—' : fmtMoney(customerRevenue.ytd)}
                       </div>
                     </div>
                     <div>
@@ -613,7 +671,7 @@ export default function CustomerDetailsSidebar({
                         Outstanding Balance
                       </p>
                       <div className="text-sm font-medium text-red-500">
-                        $0.00
+                        {customerInvoicesQuery.isLoading ? '—' : fmtMoney(customerRevenue.outstanding)}
                       </div>
                     </div>
                   </div>
@@ -1757,26 +1815,6 @@ export default function CustomerDetailsSidebar({
                                   ? "Cancel Request"
                                   : "Request Review"}
                               </button>
-                              <button
-                                className="btn btn-secondary border-amber-200 text-amber-700 hover:bg-amber-100 btn-sm flex items-center justify-center gap-1.5"
-                                onClick={() =>
-                                  setReviews((prev) => [
-                                    {
-                                      id: Date.now(),
-                                      rating: 5,
-                                      channel: "Google",
-                                      date: new Date()
-                                        .toISOString()
-                                        .split("T")[0],
-                                      comment: "",
-                                      replied: false,
-                                    },
-                                    ...prev,
-                                  ])
-                                }
-                              >
-                                <Plus size={12} /> Add Manual Review
-                              </button>
                             </div>
                           )}
                         </div>
@@ -1859,24 +1897,12 @@ export default function CustomerDetailsSidebar({
                             >
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                  {/* Star rating picker */}
-                                  <div className="flex gap-1 mb-2">
-                                    {[1, 2, 3, 4, 5].map((n) => (
-                                      <button
-                                        key={n}
-                                        disabled={!isEditMode}
-                                        onClick={() =>
-                                          setReviews((prev) =>
-                                            prev.map((x) =>
-                                              x.id === rv.id
-                                                ? { ...x, rating: n }
-                                                : x,
-                                            ),
-                                          )
-                                        }
-                                        className={`transition-colors ${isEditMode ? "cursor-pointer hover:scale-110" : "cursor-default"}`}
-                                      >
+                                  {/* Star rating (read-only — owned by customer) */}
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex gap-1">
+                                      {[1, 2, 3, 4, 5].map((n) => (
                                         <Star
+                                          key={n}
                                           size={16}
                                           className={
                                             n <= rv.rating
@@ -1884,56 +1910,33 @@ export default function CustomerDetailsSidebar({
                                               : "text-gray-300"
                                           }
                                         />
-                                      </button>
-                                    ))}
+                                      ))}
+                                    </div>
+                                    {(rv.jobId || rv.technicianName) && (
+                                      <span className="text-[11px] text-[var(--t4)]">
+                                        {rv.jobId ? "Job review" : "Company review"}
+                                        {rv.technicianName ? ` • ${rv.technicianName}` : ""}
+                                      </span>
+                                    )}
                                   </div>
-                                  {isEditMode ? (
-                                    <textarea
-                                      value={rv.comment}
-                                      rows={2}
-                                      placeholder="Customer review text..."
-                                      onChange={(e) =>
-                                        setReviews((prev) =>
-                                          prev.map((x) =>
-                                            x.id === rv.id
-                                              ? {
-                                                ...x,
-                                                comment: e.target.value,
-                                              }
-                                              : x,
-                                          ),
-                                        )
-                                      }
-                                      className={inputEdit}
-                                      style={{ resize: "none" }}
-                                    />
-                                  ) : (
-                                    <p className="text-sm text-[var(--t1)]">
-                                      {rv.comment ? (
-                                        `"${rv.comment}"`
-                                      ) : (
-                                        <span className="text-[var(--t4)] italic">
-                                          No comment yet
-                                        </span>
-                                      )}
-                                    </p>
-                                  )}
+                                  <p className="text-sm text-[var(--t1)]">
+                                    {rv.comment ? (
+                                      `"${rv.comment}"`
+                                    ) : (
+                                      <span className="text-[var(--t4)] italic">
+                                        No comment
+                                      </span>
+                                    )}
+                                  </p>
                                 </div>
                                 <div className="text-right shrink-0 ml-4 space-y-1">
                                   <div className="text-[11px] text-[var(--t4)]">
                                     {rv.date}
                                   </div>
-                                  {isEditMode && (
-                                    <button
-                                      onClick={() =>
-                                        setReviews((prev) =>
-                                          prev.filter((x) => x.id !== rv.id),
-                                        )
-                                      }
-                                      className="text-red-400 hover:text-red-600 p-1 block ml-auto"
-                                    >
-                                      <Trash2 size={13} />
-                                    </button>
+                                  {rv.channel && rv.channel !== "internal" && (
+                                    <div className="text-[10px] text-[var(--t4)] uppercase tracking-wider">
+                                      {rv.channel}
+                                    </div>
                                   )}
                                 </div>
                               </div>

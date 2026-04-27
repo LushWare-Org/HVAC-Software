@@ -4,7 +4,7 @@ import {
   X, Edit2, Save, XCircle, Wrench, MapPin, User, Calendar,
   DollarSign, FileText, Clock, AlertCircle, Loader2, ArrowRight,
   Send, Receipt, Truck, Package, CheckSquare, ClipboardList,
-  Plus, Trash2,
+  Plus, Trash2, MessageSquare,
 } from "lucide-react";
 import {
   useUpdateJobStatus, useJob, useWorkOrdersByJob,
@@ -126,6 +126,11 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
   }, [job]);
 
   if (!isOpen || !job) return null;
+
+  const handleChatWithTech = () => {
+    onClose()
+    navigate('/communications', { state: { chatWithTech: job.assignedToName } })
+  };
 
   const handleSave = () => {
     setError("");
@@ -368,7 +373,18 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
                       <User size={11} /> Technician
                     </label>
-                    <input value={job.assignedToName ?? "Unassigned"} disabled className={inputView} />
+                    <div className="flex gap-2">
+                      <input value={job.assignedToName ?? "Unassigned"} disabled className={`${inputView} flex-1`} />
+                      {job.assignedToId && job.assignedToName && (
+                        <button
+                          onClick={handleChatWithTech}
+                          title={`Chat with ${job.assignedToName}`}
+                          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-violet-200 bg-violet-50 text-violet-600 hover:bg-violet-100 transition-colors cursor-pointer"
+                        >
+                          <MessageSquare size={13} /> Chat
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-1.5 md:col-span-2">
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">

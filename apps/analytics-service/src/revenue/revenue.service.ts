@@ -57,19 +57,43 @@ export class RevenueService {
     // date_trunc maps granularity to Postgres truncation level
     const trunc = this.granularityToTrunc(granularity);
 
+    // Primary: use Payments (Stripe processed). Fallback: use Invoice.total for
+    // businesses that haven't set up Stripe yet — so charts always show data.
     const rows = await this.prisma.$queryRaw<
       { period: Date; revenue: string; cnt: bigint }[]
     >(
       Prisma.sql`
-        SELECT DATE_TRUNC(${trunc}, "paidAt") AS period,
-               SUM(amount)::TEXT              AS revenue,
-               COUNT(*)::BIGINT               AS cnt
-        FROM   finance."Payment"
-        WHERE  "companyId" = ${companyId}
-          AND  status = 'SUCCEEDED'
-          AND  "paidAt" BETWEEN ${from} AND ${to}
-        GROUP  BY 1
-        ORDER  BY 1
+        SELECT sub.period, SUM(sub.revenue)::TEXT AS revenue, SUM(sub.cnt)::BIGINT AS cnt
+        FROM (
+          -- Stripe payments
+          SELECT DATE_TRUNC(${trunc}, "paidAt") AS period,
+                 SUM(amount)                    AS revenue,
+                 COUNT(*)                       AS cnt
+          FROM   finance."Payment"
+          WHERE  "companyId" = ${companyId}
+            AND  status = 'SUCCEEDED'
+            AND  "paidAt" BETWEEN ${from} AND ${to}
+          GROUP  BY 1
+
+          UNION ALL
+
+          -- Invoice totals for invoices NOT backed by a succeeded payment
+          SELECT DATE_TRUNC(${trunc}, COALESCE(i."sentAt", i."createdAt")) AS period,
+                 SUM(i.total)                                               AS revenue,
+                 COUNT(*)                                                   AS cnt
+          FROM   finance."Invoice" i
+          WHERE  i."companyId" = ${companyId}
+            AND  i.status NOT IN ('DRAFT','VOID')
+            AND  COALESCE(i."sentAt", i."createdAt") BETWEEN ${from} AND ${to}
+            AND  NOT EXISTS (
+                  SELECT 1 FROM finance."Payment" p
+                  WHERE  p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+                 )
+          GROUP  BY 1
+        ) sub
+        WHERE sub.period IS NOT NULL
+        GROUP  BY sub.period
+        ORDER  BY sub.period
       `,
     );
 
@@ -92,8 +116,8 @@ export class RevenueService {
         FROM   finance."InvoiceLineItem" il
         JOIN   finance."Invoice" i ON i.id = il."invoiceId"
         WHERE  i."companyId" = ${companyId}
-          AND  i.status IN ('PAID')
-          AND  i."paidAt" BETWEEN ${from} AND ${to}
+          AND  i.status NOT IN ('DRAFT','VOID')
+          AND  COALESCE(i."sentAt", i."createdAt") BETWEEN ${from} AND ${to}
         GROUP  BY il.category
         ORDER  BY SUM(il."lineTotal") DESC
       `,

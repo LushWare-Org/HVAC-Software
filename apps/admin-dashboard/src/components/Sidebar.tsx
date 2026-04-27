@@ -1,6 +1,20 @@
 import { useLocation, Link } from 'react-router-dom'
+import { ROUTE_LOADERS } from '../App'
+
+// Warm the lazy-loaded chunk for a route before the user clicks. Called on
+// hover/focus — by the time they release the mouse the JS is usually in the
+// module cache, so navigation feels instant.
+const prefetched = new Set<string>()
+function prefetchRoute(path: string) {
+  if (prefetched.has(path)) return
+  const loader = ROUTE_LOADERS[path]
+  if (!loader) return
+  prefetched.add(path)
+  // Fire-and-forget; network errors are retried on actual navigation.
+  loader().catch(() => prefetched.delete(path))
+}
 import {
-    LayoutDashboard, Users, Wrench, CalendarDays, Zap,
+    LayoutDashboard, Users, Wrench, /* CalendarDays, */ Zap,
     DollarSign, MessageSquare, BarChart3, Settings,
     Menu, X, LogOut, Shield, Package
 } from 'lucide-react'
@@ -55,7 +69,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
             items: [
                 { icon: Users, label: 'Customers & CRM', path: '/customers' },
                 { icon: Wrench, label: 'Jobs', path: '/jobs', badge: 0 },
-                { icon: CalendarDays, label: 'Scheduling', path: '/scheduling' },
+                /* Scheduling page is temporarily disabled — re-enable when Go scheduling service is verified */
+                // { icon: CalendarDays, label: 'Scheduling', path: '/scheduling' },
                 { icon: Zap, label: 'Dispatch Board', path: '/dispatch' },
             ],
         },
@@ -105,6 +120,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                                     key={item.path}
                                     to={item.path}
                                     title={collapsed ? item.label : undefined}
+                                    onMouseEnter={() => prefetchRoute(item.path)}
+                                    onFocus={() => prefetchRoute(item.path)}
                                     className={[
                                         navItemBase,
                                         collapsed ? 'justify-center w-9 h-9 mx-auto p-0' : 'gap-3 px-4 py-2.5',

@@ -214,7 +214,9 @@ export class PdfService {
 
     try {
       const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      // 'domcontentloaded' is reliable for fully-inlined HTML templates and avoids
+      // 30s timeouts caused by networkidle0 waiting for external resources.
+      await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 15000 });
       const pdfBuffer = await page.pdf({
         format: 'Letter',
         printBackground: true,

@@ -24,6 +24,13 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Quiet background/heartbeat routes — they're noisy and non-actionable
+    const url = String(error.config?.url ?? '')
+    const isBackground =
+      url.includes('/scheduling/gps') ||
+      url.includes('/scheduling/technicians/me')
+    if (isBackground) return Promise.reject(error)
+
     const msg =
       error.response?.data?.message ??
       error.response?.data?.error ??

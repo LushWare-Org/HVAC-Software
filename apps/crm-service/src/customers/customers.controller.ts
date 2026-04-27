@@ -129,46 +129,8 @@ export class CustomersController {
     return this.customersService.remove(user.companyId, id);
   }
 
-  // ── Equipment endpoints ──────────────────────────────────────────────────────
-
-  @Get(':id/equipment')
-  @ApiOperation({ summary: 'List all equipment for a customer' })
-  getEquipment(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.customersService.getEquipment(user.companyId, id);
-  }
-
-  @Post(':id/equipment')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
-  @ApiOperation({ summary: 'Add equipment to a customer' })
-  createEquipmentItem(
-    @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
-    @Body() dto: { type: string; brand?: string; model?: string; serialNo?: string; installDate?: string; warrantyEnd?: string; notes?: string },
-  ) {
-    return this.customersService.createEquipmentItem(user.companyId, id, dto);
-  }
-
-  @Patch(':id/equipment/:eqId')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
-  @ApiOperation({ summary: 'Update a customer equipment item' })
-  updateEquipmentItem(
-    @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
-    @Param('eqId') eqId: string,
-    @Body() dto: { type?: string; brand?: string; model?: string; serialNo?: string; installDate?: string; warrantyEnd?: string; notes?: string },
-  ) {
-    return this.customersService.updateEquipmentItem(user.companyId, id, eqId, dto);
-  }
-
-  @Delete(':id/equipment/:eqId')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a customer equipment item' })
-  deleteEquipmentItem(
-    @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
-    @Param('eqId') eqId: string,
-  ) {
-    return this.customersService.deleteEquipmentItem(user.companyId, id, eqId);
-  }
+  // Equipment endpoints live in EquipmentController
+  // (apps/crm-service/src/equipment/equipment.controller.ts) under the same
+  // customers/:customerId/equipment path. Keeping them only there avoids
+  // route-registration collisions that were silently dropping handlers.
 }

@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
     MessageSquare, Send, Bell, Plus, Search,
     Paperclip, Smile, Check, CheckCheck, AlertCircle, RefreshCw, Archive,
-    X, Loader2, Megaphone, Info, CheckCircle2, AlertTriangle, XCircle,
+    X, Loader2, Megaphone, Info, CheckCircle2, AlertTriangle, XCircle, Wifi, WifiOff,
+    Trash2,
 } from 'lucide-react'
 import {
     useThreads,
@@ -15,7 +17,10 @@ import {
     useMarkAllNotificationsRead,
     useCreateThread,
     useSendInAppNotification,
+    useDeleteThread,
 } from '../hooks/useComms'
+import { useSocket } from '../hooks/useSocket'
+import { queryClient } from '../lib/queryClient'
 import { useCustomers } from '../hooks/useCustomers'
 import { useTeamMembers } from '../hooks/useTeam'
 import { useAuth } from '../contexts/AuthContext'
@@ -98,32 +103,127 @@ function fullCustomerName(customer: Customer) {
 
 export default function Communications() {
     const { user } = useAuth()
+    const location = useLocation()
+    const navigate = useNavigate()
     const [activeTab, setActiveTab]           = useState('messages')
     const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
     const [messageText, setMessageText]       = useState('')
     const [searchQuery, setSearchQuery]       = useState('')
     const [isNewMessageOpen, setIsNewMessageOpen] = useState(false)
+    const [newMsgInitialTech, setNewMsgInitialTech] = useState<string | null>(null)
     const [notificationTitle, setNotificationTitle] = useState('')
     const [notificationBody, setNotificationBody] = useState('')
     const [notificationType, setNotificationType] = useState('info')
     const [selectedRoles, setSelectedRoles] = useState<string[]>(['customer'])
     const [sendSuccessMsg, setSendSuccessMsg] = useState('')
+    const [typingUser, setTypingUser] = useState<string | null>(null)
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const typingSentRef = useRef(false)
+
+    // ── WebSocket ────────────────────────────────────────────────────────────────
+    const { isConnected, joinThread, leaveThread, sendTyping, onNewMessage, onTyping } = useSocket()
+
+    // Join/leave thread room on selection
+    useEffect(() => {
+        if (!selectedThreadId) return
+        joinThread(selectedThreadId)
+        return () => { leaveThread(selectedThreadId) }
+    }, [selectedThreadId, joinThread, leaveThread])
+
+    // Real-time: patch query cache when a new message arrives
+    useEffect(() => {
+        const unsub = onNewMessage(({ threadId, message }) => {
+            queryClient.setQueryData(['threads', threadId], (old: any) => {
+                if (!old) return old
+                const msgs: any[] = old.messages ?? []
+                if (msgs.find((m: any) => m.id === message.id)) return old
+                return { ...old, messages: [...msgs, message] }
+            })
+            queryClient.invalidateQueries({ queryKey: ['threads'] })
+        })
+        return unsub
+    }, [onNewMessage])
+
+    // Real-time: typing indicator from others
+    useEffect(() => {
+        const unsub = onTyping(({ threadId, userName, isTyping }) => {
+            if (threadId !== selectedThreadId) return
+            if (isTyping) {
+                setTypingUser(userName)
+                if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+                typingTimerRef.current = setTimeout(() => setTypingUser(null), 3000)
+            } else {
+                setTypingUser(null)
+                if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+            }
+        })
+        return unsub
+    }, [onTyping, selectedThreadId])
+
+    const handleTypingChange = useCallback((val: string) => {
+        setMessageText(val)
+        if (!selectedThreadId) return
+        if (!typingSentRef.current) {
+            typingSentRef.current = true
+            sendTyping(selectedThreadId, true)
+        }
+        if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+        typingTimerRef.current = setTimeout(() => {
+            typingSentRef.current = false
+            sendTyping(selectedThreadId, false)
+        }, 2000)
+    }, [selectedThreadId, sendTyping])
+
+    // Auto-open new message modal when navigated here with a technician target
+    useEffect(() => {
+        const nav = location.state as any
+        if (nav?.chatWithTech) {
+            setNewMsgInitialTech(nav.chatWithTech)
+            setIsNewMessageOpen(true)
+            navigate('/communications', { replace: true, state: {} })
+        }
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── API queries ──────────────────────────────────────────────────────────────
     const threadsQuery   = useThreads({ limit: 100 })
     const threadQuery    = useThread(selectedThreadId)
     const notifsQuery    = useNotifications(50)
-    const sendMutation   = useSendThreadMessage()
-    const markReadMutation = useMarkThreadRead()
-    const markNotifRead  = useMarkNotificationRead()
-    const markAllRead    = useMarkAllNotificationsRead()
-    const updateStatus   = useUpdateThreadStatus()
+    const sendMutation      = useSendThreadMessage()
+    const markReadMutation  = useMarkThreadRead()
+    const markNotifRead     = useMarkNotificationRead()
+    const markAllRead       = useMarkAllNotificationsRead()
+    const updateStatus      = useUpdateThreadStatus()
+    const deleteThread      = useDeleteThread()
     const sendInAppNotification = useSendInAppNotification()
     const teamQuery = useTeamMembers({ page: 1, limit: 200, isActive: true })
     const customersQuery = useCustomers({ page: 1, limit: 200, isActive: true })
 
-    const allThreads: MessageThread[] = threadsQuery.data?.data ?? []
+    // Client-side privacy guard — mirrors the backend's findThreads() logic so
+    // any stale cache entries are also filtered before rendering.
+    //
+    // Thread visibility rules (same as backend):
+    //   A) Customer thread, empty participantIds, NOT a "Chat with Technician:" subject
+    //      → admin-created support thread, always visible to admin
+    //   B) Customer thread started by the customer portal for a tech chat
+    //      → subject starts with "Chat with Technician:", PRIVATE — admin never sees these
+    //   C) Tech-created customer thread (participantIds = [techId]) → only visible if admin is in the list
+    //   D) Staff-only thread → only visible if admin's userId is in participantIds
+    const allThreadsRaw: MessageThread[] = threadsQuery.data?.data ?? []
+    const allThreads = allThreadsRaw.filter((t) => {
+      const pids: string[] = (t as any).participantIds ?? []
+      const subject: string = (t as any).subject ?? ''
+      const isCustomerThread = !!(t as any).customerId
+      const isTechChatSubject = subject.startsWith('Chat with Technician:')
+
+      if (isCustomerThread && pids.length === 0 && !isTechChatSubject) {
+        // Rule A: admin-created support thread — no participant restriction, not a tech-chat
+        return true
+      }
+      // Rules B / C / D: explicit participant list OR tech-chat — must include this admin
+      return user?.id ? pids.includes(user.id) : false
+    })
     const notifications = notifsQuery.data?.data ?? []
     const inboxNotifications = notifications.filter((n) => n.type !== 'sent')
     const sentNotifications = notifications.filter((n) => n.type === 'sent')
@@ -178,16 +278,24 @@ export default function Communications() {
 
     // ── Filter and sort thread list ──────────────────────────────────────────────
     function getThreadDisplayName(t: MessageThread): string {
+        // Customer thread → always lead with the customer's name so admins can scan
+        // the list by person. Subject (if any) is shown separately as the preview line.
         if (t.customerName) return t.customerName
         if (t.customerPhone) return t.customerPhone
         if (t.customerEmail) return t.customerEmail
+        // Staff / internal thread → prefer the subject, then the other participants' names
         if ((t as any).subject) return (t as any).subject
         if ((t as any).participantNames?.length) {
-            return (t as any).participantNames
-                .filter((n: string) => n !== user?.name)
-                .join(', ') || 'Team Chat'
+            const others = (t as any).participantNames.filter((n: string) => n && n !== user?.name)
+            return others.length ? others.join(', ') : 'Team Chat'
         }
         return 'Unknown'
+    }
+
+    function getThreadSubtitle(t: MessageThread): string | null {
+        // Secondary line under the name: subject for customer threads, role hint for staff
+        if (t.customerName && (t as any).subject) return (t as any).subject as string
+        return null
     }
 
     const filteredThreads = allThreads
@@ -220,6 +328,10 @@ export default function Communications() {
         if (!messageText.trim() || !selectedThreadId) return
         sendMutation.mutate({ threadId: selectedThreadId, body: messageText.trim() })
         setMessageText('')
+        // Clear typing indicator
+        typingSentRef.current = false
+        if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+        sendTyping(selectedThreadId, false)
     }
 
     const toggleRole = (roleId: string) => {
@@ -291,7 +403,7 @@ export default function Communications() {
                                             onChange={e => setSearchQuery(e.target.value)}
                                         />
                                     </div>
-                                    <button className="btn btn-primary btn-sm px-2" title="New Message" onClick={() => setIsNewMessageOpen(true)}>
+                                    <button className="btn btn-primary btn-sm px-2" title="New Message" onClick={() => { setNewMsgInitialTech(null); setIsNewMessageOpen(true) }}>
                                         <Plus size={16} />
                                     </button>
                                 </div>
@@ -322,6 +434,7 @@ export default function Communications() {
                                 {/* Thread rows */}
                                 {!threadsQuery.isLoading && filteredThreads.map(thread => {
                                     const name       = getThreadDisplayName(thread)
+                                    const subtitle   = getThreadSubtitle(thread)  // subject shown under customer name
                                     const isStaff    = !thread.customerId && ((thread as any).participantIds?.length ?? 0) > 0
                                     const isSelected = selectedThreadId === thread.id
                                     const unread     = thread.unreadCount ?? 0
@@ -343,6 +456,10 @@ export default function Communications() {
                                                     </p>
                                                     <span className="text-xs text-[var(--t4)] whitespace-nowrap ml-2">{fmtTime(lastTime)}</span>
                                                 </div>
+                                                {/* Subject line (e.g. "Chat with Technician: Carlos") under customer name */}
+                                                {subtitle && (
+                                                    <p className="text-[11px] text-[var(--blue)] truncate mb-0.5 font-medium">{subtitle}</p>
+                                                )}
                                                 {thread.lastMessageBody && (
                                                     <p className="text-[13px] text-[var(--t3)] truncate">{thread.lastMessageBody}</p>
                                                 )}
@@ -381,6 +498,7 @@ export default function Communications() {
                                             {(() => {
                                                 const detailIsStaff = !selectedThread.customerId && ((selectedThread as any).participantIds?.length ?? 0) > 0
                                                 const detailName = getThreadDisplayName(selectedThread as any)
+                                                const detailSubject = getThreadSubtitle(selectedThread as any)
                                                 return (
                                                     <>
                                                         <div className={`w-[38px] h-[38px] rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${detailIsStaff ? 'bg-purple-100 text-purple-600' : 'bg-[var(--blue-dim)] text-[var(--blue)]'}`}>
@@ -388,6 +506,9 @@ export default function Communications() {
                                                         </div>
                                                         <div>
                                                             <p className="font-semibold text-[var(--t1)] text-[15px]">{detailName}</p>
+                                                            {detailSubject && (
+                                                                <p className="text-xs text-[var(--blue)] mt-px font-medium">{detailSubject}</p>
+                                                            )}
                                                             <p className="text-xs text-[var(--t3)] mt-px">
                                                                 {detailIsStaff ? 'Team Chat' : `${selectedThread.channel ?? 'IN_APP'} · ${selectedThread.customerPhone ?? selectedThread.customerEmail ?? 'In-app chat'}`}
                                                             </p>
@@ -396,7 +517,11 @@ export default function Communications() {
                                                 )
                                             })()}
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 items-center">
+                                            <span title={isConnected ? 'Real-time connected' : 'Connecting...'} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: isConnected ? 'var(--green)' : 'var(--t4)' }}>
+                                                {isConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
+                                                {isConnected ? 'Live' : 'Connecting'}
+                                            </span>
                                             {selectedThread.status === 'ACTIVE' && (
                                                 <button
                                                     className="topbar-icon-btn"
@@ -406,6 +531,14 @@ export default function Communications() {
                                                     <Archive size={16} />
                                                 </button>
                                             )}
+                                            <button
+                                                className="topbar-icon-btn"
+                                                title="Delete conversation"
+                                                style={{ color: 'var(--red)' }}
+                                                onClick={() => setDeleteConfirmId(selectedThread.id)}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
                                     </div>
 
@@ -423,6 +556,9 @@ export default function Communications() {
 
                                         {!threadQuery.isLoading && (selectedThread.messages ?? []).map(msg => {
                                             const detailIsStaff2 = !selectedThread.customerId && ((selectedThread as any).participantIds?.length ?? 0) > 0
+                                            // For customer↔staff threads: OUTBOUND = staff sent, INBOUND = customer sent.
+                                            // For staff↔staff threads: use senderId to determine who sent — never use
+                                            // senderName because two users can share the same name.
                                             const isOutbound = detailIsStaff2
                                                 ? msg.senderId === user?.id
                                                 : msg.direction === 'OUTBOUND'
@@ -451,6 +587,18 @@ export default function Communications() {
                                                 No messages yet — start the conversation below.
                                             </div>
                                         )}
+                                        {typingUser && (
+                                            <div className="flex justify-start">
+                                                <div className="flex items-center gap-2 px-4 py-2 rounded-2xl rounded-tl-sm bg-[var(--bg-card-2)] text-[var(--t3)]" style={{ fontSize: 13 }}>
+                                                    <span className="flex gap-0.5">
+                                                        <span style={{ animation: 'typingDot 1.2s ease-in-out infinite', animationDelay: '0ms' }}>●</span>
+                                                        <span style={{ animation: 'typingDot 1.2s ease-in-out infinite', animationDelay: '200ms' }}>●</span>
+                                                        <span style={{ animation: 'typingDot 1.2s ease-in-out infinite', animationDelay: '400ms' }}>●</span>
+                                                    </span>
+                                                    <span>{typingUser} is typing…</span>
+                                                </div>
+                                            </div>
+                                        )}
                                         <div ref={messagesEndRef} />
                                     </div>
 
@@ -464,7 +612,7 @@ export default function Communications() {
                                                 placeholder="Type your message..."
                                                 className="flex-1 bg-transparent border-0 p-2 text-[14px] text-[var(--t1)] outline-none min-h-[40px] max-h-32 resize-none"
                                                 value={messageText}
-                                                onChange={e => setMessageText(e.target.value)}
+                                                onChange={e => handleTypingChange(e.target.value)}
                                                 onKeyDown={e => {
                                                     if (e.key === 'Enter' && !e.shiftKey) {
                                                         e.preventDefault()
@@ -748,56 +896,132 @@ export default function Communications() {
                 )}
             </div>
 
+            {/* ── Delete Confirmation Modal ─────────────────────────────── */}
+            {deleteConfirmId && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setDeleteConfirmId(null)}>
+                    <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                                <Trash2 size={18} className="text-red-600" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-[var(--t1)] text-[15px]">Delete Conversation</h3>
+                                <p className="text-xs text-[var(--t3)] mt-0.5">This will permanently delete all messages.</p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-[var(--t2)] mb-5">
+                            Are you sure you want to delete this conversation? This action cannot be undone and all messages will be lost.
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button className="btn btn-secondary" onClick={() => setDeleteConfirmId(null)}>Cancel</button>
+                            <button
+                                className="btn"
+                                style={{ background: 'var(--red)', color: '#fff', borderColor: 'var(--red)' }}
+                                disabled={deleteThread.isPending}
+                                onClick={() => {
+                                    deleteThread.mutate(deleteConfirmId, {
+                                        onSuccess: () => {
+                                            setDeleteConfirmId(null)
+                                            setSelectedThreadId(null)
+                                        },
+                                        onError: () => setDeleteConfirmId(null),
+                                    })
+                                }}
+                            >
+                                {deleteThread.isPending ? <Loader2 size={14} className="animate-spin mr-2" /> : <Trash2 size={14} className="mr-2" />}
+                                Delete Forever
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── New Message Modal ─────────────────────────────────────── */}
             {isNewMessageOpen && (
                 <NewMessageModal
-                    onClose={() => setIsNewMessageOpen(false)}
+                    onClose={() => { setIsNewMessageOpen(false); setNewMsgInitialTech(null) }}
                     onThreadCreated={(threadId) => {
                         setIsNewMessageOpen(false)
+                        setNewMsgInitialTech(null)
                         setSelectedThreadId(threadId)
                         setActiveTab('messages')
                     }}
+                    initialTechName={newMsgInitialTech}
                 />
             )}
+
+            <style>{`
+                @keyframes typingDot {
+                    0%, 60%, 100% { opacity: 0.2; transform: scale(0.8); }
+                    30% { opacity: 1; transform: scale(1); }
+                }
+            `}</style>
         </div>
     )
 }
 
 // ─── New Message Modal ────────────────────────────────────────────────────────
 
-function NewMessageModal({ onClose, onThreadCreated }: { onClose: () => void; onThreadCreated: (threadId: string) => void }) {
+function NewMessageModal({ onClose, onThreadCreated, initialTechName }: { onClose: () => void; onThreadCreated: (threadId: string) => void; initialTechName?: string | null }) {
+    const [recipientType, setRecipientType] = useState<'customer' | 'technician'>(initialTechName ? 'technician' : 'customer')
     const [customerSearch, setCustomerSearch] = useState('')
     const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string; phone?: string; email?: string } | null>(null)
     const [showDropdown, setShowDropdown]   = useState(false)
+    const [techSearch, setTechSearch] = useState(initialTechName ?? '')
+    const [selectedTech, setSelectedTech] = useState<{ id: string; name: string; role: string } | null>(null)
+    const [showTechDropdown, setShowTechDropdown] = useState(false)
     const [initialMessage, setInitialMessage] = useState('')
 
     const customersQuery = useCustomers({ search: customerSearch, limit: 20 })
     const customers = customersQuery.data?.data ?? []
+    const teamQuery = useTeamMembers({ page: 1, limit: 200, isActive: true })
+    const technicians = (teamQuery.data?.data ?? []).filter(m => m.role?.toLowerCase() === 'technician')
+    const filteredTechs = techSearch.length >= 1
+        ? technicians.filter(t => t.name.toLowerCase().includes(techSearch.toLowerCase()))
+        : technicians
     const createThread = useCreateThread()
     const sendThreadMessage = useSendThreadMessage()
 
-    const canSend = selectedCustomer && initialMessage.trim()
+    const canSend = recipientType === 'customer'
+        ? (selectedCustomer && initialMessage.trim())
+        : (selectedTech && initialMessage.trim())
 
     const handleCreate = () => {
-        if (!selectedCustomer || !initialMessage.trim()) return
+        if (!initialMessage.trim()) return
         const msg = initialMessage.trim()
 
-        createThread.mutate(
-            {
-                customerId: selectedCustomer.id,
-                customerName: selectedCustomer.name,
-                customerPhone: selectedCustomer.phone,
-                customerEmail: selectedCustomer.email,
-            },
-            {
-                onSuccess: (thread) => {
-                    // Post the initial message to the thread
-                    sendThreadMessage.mutate({ threadId: thread.id, body: msg })
-
-                    onThreadCreated(thread.id)
+        if (recipientType === 'technician') {
+            if (!selectedTech) return
+            createThread.mutate(
+                {
+                    participantIds: [selectedTech.id],
+                    participantNames: [selectedTech.name],
+                    subject: `Chat with ${selectedTech.name}`,
                 },
-            },
-        )
+                {
+                    onSuccess: (thread) => {
+                        sendThreadMessage.mutate({ threadId: thread.id, body: msg })
+                        onThreadCreated(thread.id)
+                    },
+                }
+            )
+        } else {
+            if (!selectedCustomer) return
+            createThread.mutate(
+                {
+                    customerId: selectedCustomer.id,
+                    customerName: selectedCustomer.name,
+                    customerPhone: selectedCustomer.phone,
+                    customerEmail: selectedCustomer.email,
+                },
+                {
+                    onSuccess: (thread) => {
+                        sendThreadMessage.mutate({ threadId: thread.id, body: msg })
+                        onThreadCreated(thread.id)
+                    },
+                }
+            )
+        }
     }
 
     return (
@@ -810,78 +1034,149 @@ function NewMessageModal({ onClose, onThreadCreated }: { onClose: () => void; on
                 </div>
 
                 <div className="p-5 flex flex-col gap-4">
-                    <div className="rounded-[var(--r)] border border-[var(--bd)] bg-[var(--bg-surface)] px-3 py-2.5 text-sm text-[var(--t2)] flex items-center gap-2">
-                        <MessageSquare size={14} />
-                        In-app chat only
+                    {/* Recipient type toggle */}
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => { setRecipientType('customer'); setSelectedTech(null); setTechSearch('') }}
+                            className={`flex-1 py-2 text-sm font-semibold rounded-[var(--r)] border transition-colors ${recipientType === 'customer' ? 'bg-[var(--blue)] text-white border-[var(--blue)]' : 'border-[var(--bd)] text-[var(--t2)] hover:border-[var(--blue)]'}`}
+                        >
+                            Customer
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setRecipientType('technician'); setSelectedCustomer(null); setCustomerSearch('') }}
+                            className={`flex-1 py-2 text-sm font-semibold rounded-[var(--r)] border transition-colors ${recipientType === 'technician' ? 'bg-violet-600 text-white border-violet-600' : 'border-[var(--bd)] text-[var(--t2)] hover:border-violet-500'}`}
+                        >
+                            Technician
+                        </button>
                     </div>
 
-                    {/* Recipient search */}
-                    <div className="relative">
-                        <label className="block text-sm font-medium text-[var(--t2)] mb-1.5">Recipient</label>
-                        {selectedCustomer ? (
-                            <div className="flex items-center gap-2 p-2.5 border border-[var(--bd)] rounded-[var(--r)] bg-[var(--bg-surface)]">
-                                <div className="w-8 h-8 rounded-full bg-[var(--blue-dim)] text-[var(--blue)] flex items-center justify-center text-xs font-semibold">
-                                    {getInitials(selectedCustomer.name)}
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-[var(--t1)]">{selectedCustomer.name}</p>
-                                    <p className="text-xs text-[var(--t3)]">
-                                        {selectedCustomer.phone || selectedCustomer.email || 'In-app chat'}
-                                    </p>
-                                </div>
-                                <button className="topbar-icon-btn" onClick={() => { setSelectedCustomer(null); setCustomerSearch('') }}>
-                                    <X size={14} />
-                                </button>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--t4)]" />
-                                    <input
-                                        placeholder="Search customers, technicians..."
-                                        className="w-full pl-9 pr-3 py-2.5 text-sm bg-transparent border border-[var(--bd)] rounded-[var(--r)] focus:border-[var(--blue)] outline-none text-[var(--t1)]"
-                                        value={customerSearch}
-                                        onChange={e => { setCustomerSearch(e.target.value); setShowDropdown(true) }}
-                                        onFocus={() => setShowDropdown(true)}
-                                    />
-                                </div>
-                                {showDropdown && customerSearch.length >= 1 && (
-                                    <div className="absolute z-50 left-0 right-0 mt-1 bg-[var(--bg-card)] border border-[var(--bd)] rounded-[var(--r)] shadow-lg max-h-48 overflow-auto">
-                                        {customersQuery.isLoading && (
-                                            <div className="p-3 text-center text-sm text-[var(--t4)]"><Loader2 size={14} className="animate-spin inline mr-2" />Searching...</div>
-                                        )}
-                                        {!customersQuery.isLoading && customers.length === 0 && (
-                                            <div className="p-3 text-center text-sm text-[var(--t4)]">No customers found</div>
-                                        )}
-                                        {customers.map(c => (
-                                            <div
-                                                key={c.id}
-                                                className="flex items-center gap-2 p-3 hover:bg-[var(--bg-hover)] cursor-pointer"
-                                                onClick={() => {
-                                                    setSelectedCustomer({
-                                                        id: c.id,
-                                                        name: `${c.firstName} ${c.lastName}`,
-                                                        phone: c.phone ?? undefined,
-                                                        email: c.email ?? undefined,
-                                                    })
-                                                    setShowDropdown(false)
-                                                    setCustomerSearch('')
-                                                }}
-                                            >
-                                                <div className="w-7 h-7 rounded-full bg-[var(--blue-dim)] text-[var(--blue)] flex items-center justify-center text-xs font-semibold">
-                                                    {getInitials(`${c.firstName} ${c.lastName}`)}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-[var(--t1)]">{c.firstName} {c.lastName}</p>
-                                                    <p className="text-xs text-[var(--t3)]">{c.phone ?? c.email ?? '—'}</p>
-                                                </div>
-                                            </div>
-                                        ))}
+                    {/* Customer recipient search */}
+                    {recipientType === 'customer' && (
+                        <div className="relative">
+                            <label className="block text-sm font-medium text-[var(--t2)] mb-1.5">Recipient</label>
+                            {selectedCustomer ? (
+                                <div className="flex items-center gap-2 p-2.5 border border-[var(--bd)] rounded-[var(--r)] bg-[var(--bg-surface)]">
+                                    <div className="w-8 h-8 rounded-full bg-[var(--blue-dim)] text-[var(--blue)] flex items-center justify-center text-xs font-semibold">
+                                        {getInitials(selectedCustomer.name)}
                                     </div>
-                                )}
-                            </>
-                        )}
-                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-[var(--t1)]">{selectedCustomer.name}</p>
+                                        <p className="text-xs text-[var(--t3)]">
+                                            {selectedCustomer.phone || selectedCustomer.email || 'In-app chat'}
+                                        </p>
+                                    </div>
+                                    <button className="topbar-icon-btn" onClick={() => { setSelectedCustomer(null); setCustomerSearch('') }}>
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--t4)]" />
+                                        <input
+                                            placeholder="Search customers..."
+                                            className="w-full pl-9 pr-3 py-2.5 text-sm bg-transparent border border-[var(--bd)] rounded-[var(--r)] focus:border-[var(--blue)] outline-none text-[var(--t1)]"
+                                            value={customerSearch}
+                                            onChange={e => { setCustomerSearch(e.target.value); setShowDropdown(true) }}
+                                            onFocus={() => setShowDropdown(true)}
+                                        />
+                                    </div>
+                                    {showDropdown && customerSearch.length >= 1 && (
+                                        <div className="absolute z-50 left-0 right-0 mt-1 bg-[var(--bg-card)] border border-[var(--bd)] rounded-[var(--r)] shadow-lg max-h-48 overflow-auto">
+                                            {customersQuery.isLoading && (
+                                                <div className="p-3 text-center text-sm text-[var(--t4)]"><Loader2 size={14} className="animate-spin inline mr-2" />Searching...</div>
+                                            )}
+                                            {!customersQuery.isLoading && customers.length === 0 && (
+                                                <div className="p-3 text-center text-sm text-[var(--t4)]">No customers found</div>
+                                            )}
+                                            {customers.map(c => (
+                                                <div
+                                                    key={c.id}
+                                                    className="flex items-center gap-2 p-3 hover:bg-[var(--bg-hover)] cursor-pointer"
+                                                    onClick={() => {
+                                                        setSelectedCustomer({
+                                                            id: c.id,
+                                                            name: `${c.firstName} ${c.lastName}`,
+                                                            phone: c.phone ?? undefined,
+                                                            email: c.email ?? undefined,
+                                                        })
+                                                        setShowDropdown(false)
+                                                        setCustomerSearch('')
+                                                    }}
+                                                >
+                                                    <div className="w-7 h-7 rounded-full bg-[var(--blue-dim)] text-[var(--blue)] flex items-center justify-center text-xs font-semibold">
+                                                        {getInitials(`${c.firstName} ${c.lastName}`)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-[var(--t1)]">{c.firstName} {c.lastName}</p>
+                                                        <p className="text-xs text-[var(--t3)]">{c.phone ?? c.email ?? '—'}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Technician recipient search */}
+                    {recipientType === 'technician' && (
+                        <div className="relative">
+                            <label className="block text-sm font-medium text-[var(--t2)] mb-1.5">Technician</label>
+                            {selectedTech ? (
+                                <div className="flex items-center gap-2 p-2.5 border border-[var(--bd)] rounded-[var(--r)] bg-[var(--bg-surface)]">
+                                    <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-semibold">
+                                        {getInitials(selectedTech.name)}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-[var(--t1)]">{selectedTech.name}</p>
+                                        <p className="text-xs text-[var(--t3)] capitalize">{selectedTech.role.toLowerCase()}</p>
+                                    </div>
+                                    <button className="topbar-icon-btn" onClick={() => { setSelectedTech(null); setTechSearch('') }}>
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--t4)]" />
+                                        <input
+                                            placeholder="Search technicians..."
+                                            className="w-full pl-9 pr-3 py-2.5 text-sm bg-transparent border border-[var(--bd)] rounded-[var(--r)] focus:border-violet-500 outline-none text-[var(--t1)]"
+                                            value={techSearch}
+                                            onChange={e => { setTechSearch(e.target.value); setShowTechDropdown(true) }}
+                                            onFocus={() => setShowTechDropdown(true)}
+                                        />
+                                    </div>
+                                    {showTechDropdown && (
+                                        <div className="absolute z-50 left-0 right-0 mt-1 bg-[var(--bg-card)] border border-[var(--bd)] rounded-[var(--r)] shadow-lg max-h-48 overflow-auto">
+                                            {filteredTechs.length === 0 && (
+                                                <div className="p-3 text-center text-sm text-[var(--t4)]">No technicians found</div>
+                                            )}
+                                            {filteredTechs.map(t => (
+                                                <div
+                                                    key={t.id}
+                                                    className="flex items-center gap-2 p-3 hover:bg-[var(--bg-hover)] cursor-pointer"
+                                                    onClick={() => { setSelectedTech({ id: t.id, name: t.name, role: t.role }); setShowTechDropdown(false); setTechSearch('') }}
+                                                >
+                                                    <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-semibold">
+                                                        {getInitials(t.name)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-[var(--t1)]">{t.name}</p>
+                                                        <p className="text-xs text-[var(--t3)] capitalize">Technician</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
 
                     {/* Message body */}
                     <div>

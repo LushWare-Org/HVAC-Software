@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  TextInput,
+  ActivityIndicator,
+  Pressable,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -13,6 +16,9 @@ import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants
 import { useThreads, useCreateThread } from '@/hooks/useMessages'
 import { useMyJobs } from '@/hooks/useJobs'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSocketContext } from '@/contexts/SocketContext'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/queryClient'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { formatRelative, getInitials, truncate } from '@/utils/format'
@@ -21,6 +27,13 @@ import type { MessageThread } from '@/types/api'
 export default function MessagesScreen() {
   const router = useRouter()
   const { user } = useAuth()
+  const qc = useQueryClient()
+  const { onNewMessage } = useSocketContext()
+
+  const [search, setSearch] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
+  const [startingChat, setStartingChat] = useState<string | null>(null) // customerId being started
+
   const { data: threadsData, isLoading, refetch } = useThreads({ limit: 50 })
   const { data: jobsData } = useMyJobs({ limit: 100 })
   const createThread = useCreateThread()
@@ -28,27 +41,58 @@ export default function MessagesScreen() {
   const threads = threadsData?.data ?? []
   const myJobs = jobsData?.data ?? []
 
-  // Get customer IDs from my assigned jobs
+  // ── Real-time: when a new message arrives, update the thread list cache ──────
+  useEffect(() => {
+    const unsub = onNewMessage(({ threadId, message }) => {
+      qc.setQueryData<{ data: MessageThread[]; total: number; page: number; limit: number }>(
+        queryKeys.threads({}),
+        (old) => {
+          if (!old) return old
+          const updated = old.data.map((t) => {
+            if (t.id !== threadId) return t
+            return {
+              ...t,
+              lastMessageBody: message.body,
+              lastMessageAt: message.createdAt,
+              // Increment unread if the message is INBOUND (from customer/other)
+              unreadCount:
+                message.direction === 'INBOUND'
+                  ? (t.unreadCount ?? 0) + 1
+                  : t.unreadCount ?? 0,
+            }
+          })
+          // Bubble updated thread to the top
+          const idx = updated.findIndex((t) => t.id === threadId)
+          if (idx > 0) {
+            const [moved] = updated.splice(idx, 1)
+            updated.unshift(moved)
+          }
+          return { ...old, data: updated }
+        },
+      )
+    })
+    return unsub
+  }, [onNewMessage, qc])
+
+  // ── Threads I should see ─────────────────────────────────────────────────────
+  // STRICT privacy rule: only threads where I am explicitly a participant.
+  // This prevents techs from seeing admin↔customer support threads or other
+  // techs' private chats, even if they share a customer. Own threads are
+  // created with `participantIds: [user.id]` by useCreateThread.
+  const myThreads = useMemo(() => {
+    const uid = user?.id
+    if (!uid) return []
+    return threads.filter((t) => (t.participantIds ?? []).includes(uid))
+  }, [threads, user?.id])
+
+  // Customer IDs I already have a private thread with (for "Start a chat" de-dupe)
   const myCustomerIds = useMemo(() => {
     const ids = new Set<string>()
-    myJobs.forEach((j) => {
-      if (j.customerId) ids.add(j.customerId)
-    })
+    myThreads.forEach((t) => { if (t.customerId) ids.add(t.customerId) })
     return ids
-  }, [myJobs])
+  }, [myThreads])
 
-  // Filter threads: show threads for MY customers, staff threads I'm in, or all customer threads (as technician)
-  const myThreads = useMemo(() => {
-    return threads.filter((t) => {
-      // Customer thread for a customer whose job I'm assigned to
-      if (t.customerId && myCustomerIds.has(t.customerId)) return true
-      // Staff thread I participate in
-      if (t.participantIds?.includes(user?.id ?? '')) return true
-      return false
-    })
-  }, [threads, myCustomerIds, user?.id])
-
-  // Customers I have jobs with but NO thread yet
+  // ── Customers with a job but no thread yet ───────────────────────────────────
   const customersWithoutThread = useMemo(() => {
     const threadCustomerIds = new Set(myThreads.map((t) => t.customerId).filter(Boolean))
     const seen = new Set<string>()
@@ -56,35 +100,55 @@ export default function MessagesScreen() {
     myJobs.forEach((j) => {
       if (j.customerId && !threadCustomerIds.has(j.customerId) && !seen.has(j.customerId)) {
         seen.add(j.customerId)
-        result.push({
-          customerId: j.customerId,
-          customerName: j.customerName ?? 'Customer',
-          jobTitle: j.title,
-        })
+        result.push({ customerId: j.customerId, customerName: j.customerName ?? 'Customer', jobTitle: j.title })
       }
     })
     return result
   }, [myJobs, myThreads])
 
-  const [refreshing, setRefreshing] = React.useState(false)
-  const onRefresh = async () => {
+  // ── Search filter ────────────────────────────────────────────────────────────
+  const filteredThreads = useMemo(() => {
+    if (!search.trim()) return myThreads
+    const q = search.trim().toLowerCase()
+    return myThreads.filter((t) => {
+      const name = getThreadDisplayName(t).toLowerCase()
+      const preview = (t.lastMessageBody ?? '').toLowerCase()
+      const subject = (t.subject ?? '').toLowerCase()
+      return name.includes(q) || preview.includes(q) || subject.includes(q)
+    })
+  }, [myThreads, search])
+
+  const filteredContacts = useMemo(() => {
+    if (!search.trim()) return customersWithoutThread
+    const q = search.trim().toLowerCase()
+    return customersWithoutThread.filter(
+      (c) => c.customerName.toLowerCase().includes(q) || c.jobTitle.toLowerCase().includes(q),
+    )
+  }, [customersWithoutThread, search])
+
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+  const onRefresh = useCallback(async () => {
     setRefreshing(true)
     await refetch()
     setRefreshing(false)
-  }
+  }, [refetch])
 
-  const handleStartChat = async (customerId: string, customerName: string) => {
+  const handleStartChat = useCallback(async (customerId: string, customerName: string) => {
+    setStartingChat(customerId)
     try {
       const thread = await createThread.mutateAsync({ customerId, customerName })
       router.push(`/message/${thread.id}`)
     } catch (err: any) {
-      if (err?.response?.data?.id) {
-        router.push(`/message/${err.response.data.id}`)
-      }
+      // Server may return existing thread ID in error body
+      const existing = err?.response?.data?.id ?? err?.response?.data?.existingThreadId
+      if (existing) router.push(`/message/${existing}`)
+    } finally {
+      setStartingChat(null)
     }
-  }
+  }, [createThread, router])
 
-  const getThreadDisplayName = (t: MessageThread): string => {
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function getThreadDisplayName(t: MessageThread): string {
     if (t.customerId && t.customerName) return t.customerName
     if (t.subject) return t.subject
     if (t.participantNames?.length) {
@@ -93,16 +157,18 @@ export default function MessagesScreen() {
     return 'Conversation'
   }
 
-  const isStaffThread = (t: MessageThread): boolean => {
+  function isStaffThread(t: MessageThread): boolean {
     return !t.customerId && (t.participantIds?.length ?? 0) > 0
   }
 
+  // ── Render helpers ────────────────────────────────────────────────────────────
   const renderThread = ({ item }: { item: MessageThread }) => {
     const relatedJob = item.customerId
       ? myJobs.find((j) => j.customerId === item.customerId)
       : undefined
     const displayName = getThreadDisplayName(item)
     const staff = isStaffThread(item)
+    const hasUnread = (item.unreadCount ?? 0) > 0
 
     return (
       <TouchableOpacity
@@ -113,7 +179,7 @@ export default function MessagesScreen() {
         <View
           style={[
             styles.avatar,
-            (item.unreadCount ?? 0) > 0 && styles.avatarUnread,
+            hasUnread && styles.avatarUnread,
             staff && styles.avatarStaff,
           ]}
         >
@@ -123,7 +189,7 @@ export default function MessagesScreen() {
         <View style={styles.threadContent}>
           <View style={styles.threadTopRow}>
             <Text
-              style={[styles.threadName, (item.unreadCount ?? 0) > 0 && styles.threadNameUnread]}
+              style={[styles.threadName, hasUnread && styles.threadNameUnread]}
               numberOfLines={1}
             >
               {displayName}
@@ -132,23 +198,30 @@ export default function MessagesScreen() {
               {formatRelative(item.lastMessageAt ?? item.createdAt)}
             </Text>
           </View>
+
           {staff && (
-            <Text style={[styles.jobRef, { color: '#7C3AED' }]} numberOfLines={1}>
+            <Text style={[styles.threadMeta, { color: '#7C3AED' }]} numberOfLines={1}>
               Team Chat
             </Text>
           )}
-          {relatedJob && (
-            <Text style={styles.jobRef} numberOfLines={1}>
-              {'\uD83D\uDCCB'} {relatedJob.title}
+          {relatedJob && !staff && (
+            <Text style={[styles.threadMeta, { color: Colors.primary }]} numberOfLines={1}>
+              📋 {relatedJob.title}
             </Text>
           )}
+
           <View style={styles.threadBottomRow}>
-            <Text style={styles.threadPreview} numberOfLines={1}>
-              {item.lastMessageBody ? truncate(item.lastMessageBody, 60) : 'No messages yet'}
+            <Text
+              style={[styles.threadPreview, hasUnread && styles.threadPreviewUnread]}
+              numberOfLines={1}
+            >
+              {item.lastMessageBody ? truncate(item.lastMessageBody, 55) : 'No messages yet'}
             </Text>
-            {(item.unreadCount ?? 0) > 0 && (
+            {hasUnread && (
               <View style={styles.unreadBadge}>
-                <Text style={styles.unreadText}>{item.unreadCount}</Text>
+                <Text style={styles.unreadText}>
+                  {(item.unreadCount ?? 0) > 99 ? '99+' : item.unreadCount}
+                </Text>
               </View>
             )}
           </View>
@@ -157,60 +230,155 @@ export default function MessagesScreen() {
     )
   }
 
+  const renderContact = (c: { customerId: string; customerName: string; jobTitle: string }) => {
+    const busy = startingChat === c.customerId
+    return (
+      <TouchableOpacity
+        key={c.customerId}
+        style={styles.startChatCard}
+        onPress={() => handleStartChat(c.customerId, c.customerName)}
+        activeOpacity={0.7}
+        disabled={busy}
+      >
+        <View style={styles.startChatAvatar}>
+          <Text style={styles.startChatAvatarText}>{getInitials(c.customerName)}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.startChatName}>{c.customerName}</Text>
+          <Text style={styles.startChatJob} numberOfLines={1}>
+            📋 {c.jobTitle}
+          </Text>
+        </View>
+        {busy ? (
+          <ActivityIndicator size="small" color={Colors.primary} />
+        ) : (
+          <View style={styles.startChatBtn}>
+            <Text style={styles.startChatBtnText}>💬 Chat</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    )
+  }
+
+  // ── Header component (search + contacts) ─────────────────────────────────────
+  const ListHeader = (
+    <View>
+      {/* Search bar */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search conversations..."
+            placeholderTextColor={Colors.textMuted}
+            clearButtonMode="while-editing"
+            returnKeyType="search"
+            autoCorrect={false}
+          />
+          {search.length > 0 && (
+            <Pressable onPress={() => setSearch('')} hitSlop={8}>
+              <Text style={styles.clearBtn}>✕</Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+
+      {/* New conversations section (customers without thread) */}
+      {filteredContacts.length > 0 && (
+        <View style={styles.sectionBlock}>
+          <Text style={styles.sectionLabel}>Start a conversation</Text>
+          {filteredContacts.map(renderContact)}
+        </View>
+      )}
+
+      {/* Existing threads label */}
+      {filteredThreads.length > 0 && (
+        <Text style={styles.sectionLabel}>
+          {search.trim() ? `Results (${filteredThreads.length})` : 'Recent conversations'}
+        </Text>
+      )}
+    </View>
+  )
+
+  // ── Empty state ───────────────────────────────────────────────────────────────
+  const showEmpty = !isLoading && filteredThreads.length === 0 && filteredContacts.length === 0
+  const emptyTitle = search.trim()
+    ? 'No results'
+    : 'No messages yet'
+  const emptySubtitle = search.trim()
+    ? `No conversations matching "${search}"`
+    : 'When you are assigned jobs, you can message customers and team members here.'
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Messages</Text>
-        <Text style={styles.headerSubtitle}>Customer & team conversations</Text>
+      {/* Page header */}
+      <View style={styles.pageHeader}>
+        <View>
+          <Text style={styles.pageTitle}>Messages</Text>
+          <Text style={styles.pageSubtitle}>Customer &amp; team conversations</Text>
+        </View>
+        {myThreads.length > 0 && (
+          <View style={styles.countPill}>
+            <Text style={styles.countPillText}>{myThreads.length}</Text>
+          </View>
+        )}
       </View>
 
       {isLoading && !threadsData ? (
         <LoadingSpinner message="Loading messages..." />
+      ) : showEmpty ? (
+        <View style={{ flex: 1 }}>
+          {/* Show search bar even in empty state */}
+          <View style={styles.searchRow}>
+            <View style={styles.searchContainer}>
+              <Text style={styles.searchIcon}>🔍</Text>
+              <TextInput
+                style={styles.searchInput}
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Search conversations..."
+                placeholderTextColor={Colors.textMuted}
+                clearButtonMode="while-editing"
+                returnKeyType="search"
+                autoCorrect={false}
+              />
+              {search.length > 0 && (
+                <Pressable onPress={() => setSearch('')} hitSlop={8}>
+                  <Text style={styles.clearBtn}>✕</Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
+          <EmptyState icon="💬" title={emptyTitle} subtitle={emptySubtitle} />
+        </View>
       ) : (
         <FlatList
-          data={myThreads}
+          data={filteredThreads}
           keyExtractor={(item) => item.id}
           renderItem={renderThread}
           contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Colors.primary}
+            />
+          }
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={
-            customersWithoutThread.length > 0 ? (
-              <View style={styles.startChatSection}>
-                <Text style={styles.sectionLabel}>Start a conversation</Text>
-                {customersWithoutThread.map((c) => (
-                  <TouchableOpacity
-                    key={c.customerId}
-                    style={styles.startChatCard}
-                    onPress={() => handleStartChat(c.customerId, c.customerName)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.startChatAvatar}>
-                      <Text style={styles.startChatAvatarText}>{getInitials(c.customerName)}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.startChatName}>{c.customerName}</Text>
-                      <Text style={styles.startChatJob} numberOfLines={1}>
-                        {'\uD83D\uDCCB'} {c.jobTitle}
-                      </Text>
-                    </View>
-                    <Text style={styles.startChatBtn}>
-                      {'\uD83D\uDCAC'} Chat
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+          ListHeaderComponent={ListHeader}
+          ListEmptyComponent={
+            filteredContacts.length === 0 ? (
+              <View style={styles.emptyThreads}>
+                <Text style={styles.emptyThreadsText}>
+                  {search.trim() ? `No conversations match "${search}"` : 'No conversations yet'}
+                </Text>
               </View>
             ) : null
           }
-          ListEmptyComponent={
-            customersWithoutThread.length === 0 ? (
-              <EmptyState
-                icon={'\uD83D\uDCAC'}
-                title="No messages yet"
-                subtitle="When you're assigned jobs, you can message customers and team members here."
-              />
-            ) : null
-          }
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         />
       )}
     </SafeAreaView>
@@ -219,38 +387,85 @@ export default function MessagesScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  header: {
+
+  // Page header
+  pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
-    paddingBottom: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
-  headerTitle: {
+  pageTitle: {
     fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
   },
-  headerSubtitle: {
+  pageSubtitle: {
     fontSize: FontSize.sm,
     color: Colors.textMuted,
-    marginTop: 2,
+    marginTop: 1,
   },
-  listContent: { paddingBottom: 30 },
+  countPill: {
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  countPillText: {
+    color: Colors.white,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+  },
+
+  // Search
+  searchRow: {
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  searchIcon: { fontSize: 16, marginRight: Spacing.sm },
+  searchInput: {
+    flex: 1,
+    fontSize: FontSize.base,
+    color: Colors.textPrimary,
+    paddingVertical: 0,
+  },
+  clearBtn: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    paddingLeft: Spacing.sm,
+  },
+
+  // Sections
+  sectionBlock: {
+    marginBottom: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+    paddingBottom: Spacing.md,
+  },
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.bold,
     color: Colors.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
     paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
   },
-  startChatSection: {
-    marginBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    paddingBottom: Spacing.md,
-  },
+
+  // Start chat cards
   startChatCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -261,9 +476,9 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
   },
   startChatAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#dbeafe',
     justifyContent: 'center',
     alignItems: 'center',
@@ -285,15 +500,19 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   startChatBtn: {
+    backgroundColor: '#eff6ff',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  startChatBtnText: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.semibold,
     color: Colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#eff6ff',
-    borderRadius: BorderRadius.md,
-    overflow: 'hidden',
   },
+
+  // Thread rows
+  listContent: { paddingBottom: 40 },
   threadCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -304,9 +523,9 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: Colors.disabled,
     justifyContent: 'center',
     alignItems: 'center',
@@ -331,18 +550,11 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.medium,
     color: Colors.textPrimary,
     flex: 1,
+    marginRight: Spacing.sm,
   },
   threadNameUnread: { fontWeight: FontWeight.bold },
-  threadTime: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    marginLeft: Spacing.sm,
-  },
-  jobRef: {
-    fontSize: FontSize.xs,
-    color: Colors.primary,
-    marginBottom: 2,
-  },
+  threadTime: { fontSize: FontSize.xs, color: Colors.textMuted },
+  threadMeta: { fontSize: FontSize.xs, marginBottom: 2 },
   threadBottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -352,6 +564,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     flex: 1,
+  },
+  threadPreviewUnread: {
+    color: Colors.textPrimary,
+    fontWeight: FontWeight.medium,
   },
   unreadBadge: {
     backgroundColor: Colors.primary,
@@ -367,5 +583,14 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 11,
     fontWeight: FontWeight.bold,
+  },
+
+  emptyThreads: {
+    paddingVertical: Spacing.xl,
+    alignItems: 'center',
+  },
+  emptyThreadsText: {
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
   },
 })

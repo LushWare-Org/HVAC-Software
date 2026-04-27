@@ -42,12 +42,21 @@ export class MessagingService {
     const isCustomerThread = !!dto.customerId;
 
     if (isCustomerThread) {
+      // Reuse an existing thread only when the same context is being opened:
+      //   - same customer + same job, OR
+      //   - same customer + same subject (lets "Chat with Technician: X" coexist with "Support Request")
+      // If the caller provides neither jobId nor subject we fall back to the default
+      // "Support" thread for that customer.
       const existing = await this.prisma.messageThread.findFirst({
         where: {
           companyId,
           customerId: dto.customerId,
           status: ThreadStatus.ACTIVE,
-          ...(dto.jobId ? { jobId: dto.jobId } : {}),
+          ...(dto.jobId
+            ? { jobId: dto.jobId }
+            : dto.subject
+              ? { subject: dto.subject, jobId: null }
+              : { jobId: null, OR: [{ subject: null }, { subject: '' }] }),
         },
         include: MESSAGES_INCLUDE,
       });
@@ -116,13 +125,38 @@ export class MessagingService {
     };
 
     if (customerId) {
+      // CUSTOMER role: see only their own threads.
       where.customerId = customerId;
     } else if (userId) {
+      // Staff / admin: see only threads they are personally part of.
+      //
+      // Four kinds of threads exist:
+      //   A) Admin↔customer (admin created):         customerId set, participantIds = [], subject = null or custom
+      //   B) Tech↔customer  (tech-app created):      customerId set, participantIds = [techId], subject = "Tech: X"
+      //   C) Customer-initiated tech chat (portal):  customerId set, participantIds = [], subject starts with "Chat with Technician:"
+      //   D) Staff-to-staff:                         customerId null, participantIds = [id1, id2, ...]
+      //
+      // Admins should see:
+      //   - A: their own admin↔customer threads (empty participantIds, NOT a tech-chat subject)
+      //   - D (only when the admin's userId is in participantIds)
+      //   - B / C: ONLY if this admin is explicitly listed in participantIds
+      //
+      // "Chat with Technician:" threads (C) are customer↔tech private chats — admin must never see them.
       where = {
         companyId,
         ...(status ? { status } : {}),
         OR: [
-          { customerId: { not: null } },
+          // Rule A: admin-created customer thread — no participant list, NOT a customer-initiated tech chat
+          {
+            customerId: { not: null },
+            participantIds: { isEmpty: true },
+            // Exclude "Chat with Technician: X" threads started by the customer portal
+            OR: [
+              { subject: null },
+              { subject: { not: { startsWith: 'Chat with Technician:' } } },
+            ],
+          },
+          // Rules B / C / D: explicit participant list — caller must be in it
           { participantIds: { has: userId } },
         ],
       };
@@ -158,6 +192,37 @@ export class MessagingService {
     });
     if (!thread) throw new NotFoundException(`Thread ${id} not found`);
     return this.enrichThread(thread);
+  }
+
+  /**
+   * Permanently delete a thread and all its messages.
+   * Authorization: caller must be a participant (participantIds contains userId)
+   * OR the thread has no explicit participant list (admin-created customer thread).
+   * Customers are additionally scoped to their own customerId.
+   */
+  async deleteThread(
+    companyId: string,
+    id: string,
+    userId?: string,
+    customerId?: string,
+  ) {
+    const thread = await this.prisma.messageThread.findFirst({
+      where: {
+        id,
+        companyId,
+        ...(customerId ? { customerId } : {}),
+      },
+    });
+    if (!thread) throw new NotFoundException(`Thread ${id} not found`);
+
+    // Participant check: if participantIds is non-empty, caller must be listed.
+    const pids = thread.participantIds ?? [];
+    if (pids.length > 0 && userId && !pids.includes(userId)) {
+      throw new ForbiddenException('You are not a participant in this thread');
+    }
+
+    await this.prisma.messageThread.delete({ where: { id } });
+    return { deleted: true, id };
   }
 
   async updateThreadStatus(companyId: string, id: string, status: ThreadStatus, customerId?: string) {

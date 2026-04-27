@@ -195,12 +195,21 @@ export class InvoicesService {
       throw new BadRequestException(`Invoice cannot be approved in status: ${invoice.status}`);
     }
 
-    const decisionLine = `Customer approved on ${new Date().toISOString()} by ${customerName} (${customerEmail})`;
+    const now = new Date();
+    const decisionLine = `Customer approved on ${now.toISOString()} by ${customerName} (${customerEmail})`;
     const existingNotes = invoice.notes?.trim();
 
     return this.prisma.invoice.update({
       where: { id },
       data: {
+        approvedAt: now,
+        approvedByName: customerName,
+        approvedByEmail: customerEmail,
+        // Clear any prior decline so the record reflects the latest customer action
+        declinedAt: null,
+        declinedByName: null,
+        declinedByEmail: null,
+        declineReason: null,
         notes: existingNotes ? `${existingNotes}\n\n${decisionLine}` : decisionLine,
       },
       include: {
@@ -223,14 +232,19 @@ export class InvoicesService {
       throw new BadRequestException(`Invoice cannot be declined in status: ${invoice.status}`);
     }
 
-    const decisionLine = `Customer declined on ${new Date().toISOString()} by ${customerName} (${customerEmail})${reason ? ` — ${reason}` : ''}`;
+    const now = new Date();
+    const decisionLine = `Customer declined on ${now.toISOString()} by ${customerName} (${customerEmail})${reason ? ` — ${reason}` : ''}`;
     const existingNotes = invoice.notes?.trim();
 
     return this.prisma.invoice.update({
       where: { id },
       data: {
         status: InvoiceStatus.VOID,
-        voidedAt: new Date(),
+        voidedAt: now,
+        declinedAt: now,
+        declinedByName: customerName,
+        declinedByEmail: customerEmail,
+        declineReason: reason ?? null,
         notes: existingNotes ? `${existingNotes}\n\n${decisionLine}` : decisionLine,
       },
       include: {

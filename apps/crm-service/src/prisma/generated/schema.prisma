@@ -9,10 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("CRM_DATABASE_URL")
-  // Connection URL must include ?schema=crm
-  // e.g. postgresql://user:pass@localhost:5432/tscrm?schema=crm
+  provider  = "postgresql"
+  url       = env("CRM_DATABASE_URL") // pgbouncer (runtime)
+  directUrl = env("CRM_DIRECT_DATABASE_URL") // session mode (migrations / prisma studio)
 }
 
 // ---- Companies (tenants) ----
@@ -249,16 +248,29 @@ enum BookingStatus {
 }
 
 // ---- Reviews / Reputation Management ----
+// A Review is authored by a customer and targets either a specific job
+// (type = JOB, jobId + technicianId set) or the company as a whole
+// (type = COMPANY, no jobId). Denormalized names avoid cross-service joins
+// when listing reviews.
 model Review {
-  id          String    @id @default(uuid())
-  companyId   String
-  customerId  String?
-  customer    Customer? @relation(fields: [customerId], references: [id])
-  jobId       String?
+  id        String     @id @default(uuid())
+  companyId String
+  type      ReviewType @default(JOB)
+
+  // Author (customer)
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  customerName String?
+
+  // Target: a specific job + its assigned technician
+  jobId          String?
+  technicianId   String?
+  technicianName String?
+
   rating      Int // 1-5
   comment     String?
   platform    String    @default("internal") // google, internal
-  isPublished Boolean   @default(false)
+  isPublished Boolean   @default(true) // customer-submitted reviews are live by default
   respondedAt DateTime?
   response    String?
   createdAt   DateTime  @default(now())
@@ -266,7 +278,15 @@ model Review {
 
   @@index([companyId])
   @@index([customerId])
+  @@index([technicianId])
+  @@index([companyId, type])
+  @@index([jobId])
   @@map("reviews")
+}
+
+enum ReviewType {
+  JOB // Review of a specific completed job / the assigned technician
+  COMPANY // General review of the company / business
 }
 
 // ---- Addresses (multiple per customer or lead) ----

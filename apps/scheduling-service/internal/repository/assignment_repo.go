@@ -227,6 +227,26 @@ func (r *AssignmentRepository) InsertGPSPoint(
 	return err
 }
 
+// CancelActiveForJob sets status=CANCELLED for any non-terminal assignment
+// (SUGGESTED, ASSIGNED, EN_ROUTE, ON_SITE) on the given job.
+// Call this before Create() when reassigning so the old assignment doesn't
+// linger as "active" alongside the new one.
+// Returns the number of rows updated (0 = no prior assignment existed).
+func (r *AssignmentRepository) CancelActiveForJob(ctx context.Context, companyID, jobID string) (int64, error) {
+	tag, err := r.db.Exec(ctx, `
+		UPDATE scheduling.dispatch_assignments
+		SET    status     = 'CANCELLED',
+		       updated_at = NOW()
+		WHERE  company_id = $1
+		  AND  job_id     = $2
+		  AND  status NOT IN ('COMPLETED', 'CANCELLED')`,
+		companyID, jobID)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
 // SyncJobAssignment updates the job in the jobs schema to reflect the new assignment.
 // Uses cross-schema query since all services share the same PostgreSQL instance.
 func (r *AssignmentRepository) SyncJobAssignment(ctx context.Context, companyID, jobID, techUserID, techName string) error {

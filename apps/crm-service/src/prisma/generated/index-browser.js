@@ -258,8 +258,12 @@ exports.Prisma.BookingScalarFieldEnum = {
 exports.Prisma.ReviewScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
+  type: 'type',
   customerId: 'customerId',
+  customerName: 'customerName',
   jobId: 'jobId',
+  technicianId: 'technicianId',
+  technicianName: 'technicianName',
   rating: 'rating',
   comment: 'comment',
   platform: 'platform',
@@ -350,6 +354,11 @@ exports.BookingStatus = exports.$Enums.BookingStatus = {
   CONFIRMED: 'CONFIRMED',
   CONVERTED: 'CONVERTED',
   CANCELLED: 'CANCELLED'
+};
+
+exports.ReviewType = exports.$Enums.ReviewType = {
+  JOB: 'JOB',
+  COMPANY: 'COMPANY'
 };
 
 exports.Prisma.ModelName = {

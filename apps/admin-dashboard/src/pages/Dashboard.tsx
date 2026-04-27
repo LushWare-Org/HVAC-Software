@@ -206,7 +206,7 @@ export default function Dashboard() {
                             {mounted && (
                                 revenueQuery.isLoading
                                     ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={180} /></div>
-                                    : <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                    : <ResponsiveContainer width="100%" height={260} minWidth={0}>
                                         <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
                                             <defs>
                                                 <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -255,7 +255,7 @@ export default function Dashboard() {
                             {mounted && (
                                 jobStatusQuery.isLoading
                                     ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={120} /></div>
-                                    : <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                    : <ResponsiveContainer width="100%" height={180} minWidth={0}>
                                         <PieChart>
                                             <Pie
                                                 data={jobStatusData.length > 0 ? jobStatusData : [{ name: 'No data', value: 1 }]}

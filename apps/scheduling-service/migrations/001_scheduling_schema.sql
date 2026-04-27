@@ -1,11 +1,11 @@
 -- ============================================================
 -- T&S CRM — Scheduling Schema
--- PostgreSQL 16 + PostGIS
+-- Supabase PostgreSQL 16 + PostGIS
 -- ============================================================
 
 CREATE SCHEMA IF NOT EXISTS scheduling;
 
--- Enable PostGIS on this schema (extension must be created in public)
+-- Enable PostGIS on this schema (extension must exist in the shared Supabase database)
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 

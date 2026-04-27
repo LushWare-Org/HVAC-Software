@@ -16,21 +16,41 @@ export function useUserProfile() {
       return res.data
     },
     enabled: isAuthenticated,
+    staleTime: 5 * 60_000, // profile rarely changes
   })
 }
 
 /**
- * Get technician profile from scheduling service (skills, rating, location)
+ * Get technician profile from scheduling service (skills, rating, location).
+ *
+ * The /scheduling/technicians/me endpoint auto-creates a scheduling profile
+ * for approved CRM users on first call (SyncOneFromCRM). Returns null if the
+ * user isn't in the scheduling DB yet and the sync fails — callers must handle
+ * null gracefully instead of showing an error.
  */
 export function useTechnicianProfile() {
   const { isAuthenticated } = useAuth()
   return useQuery({
     queryKey: queryKeys.techProfile,
     queryFn: async () => {
-      const res = await api.get<TechnicianProfile>('/scheduling/technicians/me')
-      return res.data
+      try {
+        const res = await api.get<TechnicianProfile>('/scheduling/technicians/me')
+        return res.data
+      } catch (err: any) {
+        // 404 = not yet approved / synced; return null, don't throw
+        if (err?.response?.status === 404) return null
+        throw err
+      }
     },
     enabled: isAuthenticated,
+    // Profile is stable — cache for 5 minutes so downstream hooks (useMyAssignments)
+    // don't reload it on every render
+    staleTime: 5 * 60_000,
+    // Don't retry 404s
+    retry: (count, err: any) => {
+      if (err?.response?.status === 404) return false
+      return count < 2
+    },
   })
 }
 

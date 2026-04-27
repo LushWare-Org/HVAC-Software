@@ -160,18 +160,25 @@ export default function Jobs() {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
+    // Active list = jobs that are still actionable AND (unscheduled OR scheduled for today / future).
+    // Everything else — including active-status jobs whose scheduled date is already in the past —
+    // falls into "Past Jobs" so dispatchers see a clean current-and-future view on top.
     const active = filtered
-      .filter(j => ACTIVE_STATUSES.has(j.status))
+      .filter(j => {
+        if (!ACTIVE_STATUSES.has(j.status)) return false;
+        if (!j.scheduledStart) return true; // keep unscheduled in the upcoming table
+        return new Date(j.scheduledStart).getTime() >= todayStart.getTime();
+      })
       .sort((a, b) => {
         if (sortMode === 'date') {
-          // Date mode: latest date first (descending), unscheduled last
+          // Date mode: soonest upcoming date first (ascending), unscheduled last
           const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : null;
           const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : null;
           // Unscheduled sink to the bottom
           if (da !== null && db === null) return -1;
           if (da === null && db !== null) return 1;
           if (da === null && db === null) return 0;
-          return (db ?? 0) - (da ?? 0); // latest date on top
+          return (da ?? 0) - (db ?? 0); // earliest / most imminent date on top
         }
         // Priority mode (default): Emergency first, then date
         const pa = PRIORITY_ORDER[a.priority ?? "NORMAL"] ?? 3;
@@ -189,7 +196,12 @@ export default function Jobs() {
       });
 
     const past = filtered
-      .filter(j => !ACTIVE_STATUSES.has(j.status))
+      .filter(j => {
+        // Past = terminal status OR active-status but scheduled in a past date
+        if (!ACTIVE_STATUSES.has(j.status)) return true;
+        if (!j.scheduledStart) return false;
+        return new Date(j.scheduledStart).getTime() < todayStart.getTime();
+      })
       .sort((a, b) => {
         const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : 0;
         const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : 0;
@@ -262,7 +274,7 @@ export default function Jobs() {
         <div className="card-body" style={{ paddingBottom: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontWeight: 700, fontSize: 15, color: "var(--t1)" }}>Active & Upcoming Jobs</span>
+              <span style={{ fontWeight: 700, fontSize: 15, color: "var(--t1)" }}>Upcoming & Active Jobs</span>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--t3)", background: "var(--bg-hover)", padding: "2px 9px", borderRadius: 12 }}>
                 {jobsQuery.isLoading ? "…" : activeJobs.length}
               </span>
@@ -347,7 +359,7 @@ export default function Jobs() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Clock size={15} color="var(--t3)" />
               <span style={{ fontWeight: 600, fontSize: 14, color: "var(--t2)" }}>Past Jobs</span>
-              <span style={{ fontSize: 11, color: "var(--t3)" }}>Completed · Invoiced · Paid · Cancelled</span>
+              <span style={{ fontSize: 11, color: "var(--t3)" }}>Past-dated, completed, invoiced, paid & cancelled — most recent first</span>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--t3)", background: "var(--bg-hover)", padding: "2px 9px", borderRadius: 12 }}>
                 {jobsQuery.isLoading ? "…" : pastJobs.length}
               </span>

@@ -105,6 +105,26 @@ export function useSendThreadMessage() {
 
 // ─── Mark thread as read ──────────────────────────────────────────────────────
 
+export function useDeleteThread() {
+  return useMutation({
+    mutationFn: async (threadId: string) => {
+      const res = await api.delete(`/comms/messaging/threads/${threadId}`)
+      return res.data as { deleted: boolean; id: string }
+    },
+    onSuccess: (_data, threadId) => {
+      // Remove from list cache immediately so the deleted thread disappears
+      queryClient.setQueriesData<PaginatedResponse<MessageThread>>(
+        { queryKey: ['threads'], exact: false },
+        (old) =>
+          old
+            ? { ...old, data: old.data.filter((t) => t.id !== threadId), total: Math.max(0, old.total - 1) }
+            : old,
+      )
+      queryClient.removeQueries({ queryKey: ['threads', threadId] })
+    },
+  })
+}
+
 export function useMarkThreadRead() {
   return useMutation({
     mutationFn: async (threadId: string) => {

@@ -182,6 +182,14 @@ export interface Invoice {
   total: string | number
   amountPaid: string | number
   notes?: string
+  approvedAt?: string
+  approvedByName?: string
+  approvedByEmail?: string
+  declinedAt?: string
+  declinedByName?: string
+  declinedByEmail?: string
+  declineReason?: string
+  voidedAt?: string
   createdAt: string
   updatedAt: string
   lineItems?: InvoiceLineItem[]
@@ -277,6 +285,8 @@ export interface ThreadMessage {
   direction: 'INBOUND' | 'OUTBOUND'
   createdAt: string
   status?: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED'
+  senderId?: string
+  senderName?: string
 }
 
 export interface MessageThread {
@@ -294,6 +304,41 @@ export interface MessageThread {
   createdAt: string
   updatedAt: string
   messages?: ThreadMessage[]
+}
+
+export type ReviewType = 'JOB' | 'COMPANY'
+
+export interface Review {
+  id: string
+  companyId: string
+  type: ReviewType
+  customerId?: string | null
+  customerName?: string | null
+  jobId?: string | null
+  technicianId?: string | null
+  technicianName?: string | null
+  rating: number                // 1-5
+  comment?: string | null
+  platform: string              // 'internal' | 'google' | ...
+  isPublished: boolean
+  respondedAt?: string | null
+  response?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReviewStats {
+  avgRating: number
+  totalRatings: number
+}
+
+export interface TechnicianReviewStats extends ReviewStats {
+  technicianId: string
+}
+
+export interface CompanyReviewStats {
+  companyReviews: ReviewStats
+  jobReviews: ReviewStats
 }
 
 export interface Notification {

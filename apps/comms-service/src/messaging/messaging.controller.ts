@@ -1,5 +1,6 @@
 import {
   Body,
+  Delete,
   ForbiddenException,
   Controller,
   Get,
@@ -72,6 +73,13 @@ export class MessagingController {
   findThread(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
     return this.service.findThread(user.companyId, id, customerId);
+  }
+
+  @Delete('threads/:id')
+  @ApiOperation({ summary: 'Permanently delete a thread and all its messages' })
+  deleteThread(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
+    return this.service.deleteThread(user.companyId, id, user.userId, customerId);
   }
 
   @Patch('threads/:id/status')

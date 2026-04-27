@@ -103,6 +103,36 @@ func (h *TechnicianHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, t)
 }
 
+// PATCH /technicians/:id/rating-sync
+// Internal endpoint called by crm-service after a customer submits / amends
+// a JOB review. Payload: { rating: float, totalRatings: int }.
+// Not auth-gated — intended to be invoked service-to-service over the private
+// network; register it outside the auth group in main.go.
+func (h *TechnicianHandler) RatingSync(c *gin.Context) {
+	id := c.Param("id")
+
+	var req struct {
+		Rating       float64 `json:"rating"`
+		TotalRatings int     `json:"totalRatings"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	// Clamp rating defensively — scoring code assumes 0-5.
+	if req.Rating < 0 {
+		req.Rating = 0
+	} else if req.Rating > 5 {
+		req.Rating = 5
+	}
+
+	if err := h.repo.UpdateRating(c.Request.Context(), id, req.Rating, req.TotalRatings); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": true, "id": id, "rating": req.Rating, "totalRatings": req.TotalRatings})
+}
+
 // GET /technicians/me
 // Convenience endpoint: returns the calling technician's own profile.
 // Useful for the mobile app to self-identify on first launch.
