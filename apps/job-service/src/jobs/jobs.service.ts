@@ -4,9 +4,12 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '../prisma/generated';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
 import { AuthUser, PaginatedResponse } from '@tscrm/types';
+
+const CREATE_JOB_MAX_ATTEMPTS = 5;
 
 @Injectable()
 export class JobsService {
@@ -17,49 +20,63 @@ export class JobsService {
   // ============================================================
 
   async create(user: AuthUser, dto: CreateJobDto) {
-    const jobNumber = await this.generateJobNumber(user.companyId);
     const { customFields, ...rest } = dto;
 
-    const job = await this.prisma.job.create({
-      data: {
-        ...rest,
-        companyId: user.companyId,
-        jobNumber,
-        priority: (rest.priority ?? 'NORMAL') as any,
-        scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
-        scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
-        createdByUserId: user.userId,
-        statusHistory: {
-          create: {
-            toStatus: 'PENDING',
-            changedById: user.userId,
-            changedByName: user.name ?? user.email,
-            note: 'Job created',
-          },
-        },
-        // If a template is specified, pre-create work order task completions
-      },
-      include: {
-        jobType: true,
-        template: { include: { tasks: { orderBy: { taskOrder: 'asc' } } } },
-        customFieldValues: { include: { fieldDef: true } },
-      },
-    });
+    for (let attempt = 1; attempt <= CREATE_JOB_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        const job = await this.prisma.$transaction(async (tx) => {
+          const jobNumber = await this.generateJobNumber(tx, user.companyId);
 
-    // Save custom field values if provided
-    if (customFields?.length) {
-      await this.prisma.$transaction(
-        customFields.map((cf) =>
-          this.prisma.jobCustomFieldValue.upsert({
-            where: { jobId_fieldDefId: { jobId: job.id, fieldDefId: cf.fieldDefId } },
-            update: { value: cf.value as any },
-            create: { jobId: job.id, fieldDefId: cf.fieldDefId, value: cf.value as any },
-          }),
-        ),
-      );
+          const createdJob = await tx.job.create({
+            data: {
+              ...rest,
+              companyId: user.companyId,
+              jobNumber,
+              priority: (rest.priority ?? 'NORMAL') as any,
+              scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
+              scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
+              createdByUserId: user.userId,
+              statusHistory: {
+                create: {
+                  toStatus: 'PENDING',
+                  changedById: user.userId,
+                  changedByName: user.name ?? user.email,
+                  note: 'Job created',
+                },
+              },
+              // If a template is specified, pre-create work order task completions
+            },
+            include: {
+              jobType: true,
+              template: { include: { tasks: { orderBy: { taskOrder: 'asc' } } } },
+              customFieldValues: { include: { fieldDef: true } },
+            },
+          });
+
+          if (customFields?.length) {
+            await Promise.all(
+              customFields.map((cf) =>
+                tx.jobCustomFieldValue.upsert({
+                  where: { jobId_fieldDefId: { jobId: createdJob.id, fieldDefId: cf.fieldDefId } },
+                  update: { value: cf.value as any },
+                  create: { jobId: createdJob.id, fieldDefId: cf.fieldDefId, value: cf.value as any },
+                }),
+              ),
+            );
+          }
+
+          return createdJob;
+        });
+
+        return this.findOne(user.companyId, job.id);
+      } catch (error) {
+        if (!this.isJobNumberUniqueError(error) || attempt === CREATE_JOB_MAX_ATTEMPTS) {
+          throw error;
+        }
+      }
     }
 
-    return this.findOne(user.companyId, job.id);
+    throw new BadRequestException('Unable to create job with a unique job number');
   }
 
   // ============================================================
@@ -337,11 +354,30 @@ export class JobsService {
   // HELPERS
   // ============================================================
 
-  private async generateJobNumber(companyId: string): Promise<string> {
+  private async generateJobNumber(
+    tx: Prisma.TransactionClient,
+    companyId: string,
+  ): Promise<string> {
     const year = new Date().getFullYear();
-    const count = await this.prisma.job.count({
-      where: { companyId, jobNumber: { startsWith: `JOB-${year}-` } },
-    });
-    return `JOB-${year}-${String(count + 1).padStart(4, '0')}`;
+    const [row] = await tx.$queryRaw<Array<{ maxNumber: number | bigint | null }>>`
+      SELECT COALESCE(MAX(SUBSTRING("jobNumber" FROM ${`^JOB-${year}-([0-9]+)$`})::int), 0) AS "maxNumber"
+      FROM "jobs"."jobs"
+      WHERE "companyId" = ${companyId}
+        AND "jobNumber" ~ ${`^JOB-${year}-[0-9]+$`}
+    `;
+    const maxNumber = Number(row?.maxNumber ?? 0);
+
+    return `JOB-${year}-${String(maxNumber + 1).padStart(4, '0')}`;
+  }
+
+  private isJobNumberUniqueError(error: unknown): boolean {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
+      return false;
+    }
+
+    const target = error.meta?.target;
+    return Array.isArray(target)
+      && target.includes('companyId')
+      && target.includes('jobNumber');
   }
 }
