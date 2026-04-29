@@ -3115,6 +3115,7 @@ export namespace Prisma {
     email: string | null
     phone: string | null
     passwordHash: string | null
+    mustResetPassword: boolean | null
     role: string | null
     isActive: boolean | null
     approvalStatus: string | null
@@ -3134,6 +3135,7 @@ export namespace Prisma {
     email: string | null
     phone: string | null
     passwordHash: string | null
+    mustResetPassword: boolean | null
     role: string | null
     isActive: boolean | null
     approvalStatus: string | null
@@ -3153,6 +3155,7 @@ export namespace Prisma {
     email: number
     phone: number
     passwordHash: number
+    mustResetPassword: number
     role: number
     isActive: number
     approvalStatus: number
@@ -3185,6 +3188,7 @@ export namespace Prisma {
     email?: true
     phone?: true
     passwordHash?: true
+    mustResetPassword?: true
     role?: true
     isActive?: true
     approvalStatus?: true
@@ -3204,6 +3208,7 @@ export namespace Prisma {
     email?: true
     phone?: true
     passwordHash?: true
+    mustResetPassword?: true
     role?: true
     isActive?: true
     approvalStatus?: true
@@ -3223,6 +3228,7 @@ export namespace Prisma {
     email?: true
     phone?: true
     passwordHash?: true
+    mustResetPassword?: true
     role?: true
     isActive?: true
     approvalStatus?: true
@@ -3330,6 +3336,7 @@ export namespace Prisma {
     email: string
     phone: string | null
     passwordHash: string | null
+    mustResetPassword: boolean
     role: string
     isActive: boolean
     approvalStatus: string
@@ -3369,6 +3376,7 @@ export namespace Prisma {
     email?: boolean
     phone?: boolean
     passwordHash?: boolean
+    mustResetPassword?: boolean
     role?: boolean
     isActive?: boolean
     approvalStatus?: boolean
@@ -3390,6 +3398,7 @@ export namespace Prisma {
     email?: boolean
     phone?: boolean
     passwordHash?: boolean
+    mustResetPassword?: boolean
     role?: boolean
     isActive?: boolean
     approvalStatus?: boolean
@@ -3411,6 +3420,7 @@ export namespace Prisma {
     email?: boolean
     phone?: boolean
     passwordHash?: boolean
+    mustResetPassword?: boolean
     role?: boolean
     isActive?: boolean
     approvalStatus?: boolean
@@ -3443,6 +3453,7 @@ export namespace Prisma {
       email: string
       phone: string | null
       passwordHash: string | null
+      mustResetPassword: boolean
       role: string
       isActive: boolean
       approvalStatus: string
@@ -3854,6 +3865,7 @@ export namespace Prisma {
     readonly email: FieldRef<"CompanyUser", 'String'>
     readonly phone: FieldRef<"CompanyUser", 'String'>
     readonly passwordHash: FieldRef<"CompanyUser", 'String'>
+    readonly mustResetPassword: FieldRef<"CompanyUser", 'Boolean'>
     readonly role: FieldRef<"CompanyUser", 'String'>
     readonly isActive: FieldRef<"CompanyUser", 'Boolean'>
     readonly approvalStatus: FieldRef<"CompanyUser", 'String'>
@@ -13074,6 +13086,7 @@ export namespace Prisma {
     email: 'email',
     phone: 'phone',
     passwordHash: 'passwordHash',
+    mustResetPassword: 'mustResetPassword',
     role: 'role',
     isActive: 'isActive',
     approvalStatus: 'approvalStatus',
@@ -13582,6 +13595,7 @@ export namespace Prisma {
     email?: StringFilter<"CompanyUser"> | string
     phone?: StringNullableFilter<"CompanyUser"> | string | null
     passwordHash?: StringNullableFilter<"CompanyUser"> | string | null
+    mustResetPassword?: BoolFilter<"CompanyUser"> | boolean
     role?: StringFilter<"CompanyUser"> | string
     isActive?: BoolFilter<"CompanyUser"> | boolean
     approvalStatus?: StringFilter<"CompanyUser"> | string
@@ -13603,6 +13617,7 @@ export namespace Prisma {
     email?: SortOrder
     phone?: SortOrderInput | SortOrder
     passwordHash?: SortOrderInput | SortOrder
+    mustResetPassword?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
     approvalStatus?: SortOrder
@@ -13628,6 +13643,7 @@ export namespace Prisma {
     email?: StringFilter<"CompanyUser"> | string
     phone?: StringNullableFilter<"CompanyUser"> | string | null
     passwordHash?: StringNullableFilter<"CompanyUser"> | string | null
+    mustResetPassword?: BoolFilter<"CompanyUser"> | boolean
     role?: StringFilter<"CompanyUser"> | string
     isActive?: BoolFilter<"CompanyUser"> | boolean
     approvalStatus?: StringFilter<"CompanyUser"> | string
@@ -13649,6 +13665,7 @@ export namespace Prisma {
     email?: SortOrder
     phone?: SortOrderInput | SortOrder
     passwordHash?: SortOrderInput | SortOrder
+    mustResetPassword?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
     approvalStatus?: SortOrder
@@ -13677,6 +13694,7 @@ export namespace Prisma {
     email?: StringWithAggregatesFilter<"CompanyUser"> | string
     phone?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
     passwordHash?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
+    mustResetPassword?: BoolWithAggregatesFilter<"CompanyUser"> | boolean
     role?: StringWithAggregatesFilter<"CompanyUser"> | string
     isActive?: BoolWithAggregatesFilter<"CompanyUser"> | boolean
     approvalStatus?: StringWithAggregatesFilter<"CompanyUser"> | string
@@ -14736,6 +14754,7 @@ export namespace Prisma {
     email: string
     phone?: string | null
     passwordHash?: string | null
+    mustResetPassword?: boolean
     role?: string
     isActive?: boolean
     approvalStatus?: string
@@ -14757,6 +14776,7 @@ export namespace Prisma {
     email: string
     phone?: string | null
     passwordHash?: string | null
+    mustResetPassword?: boolean
     role?: string
     isActive?: boolean
     approvalStatus?: string
@@ -14776,6 +14796,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    mustResetPassword?: BoolFieldUpdateOperationsInput | boolean
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     approvalStatus?: StringFieldUpdateOperationsInput | string
@@ -14797,6 +14818,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    mustResetPassword?: BoolFieldUpdateOperationsInput | boolean
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     approvalStatus?: StringFieldUpdateOperationsInput | string
@@ -14817,6 +14839,7 @@ export namespace Prisma {
     email: string
     phone?: string | null
     passwordHash?: string | null
+    mustResetPassword?: boolean
     role?: string
     isActive?: boolean
     approvalStatus?: string
@@ -14836,6 +14859,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    mustResetPassword?: BoolFieldUpdateOperationsInput | boolean
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     approvalStatus?: StringFieldUpdateOperationsInput | string
@@ -14856,6 +14880,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    mustResetPassword?: BoolFieldUpdateOperationsInput | boolean
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     approvalStatus?: StringFieldUpdateOperationsInput | string
@@ -16187,6 +16212,7 @@ export namespace Prisma {
     email?: SortOrder
     phone?: SortOrder
     passwordHash?: SortOrder
+    mustResetPassword?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
     approvalStatus?: SortOrder
@@ -16212,6 +16238,7 @@ export namespace Prisma {
     email?: SortOrder
     phone?: SortOrder
     passwordHash?: SortOrder
+    mustResetPassword?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
     approvalStatus?: SortOrder
@@ -16231,6 +16258,7 @@ export namespace Prisma {
     email?: SortOrder
     phone?: SortOrder
     passwordHash?: SortOrder
+    mustResetPassword?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
     approvalStatus?: SortOrder
@@ -18384,6 +18412,7 @@ export namespace Prisma {
     email: string
     phone?: string | null
     passwordHash?: string | null
+    mustResetPassword?: boolean
     role?: string
     isActive?: boolean
     approvalStatus?: string
@@ -18403,6 +18432,7 @@ export namespace Prisma {
     email: string
     phone?: string | null
     passwordHash?: string | null
+    mustResetPassword?: boolean
     role?: string
     isActive?: boolean
     approvalStatus?: string
@@ -18642,6 +18672,7 @@ export namespace Prisma {
     email?: StringFilter<"CompanyUser"> | string
     phone?: StringNullableFilter<"CompanyUser"> | string | null
     passwordHash?: StringNullableFilter<"CompanyUser"> | string | null
+    mustResetPassword?: BoolFilter<"CompanyUser"> | boolean
     role?: StringFilter<"CompanyUser"> | string
     isActive?: BoolFilter<"CompanyUser"> | boolean
     approvalStatus?: StringFilter<"CompanyUser"> | string
@@ -20952,6 +20983,7 @@ export namespace Prisma {
     email: string
     phone?: string | null
     passwordHash?: string | null
+    mustResetPassword?: boolean
     role?: string
     isActive?: boolean
     approvalStatus?: string
@@ -21257,6 +21289,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    mustResetPassword?: BoolFieldUpdateOperationsInput | boolean
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     approvalStatus?: StringFieldUpdateOperationsInput | string
@@ -21276,6 +21309,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    mustResetPassword?: BoolFieldUpdateOperationsInput | boolean
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     approvalStatus?: StringFieldUpdateOperationsInput | string
@@ -21295,6 +21329,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    mustResetPassword?: BoolFieldUpdateOperationsInput | boolean
     role?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     approvalStatus?: StringFieldUpdateOperationsInput | string

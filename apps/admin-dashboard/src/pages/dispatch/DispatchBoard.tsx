@@ -308,6 +308,7 @@ export default function DispatchBoard() {
   // Finance modals from job context
   const [showQuoteFromJob, setShowQuoteFromJob] = useState(false);
   const [showInvoiceFromJob, setShowInvoiceFromJob] = useState(false);
+  const [financeContextJob, setFinanceContextJob] = useState<Job | null>(null);
 
   // Auto-dismiss success messages after 4 seconds
   const showSuccess = (msg: string) => {
@@ -976,12 +977,14 @@ export default function DispatchBoard() {
           technician={selectedAssignment ? techs.find(t => t.id === selectedAssignment.technicianId) : undefined}
           isOpen={!!selectedJob}
           onClose={() => { setSelectedJob(null); setSelectedAssignment(null); }}
-          onCreateQuote={() => {
+          onCreateQuote={(j) => {
+            setFinanceContextJob(j ?? selectedJob);
             setShowQuoteFromJob(true);
             setSelectedJob(null);
             setSelectedAssignment(null);
           }}
-          onCreateInvoice={() => {
+          onCreateInvoice={(j) => {
+            setFinanceContextJob(j ?? selectedJob);
             setShowInvoiceFromJob(true);
             setSelectedJob(null);
             setSelectedAssignment(null);
@@ -990,8 +993,24 @@ export default function DispatchBoard() {
       )}
 
       {/* Finance modals from job context */}
-      <AddQuoteModal isOpen={showQuoteFromJob} onClose={() => { setShowQuoteFromJob(false); }} />
-      <AddInvoiceModal isOpen={showInvoiceFromJob} onClose={() => { setShowInvoiceFromJob(false); }} />
+      <AddQuoteModal
+        isOpen={showQuoteFromJob}
+        onClose={() => { setShowQuoteFromJob(false); setFinanceContextJob(null); }}
+        prefilledJob={financeContextJob}
+        onBack={financeContextJob ? () => {
+          setShowQuoteFromJob(false);
+          setSelectedJob(financeContextJob as Job);
+        } : undefined}
+      />
+      <AddInvoiceModal
+        isOpen={showInvoiceFromJob}
+        onClose={() => { setShowInvoiceFromJob(false); setFinanceContextJob(null); }}
+        prefilledJob={financeContextJob}
+        onBack={financeContextJob ? () => {
+          setShowInvoiceFromJob(false);
+          setSelectedJob(financeContextJob as Job);
+        } : undefined}
+      />
     </div>
   );
 }

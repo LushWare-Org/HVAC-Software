@@ -21,7 +21,7 @@ import {
   Trash2,
   ExternalLink,
 } from "lucide-react";
-import AddAgreementModal from "./AddAgreementModal";
+// import AddAgreementModal from "./AddAgreementModal"; // Agreements hidden
 import AddJobModal from "../jobs/AddJobModal";
 import { useUpdateCustomer } from "../../hooks/useCustomers";
 import { useCustomerAddresses, useSaveCustomerAddresses } from "../../hooks/useAddresses";
@@ -36,7 +36,7 @@ type TabType =
   | "addresses"
   | "equipment"
   | "jobs"
-  | "agreements"
+  // | "agreements"  // Agreements hidden
   | "reviews"
   | "activity";
 
@@ -45,6 +45,7 @@ interface CustomerDetailsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   initialTab?: TabType;
+  onBack?: () => void;
 }
 
 const inputBase =
@@ -176,6 +177,7 @@ export default function CustomerDetailsSidebar({
   isOpen,
   onClose,
   initialTab = "contact",
+  onBack,
 }: CustomerDetailsSidebarProps) {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -184,7 +186,7 @@ export default function CustomerDetailsSidebar({
   const [contacts, setContacts] = useState(mockContacts);
   const [equipment, setEquipment] = useState<any[]>([]);
   const [agreements, setAgreements] = useState(mockAgreements);
-  const [isAddAgreementModalOpen, setIsAddAgreementModalOpen] = useState(false);
+  // const [isAddAgreementModalOpen, setIsAddAgreementModalOpen] = useState(false); // Agreements hidden
   const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
   const [showRequestPanel, setShowRequestPanel] = useState(false);
   const [requestForm, setRequestForm] = useState({
@@ -422,7 +424,7 @@ export default function CustomerDetailsSidebar({
     { id: "addresses", label: "Addresses", icon: <MapPin size={14} /> },
     { id: "equipment", label: "Equipment", icon: <Wrench size={14} /> },
     { id: "jobs", label: "Jobs", icon: <ClipboardList size={14} /> },
-    { id: "agreements", label: "Agreements", icon: <ShieldCheck size={14} /> },
+    // { id: "agreements", label: "Agreements", icon: <ShieldCheck size={14} /> }, // Agreements hidden
     { id: "reviews", label: "Reviews", icon: <Star size={14} /> },
     { id: "activity", label: "Activity", icon: <Activity size={14} /> },
   ];
@@ -452,6 +454,14 @@ export default function CustomerDetailsSidebar({
       >
         <div className="sticky top-0 bg-[var(--blue)] px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
           <div className="text-white">
+            {onBack && (
+              <button
+                onClick={() => { onClose(); onBack(); }}
+                className="flex items-center gap-1 text-blue-200 hover:text-white text-xs font-semibold mb-1.5 bg-transparent border-0 cursor-pointer p-0 transition-colors"
+              >
+                ← Back to Job
+              </button>
+            )}
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold">
                 {formData.name || "Details"}
@@ -1394,8 +1404,8 @@ export default function CustomerDetailsSidebar({
                       </div>
                     )}
 
-                    {/* AGREEMENTS */}
-                    {activeTab === "agreements" && (
+                    {/* AGREEMENTS — hidden; uncomment to re-enable */}
+                    {false && activeTab === ("agreements" as any) && (
                       <div>
                         <SectionHeader
                           icon={ShieldCheck}
@@ -2105,6 +2115,7 @@ export default function CustomerDetailsSidebar({
         </div>
       </div>
 
+      {/* AddAgreementModal hidden — uncomment to re-enable
       <AddAgreementModal
         isOpen={isAddAgreementModalOpen}
         onClose={() => setIsAddAgreementModalOpen(false)}
@@ -2112,6 +2123,7 @@ export default function CustomerDetailsSidebar({
           setAgreements((prev) => [newAgr, ...prev]);
         }}
       />
+      */}
 
       <AddJobModal
         isOpen={isAddJobModalOpen}

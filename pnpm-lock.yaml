@@ -444,6 +444,9 @@ importers:
       jwks-rsa:
         specifier: ^3.1.0
         version: 3.2.2
+      nodemailer:
+        specifier: ^6.9.0
+        version: 6.10.1
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -484,6 +487,9 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.35
+      '@types/nodemailer':
+        specifier: ^6.4.0
+        version: 6.4.23
       '@types/passport-jwt':
         specifier: ^4.0.0
         version: 4.0.1
@@ -3241,6 +3247,9 @@ packages:
 
   '@types/node@24.12.0':
     resolution: {integrity: sha512-GYDxsZi3ChgmckRT9HPU0WEhKLP08ev/Yfcq2AstjrDASOYCSXeyjDsHg4v5t4jOj7cyDX3vmprafKlWIG9MXQ==}
+
+  '@types/nodemailer@6.4.23':
+    resolution: {integrity: sha512-aFV3/NsYFLSx9mbb5gtirBSXJnAlrusoKNuPbxsASWc7vrKLmIrTQRpdcxNcSFL3VW2A2XpeLEavwb2qMi6nlQ==}
 
   '@types/nodemailer@7.0.11':
     resolution: {integrity: sha512-E+U4RzR2dKrx+u3N4DlsmLaDC6mMZOM/TPROxA0UAPiTgI0y4CEFBmZE+coGWTjakDriRsXG368lNk1u9Q0a2g==}
@@ -6385,6 +6394,10 @@ packages:
 
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
+
+  nodemailer@6.10.1:
+    resolution: {integrity: sha512-Z+iLaBGVaSjbIzQ4pX6XV41HrooLsQ10ZWPUehGmuantvzWoDVBnmsdUcOIDM1t+yPor5pDhVlDESgOMEGxhHA==}
+    engines: {node: '>=6.0.0'}
 
   nodemailer@8.0.2:
     resolution: {integrity: sha512-zbj002pZAIkWQFxyAaqoxvn+zoIwRnS40hgjqTXudKOOJkiFFgBeNqjgD3/YCR12sZnrghWYBY+yP1ZucdDRpw==}
@@ -10939,6 +10952,10 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
+  '@types/nodemailer@6.4.23':
+    dependencies:
+      '@types/node': 24.12.0
+
   '@types/nodemailer@7.0.11':
     dependencies:
       '@types/node': 24.12.0
@@ -14960,6 +14977,8 @@ snapshots:
   node-int64@0.4.0: {}
 
   node-releases@2.0.27: {}
+
+  nodemailer@6.10.1: {}
 
   nodemailer@8.0.2: {}
 

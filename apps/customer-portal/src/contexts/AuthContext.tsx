@@ -9,18 +9,21 @@ export interface PortalUser {
   role: string
   companyId: string
   phone?: string
-  customerId?: string   // links to CRM customers table
+  customerId?: string        // links to CRM customers table
+  mustResetPassword?: boolean // true on first login when admin provisioned the account
 }
 
 interface AuthContextType {
   user: PortalUser | null
   token: string | null
   isAuthenticated: boolean
+  mustResetPassword: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => void
   updateLocalUser: (patch: Partial<PortalUser>) => void
+  clearMustResetPassword: () => void
 }
 
 export interface RegisterData {
@@ -38,7 +41,7 @@ export interface RegisterData {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const TOKEN_KEY = 'cp_token'
-const USER_KEY = 'cp_user'
+const USER_KEY  = 'cp_user'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<PortalUser | null>(() => {
@@ -50,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY))
   const [isLoading, setIsLoading] = useState(false)
 
-  // Keep axios Authorization header in sync with token
   useEffect(() => {
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
@@ -106,12 +108,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  /** Called after successful force-reset so the gate clears immediately. */
+  const clearMustResetPassword = useCallback(() => {
+    updateLocalUser({ mustResetPassword: false })
+  }, [updateLocalUser])
+
+  const mustResetPassword = !!(user?.mustResetPassword)
+
   return (
     <AuthContext.Provider value={{
       user, token,
       isAuthenticated: !!token && !!user,
+      mustResetPassword,
       isLoading,
-      login, register, logout, updateLocalUser,
+      login, register, logout, updateLocalUser, clearMustResetPassword,
     }}>
       {children}
     </AuthContext.Provider>

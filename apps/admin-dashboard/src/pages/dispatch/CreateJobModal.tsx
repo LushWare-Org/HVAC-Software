@@ -102,10 +102,10 @@ export default function CreateJobModal({ isOpen, onClose }: Props) {
     "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white";
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 admin-modal-backdrop" onClick={onClose}>
+    <div className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-start justify-center pt-[72px] px-4 pb-4 admin-modal-backdrop" onClick={onClose}>
       <div
-        className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col admin-modal-box"
-        style={{ maxHeight: "92vh" }}
+        className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col admin-modal-box overflow-x-hidden"
+        style={{ maxHeight: "calc(100vh - 80px)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -174,8 +174,8 @@ export default function CreateJobModal({ isOpen, onClose }: Props) {
             </div>
           </div>
 
-          {/* Priority, Job Type, Schedule */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Priority, Job Type */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-500 uppercase">Priority</label>
               <select
@@ -202,22 +202,24 @@ export default function CreateJobModal({ isOpen, onClose }: Props) {
                 ))}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1"><Calendar size={12} /> Schedule</label>
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
-                  className={`flex-1 ${inputCls}`}
-                />
-                <input
-                  type="time"
-                  value={form.time}
-                  onChange={(e) => setForm((p) => ({ ...p, time: e.target.value }))}
-                  className={`w-24 ${inputCls}`}
-                />
-              </div>
+          </div>
+
+          {/* Schedule */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1"><Calendar size={12} /> Schedule</label>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="date"
+                value={form.date}
+                onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
+                className={inputCls}
+              />
+              <input
+                type="time"
+                value={form.time}
+                onChange={(e) => setForm((p) => ({ ...p, time: e.target.value }))}
+                className={inputCls}
+              />
             </div>
           </div>
 

@@ -12,6 +12,7 @@
  */
 
 import { useQuery, useMutation } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import api from '../lib/api'
 import { queryClient } from '../lib/queryClient'
 import type {
@@ -45,6 +46,21 @@ export function useThreads(filters: ThreadFilters = {}) {
     staleTime: 10 * 1000,
     refetchInterval: 10 * 1000, // Poll for updates
   })
+}
+
+// ─── Unread thread count (for sidebar badge) ──────────────────────────────────
+
+/**
+ * Returns total unread message count across all threads.
+ * Drives the red badge on the Communications sidebar item.
+ * Re-uses the same `useThreads` cache so no extra network request is made.
+ */
+export function useUnreadThreadsCount(): number {
+  const { data } = useThreads()
+  return useMemo(
+    () => (data?.data ?? []).reduce((sum, t) => sum + (t.unreadCount ?? 0), 0),
+    [data],
+  )
 }
 
 // ─── Single thread with messages ──────────────────────────────────────────────

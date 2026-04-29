@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  X, Edit2, Save, XCircle, Wrench, MapPin, User, Calendar,
+  X, Edit2, Save, Wrench, MapPin, User, Calendar,
   DollarSign, FileText, Clock, AlertCircle, Loader2, ArrowRight,
   Send, Receipt, Truck, Package, CheckSquare, ClipboardList,
-  Plus, Trash2, MessageSquare,
+  Plus, Trash2, MessageSquare, Phone, Mail, Home,
 } from "lucide-react";
 import {
   useUpdateJobStatus, useJob, useWorkOrdersByJob,
@@ -12,6 +12,7 @@ import {
   useUpdateJobTags,
 } from "../../hooks/useJobs";
 import { useInvoices, useQuotes, useSendInvoice, useSendQuote, decimalToNumber } from "../../hooks/useFinance";
+import { useCustomer } from "../../hooks/useCustomers";
 import {
   useCustomerEquipment,
   useAddEquipmentItem,
@@ -30,9 +31,10 @@ interface JobDetailModalProps {
   job: Job | null;
   onCreateQuote?: (job: Job) => void;
   onCreateInvoice?: (job: Job) => void;
+  onBack?: () => void;
 }
 
-type TabType = "overview" | "checklist" | "equipment" | "inventory" | "details" | "notes" | "finance" | "activity";
+type TabType = "overview" | "checklist" | "equipment" | "inventory" | "details" | "notes" | "finance" | "activity" | "customer";
 
 const STATUS_MAP: Record<string, { label: string; css: string }> = {
   PENDING:     { label: "Pending",     css: "badge-amber" },
@@ -52,28 +54,13 @@ const PRIORITY_CSS: Record<string, string> = {
 };
 
 const inputView = "w-full px-3 py-2.5 rounded-lg border bg-gray-100 border-transparent text-gray-600 text-sm font-medium";
-const inputEdit = "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none";
 
-const STATUS_TRANSITIONS: Record<string, string[]> = {
-  PENDING:     ["SCHEDULED", "ON_HOLD", "CANCELLED"],
-  SCHEDULED:   ["EN_ROUTE", "ON_SITE", "ON_HOLD", "CANCELLED"],
-  EN_ROUTE:    ["ON_SITE", "SCHEDULED", "ON_HOLD", "CANCELLED"],
-  ON_SITE:     ["COMPLETED", "ON_HOLD", "CANCELLED"],
-  COMPLETED:   ["INVOICED", "CANCELLED"],
-  INVOICED:    ["PAID", "CANCELLED"],
-  PAID:        [],
-  CANCELLED:   ["PENDING"],
-  ON_HOLD:     ["SCHEDULED", "CANCELLED"],
-  IN_PROGRESS: ["COMPLETED", "ON_HOLD", "CANCELLED"],
-};
 
 type EqDraft = Partial<EquipmentRecord> & { _tempId?: string };
 
-export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, onCreateInvoice }: JobDetailModalProps) {
+export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, onCreateInvoice, onBack }: JobDetailModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
-  const [isEditMode, setIsEditMode] = useState(false);
   const [error, setError] = useState("");
-  const [editStatus, setEditStatus] = useState<string>("");
   const [notes, setNotes] = useState("");
 
   // Equipment editing state
@@ -85,6 +72,10 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskRequired, setNewTaskRequired] = useState(false);
+
+  // Customer data for the Customer tab
+  const customerQuery = useCustomer(job?.customerId ?? "");
+  const customer = customerQuery.data;
 
   // Mutations
   const navigate = useNavigate();
@@ -115,9 +106,7 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
 
   useEffect(() => {
     if (job) {
-      setEditStatus(job.status);
       setNotes(job.description ?? "");
-      setIsEditMode(false);
       setActiveTab("overview");
       setError("");
       setEditingEquipment(false);
@@ -130,21 +119,6 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
   const handleChatWithTech = () => {
     onClose()
     navigate('/communications', { state: { chatWithTech: job.assignedToName } })
-  };
-
-  const handleSave = () => {
-    setError("");
-    if (editStatus !== job.status) {
-      updateStatus.mutate(
-        { id: job.id, status: editStatus },
-        {
-          onSuccess: () => setIsEditMode(false),
-          onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to update job."),
-        },
-      );
-    } else {
-      setIsEditMode(false);
-    }
   };
 
   const quickTransition = (newStatus: string) => {
@@ -244,6 +218,7 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: "overview",  label: "Overview",      icon: <Wrench size={13} /> },
+    { id: "customer",  label: "Customer",      icon: <User size={13} /> },
     { id: "checklist", label: "Checklist",      icon: <CheckSquare size={13} /> },
     { id: "equipment", label: "Equipment",      icon: <Package size={13} /> },
     { id: "inventory", label: "Inventory",      icon: <Truck size={13} /> },
@@ -253,33 +228,12 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
     { id: "notes",     label: "Notes",          icon: <FileText size={13} /> },
   ];
 
-  const handleScheduleViaDispatch = () => {
-    onClose();
-    navigate(`/dispatch?job=${job.id}`);
-  };
-
   const getQuickActions = () => {
     const actions: { label: string; status?: string; css: string; icon: React.ReactNode; onClick?: () => void }[] = [];
     const s = job.status;
-    if (s === "PENDING") {
-      actions.push({ label: "Schedule", css: "bg-violet-600 hover:bg-violet-700", icon: <Calendar size={14} />, onClick: handleScheduleViaDispatch });
+    // Only show Hold for active jobs that can be put on hold
+    if (["PENDING", "SCHEDULED", "EN_ROUTE", "ON_SITE", "IN_PROGRESS"].includes(s)) {
       actions.push({ label: "Hold", status: "ON_HOLD", css: "bg-gray-500 hover:bg-gray-600", icon: <ArrowRight size={14} /> });
-    } else if (s === "SCHEDULED") {
-      actions.push({ label: "En Route", status: "EN_ROUTE", css: "bg-blue-600 hover:bg-blue-700", icon: <Truck size={14} /> });
-      actions.push({ label: "Arrived", status: "ON_SITE", css: "bg-purple-600 hover:bg-purple-700", icon: <MapPin size={14} /> });
-      actions.push({ label: "Hold", status: "ON_HOLD", css: "bg-gray-500 hover:bg-gray-600", icon: <ArrowRight size={14} /> });
-    } else if (s === "EN_ROUTE") {
-      actions.push({ label: "Arrive On Site", status: "ON_SITE", css: "bg-purple-600 hover:bg-purple-700", icon: <MapPin size={14} /> });
-      actions.push({ label: "Hold", status: "ON_HOLD", css: "bg-gray-500 hover:bg-gray-600", icon: <ArrowRight size={14} /> });
-    } else if (s === "ON_SITE" || s === "IN_PROGRESS") {
-      actions.push({ label: "Complete", status: "COMPLETED", css: "bg-green-600 hover:bg-green-700", icon: <Wrench size={14} /> });
-      actions.push({ label: "Hold", status: "ON_HOLD", css: "bg-gray-500 hover:bg-gray-600", icon: <ArrowRight size={14} /> });
-    } else if (s === "COMPLETED") {
-      actions.push({ label: "Mark Invoiced", status: "INVOICED", css: "bg-cyan-600 hover:bg-cyan-700", icon: <DollarSign size={14} /> });
-    } else if (s === "ON_HOLD") {
-      actions.push({ label: "Resume", status: "SCHEDULED", css: "bg-violet-600 hover:bg-violet-700", icon: <Calendar size={14} /> });
-    } else if (s === "CANCELLED") {
-      actions.push({ label: "Reopen", status: "PENDING", css: "bg-amber-600 hover:bg-amber-700", icon: <ArrowRight size={14} /> });
     }
     return actions;
   };
@@ -297,6 +251,14 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between shadow-lg rounded-t-xl shrink-0">
           <div className="text-white flex-1 min-w-0">
+            {onBack && (
+              <button
+                onClick={() => { onClose(); onBack(); }}
+                className="flex items-center gap-1 text-blue-200 hover:text-white text-xs font-semibold mb-1 bg-transparent border-0 cursor-pointer p-0 transition-colors"
+              >
+                ← Back
+              </button>
+            )}
             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
               <span className="text-blue-200 text-xs font-semibold tracking-wider">{job.id.slice(0, 8)}…</span>
               <span className={`badge ${status.css} text-xs`} style={{ fontSize: 11 }}>{status.label}</span>
@@ -311,21 +273,7 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
             </p>
           </div>
           <div className="flex items-center gap-2 ml-3 shrink-0">
-            {!isEditMode ? (
-              <button onClick={() => setIsEditMode(true)} disabled={isBusy} className="flex items-center gap-1.5 text-blue-100 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0 disabled:opacity-50">
-                <Edit2 size={13} /> Edit
-              </button>
-            ) : (
-              <>
-                <button onClick={handleSave} disabled={isBusy} className="flex items-center gap-1.5 text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0 disabled:opacity-60">
-                  {isBusy ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Save
-                </button>
-                <button onClick={() => { setEditStatus(job.status); setIsEditMode(false); setError(""); }} disabled={isBusy} className="flex items-center gap-1.5 text-blue-100 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0">
-                  <XCircle size={13} /> Cancel
-                </button>
-              </>
-            )}
-            <button onClick={onClose} className="text-blue-100 hover:text-white transition-colors p-1.5 hover:bg-blue-500 rounded-lg cursor-pointer bg-transparent border-0 ml-1">
+            <button onClick={onClose} className="text-blue-100 hover:text-white transition-colors p-1.5 hover:bg-blue-500 rounded-lg cursor-pointer bg-transparent border-0">
               <X size={18} />
             </button>
           </div>
@@ -402,22 +350,122 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                   </div>
                 </div>
 
-                {isEditMode && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</label>
-                      <select value={editStatus} onChange={e => setEditStatus(e.target.value)} disabled={isBusy} className={inputEdit}>
-                        <option value={job.status}>{STATUS_MAP[job.status]?.label ?? job.status} (current)</option>
-                        {(STATUS_TRANSITIONS[job.status] ?? []).map(s => (
-                          <option key={s} value={s}>{STATUS_MAP[s]?.label ?? s}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Priority</label>
-                      <input value={job.priority} disabled className={inputView} />
-                    </div>
+              </div>
+            )}
+
+            {/* ── Customer ──────────────────────────────────────────────── */}
+            {activeTab === "customer" && (
+              <div className="space-y-5">
+                {customerQuery.isLoading && (
+                  <div className="flex items-center justify-center py-12 text-gray-400">
+                    <Loader2 size={20} className="animate-spin mr-2" /> Loading customer…
                   </div>
+                )}
+                {!customerQuery.isLoading && !customer && (
+                  <div className="text-center py-12 text-gray-400">
+                    <User size={32} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">No customer data available.</p>
+                  </div>
+                )}
+                {customer && (
+                  <>
+                    {/* Customer header card */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5 flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
+                        {customer.firstName?.[0] ?? "?"}{customer.lastName?.[0] ?? ""}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-base font-bold text-gray-900">
+                            {customer.firstName} {customer.lastName}
+                          </h3>
+                          {customer.type && (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 uppercase">
+                              {customer.type}
+                            </span>
+                          )}
+                        </div>
+                        {(customer as any).companyName && (
+                          <p className="text-sm text-gray-500 mt-0.5">{(customer as any).companyName}</p>
+                        )}
+                        <button
+                          onClick={() => {
+                            onClose();
+                            window.dispatchEvent(new CustomEvent("open-customer-detail", { detail: { customer, returnToJob: job } }));
+                          }}
+                          className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-transparent border-0 cursor-pointer underline p-0"
+                        >
+                          View Full Profile →
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Contact details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                          <Mail size={11} /> Email
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input value={customer.email ?? "—"} disabled className={inputView} />
+                          {customer.email && (
+                            <a href={`mailto:${customer.email}`} className="shrink-0 p-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors">
+                              <Mail size={14} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                          <Phone size={11} /> Phone
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input value={customer.phone ?? "—"} disabled className={inputView} />
+                          {customer.phone && (
+                            <a href={`tel:${customer.phone}`} className="shrink-0 p-2 rounded-lg bg-green-50 border border-green-200 text-green-600 hover:bg-green-100 transition-colors">
+                              <Phone size={14} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                          <Home size={11} /> Address
+                        </label>
+                        <input
+                          value={[customer.address, customer.city, customer.state, customer.zipCode].filter(Boolean).join(", ") || "—"}
+                          disabled
+                          className={inputView}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stats row */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: "Total Jobs", value: customer.totalJobs ?? "—" },
+                        { label: "Last Service", value: customer.lastServiceDate ? new Date(customer.lastServiceDate).toLocaleDateString() : "—" },
+                        { label: "Customer Since", value: customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : "—" },
+                      ].map(stat => (
+                        <div key={stat.label} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                          <div className="text-lg font-bold text-gray-900">{stat.value}</div>
+                          <div className="text-[11px] text-gray-500 mt-0.5">{stat.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Notes */}
+                    {customer.notes && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                          <FileText size={11} /> Notes
+                        </label>
+                        <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 text-sm text-gray-700">
+                          {customer.notes}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -1006,29 +1054,14 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
             {getQuickActions().map(action => (
               <button
                 key={action.label}
-                onClick={() => action.onClick ? action.onClick() : action.status ? quickTransition(action.status) : undefined}
+                onClick={() => action.status ? quickTransition(action.status) : undefined}
                 disabled={isBusy}
                 className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white rounded-lg transition-colors cursor-pointer disabled:opacity-60 border-0 ${action.css}`}
               >
-                {isBusy && !action.onClick ? <Loader2 size={14} className="animate-spin" /> : action.icon}
+                {isBusy ? <Loader2 size={14} className="animate-spin" /> : action.icon}
                 {action.label}
               </button>
             ))}
-            {onCreateQuote && ["PENDING", "SCHEDULED", "EN_ROUTE", "ON_SITE", "COMPLETED"].includes(job.status) && (
-              <button onClick={() => onCreateQuote(job)} className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors cursor-pointer">
-                <Send size={14} /> Quote
-              </button>
-            )}
-            {onCreateInvoice && ["COMPLETED", "ON_SITE", "INVOICED"].includes(job.status) && (
-              <button onClick={() => onCreateInvoice(job)} className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
-                <Receipt size={14} /> Invoice
-              </button>
-            )}
-            {job.status !== "CANCELLED" && job.status !== "PAID" && (STATUS_TRANSITIONS[job.status] ?? []).includes("CANCELLED") && (
-              <button onClick={() => quickTransition("CANCELLED")} disabled={isBusy} className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-60">
-                <XCircle size={14} /> Cancel Job
-              </button>
-            )}
           </div>
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
             Close

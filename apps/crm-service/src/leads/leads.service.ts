@@ -207,8 +207,33 @@ export class LeadsService {
   }
 
   async remove(companyId: string, id: string) {
-    const lead = await this.prisma.lead.findFirst({ where: { id, companyId } });
+    const lead = await this.prisma.lead.findFirst({
+      where: { id, companyId },
+      include: {
+        customer: { select: { id: true, auth0UserId: true, email: true } },
+      },
+    });
     if (!lead) throw new NotFoundException('Lead not found');
+
+    // Deactivate the portal account that was provisioned for this lead/customer.
+    // We look up the CompanyUser by email (covers both the auth0UserId link and
+    // cases where the Customer was already deleted before the Lead).
+    const portalEmail = lead.email ?? lead.customer?.email;
+    if (portalEmail) {
+      await this.prisma.companyUser.updateMany({
+        where: { companyId, email: portalEmail.toLowerCase(), role: 'customer' },
+        data: { isActive: false },
+      });
+    }
+
+    // Also soft-delete the linked Customer record so it doesn't show as active
+    if (lead.customerId) {
+      await this.prisma.customer.updateMany({
+        where: { id: lead.customerId, companyId },
+        data: { isActive: false },
+      });
+    }
+
     await this.prisma.lead.delete({ where: { id } });
   }
 

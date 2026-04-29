@@ -8,18 +8,22 @@ import { Colors } from '@/constants/theme'
  * Root index — redirect based on auth state
  */
 export default function Index() {
-  const { isAuthenticated, isInitializing } = useAuth()
+  const { isAuthenticated, isInitializing, mustResetPassword } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (isInitializing) return
 
     if (isAuthenticated) {
-      router.replace('/(tabs)')
+      if (mustResetPassword) {
+        router.replace('/force-reset-password')
+      } else {
+        router.replace('/(tabs)')
+      }
     } else {
       router.replace('/login')
     }
-  }, [isAuthenticated, isInitializing])
+  }, [isAuthenticated, isInitializing, mustResetPassword])
 
   return (
     <View style={styles.container}>

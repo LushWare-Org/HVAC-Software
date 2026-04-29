@@ -12,6 +12,7 @@ import Quotes from './pages/quotes/Quotes'
 import Messages from './pages/messages/Messages'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
+import ForceResetPassword from './pages/ForceResetPassword'
 
 const MOBILE_BP = 768
 
@@ -25,12 +26,17 @@ function useIsMobile() {
   return isMobile
 }
 
-// ─── Auth Guard ──────────────────────────────────────────────────────────────
+// ─── Auth Guard — also blocks navigation when password reset is required ──────
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, mustResetPassword } = useAuth()
   const location = useLocation()
+
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />
+  }
+  // Authenticated but first-login temp password — must reset before anything else
+  if (mustResetPassword && location.pathname !== '/reset-password') {
+    return <Navigate to="/reset-password" replace />
   }
   return <>{children}</>
 }
@@ -43,12 +49,10 @@ function AppShell() {
   const location = useLocation()
   const isLogin = location.pathname === '/login'
 
-  // Close mobile sidebar on navigation
   useEffect(() => {
     if (isMobile) setMobileOpen(false)
   }, [location.pathname, isMobile])
 
-  // Close mobile sidebar when switching to desktop
   useEffect(() => {
     if (!isMobile) setMobileOpen(false)
   }, [isMobile])
@@ -66,7 +70,6 @@ function AppShell() {
   return (
     <RequireAuth>
       <div className="app-shell">
-        {/* Mobile backdrop */}
         {isMobile && (
           <div
             className={`sidebar-backdrop${mobileOpen ? ' visible' : ''}`}
@@ -104,10 +107,20 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            {/* Force-reset gate — shown when admin provisioned the account */}
+            <Route path="/reset-password" element={<ForceResetPasswordGuard />} />
             <Route path="/*" element={<AppShell />} />
           </Routes>
         </BrowserRouter>
       </ToastProvider>
     </ThemeProvider>
   )
+}
+
+/** Wrapper: only render ForceResetPassword if user is authenticated AND mustReset. */
+function ForceResetPasswordGuard() {
+  const { isAuthenticated, mustResetPassword } = useAuth()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!mustResetPassword) return <Navigate to="/" replace />
+  return <ForceResetPassword />
 }

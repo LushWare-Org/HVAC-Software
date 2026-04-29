@@ -34,7 +34,11 @@ export default function LoginScreen() {
     try {
       const result = await login(email.trim(), password)
       if (result.status === 'APPROVED') {
-        router.replace('/(tabs)')
+        if (result.mustResetPassword) {
+          router.replace('/force-reset-password')
+        } else {
+          router.replace('/(tabs)')
+        }
       } else if (result.status === 'PENDING') {
         router.replace('/pending-approval')
       } else if (result.status === 'REJECTED') {

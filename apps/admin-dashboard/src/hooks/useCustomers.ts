@@ -123,6 +123,51 @@ export function useCreateLead() {
   })
 }
 
+// ─── Auth: email check + provisioning ─────────────────────────────────────────
+
+/**
+ * Real-time email check before provisioning.
+ * GET /crm/auth/check-email?email=...
+ * Returns { exists: boolean, role?, name? }
+ */
+export function useCheckEmail() {
+  return useMutation({
+    mutationFn: async (email: string) => {
+      const res = await api.get<{ exists: boolean; role?: string; name?: string }>(
+        '/crm/auth/check-email',
+        { params: { email } },
+      )
+      return res.data
+    },
+  })
+}
+
+/**
+ * Admin provisions a customer account when creating a lead.
+ * POST /crm/auth/provision-lead
+ * Creates CompanyUser + Customer + Lead, sends welcome email with temp password.
+ */
+export function useProvisionLeadAccount() {
+  return useMutation({
+    mutationFn: async (data: {
+      companyId: string
+      firstName: string
+      lastName: string
+      email: string
+      phone?: string
+      source?: string
+      serviceInterest?: string
+    }) => {
+      const res = await api.post('/crm/auth/provision-lead', data)
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] })
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+    },
+  })
+}
+
 // ─── Update lead (status transitions, field updates) ──────────────────────────
 
 export function useUpdateLead() {

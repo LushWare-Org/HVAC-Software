@@ -148,6 +148,7 @@ exports.Prisma.CompanyUserScalarFieldEnum = {
   email: 'email',
   phone: 'phone',
   passwordHash: 'passwordHash',
+  mustResetPassword: 'mustResetPassword',
   role: 'role',
   isActive: 'isActive',
   approvalStatus: 'approvalStatus',

@@ -117,10 +117,17 @@ export class CustomersService {
   async remove(companyId: string, id: string) {
     const customer = await this.findOne(companyId, id);
 
-    // Deactivate linked auth account if this was a portal-registered customer
+    // Deactivate the linked portal account.
+    // Primary: look up by the stored auth0UserId foreign key.
+    // Fallback: look up by email in case auth0UserId wasn't populated (legacy rows).
     if (customer.auth0UserId) {
       await this.prisma.companyUser.updateMany({
         where: { id: customer.auth0UserId, companyId },
+        data: { isActive: false },
+      });
+    } else if (customer.email) {
+      await this.prisma.companyUser.updateMany({
+        where: { companyId, email: customer.email.toLowerCase(), role: 'customer' },
         data: { isActive: false },
       });
     }

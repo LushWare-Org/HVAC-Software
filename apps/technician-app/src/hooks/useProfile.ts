@@ -84,3 +84,32 @@ export function useChangePassword() {
     },
   })
 }
+
+/**
+ * Update technician base location (home GPS coordinates used by dispatch scoring).
+ * PATCH /scheduling/technicians/:id  { latitude, longitude }
+ * The technician profile ID comes from the scheduling service — pass it in from useTechnicianProfile().
+ */
+export function useUpdateBaseLocation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      technicianId,
+      latitude,
+      longitude,
+    }: {
+      technicianId: string
+      latitude: number
+      longitude: number
+    }) => {
+      const res = await api.patch(`/scheduling/technicians/${technicianId}`, { latitude, longitude })
+      return res.data
+    },
+    onSuccess: (data) => {
+      // Instantly update the cached profile with the server response — zero-lag UI
+      if (data) qc.setQueryData(queryKeys.techProfile, data)
+      // Also mark stale so a background re-fetch syncs any other fields
+      qc.invalidateQueries({ queryKey: queryKeys.techProfile })
+    },
+  })
+}

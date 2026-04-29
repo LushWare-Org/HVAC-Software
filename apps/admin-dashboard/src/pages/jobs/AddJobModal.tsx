@@ -153,6 +153,15 @@ export default function AddJobModal({
 
   const isLoading = createJob.isPending;
 
+  /** Step 1 validation before advancing to scheduling tab */
+  const handleNextStep = () => {
+    setError('');
+    if (!formData.title.trim()) { setError('Job title is required.'); return; }
+    if (!formData.customerId) { setError('Please select a customer.'); return; }
+    if (!formData.serviceAddress.trim()) { setError('Service address is required.'); return; }
+    setActiveTab('scheduling');
+  };
+
   return (
     <div
       className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 admin-modal-backdrop"
@@ -166,7 +175,9 @@ export default function AddJobModal({
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5 flex items-center justify-between rounded-t-xl shrink-0">
           <div className="text-white">
             <h2 className="text-2xl font-bold">Create New Job</h2>
-            <p className="text-blue-100 text-sm mt-0.5">Schedule a new service job</p>
+            <p className="text-blue-100 text-sm mt-0.5">
+              Step {activeTab === "basic" ? "1" : "2"} of 2 — {activeTab === "basic" ? "Job Details" : "Schedule & Cost"}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -176,22 +187,32 @@ export default function AddJobModal({
           </button>
         </div>
 
-        {/* Tabs */}
+        {/* Step indicators — visual only, not clickable */}
         <div className="flex border-b border-gray-200 bg-gray-50 shrink-0">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-1.5 px-6 py-3 text-sm font-medium transition-colors border-b-2 cursor-pointer bg-transparent ${
-                activeTab === t.id
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t.icon}
-              {t.label}
-            </button>
-          ))}
+          {tabs.map((t, idx) => {
+            const isActive = activeTab === t.id;
+            const isDone = t.id === "basic" && activeTab === "scheduling";
+            return (
+              <div
+                key={t.id}
+                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 select-none ${
+                  isActive
+                    ? "border-blue-600 text-blue-600"
+                    : isDone
+                    ? "border-green-500 text-green-600"
+                    : "border-transparent text-gray-400"
+                }`}
+              >
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                  isActive ? "bg-blue-600 text-white" : isDone ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"
+                }`}>
+                  {isDone ? "✓" : idx + 1}
+                </span>
+                {t.icon}
+                {t.label}
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -358,7 +379,7 @@ export default function AddJobModal({
           </div>
         </div>
 
-        <div className="bg-gray-50 border-t border-gray-200 px-8 py-4 flex items-center justify-end gap-3 rounded-b-xl shrink-0">
+        <div className="bg-gray-50 border-t border-gray-200 px-8 py-4 flex items-center justify-between gap-3 rounded-b-xl shrink-0">
           <button
             onClick={onClose}
             disabled={isLoading}
@@ -366,14 +387,35 @@ export default function AddJobModal({
           >
             Cancel
           </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-60 flex items-center gap-2 cursor-pointer border-0"
-          >
-            {isLoading && <Loader2 size={14} className="animate-spin" />}
-            {isLoading ? "Creating..." : "Create Job"}
-          </button>
+          <div className="flex items-center gap-2">
+            {activeTab === "scheduling" && (
+              <button
+                onClick={() => { setActiveTab("basic"); setError(""); }}
+                disabled={isLoading}
+                className="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+              >
+                ← Back
+              </button>
+            )}
+            {activeTab === "basic" ? (
+              <button
+                onClick={handleNextStep}
+                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-60 flex items-center gap-2 cursor-pointer border-0"
+              >
+                Next: Schedule & Cost →
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-60 flex items-center gap-2 cursor-pointer border-0"
+              >
+                {isLoading && <Loader2 size={14} className="animate-spin" />}
+                {isLoading ? "Creating..." : "Create Job"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -25,6 +25,7 @@ export interface TechUser {
   role: UserRole
   companyId: string
   phone?: string
+  mustResetPassword?: boolean // set by backend on admin-provisioned accounts
 }
 
 export interface LoginResponse {

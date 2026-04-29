@@ -3,6 +3,7 @@
  * All endpoints are scoped to the authenticated customer's data.
  */
 import { useQuery, useMutation, useQueryClient, useQueries } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import api from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 import type {
@@ -463,6 +464,15 @@ export function useMyThreads() {
     },
     staleTime: 15 * 1000,
   })
+}
+
+/** Total unread count across all threads — drives the red dot on the sidebar Messages item. */
+export function useUnreadMyThreadsCount(): number {
+  const { data } = useMyThreads()
+  return useMemo(
+    () => (data?.data ?? []).reduce((sum, t) => sum + (t.unreadCount ?? 0), 0),
+    [data],
+  )
 }
 
 export function useMyThread(threadId: string | null) {

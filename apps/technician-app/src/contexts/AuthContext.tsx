@@ -22,14 +22,16 @@ interface AuthContextType {
   user: TechUser | null
   token: string | null
   isAuthenticated: boolean
+  mustResetPassword: boolean
   isLoading: boolean
   isInitializing: boolean
   pendingUser: { id: string; name: string; email: string } | null
-  login: (email: string, password: string) => Promise<{ status: ApprovalStatus; rejectionMessage?: string }>
+  login: (email: string, password: string) => Promise<{ status: ApprovalStatus; mustResetPassword?: boolean; rejectionMessage?: string }>
   logout: () => Promise<void>
   registerTechnician: (data: RegisterTechnicianData) => Promise<void>
   clearPendingUser: () => Promise<void>
   updateLocalUser: (patch: Partial<TechUser>) => void
+  clearMustResetPassword: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -100,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await storage.clearAll()
   }
 
-  const login = useCallback(async (email: string, password: string): Promise<{ status: ApprovalStatus; rejectionMessage?: string }> => {
+  const login = useCallback(async (email: string, password: string): Promise<{ status: ApprovalStatus; mustResetPassword?: boolean; rejectionMessage?: string }> => {
     setIsLoading(true)
     try {
       const res = await api.post<LoginResponse>('/crm/auth/login', { email, password })
@@ -109,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('This app is for technicians only.')
       }
       await _setSession(access_token, u)
-      return { status: 'APPROVED' }
+      return { status: 'APPROVED', mustResetPassword: !!u.mustResetPassword }
     } catch (err: any) {
       const data = err.response?.data
       if (err.response?.status === 403 && data?.code === 'PENDING_APPROVAL') {
@@ -159,13 +161,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  const clearMustResetPassword = useCallback(() => {
+    updateLocalUser({ mustResetPassword: false })
+  }, [updateLocalUser])
+
+  const mustResetPassword = !!(user?.mustResetPassword)
+
   return (
     <AuthContext.Provider
       value={{
         user, token,
         isAuthenticated: !!token && !!user,
+        mustResetPassword,
         isLoading, isInitializing, pendingUser,
-        login, logout, registerTechnician, clearPendingUser, updateLocalUser,
+        login, logout, registerTechnician, clearPendingUser, updateLocalUser, clearMustResetPassword,
       }}
     >
       {children}

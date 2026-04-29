@@ -22,7 +22,7 @@ import {
 import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
 import LeadDetailsSidebar from "./LeadDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
-import { useCustomers, useLeads, useAgreements, useDeleteCustomer, useDeleteLead } from "../../hooks/useCustomers";
+import { useCustomers, useLeads, /* useAgreements — hidden until feature is re-enabled */ useDeleteCustomer, useDeleteLead } from "../../hooks/useCustomers";
 import { customerName, leadName } from "../../types/api";
 import type { Customer, Lead } from "../../types/api";
 import api from "../../lib/api";
@@ -54,15 +54,15 @@ function Skeleton({ h = 14 }: { h?: number }) {
 }
 
 export default function Customers() {
-  const [tab, setTab] = useState<"customers" | "leads" | "agreements">("customers");
+  const [tab, setTab] = useState<"customers" | "leads">("customers");
   const [search, setSearch] = useState("");
   const [customerTypeFilter, setCustomerTypeFilter] = useState("All Types");
   const [customerStatusFilter, setCustomerStatusFilter] = useState("All Status");
   const [isExpanded, setIsExpanded] = useState(false);
   const [leadsSearch, setLeadsSearch] = useState("");
   const [leadStatusFilter, setLeadStatusFilter] = useState("All Status");
-  const [agreementsSearch, setAgreementsSearch] = useState("");
-  const [agreementStatusFilter, setAgreementStatusFilter] = useState("All Status");
+  // const [agreementsSearch, setAgreementsSearch] = useState("");      // Agreements hidden
+  // const [agreementStatusFilter, setAgreementStatusFilter] = useState("All Status"); // Agreements hidden
   const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isLeadDetailsOpen, setIsLeadDetailsOpen] = useState(false);
@@ -72,7 +72,7 @@ export default function Customers() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: "customer" | "lead"; id: string; name: string } | null>(null);
   const [customerPage, setCustomerPage] = useState(1);
   const [leadPage, setLeadPage] = useState(1);
-  const [agreementPage, setAgreementPage] = useState(1);
+  // const [agreementPage, setAgreementPage] = useState(1); // Agreements hidden
   const itemsPerPage = 10;
 
   // ── API queries ─────────────────────────────────────────────────────────────
@@ -90,11 +90,12 @@ export default function Customers() {
     status: leadStatusFilter !== "All Status" ? leadStatusFilter.replace(" ", "_").toUpperCase() : undefined,
   });
 
-  const agreementsQuery = useAgreements({
-    page: agreementPage, limit: itemsPerPage,
-    search: agreementsSearch || undefined,
-    status: agreementStatusFilter !== "All Status" ? agreementStatusFilter.toUpperCase() : undefined,
-  });
+  // Agreements hidden — uncomment to re-enable
+  // const agreementsQuery = useAgreements({
+  //   page: agreementPage, limit: itemsPerPage,
+  //   search: agreementsSearch || undefined,
+  //   status: agreementStatusFilter !== "All Status" ? agreementStatusFilter.toUpperCase() : undefined,
+  // });
 
   const deleteCustomer = useDeleteCustomer();
   const deleteLead = useDeleteLead();
@@ -107,9 +108,10 @@ export default function Customers() {
   const leads: Lead[] = leadsQuery.data?.data ?? [];
   const totalLeads = leadsQuery.data?.total ?? 0;
   const totalLeadPages = Math.max(1, leadsQuery.data?.totalPages ?? 1);
-  const agreements: any[] = agreementsQuery.data?.data ?? [];
-  const totalAgreements = agreementsQuery.data?.total ?? 0;
-  const totalAgreementPages = Math.max(1, agreementsQuery.data?.totalPages ?? 1);
+  // Agreements hidden
+  const agreements: any[] = [];
+  const totalAgreements = 0;
+  // const totalAgreementPages = 1;
 
   const queryClient = useQueryClient();
 
@@ -158,7 +160,7 @@ export default function Customers() {
             {[
               { icon: Users, v: customersQuery.isLoading ? "—" : totalCustomers.toLocaleString(), l: "Total Customers", loading: customersQuery.isLoading },
               { icon: Target, v: leadsQuery.isLoading ? "—" : totalLeads.toString(), l: "Active Leads", loading: leadsQuery.isLoading },
-              { icon: FileText, v: agreementsQuery.isLoading ? "—" : totalAgreements.toString(), l: "Service Agreements", loading: agreementsQuery.isLoading },
+              // { icon: FileText, v: "—", l: "Service Agreements", loading: false }, // Agreements hidden
               { icon: TrendingUp, v: "—", l: "Avg. Revenue / Customer", loading: false },
             ].map((k) => (
               <div key={k.l} className="kpi-card" style={{ padding: "16px 20px", borderRadius: "var(--r-md)" }}>
@@ -179,9 +181,11 @@ export default function Customers() {
           <button className={`tab-btn ${tab === "leads" ? "active" : ""}`} onClick={() => setTab("leads")}>
             <Target size={14} /> Leads <span className="tab-count">{totalLeads}</span>
           </button>
+          {/* Agreements tab hidden — uncomment to re-enable
           <button className={`tab-btn ${tab === "agreements" ? "active" : ""}`} onClick={() => setTab("agreements")}>
             <FileText size={14} /> Agreements <span className="tab-count">{totalAgreements}</span>
           </button>
+          */}
         </div>
 
         {/* Customers */}
@@ -205,7 +209,7 @@ export default function Customers() {
                 <select className="select" style={{ width: 140 }} value={customerStatusFilter} onChange={e => { setCustomerStatusFilter(e.target.value); setCustomerPage(1); }}>
                   <option>All Status</option><option>Active</option><option>Inactive</option>
                 </select>
-                <button className="btn btn-primary btn-sm ml-auto" onClick={() => { setAddType("customer"); setIsAddOpen(true); }}><Plus size={12} /> Add Customer</button>
+                {/* <button className="btn btn-primary btn-sm ml-auto" onClick={() => { setAddType("customer"); setIsAddOpen(true); }}><Plus size={12} /> Add Customer</button> */}
                 <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: "0 12px", fontWeight: 600 }} onClick={() => customersQuery.refetch()} title="Refresh"><RefreshCw size={14} /></button>
                 <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ marginLeft: "4px", padding: "0 12px", fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
                   {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
@@ -324,8 +328,8 @@ export default function Customers() {
           </div>
         )}
 
-        {/* Agreements */}
-        {tab === "agreements" && (
+        {/* Agreements — hidden; uncomment to re-enable */}
+        {false && tab === ("agreements" as any) && (
           <div className="anim-fade-in card">
             <div className="card-header">
               <div className="filter-bar w-full" style={{ margin: 0 }}>

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { usePendingTechnicians } from '../hooks/useTeam'
+import { useUnreadThreadsCount } from '../hooks/useComms'
 
 interface Props { collapsed: boolean; onToggle: () => void; mobileOpen?: boolean }
 
@@ -28,6 +29,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     const { theme } = useTheme()
     const pendingQuery = usePendingTechnicians()
     const pendingCount = pendingQuery.data?.total ?? 0
+    const unreadMessages = useUnreadThreadsCount()
 
     const isLight = theme === 'light'
     const isMobileMode = mobileOpen !== undefined
@@ -77,7 +79,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
         {
             items: [
                 { icon: DollarSign, label: 'Finance', path: '/finance' },
-                { icon: MessageSquare, label: 'Communications', path: '/communications', badge: 0 },
+                { icon: MessageSquare, label: 'Communications', path: '/communications', badge: unreadMessages },
                 { icon: BarChart3, label: 'Analytics', path: '/analytics' },
                 { icon: Package, label: 'Inventory', path: '/inventory' },
             ],
@@ -131,7 +133,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                                     {/* Icon with optional red dot overlay */}
                                     <span className="flex items-center justify-center flex-shrink-0 relative">
                                         <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
-                                        {item.pendingDot && (
+                                        {(item.pendingDot || item.badge > 0) && (
                                             <span style={{
                                                 position: 'absolute', top: -3, right: -3,
                                                 width: 8, height: 8, borderRadius: '50%',

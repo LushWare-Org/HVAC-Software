@@ -168,22 +168,7 @@ export default function JobDetailPanel({
                 </div>
               )}
 
-              {/* Quick Status Actions */}
-              {getQuickActions().length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {getQuickActions().map((action) => (
-                    <button
-                      key={action.status}
-                      onClick={() => handleQuickTransition(action.status, action.note)}
-                      disabled={updateJobStatus.isPending}
-                      className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors cursor-pointer disabled:opacity-60 border-0 ${action.css}`}
-                    >
-                      {updateJobStatus.isPending ? <Loader2 size={14} className="animate-spin" /> : <action.icon size={14} />}
-                      {action.label}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Quick Status Actions — removed; status updates automatically via technician app */}
 
               {/* Job Details Grid */}
               <div className="space-y-4">

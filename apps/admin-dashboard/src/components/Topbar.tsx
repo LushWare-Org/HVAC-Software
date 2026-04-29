@@ -5,6 +5,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import AddJobModal from '../pages/jobs/AddJobModal'
 import JobDetailModal from '../pages/jobs/JobDetailModal'
+import CustomerDetailsSidebar from '../pages/customers/CustomerDetailsSidebar'
 import InvoiceDetailModal from '../pages/finance/InvoiceDetailModal'
 import QuoteDetailModal from '../pages/finance/QuoteDetailModal'
 import ExpenseDetailModal from '../pages/finance/ExpenseDetailModal'
@@ -60,9 +61,15 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     const [isTechnicianDetailOpen, setIsTechnicianDetailOpen] = useState(false)
     const [selectedTechnician, setSelectedTechnician] = useState<any>(null)
 
+    // Customer detail (opened from job view or anywhere via event)
+    const [isCustomerDetailOpen, setIsCustomerDetailOpen] = useState(false)
+    const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<any>(null)
+    const [customerDetailReturnJob, setCustomerDetailReturnJob] = useState<any>(null)
+
     // Finance creation from job context
     const [isAddQuoteFromJobOpen, setIsAddQuoteFromJobOpen] = useState(false)
     const [isAddInvoiceFromJobOpen, setIsAddInvoiceFromJobOpen] = useState(false)
+    const [financeContextJob, setFinanceContextJob] = useState<any>(null)
 
     useEffect(() => {
         const handler = (e: Event) => {
@@ -129,6 +136,20 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
         return () => window.removeEventListener('open-technician-detail', handler)
     }, [])
 
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const payload = (e as CustomEvent).detail
+            // Payload may be { customer, returnToJob } OR just a customer object directly
+            const customer = payload?.customer ?? payload
+            const returnJob = payload?.returnToJob ?? null
+            setSelectedCustomerDetail(customer)
+            setCustomerDetailReturnJob(returnJob)
+            setIsCustomerDetailOpen(true)
+        }
+        window.addEventListener('open-customer-detail', handler)
+        return () => window.removeEventListener('open-customer-detail', handler)
+    }, [])
+
     const { user: authUser, logout } = useAuth()
     const navigate = useNavigate()
     const currentUser = {
@@ -140,7 +161,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     const getPageHeader = () => {
         switch (pathname) {
             case '/': return { title: 'Dashboard', sub: '' }
-            case '/customers': return { title: 'Customers & CRM', sub: 'Manage customers, leads, and service agreements' }
+            case '/customers': return { title: 'Customers & CRM', sub: 'Manage customers and leads' }
             case '/jobs': return { title: 'Jobs', sub: 'Manage and track all your service work orders' }
             case '/scheduling': return { title: 'Scheduling & Dispatch', sub: 'Assign jobs and track field operations' }
             case '/finance': return { title: 'Finance', sub: 'Invoices, quotes, expenses and cash flow' }
@@ -421,8 +442,8 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                 isOpen={isDetailOpen}
                 onClose={() => setIsDetailOpen(false)}
                 job={selectedJob}
-                onCreateQuote={() => { setIsDetailOpen(false); setIsAddQuoteFromJobOpen(true); }}
-                onCreateInvoice={() => { setIsDetailOpen(false); setIsAddInvoiceFromJobOpen(true); }}
+                onCreateQuote={(j) => { setFinanceContextJob(j); setIsDetailOpen(false); setIsAddQuoteFromJobOpen(true); }}
+                onCreateInvoice={(j) => { setFinanceContextJob(j); setIsDetailOpen(false); setIsAddInvoiceFromJobOpen(true); }}
             />
             <InvoiceDetailModal
                 isOpen={isInvoiceDetailOpen}
@@ -449,10 +470,40 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                 onClose={() => setIsTechnicianDetailOpen(false)}
                 technician={selectedTechnician}
             />
+            <CustomerDetailsSidebar
+                isOpen={isCustomerDetailOpen}
+                onClose={() => { setIsCustomerDetailOpen(false); setSelectedCustomerDetail(null); setCustomerDetailReturnJob(null); }}
+                person={selectedCustomerDetail}
+                onBack={customerDetailReturnJob ? () => {
+                    setIsCustomerDetailOpen(false);
+                    setSelectedCustomerDetail(null);
+                    setCustomerDetailReturnJob(null);
+                    setSelectedJob(customerDetailReturnJob);
+                    setIsDetailOpen(true);
+                } : undefined}
+            />
 
             {/* Finance creation from job context */}
-            <AddQuoteModal isOpen={isAddQuoteFromJobOpen} onClose={() => setIsAddQuoteFromJobOpen(false)} />
-            <AddInvoiceModal isOpen={isAddInvoiceFromJobOpen} onClose={() => setIsAddInvoiceFromJobOpen(false)} />
+            <AddQuoteModal
+                isOpen={isAddQuoteFromJobOpen}
+                onClose={() => { setIsAddQuoteFromJobOpen(false); setFinanceContextJob(null); }}
+                prefilledJob={financeContextJob}
+                onBack={financeContextJob ? () => {
+                    setIsAddQuoteFromJobOpen(false);
+                    setSelectedJob(financeContextJob);
+                    setIsDetailOpen(true);
+                } : undefined}
+            />
+            <AddInvoiceModal
+                isOpen={isAddInvoiceFromJobOpen}
+                onClose={() => { setIsAddInvoiceFromJobOpen(false); setFinanceContextJob(null); }}
+                prefilledJob={financeContextJob}
+                onBack={financeContextJob ? () => {
+                    setIsAddInvoiceFromJobOpen(false);
+                    setSelectedJob(financeContextJob);
+                    setIsDetailOpen(true);
+                } : undefined}
+            />
         </>
     )
 }

@@ -97,9 +97,10 @@ export default function RootLayout() {
                 }}
               >
                 <Stack.Screen name="index" />
-                <Stack.Screen name="login"           options={{ animation: 'fade' }} />
-                <Stack.Screen name="signup"          options={{ animation: 'slide_from_right' }} />
-                <Stack.Screen name="pending-approval" options={{ animation: 'fade' }} />
+                <Stack.Screen name="login"                options={{ animation: 'fade' }} />
+                <Stack.Screen name="signup"               options={{ animation: 'slide_from_right' }} />
+                <Stack.Screen name="pending-approval"     options={{ animation: 'fade' }} />
+                <Stack.Screen name="force-reset-password" options={{ animation: 'fade', gestureEnabled: false }} />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
                   name="job/[id]"

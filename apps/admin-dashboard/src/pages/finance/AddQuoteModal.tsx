@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, AlertCircle, Loader2, Plus, Trash2, Search } from "lucide-react";
 import { useCreateQuote } from "../../hooks/useFinance";
@@ -8,9 +8,19 @@ import { useToast } from "../../contexts/ToastContext";
 import { customerName as fmtCustomerName } from "../../types/api";
 import type { Customer, Job } from "../../types/api";
 
+interface PrefilledJob {
+  id: string;
+  title: string;
+  customerId?: string | null;
+  customerName?: string | null;
+  customerEmail?: string | null;
+}
+
 interface AddQuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
+  prefilledJob?: PrefilledJob | null;
+  onBack?: () => void;
 }
 
 interface LineItem {
@@ -32,7 +42,7 @@ const CATEGORIES = [
 const inputClass =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none";
 
-export default function AddQuoteModal({ isOpen, onClose }: AddQuoteModalProps) {
+export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }: AddQuoteModalProps) {
   const { showError, showSuccess, showInfo } = useToast();
   const [error, setError] = useState("");
   const [title, setTitle] = useState("");
@@ -79,6 +89,19 @@ export default function AddQuoteModal({ isOpen, onClose }: AddQuoteModalProps) {
   };
 
   const createQuote = useCreateQuote();
+
+  // Auto-fill when opened from a specific job's Finance tab
+  useEffect(() => {
+    if (isOpen && prefilledJob) {
+      setJobId(prefilledJob.id);
+      setJobSearch(prefilledJob.title);
+      if (prefilledJob.customerId) {
+        setCustomerId(prefilledJob.customerId);
+        if (prefilledJob.customerName) setCustomerNameVal(prefilledJob.customerName);
+        if (prefilledJob.customerEmail) setCustomerEmail(prefilledJob.customerEmail);
+      }
+    }
+  }, [isOpen, prefilledJob]);
 
   if (!isOpen) return null;
 
@@ -140,8 +163,18 @@ export default function AddQuoteModal({ isOpen, onClose }: AddQuoteModalProps) {
       <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl admin-modal-box" onClick={e => e.stopPropagation()}>
         <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-5 flex items-center justify-between rounded-t-xl shrink-0">
           <div className="text-white">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex items-center gap-1 text-green-200 hover:text-white text-xs font-semibold mb-1.5 bg-transparent border-0 cursor-pointer p-0 transition-colors"
+              >
+                ← Back to Job
+              </button>
+            )}
             <h2 className="text-xl font-bold">Create Quote</h2>
-            <p className="text-green-100 text-sm mt-0.5">Add a new quote with line items</p>
+            <p className="text-green-100 text-sm mt-0.5">
+              {prefilledJob ? `For: ${prefilledJob.title}` : "Add a new quote with line items"}
+            </p>
           </div>
           <button onClick={onClose} className="text-green-100 hover:text-white p-1 hover:bg-green-500 rounded-lg cursor-pointer bg-transparent border-0">
             <X className="h-5 w-5" />

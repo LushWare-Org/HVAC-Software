@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
+import { useUnreadMyThreadsCount } from '../hooks/useCustomerPortal'
 
 interface Props {
   collapsed: boolean
@@ -18,27 +19,28 @@ interface Props {
   mobileOpen?: boolean // undefined = desktop mode, true/false = mobile mode
 }
 
-const NAV = [
-  {
-    items: [{ icon: LayoutDashboard, label: 'Dashboard', path: '/' }],
-  },
-  {
-    items: [
-      { icon: Wrench, label: 'My Jobs', path: '/jobs' },
-      { icon: FileText, label: 'Invoices', path: '/invoices' },
-      { icon: FileText, label: 'Quotes', path: '/quotes' },
-      { icon: MessageSquare, label: 'Messages', path: '/messages' },
-      { icon: User, label: 'Profile', path: '/profile' },
-    ],
-  },
-]
-
 export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
   const isMobileMode = mobileOpen !== undefined
   const loc = useLocation()
   const { theme } = useTheme()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const unreadMessages = useUnreadMyThreadsCount()
+
+  const NAV = [
+    {
+      items: [{ icon: LayoutDashboard, label: 'Dashboard', path: '/', badge: 0 }],
+    },
+    {
+      items: [
+        { icon: Wrench, label: 'My Jobs', path: '/jobs', badge: 0 },
+        { icon: FileText, label: 'Invoices', path: '/invoices', badge: 0 },
+        { icon: FileText, label: 'Quotes', path: '/quotes', badge: 0 },
+        { icon: MessageSquare, label: 'Messages', path: '/messages', badge: unreadMessages },
+        { icon: User, label: 'Profile', path: '/profile', badge: 0 },
+      ],
+    },
+  ]
 
   const handleLogout = () => {
     logout()
@@ -119,10 +121,28 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                     active ? navItemActive : navItemInactive,
                   ].join(' ')}
                 >
-                  <span className="flex items-center justify-center flex-shrink-0">
+                  {/* Icon with red dot overlay when there are unread messages */}
+                  <span className="flex items-center justify-center flex-shrink-0 relative">
                     <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
+                    {item.badge > 0 && (
+                      <span style={{
+                        position: 'absolute', top: -3, right: -3,
+                        width: 8, height: 8, borderRadius: '50%',
+                        background: '#ef4444',
+                        boxShadow: '0 0 0 2px var(--bg-surface)',
+                      }} />
+                    )}
                   </span>
-                  {!collapsed && <span className="flex-1 min-w-0">{item.label}</span>}
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1 min-w-0">{item.label}</span>
+                      {item.badge > 0 && (
+                        <span className="flex items-center justify-center px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold flex-shrink-0">
+                          {item.badge > 99 ? '99+' : item.badge}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </Link>
               )
             })}

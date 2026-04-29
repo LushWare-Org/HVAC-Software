@@ -322,3 +322,52 @@ export function useDispatchWebSocket() {
 
   return { status, lastEvent }
 }
+
+// ─── Admin: provision technician account ──────────────────────────────────────
+
+/**
+ * Admin provisions a technician CRM account (sets mustResetPassword=true,
+ * sends welcome email), then creates the scheduling-service record so the
+ * technician shows up on the dispatch board immediately.
+ *
+ * Flow:
+ *  1. POST /crm/auth/provision-technician  → { userId4Scheduling, ... }
+ *  2. POST /scheduling/technicians          → scheduling profile
+ */
+export function useProvisionTechnicianAccount() {
+  return useMutation({
+    mutationFn: async (data: {
+      companyId: string
+      name: string
+      email: string
+      phone?: string
+      skills?: string[]
+      maxDailyJobs?: number
+      latitude?: number
+      longitude?: number
+    }) => {
+      // Step 1 — create CRM account + send welcome email
+      const crmRes = await api.post<{ userId4Scheduling: string; success: boolean; message: string }>(
+        '/crm/auth/provision-technician',
+        data,
+      )
+      const { userId4Scheduling } = crmRes.data
+
+      // Step 2 — create scheduling profile so tech appears on dispatch board
+      const schedRes = await api.post('/scheduling/technicians', {
+        userId:      userId4Scheduling,
+        name:        data.name,
+        phone:       data.phone,
+        skills:      data.skills,
+        maxDailyJobs: data.maxDailyJobs ?? 5,
+        latitude:    data.latitude,
+        longitude:   data.longitude,
+      })
+
+      return { crm: crmRes.data, scheduling: schedRes.data }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduling', 'technicians'] })
+    },
+  })
+}
