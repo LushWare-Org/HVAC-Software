@@ -21,6 +21,7 @@
   --bg-hover: #F9FAFB;
   --bg-active: #EEF2FF;
   --bg-input: #FFFFFF;
+  --border: var(--bd);
 
   /* Borders */
   --bd: #E5E7EB;
@@ -90,6 +91,7 @@
   --bg-hover: #243456;
   --bg-active: #2D3E5F;
   --bg-input: #1A2342;
+  --border: var(--bd);
 
   --bd: #314261;
   --bd-md: #3D5178;
@@ -131,6 +133,7 @@
   --bg-hover: #1f1f1f;
   --bg-active: #292929;
   --bg-input: #0a0a0a;
+  --border: var(--bd);
 
   --bd: #262626;
   --bd-md: #404040;
@@ -2371,4 +2374,121 @@ img {
 .sidebar-collapse-btn:hover {
   background: var(--bg-hover);
   color: var(--t1);
+}
+
+/* Theme-aware overrides for legacy modal/sidebar utility classes. */
+[data-theme="dark"] .bg-white,
+[data-theme="black"] .bg-white {
+  background-color: var(--bg-card) !important;
+}
+
+[data-theme="dark"] .bg-gray-50,
+[data-theme="black"] .bg-gray-50,
+[data-theme="dark"] .bg-gray-100,
+[data-theme="black"] .bg-gray-100,
+[data-theme="dark"] .bg-blue-50,
+[data-theme="black"] .bg-blue-50,
+[data-theme="dark"] .bg-green-50,
+[data-theme="black"] .bg-green-50,
+[data-theme="dark"] .bg-red-50,
+[data-theme="black"] .bg-red-50,
+[data-theme="dark"] .bg-violet-50,
+[data-theme="black"] .bg-violet-50,
+[data-theme="dark"] .hover\:bg-gray-50:hover,
+[data-theme="black"] .hover\:bg-gray-50:hover,
+[data-theme="dark"] .hover\:bg-gray-100:hover,
+[data-theme="black"] .hover\:bg-gray-100:hover,
+[data-theme="dark"] .hover\:bg-gray-200:hover,
+[data-theme="black"] .hover\:bg-gray-200:hover,
+[data-theme="dark"] .hover\:bg-blue-50:hover,
+[data-theme="black"] .hover\:bg-blue-50:hover,
+[data-theme="dark"] .hover\:bg-green-50:hover,
+[data-theme="black"] .hover\:bg-green-50:hover,
+[data-theme="dark"] .hover\:bg-violet-50:hover,
+[data-theme="black"] .hover\:bg-violet-50:hover,
+[data-theme="dark"] .hover\:bg-red-50:hover,
+[data-theme="black"] .hover\:bg-red-50:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+[data-theme="dark"] .border-gray-100,
+[data-theme="black"] .border-gray-100,
+[data-theme="dark"] .border-gray-200,
+[data-theme="black"] .border-gray-200,
+[data-theme="dark"] .border-gray-300,
+[data-theme="black"] .border-gray-300 {
+  border-color: var(--bd) !important;
+}
+
+[data-theme="dark"] .border-blue-200,
+[data-theme="black"] .border-blue-200,
+[data-theme="dark"] .border-green-200,
+[data-theme="black"] .border-green-200,
+[data-theme="dark"] .border-green-300,
+[data-theme="black"] .border-green-300,
+[data-theme="dark"] .border-red-200,
+[data-theme="black"] .border-red-200 {
+  border-color: var(--bd-md) !important;
+}
+
+[data-theme="dark"] .text-gray-900,
+[data-theme="black"] .text-gray-900,
+[data-theme="dark"] .text-gray-800,
+[data-theme="black"] .text-gray-800 {
+  color: var(--t1) !important;
+}
+
+[data-theme="dark"] .text-gray-700,
+[data-theme="black"] .text-gray-700,
+[data-theme="dark"] .text-gray-600,
+[data-theme="black"] .text-gray-600 {
+  color: var(--t2) !important;
+}
+
+[data-theme="dark"] .text-gray-500,
+[data-theme="black"] .text-gray-500,
+[data-theme="dark"] .text-gray-400,
+[data-theme="black"] .text-gray-400 {
+  color: var(--t3) !important;
+}
+
+[data-theme="dark"] .text-blue-600,
+[data-theme="black"] .text-blue-600,
+[data-theme="dark"] .text-blue-700,
+[data-theme="black"] .text-blue-700 {
+  color: var(--blue-light) !important;
+}
+
+[data-theme="dark"] .text-green-600,
+[data-theme="black"] .text-green-600,
+[data-theme="dark"] .text-green-700,
+[data-theme="black"] .text-green-700,
+[data-theme="dark"] .text-green-800,
+[data-theme="black"] .text-green-800 {
+  color: var(--green) !important;
+}
+
+[data-theme="dark"] .text-red-500,
+[data-theme="black"] .text-red-500,
+[data-theme="dark"] .text-red-600,
+[data-theme="black"] .text-red-600,
+[data-theme="dark"] .text-red-700,
+[data-theme="black"] .text-red-700 {
+  color: var(--red) !important;
+}
+
+[data-theme="dark"] .text-violet-500,
+[data-theme="black"] .text-violet-500 {
+  color: var(--violet) !important;
+}
+
+[data-theme="dark"] input.bg-white,
+[data-theme="black"] input.bg-white,
+[data-theme="dark"] select.bg-white,
+[data-theme="black"] select.bg-white,
+[data-theme="dark"] textarea.bg-white,
+[data-theme="black"] textarea.bg-white {
+  background-color: var(--bg-input) !important;
+  border-color: var(--bd-md) !important;
+  color: var(--t1) !important;
 }

@@ -499,7 +499,7 @@ export default function CustomerDetailsSidebar({
       />
       <div
         className="fixed top-0 bottom-0 right-0 w-3/4 z-[210] flex flex-col shadow-2xl transition-transform transform duration-300 translate-x-0 border-l border-gray-200"
-        style={{ background: "#ffffff" }}
+        style={{ background: "var(--bg-card)" }}
       >
         <div className="sticky top-0 bg-[var(--blue)] px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
           <div className="text-white">
@@ -594,7 +594,7 @@ export default function CustomerDetailsSidebar({
 
         <div
           className="flex-1 overflow-y-auto"
-          style={{ background: "#f3f4f6" }}
+          style={{ background: "var(--bg-surface)" }}
         >
           <div className="p-6">
             <div className="grid grid-cols-12 gap-6">
@@ -602,7 +602,7 @@ export default function CustomerDetailsSidebar({
               <div className="col-span-3 space-y-4">
                 <div
                   className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-full bg-[var(--blue)] text-white flex items-center justify-center font-bold text-lg shrink-0">
@@ -621,7 +621,7 @@ export default function CustomerDetailsSidebar({
 
                 <div
                   className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
                     <Mail size={16} className="text-[var(--blue-light)]" />{" "}
@@ -660,7 +660,7 @@ export default function CustomerDetailsSidebar({
 
                 <div
                   className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
                     <CheckCircle2
@@ -694,7 +694,7 @@ export default function CustomerDetailsSidebar({
                 {/* Revenue */}
                 <div
                   className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
                     <Activity size={16} className="text-[var(--blue-light)]" />{" "}
@@ -734,7 +734,7 @@ export default function CustomerDetailsSidebar({
                 {formData.engagementStatus !== 'INACTIVE' && (
                     <div
                       className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                      style={{ background: "#ffffff" }}
+                      style={{ background: "var(--bg-card)" }}
                     >
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Customer Engagement Pipeline</p>
                       <div className="relative pt-2 pb-1">
@@ -744,7 +744,7 @@ export default function CustomerDetailsSidebar({
                             <div
                               key={i}
                               className="flex flex-col items-center gap-2 px-2"
-                              style={{ background: "#ffffff" }}
+                              style={{ background: "var(--bg-card)" }}
                             >
                               <div
                                 className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all shrink-0 ${stage.status === "completed" ? "bg-[var(--green)] border-[var(--green)] text-white" : stage.status === "active" ? "bg-white border-[var(--blue)] ring-2 ring-[var(--blue-dim)] ring-offset-2" : "bg-white border-[var(--bd-md)]"}`}
@@ -771,7 +771,7 @@ export default function CustomerDetailsSidebar({
                 {/* Tabs */}
                 <div
                   className="rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col"
-                  style={{ background: "#ffffff", minHeight: 560 }}
+                  style={{ background: "var(--bg-card)", minHeight: 560 }}
                 >
                   <div
                     className="border-b border-gray-200 flex overflow-x-auto shrink-0 px-2 pt-2"
@@ -795,7 +795,7 @@ export default function CustomerDetailsSidebar({
 
                   <div
                     className="flex-1 overflow-y-auto p-6"
-                    style={{ background: "#ffffff" }}
+                    style={{ background: "var(--bg-card)" }}
                   >
                     {activeTab === "contact" && (
                       <div className="space-y-8">

@@ -331,7 +331,13 @@ function LeadHoverSummary({
   anchor: { x: number; y: number };
 }) {
   const summary = computeLeadStatusSummary(lead);
-  const left = typeof window === "undefined" ? anchor.x + 16 : Math.min(anchor.x + 16, window.innerWidth - 400);
+  const width = 360;
+  const gap = 16;
+  const left = typeof window === "undefined"
+    ? anchor.x + gap
+    : anchor.x > window.innerWidth - width - 64
+      ? anchor.x - width - gap
+      : Math.min(anchor.x + gap, window.innerWidth - width - 24);
   const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 430));
   const channel = summary.recommendedAction.channel === "whatsapp" ? "WhatsApp" : summary.recommendedAction.channel === "call" ? "Phone call" : "Email";
 
@@ -342,7 +348,7 @@ function LeadHoverSummary({
         zIndex: 80,
         top,
         left: Math.max(12, left),
-        width: 360,
+        width,
         padding: 14,
         borderRadius: 8,
         border: "1px solid var(--border)",
@@ -630,7 +636,11 @@ export default function Customers() {
                         <td className="font-600">{c.totalRevenue != null ? fmt(c.totalRevenue) : '—'}</td>
                         <td className="text-sm text-[var(--t3)]">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                         <td>
-                          <div className="flex items-center gap-1">
+                          <div
+                            className="flex items-center gap-1"
+                            onMouseEnter={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
+                            onMouseMove={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
+                          >
                             <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecCustomer(c); }} title="AI Recommendations"><Sparkles size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(c, "customer"); }} title="View Details"><Edit size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); window.location.href = `mailto:${c.email}`; }}><Mail size={15} /></button>
@@ -696,7 +706,11 @@ export default function Customers() {
                         <td>{l.assignedToName ?? '—'}</td>
                         <td className="text-sm text-3">{new Date(l.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                         <td>
-                          <div className="flex items-center gap-1">
+                          <div
+                            className="flex items-center gap-1"
+                            onMouseEnter={(e) => { e.stopPropagation(); setHoveredLead(null); }}
+                            onMouseMove={(e) => { e.stopPropagation(); setHoveredLead(null); }}
+                          >
                             <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecLead(l); }} title="AI Recommendations"><Sparkles size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(l, "lead"); }} title="View"><Edit size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); if (l.email) window.location.href = `mailto:${l.email}`; }}><Mail size={15} /></button>
