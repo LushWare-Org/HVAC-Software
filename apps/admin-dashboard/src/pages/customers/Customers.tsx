@@ -25,10 +25,12 @@ import LeadDetailsSidebar from "./LeadDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import CustomerRecommendationsModal from "../../components/CustomerRecommendationsModal";
+import LeadRecommendationsModal from "../../components/LeadRecommendationsModal";
 import { useCustomers, useLeads, useAgreements, useDeleteCustomer, useDeleteLead, useUpdateCustomer, useCustomerStatusSummary } from "../../hooks/useCustomers";
 import { customerName, leadName } from "../../types/api";
 import type { Customer, CustomerStatusSummary, Lead } from "../../types/api";
 import api from "../../lib/api";
+import { computeLeadStatusSummary, formatLeadPct, leadConversionColor, leadRiskColor } from "./leadInsights";
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
 
@@ -321,6 +323,83 @@ function CustomerHoverSummary({
   );
 }
 
+function LeadHoverSummary({
+  lead,
+  anchor,
+}: {
+  lead: Lead;
+  anchor: { x: number; y: number };
+}) {
+  const summary = computeLeadStatusSummary(lead);
+  const left = typeof window === "undefined" ? anchor.x + 16 : Math.min(anchor.x + 16, window.innerWidth - 400);
+  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 430));
+  const channel = summary.recommendedAction.channel === "whatsapp" ? "WhatsApp" : summary.recommendedAction.channel === "call" ? "Phone call" : "Email";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        zIndex: 80,
+        top,
+        left: Math.max(12, left),
+        width: 360,
+        padding: 14,
+        borderRadius: 8,
+        border: "1px solid var(--border)",
+        background: "var(--bg-card)",
+        boxShadow: "0 18px 44px rgba(15, 23, 42, 0.18)",
+        color: "var(--t1)",
+        pointerEvents: "none",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--t3)", marginBottom: 10 }}>
+        Lead risk summary
+      </div>
+      <div style={{ display: "grid", gap: 10 }}>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Current status</div>
+          <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2 }}>{summary.currentStatus}</div>
+        </div>
+        <div style={{ padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card-2)" }}>
+          <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Recommended action</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
+            <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 700 }}>{offerLabel(summary.recommendedAction.action)}</div>
+            <div style={{ fontSize: 12, color: summary.recommendedAction.priority === "high" ? "var(--red)" : summary.recommendedAction.priority === "medium" ? "var(--amber)" : "var(--green)", fontWeight: 700 }}>
+              {summary.recommendedAction.priority.toUpperCase()}
+            </div>
+          </div>
+          <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 6, lineHeight: 1.35 }}>
+            {summary.recommendedAction.reason} Channel: {channel}.
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Conversion prediction</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: leadConversionColor(summary.conversionPrediction.level), marginTop: 2 }}>
+              {summary.conversionPrediction.level} ({formatLeadPct(summary.conversionPrediction.probability)})
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Risk prediction</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: leadRiskColor(summary.riskPrediction.level), marginTop: 2 }}>
+              {summary.riskPrediction.level} ({formatLeadPct(summary.riskPrediction.probability)})
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Proposed next step</div>
+          <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2, lineHeight: 1.4 }}>{summary.proposedNextStep}</div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, paddingTop: 8, borderTop: "1px solid var(--border)", fontSize: 12, color: "var(--t3)" }}>
+          <span>{summary.signals.ageDays} days open</span>
+          <span>{summary.signals.sourceQuality} source</span>
+          <span>{summary.predictionSource === "model" ? "AI model" : "Fallback"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Customers() {
   const [tab, setTab] = useState<"customers" | "leads" | "agreements">("customers");
   const [search, setSearch] = useState("");
@@ -339,7 +418,9 @@ export default function Customers() {
   const [sidebarTab, setSidebarTab] = useState<any>("contact");
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: "customer" | "lead"; id: string; name: string } | null>(null);
   const [hoveredCustomer, setHoveredCustomer] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [hoveredLead, setHoveredLead] = useState<{ lead: Lead; x: number; y: number } | null>(null);
   const [recCustomer, setRecCustomer] = useState<Customer | null>(null);
+  const [recLead, setRecLead] = useState<Lead | null>(null);
   const [customerPage, setCustomerPage] = useState(1);
   const [leadPage, setLeadPage] = useState(1);
   const [agreementPage, setAgreementPage] = useState(1);
@@ -598,7 +679,14 @@ export default function Customers() {
                   <tbody>
                     {leadsQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
                     {!leadsQuery.isLoading && leads.map(l => (
-                      <tr key={l.id} onClick={() => handleViewClick(l, "lead")} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
+                      <tr
+                        key={l.id}
+                        onClick={() => handleViewClick(l, "lead")}
+                        onMouseEnter={(e) => setHoveredLead({ lead: l, x: e.clientX, y: e.clientY })}
+                        onMouseMove={(e) => setHoveredLead(current => current?.lead.id === l.id ? { lead: l, x: e.clientX, y: e.clientY } : current)}
+                        onMouseLeave={() => setHoveredLead(current => current?.lead.id === l.id ? null : current)}
+                        className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                      >
                         <td><div className="cell-user"><div><div className="cell-name">{leadName(l)}</div><div className="cell-email">{l.email}</div></div></div></td>
                         <td><div className="flex items-center gap-1.5 text-sm text-[var(--t2)]"><MapPin size={12} className="text-[var(--t4)]" />{l.customer?.city ?? '—'}{l.customer?.state ? `, ${l.customer.state}` : ''}</div></td>
                         <td>{l.serviceInterest ?? '—'}</td>
@@ -609,6 +697,7 @@ export default function Customers() {
                         <td className="text-sm text-3">{new Date(l.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                         <td>
                           <div className="flex items-center gap-1">
+                            <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecLead(l); }} title="AI Recommendations"><Sparkles size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(l, "lead"); }} title="View"><Edit size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); if (l.email) window.location.href = `mailto:${l.email}`; }}><Mail size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete" onClick={e => { e.stopPropagation(); confirmDelete("lead", l.id, leadName(l)); }}><Trash2 size={15} /></button>
@@ -695,12 +784,23 @@ export default function Customers() {
         />
       )}
 
+      {hoveredLead && (
+        <LeadHoverSummary
+          anchor={{ x: hoveredLead.x, y: hoveredLead.y }}
+          lead={hoveredLead.lead}
+        />
+      )}
+
       <CustomerDetailsSidebar isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} person={selectedPerson} initialTab={sidebarTab} />
       <LeadDetailsSidebar isOpen={isLeadDetailsOpen} onClose={() => setIsLeadDetailsOpen(false)} person={selectedPerson} onConverted={handleLeadConverted} />
       <AddPersonModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} type={addType} />
 
       {recCustomer && (
         <CustomerRecommendationsModal customer={recCustomer} onClose={() => setRecCustomer(null)} />
+      )}
+
+      {recLead && (
+        <LeadRecommendationsModal lead={recLead} onClose={() => setRecLead(null)} />
       )}
 
       {/* Delete confirmation dialog */}

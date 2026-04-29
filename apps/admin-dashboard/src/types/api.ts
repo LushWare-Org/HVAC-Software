@@ -165,6 +165,66 @@ export interface Lead {
   customer?: { id: string; firstName: string; lastName: string; city?: string; state?: string; address?: string }
 }
 
+export interface LeadStatusSummary {
+  leadId: string
+  currentStatus: string
+  conversionPrediction: {
+    probability: number
+    level: 'Low' | 'Medium' | 'High'
+    summary: string
+  }
+  riskPrediction: {
+    probability: number
+    level: 'Low' | 'Medium' | 'High'
+    summary: string
+  }
+  recommendedAction: {
+    action: string
+    priority: 'low' | 'medium' | 'high'
+    channel: 'whatsapp' | 'email' | 'call'
+    reason: string
+    triggerImmediately: boolean
+  }
+  valueRecommendation: {
+    recommendedOffer: string
+    confidence: number
+    priorityScore: number
+    status: string
+  }
+  proposedNextStep: string
+  predictionSource: 'model' | 'fallback'
+  reasoning: {
+    leadConversion: {
+      ruleBased: string
+      mlResult: string
+      aiExplanation: string
+    }
+    riskPrediction: {
+      ruleBased: string
+      mlResult: string
+      aiExplanation: string
+    }
+    recommendation: {
+      ruleBased: string
+      mlResult: string
+      aiExplanation: string
+    }
+    proposedNextStep: {
+      ruleBased: string
+      mlResult: string
+      aiExplanation: string
+    }
+  }
+  signals: {
+    ageDays: number
+    estimatedValue: number
+    hasEmail: boolean
+    hasPhone: boolean
+    hasWhatsapp: boolean
+    sourceQuality: 'high' | 'medium' | 'low'
+  }
+}
+
 export function leadName(l: Lead): string {
   return `${l.firstName} ${l.lastName}`.trim()
 }
