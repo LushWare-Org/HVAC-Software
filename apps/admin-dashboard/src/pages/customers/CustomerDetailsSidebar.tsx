@@ -50,8 +50,8 @@ interface CustomerDetailsSidebarProps {
 
 const inputBase =
   "w-full px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors";
-const inputView = `${inputBase} bg-gray-100 border-transparent text-gray-600`;
-const inputEdit = `${inputBase} bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none`;
+const inputView = `${inputBase} bg-[var(--bg-card-2)] border-transparent text-[var(--t3)]`;
+const inputEdit = `${inputBase} bg-[var(--bg-card)] border-[var(--bd-md)] text-[var(--t1)] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none`;
 
 function Field({
   label,
@@ -449,8 +449,8 @@ export default function CustomerDetailsSidebar({
         onClick={onClose}
       />
       <div
-        className="fixed top-0 bottom-0 right-0 w-full md:w-3/4 z-[210] flex flex-col shadow-2xl transition-transform transform duration-300 translate-x-0 border-l border-gray-200"
-        style={{ background: "#ffffff" }}
+        className="fixed top-0 bottom-0 right-0 w-full md:w-3/4 z-[210] flex flex-col shadow-2xl transition-transform transform duration-300 translate-x-0 border-l border-[var(--bd)]"
+        style={{ background: "var(--bg-card)" }}
       >
         <div className="sticky top-0 bg-[var(--blue)] px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
           <div className="text-white">
@@ -553,15 +553,15 @@ export default function CustomerDetailsSidebar({
 
         <div
           className="flex-1 overflow-y-auto"
-          style={{ background: "#f3f4f6" }}
+          style={{ background: "var(--bg-card-2)" }}
         >
           <div className="p-6">
             <div className="grid grid-cols-12 gap-6">
               {/* Left Panel */}
               <div className="col-span-3 space-y-4">
                 <div
-                  className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-full bg-[var(--blue)] text-white flex items-center justify-center font-bold text-lg shrink-0">
@@ -579,8 +579,8 @@ export default function CustomerDetailsSidebar({
                 </div>
 
                 <div
-                  className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
                     <Mail size={16} className="text-[var(--blue-light)]" />{" "}
@@ -618,8 +618,8 @@ export default function CustomerDetailsSidebar({
                 </div>
 
                 <div
-                  className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
                     <CheckCircle2
@@ -652,8 +652,8 @@ export default function CustomerDetailsSidebar({
 
                 {/* Revenue */}
                 <div
-                  className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
                     <Activity size={16} className="text-[var(--blue-light)]" />{" "}
@@ -692,21 +692,21 @@ export default function CustomerDetailsSidebar({
               <div className="col-span-9 space-y-4">
                 {formData.engagementStatus !== 'INACTIVE' && (
                     <div
-                      className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                      style={{ background: "#ffffff" }}
+                      className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                      style={{ background: "var(--bg-card)" }}
                     >
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Customer Engagement Pipeline</p>
+                      <p className="text-xs font-semibold text-[var(--t4)] uppercase tracking-wider mb-4">Customer Engagement Pipeline</p>
                       <div className="relative pt-2 pb-1">
-                        <div className="absolute top-5 left-[10%] right-[10%] h-[2px] bg-gray-300" />
+                        <div className="absolute top-5 left-[10%] right-[10%] h-[2px] bg-[var(--bd-md)]" />
                         <div className="relative z-10 flex justify-between">
                           {stages.map((stage, i) => (
                             <div
                               key={i}
                               className="flex flex-col items-center gap-2 px-2"
-                              style={{ background: "#ffffff" }}
+                              style={{ background: "var(--bg-card)" }}
                             >
                               <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all shrink-0 ${stage.status === "completed" ? "bg-[var(--green)] border-[var(--green)] text-white" : stage.status === "active" ? "bg-white border-[var(--blue)] ring-2 ring-[var(--blue-dim)] ring-offset-2" : "bg-white border-[var(--bd-md)]"}`}
+                                className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all shrink-0 ${stage.status === "completed" ? "bg-[var(--green)] border-[var(--green)] text-white" : stage.status === "active" ? "bg-[var(--bg-card)] border-[var(--blue)] ring-2 ring-[var(--blue-dim)] ring-offset-2" : "bg-[var(--bg-card)] border-[var(--bd-md)]"}`}
                               >
                                 {stage.status === "completed" && (
                                   <CheckCircle2 size={12} />
@@ -729,18 +729,18 @@ export default function CustomerDetailsSidebar({
 
                 {/* Tabs */}
                 <div
-                  className="rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col"
-                  style={{ background: "#ffffff", minHeight: 560 }}
+                  className="rounded-xl border border-[var(--bd)] shadow-sm overflow-hidden flex flex-col"
+                  style={{ background: "var(--bg-card)", minHeight: 560 }}
                 >
                   <div
-                    className="border-b border-gray-200 flex overflow-x-auto shrink-0 px-2 pt-2"
+                    className="border-b border-[var(--bd)] flex overflow-x-auto shrink-0 px-2 pt-2"
                     style={{ scrollbarWidth: "none" }}
                   >
                     {tabs.map((tab) => (
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center justify-center gap-1.5 px-4 py-3 text-[12px] font-600 whitespace-nowrap transition-all border-b-[3px] bg-transparent cursor-pointer hover:bg-gray-50 rounded-t-lg ml-1 ${activeTab === tab.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500"}`}
+                        className={`flex items-center justify-center gap-1.5 px-4 py-3 text-[12px] font-600 whitespace-nowrap transition-all border-b-[3px] bg-transparent cursor-pointer hover:bg-[var(--bg-hover)] rounded-t-lg ml-1 ${activeTab === tab.id ? "border-blue-600 text-blue-600" : "border-transparent text-[var(--t3)]"}`}
                       >
                         {tab.icon} {tab.label}{" "}
                         {tab.id === "jobs" && customerJobs.length > 0 && (
@@ -754,7 +754,7 @@ export default function CustomerDetailsSidebar({
 
                   <div
                     className="flex-1 overflow-y-auto p-6"
-                    style={{ background: "#ffffff" }}
+                    style={{ background: "var(--bg-card)" }}
                   >
                     {activeTab === "contact" && (
                       <div className="space-y-8">
@@ -865,7 +865,7 @@ export default function CustomerDetailsSidebar({
                             {contacts.map((c, idx) => (
                               <div
                                 key={c.id}
-                                className="p-4 rounded-xl border border-gray-100 bg-gray-50 space-y-3"
+                                className="p-4 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)] space-y-3"
                               >
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-[11px] font-700 text-[var(--t4)] uppercase tracking-wider">
@@ -1025,7 +1025,7 @@ export default function CustomerDetailsSidebar({
                           {addresses.map((addr) => (
                             <div
                               key={addr.id}
-                              className="p-4 rounded-xl border border-gray-100 bg-gray-50"
+                              className="p-4 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)]"
                             >
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
@@ -1041,7 +1041,7 @@ export default function CustomerDetailsSidebar({
                                         ),
                                       )
                                     }
-                                    className={`text-[12px] font-700 rounded px-2 py-1 ${isEditMode ? "border border-gray-300 bg-white" : "border-0 bg-transparent text-[var(--t2)]"}`}
+                                    className={`text-[12px] font-700 rounded px-2 py-1 ${isEditMode ? "border border-[var(--bd-md)] bg-[var(--bg-card)] text-[var(--t1)]" : "border-0 bg-transparent text-[var(--t2)]"}`}
                                   >
                                     <option>Site</option>
                                     <option>Billing</option>
@@ -1140,7 +1140,7 @@ export default function CustomerDetailsSidebar({
                           {equipment.map((eq, idx) => (
                             <div
                               key={eq.id}
-                              className="p-4 rounded-xl border border-gray-100 bg-gray-50"
+                              className="p-4 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)]"
                             >
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
@@ -1167,7 +1167,7 @@ export default function CustomerDetailsSidebar({
                                         ),
                                       )
                                     }
-                                    className={`text-[11px] font-600 rounded px-2 py-1 ${isEditMode ? "border border-gray-300 bg-white" : "border-0 bg-transparent text-[var(--t3)]"}`}
+                                    className={`text-[11px] font-600 rounded px-2 py-1 ${isEditMode ? "border border-[var(--bd-md)] bg-[var(--bg-card)] text-[var(--t1)]" : "border-0 bg-transparent text-[var(--t3)]"}`}
                                   >
                                     <option>Boiler</option>
                                     <option>AC Unit</option>
@@ -1283,7 +1283,7 @@ export default function CustomerDetailsSidebar({
                         {/* Quotes for this customer */}
                         {customerQuotes.length > 0 && (
                           <div className="mb-6">
-                            <h4 className="text-xs font-700 text-gray-500 uppercase mb-3 flex items-center gap-2">
+                            <h4 className="text-xs font-700 text-[var(--t3)] uppercase mb-3 flex items-center gap-2">
                               <FileText size={14} className="text-green-500" />
                               Quotes ({customerQuotes.length})
                             </h4>
@@ -1291,15 +1291,15 @@ export default function CustomerDetailsSidebar({
                               {customerQuotes.map((q) => (
                                 <div
                                   key={q.id}
-                                  className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                                  className="flex items-center justify-between p-3 rounded-lg border border-[var(--bd)] hover:bg-[var(--bg-hover)] cursor-pointer transition-colors"
                                   onClick={() => window.dispatchEvent(new CustomEvent("open-quote-detail", { detail: q }))}
                                 >
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-600 text-gray-900 truncate">{q.title}</div>
-                                    <div className="text-xs text-gray-500 mt-0.5">{q.quoteNumber} · {new Date(q.createdAt).toLocaleDateString()}</div>
+                                    <div className="text-sm font-600 text-[var(--t1)] truncate">{q.title}</div>
+                                    <div className="text-xs text-[var(--t3)] mt-0.5">{q.quoteNumber} · {new Date(q.createdAt).toLocaleDateString()}</div>
                                   </div>
                                   <div className="flex items-center gap-2 ml-3">
-                                    <span className="text-sm font-700 text-gray-900">${decimalToNumber(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="text-sm font-700 text-[var(--t1)]">${decimalToNumber(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     <span className={`badge ${QUO_CSS[q.status] ?? "badge-neutral"}`}>{q.status}</span>
                                   </div>
                                 </div>
@@ -1311,7 +1311,7 @@ export default function CustomerDetailsSidebar({
                         {/* Invoices for this customer */}
                         {customerInvoices.length > 0 && (
                           <div className="mb-6">
-                            <h4 className="text-xs font-700 text-gray-500 uppercase mb-3 flex items-center gap-2">
+                            <h4 className="text-xs font-700 text-[var(--t3)] uppercase mb-3 flex items-center gap-2">
                               <FileText size={14} className="text-blue-500" />
                               Invoices ({customerInvoices.length})
                             </h4>
@@ -1319,18 +1319,18 @@ export default function CustomerDetailsSidebar({
                               {customerInvoices.map((inv) => (
                                 <div
                                   key={inv.id}
-                                  className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                                  className="flex items-center justify-between p-3 rounded-lg border border-[var(--bd)] hover:bg-[var(--bg-hover)] cursor-pointer transition-colors"
                                   onClick={() => window.dispatchEvent(new CustomEvent("open-invoice-detail", { detail: inv }))}
                                 >
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-600 text-gray-900 truncate">{inv.invoiceNumber}</div>
-                                    <div className="text-xs text-gray-500 mt-0.5">
+                                    <div className="text-sm font-600 text-[var(--t1)] truncate">{inv.invoiceNumber}</div>
+                                    <div className="text-xs text-[var(--t3)] mt-0.5">
                                       {inv.dueAt ? `Due ${new Date(inv.dueAt).toLocaleDateString()}` : new Date(inv.createdAt).toLocaleDateString()}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2 ml-3">
                                     <div className="text-right">
-                                      <span className="text-sm font-700 text-gray-900">${decimalToNumber(inv.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                      <span className="text-sm font-700 text-[var(--t1)]">${decimalToNumber(inv.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                       {decimalToNumber(inv.balanceDue) > 0 && (
                                         <div className="text-[10px] text-amber-600">Due: ${decimalToNumber(inv.balanceDue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                                       )}
@@ -1345,7 +1345,7 @@ export default function CustomerDetailsSidebar({
 
                         {/* Jobs for this customer */}
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-xs font-700 text-gray-500 uppercase flex items-center gap-2">
+                          <h4 className="text-xs font-700 text-[var(--t3)] uppercase flex items-center gap-2">
                             <ClipboardList size={14} className="text-blue-500" />
                             Jobs ({customerJobs.length})
                           </h4>
@@ -1356,7 +1356,7 @@ export default function CustomerDetailsSidebar({
                             <Plus size={12} /> New Job
                           </button>
                         </div>
-                        {customerJobsQuery.isLoading && <div className="text-sm text-gray-400 py-4 text-center">Loading jobs...</div>}
+                        {customerJobsQuery.isLoading && <div className="text-sm text-[var(--t4)] py-4 text-center">Loading jobs...</div>}
                         <div className="table-container">
                           <table className="data-table">
                             <thead>
@@ -1371,8 +1371,8 @@ export default function CustomerDetailsSidebar({
                               {customerJobs.map((j) => (
                                 <tr key={j.id}>
                                   <td>
-                                    <div className="text-sm font-600 text-gray-900">{j.title}</div>
-                                    <div className="text-xs text-gray-500">{j.serviceAddress ?? j.customerAddress ?? ""}</div>
+                                    <div className="text-sm font-600 text-[var(--t1)]">{j.title}</div>
+                                    <div className="text-xs text-[var(--t3)]">{j.serviceAddress ?? j.customerAddress ?? ""}</div>
                                   </td>
                                   <td className="text-sm text-3">{new Date(j.createdAt).toLocaleDateString()}</td>
                                   <td>
@@ -1395,7 +1395,7 @@ export default function CustomerDetailsSidebar({
                               ))}
                               {!customerJobsQuery.isLoading && customerJobs.length === 0 && (
                                 <tr>
-                                  <td colSpan={4} className="text-center text-gray-400 py-6 text-sm">No jobs found for this customer</td>
+                                  <td colSpan={4} className="text-center text-[var(--t4)] py-6 text-sm">No jobs found for this customer</td>
                                 </tr>
                               )}
                             </tbody>
@@ -1424,7 +1424,7 @@ export default function CustomerDetailsSidebar({
                         {agreements.map((agr) => (
                           <div
                             key={agr.id}
-                            className="p-5 rounded-xl border border-gray-100 bg-gray-50 mb-4"
+                            className="p-5 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)] mb-4"
                           >
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex-1 mr-3">
@@ -1471,7 +1471,7 @@ export default function CustomerDetailsSidebar({
                                       ),
                                     )
                                   }
-                                  className={`text-[11px] font-600 rounded px-2 py-1 ${isEditMode ? "border border-gray-300 bg-white" : "border-0 bg-transparent"}`}
+                                  className={`text-[11px] font-600 rounded px-2 py-1 ${isEditMode ? "border border-[var(--bd-md)] bg-[var(--bg-card)] text-[var(--t1)]" : "border-0 bg-transparent"}`}
                                   style={{
                                     color:
                                       agr.status === "active"
@@ -1543,7 +1543,7 @@ export default function CustomerDetailsSidebar({
                                 </div>
                               ))}
                             </div>
-                            <div className="mt-4 pt-3 border-t border-gray-200 space-y-3">
+                            <div className="mt-4 pt-3 border-t border-[var(--bd)] space-y-3">
                               {/* Upload zone */}
                               {isEditMode && (
                                 <div>
@@ -1903,7 +1903,7 @@ export default function CustomerDetailsSidebar({
                           {reviews.map((rv) => (
                             <div
                               key={rv.id}
-                              className="p-4 rounded-xl border border-gray-100 bg-gray-50"
+                              className="p-4 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)]"
                             >
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
@@ -1950,9 +1950,9 @@ export default function CustomerDetailsSidebar({
                                   )}
                                 </div>
                               </div>
-                              <div className="flex gap-2 pt-2 border-t border-gray-200 mt-2">
+                              <div className="flex gap-2 pt-2 border-t border-[var(--bd)] mt-2">
                                 {rv.replied ? (
-                                  <div className="w-full mt-1 p-3 bg-white border border-gray-200 rounded-lg">
+                                  <div className="w-full mt-1 p-3 bg-[var(--bg-card)] border border-[var(--bd)] rounded-lg">
                                     <span className="text-[11px] text-green-600 font-600 flex items-center gap-1 mb-1">
                                       <CheckCircle2 size={12} /> Replied
                                     </span>
@@ -2072,7 +2072,7 @@ export default function CustomerDetailsSidebar({
                           icon={Activity}
                           title="Activity Timeline"
                         />
-                        <div className="relative space-y-5 before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-gray-200">
+                        <div className="relative space-y-5 before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-[var(--bd)]">
                           {activityTimeline.length === 0 ? (
                             <p className="text-sm text-[var(--t4)] text-center py-8">No activity recorded yet.</p>
                           ) : activityTimeline.map((item) => {
@@ -2088,7 +2088,7 @@ export default function CustomerDetailsSidebar({
                                 >
                                   <Icon size={14} />
                                 </div>
-                                <div className="flex-1 p-3 rounded-xl border border-gray-100 bg-gray-50">
+                                <div className="flex-1 p-3 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)]">
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-sm font-600 text-[var(--t1)]">
                                       {item.label}
