@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   X, Sparkles, CheckCircle2, AlertCircle, Zap, RefreshCw,
-  Phone, TrendingUp, ShieldCheck, ChevronDown, ChevronUp, Loader2,
+  Phone, TrendingUp, ShieldCheck, Loader2,
 } from 'lucide-react'
 import { useCustomerStatusSummary } from '../hooks/useCustomers'
 import { useExecuteFollowup, useExecuteRetention, useExecuteUpsell } from '../hooks/useCustomers'
@@ -33,9 +33,9 @@ function PriorityBadge({ priority }: { priority: Priority }) {
 
 function Skeleton() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '20px 0' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12, padding: '20px 0' }}>
       {[1, 2, 3].map(i => (
-        <div key={i} style={{ height: 100, background: 'var(--bg-hover)', borderRadius: 10, opacity: 0.6 + i * 0.1 }} />
+        <div key={i} style={{ height: 320, background: 'var(--bg-hover)', borderRadius: 10, opacity: 0.6 + i * 0.1 }} />
       ))}
     </div>
   )
@@ -63,34 +63,41 @@ interface SectionProps {
   title: string
   priority: Priority
   children: React.ReactNode
-  defaultOpen?: boolean
 }
 
-function Section({ icon, title, priority, children, defaultOpen = true }: SectionProps) {
-  const [open, setOpen] = useState(defaultOpen)
+function Section({ icon, title, priority, children }: SectionProps) {
   const cfg = PRIORITY_CONFIG[priority]
   return (
-    <div style={{ borderRadius: 10, border: `1px solid var(--border)`, overflow: 'hidden', borderLeft: `3px solid ${cfg.border}` }}>
-      <button
-        onClick={() => setOpen(o => !o)}
+    <div
+      style={{
+        borderRadius: 10,
+        border: `1px solid var(--border)`,
+        overflow: 'hidden',
+        borderTop: `3px solid ${cfg.border}`,
+        background: 'var(--bg-card)',
+        minHeight: 360,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div
         style={{
-          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '12px 16px', background: 'var(--bg-card)', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+          padding: '14px 16px 10px', background: 'var(--bg-card)',
           gap: 10,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, minWidth: 0 }}>
           <span style={{ color: cfg.color }}>{icon}</span>
-          <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)' }}>{title}</span>
+          <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)', lineHeight: 1.25 }}>{title}</span>
+        </div>
+        <div style={{ flexShrink: 0 }}>
           <PriorityBadge priority={priority} />
         </div>
-        {open ? <ChevronUp size={15} style={{ color: 'var(--t3)', flexShrink: 0 }} /> : <ChevronDown size={15} style={{ color: 'var(--t3)', flexShrink: 0 }} />}
-      </button>
-      {open && (
-        <div style={{ padding: '0 16px 16px', background: 'var(--bg-card)' }}>
-          {children}
-        </div>
-      )}
+      </div>
+      <div style={{ padding: '0 16px 16px', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        {children}
+      </div>
     </div>
   )
 }
@@ -152,7 +159,7 @@ function FollowupSection({ summary, customerId }: { summary: CustomerStatusSumma
 
   return (
     <Section icon={<Phone size={15} />} title="Follow-up Recommendation" priority={priority}>
-      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, flex: 1 }}>
         <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 10, lineHeight: 1.5 }}>
           {summary.proposedNextStep}
         </p>
@@ -166,7 +173,7 @@ function FollowupSection({ summary, customerId }: { summary: CustomerStatusSumma
         onClick={handleExecute}
         disabled={exec.isPending}
         className="btn btn-primary btn-sm"
-        style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6 }}
+        style={{ marginTop: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
       >
         {exec.isPending ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
         {exec.isPending ? 'Queuing…' : 'Execute Follow-up'}
@@ -202,7 +209,7 @@ function RetentionSection({ summary, customerId }: { summary: CustomerStatusSumm
 
   return (
     <Section icon={<ShieldCheck size={15} />} title="Retention Recommendation" priority={priority}>
-      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, flex: 1 }}>
         <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 10, lineHeight: 1.5 }}>
           {ret.reason}
         </p>
@@ -225,7 +232,7 @@ function RetentionSection({ summary, customerId }: { summary: CustomerStatusSumm
           onClick={handleExecute}
           disabled={exec.isPending}
           className="btn btn-primary btn-sm"
-          style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6 }}
+          style={{ marginTop: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
         >
           {exec.isPending ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
           {exec.isPending ? 'Queuing…' : 'Execute Retention'}
@@ -265,7 +272,7 @@ function UpsellSection({ summary, customerId }: { summary: CustomerStatusSummary
 
   return (
     <Section icon={<TrendingUp size={15} />} title="Upsell Recommendation" priority={priority}>
-      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, flex: 1 }}>
         <Detail label="Recommended offer"  value={label(up.recommendedOffer)} />
         <Detail label="Confidence"         value={pct(up.confidence)} />
         {up.priorityScore != null && <Detail label="Priority score" value={up.priorityScore.toFixed(3)} />}
@@ -278,7 +285,7 @@ function UpsellSection({ summary, customerId }: { summary: CustomerStatusSummary
         onClick={handleExecute}
         disabled={exec.isPending}
         className="btn btn-secondary btn-sm"
-        style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6 }}
+        style={{ marginTop: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
       >
         {exec.isPending ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
         {exec.isPending ? 'Refreshing…' : 'Refresh Upsell'}
@@ -309,7 +316,7 @@ export default function CustomerRecommendationsModal({ customer, onClose }: Prop
           background: 'var(--bg-card)',
           borderRadius: 14,
           width: '100%',
-          maxWidth: 560,
+          maxWidth: 980,
           maxHeight: '90vh',
           overflow: 'hidden',
           display: 'flex',
@@ -342,7 +349,7 @@ export default function CustomerRecommendationsModal({ customer, onClose }: Prop
         </div>
 
         {/* Body */}
-        <div style={{ overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ overflowY: 'auto', padding: '16px 20px' }}>
           {statusQuery.isLoading && <Skeleton />}
 
           {statusQuery.isError && (
@@ -353,11 +360,16 @@ export default function CustomerRecommendationsModal({ customer, onClose }: Prop
           )}
 
           {summary && (
-            <>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+              gap: 12,
+              alignItems: 'stretch',
+            }}>
               <FollowupSection   summary={summary} customerId={customer.id} />
               <RetentionSection  summary={summary} customerId={customer.id} />
               <UpsellSection     summary={summary} customerId={customer.id} />
-            </>
+            </div>
           )}
         </div>
       </div>
