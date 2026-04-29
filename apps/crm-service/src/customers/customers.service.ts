@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput } from '../ai/churn.client';
+import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput, type RevenuePredictionResult } from '../ai/churn.client';
 import { UpsellAgentService } from '../upsell/upsell-agent.service';
 import { FollowupAgent } from '../agents/followup.agent';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -231,12 +231,19 @@ export class CustomersService {
       failure_history: failureHistory,
     };
 
-    let prediction = this.computeFallbackPrediction(churnInput, failureInput);
+    const fallbackPrediction = this.computeFallbackPrediction(churnInput, failureInput);
+    let prediction = fallbackPrediction;
     let predictionSource: 'model' | 'fallback' = 'fallback';
 
     try {
-      prediction = await this.churnClient.predictRevenue({ churn: churnInput, failure: failureInput });
-      predictionSource = 'model';
+      const modelPrediction = await this.churnClient.predictRevenue({ churn: churnInput, failure: failureInput });
+      const reconciledPrediction = this.reconcileModelPrediction(modelPrediction, fallbackPrediction, churnInput);
+      prediction = reconciledPrediction.prediction;
+      predictionSource = reconciledPrediction.usedFallback ? 'fallback' : 'model';
+
+      if (reconciledPrediction.usedFallback) {
+        this.logger.warn(`Status summary model returned saturated low risk for customer ${customer.id}; using calibrated fallback scores`);
+      }
     } catch (error) {
       this.logger.warn(`Status summary model unavailable for customer ${customer.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -398,6 +405,48 @@ export class CustomersService {
     };
   }
 
+  private reconcileModelPrediction(
+    modelPrediction: RevenuePredictionResult,
+    fallbackPrediction: RevenuePredictionResult,
+    churnInput: ChurnPredictionInput,
+  ): { prediction: RevenuePredictionResult; usedFallback: boolean } {
+    const churnProbability = this.reconcileProbability(
+      modelPrediction.churn_probability,
+      fallbackPrediction.churn_probability,
+    );
+    const failureProbability = this.reconcileProbability(
+      modelPrediction.failure_probability,
+      fallbackPrediction.failure_probability,
+    );
+    const usedFallback =
+      churnProbability !== modelPrediction.churn_probability ||
+      failureProbability !== modelPrediction.failure_probability;
+
+    if (!usedFallback) {
+      return { prediction: modelPrediction, usedFallback: false };
+    }
+
+    return {
+      prediction: {
+        churn_probability: churnProbability,
+        failure_probability: failureProbability,
+        revenue_risk: Number(((churnProbability * churnInput.avg_monthly_spend * 12) + (failureProbability * 200)).toFixed(2)),
+        recommended_action: this.recommendFallbackAction(churnProbability, failureProbability),
+      },
+      usedFallback: true,
+    };
+  }
+
+  private reconcileProbability(modelProbability: number, fallbackProbability: number): number {
+    if (!Number.isFinite(modelProbability)) {
+      return fallbackProbability;
+    }
+
+    return modelProbability < 0.01 && fallbackProbability >= 0.05
+      ? fallbackProbability
+      : modelProbability;
+  }
+
   private recommendFallbackAction(churnProbability: number, failureProbability: number): string {
     if (churnProbability > 0.7 && failureProbability > 0.7) return 'URGENT_INTERVENTION';
     if (churnProbability > 0.7) return 'RETENTION';
@@ -464,7 +513,26 @@ export class CustomersService {
       customerId,
     );
 
-    return rows[0] ?? null;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+
+    const confidence = Number(row.confidence);
+    const priorityScore = row.priorityScore === null ? null : Number(row.priorityScore);
+
+    if (confidence >= 0.995 || confidence <= 0.005) {
+      this.logger.warn(
+        `Ignoring saturated stored upsell recommendation ${row.id} for customer ${customerId}; recalculating from status signals`,
+      );
+      return null;
+    }
+
+    return {
+      ...row,
+      confidence,
+      priorityScore,
+    };
   }
 
   private computeInlineUpsellRecommendation(signals: {
