@@ -4,7 +4,7 @@ Field Service Management (FSM) platform for trade businesses — HVAC, Plumbing,
 
 ## Architecture
 
-6 microservices in a Turborepo monorepo. Infrastructure (databases, cache, gateway) runs in Docker. Services run on host for hot-reload during development.
+7 microservices in a Turborepo monorepo. Infrastructure (databases, cache, gateway) runs in Docker. Services run on host for hot-reload during development, except the FastAPI churn inference service which runs in Docker.
 
 | Service | Port | Tech |
 |---------|------|------|
@@ -14,6 +14,7 @@ Field Service Management (FSM) platform for trade businesses — HVAC, Plumbing,
 | Finance | 3004 | NestJS + Stripe + Puppeteer |
 | Communication | 3005 | NestJS + BullMQ + MongoDB |
 | Analytics | 3006 | NestJS + PostgreSQL (analytics schema) |
+| Churn Inference | 8000 | FastAPI + scikit-learn/XGBoost |
 
 ## Prerequisites
 
@@ -52,6 +53,7 @@ apps/
   finance-service/      NestJS — Quotes, invoices, Stripe payments, PDF generation
   comms-service/        NestJS — SMS, email, push, automation workflows
   analytics-service/    NestJS — Dashboards, reports, exports
+  churn-service/        FastAPI — Churn, failure, and revenue risk inference
   admin-dashboard/      React 18 + Vite + TanStack Query + shadcn/ui
   customer-portal/      Next.js 14 App Router (mobile-responsive)
 packages/

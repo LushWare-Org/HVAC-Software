@@ -1,5 +1,5 @@
 // ============================================================
-// CRM Service — Prisma Schema
+// CRM Service â€” Prisma Schema
 // Schema: crm (isolated from other services)
 // ============================================================
 
@@ -16,21 +16,22 @@ datasource db {
 
 // ---- Companies (tenants) ----
 model Company {
-  id          String    @id @default(uuid())
-  name        String
-  email       String    @unique
-  phone       String?
-  address     String?
-  city        String?
-  state       String?
-  zipCode     String?
-  country     String    @default("US")
-  logoUrl     String?
-  website     String?
-  isActive    Boolean   @default(true)
-  trialEndsAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                       String    @id @default(uuid())
+  name                     String
+  email                    String    @unique
+  phone                    String?
+  address                  String?
+  city                     String?
+  state                    String?
+  zipCode                  String?
+  country                  String    @default("US")
+  logoUrl                  String?
+  website                  String?
+  isActive                 Boolean   @default(true)
+  automaticFollowupEnabled Boolean   @default(true)
+  trialEndsAt              DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   customers  Customer[]
   contacts   Contact[]
@@ -72,35 +73,37 @@ model CompanyUser {
 
 // ---- Customers (business accounts or residential) ----
 model Customer {
-  id               String                   @id @default(uuid())
-  companyId        String
-  company          Company                  @relation(fields: [companyId], references: [id])
-  type             CustomerType             @default(RESIDENTIAL)
-  firstName        String
-  lastName         String
-  email            String?
-  phone            String?
-  mobile           String?
-  address          String?
-  city             String?
-  state            String?
-  zipCode          String?
-  notes            String?
-  source           String? // how they found us
-  tags             String[] // flexible tagging
-  isActive         Boolean                  @default(true)
-  engagementStatus CustomerEngagementStatus @default(ACTIVE)
-  auth0UserId      String? // when customer has portal access
-  createdAt        DateTime                 @default(now())
-  updatedAt        DateTime                 @updatedAt
+  id                       String                   @id @default(uuid())
+  companyId                String
+  company                  Company                  @relation(fields: [companyId], references: [id])
+  type                     CustomerType             @default(RESIDENTIAL)
+  firstName                String
+  lastName                 String
+  email                    String?
+  phone                    String?
+  mobile                   String?
+  address                  String?
+  city                     String?
+  state                    String?
+  zipCode                  String?
+  notes                    String?
+  source                   String? // how they found us
+  tags                     String[] // flexible tagging
+  isActive                 Boolean                  @default(true)
+  automaticFollowupEnabled Boolean                  @default(true)
+  engagementStatus         CustomerEngagementStatus @default(ACTIVE)
+  auth0UserId              String? // when customer has portal access
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
 
-  contacts   Contact[]
-  leads      Lead[]
-  agreements ServiceAgreement[]
-  bookings   Booking[]
-  reviews    Review[]
-  addresses  Address[]
-  equipment  Equipment[]
+  contacts              Contact[]
+  leads                 Lead[]
+  agreements            ServiceAgreement[]
+  bookings              Booking[]
+  reviews               Review[]
+  addresses             Address[]
+  equipment             Equipment[]
+  upsellRecommendations UpsellRecommendation[]
 
   @@index([companyId])
   @@index([companyId, email])
@@ -331,4 +334,51 @@ model Equipment {
 
   @@index([customerId])
   @@map("equipment")
+}
+
+model FollowupAttempt {
+  id               String    @id
+  companyId        String    @map("company_id")
+  entityType       String    @map("entity_type")
+  entityId         String    @map("entity_id")
+  customerId       String?   @map("customer_id")
+  leadId           String?   @map("lead_id")
+  action           String
+  status           String
+  churnProbability Float?    @map("churn_probability")
+  queueJobId       String?   @map("queue_job_id")
+  reason           String?
+  errorMessage     String?   @map("error_message")
+  metadata         Json?
+  triggeredAt      DateTime  @default(now()) @map("triggered_at")
+  queuedAt         DateTime? @map("queued_at")
+  failedAt         DateTime? @map("failed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([companyId, entityType, entityId, triggeredAt])
+  @@index([companyId, status, triggeredAt])
+  @@map("followup_attempts")
+}
+
+model UpsellRecommendation {
+  id               String   @id @default(uuid())
+  companyId        String   @map("company_id")
+  customerId       String   @map("customer_id")
+  customer         Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  recommendedOffer String   @map("recommended_offer")
+  confidence       Float
+  status           String   @default("pending")
+  allScores        Json?    @map("all_scores")
+  ruleOffer        String?  @map("rule_offer")
+  modelOffer       String?  @map("model_offer")
+  triggerSource    String?  @map("trigger_source")
+  priorityScore    Float?   @map("priority_score")
+  inputPayload     Json?    @map("input_payload")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId, customerId, createdAt])
+  @@index([companyId, status, priorityScore])
+  @@map("upsell_recommendations")
 }

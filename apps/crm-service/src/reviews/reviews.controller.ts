@@ -25,7 +25,13 @@ import {
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { ReviewsService } from './reviews.service';
-import { ReviewType } from '../prisma/generated';
+
+const ReviewType = {
+  JOB: 'JOB',
+  COMPANY: 'COMPANY',
+} as const;
+
+type ReviewType = (typeof ReviewType)[keyof typeof ReviewType];
 
 class CreateReviewDto {
   @IsOptional() @IsEnum(ReviewType) type?: ReviewType;

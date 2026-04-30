@@ -9,6 +9,7 @@ import {
 } from 'recharts'
 import { useDashboardKpis, useRecentJobs, useUpcomingAppointments } from '../hooks/useDashboard'
 import { useRevenueSeries, useJobsByStatus } from '../hooks/useAnalytics'
+import RecommendationsPanel from '../components/RecommendationsPanel'
 import type { Job, Appointment } from '../types/api'
 
 // ─── Status maps: backend UPPER_CASE → display ────────────────────────────────
@@ -189,6 +190,8 @@ export default function Dashboard() {
                     )
                 })}
             </div>
+
+            <RecommendationsPanel limit={3} />
 
             <div className="grid-2 mb-5" style={{ gridTemplateColumns: '2fr 1fr' }}>
                 {/* Revenue Area Chart */}

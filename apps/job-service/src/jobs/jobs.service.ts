@@ -3,19 +3,17 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Prisma } from '../prisma/generated';
 import { PrismaService } from '../prisma/prisma.service';
-import { RedisCacheService } from '../redis-cache.service';
+import { Prisma } from '../prisma/generated';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
 import { AuthUser, PaginatedResponse } from '@tscrm/types';
 
+const CREATE_JOB_MAX_ATTEMPTS = 5;
+
 @Injectable()
 export class JobsService {
-  constructor(
-    private prisma: PrismaService,
-    private cache: RedisCacheService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   // ============================================================
   // CREATE
@@ -24,62 +22,61 @@ export class JobsService {
   async create(user: AuthUser, dto: CreateJobDto) {
     const { customFields, ...rest } = dto;
 
-    // ── Retry on unique-constraint collision ────────────────────────────────
-    // generateJobNumber reads MAX(jobNumber) to avoid gaps, but two concurrent
-    // requests can still race and land on the same number. We retry up to 5×.
-    let job: any;
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const jobNumber = await this.generateJobNumber(user.companyId);
+    for (let attempt = 1; attempt <= CREATE_JOB_MAX_ATTEMPTS; attempt += 1) {
       try {
-        job = await this.prisma.job.create({
-          data: {
-            ...rest,
-            companyId: user.companyId,
-            jobNumber,
-            priority: (rest.priority ?? 'NORMAL') as any,
-            scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
-            scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
-            createdByUserId: user.userId,
-            statusHistory: {
-              create: {
-                toStatus: 'PENDING',
-                changedById: user.userId,
-                changedByName: user.name ?? user.email,
-                note: 'Job created',
+        const job = await this.prisma.$transaction(async (tx) => {
+          const jobNumber = await this.generateJobNumber(tx, user.companyId);
+
+          const createdJob = await tx.job.create({
+            data: {
+              ...rest,
+              companyId: user.companyId,
+              jobNumber,
+              priority: (rest.priority ?? 'NORMAL') as any,
+              scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
+              scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
+              createdByUserId: user.userId,
+              statusHistory: {
+                create: {
+                  toStatus: 'PENDING',
+                  changedById: user.userId,
+                  changedByName: user.name ?? user.email,
+                  note: 'Job created',
+                },
               },
+              // If a template is specified, pre-create work order task completions
             },
-          },
-          include: {
-            jobType: true,
-            template: { include: { tasks: { orderBy: { taskOrder: 'asc' } } } },
-            customFieldValues: { include: { fieldDef: true } },
-          },
+            include: {
+              jobType: true,
+              template: { include: { tasks: { orderBy: { taskOrder: 'asc' } } } },
+              customFieldValues: { include: { fieldDef: true } },
+            },
+          });
+
+          if (customFields?.length) {
+            await Promise.all(
+              customFields.map((cf) =>
+                tx.jobCustomFieldValue.upsert({
+                  where: { jobId_fieldDefId: { jobId: createdJob.id, fieldDefId: cf.fieldDefId } },
+                  update: { value: cf.value as any },
+                  create: { jobId: createdJob.id, fieldDefId: cf.fieldDefId, value: cf.value as any },
+                }),
+              ),
+            );
+          }
+
+          return createdJob;
         });
-        break; // success — exit retry loop
-      } catch (err: any) {
-        // P2002 = unique constraint violation (companyId, jobNumber collision)
-        const isUniqueViolation =
-          err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002';
-        if (!isUniqueViolation || attempt === 4) throw err;
-        // else: loop again with a freshly generated number
+
+        return this.findOne(user.companyId, job.id);
+      } catch (error) {
+        if (!this.isJobNumberUniqueError(error) || attempt === CREATE_JOB_MAX_ATTEMPTS) {
+          throw error;
+        }
       }
     }
 
-    // Save custom field values if provided
-    if (customFields?.length) {
-      await this.prisma.$transaction(
-        customFields.map((cf) =>
-          this.prisma.jobCustomFieldValue.upsert({
-            where: { jobId_fieldDefId: { jobId: job.id, fieldDefId: cf.fieldDefId } },
-            update: { value: cf.value as any },
-            create: { jobId: job.id, fieldDefId: cf.fieldDefId, value: cf.value as any },
-          }),
-        ),
-      );
-    }
-
-    await this.cache.del(`jobs:stats:${user.companyId}`);
-    return this.findOne(user.companyId, job.id);
+    throw new BadRequestException('Unable to create job with a unique job number');
   }
 
   // ============================================================
@@ -181,12 +178,13 @@ export class JobsService {
       select: { id: true },
     });
     if (!existing) throw new NotFoundException(`Job ${id} not found`);
-    // WorkOrder relation lacks onDelete: Cascade — delete children explicitly.
-    // Other relations (CustomFieldValue, JobStatusHistory, JobPhoto) cascade.
+
+    // WorkOrder relation does not cascade on delete in this schema.
     await this.prisma.$transaction(async (tx) => {
       await tx.workOrder.deleteMany({ where: { jobId: id } });
       await tx.job.delete({ where: { id } });
     });
+
     return { success: true, id };
   }
 
@@ -241,7 +239,6 @@ export class JobsService {
         },
       });
 
-      await this.cache.del(`jobs:stats:${companyId}`);
       return updated;
     });
   }
@@ -344,10 +341,6 @@ export class JobsService {
   // ============================================================
 
   async getStats(companyId: string) {
-    const cacheKey = `jobs:stats:${companyId}`;
-    const cached = await this.cache.get<any>(cacheKey);
-    if (cached) return cached;
-
     const statuses = [
       'PENDING', 'SCHEDULED', 'EN_ROUTE', 'ON_SITE',
       'COMPLETED', 'INVOICED', 'PAID', 'CANCELLED', 'ON_HOLD',
@@ -374,34 +367,37 @@ export class JobsService {
       },
     });
 
-    const result = { byStatus: counts, scheduledToday };
-    await this.cache.set(cacheKey, result, 30); // 30-second cache
-    return result;
+    return { byStatus: counts, scheduledToday };
   }
 
   // ============================================================
   // HELPERS
   // ============================================================
 
-  private async generateJobNumber(companyId: string): Promise<string> {
+  private async generateJobNumber(
+    tx: Prisma.TransactionClient,
+    companyId: string,
+  ): Promise<string> {
     const year = new Date().getFullYear();
-    const prefix = `JOB-${year}-`;
+    const [row] = await tx.$queryRaw<Array<{ maxNumber: number | bigint | null }>>`
+      SELECT COALESCE(MAX(SUBSTRING("jobNumber" FROM ${`^JOB-${year}-([0-9]+)$`})::int), 0) AS "maxNumber"
+      FROM "jobs"."jobs"
+      WHERE "companyId" = ${companyId}
+        AND "jobNumber" ~ ${`^JOB-${year}-[0-9]+$`}
+    `;
+    const maxNumber = Number(row?.maxNumber ?? 0);
 
-    // Use MAX of the numeric suffix so deletes and gaps don't cause collisions.
-    // COUNT would return the same number if a job was deleted, breaking the unique constraint.
-    const last = await this.prisma.job.findFirst({
-      where: { companyId, jobNumber: { startsWith: prefix } },
-      orderBy: { jobNumber: 'desc' },
-      select: { jobNumber: true },
-    });
+    return `JOB-${year}-${String(maxNumber + 1).padStart(4, '0')}`;
+  }
 
-    let next = 1;
-    if (last?.jobNumber) {
-      const suffix = last.jobNumber.replace(prefix, '');
-      const parsed = parseInt(suffix, 10);
-      if (!isNaN(parsed)) next = parsed + 1;
+  private isJobNumberUniqueError(error: unknown): boolean {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
+      return false;
     }
 
-    return `${prefix}${String(next).padStart(4, '0')}`;
+    const target = error.meta?.target;
+    return Array.isArray(target)
+      && target.includes('companyId')
+      && target.includes('jobNumber');
   }
 }

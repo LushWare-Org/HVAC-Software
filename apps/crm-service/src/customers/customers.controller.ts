@@ -94,6 +94,17 @@ export class CustomersController {
     return this.customersService.getStats(user.companyId);
   }
 
+  // ---- Hover summary ----
+  @Get(':id/status-summary')
+  @ApiOperation({ summary: 'Get customer status, churn risk, failure risk, and next step summary' })
+  @ApiParam({ name: 'id', type: String })
+  getStatusSummary(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.customersService.getStatusSummary(user.companyId, id);
+  }
+
   // ---- Get one ----
   @Get(':id')
   @ApiOperation({ summary: 'Get a single customer with contacts and history' })
@@ -129,8 +140,30 @@ export class CustomersController {
     return this.customersService.remove(user.companyId, id);
   }
 
-  // Equipment endpoints live in EquipmentController
-  // (apps/crm-service/src/equipment/equipment.controller.ts) under the same
-  // customers/:customerId/equipment path. Keeping them only there avoids
-  // route-registration collisions that were silently dropping handlers.
+  // ── Per-customer recommendation execute endpoints ────────────────────────────
+
+  @Post(':id/followup')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Trigger an immediate follow-up action for a customer' })
+  @ApiParam({ name: 'id', type: String })
+  triggerFollowup(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.customersService.executeFollowup(user.companyId, id);
+  }
+
+  @Post(':id/retention')
+  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Trigger a retention action for a customer' })
+  @ApiParam({ name: 'id', type: String })
+  triggerRetention(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.customersService.executeRetention(user.companyId, id);
+  }
+
+  // Equipment endpoints live in EquipmentController under customers/:customerId/equipment
+  // to avoid route-registration collisions in this controller.
 }

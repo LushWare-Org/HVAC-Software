@@ -135,6 +135,7 @@ exports.Prisma.CompanyScalarFieldEnum = {
   logoUrl: 'logoUrl',
   website: 'website',
   isActive: 'isActive',
+  automaticFollowupEnabled: 'automaticFollowupEnabled',
   trialEndsAt: 'trialEndsAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -178,6 +179,7 @@ exports.Prisma.CustomerScalarFieldEnum = {
   source: 'source',
   tags: 'tags',
   isActive: 'isActive',
+  automaticFollowupEnabled: 'automaticFollowupEnabled',
   engagementStatus: 'engagementStatus',
   auth0UserId: 'auth0UserId',
   createdAt: 'createdAt',
@@ -306,9 +308,52 @@ exports.Prisma.EquipmentScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.FollowupAttemptScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  entityType: 'entityType',
+  entityId: 'entityId',
+  customerId: 'customerId',
+  leadId: 'leadId',
+  action: 'action',
+  status: 'status',
+  churnProbability: 'churnProbability',
+  queueJobId: 'queueJobId',
+  reason: 'reason',
+  errorMessage: 'errorMessage',
+  metadata: 'metadata',
+  triggeredAt: 'triggeredAt',
+  queuedAt: 'queuedAt',
+  failedAt: 'failedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UpsellRecommendationScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  customerId: 'customerId',
+  recommendedOffer: 'recommendedOffer',
+  confidence: 'confidence',
+  status: 'status',
+  allScores: 'allScores',
+  ruleOffer: 'ruleOffer',
+  modelOffer: 'modelOffer',
+  triggerSource: 'triggerSource',
+  priorityScore: 'priorityScore',
+  inputPayload: 'inputPayload',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -319,6 +364,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 exports.CustomerType = exports.$Enums.CustomerType = {
   RESIDENTIAL: 'RESIDENTIAL',
@@ -372,7 +423,9 @@ exports.Prisma.ModelName = {
   Booking: 'Booking',
   Review: 'Review',
   Address: 'Address',
-  Equipment: 'Equipment'
+  Equipment: 'Equipment',
+  FollowupAttempt: 'FollowupAttempt',
+  UpsellRecommendation: 'UpsellRecommendation'
 };
 
 /**

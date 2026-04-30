@@ -18,14 +18,19 @@ import {
   Minimize2,
   RefreshCw,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
 import LeadDetailsSidebar from "./LeadDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
-import { useCustomers, useLeads, /* useAgreements — hidden until feature is re-enabled */ useDeleteCustomer, useDeleteLead } from "../../hooks/useCustomers";
+import RecommendationsPanel from "../../components/RecommendationsPanel";
+import CustomerRecommendationsModal from "../../components/CustomerRecommendationsModal";
+import LeadRecommendationsModal from "../../components/LeadRecommendationsModal";
+import { useCustomers, useLeads, useAgreements, useDeleteCustomer, useDeleteLead, useUpdateCustomer, useCustomerStatusSummary } from "../../hooks/useCustomers";
 import { customerName, leadName } from "../../types/api";
-import type { Customer, Lead } from "../../types/api";
+import type { Customer, CustomerStatusSummary, Lead } from "../../types/api";
 import api from "../../lib/api";
+import { computeLeadStatusSummary, formatLeadPct, leadConversionColor, leadRiskColor } from "./leadInsights";
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
 
@@ -53,6 +58,354 @@ function Skeleton({ h = 14 }: { h?: number }) {
   return <div style={{ width: '100%', height: h, background: 'var(--bg-hover)', borderRadius: 4 }} />;
 }
 
+function FollowupToggle({ checked, disabled, onChange }: { checked: boolean; disabled?: boolean; onChange: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={checked ? "Disable automatic follow-up" : "Enable automatic follow-up"}
+      aria-pressed={checked}
+      disabled={disabled}
+      onClick={(e) => { e.stopPropagation(); onChange(); }}
+      style={{
+        width: 46,
+        height: 24,
+        borderRadius: 8,
+        border: `1px solid ${checked ? 'var(--blue)' : 'var(--bd)'}`,
+        background: checked ? 'var(--blue)' : 'var(--bg-card-2)',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        padding: 2,
+        opacity: disabled ? 0.6 : 1,
+        transition: 'background-color var(--dur), border-color var(--dur)',
+      }}
+    >
+      <span
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: 6,
+          background: 'white',
+          transform: checked ? 'translateX(20px)' : 'translateX(0)',
+          transition: 'transform var(--dur)',
+          boxShadow: 'var(--shadow-sm)',
+        }}
+      />
+    </button>
+  );
+}
+
+function pct(value: number) {
+  return `${Math.round(value * 100)}%`;
+}
+
+function offerLabel(value: string) {
+  return value
+    .split("_")
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function riskColor(level: CustomerStatusSummary["churnPrediction"]["level"]) {
+  if (level === "High") return "var(--red)";
+  if (level === "Medium") return "var(--amber)";
+  return "var(--green)";
+}
+
+function inlineUpsellRecommendation(summary: CustomerStatusSummary) {
+  const scores: Record<string, number> = {
+    maintenance_plan: 0.25,
+    replacement: 0.2,
+    service: 0.2,
+  };
+
+  if (summary.signals.daysSinceLastService > 180) scores.service += 0.4;
+  if (summary.failurePrediction.probability >= 0.5) scores.maintenance_plan += 0.15;
+  if (summary.churnPrediction.probability >= 0.5) {
+    scores.maintenance_plan += 0.1;
+    scores.service += 0.1;
+  }
+  if (summary.signals.avgMonthlySpend >= 250) scores.maintenance_plan += 0.08;
+
+  const total = Object.values(scores).reduce((sum, score) => sum + score, 0);
+  const normalized = Object.fromEntries(
+    Object.entries(scores).map(([offer, score]) => [offer, score / total]),
+  );
+  const [recommendedOffer, confidence] = Object.entries(normalized).sort(([, a], [, b]) => b - a)[0];
+  const priorityScore = Math.min(
+    1,
+    (confidence * 0.7)
+      + (summary.churnPrediction.probability * 0.15)
+      + (summary.failurePrediction.probability * 0.15),
+  );
+
+  return {
+    recommendedOffer,
+    confidence,
+    priorityScore,
+    status: "live estimate",
+  };
+}
+
+function inlineRetentionPrediction(summary: CustomerStatusSummary, upsellRecommendation: { confidence: number }) {
+  const pConvert = upsellRecommendation.confidence;
+  const ltv = summary.signals.avgMonthlySpend * 12;
+  const churnProbability = summary.churnPrediction.probability;
+  const score = pConvert * ltv * (1 - churnProbability);
+  let action = "no_action";
+
+  if (pConvert > 0.75 && ltv > 1500) {
+    action = "premium_contract_offer";
+  } else if (churnProbability > 0.7) {
+    action = "discount_retention_offer";
+  } else if (summary.failurePrediction.probability >= 0.7) {
+    action = "maintenance_plan_offer";
+  }
+
+  const offer =
+    action === "premium_contract_offer" ? { type: "premium", discount: 0 } :
+    action === "discount_retention_offer" ? { type: "discounted", discount: 20 } :
+    action === "maintenance_plan_offer" ? { type: "standard", discount: 10 } :
+    { type: "none", discount: 0 };
+
+  return {
+    pConvert,
+    ltv,
+    churnProbability,
+    score,
+    action,
+    offer,
+    recommendedChannel: "email",
+    priority: score > 1500 ? "high" : score >= 500 ? "medium" : "low",
+    triggerImmediately: summary.failurePrediction.probability >= 0.7,
+    reason:
+      action === "premium_contract_offer" ? "High conversion probability and high predicted lifetime value" :
+      action === "discount_retention_offer" ? "High churn probability" :
+      action === "maintenance_plan_offer" ? "High repair frequency" :
+      "Customer does not meet retention targeting thresholds",
+  };
+}
+
+function CustomerHoverSummary({
+  summary,
+  loading,
+  error,
+  anchor,
+}: {
+  summary?: CustomerStatusSummary;
+  loading: boolean;
+  error: boolean;
+  anchor: { x: number; y: number };
+}) {
+  const left = typeof window === "undefined" ? anchor.x + 16 : Math.min(anchor.x + 16, window.innerWidth - 400);
+  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 520));
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        zIndex: 80,
+        top,
+        left: Math.max(12, left),
+        width: 360,
+        padding: 14,
+        borderRadius: 8,
+        border: "1px solid var(--border)",
+        background: "var(--bg-card)",
+        boxShadow: "0 18px 44px rgba(15, 23, 42, 0.18)",
+        color: "var(--t1)",
+        pointerEvents: "none",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--t3)", marginBottom: 10 }}>
+        Customer risk summary
+      </div>
+      {loading && (
+        <div style={{ display: "grid", gap: 8 }}>
+          <Skeleton h={16} />
+          <Skeleton h={16} />
+          <Skeleton h={16} />
+          <Skeleton h={30} />
+        </div>
+      )}
+      {!loading && error && (
+        <div style={{ color: "var(--red)", fontSize: 13 }}>
+          Summary unavailable right now.
+        </div>
+      )}
+      {!loading && !error && summary && (
+        <div style={{ display: "grid", gap: 10 }}>
+          {(() => {
+            const upsellRecommendation = summary.upsellRecommendation ?? inlineUpsellRecommendation(summary);
+            const retentionPrediction = summary.retentionPrediction ?? inlineRetentionPrediction(summary, upsellRecommendation);
+
+            return (
+              <>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Current status</div>
+            <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2 }}>{summary.currentStatus}</div>
+          </div>
+          <div style={{ padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card-2)" }}>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Upsell recommendation</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
+              <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 700 }}>
+                {offerLabel(upsellRecommendation.recommendedOffer)}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--green)", fontWeight: 700 }}>
+                {pct(upsellRecommendation.confidence)}
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4, lineHeight: 1.35 }}>
+              Priority {pct(upsellRecommendation.priorityScore ?? upsellRecommendation.confidence)} - {upsellRecommendation.status === "generated" ? "live estimate" : upsellRecommendation.status}
+            </div>
+          </div>
+          <div style={{ padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card-2)" }}>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Retention suggestion</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
+              <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 700 }}>
+                {offerLabel(retentionPrediction.action)}
+              </div>
+              <div style={{ fontSize: 12, color: retentionPrediction.priority === "high" ? "var(--red)" : retentionPrediction.priority === "medium" ? "var(--amber)" : "var(--green)", fontWeight: 700 }}>
+                {retentionPrediction.priority.toUpperCase()}
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
+              <div>
+                <div style={{ fontSize: 10, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Convert</div>
+                <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 700 }}>{pct(retentionPrediction.pConvert)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>LTV</div>
+                <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 700 }}>{fmt(Math.round(retentionPrediction.ltv))}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Score</div>
+                <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 700 }}>{Math.round(retentionPrediction.score)}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 8, lineHeight: 1.35 }}>
+              Offer: {offerLabel(retentionPrediction.offer.type)}{retentionPrediction.offer.discount > 0 ? `, ${retentionPrediction.offer.discount}% off` : ""} via {offerLabel(retentionPrediction.recommendedChannel)}
+              {retentionPrediction.triggerImmediately ? " - trigger now" : ""}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4, lineHeight: 1.35 }}>
+              {retentionPrediction.reason}
+            </div>
+          </div>
+              </>
+            );
+          })()}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Failure prediction</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: riskColor(summary.failurePrediction.level), marginTop: 2 }}>
+                {summary.failurePrediction.level} ({pct(summary.failurePrediction.probability)})
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Churn prediction</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: riskColor(summary.churnPrediction.level), marginTop: 2 }}>
+                {summary.churnPrediction.level} ({pct(summary.churnPrediction.probability)})
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Proposed next step</div>
+            <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2, lineHeight: 1.4 }}>{summary.proposedNextStep}</div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, paddingTop: 8, borderTop: "1px solid var(--border)", fontSize: 12, color: "var(--t3)" }}>
+            <span>{summary.signals.daysSinceLastService} days since service</span>
+            <span>{summary.signals.serviceCountLastYear} services/year</span>
+            <span>{summary.predictionSource === "model" ? "AI model" : "Fallback"}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LeadHoverSummary({
+  lead,
+  anchor,
+}: {
+  lead: Lead;
+  anchor: { x: number; y: number };
+}) {
+  const summary = computeLeadStatusSummary(lead);
+  const width = 360;
+  const gap = 16;
+  const left = typeof window === "undefined"
+    ? anchor.x + gap
+    : anchor.x > window.innerWidth - width - 64
+      ? anchor.x - width - gap
+      : Math.min(anchor.x + gap, window.innerWidth - width - 24);
+  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 430));
+  const channel = summary.recommendedAction.channel === "whatsapp" ? "WhatsApp" : summary.recommendedAction.channel === "call" ? "Phone call" : "Email";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        zIndex: 80,
+        top,
+        left: Math.max(12, left),
+        width,
+        padding: 14,
+        borderRadius: 8,
+        border: "1px solid var(--border)",
+        background: "var(--bg-card)",
+        boxShadow: "0 18px 44px rgba(15, 23, 42, 0.18)",
+        color: "var(--t1)",
+        pointerEvents: "none",
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--t3)", marginBottom: 10 }}>
+        Lead risk summary
+      </div>
+      <div style={{ display: "grid", gap: 10 }}>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Current status</div>
+          <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2 }}>{summary.currentStatus}</div>
+        </div>
+        <div style={{ padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card-2)" }}>
+          <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Recommended action</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
+            <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 700 }}>{offerLabel(summary.recommendedAction.action)}</div>
+            <div style={{ fontSize: 12, color: summary.recommendedAction.priority === "high" ? "var(--red)" : summary.recommendedAction.priority === "medium" ? "var(--amber)" : "var(--green)", fontWeight: 700 }}>
+              {summary.recommendedAction.priority.toUpperCase()}
+            </div>
+          </div>
+          <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 6, lineHeight: 1.35 }}>
+            {summary.recommendedAction.reason} Channel: {channel}.
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Conversion prediction</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: leadConversionColor(summary.conversionPrediction.level), marginTop: 2 }}>
+              {summary.conversionPrediction.level} ({formatLeadPct(summary.conversionPrediction.probability)})
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Risk prediction</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: leadRiskColor(summary.riskPrediction.level), marginTop: 2 }}>
+              {summary.riskPrediction.level} ({formatLeadPct(summary.riskPrediction.probability)})
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Proposed next step</div>
+          <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2, lineHeight: 1.4 }}>{summary.proposedNextStep}</div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, paddingTop: 8, borderTop: "1px solid var(--border)", fontSize: 12, color: "var(--t3)" }}>
+          <span>{summary.signals.ageDays} days open</span>
+          <span>{summary.signals.sourceQuality} source</span>
+          <span>{summary.predictionSource === "model" ? "AI model" : "Fallback"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Customers() {
   const [tab, setTab] = useState<"customers" | "leads">("customers");
   const [search, setSearch] = useState("");
@@ -61,8 +414,6 @@ export default function Customers() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [leadsSearch, setLeadsSearch] = useState("");
   const [leadStatusFilter, setLeadStatusFilter] = useState("All Status");
-  // const [agreementsSearch, setAgreementsSearch] = useState("");      // Agreements hidden
-  // const [agreementStatusFilter, setAgreementStatusFilter] = useState("All Status"); // Agreements hidden
   const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isLeadDetailsOpen, setIsLeadDetailsOpen] = useState(false);
@@ -70,9 +421,12 @@ export default function Customers() {
   const [addType, setAddType] = useState<"customer" | "lead">("customer");
   const [sidebarTab, setSidebarTab] = useState<any>("contact");
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: "customer" | "lead"; id: string; name: string } | null>(null);
+  const [hoveredCustomer, setHoveredCustomer] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [hoveredLead, setHoveredLead] = useState<{ lead: Lead; x: number; y: number } | null>(null);
+  const [recCustomer, setRecCustomer] = useState<Customer | null>(null);
+  const [recLead, setRecLead] = useState<Lead | null>(null);
   const [customerPage, setCustomerPage] = useState(1);
   const [leadPage, setLeadPage] = useState(1);
-  // const [agreementPage, setAgreementPage] = useState(1); // Agreements hidden
   const itemsPerPage = 10;
 
   // ── API queries ─────────────────────────────────────────────────────────────
@@ -90,15 +444,12 @@ export default function Customers() {
     status: leadStatusFilter !== "All Status" ? leadStatusFilter.replace(" ", "_").toUpperCase() : undefined,
   });
 
-  // Agreements hidden — uncomment to re-enable
-  // const agreementsQuery = useAgreements({
-  //   page: agreementPage, limit: itemsPerPage,
-  //   search: agreementsSearch || undefined,
-  //   status: agreementStatusFilter !== "All Status" ? agreementStatusFilter.toUpperCase() : undefined,
-  // });
+  const agreementsQuery = useAgreements({ page: 1, limit: 1 });
 
   const deleteCustomer = useDeleteCustomer();
   const deleteLead = useDeleteLead();
+  const updateCustomer = useUpdateCustomer();
+  const hoveredSummaryQuery = useCustomerStatusSummary(hoveredCustomer?.id);
 
   // ── Derived ──────────────────────────────────────────────────────────────────
 
@@ -108,10 +459,7 @@ export default function Customers() {
   const leads: Lead[] = leadsQuery.data?.data ?? [];
   const totalLeads = leadsQuery.data?.total ?? 0;
   const totalLeadPages = Math.max(1, leadsQuery.data?.totalPages ?? 1);
-  // Agreements hidden
-  const agreements: any[] = [];
-  const totalAgreements = 0;
-  // const totalAgreementPages = 1;
+  const totalAgreements = agreementsQuery.data?.total ?? 0;
 
   const queryClient = useQueryClient();
 
@@ -138,6 +486,20 @@ export default function Customers() {
     }
   };
 
+  const toggleCustomerFollowup = (customer: Customer) => {
+    const automaticFollowupEnabled = !(customer.automaticFollowupEnabled ?? true);
+    updateCustomer.mutate(
+      { id: customer.id, data: { automaticFollowupEnabled } },
+      {
+        onSuccess: (updated) => {
+          if (selectedPerson?.id === customer.id) {
+            setSelectedPerson(updated);
+          }
+        },
+      },
+    );
+  };
+
   const handleLeadConverted = async (customerId: string) => {
     setIsLeadDetailsOpen(false);
     queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -160,7 +522,7 @@ export default function Customers() {
             {[
               { icon: Users, v: customersQuery.isLoading ? "—" : totalCustomers.toLocaleString(), l: "Total Customers", loading: customersQuery.isLoading },
               { icon: Target, v: leadsQuery.isLoading ? "—" : totalLeads.toString(), l: "Active Leads", loading: leadsQuery.isLoading },
-              // { icon: FileText, v: "—", l: "Service Agreements", loading: false }, // Agreements hidden
+              { icon: FileText, v: agreementsQuery.isLoading ? "—" : totalAgreements.toString(), l: "Service Agreements", loading: agreementsQuery.isLoading },
               { icon: TrendingUp, v: "—", l: "Avg. Revenue / Customer", loading: false },
             ].map((k) => (
               <div key={k.l} className="kpi-card" style={{ padding: "16px 20px", borderRadius: "var(--r-md)" }}>
@@ -174,6 +536,8 @@ export default function Customers() {
           </div>
         )}
 
+        {!isExpanded && <RecommendationsPanel filterActions={['call', 'geo_target_discount']} />}
+
         <div className="page-tabs">
           <button className={`tab-btn ${tab === "customers" ? "active" : ""}`} onClick={() => setTab("customers")}>
             <Users size={14} /> Customers <span className="tab-count">{totalCustomers}</span>
@@ -181,11 +545,6 @@ export default function Customers() {
           <button className={`tab-btn ${tab === "leads" ? "active" : ""}`} onClick={() => setTab("leads")}>
             <Target size={14} /> Leads <span className="tab-count">{totalLeads}</span>
           </button>
-          {/* Agreements tab hidden — uncomment to re-enable
-          <button className={`tab-btn ${tab === "agreements" ? "active" : ""}`} onClick={() => setTab("agreements")}>
-            <FileText size={14} /> Agreements <span className="tab-count">{totalAgreements}</span>
-          </button>
-          */}
         </div>
 
         {/* Customers */}
@@ -209,7 +568,7 @@ export default function Customers() {
                 <select className="select" style={{ width: 140 }} value={customerStatusFilter} onChange={e => { setCustomerStatusFilter(e.target.value); setCustomerPage(1); }}>
                   <option>All Status</option><option>Active</option><option>Inactive</option>
                 </select>
-                {/* <button className="btn btn-primary btn-sm ml-auto" onClick={() => { setAddType("customer"); setIsAddOpen(true); }}><Plus size={12} /> Add Customer</button> */}
+                <button className="btn btn-primary btn-sm ml-auto" onClick={() => { setAddType("customer"); setIsAddOpen(true); }}><Plus size={12} /> Add Customer</button>
                 <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: "0 12px", fontWeight: 600 }} onClick={() => customersQuery.refetch()} title="Refresh"><RefreshCw size={14} /></button>
                 <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ marginLeft: "4px", padding: "0 12px", fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
                   {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
@@ -220,14 +579,21 @@ export default function Customers() {
               <div className="table-container">
                 <table className="data-table">
                   <thead>
-                    <tr><th>Customer</th><th>Contact</th><th>Location</th><th>Status</th><th>Type</th><th>Jobs</th><th>Revenue</th><th>Since</th><th>Actions</th></tr>
+                    <tr><th>Customer</th><th>Contact</th><th>Location</th><th>Status</th><th>Type</th><th>Auto Follow-up</th><th>Jobs</th><th>Revenue</th><th>Since</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
                     {customersQuery.isLoading && Array.from({ length: 5 }).map((_, i) => (
-                      <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
+                      <tr key={i}>{Array.from({ length: 10 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
                     ))}
                     {!customersQuery.isLoading && customers.map(c => (
-                      <tr key={c.id} onClick={() => handleViewClick(c, "customer")} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
+                      <tr
+                        key={c.id}
+                        onClick={() => handleViewClick(c, "customer")}
+                        onMouseEnter={(e) => setHoveredCustomer({ id: c.id, x: e.clientX, y: e.clientY })}
+                        onMouseMove={(e) => setHoveredCustomer(current => current?.id === c.id ? { id: c.id, x: e.clientX, y: e.clientY } : current)}
+                        onMouseLeave={() => setHoveredCustomer(current => current?.id === c.id ? null : current)}
+                        className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                      >
                         <td>
                           <div className="cell-user"><div>
                             <div className="cell-name">{customerName(c)}</div>
@@ -242,11 +608,28 @@ export default function Customers() {
                           </span>
                         </td>
                         <td><span className={`badge ${c.type === "COMMERCIAL" ? "badge-violet" : "badge-blue"}`}>{c.type.charAt(0) + c.type.slice(1).toLowerCase()}</span></td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <FollowupToggle
+                              checked={c.automaticFollowupEnabled ?? true}
+                              disabled={updateCustomer.isPending}
+                              onChange={() => toggleCustomerFollowup(c)}
+                            />
+                            <span className="text-xs font-600 text-[var(--t3)]">
+                              {(c.automaticFollowupEnabled ?? true) ? "On" : "Off"}
+                            </span>
+                          </div>
+                        </td>
                         <td className="font-600">{c.totalJobs ?? '—'}</td>
                         <td className="font-600">{c.totalRevenue != null ? fmt(c.totalRevenue) : '—'}</td>
                         <td className="text-sm text-[var(--t3)]">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                         <td>
-                          <div className="flex items-center gap-1">
+                          <div
+                            className="flex items-center gap-1"
+                            onMouseEnter={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
+                            onMouseMove={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
+                          >
+                            <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecCustomer(c); }} title="AI Recommendations"><Sparkles size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(c, "customer"); }} title="View Details"><Edit size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); window.location.href = `mailto:${c.email}`; }}><Mail size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete" onClick={e => { e.stopPropagation(); confirmDelete("customer", c.id, customerName(c)); }}><Trash2 size={15} /></button>
@@ -255,7 +638,7 @@ export default function Customers() {
                       </tr>
                     ))}
                     {!customersQuery.isLoading && customers.length === 0 && (
-                      <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No customers found</td></tr>
+                      <tr><td colSpan={10} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No customers found</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -294,7 +677,14 @@ export default function Customers() {
                   <tbody>
                     {leadsQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
                     {!leadsQuery.isLoading && leads.map(l => (
-                      <tr key={l.id} onClick={() => handleViewClick(l, "lead")} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
+                      <tr
+                        key={l.id}
+                        onClick={() => handleViewClick(l, "lead")}
+                        onMouseEnter={(e) => setHoveredLead({ lead: l, x: e.clientX, y: e.clientY })}
+                        onMouseMove={(e) => setHoveredLead(current => current?.lead.id === l.id ? { lead: l, x: e.clientX, y: e.clientY } : current)}
+                        onMouseLeave={() => setHoveredLead(current => current?.lead.id === l.id ? null : current)}
+                        className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
+                      >
                         <td><div className="cell-user"><div><div className="cell-name">{leadName(l)}</div><div className="cell-email">{l.email}</div></div></div></td>
                         <td><div className="flex items-center gap-1.5 text-sm text-[var(--t2)]"><MapPin size={12} className="text-[var(--t4)]" />{l.customer?.city ?? '—'}{l.customer?.state ? `, ${l.customer.state}` : ''}</div></td>
                         <td>{l.serviceInterest ?? '—'}</td>
@@ -304,7 +694,12 @@ export default function Customers() {
                         <td>{l.assignedToName ?? '—'}</td>
                         <td className="text-sm text-3">{new Date(l.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                         <td>
-                          <div className="flex items-center gap-1">
+                          <div
+                            className="flex items-center gap-1"
+                            onMouseEnter={(e) => { e.stopPropagation(); setHoveredLead(null); }}
+                            onMouseMove={(e) => { e.stopPropagation(); setHoveredLead(null); }}
+                          >
+                            <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecLead(l); }} title="AI Recommendations"><Sparkles size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(l, "lead"); }} title="View"><Edit size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); if (l.email) window.location.href = `mailto:${l.email}`; }}><Mail size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete" onClick={e => { e.stopPropagation(); confirmDelete("lead", l.id, leadName(l)); }}><Trash2 size={15} /></button>
@@ -328,68 +723,40 @@ export default function Customers() {
           </div>
         )}
 
-        {/* Agreements — hidden; uncomment to re-enable */}
-        {false && tab === ("agreements" as any) && (
-          <div className="anim-fade-in card">
-            <div className="card-header">
-              <div className="filter-bar w-full" style={{ margin: 0 }}>
-                <div className="filter-search flex-1"><Search size={13} color="var(--t4)" /><input placeholder="Search agreements…" value={agreementsSearch} onChange={e => { setAgreementsSearch(e.target.value); setAgreementPage(1); }} /></div>
-                <select className="select" style={{ width: 140 }} value={agreementStatusFilter} onChange={e => { setAgreementStatusFilter(e.target.value); setAgreementPage(1); }}>
-                  <option>All Status</option><option>Active</option><option>Expiring</option><option>Inactive</option>
-                </select>
-                <button className="btn btn-primary btn-sm ml-auto"><Plus size={12} /> New Agreement</button>
-                <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ marginLeft: "8px", padding: "0 12px", fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
-                  {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
-                </button>
-              </div>
-            </div>
-            <div className="card-body-flush mt-4">
-              <div className="table-container">
-                <table className="data-table">
-                  <thead><tr><th>Agreement ID</th><th>Customer</th><th>Value</th><th>Status</th><th>Next Service</th><th>Renewal Date</th><th>Actions</th></tr></thead>
-                  <tbody>
-                    {agreementsQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 7 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
-                    {!agreementsQuery.isLoading && agreements.map(a => (
-                      <tr key={a.id} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
-                        <td className="font-500 text-[13px]">{a.id}</td>
-                        <td><div className="cell-name">{a.customerName ?? a.customerId}</div></td>
-                        <td className="td-primary font-600">{a.value != null ? `${fmt(a.value)}/yr` : '—'}</td>
-                        <td><span className={`badge ${AGREEMENT_STATUS[a.status?.toUpperCase()] ?? 'badge-neutral'}`}>{a.status}</span></td>
-                        <td className="text-sm text-3">{a.nextServiceDate ? new Date(a.nextServiceDate).toLocaleDateString() : '—'}</td>
-                        <td className="text-sm text-3">{a.renewalDate ? new Date(a.renewalDate).toLocaleDateString() : '—'}</td>
-                        <td>
-                          <div className="flex items-center gap-1">
-                            <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="View"><Edit size={15} /></button>
-                            <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete"><Trash2 size={15} /></button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {!agreementsQuery.isLoading && agreements.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No agreements found</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div className="card-footer" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderTop: "1px solid var(--border)" }}>
-              <span className="text-[13px] text-[var(--t3)]">Showing {totalAgreements > 0 ? (agreementPage - 1) * itemsPerPage + 1 : 0} to {Math.min(agreementPage * itemsPerPage, totalAgreements)} of {totalAgreements} agreements</span>
-              <div className="flex items-center gap-2">
-                <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setAgreementPage(p => Math.max(1, p - 1))} disabled={agreementPage === 1}><ChevronLeft size={18} /></button>
-                <span className="text-[13px] text-[var(--t2)] mx-2">Page {agreementPage} of {totalAgreementPages}</span>
-                <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setAgreementPage(p => Math.min(totalAgreementPages, p + 1))} disabled={agreementPage === totalAgreementPages}><ChevronRight size={18} /></button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {hoveredCustomer && (
+        <CustomerHoverSummary
+          anchor={{ x: hoveredCustomer.x, y: hoveredCustomer.y }}
+          summary={hoveredSummaryQuery.data}
+          loading={hoveredSummaryQuery.isLoading || hoveredSummaryQuery.isFetching}
+          error={hoveredSummaryQuery.isError}
+        />
+      )}
+
+      {hoveredLead && (
+        <LeadHoverSummary
+          anchor={{ x: hoveredLead.x, y: hoveredLead.y }}
+          lead={hoveredLead.lead}
+        />
+      )}
 
       <CustomerDetailsSidebar isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} person={selectedPerson} initialTab={sidebarTab} />
       <LeadDetailsSidebar isOpen={isLeadDetailsOpen} onClose={() => setIsLeadDetailsOpen(false)} person={selectedPerson} onConverted={handleLeadConverted} />
       <AddPersonModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} type={addType} />
 
+      {recCustomer && (
+        <CustomerRecommendationsModal customer={recCustomer} onClose={() => setRecCustomer(null)} />
+      )}
+
+      {recLead && (
+        <LeadRecommendationsModal lead={recLead} onClose={() => setRecLead(null)} />
+      )}
+
       {/* Delete confirmation dialog */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center admin-modal-backdrop" onClick={() => setDeleteConfirm(null)}>
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 admin-modal-box" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                 <Trash2 size={18} className="text-red-600" />

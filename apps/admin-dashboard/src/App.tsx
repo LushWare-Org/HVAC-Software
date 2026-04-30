@@ -15,6 +15,7 @@ import Login from './pages/Login'
 // Dashboard is NOT lazy-loaded — it's the post-login landing page and we want
 // it ready before the login animation finishes.
 import Dashboard from './pages/Dashboard'
+import BanditDashboard from './pages/BanditDashboard'
 
 const Customers       = lazy(() => import('./pages/customers/Customers'))
 const Jobs            = lazy(() => import('./pages/jobs/Jobs'))
@@ -141,21 +142,21 @@ function AuthenticatedApp() {
       <div className={`main-content${!isMobile && collapsed ? ' sidebar-collapsed' : ''}`}>
         <Topbar onMenuClick={handleToggle} showMenu={isMobile} />
         <div className="page">
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/dispatch" element={<DispatchBoard />} />
-              <Route path="/finance" element={<Finance />} />
-              <Route path="/communications" element={<Communications />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/team" element={<Team />} />
-              <Route path="/profile" element={<Profile />} />
-            </Routes>
-          </Suspense>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/jobs" element={<Jobs />} />
+            {/* <Route path="/scheduling" element={<Scheduling />} /> */}
+            <Route path="/dispatch" element={<DispatchBoard />} />
+            <Route path="/finance" element={<Finance />} />
+            <Route path="/communications" element={<Communications />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/bandit-dashboard" element={<BanditDashboard />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
         </div>
       </div>
       {/* Keyframes for the top-of-page route loader */}

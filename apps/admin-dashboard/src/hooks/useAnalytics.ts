@@ -4,6 +4,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 import api from '../lib/api'
 import type {
   DashboardKpis,
@@ -12,11 +13,10 @@ import type {
   TechLeaderboard,
   CustomerAcquisition,
   RevenueByCategory,
-  RevenueSummary,
-  JobsByTrade,
-  JobVolumeTrend,
-  JobCompletionRates,
-  TopJob,
+  RevenueAgentSummary,
+  RevenueAgentTrendPoint,
+  RevenueAgentLog,
+  Recommendation,
 } from '../types/api'
 
 type Granularity = 'day' | 'week' | 'month' | 'quarter' | 'year'
@@ -115,81 +115,63 @@ export function useRevenueByCategory(from?: string, to?: string) {
   })
 }
 
-// ─── Revenue summary ───────────────────────────────────────────────────────────
-
-export function useRevenueSummary(from?: string, to?: string) {
-  return useQuery<RevenueSummary>({
-    queryKey: ['analytics', 'revenue-summary', from, to],
-    queryFn: async () => {
-      const params: Record<string, string> = {}
-      if (from) params.from = from
-      if (to) params.to = to
-      const res = await api.get('/analytics/revenue/summary', { params })
+async function getRevenueAgentEndpoint<T>(path: string, params: Record<string, string | number> | undefined, fallback: T): Promise<T> {
+  try {
+    const res = await api.get(`/analytics/revenue-agent${path}`, { params })
+    return res.data
+  } catch {
+    try {
+      const res = await axios.get(`/revenue-agent-api/analytics${path}`, { params })
       return res.data
-    },
+    } catch {
+      return fallback
+    }
+  }
+}
+
+const EMPTY_AGENT_SUMMARY: RevenueAgentSummary = {
+  revenue_accuracy: 0,
+  revenue_mean_error: 0,
+  demand_accuracy: 0,
+  utilization_accuracy: 0,
+  action_success_rate: 0,
+  pricing_impact: 0,
+  sample_size: 0,
+}
+
+export function useRevenueAgentSummary() {
+  return useQuery<RevenueAgentSummary>({
+    queryKey: ['analytics', 'revenue-agent', 'summary'],
+    queryFn: () => getRevenueAgentEndpoint<RevenueAgentSummary>('/summary', undefined, EMPTY_AGENT_SUMMARY),
+    refetchInterval: 30000,
   })
 }
 
-// ─── Jobs by trade type ────────────────────────────────────────────────────────
-
-export function useJobsByTrade(from?: string, to?: string) {
-  return useQuery<JobsByTrade[]>({
-    queryKey: ['analytics', 'jobs-by-trade', from, to],
-    queryFn: async () => {
-      const params: Record<string, string> = {}
-      if (from) params.from = from
-      if (to) params.to = to
-      const res = await api.get('/analytics/jobs-analytics/by-trade', { params })
-      return res.data
-    },
+export function useRevenueAgentTrends(limit = 14) {
+  return useQuery<RevenueAgentTrendPoint[]>({
+    queryKey: ['analytics', 'revenue-agent', 'trends', limit],
+    queryFn: () => getRevenueAgentEndpoint<RevenueAgentTrendPoint[]>('/trends', { limit }, []),
+    refetchInterval: 30000,
   })
 }
 
-// ─── Job volume trends ────────────────────────────────────────────────────────
-
-export function useJobTrends(
-  granularity: Granularity = 'week',
-  from?: string,
-  to?: string,
-) {
-  return useQuery<JobVolumeTrend[]>({
-    queryKey: ['analytics', 'job-trends', granularity, from, to],
-    queryFn: async () => {
-      const params: Record<string, string> = { granularity }
-      if (from) params.from = from
-      if (to) params.to = to
-      const res = await api.get('/analytics/jobs-analytics/trends', { params })
-      return res.data
-    },
+export function useRevenueAgentLogs(limit = 10) {
+  return useQuery<RevenueAgentLog[]>({
+    queryKey: ['analytics', 'revenue-agent', 'logs', limit],
+    queryFn: () => getRevenueAgentEndpoint<RevenueAgentLog[]>('/logs', { limit }, []),
+    refetchInterval: 30000,
   })
 }
 
-// ─── Job completion rates ─────────────────────────────────────────────────────
+// ─── AI Revenue Recommendations ───────────────────────────────────────────────
 
-export function useJobCompletionRates(from?: string, to?: string) {
-  return useQuery<JobCompletionRates>({
-    queryKey: ['analytics', 'job-completion-rates', from, to],
+export function useRecommendations() {
+  return useQuery<Recommendation[]>({
+    queryKey: ['analytics', 'recommendations'],
     queryFn: async () => {
-      const params: Record<string, string> = {}
-      if (from) params.from = from
-      if (to) params.to = to
-      const res = await api.get('/analytics/jobs-analytics/completion-rates', { params })
+      const res = await api.get('/analytics/recommendations')
       return res.data
     },
-  })
-}
-
-// ─── Top jobs ─────────────────────────────────────────────────────────────────
-
-export function useTopJobs(limit = 5, from?: string, to?: string) {
-  return useQuery<TopJob[]>({
-    queryKey: ['analytics', 'top-jobs', limit, from, to],
-    queryFn: async () => {
-      const params: Record<string, string | number> = { limit }
-      if (from) params.from = from
-      if (to) params.to = to
-      const res = await api.get('/analytics/revenue/top-jobs', { params })
-      return res.data
-    },
+    refetchInterval: 5 * 60 * 1000, // auto-refresh every 5 minutes
   })
 }

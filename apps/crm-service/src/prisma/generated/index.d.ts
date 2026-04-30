@@ -63,6 +63,16 @@ export type Address = $Result.DefaultSelection<Prisma.$AddressPayload>
  * 
  */
 export type Equipment = $Result.DefaultSelection<Prisma.$EquipmentPayload>
+/**
+ * Model FollowupAttempt
+ * 
+ */
+export type FollowupAttempt = $Result.DefaultSelection<Prisma.$FollowupAttemptPayload>
+/**
+ * Model UpsellRecommendation
+ * 
+ */
+export type UpsellRecommendation = $Result.DefaultSelection<Prisma.$UpsellRecommendationPayload>
 
 /**
  * Enums
@@ -375,6 +385,26 @@ export class PrismaClient<
     * ```
     */
   get equipment(): Prisma.EquipmentDelegate<ExtArgs>;
+
+  /**
+   * `prisma.followupAttempt`: Exposes CRUD operations for the **FollowupAttempt** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more FollowupAttempts
+    * const followupAttempts = await prisma.followupAttempt.findMany()
+    * ```
+    */
+  get followupAttempt(): Prisma.FollowupAttemptDelegate<ExtArgs>;
+
+  /**
+   * `prisma.upsellRecommendation`: Exposes CRUD operations for the **UpsellRecommendation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UpsellRecommendations
+    * const upsellRecommendations = await prisma.upsellRecommendation.findMany()
+    * ```
+    */
+  get upsellRecommendation(): Prisma.UpsellRecommendationDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -825,7 +855,9 @@ export namespace Prisma {
     Booking: 'Booking',
     Review: 'Review',
     Address: 'Address',
-    Equipment: 'Equipment'
+    Equipment: 'Equipment',
+    FollowupAttempt: 'FollowupAttempt',
+    UpsellRecommendation: 'UpsellRecommendation'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -841,7 +873,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "company" | "companyUser" | "customer" | "contact" | "lead" | "serviceAgreement" | "booking" | "review" | "address" | "equipment"
+      modelProps: "company" | "companyUser" | "customer" | "contact" | "lead" | "serviceAgreement" | "booking" | "review" | "address" | "equipment" | "followupAttempt" | "upsellRecommendation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1545,6 +1577,146 @@ export namespace Prisma {
           }
         }
       }
+      FollowupAttempt: {
+        payload: Prisma.$FollowupAttemptPayload<ExtArgs>
+        fields: Prisma.FollowupAttemptFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.FollowupAttemptFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.FollowupAttemptFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          findFirst: {
+            args: Prisma.FollowupAttemptFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.FollowupAttemptFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          findMany: {
+            args: Prisma.FollowupAttemptFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>[]
+          }
+          create: {
+            args: Prisma.FollowupAttemptCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          createMany: {
+            args: Prisma.FollowupAttemptCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.FollowupAttemptCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>[]
+          }
+          delete: {
+            args: Prisma.FollowupAttemptDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          update: {
+            args: Prisma.FollowupAttemptUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          deleteMany: {
+            args: Prisma.FollowupAttemptDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.FollowupAttemptUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.FollowupAttemptUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FollowupAttemptPayload>
+          }
+          aggregate: {
+            args: Prisma.FollowupAttemptAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateFollowupAttempt>
+          }
+          groupBy: {
+            args: Prisma.FollowupAttemptGroupByArgs<ExtArgs>
+            result: $Utils.Optional<FollowupAttemptGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.FollowupAttemptCountArgs<ExtArgs>
+            result: $Utils.Optional<FollowupAttemptCountAggregateOutputType> | number
+          }
+        }
+      }
+      UpsellRecommendation: {
+        payload: Prisma.$UpsellRecommendationPayload<ExtArgs>
+        fields: Prisma.UpsellRecommendationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UpsellRecommendationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UpsellRecommendationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload>
+          }
+          findFirst: {
+            args: Prisma.UpsellRecommendationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UpsellRecommendationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload>
+          }
+          findMany: {
+            args: Prisma.UpsellRecommendationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload>[]
+          }
+          create: {
+            args: Prisma.UpsellRecommendationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload>
+          }
+          createMany: {
+            args: Prisma.UpsellRecommendationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UpsellRecommendationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload>[]
+          }
+          delete: {
+            args: Prisma.UpsellRecommendationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload>
+          }
+          update: {
+            args: Prisma.UpsellRecommendationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload>
+          }
+          deleteMany: {
+            args: Prisma.UpsellRecommendationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UpsellRecommendationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.UpsellRecommendationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UpsellRecommendationPayload>
+          }
+          aggregate: {
+            args: Prisma.UpsellRecommendationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUpsellRecommendation>
+          }
+          groupBy: {
+            args: Prisma.UpsellRecommendationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UpsellRecommendationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UpsellRecommendationCountArgs<ExtArgs>
+            result: $Utils.Optional<UpsellRecommendationCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1789,6 +1961,7 @@ export namespace Prisma {
     reviews: number
     addresses: number
     equipment: number
+    upsellRecommendations: number
   }
 
   export type CustomerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1799,6 +1972,7 @@ export namespace Prisma {
     reviews?: boolean | CustomerCountOutputTypeCountReviewsArgs
     addresses?: boolean | CustomerCountOutputTypeCountAddressesArgs
     equipment?: boolean | CustomerCountOutputTypeCountEquipmentArgs
+    upsellRecommendations?: boolean | CustomerCountOutputTypeCountUpsellRecommendationsArgs
   }
 
   // Custom InputTypes
@@ -1861,6 +2035,13 @@ export namespace Prisma {
     where?: EquipmentWhereInput
   }
 
+  /**
+   * CustomerCountOutputType without action
+   */
+  export type CustomerCountOutputTypeCountUpsellRecommendationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UpsellRecommendationWhereInput
+  }
+
 
   /**
    * Count Type LeadCountOutputType
@@ -1920,6 +2101,7 @@ export namespace Prisma {
     logoUrl: string | null
     website: string | null
     isActive: boolean | null
+    automaticFollowupEnabled: boolean | null
     trialEndsAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -1938,6 +2120,7 @@ export namespace Prisma {
     logoUrl: string | null
     website: string | null
     isActive: boolean | null
+    automaticFollowupEnabled: boolean | null
     trialEndsAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -1956,6 +2139,7 @@ export namespace Prisma {
     logoUrl: number
     website: number
     isActive: number
+    automaticFollowupEnabled: number
     trialEndsAt: number
     createdAt: number
     updatedAt: number
@@ -1976,6 +2160,7 @@ export namespace Prisma {
     logoUrl?: true
     website?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     trialEndsAt?: true
     createdAt?: true
     updatedAt?: true
@@ -1994,6 +2179,7 @@ export namespace Prisma {
     logoUrl?: true
     website?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     trialEndsAt?: true
     createdAt?: true
     updatedAt?: true
@@ -2012,6 +2198,7 @@ export namespace Prisma {
     logoUrl?: true
     website?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     trialEndsAt?: true
     createdAt?: true
     updatedAt?: true
@@ -2103,6 +2290,7 @@ export namespace Prisma {
     logoUrl: string | null
     website: string | null
     isActive: boolean
+    automaticFollowupEnabled: boolean
     trialEndsAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -2138,6 +2326,7 @@ export namespace Prisma {
     logoUrl?: boolean
     website?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2163,6 +2352,7 @@ export namespace Prisma {
     logoUrl?: boolean
     website?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2181,6 +2371,7 @@ export namespace Prisma {
     logoUrl?: boolean
     website?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2220,6 +2411,7 @@ export namespace Prisma {
       logoUrl: string | null
       website: string | null
       isActive: boolean
+      automaticFollowupEnabled: boolean
       trialEndsAt: Date | null
       createdAt: Date
       updatedAt: Date
@@ -2634,6 +2826,7 @@ export namespace Prisma {
     readonly logoUrl: FieldRef<"Company", 'String'>
     readonly website: FieldRef<"Company", 'String'>
     readonly isActive: FieldRef<"Company", 'Boolean'>
+    readonly automaticFollowupEnabled: FieldRef<"Company", 'Boolean'>
     readonly trialEndsAt: FieldRef<"Company", 'DateTime'>
     readonly createdAt: FieldRef<"Company", 'DateTime'>
     readonly updatedAt: FieldRef<"Company", 'DateTime'>
@@ -4234,6 +4427,7 @@ export namespace Prisma {
     notes: string | null
     source: string | null
     isActive: boolean | null
+    automaticFollowupEnabled: boolean | null
     engagementStatus: $Enums.CustomerEngagementStatus | null
     auth0UserId: string | null
     createdAt: Date | null
@@ -4256,6 +4450,7 @@ export namespace Prisma {
     notes: string | null
     source: string | null
     isActive: boolean | null
+    automaticFollowupEnabled: boolean | null
     engagementStatus: $Enums.CustomerEngagementStatus | null
     auth0UserId: string | null
     createdAt: Date | null
@@ -4279,6 +4474,7 @@ export namespace Prisma {
     source: number
     tags: number
     isActive: number
+    automaticFollowupEnabled: number
     engagementStatus: number
     auth0UserId: number
     createdAt: number
@@ -4303,6 +4499,7 @@ export namespace Prisma {
     notes?: true
     source?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     engagementStatus?: true
     auth0UserId?: true
     createdAt?: true
@@ -4325,6 +4522,7 @@ export namespace Prisma {
     notes?: true
     source?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     engagementStatus?: true
     auth0UserId?: true
     createdAt?: true
@@ -4348,6 +4546,7 @@ export namespace Prisma {
     source?: true
     tags?: true
     isActive?: true
+    automaticFollowupEnabled?: true
     engagementStatus?: true
     auth0UserId?: true
     createdAt?: true
@@ -4444,6 +4643,7 @@ export namespace Prisma {
     source: string | null
     tags: string[]
     isActive: boolean
+    automaticFollowupEnabled: boolean
     engagementStatus: $Enums.CustomerEngagementStatus
     auth0UserId: string | null
     createdAt: Date
@@ -4484,6 +4684,7 @@ export namespace Prisma {
     source?: boolean
     tags?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: boolean
     auth0UserId?: boolean
     createdAt?: boolean
@@ -4496,6 +4697,7 @@ export namespace Prisma {
     reviews?: boolean | Customer$reviewsArgs<ExtArgs>
     addresses?: boolean | Customer$addressesArgs<ExtArgs>
     equipment?: boolean | Customer$equipmentArgs<ExtArgs>
+    upsellRecommendations?: boolean | Customer$upsellRecommendationsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["customer"]>
 
@@ -4516,6 +4718,7 @@ export namespace Prisma {
     source?: boolean
     tags?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: boolean
     auth0UserId?: boolean
     createdAt?: boolean
@@ -4540,6 +4743,7 @@ export namespace Prisma {
     source?: boolean
     tags?: boolean
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: boolean
     auth0UserId?: boolean
     createdAt?: boolean
@@ -4555,6 +4759,7 @@ export namespace Prisma {
     reviews?: boolean | Customer$reviewsArgs<ExtArgs>
     addresses?: boolean | Customer$addressesArgs<ExtArgs>
     equipment?: boolean | Customer$equipmentArgs<ExtArgs>
+    upsellRecommendations?: boolean | Customer$upsellRecommendationsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CustomerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4572,6 +4777,7 @@ export namespace Prisma {
       reviews: Prisma.$ReviewPayload<ExtArgs>[]
       addresses: Prisma.$AddressPayload<ExtArgs>[]
       equipment: Prisma.$EquipmentPayload<ExtArgs>[]
+      upsellRecommendations: Prisma.$UpsellRecommendationPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4590,6 +4796,7 @@ export namespace Prisma {
       source: string | null
       tags: string[]
       isActive: boolean
+      automaticFollowupEnabled: boolean
       engagementStatus: $Enums.CustomerEngagementStatus
       auth0UserId: string | null
       createdAt: Date
@@ -4966,6 +5173,7 @@ export namespace Prisma {
     reviews<T extends Customer$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany"> | Null>
     addresses<T extends Customer$addressesArgs<ExtArgs> = {}>(args?: Subset<T, Customer$addressesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AddressPayload<ExtArgs>, T, "findMany"> | Null>
     equipment<T extends Customer$equipmentArgs<ExtArgs> = {}>(args?: Subset<T, Customer$equipmentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentPayload<ExtArgs>, T, "findMany"> | Null>
+    upsellRecommendations<T extends Customer$upsellRecommendationsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$upsellRecommendationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5011,6 +5219,7 @@ export namespace Prisma {
     readonly source: FieldRef<"Customer", 'String'>
     readonly tags: FieldRef<"Customer", 'String[]'>
     readonly isActive: FieldRef<"Customer", 'Boolean'>
+    readonly automaticFollowupEnabled: FieldRef<"Customer", 'Boolean'>
     readonly engagementStatus: FieldRef<"Customer", 'CustomerEngagementStatus'>
     readonly auth0UserId: FieldRef<"Customer", 'String'>
     readonly createdAt: FieldRef<"Customer", 'DateTime'>
@@ -5470,6 +5679,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: EquipmentScalarFieldEnum | EquipmentScalarFieldEnum[]
+  }
+
+  /**
+   * Customer.upsellRecommendations
+   */
+  export type Customer$upsellRecommendationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    where?: UpsellRecommendationWhereInput
+    orderBy?: UpsellRecommendationOrderByWithRelationInput | UpsellRecommendationOrderByWithRelationInput[]
+    cursor?: UpsellRecommendationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UpsellRecommendationScalarFieldEnum | UpsellRecommendationScalarFieldEnum[]
   }
 
   /**
@@ -13044,6 +13273,2141 @@ export namespace Prisma {
 
 
   /**
+   * Model FollowupAttempt
+   */
+
+  export type AggregateFollowupAttempt = {
+    _count: FollowupAttemptCountAggregateOutputType | null
+    _avg: FollowupAttemptAvgAggregateOutputType | null
+    _sum: FollowupAttemptSumAggregateOutputType | null
+    _min: FollowupAttemptMinAggregateOutputType | null
+    _max: FollowupAttemptMaxAggregateOutputType | null
+  }
+
+  export type FollowupAttemptAvgAggregateOutputType = {
+    churnProbability: number | null
+  }
+
+  export type FollowupAttemptSumAggregateOutputType = {
+    churnProbability: number | null
+  }
+
+  export type FollowupAttemptMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    entityType: string | null
+    entityId: string | null
+    customerId: string | null
+    leadId: string | null
+    action: string | null
+    status: string | null
+    churnProbability: number | null
+    queueJobId: string | null
+    reason: string | null
+    errorMessage: string | null
+    triggeredAt: Date | null
+    queuedAt: Date | null
+    failedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type FollowupAttemptMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    entityType: string | null
+    entityId: string | null
+    customerId: string | null
+    leadId: string | null
+    action: string | null
+    status: string | null
+    churnProbability: number | null
+    queueJobId: string | null
+    reason: string | null
+    errorMessage: string | null
+    triggeredAt: Date | null
+    queuedAt: Date | null
+    failedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type FollowupAttemptCountAggregateOutputType = {
+    id: number
+    companyId: number
+    entityType: number
+    entityId: number
+    customerId: number
+    leadId: number
+    action: number
+    status: number
+    churnProbability: number
+    queueJobId: number
+    reason: number
+    errorMessage: number
+    metadata: number
+    triggeredAt: number
+    queuedAt: number
+    failedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type FollowupAttemptAvgAggregateInputType = {
+    churnProbability?: true
+  }
+
+  export type FollowupAttemptSumAggregateInputType = {
+    churnProbability?: true
+  }
+
+  export type FollowupAttemptMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    entityType?: true
+    entityId?: true
+    customerId?: true
+    leadId?: true
+    action?: true
+    status?: true
+    churnProbability?: true
+    queueJobId?: true
+    reason?: true
+    errorMessage?: true
+    triggeredAt?: true
+    queuedAt?: true
+    failedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type FollowupAttemptMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    entityType?: true
+    entityId?: true
+    customerId?: true
+    leadId?: true
+    action?: true
+    status?: true
+    churnProbability?: true
+    queueJobId?: true
+    reason?: true
+    errorMessage?: true
+    triggeredAt?: true
+    queuedAt?: true
+    failedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type FollowupAttemptCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    entityType?: true
+    entityId?: true
+    customerId?: true
+    leadId?: true
+    action?: true
+    status?: true
+    churnProbability?: true
+    queueJobId?: true
+    reason?: true
+    errorMessage?: true
+    metadata?: true
+    triggeredAt?: true
+    queuedAt?: true
+    failedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type FollowupAttemptAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FollowupAttempt to aggregate.
+     */
+    where?: FollowupAttemptWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FollowupAttempts to fetch.
+     */
+    orderBy?: FollowupAttemptOrderByWithRelationInput | FollowupAttemptOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: FollowupAttemptWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FollowupAttempts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FollowupAttempts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned FollowupAttempts
+    **/
+    _count?: true | FollowupAttemptCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: FollowupAttemptAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: FollowupAttemptSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: FollowupAttemptMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: FollowupAttemptMaxAggregateInputType
+  }
+
+  export type GetFollowupAttemptAggregateType<T extends FollowupAttemptAggregateArgs> = {
+        [P in keyof T & keyof AggregateFollowupAttempt]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateFollowupAttempt[P]>
+      : GetScalarType<T[P], AggregateFollowupAttempt[P]>
+  }
+
+
+
+
+  export type FollowupAttemptGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FollowupAttemptWhereInput
+    orderBy?: FollowupAttemptOrderByWithAggregationInput | FollowupAttemptOrderByWithAggregationInput[]
+    by: FollowupAttemptScalarFieldEnum[] | FollowupAttemptScalarFieldEnum
+    having?: FollowupAttemptScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: FollowupAttemptCountAggregateInputType | true
+    _avg?: FollowupAttemptAvgAggregateInputType
+    _sum?: FollowupAttemptSumAggregateInputType
+    _min?: FollowupAttemptMinAggregateInputType
+    _max?: FollowupAttemptMaxAggregateInputType
+  }
+
+  export type FollowupAttemptGroupByOutputType = {
+    id: string
+    companyId: string
+    entityType: string
+    entityId: string
+    customerId: string | null
+    leadId: string | null
+    action: string
+    status: string
+    churnProbability: number | null
+    queueJobId: string | null
+    reason: string | null
+    errorMessage: string | null
+    metadata: JsonValue | null
+    triggeredAt: Date
+    queuedAt: Date | null
+    failedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: FollowupAttemptCountAggregateOutputType | null
+    _avg: FollowupAttemptAvgAggregateOutputType | null
+    _sum: FollowupAttemptSumAggregateOutputType | null
+    _min: FollowupAttemptMinAggregateOutputType | null
+    _max: FollowupAttemptMaxAggregateOutputType | null
+  }
+
+  type GetFollowupAttemptGroupByPayload<T extends FollowupAttemptGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<FollowupAttemptGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof FollowupAttemptGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], FollowupAttemptGroupByOutputType[P]>
+            : GetScalarType<T[P], FollowupAttemptGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type FollowupAttemptSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    customerId?: boolean
+    leadId?: boolean
+    action?: boolean
+    status?: boolean
+    churnProbability?: boolean
+    queueJobId?: boolean
+    reason?: boolean
+    errorMessage?: boolean
+    metadata?: boolean
+    triggeredAt?: boolean
+    queuedAt?: boolean
+    failedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["followupAttempt"]>
+
+  export type FollowupAttemptSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    customerId?: boolean
+    leadId?: boolean
+    action?: boolean
+    status?: boolean
+    churnProbability?: boolean
+    queueJobId?: boolean
+    reason?: boolean
+    errorMessage?: boolean
+    metadata?: boolean
+    triggeredAt?: boolean
+    queuedAt?: boolean
+    failedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["followupAttempt"]>
+
+  export type FollowupAttemptSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    customerId?: boolean
+    leadId?: boolean
+    action?: boolean
+    status?: boolean
+    churnProbability?: boolean
+    queueJobId?: boolean
+    reason?: boolean
+    errorMessage?: boolean
+    metadata?: boolean
+    triggeredAt?: boolean
+    queuedAt?: boolean
+    failedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $FollowupAttemptPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "FollowupAttempt"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      entityType: string
+      entityId: string
+      customerId: string | null
+      leadId: string | null
+      action: string
+      status: string
+      churnProbability: number | null
+      queueJobId: string | null
+      reason: string | null
+      errorMessage: string | null
+      metadata: Prisma.JsonValue | null
+      triggeredAt: Date
+      queuedAt: Date | null
+      failedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["followupAttempt"]>
+    composites: {}
+  }
+
+  type FollowupAttemptGetPayload<S extends boolean | null | undefined | FollowupAttemptDefaultArgs> = $Result.GetResult<Prisma.$FollowupAttemptPayload, S>
+
+  type FollowupAttemptCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<FollowupAttemptFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: FollowupAttemptCountAggregateInputType | true
+    }
+
+  export interface FollowupAttemptDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FollowupAttempt'], meta: { name: 'FollowupAttempt' } }
+    /**
+     * Find zero or one FollowupAttempt that matches the filter.
+     * @param {FollowupAttemptFindUniqueArgs} args - Arguments to find a FollowupAttempt
+     * @example
+     * // Get one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends FollowupAttemptFindUniqueArgs>(args: SelectSubset<T, FollowupAttemptFindUniqueArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one FollowupAttempt that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {FollowupAttemptFindUniqueOrThrowArgs} args - Arguments to find a FollowupAttempt
+     * @example
+     * // Get one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends FollowupAttemptFindUniqueOrThrowArgs>(args: SelectSubset<T, FollowupAttemptFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first FollowupAttempt that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptFindFirstArgs} args - Arguments to find a FollowupAttempt
+     * @example
+     * // Get one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends FollowupAttemptFindFirstArgs>(args?: SelectSubset<T, FollowupAttemptFindFirstArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first FollowupAttempt that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptFindFirstOrThrowArgs} args - Arguments to find a FollowupAttempt
+     * @example
+     * // Get one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends FollowupAttemptFindFirstOrThrowArgs>(args?: SelectSubset<T, FollowupAttemptFindFirstOrThrowArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more FollowupAttempts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all FollowupAttempts
+     * const followupAttempts = await prisma.followupAttempt.findMany()
+     * 
+     * // Get first 10 FollowupAttempts
+     * const followupAttempts = await prisma.followupAttempt.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const followupAttemptWithIdOnly = await prisma.followupAttempt.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends FollowupAttemptFindManyArgs>(args?: SelectSubset<T, FollowupAttemptFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a FollowupAttempt.
+     * @param {FollowupAttemptCreateArgs} args - Arguments to create a FollowupAttempt.
+     * @example
+     * // Create one FollowupAttempt
+     * const FollowupAttempt = await prisma.followupAttempt.create({
+     *   data: {
+     *     // ... data to create a FollowupAttempt
+     *   }
+     * })
+     * 
+     */
+    create<T extends FollowupAttemptCreateArgs>(args: SelectSubset<T, FollowupAttemptCreateArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many FollowupAttempts.
+     * @param {FollowupAttemptCreateManyArgs} args - Arguments to create many FollowupAttempts.
+     * @example
+     * // Create many FollowupAttempts
+     * const followupAttempt = await prisma.followupAttempt.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends FollowupAttemptCreateManyArgs>(args?: SelectSubset<T, FollowupAttemptCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many FollowupAttempts and returns the data saved in the database.
+     * @param {FollowupAttemptCreateManyAndReturnArgs} args - Arguments to create many FollowupAttempts.
+     * @example
+     * // Create many FollowupAttempts
+     * const followupAttempt = await prisma.followupAttempt.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many FollowupAttempts and only return the `id`
+     * const followupAttemptWithIdOnly = await prisma.followupAttempt.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends FollowupAttemptCreateManyAndReturnArgs>(args?: SelectSubset<T, FollowupAttemptCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a FollowupAttempt.
+     * @param {FollowupAttemptDeleteArgs} args - Arguments to delete one FollowupAttempt.
+     * @example
+     * // Delete one FollowupAttempt
+     * const FollowupAttempt = await prisma.followupAttempt.delete({
+     *   where: {
+     *     // ... filter to delete one FollowupAttempt
+     *   }
+     * })
+     * 
+     */
+    delete<T extends FollowupAttemptDeleteArgs>(args: SelectSubset<T, FollowupAttemptDeleteArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one FollowupAttempt.
+     * @param {FollowupAttemptUpdateArgs} args - Arguments to update one FollowupAttempt.
+     * @example
+     * // Update one FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends FollowupAttemptUpdateArgs>(args: SelectSubset<T, FollowupAttemptUpdateArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more FollowupAttempts.
+     * @param {FollowupAttemptDeleteManyArgs} args - Arguments to filter FollowupAttempts to delete.
+     * @example
+     * // Delete a few FollowupAttempts
+     * const { count } = await prisma.followupAttempt.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends FollowupAttemptDeleteManyArgs>(args?: SelectSubset<T, FollowupAttemptDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more FollowupAttempts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many FollowupAttempts
+     * const followupAttempt = await prisma.followupAttempt.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends FollowupAttemptUpdateManyArgs>(args: SelectSubset<T, FollowupAttemptUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one FollowupAttempt.
+     * @param {FollowupAttemptUpsertArgs} args - Arguments to update or create a FollowupAttempt.
+     * @example
+     * // Update or create a FollowupAttempt
+     * const followupAttempt = await prisma.followupAttempt.upsert({
+     *   create: {
+     *     // ... data to create a FollowupAttempt
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the FollowupAttempt we want to update
+     *   }
+     * })
+     */
+    upsert<T extends FollowupAttemptUpsertArgs>(args: SelectSubset<T, FollowupAttemptUpsertArgs<ExtArgs>>): Prisma__FollowupAttemptClient<$Result.GetResult<Prisma.$FollowupAttemptPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of FollowupAttempts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptCountArgs} args - Arguments to filter FollowupAttempts to count.
+     * @example
+     * // Count the number of FollowupAttempts
+     * const count = await prisma.followupAttempt.count({
+     *   where: {
+     *     // ... the filter for the FollowupAttempts we want to count
+     *   }
+     * })
+    **/
+    count<T extends FollowupAttemptCountArgs>(
+      args?: Subset<T, FollowupAttemptCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], FollowupAttemptCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a FollowupAttempt.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends FollowupAttemptAggregateArgs>(args: Subset<T, FollowupAttemptAggregateArgs>): Prisma.PrismaPromise<GetFollowupAttemptAggregateType<T>>
+
+    /**
+     * Group by FollowupAttempt.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FollowupAttemptGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends FollowupAttemptGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: FollowupAttemptGroupByArgs['orderBy'] }
+        : { orderBy?: FollowupAttemptGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, FollowupAttemptGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFollowupAttemptGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the FollowupAttempt model
+   */
+  readonly fields: FollowupAttemptFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for FollowupAttempt.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__FollowupAttemptClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the FollowupAttempt model
+   */ 
+  interface FollowupAttemptFieldRefs {
+    readonly id: FieldRef<"FollowupAttempt", 'String'>
+    readonly companyId: FieldRef<"FollowupAttempt", 'String'>
+    readonly entityType: FieldRef<"FollowupAttempt", 'String'>
+    readonly entityId: FieldRef<"FollowupAttempt", 'String'>
+    readonly customerId: FieldRef<"FollowupAttempt", 'String'>
+    readonly leadId: FieldRef<"FollowupAttempt", 'String'>
+    readonly action: FieldRef<"FollowupAttempt", 'String'>
+    readonly status: FieldRef<"FollowupAttempt", 'String'>
+    readonly churnProbability: FieldRef<"FollowupAttempt", 'Float'>
+    readonly queueJobId: FieldRef<"FollowupAttempt", 'String'>
+    readonly reason: FieldRef<"FollowupAttempt", 'String'>
+    readonly errorMessage: FieldRef<"FollowupAttempt", 'String'>
+    readonly metadata: FieldRef<"FollowupAttempt", 'Json'>
+    readonly triggeredAt: FieldRef<"FollowupAttempt", 'DateTime'>
+    readonly queuedAt: FieldRef<"FollowupAttempt", 'DateTime'>
+    readonly failedAt: FieldRef<"FollowupAttempt", 'DateTime'>
+    readonly createdAt: FieldRef<"FollowupAttempt", 'DateTime'>
+    readonly updatedAt: FieldRef<"FollowupAttempt", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * FollowupAttempt findUnique
+   */
+  export type FollowupAttemptFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempt to fetch.
+     */
+    where: FollowupAttemptWhereUniqueInput
+  }
+
+  /**
+   * FollowupAttempt findUniqueOrThrow
+   */
+  export type FollowupAttemptFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempt to fetch.
+     */
+    where: FollowupAttemptWhereUniqueInput
+  }
+
+  /**
+   * FollowupAttempt findFirst
+   */
+  export type FollowupAttemptFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempt to fetch.
+     */
+    where?: FollowupAttemptWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FollowupAttempts to fetch.
+     */
+    orderBy?: FollowupAttemptOrderByWithRelationInput | FollowupAttemptOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FollowupAttempts.
+     */
+    cursor?: FollowupAttemptWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FollowupAttempts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FollowupAttempts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FollowupAttempts.
+     */
+    distinct?: FollowupAttemptScalarFieldEnum | FollowupAttemptScalarFieldEnum[]
+  }
+
+  /**
+   * FollowupAttempt findFirstOrThrow
+   */
+  export type FollowupAttemptFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempt to fetch.
+     */
+    where?: FollowupAttemptWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FollowupAttempts to fetch.
+     */
+    orderBy?: FollowupAttemptOrderByWithRelationInput | FollowupAttemptOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FollowupAttempts.
+     */
+    cursor?: FollowupAttemptWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FollowupAttempts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FollowupAttempts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FollowupAttempts.
+     */
+    distinct?: FollowupAttemptScalarFieldEnum | FollowupAttemptScalarFieldEnum[]
+  }
+
+  /**
+   * FollowupAttempt findMany
+   */
+  export type FollowupAttemptFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter, which FollowupAttempts to fetch.
+     */
+    where?: FollowupAttemptWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FollowupAttempts to fetch.
+     */
+    orderBy?: FollowupAttemptOrderByWithRelationInput | FollowupAttemptOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing FollowupAttempts.
+     */
+    cursor?: FollowupAttemptWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FollowupAttempts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FollowupAttempts.
+     */
+    skip?: number
+    distinct?: FollowupAttemptScalarFieldEnum | FollowupAttemptScalarFieldEnum[]
+  }
+
+  /**
+   * FollowupAttempt create
+   */
+  export type FollowupAttemptCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * The data needed to create a FollowupAttempt.
+     */
+    data: XOR<FollowupAttemptCreateInput, FollowupAttemptUncheckedCreateInput>
+  }
+
+  /**
+   * FollowupAttempt createMany
+   */
+  export type FollowupAttemptCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many FollowupAttempts.
+     */
+    data: FollowupAttemptCreateManyInput | FollowupAttemptCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * FollowupAttempt createManyAndReturn
+   */
+  export type FollowupAttemptCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many FollowupAttempts.
+     */
+    data: FollowupAttemptCreateManyInput | FollowupAttemptCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * FollowupAttempt update
+   */
+  export type FollowupAttemptUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * The data needed to update a FollowupAttempt.
+     */
+    data: XOR<FollowupAttemptUpdateInput, FollowupAttemptUncheckedUpdateInput>
+    /**
+     * Choose, which FollowupAttempt to update.
+     */
+    where: FollowupAttemptWhereUniqueInput
+  }
+
+  /**
+   * FollowupAttempt updateMany
+   */
+  export type FollowupAttemptUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update FollowupAttempts.
+     */
+    data: XOR<FollowupAttemptUpdateManyMutationInput, FollowupAttemptUncheckedUpdateManyInput>
+    /**
+     * Filter which FollowupAttempts to update
+     */
+    where?: FollowupAttemptWhereInput
+  }
+
+  /**
+   * FollowupAttempt upsert
+   */
+  export type FollowupAttemptUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * The filter to search for the FollowupAttempt to update in case it exists.
+     */
+    where: FollowupAttemptWhereUniqueInput
+    /**
+     * In case the FollowupAttempt found by the `where` argument doesn't exist, create a new FollowupAttempt with this data.
+     */
+    create: XOR<FollowupAttemptCreateInput, FollowupAttemptUncheckedCreateInput>
+    /**
+     * In case the FollowupAttempt was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<FollowupAttemptUpdateInput, FollowupAttemptUncheckedUpdateInput>
+  }
+
+  /**
+   * FollowupAttempt delete
+   */
+  export type FollowupAttemptDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+    /**
+     * Filter which FollowupAttempt to delete.
+     */
+    where: FollowupAttemptWhereUniqueInput
+  }
+
+  /**
+   * FollowupAttempt deleteMany
+   */
+  export type FollowupAttemptDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FollowupAttempts to delete
+     */
+    where?: FollowupAttemptWhereInput
+  }
+
+  /**
+   * FollowupAttempt without action
+   */
+  export type FollowupAttemptDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FollowupAttempt
+     */
+    select?: FollowupAttemptSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model UpsellRecommendation
+   */
+
+  export type AggregateUpsellRecommendation = {
+    _count: UpsellRecommendationCountAggregateOutputType | null
+    _avg: UpsellRecommendationAvgAggregateOutputType | null
+    _sum: UpsellRecommendationSumAggregateOutputType | null
+    _min: UpsellRecommendationMinAggregateOutputType | null
+    _max: UpsellRecommendationMaxAggregateOutputType | null
+  }
+
+  export type UpsellRecommendationAvgAggregateOutputType = {
+    confidence: number | null
+    priorityScore: number | null
+  }
+
+  export type UpsellRecommendationSumAggregateOutputType = {
+    confidence: number | null
+    priorityScore: number | null
+  }
+
+  export type UpsellRecommendationMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    customerId: string | null
+    recommendedOffer: string | null
+    confidence: number | null
+    status: string | null
+    ruleOffer: string | null
+    modelOffer: string | null
+    triggerSource: string | null
+    priorityScore: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type UpsellRecommendationMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    customerId: string | null
+    recommendedOffer: string | null
+    confidence: number | null
+    status: string | null
+    ruleOffer: string | null
+    modelOffer: string | null
+    triggerSource: string | null
+    priorityScore: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type UpsellRecommendationCountAggregateOutputType = {
+    id: number
+    companyId: number
+    customerId: number
+    recommendedOffer: number
+    confidence: number
+    status: number
+    allScores: number
+    ruleOffer: number
+    modelOffer: number
+    triggerSource: number
+    priorityScore: number
+    inputPayload: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type UpsellRecommendationAvgAggregateInputType = {
+    confidence?: true
+    priorityScore?: true
+  }
+
+  export type UpsellRecommendationSumAggregateInputType = {
+    confidence?: true
+    priorityScore?: true
+  }
+
+  export type UpsellRecommendationMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    recommendedOffer?: true
+    confidence?: true
+    status?: true
+    ruleOffer?: true
+    modelOffer?: true
+    triggerSource?: true
+    priorityScore?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type UpsellRecommendationMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    recommendedOffer?: true
+    confidence?: true
+    status?: true
+    ruleOffer?: true
+    modelOffer?: true
+    triggerSource?: true
+    priorityScore?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type UpsellRecommendationCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    recommendedOffer?: true
+    confidence?: true
+    status?: true
+    allScores?: true
+    ruleOffer?: true
+    modelOffer?: true
+    triggerSource?: true
+    priorityScore?: true
+    inputPayload?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type UpsellRecommendationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UpsellRecommendation to aggregate.
+     */
+    where?: UpsellRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UpsellRecommendations to fetch.
+     */
+    orderBy?: UpsellRecommendationOrderByWithRelationInput | UpsellRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UpsellRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UpsellRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UpsellRecommendations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UpsellRecommendations
+    **/
+    _count?: true | UpsellRecommendationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: UpsellRecommendationAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UpsellRecommendationSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UpsellRecommendationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UpsellRecommendationMaxAggregateInputType
+  }
+
+  export type GetUpsellRecommendationAggregateType<T extends UpsellRecommendationAggregateArgs> = {
+        [P in keyof T & keyof AggregateUpsellRecommendation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUpsellRecommendation[P]>
+      : GetScalarType<T[P], AggregateUpsellRecommendation[P]>
+  }
+
+
+
+
+  export type UpsellRecommendationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UpsellRecommendationWhereInput
+    orderBy?: UpsellRecommendationOrderByWithAggregationInput | UpsellRecommendationOrderByWithAggregationInput[]
+    by: UpsellRecommendationScalarFieldEnum[] | UpsellRecommendationScalarFieldEnum
+    having?: UpsellRecommendationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UpsellRecommendationCountAggregateInputType | true
+    _avg?: UpsellRecommendationAvgAggregateInputType
+    _sum?: UpsellRecommendationSumAggregateInputType
+    _min?: UpsellRecommendationMinAggregateInputType
+    _max?: UpsellRecommendationMaxAggregateInputType
+  }
+
+  export type UpsellRecommendationGroupByOutputType = {
+    id: string
+    companyId: string
+    customerId: string
+    recommendedOffer: string
+    confidence: number
+    status: string
+    allScores: JsonValue | null
+    ruleOffer: string | null
+    modelOffer: string | null
+    triggerSource: string | null
+    priorityScore: number | null
+    inputPayload: JsonValue | null
+    createdAt: Date
+    updatedAt: Date
+    _count: UpsellRecommendationCountAggregateOutputType | null
+    _avg: UpsellRecommendationAvgAggregateOutputType | null
+    _sum: UpsellRecommendationSumAggregateOutputType | null
+    _min: UpsellRecommendationMinAggregateOutputType | null
+    _max: UpsellRecommendationMaxAggregateOutputType | null
+  }
+
+  type GetUpsellRecommendationGroupByPayload<T extends UpsellRecommendationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UpsellRecommendationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UpsellRecommendationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UpsellRecommendationGroupByOutputType[P]>
+            : GetScalarType<T[P], UpsellRecommendationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UpsellRecommendationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    recommendedOffer?: boolean
+    confidence?: boolean
+    status?: boolean
+    allScores?: boolean
+    ruleOffer?: boolean
+    modelOffer?: boolean
+    triggerSource?: boolean
+    priorityScore?: boolean
+    inputPayload?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["upsellRecommendation"]>
+
+  export type UpsellRecommendationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    recommendedOffer?: boolean
+    confidence?: boolean
+    status?: boolean
+    allScores?: boolean
+    ruleOffer?: boolean
+    modelOffer?: boolean
+    triggerSource?: boolean
+    priorityScore?: boolean
+    inputPayload?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["upsellRecommendation"]>
+
+  export type UpsellRecommendationSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    recommendedOffer?: boolean
+    confidence?: boolean
+    status?: boolean
+    allScores?: boolean
+    ruleOffer?: boolean
+    modelOffer?: boolean
+    triggerSource?: boolean
+    priorityScore?: boolean
+    inputPayload?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type UpsellRecommendationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }
+  export type UpsellRecommendationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }
+
+  export type $UpsellRecommendationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UpsellRecommendation"
+    objects: {
+      customer: Prisma.$CustomerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      customerId: string
+      recommendedOffer: string
+      confidence: number
+      status: string
+      allScores: Prisma.JsonValue | null
+      ruleOffer: string | null
+      modelOffer: string | null
+      triggerSource: string | null
+      priorityScore: number | null
+      inputPayload: Prisma.JsonValue | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["upsellRecommendation"]>
+    composites: {}
+  }
+
+  type UpsellRecommendationGetPayload<S extends boolean | null | undefined | UpsellRecommendationDefaultArgs> = $Result.GetResult<Prisma.$UpsellRecommendationPayload, S>
+
+  type UpsellRecommendationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<UpsellRecommendationFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: UpsellRecommendationCountAggregateInputType | true
+    }
+
+  export interface UpsellRecommendationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UpsellRecommendation'], meta: { name: 'UpsellRecommendation' } }
+    /**
+     * Find zero or one UpsellRecommendation that matches the filter.
+     * @param {UpsellRecommendationFindUniqueArgs} args - Arguments to find a UpsellRecommendation
+     * @example
+     * // Get one UpsellRecommendation
+     * const upsellRecommendation = await prisma.upsellRecommendation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UpsellRecommendationFindUniqueArgs>(args: SelectSubset<T, UpsellRecommendationFindUniqueArgs<ExtArgs>>): Prisma__UpsellRecommendationClient<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one UpsellRecommendation that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {UpsellRecommendationFindUniqueOrThrowArgs} args - Arguments to find a UpsellRecommendation
+     * @example
+     * // Get one UpsellRecommendation
+     * const upsellRecommendation = await prisma.upsellRecommendation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UpsellRecommendationFindUniqueOrThrowArgs>(args: SelectSubset<T, UpsellRecommendationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UpsellRecommendationClient<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first UpsellRecommendation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UpsellRecommendationFindFirstArgs} args - Arguments to find a UpsellRecommendation
+     * @example
+     * // Get one UpsellRecommendation
+     * const upsellRecommendation = await prisma.upsellRecommendation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UpsellRecommendationFindFirstArgs>(args?: SelectSubset<T, UpsellRecommendationFindFirstArgs<ExtArgs>>): Prisma__UpsellRecommendationClient<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first UpsellRecommendation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UpsellRecommendationFindFirstOrThrowArgs} args - Arguments to find a UpsellRecommendation
+     * @example
+     * // Get one UpsellRecommendation
+     * const upsellRecommendation = await prisma.upsellRecommendation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UpsellRecommendationFindFirstOrThrowArgs>(args?: SelectSubset<T, UpsellRecommendationFindFirstOrThrowArgs<ExtArgs>>): Prisma__UpsellRecommendationClient<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more UpsellRecommendations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UpsellRecommendationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UpsellRecommendations
+     * const upsellRecommendations = await prisma.upsellRecommendation.findMany()
+     * 
+     * // Get first 10 UpsellRecommendations
+     * const upsellRecommendations = await prisma.upsellRecommendation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const upsellRecommendationWithIdOnly = await prisma.upsellRecommendation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UpsellRecommendationFindManyArgs>(args?: SelectSubset<T, UpsellRecommendationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a UpsellRecommendation.
+     * @param {UpsellRecommendationCreateArgs} args - Arguments to create a UpsellRecommendation.
+     * @example
+     * // Create one UpsellRecommendation
+     * const UpsellRecommendation = await prisma.upsellRecommendation.create({
+     *   data: {
+     *     // ... data to create a UpsellRecommendation
+     *   }
+     * })
+     * 
+     */
+    create<T extends UpsellRecommendationCreateArgs>(args: SelectSubset<T, UpsellRecommendationCreateArgs<ExtArgs>>): Prisma__UpsellRecommendationClient<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many UpsellRecommendations.
+     * @param {UpsellRecommendationCreateManyArgs} args - Arguments to create many UpsellRecommendations.
+     * @example
+     * // Create many UpsellRecommendations
+     * const upsellRecommendation = await prisma.upsellRecommendation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UpsellRecommendationCreateManyArgs>(args?: SelectSubset<T, UpsellRecommendationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UpsellRecommendations and returns the data saved in the database.
+     * @param {UpsellRecommendationCreateManyAndReturnArgs} args - Arguments to create many UpsellRecommendations.
+     * @example
+     * // Create many UpsellRecommendations
+     * const upsellRecommendation = await prisma.upsellRecommendation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UpsellRecommendations and only return the `id`
+     * const upsellRecommendationWithIdOnly = await prisma.upsellRecommendation.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UpsellRecommendationCreateManyAndReturnArgs>(args?: SelectSubset<T, UpsellRecommendationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a UpsellRecommendation.
+     * @param {UpsellRecommendationDeleteArgs} args - Arguments to delete one UpsellRecommendation.
+     * @example
+     * // Delete one UpsellRecommendation
+     * const UpsellRecommendation = await prisma.upsellRecommendation.delete({
+     *   where: {
+     *     // ... filter to delete one UpsellRecommendation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UpsellRecommendationDeleteArgs>(args: SelectSubset<T, UpsellRecommendationDeleteArgs<ExtArgs>>): Prisma__UpsellRecommendationClient<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one UpsellRecommendation.
+     * @param {UpsellRecommendationUpdateArgs} args - Arguments to update one UpsellRecommendation.
+     * @example
+     * // Update one UpsellRecommendation
+     * const upsellRecommendation = await prisma.upsellRecommendation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UpsellRecommendationUpdateArgs>(args: SelectSubset<T, UpsellRecommendationUpdateArgs<ExtArgs>>): Prisma__UpsellRecommendationClient<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more UpsellRecommendations.
+     * @param {UpsellRecommendationDeleteManyArgs} args - Arguments to filter UpsellRecommendations to delete.
+     * @example
+     * // Delete a few UpsellRecommendations
+     * const { count } = await prisma.upsellRecommendation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UpsellRecommendationDeleteManyArgs>(args?: SelectSubset<T, UpsellRecommendationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UpsellRecommendations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UpsellRecommendationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UpsellRecommendations
+     * const upsellRecommendation = await prisma.upsellRecommendation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UpsellRecommendationUpdateManyArgs>(args: SelectSubset<T, UpsellRecommendationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one UpsellRecommendation.
+     * @param {UpsellRecommendationUpsertArgs} args - Arguments to update or create a UpsellRecommendation.
+     * @example
+     * // Update or create a UpsellRecommendation
+     * const upsellRecommendation = await prisma.upsellRecommendation.upsert({
+     *   create: {
+     *     // ... data to create a UpsellRecommendation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UpsellRecommendation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UpsellRecommendationUpsertArgs>(args: SelectSubset<T, UpsellRecommendationUpsertArgs<ExtArgs>>): Prisma__UpsellRecommendationClient<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of UpsellRecommendations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UpsellRecommendationCountArgs} args - Arguments to filter UpsellRecommendations to count.
+     * @example
+     * // Count the number of UpsellRecommendations
+     * const count = await prisma.upsellRecommendation.count({
+     *   where: {
+     *     // ... the filter for the UpsellRecommendations we want to count
+     *   }
+     * })
+    **/
+    count<T extends UpsellRecommendationCountArgs>(
+      args?: Subset<T, UpsellRecommendationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UpsellRecommendationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UpsellRecommendation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UpsellRecommendationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UpsellRecommendationAggregateArgs>(args: Subset<T, UpsellRecommendationAggregateArgs>): Prisma.PrismaPromise<GetUpsellRecommendationAggregateType<T>>
+
+    /**
+     * Group by UpsellRecommendation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UpsellRecommendationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UpsellRecommendationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UpsellRecommendationGroupByArgs['orderBy'] }
+        : { orderBy?: UpsellRecommendationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UpsellRecommendationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUpsellRecommendationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UpsellRecommendation model
+   */
+  readonly fields: UpsellRecommendationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UpsellRecommendation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UpsellRecommendationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UpsellRecommendation model
+   */ 
+  interface UpsellRecommendationFieldRefs {
+    readonly id: FieldRef<"UpsellRecommendation", 'String'>
+    readonly companyId: FieldRef<"UpsellRecommendation", 'String'>
+    readonly customerId: FieldRef<"UpsellRecommendation", 'String'>
+    readonly recommendedOffer: FieldRef<"UpsellRecommendation", 'String'>
+    readonly confidence: FieldRef<"UpsellRecommendation", 'Float'>
+    readonly status: FieldRef<"UpsellRecommendation", 'String'>
+    readonly allScores: FieldRef<"UpsellRecommendation", 'Json'>
+    readonly ruleOffer: FieldRef<"UpsellRecommendation", 'String'>
+    readonly modelOffer: FieldRef<"UpsellRecommendation", 'String'>
+    readonly triggerSource: FieldRef<"UpsellRecommendation", 'String'>
+    readonly priorityScore: FieldRef<"UpsellRecommendation", 'Float'>
+    readonly inputPayload: FieldRef<"UpsellRecommendation", 'Json'>
+    readonly createdAt: FieldRef<"UpsellRecommendation", 'DateTime'>
+    readonly updatedAt: FieldRef<"UpsellRecommendation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UpsellRecommendation findUnique
+   */
+  export type UpsellRecommendationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which UpsellRecommendation to fetch.
+     */
+    where: UpsellRecommendationWhereUniqueInput
+  }
+
+  /**
+   * UpsellRecommendation findUniqueOrThrow
+   */
+  export type UpsellRecommendationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which UpsellRecommendation to fetch.
+     */
+    where: UpsellRecommendationWhereUniqueInput
+  }
+
+  /**
+   * UpsellRecommendation findFirst
+   */
+  export type UpsellRecommendationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which UpsellRecommendation to fetch.
+     */
+    where?: UpsellRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UpsellRecommendations to fetch.
+     */
+    orderBy?: UpsellRecommendationOrderByWithRelationInput | UpsellRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UpsellRecommendations.
+     */
+    cursor?: UpsellRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UpsellRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UpsellRecommendations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UpsellRecommendations.
+     */
+    distinct?: UpsellRecommendationScalarFieldEnum | UpsellRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * UpsellRecommendation findFirstOrThrow
+   */
+  export type UpsellRecommendationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which UpsellRecommendation to fetch.
+     */
+    where?: UpsellRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UpsellRecommendations to fetch.
+     */
+    orderBy?: UpsellRecommendationOrderByWithRelationInput | UpsellRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UpsellRecommendations.
+     */
+    cursor?: UpsellRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UpsellRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UpsellRecommendations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UpsellRecommendations.
+     */
+    distinct?: UpsellRecommendationScalarFieldEnum | UpsellRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * UpsellRecommendation findMany
+   */
+  export type UpsellRecommendationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which UpsellRecommendations to fetch.
+     */
+    where?: UpsellRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UpsellRecommendations to fetch.
+     */
+    orderBy?: UpsellRecommendationOrderByWithRelationInput | UpsellRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UpsellRecommendations.
+     */
+    cursor?: UpsellRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UpsellRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UpsellRecommendations.
+     */
+    skip?: number
+    distinct?: UpsellRecommendationScalarFieldEnum | UpsellRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * UpsellRecommendation create
+   */
+  export type UpsellRecommendationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a UpsellRecommendation.
+     */
+    data: XOR<UpsellRecommendationCreateInput, UpsellRecommendationUncheckedCreateInput>
+  }
+
+  /**
+   * UpsellRecommendation createMany
+   */
+  export type UpsellRecommendationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UpsellRecommendations.
+     */
+    data: UpsellRecommendationCreateManyInput | UpsellRecommendationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UpsellRecommendation createManyAndReturn
+   */
+  export type UpsellRecommendationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many UpsellRecommendations.
+     */
+    data: UpsellRecommendationCreateManyInput | UpsellRecommendationCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UpsellRecommendation update
+   */
+  export type UpsellRecommendationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a UpsellRecommendation.
+     */
+    data: XOR<UpsellRecommendationUpdateInput, UpsellRecommendationUncheckedUpdateInput>
+    /**
+     * Choose, which UpsellRecommendation to update.
+     */
+    where: UpsellRecommendationWhereUniqueInput
+  }
+
+  /**
+   * UpsellRecommendation updateMany
+   */
+  export type UpsellRecommendationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UpsellRecommendations.
+     */
+    data: XOR<UpsellRecommendationUpdateManyMutationInput, UpsellRecommendationUncheckedUpdateManyInput>
+    /**
+     * Filter which UpsellRecommendations to update
+     */
+    where?: UpsellRecommendationWhereInput
+  }
+
+  /**
+   * UpsellRecommendation upsert
+   */
+  export type UpsellRecommendationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the UpsellRecommendation to update in case it exists.
+     */
+    where: UpsellRecommendationWhereUniqueInput
+    /**
+     * In case the UpsellRecommendation found by the `where` argument doesn't exist, create a new UpsellRecommendation with this data.
+     */
+    create: XOR<UpsellRecommendationCreateInput, UpsellRecommendationUncheckedCreateInput>
+    /**
+     * In case the UpsellRecommendation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UpsellRecommendationUpdateInput, UpsellRecommendationUncheckedUpdateInput>
+  }
+
+  /**
+   * UpsellRecommendation delete
+   */
+  export type UpsellRecommendationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter which UpsellRecommendation to delete.
+     */
+    where: UpsellRecommendationWhereUniqueInput
+  }
+
+  /**
+   * UpsellRecommendation deleteMany
+   */
+  export type UpsellRecommendationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UpsellRecommendations to delete
+     */
+    where?: UpsellRecommendationWhereInput
+  }
+
+  /**
+   * UpsellRecommendation without action
+   */
+  export type UpsellRecommendationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UpsellRecommendation
+     */
+    select?: UpsellRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UpsellRecommendationInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -13070,6 +15434,7 @@ export namespace Prisma {
     logoUrl: 'logoUrl',
     website: 'website',
     isActive: 'isActive',
+    automaticFollowupEnabled: 'automaticFollowupEnabled',
     trialEndsAt: 'trialEndsAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -13119,6 +15484,7 @@ export namespace Prisma {
     source: 'source',
     tags: 'tags',
     isActive: 'isActive',
+    automaticFollowupEnabled: 'automaticFollowupEnabled',
     engagementStatus: 'engagementStatus',
     auth0UserId: 'auth0UserId',
     createdAt: 'createdAt',
@@ -13271,12 +15637,64 @@ export namespace Prisma {
   export type EquipmentScalarFieldEnum = (typeof EquipmentScalarFieldEnum)[keyof typeof EquipmentScalarFieldEnum]
 
 
+  export const FollowupAttemptScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    entityType: 'entityType',
+    entityId: 'entityId',
+    customerId: 'customerId',
+    leadId: 'leadId',
+    action: 'action',
+    status: 'status',
+    churnProbability: 'churnProbability',
+    queueJobId: 'queueJobId',
+    reason: 'reason',
+    errorMessage: 'errorMessage',
+    metadata: 'metadata',
+    triggeredAt: 'triggeredAt',
+    queuedAt: 'queuedAt',
+    failedAt: 'failedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type FollowupAttemptScalarFieldEnum = (typeof FollowupAttemptScalarFieldEnum)[keyof typeof FollowupAttemptScalarFieldEnum]
+
+
+  export const UpsellRecommendationScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    customerId: 'customerId',
+    recommendedOffer: 'recommendedOffer',
+    confidence: 'confidence',
+    status: 'status',
+    allScores: 'allScores',
+    ruleOffer: 'ruleOffer',
+    modelOffer: 'modelOffer',
+    triggerSource: 'triggerSource',
+    priorityScore: 'priorityScore',
+    inputPayload: 'inputPayload',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type UpsellRecommendationScalarFieldEnum = (typeof UpsellRecommendationScalarFieldEnum)[keyof typeof UpsellRecommendationScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
   export const QueryMode: {
@@ -13293,6 +15711,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -13459,6 +15886,13 @@ export namespace Prisma {
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
   /**
    * Deep Input Types
    */
@@ -13480,6 +15914,7 @@ export namespace Prisma {
     logoUrl?: StringNullableFilter<"Company"> | string | null
     website?: StringNullableFilter<"Company"> | string | null
     isActive?: BoolFilter<"Company"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Company"> | boolean
     trialEndsAt?: DateTimeNullableFilter<"Company"> | Date | string | null
     createdAt?: DateTimeFilter<"Company"> | Date | string
     updatedAt?: DateTimeFilter<"Company"> | Date | string
@@ -13504,6 +15939,7 @@ export namespace Prisma {
     logoUrl?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13531,6 +15967,7 @@ export namespace Prisma {
     logoUrl?: StringNullableFilter<"Company"> | string | null
     website?: StringNullableFilter<"Company"> | string | null
     isActive?: BoolFilter<"Company"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Company"> | boolean
     trialEndsAt?: DateTimeNullableFilter<"Company"> | Date | string | null
     createdAt?: DateTimeFilter<"Company"> | Date | string
     updatedAt?: DateTimeFilter<"Company"> | Date | string
@@ -13555,6 +15992,7 @@ export namespace Prisma {
     logoUrl?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13579,6 +16017,7 @@ export namespace Prisma {
     logoUrl?: StringNullableWithAggregatesFilter<"Company"> | string | null
     website?: StringNullableWithAggregatesFilter<"Company"> | string | null
     isActive?: BoolWithAggregatesFilter<"Company"> | boolean
+    automaticFollowupEnabled?: BoolWithAggregatesFilter<"Company"> | boolean
     trialEndsAt?: DateTimeNullableWithAggregatesFilter<"Company"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Company"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Company"> | Date | string
@@ -13727,6 +16166,7 @@ export namespace Prisma {
     source?: StringNullableFilter<"Customer"> | string | null
     tags?: StringNullableListFilter<"Customer">
     isActive?: BoolFilter<"Customer"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableFilter<"Customer"> | string | null
     createdAt?: DateTimeFilter<"Customer"> | Date | string
@@ -13739,6 +16179,7 @@ export namespace Prisma {
     reviews?: ReviewListRelationFilter
     addresses?: AddressListRelationFilter
     equipment?: EquipmentListRelationFilter
+    upsellRecommendations?: UpsellRecommendationListRelationFilter
   }
 
   export type CustomerOrderByWithRelationInput = {
@@ -13758,6 +16199,7 @@ export namespace Prisma {
     source?: SortOrderInput | SortOrder
     tags?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -13770,6 +16212,7 @@ export namespace Prisma {
     reviews?: ReviewOrderByRelationAggregateInput
     addresses?: AddressOrderByRelationAggregateInput
     equipment?: EquipmentOrderByRelationAggregateInput
+    upsellRecommendations?: UpsellRecommendationOrderByRelationAggregateInput
   }
 
   export type CustomerWhereUniqueInput = Prisma.AtLeast<{
@@ -13792,6 +16235,7 @@ export namespace Prisma {
     source?: StringNullableFilter<"Customer"> | string | null
     tags?: StringNullableListFilter<"Customer">
     isActive?: BoolFilter<"Customer"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableFilter<"Customer"> | string | null
     createdAt?: DateTimeFilter<"Customer"> | Date | string
@@ -13804,6 +16248,7 @@ export namespace Prisma {
     reviews?: ReviewListRelationFilter
     addresses?: AddressListRelationFilter
     equipment?: EquipmentListRelationFilter
+    upsellRecommendations?: UpsellRecommendationListRelationFilter
   }, "id">
 
   export type CustomerOrderByWithAggregationInput = {
@@ -13823,6 +16268,7 @@ export namespace Prisma {
     source?: SortOrderInput | SortOrder
     tags?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -13852,6 +16298,7 @@ export namespace Prisma {
     source?: StringNullableWithAggregatesFilter<"Customer"> | string | null
     tags?: StringNullableListFilter<"Customer">
     isActive?: BoolWithAggregatesFilter<"Customer"> | boolean
+    automaticFollowupEnabled?: BoolWithAggregatesFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusWithAggregatesFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableWithAggregatesFilter<"Customer"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Customer"> | Date | string
@@ -14597,6 +17044,227 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Equipment"> | Date | string
   }
 
+  export type FollowupAttemptWhereInput = {
+    AND?: FollowupAttemptWhereInput | FollowupAttemptWhereInput[]
+    OR?: FollowupAttemptWhereInput[]
+    NOT?: FollowupAttemptWhereInput | FollowupAttemptWhereInput[]
+    id?: StringFilter<"FollowupAttempt"> | string
+    companyId?: StringFilter<"FollowupAttempt"> | string
+    entityType?: StringFilter<"FollowupAttempt"> | string
+    entityId?: StringFilter<"FollowupAttempt"> | string
+    customerId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    leadId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    action?: StringFilter<"FollowupAttempt"> | string
+    status?: StringFilter<"FollowupAttempt"> | string
+    churnProbability?: FloatNullableFilter<"FollowupAttempt"> | number | null
+    queueJobId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    reason?: StringNullableFilter<"FollowupAttempt"> | string | null
+    errorMessage?: StringNullableFilter<"FollowupAttempt"> | string | null
+    metadata?: JsonNullableFilter<"FollowupAttempt">
+    triggeredAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+    queuedAt?: DateTimeNullableFilter<"FollowupAttempt"> | Date | string | null
+    failedAt?: DateTimeNullableFilter<"FollowupAttempt"> | Date | string | null
+    createdAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+    updatedAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+  }
+
+  export type FollowupAttemptOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    leadId?: SortOrderInput | SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrderInput | SortOrder
+    queueJobId?: SortOrderInput | SortOrder
+    reason?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrderInput | SortOrder
+    failedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FollowupAttemptWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: FollowupAttemptWhereInput | FollowupAttemptWhereInput[]
+    OR?: FollowupAttemptWhereInput[]
+    NOT?: FollowupAttemptWhereInput | FollowupAttemptWhereInput[]
+    companyId?: StringFilter<"FollowupAttempt"> | string
+    entityType?: StringFilter<"FollowupAttempt"> | string
+    entityId?: StringFilter<"FollowupAttempt"> | string
+    customerId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    leadId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    action?: StringFilter<"FollowupAttempt"> | string
+    status?: StringFilter<"FollowupAttempt"> | string
+    churnProbability?: FloatNullableFilter<"FollowupAttempt"> | number | null
+    queueJobId?: StringNullableFilter<"FollowupAttempt"> | string | null
+    reason?: StringNullableFilter<"FollowupAttempt"> | string | null
+    errorMessage?: StringNullableFilter<"FollowupAttempt"> | string | null
+    metadata?: JsonNullableFilter<"FollowupAttempt">
+    triggeredAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+    queuedAt?: DateTimeNullableFilter<"FollowupAttempt"> | Date | string | null
+    failedAt?: DateTimeNullableFilter<"FollowupAttempt"> | Date | string | null
+    createdAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+    updatedAt?: DateTimeFilter<"FollowupAttempt"> | Date | string
+  }, "id">
+
+  export type FollowupAttemptOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    leadId?: SortOrderInput | SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrderInput | SortOrder
+    queueJobId?: SortOrderInput | SortOrder
+    reason?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrderInput | SortOrder
+    failedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: FollowupAttemptCountOrderByAggregateInput
+    _avg?: FollowupAttemptAvgOrderByAggregateInput
+    _max?: FollowupAttemptMaxOrderByAggregateInput
+    _min?: FollowupAttemptMinOrderByAggregateInput
+    _sum?: FollowupAttemptSumOrderByAggregateInput
+  }
+
+  export type FollowupAttemptScalarWhereWithAggregatesInput = {
+    AND?: FollowupAttemptScalarWhereWithAggregatesInput | FollowupAttemptScalarWhereWithAggregatesInput[]
+    OR?: FollowupAttemptScalarWhereWithAggregatesInput[]
+    NOT?: FollowupAttemptScalarWhereWithAggregatesInput | FollowupAttemptScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    companyId?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    entityType?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    entityId?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    customerId?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    leadId?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    action?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    status?: StringWithAggregatesFilter<"FollowupAttempt"> | string
+    churnProbability?: FloatNullableWithAggregatesFilter<"FollowupAttempt"> | number | null
+    queueJobId?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    reason?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    errorMessage?: StringNullableWithAggregatesFilter<"FollowupAttempt"> | string | null
+    metadata?: JsonNullableWithAggregatesFilter<"FollowupAttempt">
+    triggeredAt?: DateTimeWithAggregatesFilter<"FollowupAttempt"> | Date | string
+    queuedAt?: DateTimeNullableWithAggregatesFilter<"FollowupAttempt"> | Date | string | null
+    failedAt?: DateTimeNullableWithAggregatesFilter<"FollowupAttempt"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"FollowupAttempt"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"FollowupAttempt"> | Date | string
+  }
+
+  export type UpsellRecommendationWhereInput = {
+    AND?: UpsellRecommendationWhereInput | UpsellRecommendationWhereInput[]
+    OR?: UpsellRecommendationWhereInput[]
+    NOT?: UpsellRecommendationWhereInput | UpsellRecommendationWhereInput[]
+    id?: StringFilter<"UpsellRecommendation"> | string
+    companyId?: StringFilter<"UpsellRecommendation"> | string
+    customerId?: StringFilter<"UpsellRecommendation"> | string
+    recommendedOffer?: StringFilter<"UpsellRecommendation"> | string
+    confidence?: FloatFilter<"UpsellRecommendation"> | number
+    status?: StringFilter<"UpsellRecommendation"> | string
+    allScores?: JsonNullableFilter<"UpsellRecommendation">
+    ruleOffer?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    modelOffer?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    triggerSource?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    priorityScore?: FloatNullableFilter<"UpsellRecommendation"> | number | null
+    inputPayload?: JsonNullableFilter<"UpsellRecommendation">
+    createdAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
+    updatedAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
+    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+  }
+
+  export type UpsellRecommendationOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    recommendedOffer?: SortOrder
+    confidence?: SortOrder
+    status?: SortOrder
+    allScores?: SortOrderInput | SortOrder
+    ruleOffer?: SortOrderInput | SortOrder
+    modelOffer?: SortOrderInput | SortOrder
+    triggerSource?: SortOrderInput | SortOrder
+    priorityScore?: SortOrderInput | SortOrder
+    inputPayload?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    customer?: CustomerOrderByWithRelationInput
+  }
+
+  export type UpsellRecommendationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: UpsellRecommendationWhereInput | UpsellRecommendationWhereInput[]
+    OR?: UpsellRecommendationWhereInput[]
+    NOT?: UpsellRecommendationWhereInput | UpsellRecommendationWhereInput[]
+    companyId?: StringFilter<"UpsellRecommendation"> | string
+    customerId?: StringFilter<"UpsellRecommendation"> | string
+    recommendedOffer?: StringFilter<"UpsellRecommendation"> | string
+    confidence?: FloatFilter<"UpsellRecommendation"> | number
+    status?: StringFilter<"UpsellRecommendation"> | string
+    allScores?: JsonNullableFilter<"UpsellRecommendation">
+    ruleOffer?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    modelOffer?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    triggerSource?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    priorityScore?: FloatNullableFilter<"UpsellRecommendation"> | number | null
+    inputPayload?: JsonNullableFilter<"UpsellRecommendation">
+    createdAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
+    updatedAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
+    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+  }, "id">
+
+  export type UpsellRecommendationOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    recommendedOffer?: SortOrder
+    confidence?: SortOrder
+    status?: SortOrder
+    allScores?: SortOrderInput | SortOrder
+    ruleOffer?: SortOrderInput | SortOrder
+    modelOffer?: SortOrderInput | SortOrder
+    triggerSource?: SortOrderInput | SortOrder
+    priorityScore?: SortOrderInput | SortOrder
+    inputPayload?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: UpsellRecommendationCountOrderByAggregateInput
+    _avg?: UpsellRecommendationAvgOrderByAggregateInput
+    _max?: UpsellRecommendationMaxOrderByAggregateInput
+    _min?: UpsellRecommendationMinOrderByAggregateInput
+    _sum?: UpsellRecommendationSumOrderByAggregateInput
+  }
+
+  export type UpsellRecommendationScalarWhereWithAggregatesInput = {
+    AND?: UpsellRecommendationScalarWhereWithAggregatesInput | UpsellRecommendationScalarWhereWithAggregatesInput[]
+    OR?: UpsellRecommendationScalarWhereWithAggregatesInput[]
+    NOT?: UpsellRecommendationScalarWhereWithAggregatesInput | UpsellRecommendationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"UpsellRecommendation"> | string
+    companyId?: StringWithAggregatesFilter<"UpsellRecommendation"> | string
+    customerId?: StringWithAggregatesFilter<"UpsellRecommendation"> | string
+    recommendedOffer?: StringWithAggregatesFilter<"UpsellRecommendation"> | string
+    confidence?: FloatWithAggregatesFilter<"UpsellRecommendation"> | number
+    status?: StringWithAggregatesFilter<"UpsellRecommendation"> | string
+    allScores?: JsonNullableWithAggregatesFilter<"UpsellRecommendation">
+    ruleOffer?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
+    modelOffer?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
+    triggerSource?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
+    priorityScore?: FloatNullableWithAggregatesFilter<"UpsellRecommendation"> | number | null
+    inputPayload?: JsonNullableWithAggregatesFilter<"UpsellRecommendation">
+    createdAt?: DateTimeWithAggregatesFilter<"UpsellRecommendation"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"UpsellRecommendation"> | Date | string
+  }
+
   export type CompanyCreateInput = {
     id?: string
     name: string
@@ -14610,6 +17278,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14634,6 +17303,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14658,6 +17328,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14682,6 +17353,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14706,6 +17378,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14724,6 +17397,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14742,6 +17416,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14909,6 +17584,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -14921,6 +17597,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateInput = {
@@ -14940,6 +17617,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -14951,6 +17629,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUpdateInput = {
@@ -14969,6 +17648,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14981,6 +17661,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateInput = {
@@ -15000,6 +17681,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15011,6 +17693,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerCreateManyInput = {
@@ -15030,6 +17713,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -15052,6 +17736,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15075,6 +17760,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15927,6 +18613,271 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type FollowupAttemptCreateInput = {
+    id: string
+    companyId: string
+    entityType: string
+    entityId: string
+    customerId?: string | null
+    leadId?: string | null
+    action: string
+    status: string
+    churnProbability?: number | null
+    queueJobId?: string | null
+    reason?: string | null
+    errorMessage?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: Date | string
+    queuedAt?: Date | string | null
+    failedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FollowupAttemptUncheckedCreateInput = {
+    id: string
+    companyId: string
+    entityType: string
+    entityId: string
+    customerId?: string | null
+    leadId?: string | null
+    action: string
+    status: string
+    churnProbability?: number | null
+    queueJobId?: string | null
+    reason?: string | null
+    errorMessage?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: Date | string
+    queuedAt?: Date | string | null
+    failedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FollowupAttemptUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    leadId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    churnProbability?: NullableFloatFieldUpdateOperationsInput | number | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    queuedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FollowupAttemptUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    leadId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    churnProbability?: NullableFloatFieldUpdateOperationsInput | number | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    queuedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FollowupAttemptCreateManyInput = {
+    id: string
+    companyId: string
+    entityType: string
+    entityId: string
+    customerId?: string | null
+    leadId?: string | null
+    action: string
+    status: string
+    churnProbability?: number | null
+    queueJobId?: string | null
+    reason?: string | null
+    errorMessage?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: Date | string
+    queuedAt?: Date | string | null
+    failedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FollowupAttemptUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    leadId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    churnProbability?: NullableFloatFieldUpdateOperationsInput | number | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    queuedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FollowupAttemptUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    leadId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    churnProbability?: NullableFloatFieldUpdateOperationsInput | number | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    triggeredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    queuedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UpsellRecommendationCreateInput = {
+    id?: string
+    companyId: string
+    recommendedOffer: string
+    confidence: number
+    status?: string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: string | null
+    modelOffer?: string | null
+    triggerSource?: string | null
+    priorityScore?: number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer: CustomerCreateNestedOneWithoutUpsellRecommendationsInput
+  }
+
+  export type UpsellRecommendationUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    recommendedOffer: string
+    confidence: number
+    status?: string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: string | null
+    modelOffer?: string | null
+    triggerSource?: string | null
+    priorityScore?: number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UpsellRecommendationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    recommendedOffer?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    modelOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
+    priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneRequiredWithoutUpsellRecommendationsNestedInput
+  }
+
+  export type UpsellRecommendationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    recommendedOffer?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    modelOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
+    priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UpsellRecommendationCreateManyInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    recommendedOffer: string
+    confidence: number
+    status?: string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: string | null
+    modelOffer?: string | null
+    triggerSource?: string | null
+    priorityScore?: number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UpsellRecommendationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    recommendedOffer?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    modelOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
+    priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UpsellRecommendationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    recommendedOffer?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    modelOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
+    priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -16062,6 +19013,7 @@ export namespace Prisma {
     logoUrl?: SortOrder
     website?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -16080,6 +19032,7 @@ export namespace Prisma {
     logoUrl?: SortOrder
     website?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -16098,6 +19051,7 @@ export namespace Prisma {
     logoUrl?: SortOrder
     website?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     trialEndsAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -16323,6 +19277,12 @@ export namespace Prisma {
     none?: EquipmentWhereInput
   }
 
+  export type UpsellRecommendationListRelationFilter = {
+    every?: UpsellRecommendationWhereInput
+    some?: UpsellRecommendationWhereInput
+    none?: UpsellRecommendationWhereInput
+  }
+
   export type ReviewOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -16332,6 +19292,10 @@ export namespace Prisma {
   }
 
   export type EquipmentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type UpsellRecommendationOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -16352,6 +19316,7 @@ export namespace Prisma {
     source?: SortOrder
     tags?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrder
     createdAt?: SortOrder
@@ -16374,6 +19339,7 @@ export namespace Prisma {
     notes?: SortOrder
     source?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrder
     createdAt?: SortOrder
@@ -16396,6 +19362,7 @@ export namespace Prisma {
     notes?: SortOrder
     source?: SortOrder
     isActive?: SortOrder
+    automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrder
     createdAt?: SortOrder
@@ -16948,6 +19915,206 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
+  export type JsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type FollowupAttemptCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrder
+    leadId?: SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrder
+    queueJobId?: SortOrder
+    reason?: SortOrder
+    errorMessage?: SortOrder
+    metadata?: SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrder
+    failedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FollowupAttemptAvgOrderByAggregateInput = {
+    churnProbability?: SortOrder
+  }
+
+  export type FollowupAttemptMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrder
+    leadId?: SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrder
+    queueJobId?: SortOrder
+    reason?: SortOrder
+    errorMessage?: SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrder
+    failedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FollowupAttemptMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    customerId?: SortOrder
+    leadId?: SortOrder
+    action?: SortOrder
+    status?: SortOrder
+    churnProbability?: SortOrder
+    queueJobId?: SortOrder
+    reason?: SortOrder
+    errorMessage?: SortOrder
+    triggeredAt?: SortOrder
+    queuedAt?: SortOrder
+    failedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FollowupAttemptSumOrderByAggregateInput = {
+    churnProbability?: SortOrder
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type UpsellRecommendationCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    recommendedOffer?: SortOrder
+    confidence?: SortOrder
+    status?: SortOrder
+    allScores?: SortOrder
+    ruleOffer?: SortOrder
+    modelOffer?: SortOrder
+    triggerSource?: SortOrder
+    priorityScore?: SortOrder
+    inputPayload?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UpsellRecommendationAvgOrderByAggregateInput = {
+    confidence?: SortOrder
+    priorityScore?: SortOrder
+  }
+
+  export type UpsellRecommendationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    recommendedOffer?: SortOrder
+    confidence?: SortOrder
+    status?: SortOrder
+    ruleOffer?: SortOrder
+    modelOffer?: SortOrder
+    triggerSource?: SortOrder
+    priorityScore?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UpsellRecommendationMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    recommendedOffer?: SortOrder
+    confidence?: SortOrder
+    status?: SortOrder
+    ruleOffer?: SortOrder
+    modelOffer?: SortOrder
+    triggerSource?: SortOrder
+    priorityScore?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UpsellRecommendationSumOrderByAggregateInput = {
+    confidence?: SortOrder
+    priorityScore?: SortOrder
+  }
+
+  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
 
   export type CustomerCreateNestedManyWithoutCompanyInput = {
     create?: XOR<CustomerCreateWithoutCompanyInput, CustomerUncheckedCreateWithoutCompanyInput> | CustomerCreateWithoutCompanyInput[] | CustomerUncheckedCreateWithoutCompanyInput[]
@@ -17311,6 +20478,13 @@ export namespace Prisma {
     connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
   }
 
+  export type UpsellRecommendationCreateNestedManyWithoutCustomerInput = {
+    create?: XOR<UpsellRecommendationCreateWithoutCustomerInput, UpsellRecommendationUncheckedCreateWithoutCustomerInput> | UpsellRecommendationCreateWithoutCustomerInput[] | UpsellRecommendationUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: UpsellRecommendationCreateOrConnectWithoutCustomerInput | UpsellRecommendationCreateOrConnectWithoutCustomerInput[]
+    createMany?: UpsellRecommendationCreateManyCustomerInputEnvelope
+    connect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+  }
+
   export type ContactUncheckedCreateNestedManyWithoutCustomerInput = {
     create?: XOR<ContactCreateWithoutCustomerInput, ContactUncheckedCreateWithoutCustomerInput> | ContactCreateWithoutCustomerInput[] | ContactUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: ContactCreateOrConnectWithoutCustomerInput | ContactCreateOrConnectWithoutCustomerInput[]
@@ -17358,6 +20532,13 @@ export namespace Prisma {
     connectOrCreate?: EquipmentCreateOrConnectWithoutCustomerInput | EquipmentCreateOrConnectWithoutCustomerInput[]
     createMany?: EquipmentCreateManyCustomerInputEnvelope
     connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+  }
+
+  export type UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput = {
+    create?: XOR<UpsellRecommendationCreateWithoutCustomerInput, UpsellRecommendationUncheckedCreateWithoutCustomerInput> | UpsellRecommendationCreateWithoutCustomerInput[] | UpsellRecommendationUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: UpsellRecommendationCreateOrConnectWithoutCustomerInput | UpsellRecommendationCreateOrConnectWithoutCustomerInput[]
+    createMany?: UpsellRecommendationCreateManyCustomerInputEnvelope
+    connect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
   }
 
   export type EnumCustomerTypeFieldUpdateOperationsInput = {
@@ -17479,6 +20660,20 @@ export namespace Prisma {
     deleteMany?: EquipmentScalarWhereInput | EquipmentScalarWhereInput[]
   }
 
+  export type UpsellRecommendationUpdateManyWithoutCustomerNestedInput = {
+    create?: XOR<UpsellRecommendationCreateWithoutCustomerInput, UpsellRecommendationUncheckedCreateWithoutCustomerInput> | UpsellRecommendationCreateWithoutCustomerInput[] | UpsellRecommendationUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: UpsellRecommendationCreateOrConnectWithoutCustomerInput | UpsellRecommendationCreateOrConnectWithoutCustomerInput[]
+    upsert?: UpsellRecommendationUpsertWithWhereUniqueWithoutCustomerInput | UpsellRecommendationUpsertWithWhereUniqueWithoutCustomerInput[]
+    createMany?: UpsellRecommendationCreateManyCustomerInputEnvelope
+    set?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+    disconnect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+    delete?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+    connect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+    update?: UpsellRecommendationUpdateWithWhereUniqueWithoutCustomerInput | UpsellRecommendationUpdateWithWhereUniqueWithoutCustomerInput[]
+    updateMany?: UpsellRecommendationUpdateManyWithWhereWithoutCustomerInput | UpsellRecommendationUpdateManyWithWhereWithoutCustomerInput[]
+    deleteMany?: UpsellRecommendationScalarWhereInput | UpsellRecommendationScalarWhereInput[]
+  }
+
   export type ContactUncheckedUpdateManyWithoutCustomerNestedInput = {
     create?: XOR<ContactCreateWithoutCustomerInput, ContactUncheckedCreateWithoutCustomerInput> | ContactCreateWithoutCustomerInput[] | ContactUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: ContactCreateOrConnectWithoutCustomerInput | ContactCreateOrConnectWithoutCustomerInput[]
@@ -17575,6 +20770,20 @@ export namespace Prisma {
     update?: EquipmentUpdateWithWhereUniqueWithoutCustomerInput | EquipmentUpdateWithWhereUniqueWithoutCustomerInput[]
     updateMany?: EquipmentUpdateManyWithWhereWithoutCustomerInput | EquipmentUpdateManyWithWhereWithoutCustomerInput[]
     deleteMany?: EquipmentScalarWhereInput | EquipmentScalarWhereInput[]
+  }
+
+  export type UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput = {
+    create?: XOR<UpsellRecommendationCreateWithoutCustomerInput, UpsellRecommendationUncheckedCreateWithoutCustomerInput> | UpsellRecommendationCreateWithoutCustomerInput[] | UpsellRecommendationUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: UpsellRecommendationCreateOrConnectWithoutCustomerInput | UpsellRecommendationCreateOrConnectWithoutCustomerInput[]
+    upsert?: UpsellRecommendationUpsertWithWhereUniqueWithoutCustomerInput | UpsellRecommendationUpsertWithWhereUniqueWithoutCustomerInput[]
+    createMany?: UpsellRecommendationCreateManyCustomerInputEnvelope
+    set?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+    disconnect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+    delete?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+    connect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+    update?: UpsellRecommendationUpdateWithWhereUniqueWithoutCustomerInput | UpsellRecommendationUpdateWithWhereUniqueWithoutCustomerInput[]
+    updateMany?: UpsellRecommendationUpdateManyWithWhereWithoutCustomerInput | UpsellRecommendationUpdateManyWithWhereWithoutCustomerInput[]
+    deleteMany?: UpsellRecommendationScalarWhereInput | UpsellRecommendationScalarWhereInput[]
   }
 
   export type CompanyCreateNestedOneWithoutContactsInput = {
@@ -17827,6 +21036,28 @@ export namespace Prisma {
     upsert?: CustomerUpsertWithoutEquipmentInput
     connect?: CustomerWhereUniqueInput
     update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutEquipmentInput, CustomerUpdateWithoutEquipmentInput>, CustomerUncheckedUpdateWithoutEquipmentInput>
+  }
+
+  export type CustomerCreateNestedOneWithoutUpsellRecommendationsInput = {
+    create?: XOR<CustomerCreateWithoutUpsellRecommendationsInput, CustomerUncheckedCreateWithoutUpsellRecommendationsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutUpsellRecommendationsInput
+    connect?: CustomerWhereUniqueInput
+  }
+
+  export type FloatFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type CustomerUpdateOneRequiredWithoutUpsellRecommendationsNestedInput = {
+    create?: XOR<CustomerCreateWithoutUpsellRecommendationsInput, CustomerUncheckedCreateWithoutUpsellRecommendationsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutUpsellRecommendationsInput
+    upsert?: CustomerUpsertWithoutUpsellRecommendationsInput
+    connect?: CustomerWhereUniqueInput
+    update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutUpsellRecommendationsInput, CustomerUpdateWithoutUpsellRecommendationsInput>, CustomerUncheckedUpdateWithoutUpsellRecommendationsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -18158,6 +21389,44 @@ export namespace Prisma {
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
 
   export type CustomerCreateWithoutCompanyInput = {
     id?: string
@@ -18175,6 +21444,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -18186,6 +21456,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutCompanyInput = {
@@ -18204,6 +21475,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -18215,6 +21487,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutCompanyInput = {
@@ -18491,6 +21764,7 @@ export namespace Prisma {
     source?: StringNullableFilter<"Customer"> | string | null
     tags?: StringNullableListFilter<"Customer">
     isActive?: BoolFilter<"Customer"> | boolean
+    automaticFollowupEnabled?: BoolFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableFilter<"Customer"> | string | null
     createdAt?: DateTimeFilter<"Customer"> | Date | string
@@ -18698,6 +21972,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18721,6 +21996,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18760,6 +22036,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18783,6 +22060,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18806,6 +22084,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18829,6 +22108,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19146,6 +22426,48 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type UpsellRecommendationCreateWithoutCustomerInput = {
+    id?: string
+    companyId: string
+    recommendedOffer: string
+    confidence: number
+    status?: string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: string | null
+    modelOffer?: string | null
+    triggerSource?: string | null
+    priorityScore?: number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UpsellRecommendationUncheckedCreateWithoutCustomerInput = {
+    id?: string
+    companyId: string
+    recommendedOffer: string
+    confidence: number
+    status?: string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: string | null
+    modelOffer?: string | null
+    triggerSource?: string | null
+    priorityScore?: number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UpsellRecommendationCreateOrConnectWithoutCustomerInput = {
+    where: UpsellRecommendationWhereUniqueInput
+    create: XOR<UpsellRecommendationCreateWithoutCustomerInput, UpsellRecommendationUncheckedCreateWithoutCustomerInput>
+  }
+
+  export type UpsellRecommendationCreateManyCustomerInputEnvelope = {
+    data: UpsellRecommendationCreateManyCustomerInput | UpsellRecommendationCreateManyCustomerInput[]
+    skipDuplicates?: boolean
+  }
+
   export type CompanyUpsertWithoutCustomersInput = {
     update: XOR<CompanyUpdateWithoutCustomersInput, CompanyUncheckedUpdateWithoutCustomersInput>
     create: XOR<CompanyCreateWithoutCustomersInput, CompanyUncheckedCreateWithoutCustomersInput>
@@ -19170,6 +22492,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19193,6 +22516,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19374,6 +22698,42 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Equipment"> | Date | string
   }
 
+  export type UpsellRecommendationUpsertWithWhereUniqueWithoutCustomerInput = {
+    where: UpsellRecommendationWhereUniqueInput
+    update: XOR<UpsellRecommendationUpdateWithoutCustomerInput, UpsellRecommendationUncheckedUpdateWithoutCustomerInput>
+    create: XOR<UpsellRecommendationCreateWithoutCustomerInput, UpsellRecommendationUncheckedCreateWithoutCustomerInput>
+  }
+
+  export type UpsellRecommendationUpdateWithWhereUniqueWithoutCustomerInput = {
+    where: UpsellRecommendationWhereUniqueInput
+    data: XOR<UpsellRecommendationUpdateWithoutCustomerInput, UpsellRecommendationUncheckedUpdateWithoutCustomerInput>
+  }
+
+  export type UpsellRecommendationUpdateManyWithWhereWithoutCustomerInput = {
+    where: UpsellRecommendationScalarWhereInput
+    data: XOR<UpsellRecommendationUpdateManyMutationInput, UpsellRecommendationUncheckedUpdateManyWithoutCustomerInput>
+  }
+
+  export type UpsellRecommendationScalarWhereInput = {
+    AND?: UpsellRecommendationScalarWhereInput | UpsellRecommendationScalarWhereInput[]
+    OR?: UpsellRecommendationScalarWhereInput[]
+    NOT?: UpsellRecommendationScalarWhereInput | UpsellRecommendationScalarWhereInput[]
+    id?: StringFilter<"UpsellRecommendation"> | string
+    companyId?: StringFilter<"UpsellRecommendation"> | string
+    customerId?: StringFilter<"UpsellRecommendation"> | string
+    recommendedOffer?: StringFilter<"UpsellRecommendation"> | string
+    confidence?: FloatFilter<"UpsellRecommendation"> | number
+    status?: StringFilter<"UpsellRecommendation"> | string
+    allScores?: JsonNullableFilter<"UpsellRecommendation">
+    ruleOffer?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    modelOffer?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    triggerSource?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    priorityScore?: FloatNullableFilter<"UpsellRecommendation"> | number | null
+    inputPayload?: JsonNullableFilter<"UpsellRecommendation">
+    createdAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
+    updatedAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
+  }
+
   export type CompanyCreateWithoutContactsInput = {
     id?: string
     name: string
@@ -19387,6 +22747,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19410,6 +22771,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19441,6 +22803,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -19452,6 +22815,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutContactsInput = {
@@ -19471,6 +22835,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -19481,6 +22846,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutContactsInput = {
@@ -19512,6 +22878,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19535,6 +22902,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19572,6 +22940,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19583,6 +22952,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutContactsInput = {
@@ -19602,6 +22972,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19612,6 +22983,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CompanyCreateWithoutLeadsInput = {
@@ -19627,6 +22999,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19650,6 +23023,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19681,6 +23055,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -19692,6 +23067,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutLeadsInput = {
@@ -19711,6 +23087,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -19721,6 +23098,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutLeadsInput = {
@@ -19792,6 +23170,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19815,6 +23194,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19852,6 +23232,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19863,6 +23244,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutLeadsInput = {
@@ -19882,6 +23264,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19892,6 +23275,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type AddressUpsertWithWhereUniqueWithoutLeadInput = {
@@ -19923,6 +23307,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19946,6 +23331,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19977,6 +23363,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -19988,6 +23375,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutAgreementsInput = {
@@ -20007,6 +23395,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20017,6 +23406,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutAgreementsInput = {
@@ -20048,6 +23438,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20071,6 +23462,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20108,6 +23500,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20119,6 +23512,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutAgreementsInput = {
@@ -20138,6 +23532,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20148,6 +23543,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CompanyCreateWithoutBookingsInput = {
@@ -20163,6 +23559,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20186,6 +23583,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     trialEndsAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20217,6 +23615,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20228,6 +23627,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutBookingsInput = {
@@ -20247,6 +23647,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20257,6 +23658,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutBookingsInput = {
@@ -20288,6 +23690,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20311,6 +23714,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20348,6 +23752,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20359,6 +23764,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutBookingsInput = {
@@ -20378,6 +23784,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20388,6 +23795,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerCreateWithoutReviewsInput = {
@@ -20406,6 +23814,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20417,6 +23826,7 @@ export namespace Prisma {
     bookings?: BookingCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutReviewsInput = {
@@ -20436,6 +23846,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20446,6 +23857,7 @@ export namespace Prisma {
     bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutReviewsInput = {
@@ -20480,6 +23892,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20491,6 +23904,7 @@ export namespace Prisma {
     bookings?: BookingUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutReviewsInput = {
@@ -20510,6 +23924,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20520,6 +23935,7 @@ export namespace Prisma {
     bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerCreateWithoutAddressesInput = {
@@ -20538,6 +23954,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20549,6 +23966,7 @@ export namespace Prisma {
     bookings?: BookingCreateNestedManyWithoutCustomerInput
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutAddressesInput = {
@@ -20568,6 +23986,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20578,6 +23997,7 @@ export namespace Prisma {
     bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutAddressesInput = {
@@ -20659,6 +24079,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20670,6 +24091,7 @@ export namespace Prisma {
     bookings?: BookingUpdateManyWithoutCustomerNestedInput
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutAddressesInput = {
@@ -20689,6 +24111,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20699,6 +24122,7 @@ export namespace Prisma {
     bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type LeadUpsertWithoutAddressesInput = {
@@ -20770,6 +24194,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20781,6 +24206,7 @@ export namespace Prisma {
     bookings?: BookingCreateNestedManyWithoutCustomerInput
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutEquipmentInput = {
@@ -20800,6 +24226,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -20810,6 +24237,7 @@ export namespace Prisma {
     bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutEquipmentInput = {
@@ -20844,6 +24272,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20855,6 +24284,7 @@ export namespace Prisma {
     bookings?: BookingUpdateManyWithoutCustomerNestedInput
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutEquipmentInput = {
@@ -20874,6 +24304,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20884,6 +24315,147 @@ export namespace Prisma {
     bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type CustomerCreateWithoutUpsellRecommendationsInput = {
+    id?: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutCustomersInput
+    contacts?: ContactCreateNestedManyWithoutCustomerInput
+    leads?: LeadCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementCreateNestedManyWithoutCustomerInput
+    bookings?: BookingCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewCreateNestedManyWithoutCustomerInput
+    addresses?: AddressCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerUncheckedCreateWithoutUpsellRecommendationsInput = {
+    id?: string
+    companyId: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
+    leads?: LeadUncheckedCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCustomerInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
+    addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerCreateOrConnectWithoutUpsellRecommendationsInput = {
+    where: CustomerWhereUniqueInput
+    create: XOR<CustomerCreateWithoutUpsellRecommendationsInput, CustomerUncheckedCreateWithoutUpsellRecommendationsInput>
+  }
+
+  export type CustomerUpsertWithoutUpsellRecommendationsInput = {
+    update: XOR<CustomerUpdateWithoutUpsellRecommendationsInput, CustomerUncheckedUpdateWithoutUpsellRecommendationsInput>
+    create: XOR<CustomerCreateWithoutUpsellRecommendationsInput, CustomerUncheckedCreateWithoutUpsellRecommendationsInput>
+    where?: CustomerWhereInput
+  }
+
+  export type CustomerUpdateToOneWithWhereWithoutUpsellRecommendationsInput = {
+    where?: CustomerWhereInput
+    data: XOR<CustomerUpdateWithoutUpsellRecommendationsInput, CustomerUncheckedUpdateWithoutUpsellRecommendationsInput>
+  }
+
+  export type CustomerUpdateWithoutUpsellRecommendationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
+    contacts?: ContactUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type CustomerUncheckedUpdateWithoutUpsellRecommendationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUncheckedUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUncheckedUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerCreateManyCompanyInput = {
@@ -20902,6 +24474,7 @@ export namespace Prisma {
     source?: string | null
     tags?: CustomerCreatetagsInput | string[]
     isActive?: boolean
+    automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
     createdAt?: Date | string
@@ -21012,6 +24585,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21023,6 +24597,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutCompanyInput = {
@@ -21041,6 +24616,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21052,6 +24628,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateManyWithoutCompanyInput = {
@@ -21070,6 +24647,7 @@ export namespace Prisma {
     source?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: CustomerUpdatetagsInput | string[]
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21457,6 +25035,22 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type UpsellRecommendationCreateManyCustomerInput = {
+    id?: string
+    companyId: string
+    recommendedOffer: string
+    confidence: number
+    status?: string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: string | null
+    modelOffer?: string | null
+    triggerSource?: string | null
+    priorityScore?: number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type ContactUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     firstName?: StringFieldUpdateOperationsInput | string
@@ -21804,6 +25398,54 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type UpsellRecommendationUpdateWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    recommendedOffer?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    modelOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
+    priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UpsellRecommendationUncheckedUpdateWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    recommendedOffer?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    modelOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
+    priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UpsellRecommendationUncheckedUpdateManyWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    recommendedOffer?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    allScores?: NullableJsonNullValueInput | InputJsonValue
+    ruleOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    modelOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
+    priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AddressCreateManyLeadInput = {
     id?: string
     companyId: string
@@ -21921,6 +25563,14 @@ export namespace Prisma {
      * @deprecated Use EquipmentDefaultArgs instead
      */
     export type EquipmentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = EquipmentDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use FollowupAttemptDefaultArgs instead
+     */
+    export type FollowupAttemptArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = FollowupAttemptDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use UpsellRecommendationDefaultArgs instead
+     */
+    export type UpsellRecommendationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = UpsellRecommendationDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

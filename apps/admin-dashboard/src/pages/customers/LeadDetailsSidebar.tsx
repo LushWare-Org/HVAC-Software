@@ -7,6 +7,9 @@ import {
   CheckCircle2,
   Plus,
   Activity,
+  FileText,
+  TrendingUp,
+  ShieldCheck,
   Save,
   Edit2,
   User,
@@ -18,8 +21,9 @@ import {
 import { useUpdateLead } from "../../hooks/useCustomers";
 import { useLeadAddresses, useSaveLeadAddresses } from "../../hooks/useAddresses";
 import type { Lead } from "../../types/api";
+import { computeLeadStatusSummary, formatLeadPct, leadConversionColor, leadRiskColor } from "./leadInsights";
 
-type TabType = "contact" | "addresses" | "activity";
+type TabType = "contact" | "addresses" | "activity" | "reasoning";
 
 interface LeadDetailsSidebarProps {
   person: Lead | null;
@@ -110,6 +114,57 @@ function SectionHeader({
         {title}
       </h3>
       {action}
+    </div>
+  );
+}
+
+function titleCase(value: string) {
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function ReasoningCard({
+  title,
+  result,
+  accent,
+  details,
+}: {
+  title: string;
+  result: string;
+  accent: string;
+  details: {
+    ruleBased: string;
+    mlResult: string;
+    aiExplanation: string;
+  };
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h4 className="text-sm font-700 text-[var(--t1)]">{title}</h4>
+          <p className="text-xs text-[var(--t2)] mt-1 font-600">{result}</p>
+        </div>
+        <span className="text-[11px] font-700 px-2 py-1 rounded-md" style={{ color: accent, background: "rgba(59, 130, 246, 0.12)" }}>
+          Explanation
+        </span>
+      </div>
+      <div className="grid gap-3">
+        <div>
+          <div className="text-[11px] font-700 text-[var(--t4)] uppercase tracking-wider mb-1">Rule-based signals</div>
+          <p className="text-sm text-[var(--t2)] leading-relaxed">{details.ruleBased}</p>
+        </div>
+        <div>
+          <div className="text-[11px] font-700 text-[var(--t4)] uppercase tracking-wider mb-1">Prediction result</div>
+          <p className="text-sm text-[var(--t2)] leading-relaxed">{details.mlResult}</p>
+        </div>
+        <div>
+          <div className="text-[11px] font-700 text-[var(--t4)] uppercase tracking-wider mb-1">AI explanation</div>
+          <p className="text-sm text-[var(--t2)] leading-relaxed">{details.aiExplanation}</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -299,6 +354,7 @@ export default function LeadDetailsSidebar({
     { id: "contact", label: "Contact", icon: <User size={14} /> },
     { id: "addresses", label: "Addresses", icon: <MapPin size={14} /> },
     { id: "activity", label: "Activity", icon: <Activity size={14} /> },
+    { id: "reasoning", label: "Reasoning", icon: <FileText size={14} /> },
   ];
 
   return (
@@ -308,8 +364,8 @@ export default function LeadDetailsSidebar({
         onClick={onClose}
       />
       <div
-        className="fixed top-0 bottom-0 right-0 w-full md:w-3/4 z-[210] flex flex-col shadow-2xl transition-transform transform duration-300 translate-x-0 border-l border-gray-200"
-        style={{ background: "#ffffff" }}
+        className="fixed top-0 bottom-0 right-0 w-3/4 z-[210] flex flex-col shadow-2xl transition-transform transform duration-300 translate-x-0 border-l border-gray-200"
+        style={{ background: "var(--bg-card)" }}
       >        <div className="sticky top-0 bg-[var(--blue)] px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
           <div className="text-white">
             <div className="flex items-center gap-3">
@@ -412,7 +468,7 @@ export default function LeadDetailsSidebar({
 
         <div
           className="flex-1 overflow-y-auto"
-          style={{ background: "#f3f4f6" }}
+          style={{ background: "var(--bg-surface)" }}
         >
           <div className="p-6">
             <div className="grid grid-cols-12 gap-6">
@@ -420,7 +476,7 @@ export default function LeadDetailsSidebar({
               <div className="col-span-3 space-y-4">
                 <div
                   className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-full bg-[var(--blue)] text-white flex items-center justify-center font-bold text-lg shrink-0">
@@ -439,7 +495,7 @@ export default function LeadDetailsSidebar({
 
                 <div
                   className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
                     <Mail size={16} className="text-[var(--blue-light)]" />{" "}
@@ -475,7 +531,7 @@ export default function LeadDetailsSidebar({
 
                 <div
                   className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                  style={{ background: "#ffffff" }}
+                  style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
                     <CheckCircle2
@@ -512,7 +568,7 @@ export default function LeadDetailsSidebar({
                   ].includes(formData.status) && (
                     <div
                       className="rounded-xl border border-gray-200 p-5 shadow-sm"
-                      style={{ background: "#ffffff" }}
+                      style={{ background: "var(--bg-card)" }}
                     >
                       <div className="relative pt-2 pb-1">
                         <div className="absolute top-5 left-[10%] right-[10%] h-[2px] bg-gray-300" />
@@ -521,7 +577,7 @@ export default function LeadDetailsSidebar({
                             <div
                               key={i}
                               className="flex flex-col items-center gap-2 px-2"
-                              style={{ background: "#ffffff" }}
+                              style={{ background: "var(--bg-card)" }}
                             >
                               <div
                                 className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all shrink-0 ${stage.status === "completed" ? "bg-[var(--green)] border-[var(--green)] text-white" : stage.status === "active" ? "bg-white border-[var(--blue)] ring-2 ring-[var(--blue-dim)] ring-offset-2" : "bg-white border-[var(--bd-md)]"}`}
@@ -548,7 +604,7 @@ export default function LeadDetailsSidebar({
                 {/* Tab */}
                 <div
                   className="rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col"
-                  style={{ background: "#ffffff", minHeight: 560 }}
+                  style={{ background: "var(--bg-card)", minHeight: 560 }}
                 >
                   <div
                     className="border-b border-gray-200 flex overflow-x-auto shrink-0 px-2 pt-2"
@@ -567,7 +623,7 @@ export default function LeadDetailsSidebar({
 
                   <div
                     className="flex-1 overflow-y-auto p-6"
-                    style={{ background: "#ffffff" }}
+                    style={{ background: "var(--bg-card)" }}
                   >
                     {activeTab === "contact" && (
                       <div className="space-y-8">
@@ -961,6 +1017,63 @@ export default function LeadDetailsSidebar({
                         </div>
                       </div>
                     )}
+
+                    {/* REASONING */}
+                    {activeTab === "reasoning" && (() => {
+                      const summary = computeLeadStatusSummary(person);
+                      return (
+                        <div className="space-y-5">
+                          <SectionHeader icon={FileText} title="Reasoning" />
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                              <div className="flex items-center gap-2 text-[11px] font-700 text-[var(--t4)] uppercase tracking-wider">
+                                <TrendingUp size={14} /> Conversion
+                              </div>
+                              <div className="text-sm font-700 mt-1" style={{ color: leadConversionColor(summary.conversionPrediction.level) }}>
+                                {summary.conversionPrediction.level} ({formatLeadPct(summary.conversionPrediction.probability)})
+                              </div>
+                            </div>
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                              <div className="flex items-center gap-2 text-[11px] font-700 text-[var(--t4)] uppercase tracking-wider">
+                                <ShieldCheck size={14} /> Risk
+                              </div>
+                              <div className="text-sm font-700 mt-1" style={{ color: leadRiskColor(summary.riskPrediction.level) }}>
+                                {summary.riskPrediction.level} ({formatLeadPct(summary.riskPrediction.probability)})
+                              </div>
+                            </div>
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                              <div className="text-[11px] font-700 text-[var(--t4)] uppercase tracking-wider">Next action</div>
+                              <div className="text-sm font-700 text-[var(--t1)] mt-1">{titleCase(summary.recommendedAction.action)}</div>
+                            </div>
+                          </div>
+
+                          <ReasoningCard
+                            title="Lead Conversion Prediction"
+                            result={`${summary.conversionPrediction.level} likelihood - ${formatLeadPct(summary.conversionPrediction.probability)}`}
+                            accent={leadConversionColor(summary.conversionPrediction.level)}
+                            details={summary.reasoning.leadConversion}
+                          />
+                          <ReasoningCard
+                            title="Risk Prediction"
+                            result={`${summary.riskPrediction.level} risk - ${formatLeadPct(summary.riskPrediction.probability)}`}
+                            accent={leadRiskColor(summary.riskPrediction.level)}
+                            details={summary.reasoning.riskPrediction}
+                          />
+                          <ReasoningCard
+                            title="Individual Recommendation"
+                            result={`${titleCase(summary.recommendedAction.action)} - ${summary.recommendedAction.priority} priority`}
+                            accent={summary.recommendedAction.priority === "high" ? "var(--red)" : summary.recommendedAction.priority === "medium" ? "var(--amber)" : "var(--green)"}
+                            details={summary.reasoning.recommendation}
+                          />
+                          <ReasoningCard
+                            title="Proposed Next Step"
+                            result={summary.proposedNextStep}
+                            accent="var(--blue)"
+                            details={summary.reasoning.proposedNextStep}
+                          />
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

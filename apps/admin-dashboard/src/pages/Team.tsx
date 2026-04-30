@@ -13,6 +13,7 @@ import {
 import { useCreateTechnician } from '../hooks/useScheduling'
 import { useEnsureVan } from '../hooks/useInventory'
 import MapPicker from '../components/MapPicker'
+import RecommendationsPanel from '../components/RecommendationsPanel'
 
 const ROLE_MAP: Record<string, string> = {
     super_admin: 'Super Admin',
@@ -130,6 +131,8 @@ export default function Team() {
                     })}
                 </div>
             )}
+
+            {!isExpanded && <RecommendationsPanel filterActions={['increase_price', 'discount_20']} />}
 
             {membersQuery.isError && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: 'var(--red-dim)', borderRadius: 8, color: 'var(--red)', fontSize: 13, marginBottom: 12 }}>

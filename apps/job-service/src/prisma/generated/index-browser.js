@@ -145,6 +145,7 @@ exports.Prisma.JobTemplateScalarFieldEnum = {
   estimatedDurationMins: 'estimatedDurationMins',
   version: 'version',
   isActive: 'isActive',
+  requiredParts: 'requiredParts',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

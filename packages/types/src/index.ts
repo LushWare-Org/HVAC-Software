@@ -161,3 +161,21 @@ export interface GeneratePdfPayload {
   companyId: string;
   entityId: string;    // quote/invoice/contract ID
 }
+
+export type FollowupAction = 'RETENTION' | 'REENGAGEMENT' | 'LEAD_FOLLOWUP' | 'UPSELL';
+
+export interface FollowupJobPayload {
+  companyId: string;
+  entityType: 'customer' | 'lead';
+  entityId: string;
+  customerId?: string;
+  leadId?: string;
+  recipientId: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  recipientEmail?: string;
+  action: FollowupAction;
+  churnProb?: number;
+  reason: string;
+  triggeredAt: string;
+}

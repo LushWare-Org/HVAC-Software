@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
+  ChevronLeft,
   X,
   Mail,
   Phone,
@@ -21,37 +22,38 @@ import {
   Trash2,
   ExternalLink,
 } from "lucide-react";
-// import AddAgreementModal from "./AddAgreementModal"; // Agreements hidden
+import AddAgreementModal from "./AddAgreementModal";
 import AddJobModal from "../jobs/AddJobModal";
-import { useUpdateCustomer } from "../../hooks/useCustomers";
+import { useCustomerStatusSummary, useUpdateCustomer } from "../../hooks/useCustomers";
 import { useCustomerAddresses, useSaveCustomerAddresses } from "../../hooks/useAddresses";
 import { useCustomerEquipment, useSaveCustomerEquipment } from "../../hooks/useEquipment";
 import { useJobs } from "../../hooks/useJobs";
 import { useQuotes, useInvoices } from "../../hooks/useFinance";
-import { useCustomerReviews } from "../../hooks/useReviews";
 import { decimalToNumber } from "../../hooks/useFinance";
+import type { CustomerStatusSummary } from "../../types/api";
 
 type TabType =
   | "contact"
   | "addresses"
   | "equipment"
   | "jobs"
-  // | "agreements"  // Agreements hidden
+  | "agreements"
   | "reviews"
-  | "activity";
+  | "activity"
+  | "reasoning";
 
 interface CustomerDetailsSidebarProps {
   person: any | null;
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: TabType;
   onBack?: () => void;
+  initialTab?: TabType;
 }
 
 const inputBase =
   "w-full px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors";
-const inputView = `${inputBase} bg-[var(--bg-card-2)] border-transparent text-[var(--t3)]`;
-const inputEdit = `${inputBase} bg-[var(--bg-card)] border-[var(--bd-md)] text-[var(--t1)] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none`;
+const inputView = `${inputBase} bg-gray-100 border-transparent text-gray-600`;
+const inputEdit = `${inputBase} bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none`;
 
 function Field({
   label,
@@ -172,12 +174,117 @@ const INV_CSS: Record<string, string> = {
   VOID: "badge-neutral",
 };
 
+function formatPct(value: number) {
+  if (!Number.isFinite(value)) return "0%";
+  return `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+}
+
+function formatMoney(value: number) {
+  if (!Number.isFinite(value)) return "$0";
+  return `$${Math.round(value).toLocaleString()}`;
+}
+
+function offerLabel(value?: string) {
+  if (!value) return "None";
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function riskColor(level: CustomerStatusSummary["churnPrediction"]["level"]) {
+  if (level === "High") return "var(--red)";
+  if (level === "Medium") return "var(--amber)";
+  return "var(--green)";
+}
+
+function fallbackReasoning(summary: CustomerStatusSummary) {
+  const upsell = summary.upsellRecommendation;
+  const retention = summary.retentionPrediction;
+  const source = summary.predictionSource === "model" ? "ML service" : "fallback rule model";
+
+  return {
+    upsellRecommendation: {
+      ruleBased: `Scores consider service recency (${summary.signals.daysSinceLastService} days), failure risk (${summary.failurePrediction.level}), churn risk (${summary.churnPrediction.level}), and monthly spend (${formatMoney(summary.signals.avgMonthlySpend)}).`,
+      mlResult: upsell
+        ? `Recommended ${offerLabel(upsell.recommendedOffer)} with ${formatPct(upsell.confidence)} confidence and ${formatPct(upsell.priorityScore ?? upsell.confidence)} priority.`
+        : "No upsell recommendation was returned for this customer.",
+      aiExplanation: upsell
+        ? `The offer is favored because the customer signals make ${offerLabel(upsell.recommendedOffer).toLowerCase()} the strongest commercial follow-up.`
+        : "The system needs more offer data before it can explain a specific upsell recommendation.",
+    },
+    retentionSuggestion: {
+      ruleBased: "Retention thresholds favor premium contracts for high conversion and value, retention discounts for high churn, and maintenance plans for repeated failure history.",
+      mlResult: retention
+        ? `${source} inputs produced ${formatPct(retention.pConvert)} conversion probability, ${formatMoney(retention.ltv)} annual value, ${formatPct(retention.churnProbability)} churn probability, and score ${Math.round(retention.score)}.`
+        : "No retention suggestion was returned for this customer.",
+      aiExplanation: retention
+        ? `${retention.reason}. Suggested action: ${offerLabel(retention.action)} at ${retention.priority} priority via ${offerLabel(retention.recommendedChannel)}.`
+        : "The system cannot explain a retention action until a retention prediction is available.",
+    },
+    failureAndChurnPrediction: {
+      ruleBased: "Fallback rules increase churn for long inactivity and low recent service count; failure risk rises with older equipment, service gaps, and poor review history.",
+      mlResult: `${source} returned ${summary.churnPrediction.level} churn risk (${formatPct(summary.churnPrediction.probability)}) and ${summary.failurePrediction.level} failure risk (${formatPct(summary.failurePrediction.probability)}).`,
+      aiExplanation: `The combined result means this customer needs outreach calibrated to churn risk and service timing calibrated to failure risk.`,
+    },
+    proposedNextStep: {
+      ruleBased: "Next-step rules prioritize paused follow-up review, urgent intervention, retention offers, maintenance scheduling, re-engagement, monitoring, then normal cadence.",
+      mlResult: `Selected next step: ${summary.proposedNextStep}`,
+      aiExplanation: "This converts the risk and recommendation results into the next operational action for the team.",
+    },
+  };
+}
+
+function ReasoningCard({
+  title,
+  result,
+  accent,
+  details,
+}: {
+  title: string;
+  result: string;
+  accent: string;
+  details: {
+    ruleBased: string;
+    mlResult: string;
+    aiExplanation: string;
+  };
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h4 className="text-sm font-700 text-[var(--t1)]">{title}</h4>
+          <p className="text-xs text-[var(--t2)] mt-1 font-600">{result}</p>
+        </div>
+        <span className="text-[11px] font-700 px-2 py-1 rounded-md" style={{ color: accent, background: "rgba(59, 130, 246, 0.12)" }}>
+          Explanation
+        </span>
+      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider mb-2">Rule based</div>
+          <p className="text-sm text-[var(--t1)] leading-relaxed">{details.ruleBased}</p>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider mb-2">ML result</div>
+          <p className="text-sm text-[var(--t1)] leading-relaxed">{details.mlResult}</p>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider mb-2">AI explanation</div>
+          <p className="text-sm text-[var(--t1)] leading-relaxed">{details.aiExplanation}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CustomerDetailsSidebar({
   person,
   isOpen,
   onClose,
-  initialTab = "contact",
   onBack,
+  initialTab = "contact",
 }: CustomerDetailsSidebarProps) {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -186,8 +293,9 @@ export default function CustomerDetailsSidebar({
   const [contacts, setContacts] = useState(mockContacts);
   const [equipment, setEquipment] = useState<any[]>([]);
   const [agreements, setAgreements] = useState(mockAgreements);
-  // const [isAddAgreementModalOpen, setIsAddAgreementModalOpen] = useState(false); // Agreements hidden
+  const [isAddAgreementModalOpen, setIsAddAgreementModalOpen] = useState(false);
   const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
+  const [reviews, setReviews] = useState(mockReviews);
   const [showRequestPanel, setShowRequestPanel] = useState(false);
   const [requestForm, setRequestForm] = useState({
     email: "",
@@ -197,26 +305,7 @@ export default function CustomerDetailsSidebar({
 
   // Fetch real jobs and quotes for this customer
   const customerId = person?.id ?? "";
-
-  // Reviews — fetched AFTER customerId is defined to avoid TDZ crash.
-  // Local `setReviews` is a no-op bridge: the review list is read-only until
-  // we expose a PATCH /reviews/:id endpoint.
-  const reviewsQuery = useCustomerReviews(customerId || undefined);
-  const reviews = (reviewsQuery.data ?? []).map((r) => ({
-    id:            r.id,
-    rating:        r.rating,
-    comment:       r.comment ?? "",
-    channel:       r.platform,
-    date:          r.createdAt?.split("T")[0] ?? "",
-    jobId:         r.jobId,
-    technicianName: r.technicianName,
-    replied:       !!r.respondedAt,
-    replyText:     r.response ?? "",
-  }));
-  const setReviews: (u: any) => void = () => {
-    /* no-op — review mutations need a backend endpoint not yet available */
-  };
-
+  const statusSummaryQuery = useCustomerStatusSummary(customerId || undefined);
   const customerJobsQuery = useJobs({ customerId: customerId || undefined, limit: 50 });
   const customerJobs = [...(customerJobsQuery.data?.data ?? [])].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -229,44 +318,15 @@ export default function CustomerDetailsSidebar({
   const customerInvoices = [...(customerInvoicesQuery.data?.data ?? [])].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
-
-  // ── Customer Revenue Metrics (derived from real invoice data) ────────────────
-  // Computed from the invoices already fetched above — no extra API call needed.
-  //
-  // Total Lifetime Revenue: sum of amountPaid across ALL non-void/cancelled invoices.
-  //   Uses amountPaid (not total) so partially-paid invoices are counted correctly.
-  //
-  // YTD Revenue: same filter but only invoices where paidAt is in the current calendar year.
-  //   Falls back to createdAt year when paidAt is absent (e.g. partially-paid, still open).
-  //
-  // Outstanding Balance: sum of balanceDue for invoices in an open state
-  //   (SENT, PARTIALLY_PAID, OVERDUE). DRAFT invoices are excluded (not yet sent).
-  const CURRENT_YEAR = new Date().getFullYear();
-  const CLOSED_STATUSES = new Set(['VOID', 'CANCELLED']);
-  const OPEN_STATUSES   = new Set(['SENT', 'PARTIALLY_PAID', 'OVERDUE']);
-
-  const customerRevenue = customerInvoices.reduce(
-    (acc, inv) => {
-      const status    = inv.status as string;
-      const paid      = decimalToNumber(inv.amountPaid);
-      const balance   = decimalToNumber(inv.balanceDue);
-      const paidDate  = inv.paidAt ?? inv.updatedAt ?? inv.createdAt;
-      const paidYear  = new Date(paidDate).getFullYear();
-
-      if (!CLOSED_STATUSES.has(status)) {
-        acc.lifetime += paid;
-        if (paidYear === CURRENT_YEAR && paid > 0) acc.ytd += paid;
-      }
-      if (OPEN_STATUSES.has(status)) {
-        acc.outstanding += balance;
-      }
-      return acc;
-    },
-    { lifetime: 0, ytd: 0, outstanding: 0 },
-  );
-
-  const fmtMoney = (n: number) =>
-    n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+  const currentYear = new Date().getFullYear();
+  const lifetimeRevenue = decimalToNumber(person?.totalRevenue ?? customerInvoices.reduce((sum, invoice) => sum + decimalToNumber(invoice.total), 0));
+  const ytdRevenue = customerInvoices.reduce((sum, invoice) => {
+    const invoiceDate = new Date(invoice.issuedAt ?? invoice.createdAt);
+    if (invoiceDate.getFullYear() !== currentYear) return sum;
+    if (['DRAFT', 'VOID', 'CANCELLED'].includes(invoice.status)) return sum;
+    return sum + decimalToNumber(invoice.total);
+  }, 0);
+  const outstandingBalance = customerInvoices.reduce((sum, invoice) => sum + decimalToNumber(invoice.balanceDue), 0);
 
   // Fetch real addresses and equipment from API
   const addressesQuery = useCustomerAddresses(customerId || undefined);
@@ -295,7 +355,7 @@ export default function CustomerDetailsSidebar({
         },
       ]);
       setAgreements(mockAgreements);
-      // reviews now come from useCustomerReviews — no need to reset here
+      setReviews(mockReviews);
       setActiveTab(initialTab);
       setIsEditMode(false);
     } else {
@@ -424,9 +484,10 @@ export default function CustomerDetailsSidebar({
     { id: "addresses", label: "Addresses", icon: <MapPin size={14} /> },
     { id: "equipment", label: "Equipment", icon: <Wrench size={14} /> },
     { id: "jobs", label: "Jobs", icon: <ClipboardList size={14} /> },
-    // { id: "agreements", label: "Agreements", icon: <ShieldCheck size={14} /> }, // Agreements hidden
+    { id: "agreements", label: "Agreements", icon: <ShieldCheck size={14} /> },
     { id: "reviews", label: "Reviews", icon: <Star size={14} /> },
     { id: "activity", label: "Activity", icon: <Activity size={14} /> },
+    { id: "reasoning", label: "Reasoning", icon: <FileText size={14} /> },
   ];
 
   // Real activity timeline derived from the actual record — no DB activity log yet
@@ -449,20 +510,22 @@ export default function CustomerDetailsSidebar({
         onClick={onClose}
       />
       <div
-        className="fixed top-0 bottom-0 right-0 w-full md:w-3/4 z-[210] flex flex-col shadow-2xl transition-transform transform duration-300 translate-x-0 border-l border-[var(--bd)]"
+        className="fixed top-0 bottom-0 right-0 w-3/4 z-[210] flex flex-col shadow-2xl transition-transform transform duration-300 translate-x-0 border-l border-gray-200"
         style={{ background: "var(--bg-card)" }}
       >
         <div className="sticky top-0 bg-[var(--blue)] px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
           <div className="text-white">
-            {onBack && (
-              <button
-                onClick={() => { onClose(); onBack(); }}
-                className="flex items-center gap-1 text-blue-200 hover:text-white text-xs font-semibold mb-1.5 bg-transparent border-0 cursor-pointer p-0 transition-colors"
-              >
-                ← Back to Job
-              </button>
-            )}
             <div className="flex items-center gap-3">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-colors border-0 cursor-pointer"
+                  aria-label="Go back"
+                  title="Back"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+              )}
               <h2 className="text-xl font-bold">
                 {formData.name || "Details"}
               </h2>
@@ -553,14 +616,14 @@ export default function CustomerDetailsSidebar({
 
         <div
           className="flex-1 overflow-y-auto"
-          style={{ background: "var(--bg-card-2)" }}
+          style={{ background: "var(--bg-surface)" }}
         >
           <div className="p-6">
             <div className="grid grid-cols-12 gap-6">
               {/* Left Panel */}
               <div className="col-span-3 space-y-4">
                 <div
-                  className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                  className="rounded-xl border border-gray-200 p-5 shadow-sm"
                   style={{ background: "var(--bg-card)" }}
                 >
                   <div className="flex items-start gap-4">
@@ -579,7 +642,7 @@ export default function CustomerDetailsSidebar({
                 </div>
 
                 <div
-                  className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                  className="rounded-xl border border-gray-200 p-5 shadow-sm"
                   style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
@@ -618,7 +681,7 @@ export default function CustomerDetailsSidebar({
                 </div>
 
                 <div
-                  className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                  className="rounded-xl border border-gray-200 p-5 shadow-sm"
                   style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
@@ -652,7 +715,7 @@ export default function CustomerDetailsSidebar({
 
                 {/* Revenue */}
                 <div
-                  className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                  className="rounded-xl border border-gray-200 p-5 shadow-sm"
                   style={{ background: "var(--bg-card)" }}
                 >
                   <h3 className="text-sm font-semibold text-[var(--t1)] mb-4 flex items-center gap-2">
@@ -665,7 +728,7 @@ export default function CustomerDetailsSidebar({
                         Total Lifetime
                       </p>
                       <div className="text-lg font-bold text-[var(--green)]">
-                        {customerInvoicesQuery.isLoading ? '—' : fmtMoney(customerRevenue.lifetime)}
+                        {formatMoney(lifetimeRevenue)}
                       </div>
                     </div>
                     <div>
@@ -673,7 +736,7 @@ export default function CustomerDetailsSidebar({
                         YTD Revenue
                       </p>
                       <div className="text-sm font-medium text-[var(--t2)]">
-                        {customerInvoicesQuery.isLoading ? '—' : fmtMoney(customerRevenue.ytd)}
+                        {formatMoney(ytdRevenue)}
                       </div>
                     </div>
                     <div>
@@ -681,7 +744,7 @@ export default function CustomerDetailsSidebar({
                         Outstanding Balance
                       </p>
                       <div className="text-sm font-medium text-red-500">
-                        {customerInvoicesQuery.isLoading ? '—' : fmtMoney(customerRevenue.outstanding)}
+                        {formatMoney(outstandingBalance)}
                       </div>
                     </div>
                   </div>
@@ -692,12 +755,12 @@ export default function CustomerDetailsSidebar({
               <div className="col-span-9 space-y-4">
                 {formData.engagementStatus !== 'INACTIVE' && (
                     <div
-                      className="rounded-xl border border-[var(--bd)] p-5 shadow-sm"
+                      className="rounded-xl border border-gray-200 p-5 shadow-sm"
                       style={{ background: "var(--bg-card)" }}
                     >
-                      <p className="text-xs font-semibold text-[var(--t4)] uppercase tracking-wider mb-4">Customer Engagement Pipeline</p>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Customer Engagement Pipeline</p>
                       <div className="relative pt-2 pb-1">
-                        <div className="absolute top-5 left-[10%] right-[10%] h-[2px] bg-[var(--bd-md)]" />
+                        <div className="absolute top-5 left-[10%] right-[10%] h-[2px] bg-gray-300" />
                         <div className="relative z-10 flex justify-between">
                           {stages.map((stage, i) => (
                             <div
@@ -706,7 +769,7 @@ export default function CustomerDetailsSidebar({
                               style={{ background: "var(--bg-card)" }}
                             >
                               <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all shrink-0 ${stage.status === "completed" ? "bg-[var(--green)] border-[var(--green)] text-white" : stage.status === "active" ? "bg-[var(--bg-card)] border-[var(--blue)] ring-2 ring-[var(--blue-dim)] ring-offset-2" : "bg-[var(--bg-card)] border-[var(--bd-md)]"}`}
+                                className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all shrink-0 ${stage.status === "completed" ? "bg-[var(--green)] border-[var(--green)] text-white" : stage.status === "active" ? "bg-white border-[var(--blue)] ring-2 ring-[var(--blue-dim)] ring-offset-2" : "bg-white border-[var(--bd-md)]"}`}
                               >
                                 {stage.status === "completed" && (
                                   <CheckCircle2 size={12} />
@@ -729,18 +792,18 @@ export default function CustomerDetailsSidebar({
 
                 {/* Tabs */}
                 <div
-                  className="rounded-xl border border-[var(--bd)] shadow-sm overflow-hidden flex flex-col"
+                  className="rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col"
                   style={{ background: "var(--bg-card)", minHeight: 560 }}
                 >
                   <div
-                    className="border-b border-[var(--bd)] flex overflow-x-auto shrink-0 px-2 pt-2"
+                    className="border-b border-gray-200 flex overflow-x-auto shrink-0 px-2 pt-2"
                     style={{ scrollbarWidth: "none" }}
                   >
                     {tabs.map((tab) => (
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center justify-center gap-1.5 px-4 py-3 text-[12px] font-600 whitespace-nowrap transition-all border-b-[3px] bg-transparent cursor-pointer hover:bg-[var(--bg-hover)] rounded-t-lg ml-1 ${activeTab === tab.id ? "border-blue-600 text-blue-600" : "border-transparent text-[var(--t3)]"}`}
+                        className={`flex items-center justify-center gap-1.5 px-4 py-3 text-[12px] font-600 whitespace-nowrap transition-all border-b-[3px] bg-transparent cursor-pointer hover:bg-gray-50 rounded-t-lg ml-1 ${activeTab === tab.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500"}`}
                       >
                         {tab.icon} {tab.label}{" "}
                         {tab.id === "jobs" && customerJobs.length > 0 && (
@@ -865,7 +928,7 @@ export default function CustomerDetailsSidebar({
                             {contacts.map((c, idx) => (
                               <div
                                 key={c.id}
-                                className="p-4 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)] space-y-3"
+                                className="p-4 rounded-xl border border-gray-100 bg-gray-50 space-y-3"
                               >
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-[11px] font-700 text-[var(--t4)] uppercase tracking-wider">
@@ -1025,7 +1088,7 @@ export default function CustomerDetailsSidebar({
                           {addresses.map((addr) => (
                             <div
                               key={addr.id}
-                              className="p-4 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)]"
+                              className="p-4 rounded-xl border border-gray-100 bg-gray-50"
                             >
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
@@ -1041,7 +1104,7 @@ export default function CustomerDetailsSidebar({
                                         ),
                                       )
                                     }
-                                    className={`text-[12px] font-700 rounded px-2 py-1 ${isEditMode ? "border border-[var(--bd-md)] bg-[var(--bg-card)] text-[var(--t1)]" : "border-0 bg-transparent text-[var(--t2)]"}`}
+                                    className={`text-[12px] font-700 rounded px-2 py-1 ${isEditMode ? "border border-gray-300 bg-white" : "border-0 bg-transparent text-[var(--t2)]"}`}
                                   >
                                     <option>Site</option>
                                     <option>Billing</option>
@@ -1140,7 +1203,7 @@ export default function CustomerDetailsSidebar({
                           {equipment.map((eq, idx) => (
                             <div
                               key={eq.id}
-                              className="p-4 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)]"
+                              className="p-4 rounded-xl border border-gray-100 bg-gray-50"
                             >
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
@@ -1167,7 +1230,7 @@ export default function CustomerDetailsSidebar({
                                         ),
                                       )
                                     }
-                                    className={`text-[11px] font-600 rounded px-2 py-1 ${isEditMode ? "border border-[var(--bd-md)] bg-[var(--bg-card)] text-[var(--t1)]" : "border-0 bg-transparent text-[var(--t3)]"}`}
+                                    className={`text-[11px] font-600 rounded px-2 py-1 ${isEditMode ? "border border-gray-300 bg-white" : "border-0 bg-transparent text-[var(--t3)]"}`}
                                   >
                                     <option>Boiler</option>
                                     <option>AC Unit</option>
@@ -1283,7 +1346,7 @@ export default function CustomerDetailsSidebar({
                         {/* Quotes for this customer */}
                         {customerQuotes.length > 0 && (
                           <div className="mb-6">
-                            <h4 className="text-xs font-700 text-[var(--t3)] uppercase mb-3 flex items-center gap-2">
+                            <h4 className="text-xs font-700 text-gray-500 uppercase mb-3 flex items-center gap-2">
                               <FileText size={14} className="text-green-500" />
                               Quotes ({customerQuotes.length})
                             </h4>
@@ -1291,15 +1354,15 @@ export default function CustomerDetailsSidebar({
                               {customerQuotes.map((q) => (
                                 <div
                                   key={q.id}
-                                  className="flex items-center justify-between p-3 rounded-lg border border-[var(--bd)] hover:bg-[var(--bg-hover)] cursor-pointer transition-colors"
+                                  className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
                                   onClick={() => window.dispatchEvent(new CustomEvent("open-quote-detail", { detail: q }))}
                                 >
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-600 text-[var(--t1)] truncate">{q.title}</div>
-                                    <div className="text-xs text-[var(--t3)] mt-0.5">{q.quoteNumber} · {new Date(q.createdAt).toLocaleDateString()}</div>
+                                    <div className="text-sm font-600 text-gray-900 truncate">{q.title}</div>
+                                    <div className="text-xs text-gray-500 mt-0.5">{q.quoteNumber} · {new Date(q.createdAt).toLocaleDateString()}</div>
                                   </div>
                                   <div className="flex items-center gap-2 ml-3">
-                                    <span className="text-sm font-700 text-[var(--t1)]">${decimalToNumber(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="text-sm font-700 text-gray-900">${decimalToNumber(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     <span className={`badge ${QUO_CSS[q.status] ?? "badge-neutral"}`}>{q.status}</span>
                                   </div>
                                 </div>
@@ -1311,7 +1374,7 @@ export default function CustomerDetailsSidebar({
                         {/* Invoices for this customer */}
                         {customerInvoices.length > 0 && (
                           <div className="mb-6">
-                            <h4 className="text-xs font-700 text-[var(--t3)] uppercase mb-3 flex items-center gap-2">
+                            <h4 className="text-xs font-700 text-gray-500 uppercase mb-3 flex items-center gap-2">
                               <FileText size={14} className="text-blue-500" />
                               Invoices ({customerInvoices.length})
                             </h4>
@@ -1319,18 +1382,18 @@ export default function CustomerDetailsSidebar({
                               {customerInvoices.map((inv) => (
                                 <div
                                   key={inv.id}
-                                  className="flex items-center justify-between p-3 rounded-lg border border-[var(--bd)] hover:bg-[var(--bg-hover)] cursor-pointer transition-colors"
+                                  className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
                                   onClick={() => window.dispatchEvent(new CustomEvent("open-invoice-detail", { detail: inv }))}
                                 >
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-600 text-[var(--t1)] truncate">{inv.invoiceNumber}</div>
-                                    <div className="text-xs text-[var(--t3)] mt-0.5">
+                                    <div className="text-sm font-600 text-gray-900 truncate">{inv.invoiceNumber}</div>
+                                    <div className="text-xs text-gray-500 mt-0.5">
                                       {inv.dueAt ? `Due ${new Date(inv.dueAt).toLocaleDateString()}` : new Date(inv.createdAt).toLocaleDateString()}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2 ml-3">
                                     <div className="text-right">
-                                      <span className="text-sm font-700 text-[var(--t1)]">${decimalToNumber(inv.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                      <span className="text-sm font-700 text-gray-900">${decimalToNumber(inv.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                       {decimalToNumber(inv.balanceDue) > 0 && (
                                         <div className="text-[10px] text-amber-600">Due: ${decimalToNumber(inv.balanceDue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                                       )}
@@ -1345,7 +1408,7 @@ export default function CustomerDetailsSidebar({
 
                         {/* Jobs for this customer */}
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-xs font-700 text-[var(--t3)] uppercase flex items-center gap-2">
+                          <h4 className="text-xs font-700 text-gray-500 uppercase flex items-center gap-2">
                             <ClipboardList size={14} className="text-blue-500" />
                             Jobs ({customerJobs.length})
                           </h4>
@@ -1356,7 +1419,7 @@ export default function CustomerDetailsSidebar({
                             <Plus size={12} /> New Job
                           </button>
                         </div>
-                        {customerJobsQuery.isLoading && <div className="text-sm text-[var(--t4)] py-4 text-center">Loading jobs...</div>}
+                        {customerJobsQuery.isLoading && <div className="text-sm text-gray-400 py-4 text-center">Loading jobs...</div>}
                         <div className="table-container">
                           <table className="data-table">
                             <thead>
@@ -1371,8 +1434,8 @@ export default function CustomerDetailsSidebar({
                               {customerJobs.map((j) => (
                                 <tr key={j.id}>
                                   <td>
-                                    <div className="text-sm font-600 text-[var(--t1)]">{j.title}</div>
-                                    <div className="text-xs text-[var(--t3)]">{j.serviceAddress ?? j.customerAddress ?? ""}</div>
+                                    <div className="text-sm font-600 text-gray-900">{j.title}</div>
+                                    <div className="text-xs text-gray-500">{j.serviceAddress ?? j.customerAddress ?? ""}</div>
                                   </td>
                                   <td className="text-sm text-3">{new Date(j.createdAt).toLocaleDateString()}</td>
                                   <td>
@@ -1395,7 +1458,7 @@ export default function CustomerDetailsSidebar({
                               ))}
                               {!customerJobsQuery.isLoading && customerJobs.length === 0 && (
                                 <tr>
-                                  <td colSpan={4} className="text-center text-[var(--t4)] py-6 text-sm">No jobs found for this customer</td>
+                                  <td colSpan={4} className="text-center text-gray-400 py-6 text-sm">No jobs found for this customer</td>
                                 </tr>
                               )}
                             </tbody>
@@ -1404,8 +1467,8 @@ export default function CustomerDetailsSidebar({
                       </div>
                     )}
 
-                    {/* AGREEMENTS — hidden; uncomment to re-enable */}
-                    {false && activeTab === ("agreements" as any) && (
+                    {/* AGREEMENTS */}
+                    {activeTab === "agreements" && (
                       <div>
                         <SectionHeader
                           icon={ShieldCheck}
@@ -1424,7 +1487,7 @@ export default function CustomerDetailsSidebar({
                         {agreements.map((agr) => (
                           <div
                             key={agr.id}
-                            className="p-5 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)] mb-4"
+                            className="p-5 rounded-xl border border-gray-100 bg-gray-50 mb-4"
                           >
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex-1 mr-3">
@@ -1471,7 +1534,7 @@ export default function CustomerDetailsSidebar({
                                       ),
                                     )
                                   }
-                                  className={`text-[11px] font-600 rounded px-2 py-1 ${isEditMode ? "border border-[var(--bd-md)] bg-[var(--bg-card)] text-[var(--t1)]" : "border-0 bg-transparent"}`}
+                                  className={`text-[11px] font-600 rounded px-2 py-1 ${isEditMode ? "border border-gray-300 bg-white" : "border-0 bg-transparent"}`}
                                   style={{
                                     color:
                                       agr.status === "active"
@@ -1543,7 +1606,7 @@ export default function CustomerDetailsSidebar({
                                 </div>
                               ))}
                             </div>
-                            <div className="mt-4 pt-3 border-t border-[var(--bd)] space-y-3">
+                            <div className="mt-4 pt-3 border-t border-gray-200 space-y-3">
                               {/* Upload zone */}
                               {isEditMode && (
                                 <div>
@@ -1825,6 +1888,26 @@ export default function CustomerDetailsSidebar({
                                   ? "Cancel Request"
                                   : "Request Review"}
                               </button>
+                              <button
+                                className="btn btn-secondary border-amber-200 text-amber-700 hover:bg-amber-100 btn-sm flex items-center justify-center gap-1.5"
+                                onClick={() =>
+                                  setReviews((prev) => [
+                                    {
+                                      id: Date.now(),
+                                      rating: 5,
+                                      channel: "Google",
+                                      date: new Date()
+                                        .toISOString()
+                                        .split("T")[0],
+                                      comment: "",
+                                      replied: false,
+                                    },
+                                    ...prev,
+                                  ])
+                                }
+                              >
+                                <Plus size={12} /> Add Manual Review
+                              </button>
                             </div>
                           )}
                         </div>
@@ -1903,16 +1986,28 @@ export default function CustomerDetailsSidebar({
                           {reviews.map((rv) => (
                             <div
                               key={rv.id}
-                              className="p-4 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)]"
+                              className="p-4 rounded-xl border border-gray-100 bg-gray-50"
                             >
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                  {/* Star rating (read-only — owned by customer) */}
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <div className="flex gap-1">
-                                      {[1, 2, 3, 4, 5].map((n) => (
+                                  {/* Star rating picker */}
+                                  <div className="flex gap-1 mb-2">
+                                    {[1, 2, 3, 4, 5].map((n) => (
+                                      <button
+                                        key={n}
+                                        disabled={!isEditMode}
+                                        onClick={() =>
+                                          setReviews((prev) =>
+                                            prev.map((x) =>
+                                              x.id === rv.id
+                                                ? { ...x, rating: n }
+                                                : x,
+                                            ),
+                                          )
+                                        }
+                                        className={`transition-colors ${isEditMode ? "cursor-pointer hover:scale-110" : "cursor-default"}`}
+                                      >
                                         <Star
-                                          key={n}
                                           size={16}
                                           className={
                                             n <= rv.rating
@@ -1920,39 +2015,62 @@ export default function CustomerDetailsSidebar({
                                               : "text-gray-300"
                                           }
                                         />
-                                      ))}
-                                    </div>
-                                    {(rv.jobId || rv.technicianName) && (
-                                      <span className="text-[11px] text-[var(--t4)]">
-                                        {rv.jobId ? "Job review" : "Company review"}
-                                        {rv.technicianName ? ` • ${rv.technicianName}` : ""}
-                                      </span>
-                                    )}
+                                      </button>
+                                    ))}
                                   </div>
-                                  <p className="text-sm text-[var(--t1)]">
-                                    {rv.comment ? (
-                                      `"${rv.comment}"`
-                                    ) : (
-                                      <span className="text-[var(--t4)] italic">
-                                        No comment
-                                      </span>
-                                    )}
-                                  </p>
+                                  {isEditMode ? (
+                                    <textarea
+                                      value={rv.comment}
+                                      rows={2}
+                                      placeholder="Customer review text..."
+                                      onChange={(e) =>
+                                        setReviews((prev) =>
+                                          prev.map((x) =>
+                                            x.id === rv.id
+                                              ? {
+                                                ...x,
+                                                comment: e.target.value,
+                                              }
+                                              : x,
+                                          ),
+                                        )
+                                      }
+                                      className={inputEdit}
+                                      style={{ resize: "none" }}
+                                    />
+                                  ) : (
+                                    <p className="text-sm text-[var(--t1)]">
+                                      {rv.comment ? (
+                                        `"${rv.comment}"`
+                                      ) : (
+                                        <span className="text-[var(--t4)] italic">
+                                          No comment yet
+                                        </span>
+                                      )}
+                                    </p>
+                                  )}
                                 </div>
                                 <div className="text-right shrink-0 ml-4 space-y-1">
                                   <div className="text-[11px] text-[var(--t4)]">
                                     {rv.date}
                                   </div>
-                                  {rv.channel && rv.channel !== "internal" && (
-                                    <div className="text-[10px] text-[var(--t4)] uppercase tracking-wider">
-                                      {rv.channel}
-                                    </div>
+                                  {isEditMode && (
+                                    <button
+                                      onClick={() =>
+                                        setReviews((prev) =>
+                                          prev.filter((x) => x.id !== rv.id),
+                                        )
+                                      }
+                                      className="text-red-400 hover:text-red-600 p-1 block ml-auto"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
                                   )}
                                 </div>
                               </div>
-                              <div className="flex gap-2 pt-2 border-t border-[var(--bd)] mt-2">
+                              <div className="flex gap-2 pt-2 border-t border-gray-200 mt-2">
                                 {rv.replied ? (
-                                  <div className="w-full mt-1 p-3 bg-[var(--bg-card)] border border-[var(--bd)] rounded-lg">
+                                  <div className="w-full mt-1 p-3 bg-white border border-gray-200 rounded-lg">
                                     <span className="text-[11px] text-green-600 font-600 flex items-center gap-1 mb-1">
                                       <CheckCircle2 size={12} /> Replied
                                     </span>
@@ -2066,13 +2184,88 @@ export default function CustomerDetailsSidebar({
                       </div>
                     )}
 
+                    {activeTab === "reasoning" && (
+                      <div className="space-y-5">
+                        <SectionHeader icon={FileText} title="Reasoning" />
+                        {statusSummaryQuery.isLoading && (
+                          <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
+                            <p className="text-sm text-[var(--t1)] font-600">Loading reasoning from customer status signals...</p>
+                          </div>
+                        )}
+                        {statusSummaryQuery.isError && (
+                          <div className="rounded-xl border border-red-100 bg-red-50 p-5">
+                            <p className="text-sm font-600 text-red-700">Reasoning is unavailable right now.</p>
+                            <p className="text-xs text-red-600 mt-1">The status summary endpoint could not be loaded.</p>
+                          </div>
+                        )}
+                        {!statusSummaryQuery.isLoading && !statusSummaryQuery.isError && statusSummaryQuery.data && (() => {
+                          const summary = statusSummaryQuery.data;
+                          const reasoning = summary.reasoning ?? fallbackReasoning(summary);
+                          const upsell = summary.upsellRecommendation;
+                          const retention = summary.retentionPrediction;
+
+                          return (
+                            <>
+                              <div className="grid grid-cols-4 gap-3">
+                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                  <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider">Prediction source</div>
+                                  <div className="text-sm font-700 text-[var(--t1)] mt-1">{summary.predictionSource === "model" ? "ML model" : "Rule fallback"}</div>
+                                </div>
+                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                  <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider">Churn risk</div>
+                                  <div className="text-sm font-700 mt-1" style={{ color: riskColor(summary.churnPrediction.level) }}>
+                                    {summary.churnPrediction.level} ({formatPct(summary.churnPrediction.probability)})
+                                  </div>
+                                </div>
+                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                  <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider">Failure risk</div>
+                                  <div className="text-sm font-700 mt-1" style={{ color: riskColor(summary.failurePrediction.level) }}>
+                                    {summary.failurePrediction.level} ({formatPct(summary.failurePrediction.probability)})
+                                  </div>
+                                </div>
+                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                  <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider">Revenue risk</div>
+                                  <div className="text-sm font-700 text-[var(--t1)] mt-1">{formatMoney(summary.revenueRisk)}</div>
+                                </div>
+                              </div>
+
+                              <ReasoningCard
+                                title="Upsell Recommendation"
+                                result={upsell ? `${offerLabel(upsell.recommendedOffer)} - ${formatPct(upsell.confidence)} confidence` : "No recommendation"}
+                                accent="var(--blue)"
+                                details={reasoning.upsellRecommendation}
+                              />
+                              <ReasoningCard
+                                title="Retention Suggestion"
+                                result={retention ? `${offerLabel(retention.action)} - ${retention.priority} priority` : "No suggestion"}
+                                accent={retention?.priority === "high" ? "var(--red)" : retention?.priority === "medium" ? "var(--amber)" : "var(--green)"}
+                                details={reasoning.retentionSuggestion}
+                              />
+                              <ReasoningCard
+                                title="Failure & Churn Prediction"
+                                result={`${summary.failurePrediction.level} failure, ${summary.churnPrediction.level} churn`}
+                                accent={summary.churnPrediction.level === "High" || summary.failurePrediction.level === "High" ? "var(--red)" : "var(--blue)"}
+                                details={reasoning.failureAndChurnPrediction}
+                              />
+                              <ReasoningCard
+                                title="Proposed Next Step"
+                                result={summary.proposedNextStep}
+                                accent="var(--green)"
+                                details={reasoning.proposedNextStep}
+                              />
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+
                     {activeTab === "activity" && (
                       <div>
                         <SectionHeader
                           icon={Activity}
                           title="Activity Timeline"
                         />
-                        <div className="relative space-y-5 before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-[var(--bd)]">
+                        <div className="relative space-y-5 before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-gray-200">
                           {activityTimeline.length === 0 ? (
                             <p className="text-sm text-[var(--t4)] text-center py-8">No activity recorded yet.</p>
                           ) : activityTimeline.map((item) => {
@@ -2088,7 +2281,7 @@ export default function CustomerDetailsSidebar({
                                 >
                                   <Icon size={14} />
                                 </div>
-                                <div className="flex-1 p-3 rounded-xl border border-[var(--bd)] bg-[var(--bg-card-2)]">
+                                <div className="flex-1 p-3 rounded-xl border border-gray-100 bg-gray-50">
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-sm font-600 text-[var(--t1)]">
                                       {item.label}
@@ -2115,7 +2308,6 @@ export default function CustomerDetailsSidebar({
         </div>
       </div>
 
-      {/* AddAgreementModal hidden — uncomment to re-enable
       <AddAgreementModal
         isOpen={isAddAgreementModalOpen}
         onClose={() => setIsAddAgreementModalOpen(false)}
@@ -2123,7 +2315,6 @@ export default function CustomerDetailsSidebar({
           setAgreements((prev) => [newAgr, ...prev]);
         }}
       />
-      */}
 
       <AddJobModal
         isOpen={isAddJobModalOpen}

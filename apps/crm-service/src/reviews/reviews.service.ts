@@ -12,7 +12,13 @@
 
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ReviewType } from '../prisma/generated';
+
+const ReviewType = {
+  JOB: 'JOB',
+  COMPANY: 'COMPANY',
+} as const;
+
+type ReviewType = (typeof ReviewType)[keyof typeof ReviewType];
 
 interface CreateReviewData {
   type?:           ReviewType;
@@ -148,7 +154,6 @@ export class ReviewsService {
             rating:         data.rating,
             comment:        data.comment ?? existing.comment,
             technicianId:   data.technicianId ?? existing.technicianId,
-            technicianName: data.technicianName ?? existing.technicianName,
             updatedAt:      new Date(),
           },
         });
@@ -176,7 +181,7 @@ export class ReviewsService {
     });
 
     // Fire-and-forget rating sync to scheduling service
-    if (review.type === ReviewType.JOB && review.technicianId) {
+    if (type === ReviewType.JOB && review.technicianId) {
       this.syncTechnicianRating(companyId, review.technicianId).catch(() => {});
     }
 

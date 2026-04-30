@@ -1,4 +1,4 @@
-/**
+﻿/**
  * useSettings.ts — Hooks for Settings page (profile & company)
  * Profile via /crm/users/me, Company via /crm/company
  */
@@ -6,8 +6,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
 import api from '../lib/api'
 import { queryClient } from '../lib/queryClient'
-
-// ---- Profile (current user) ----
 
 export interface UserProfile {
   id: string
@@ -36,7 +34,6 @@ export function useMyProfile() {
 export function useUpdateMyProfile() {
   return useMutation({
     mutationFn: async (data: { name?: string; email?: string; phone?: string }) => {
-      // We update via the users/:id route since /me has no PATCH
       const me = await api.get('/crm/users/me')
       const res = await api.patch(`/crm/users/${me.data.id}`, data)
       return res.data as UserProfile
@@ -47,8 +44,6 @@ export function useUpdateMyProfile() {
     },
   })
 }
-
-// ---- Company ----
 
 export interface CompanyProfile {
   id: string
@@ -62,10 +57,25 @@ export interface CompanyProfile {
   country: string
   website?: string
   logoUrl?: string
+  automaticFollowupEnabled: boolean
   isActive: boolean
   trialEndsAt?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface UpdateCompanyInput {
+  name?: string
+  email?: string
+  phone?: string
+  address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country?: string
+  website?: string
+  logoUrl?: string
+  automaticFollowupEnabled?: boolean
 }
 
 export function useCompany() {
@@ -80,18 +90,7 @@ export function useCompany() {
 
 export function useUpdateCompany() {
   return useMutation({
-    mutationFn: async (data: {
-      name?: string
-      email?: string
-      phone?: string
-      address?: string
-      city?: string
-      state?: string
-      zipCode?: string
-      country?: string
-      website?: string
-      logoUrl?: string
-    }) => {
+    mutationFn: async (data: UpdateCompanyInput) => {
       const res = await api.patch('/crm/company', data)
       return res.data as CompanyProfile
     },

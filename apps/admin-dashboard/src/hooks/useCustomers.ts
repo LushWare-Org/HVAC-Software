@@ -6,7 +6,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
 import api from '../lib/api'
 import { queryClient } from '../lib/queryClient'
-import type { Customer, Lead, PaginatedResponse } from '../types/api'
+import type { Customer, CustomerStatusSummary, Lead, PaginatedResponse } from '../types/api'
 
 // ─── Customers ────────────────────────────────────────────────────────────────
 
@@ -51,6 +51,18 @@ export function useCustomer(id: string) {
   })
 }
 
+export function useCustomerStatusSummary(id?: string | null) {
+  return useQuery<CustomerStatusSummary>({
+    queryKey: ['customers', id, 'status-summary'],
+    queryFn: async () => {
+      const res = await api.get(`/crm/customers/${id}/status-summary`)
+      return res.data
+    },
+    enabled: !!id,
+    staleTime: 0,
+  })
+}
+
 export function useCreateCustomer() {
   return useMutation({
     mutationFn: async (data: Partial<Customer>) => {
@@ -82,6 +94,36 @@ export function useDeleteCustomer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
+    },
+  })
+}
+
+export function useExecuteFollowup() {
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await api.post(`/crm/customers/${customerId}/followup`)
+      return res.data as { queued: boolean; action?: string; reason?: string }
+    },
+  })
+}
+
+export function useExecuteRetention() {
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await api.post(`/crm/customers/${customerId}/retention`)
+      return res.data as { queued: boolean; reason?: string }
+    },
+  })
+}
+
+export function useExecuteUpsell() {
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await api.post(`/crm/upsell/customers/${customerId}/recommendations`)
+      return res.data as { status: string }
+    },
+    onSuccess: (_data, customerId) => {
+      queryClient.invalidateQueries({ queryKey: ['customers', customerId, 'status-summary'] })
     },
   })
 }

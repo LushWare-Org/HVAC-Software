@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
 import type { Job } from "../../types/api";
+import RecommendationsPanel from "../../components/RecommendationsPanel";
 
 const STATUS: Record<string, { label: string; css: string }> = {
   PENDING:     { label: "Pending",     css: "badge-amber" },
@@ -251,6 +252,8 @@ export default function Jobs() {
           ))}
         </div>
       )}
+
+      {!isExpanded && <RecommendationsPanel filterActions={['discount_20', 'same_day_offer', 'increase_price']} />}
 
       {/* Urgent banner */}
       {urgentCount > 0 && (

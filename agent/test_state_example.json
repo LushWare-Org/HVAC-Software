@@ -1,0 +1,14 @@
+{
+  "utilization": 0.48,
+  "churn_risk": 0.42,
+  "ltv": 1800.0,
+  "pending_quotes": 16,
+  "conversion_rate": 0.29,
+  "expected_demand": 40,
+  "demand_gap": -30,
+  "num_technicians": 10,
+  "avg_job_duration": 1.5,
+  "temperature": 82,
+  "capacity_status": "LOW",
+  "idle_capacity": 0.45
+}

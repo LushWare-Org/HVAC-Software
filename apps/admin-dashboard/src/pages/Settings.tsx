@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock, Loader2, AlertCircle, ClipboardList, ChevronDown, ChevronRight } from 'lucide-react'
+﻿import { useState, useEffect } from 'react'
+import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock, Loader2, AlertCircle, ClipboardList, ChevronDown, ChevronRight, Bot } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useMyProfile, useUpdateMyProfile, useCompany, useUpdateCompany } from '../hooks/useSettings'
 import { useJobTypes, useJobTemplates } from '../hooks/useJobs'
@@ -37,7 +37,7 @@ export default function Settings() {
     // ---- Company ----
     const companyQuery = useCompany()
     const updateCompany = useUpdateCompany()
-    const [companyForm, setCompanyForm] = useState({ name: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', website: '' })
+    const [companyForm, setCompanyForm] = useState({ name: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', website: '', automaticFollowupEnabled: true })
     const [companyDirty, setCompanyDirty] = useState(false)
 
     useEffect(() => {
@@ -52,6 +52,7 @@ export default function Settings() {
                 state: c.state ?? '',
                 zipCode: c.zipCode ?? '',
                 website: c.website ?? '',
+                automaticFollowupEnabled: c.automaticFollowupEnabled ?? true,
             })
         }
     }, [companyQuery.data])
@@ -59,6 +60,11 @@ export default function Settings() {
     const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
         setCompanyForm(prev => ({ ...prev, [name]: value }))
+        setCompanyDirty(true)
+    }
+
+    const toggleAutomaticFollowup = () => {
+        setCompanyForm(prev => ({ ...prev, automaticFollowupEnabled: !prev.automaticFollowupEnabled }))
         setCompanyDirty(true)
     }
 
@@ -107,7 +113,7 @@ export default function Settings() {
             setSecurityError('Passwords do not match.')
             return
         }
-        // Password change would go through Auth0 — show success for now
+        // Password change would go through Auth0 â€” show success for now
         setSecuritySaved(true)
         setSecuritySettings({ currentPassword: '', newPassword: '', confirmPassword: '' })
     }
@@ -131,12 +137,11 @@ export default function Settings() {
             }} />
         </button>
     )
-
     const SaveButton = ({ saving, dirty, onSave, saved }: { saving: boolean; dirty: boolean; onSave: () => void; saved?: boolean }) => (
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
             <button className="btn btn-primary btn-sm" onClick={onSave} disabled={saving || (!dirty && !saved)}>
                 {saving ? (
-                    <><Loader2 size={13} className="spin" /> Saving…</>
+                    <><Loader2 size={13} className="spin" /> Saving...</>
                 ) : !dirty && saved !== false ? (
                     <><Check size={13} /> Saved</>
                 ) : (
@@ -191,7 +196,7 @@ export default function Settings() {
                             </div>
                         ) : (
                             <>
-                                <div className="settings-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
                                     <div className="form-group">
                                         <label className="form-label">Name *</label>
                                         <input type="text" className="form-input" name="name" value={profileForm.name} onChange={handleProfileChange} />
@@ -225,7 +230,7 @@ export default function Settings() {
                     <div className="card-header">
                         <div>
                             <div className="card-title">Company Information</div>
-                            <div className="card-subtitle">Manage business details and registration information</div>
+                            <div className="card-subtitle">Manage business details and automation preferences</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -241,7 +246,34 @@ export default function Settings() {
                             </div>
                         ) : (
                             <>
-                                <div className="settings-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+                                    padding: 18, marginBottom: 24, borderRadius: 'var(--r-md)',
+                                    background: 'var(--bg-card-2)', border: '1px solid var(--bd)',
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                                        <div style={{
+                                            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            background: 'var(--blue-glow)',
+                                        }}>
+                                            <Bot size={18} style={{ color: 'var(--blue)' }} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginBottom: 4 }}>Automatic Follow-up Agent</div>
+                                            <div style={{ fontSize: 12, color: 'var(--t3)', maxWidth: 560 }}>
+                                                Turn automated churn prevention and lead follow-up on or off for this company. When disabled, CRM stops queuing automatic follow-up messages.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                                        <span style={{ fontSize: 12, fontWeight: 600, color: companyForm.automaticFollowupEnabled ? 'var(--green)' : 'var(--t3)' }}>
+                                            {companyForm.automaticFollowupEnabled ? 'Enabled' : 'Disabled'}
+                                        </span>
+                                        <Toggle checked={companyForm.automaticFollowupEnabled} onChange={toggleAutomaticFollowup} />
+                                    </div>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
                                     <div className="form-group">
                                         <label className="form-label">Company Name *</label>
                                         <input type="text" className="form-input" name="name" value={companyForm.name} onChange={handleCompanyChange} />
@@ -371,7 +403,7 @@ export default function Settings() {
                             <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <Lock size={16} /> Change Password
                             </h4>
-                            <div className="settings-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 16 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 16 }}>
                                 <div className="form-group">
                                     <label className="form-label">Current Password</label>
                                     <input type="password" className="form-input" name="currentPassword" value={securitySettings.currentPassword} onChange={handleSecurityChange} placeholder="Enter current password" />
@@ -484,7 +516,7 @@ function JobTypeRow({ jobType, expanded, onToggle, isLast }: { jobType: any; exp
                 <div style={{ padding: '0 24px 20px 24px', background: 'var(--bg2)' }}>
                     {isLoading ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--t3)', fontSize: 13, padding: '12px 0' }}>
-                            <Loader2 size={14} className="spin" /> Loading templates…
+                            <Loader2 size={14} className="spin" /> Loading templatesâ€¦
                         </div>
                     ) : templates.length === 0 ? (
                         <p style={{ fontSize: 13, color: 'var(--t3)', padding: '12px 0' }}>No templates for this job type.</p>
@@ -521,3 +553,7 @@ function JobTypeRow({ jobType, expanded, onToggle, isLast }: { jobType: any; exp
         </div>
     )
 }
+
+
+
+
