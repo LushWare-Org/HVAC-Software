@@ -20,10 +20,18 @@ export enum QueueName {
 }
 
 // ---- Redis connection factory (shared config) ----
+// Supports both REDIS_URL (full URL, e.g. Upstash rediss://:pass@host:6379)
+// and legacy REDIS_HOST + REDIS_PORT + REDIS_PASSWORD env vars.
 export function createRedisConnection(): IORedis {
+  const redisUrl = process.env.REDIS_URL;
+  if (redisUrl) {
+    // IORedis handles rediss:// TLS automatically when URL is passed as first arg
+    return new IORedis(redisUrl, { maxRetriesPerRequest: null });
+  }
   return new IORedis({
     host: process.env.REDIS_HOST ?? 'localhost',
     port: Number(process.env.REDIS_PORT ?? 6379),
+    password: process.env.REDIS_PASSWORD,
     maxRetriesPerRequest: null, // required by BullMQ
   });
 }

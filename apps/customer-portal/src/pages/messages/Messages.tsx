@@ -46,6 +46,7 @@ function getInitials(name?: string) {
  * - Any other subject           → show as-is (shouldn't normally occur)
  */
 function getThreadTitle(t: any, currentUserName?: string): string {
+  void currentUserName
   const subject: string = t?.subject ?? ''
   if (subject.startsWith('Chat with Technician:')) {
     const techName = subject.replace('Chat with Technician:', '').trim()

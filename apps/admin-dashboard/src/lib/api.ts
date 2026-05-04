@@ -12,9 +12,15 @@
 
 import axios from 'axios'
 
+function normalizeApiBaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.replace(/\/$/, '')
+  if (!trimmed) return '/api'
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`
+}
+
 // ─── Axios instance ─────────────────────────────────────────────────────────
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL ?? '/api'),
   headers: {
     'Content-Type': 'application/json',
   },

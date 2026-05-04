@@ -2,8 +2,11 @@ package database
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -19,17 +22,26 @@ func NewRedisClient(ctx context.Context, redisURL string) *redis.Client {
 		log.Fatalf("❌ Failed to parse REDIS_URL: %v", err)
 	}
 
+	if strings.Contains(opts.Addr, "upstash.io") {
+		opts.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+	}
+
 	// Connection pool settings
 	opts.PoolSize = 10
 	opts.MinIdleConns = 2
 
 	client := redis.NewClient(opts)
 
-	if err := client.Ping(ctx).Err(); err != nil {
-		log.Fatalf("❌ Redis ping failed: %v", err)
+	// Try to ping Redis with a 5-second timeout (non-fatal if it fails)
+	pingCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	if err := client.Ping(pingCtx).Err(); err != nil {
+		fmt.Printf("⚠️  Redis connection warning (will retry): %v\n", err)
+	} else {
+		fmt.Println("✅ Redis connected")
 	}
-
-	fmt.Println("✅ Redis connected")
+	
 	return client
 }
 

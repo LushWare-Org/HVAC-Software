@@ -69,8 +69,10 @@ func main() {
 	r.Use(func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
 		allowed := map[string]bool{
-			"http://localhost:3000": true,
-			"http://localhost:5173": true,
+			"http://localhost:3000":            true,
+			"http://localhost:5173":            true,
+			"https://tscrm-demo-admin.web.app":     true,
+			"https://tscrm-demo-customer.web.app":  true,
 		}
 		if allowed[origin] || os.Getenv("GIN_MODE") == "release" {
 			c.Header("Access-Control-Allow-Origin", origin)

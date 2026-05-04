@@ -37,7 +37,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleInit() {
-    await this.$connect();
+    try {
+      await this.$connect();
+    } catch (error) {
+      console.warn('Finance Prisma connection deferred during startup:', error);
+    }
   }
 
   async onModuleDestroy() {

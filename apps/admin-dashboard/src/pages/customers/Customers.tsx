@@ -42,13 +42,7 @@ const LEAD_STATUS: Record<string, string> = {
   LOST: "badge-red",
 };
 
-const AGREEMENT_STATUS: Record<string, string> = {
-  ACTIVE: "badge-green",
-  EXPIRING: "badge-amber",
-  INACTIVE: "badge-neutral",
-  EXPIRED: "badge-amber",
-  CANCELLED: "badge-red",
-};
+
 
 function fmt(n: number) {
   return `$${n.toLocaleString()}`;

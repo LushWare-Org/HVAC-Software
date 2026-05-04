@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback, lazy } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -81,26 +81,7 @@ function useIsMobile(breakpoint = 768) {
  * a thin top progress bar keeps the shell present and feels faster than a
  * blank "Loading" screen. The chunk normally lands in <300 ms.
  */
-function RouteFallback() {
-  return (
-    <div
-      aria-busy="true"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 2,
-        background:
-          'linear-gradient(90deg, transparent 0%, var(--blue, #2563EB) 50%, transparent 100%)',
-        backgroundSize: '200% 100%',
-        animation: 'routeLoadShimmer 1.1s ease-in-out infinite',
-        zIndex: 9999,
-        pointerEvents: 'none',
-      }}
-    />
-  )
-}
+
 
 function AuthenticatedApp() {
   const isMobile = useIsMobile()

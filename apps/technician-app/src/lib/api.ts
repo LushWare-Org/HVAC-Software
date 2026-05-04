@@ -9,13 +9,19 @@
 import axios from 'axios'
 import Constants from 'expo-constants'
 
+function normalizeApiBaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.replace(/\/$/, '')
+  if (!trimmed) return 'http://localhost:80/api'
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`
+}
+
 const BASE_URL =
   Constants.expoConfig?.extra?.apiBaseUrl ??
   process.env.EXPO_PUBLIC_API_BASE_URL ??
   'http://localhost:80/api'
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: normalizeApiBaseUrl(BASE_URL),
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
 })

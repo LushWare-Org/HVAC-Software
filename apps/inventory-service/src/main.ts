@@ -17,7 +17,15 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-  app.enableCors({ origin: ['http://localhost:3000', 'http://localhost:5173'] });
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'https://tscrm-demo-admin.web.app',
+      'https://tscrm-demo-customer.web.app',
+    ],
+  });
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('T&S CRM — Inventory Management Service')

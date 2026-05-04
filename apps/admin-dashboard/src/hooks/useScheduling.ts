@@ -33,6 +33,8 @@ import type {
   AssignJobRequest,
 } from '../types/api'
 
+const DEFAULT_DISPATCH_WS_BASE = 'wss://nginx-gateway-2ohuhmktua-uc.a.run.app'
+
 // ─── Technicians ───────────────────────────────────────────────────────────────
 
 export function useTechnicians() {
@@ -217,6 +219,11 @@ function resolveDispatchWsBase(): string {
   // In Vite dev, bypass Vite's ws proxy and hit Nginx directly to avoid EPIPE noise.
   if (import.meta.env.DEV && window.location.port === '5173') {
     return `${protocol}//${hostname}`
+  }
+
+  // In production, always connect to the gateway instead of the Firebase host.
+  if (import.meta.env.PROD) {
+    return DEFAULT_DISPATCH_WS_BASE
   }
 
   return `${protocol}//${window.location.host}`

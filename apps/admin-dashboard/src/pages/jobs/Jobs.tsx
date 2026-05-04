@@ -3,7 +3,7 @@ import {
   Wrench, Clock, CheckCircle, FileText, Search, AlertTriangle,
   Maximize2, Minimize2, Edit2,
   ChevronLeft, ChevronRight, RefreshCw, AlertCircle,
-  ChevronDown, ChevronUp, Zap, ArrowUpDown, CalendarDays, Shield, Trash2,
+  ChevronDown, ChevronUp, Zap, CalendarDays, Shield, Trash2,
 } from "lucide-react";
 import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
 import type { Job } from "../../types/api";

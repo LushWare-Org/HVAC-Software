@@ -31,3 +31,17 @@ export class FollowupProducer implements OnModuleDestroy {
     await this.queue.close();
   }
 }
+
+@Injectable()
+export class NoopFollowupProducer implements OnModuleDestroy {
+  private readonly logger = new Logger(NoopFollowupProducer.name);
+
+  async enqueueFollowup(_payload: FollowupJobPayload): Promise<string> {
+    this.logger.debug('Skipping follow-up queue because Redis is not configured');
+    return 'noop';
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    return;
+  }
+}

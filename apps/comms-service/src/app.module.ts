@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
+import IORedis from 'ioredis';
 import { AuthModule } from '@tscrm/auth-client';
 import appConfig from './config/app.config';
 import { HealthModule } from './health/health.module';
@@ -23,11 +24,17 @@ import { AutomationModule } from './automation/automation.module';
     }),
 
     // ── Redis / BullMQ connection (global) ─────────────────────────────────
+    // Supports REDIS_URL (full URL — Upstash rediss://:pass@host:6379)
+    // or legacy REDIS_HOST + REDIS_PORT + REDIS_PASSWORD env vars.
     BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST ?? 'localhost',
-        port: Number(process.env.REDIS_PORT ?? 6379),
-      },
+      connection: process.env.REDIS_URL
+        ? new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null })
+        : new IORedis({
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number(process.env.REDIS_PORT ?? 6379),
+            password: process.env.REDIS_PASSWORD,
+            maxRetriesPerRequest: null,
+          }),
       defaultJobOptions: {
         attempts: 3,
         backoff: { type: 'exponential', delay: 2000 },

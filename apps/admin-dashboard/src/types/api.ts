@@ -270,6 +270,7 @@ export type JobPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'EMERGENCY' | 'URGENT'
 export interface Job {
   id: string
   companyId: string
+  jobNumber?: string
   title: string
   description?: string
   status: JobStatus

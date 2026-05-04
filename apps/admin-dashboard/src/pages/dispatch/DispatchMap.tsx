@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import type { DispatchAssignment, Job, Technician, StockLevel } from '../../types/api'
+import type { DispatchAssignment, Job, Technician } from '../../types/api'
 import { useLocations, useLocationStock, decimalToNumber } from '../../hooks/useInventory'
 
 // Fix default marker icon (Leaflet + bundler issue)

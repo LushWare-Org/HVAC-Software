@@ -9,8 +9,8 @@
 import { useState } from "react";
 import {
   X, MapPin, User, Calendar, Clock, DollarSign, FileText,
-  Briefcase, Wrench, ArrowRight, Loader2, CheckCircle2,
-  AlertCircle, Send, Receipt, Truck, Star, RefreshCw,
+  Briefcase, Wrench, Loader2,
+  AlertCircle, Send, Receipt, Star, RefreshCw,
 } from "lucide-react";
 import { useJob, useUpdateJobStatus } from "../../hooks/useJobs";
 import { useTechnicians, useManualAssign } from "../../hooks/useScheduling";
@@ -73,32 +73,7 @@ export default function JobDetailPanel({
     );
   };
 
-  const getQuickActions = () => {
-    if (!job) return [];
-    const actions: { label: string; status: string; css: string; icon: any; note: string }[] = [];
-    const s = job.status;
-    if (s === "PENDING") {
-      actions.push({ label: "Schedule", status: "SCHEDULED", css: "bg-violet-600 hover:bg-violet-700", icon: Calendar, note: "Scheduled from dispatch" });
-      actions.push({ label: "Hold", status: "ON_HOLD", css: "bg-gray-500 hover:bg-gray-600", icon: AlertCircle, note: "Put on hold" });
-    } else if (s === "SCHEDULED") {
-      actions.push({ label: "Start En Route", status: "EN_ROUTE", css: "bg-blue-600 hover:bg-blue-700", icon: Truck, note: "Tech en route" });
-      actions.push({ label: "Arrive On Site", status: "ON_SITE", css: "bg-purple-600 hover:bg-purple-700", icon: MapPin, note: "Tech arrived on site" });
-      actions.push({ label: "Hold", status: "ON_HOLD", css: "bg-gray-500 hover:bg-gray-600", icon: AlertCircle, note: "Put on hold" });
-    } else if (s === "EN_ROUTE") {
-      actions.push({ label: "Arrive On Site", status: "ON_SITE", css: "bg-purple-600 hover:bg-purple-700", icon: MapPin, note: "Tech arrived on site" });
-      actions.push({ label: "Hold", status: "ON_HOLD", css: "bg-gray-500 hover:bg-gray-600", icon: AlertCircle, note: "Put on hold" });
-    } else if (s === "ON_SITE" || s === "IN_PROGRESS") {
-      actions.push({ label: "Complete Job", status: "COMPLETED", css: "bg-emerald-600 hover:bg-emerald-700", icon: CheckCircle2, note: "Job completed" });
-      actions.push({ label: "Hold", status: "ON_HOLD", css: "bg-gray-500 hover:bg-gray-600", icon: AlertCircle, note: "Put on hold" });
-    } else if (s === "COMPLETED") {
-      actions.push({ label: "Mark Invoiced", status: "INVOICED", css: "bg-cyan-600 hover:bg-cyan-700", icon: DollarSign, note: "Invoice created" });
-    } else if (s === "ON_HOLD") {
-      actions.push({ label: "Resume", status: "SCHEDULED", css: "bg-violet-600 hover:bg-violet-700", icon: Calendar, note: "Resumed from hold" });
-    } else if (s === "CANCELLED") {
-      actions.push({ label: "Reopen", status: "PENDING", css: "bg-amber-600 hover:bg-amber-700", icon: ArrowRight, note: "Reopened job" });
-    }
-    return actions;
-  };
+  
 
   const status = STATUS_MAP[job?.status ?? "PENDING"] ?? STATUS_MAP.PENDING;
   const assignedTechName = technician?.name ?? assignment?.technicianName ?? job?.assignedToName ?? "Unassigned";

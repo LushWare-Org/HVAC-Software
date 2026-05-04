@@ -18,7 +18,14 @@ async function bootstrap() {
   app.use('/webhooks/twilio', express.raw({ type: '*/*' }));
   const port = process.env.COMMS_PORT ?? 3005;
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  app.enableCors({ origin: ['http://localhost:3000', 'http://localhost:5173'] });
+  app.enableCors({origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://tscrm-demo-admin.web.app',
+    'https://tscrm-demo-customer.web.app',
+  ],
+  credentials: true,});
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('T&S CRM — Communications Service')

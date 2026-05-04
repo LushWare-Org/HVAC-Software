@@ -13,13 +13,17 @@ export class RedisCacheService implements OnModuleDestroy {
   private connected = false;
 
   constructor(private readonly config: ConfigService) {
-    this.client = new Redis({
-      host: this.config.get<string>('REDIS_HOST', 'localhost'),
-      port: this.config.get<number>('REDIS_PORT', 6379),
-      lazyConnect: true,
-      maxRetriesPerRequest: 1,
-      enableOfflineQueue: false,
-    });
+    const redisUrl = this.config.get<string>('REDIS_URL');
+    this.client = redisUrl
+      ? new Redis(redisUrl, { lazyConnect: true, maxRetriesPerRequest: 1, enableOfflineQueue: false })
+      : new Redis({
+          host: this.config.get<string>('REDIS_HOST', 'localhost'),
+          port: this.config.get<number>('REDIS_PORT', 6379),
+          password: this.config.get<string>('REDIS_PASSWORD'),
+          lazyConnect: true,
+          maxRetriesPerRequest: 1,
+          enableOfflineQueue: false,
+        });
 
     this.client.connect().then(() => {
       this.connected = true;

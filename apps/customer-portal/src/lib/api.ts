@@ -8,8 +8,19 @@
 
 import axios from 'axios'
 
+const DEFAULT_API_BASE_URL = 'https://nginx-gateway-2ohuhmktua-uc.a.run.app/api'
+
+function normalizeApiBaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.replace(/\/$/, '')
+  const resolved = trimmed && trimmed !== '/api'
+    ? trimmed
+    : (import.meta.env.PROD ? DEFAULT_API_BASE_URL : '/api')
+
+  return resolved.endsWith('/api') ? resolved : `${resolved}/api`
+}
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL ?? '/api'),
   headers: { 'Content-Type': 'application/json' },
 })
 

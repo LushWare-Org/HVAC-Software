@@ -33,7 +33,16 @@ interface AuthSocket extends Socket {
 
 @WebSocketGateway({
   namespace: '/chat',
-  cors: { origin: '*', credentials: true },
+  cors: {
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'https://tscrm-demo-admin.web.app',
+      'https://tscrm-demo-customer.web.app',
+    ],
+    credentials: true,
+  },
   transports: ['websocket', 'polling'],
 })
 export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnect {

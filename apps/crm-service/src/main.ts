@@ -22,7 +22,13 @@ async function bootstrap() {
 
   // ---- CORS (dev — Nginx handles prod) ----
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'],
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'https://tscrm-demo-admin.web.app',
+      'https://tscrm-demo-customer.web.app',
+    ],
     credentials: true,
   });
 

@@ -1,14 +1,14 @@
 # ── Build stage ──────────────────────────────────────────────────────────────
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
 # Install dependencies first (layer caching)
-COPY go.mod go.sum ./
+COPY apps/scheduling-service/go.mod apps/scheduling-service/go.sum ./
 RUN go mod download
 
 # Copy source
-COPY . .
+COPY apps/scheduling-service/ .
 
 # Build with optimisations
 # CGO_ENABLED=0 → fully static binary (no libc dependency)
@@ -29,7 +29,7 @@ WORKDIR /app
 COPY --from=builder /app/scheduling-service .
 
 # Copy migrations for startup init (optional — can also run via CI)
-COPY migrations/ ./migrations/
+COPY --from=builder /app/migrations/ ./migrations/
 
 EXPOSE 3003
 
