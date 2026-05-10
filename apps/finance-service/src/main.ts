@@ -26,13 +26,17 @@ async function bootstrap() {
   });
 
   if (process.env.NODE_ENV !== 'production') {
+    const isBypass = process.env.BYPASS_AUTH === 'true';
     const config = new DocumentBuilder()
       .setTitle('T&S CRM — Finance Service')
       .setDescription(
-        'Quotes, invoices, Stripe payments, PDF generation, job expense tracking',
+        isBypass
+          ? 'BYPASS_AUTH=true — click Authorize and enter your Company ID in the x-test-company-id field (e.g. co-demo-001)'
+          : 'Quotes, invoices, Stripe payments, PDF generation, job expense tracking',
       )
       .setVersion('1.0')
       .addBearerAuth()
+      .addApiKey({ type: 'apiKey', in: 'header', name: 'x-test-company-id', description: 'Dev bypass: enter company ID (e.g. co-demo-001)' }, 'x-test-company-id')
       .build();
     SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, config));
     console.log(`📖 Swagger docs: http://localhost:${port}/docs`);

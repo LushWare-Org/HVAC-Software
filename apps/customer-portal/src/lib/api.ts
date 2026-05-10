@@ -30,6 +30,23 @@ if (storedToken) {
   api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
 }
 
+api.interceptors.request.use((config) => {
+  if (import.meta.env.DEV && import.meta.env.VITE_COMPANY_ID) {
+    config.headers['x-test-company-id'] = import.meta.env.VITE_COMPANY_ID
+    config.headers['x-test-user-role'] = 'CUSTOMER'
+    try {
+      const cpUser = localStorage.getItem('cp_user')
+      if (cpUser) {
+        const parsed = JSON.parse(cpUser)
+        if (parsed?.customerId) {
+          config.headers['x-test-customer-id'] = parsed.customerId
+        }
+      }
+    } catch { /* localStorage not available */ }
+  }
+  return config
+})
+
 // Response interceptor — normalise errors + auto-logout on 401
 api.interceptors.response.use(
   (response) => response,
@@ -43,7 +60,10 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401) {
       const url = String(error.config?.url ?? '')
-      if (!url.includes('/auth/login') && !url.includes('/auth/register')) {
+      // A failed payment-intent call should show an error, not log the user out.
+      const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register')
+      const isPaymentEndpoint = url.includes('/finance/') || url.includes('/payment')
+      if (!isAuthEndpoint && !isPaymentEndpoint) {
         localStorage.removeItem('cp_token')
         localStorage.removeItem('cp_user')
         delete api.defaults.headers.common['Authorization']

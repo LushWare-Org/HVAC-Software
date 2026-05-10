@@ -206,6 +206,8 @@ model Invoice {
   stripePaymentIntentId String?
   stripePaymentUrl      String? // hosted payment page URL
 
+  quickbooksId String? 
+
   // Lifecycle timestamps
   sentAt   DateTime?
   paidAt   DateTime?
@@ -271,6 +273,8 @@ model Payment {
   stripePaymentIntentId String?
   stripeChargeId        String?
 
+  quickbooksId String?
+
   paidAt DateTime?
   notes  String?
 
@@ -331,5 +335,33 @@ model Expense {
 
   @@index([companyId, jobId])
   @@index([companyId, expenseDate])
+  @@schema("finance")
+}
+
+// ============================================================
+// QUICKBOOKS INTEGRATION
+// ============================================================
+
+model QuickBooksConnection {
+  id             String   @id @default(uuid())
+  companyId      String   @unique
+  realmId        String
+  accessToken    String   @db.Text
+  refreshToken   String   @db.Text
+  tokenExpiresAt DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("finance")
+}
+
+model QuickBooksCustomerMap {
+  id            String @id @default(uuid())
+  companyId     String
+  crmCustomerId String
+  qbCustomerId  String
+
+  @@unique([companyId, crmCustomerId])
   @@schema("finance")
 }

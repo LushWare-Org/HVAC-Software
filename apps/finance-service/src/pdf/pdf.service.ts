@@ -169,11 +169,28 @@ export class PdfService {
 
   private async htmlToPdf(html: string): Promise<Buffer> {
     const puppeteer = await import('puppeteer-core');
+    const fs = await import('fs');
+    const os = await import('os');
     let chromiumPath: string;
 
     if (process.env.CHROMIUM_PATH) {
       // Explicit override always wins
       chromiumPath = process.env.CHROMIUM_PATH;
+    } else if (process.platform === 'win32') {
+      // Windows — use os.homedir() which always resolves correctly
+      const home = os.homedir().replace(/\\/g, '/');
+      const winPaths = [
+        `${home}/AppData/Local/Google/Chrome/Application/chrome.exe`,
+        'C:/Program Files/Google/Chrome/Application/chrome.exe',
+        'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+      ];
+      const found = winPaths.find((p) => fs.existsSync(p));
+      if (!found) {
+        throw new Error(
+          'No Chrome found on Windows. Install Google Chrome or set CHROMIUM_PATH in .env.',
+        );
+      }
+      chromiumPath = found;
     } else if (process.platform === 'darwin') {
       // macOS dev machine — use the installed Google Chrome
       const macPaths = [
@@ -182,7 +199,6 @@ export class PdfService {
         '/usr/bin/chromium-browser',
         '/usr/bin/google-chrome',
       ];
-      const fs = await import('fs');
       const found = macPaths.find((p) => fs.existsSync(p));
       if (!found) {
         throw new Error(
@@ -191,7 +207,6 @@ export class PdfService {
       }
       chromiumPath = found;
     } else {
-      // Linux / Lambda / Docker — use @sparticuz/chromium serverless binary
       try {
         const chromium = await import('@sparticuz/chromium');
         chromiumPath = await chromium.default.executablePath();
@@ -199,6 +214,9 @@ export class PdfService {
         chromiumPath = '/usr/bin/google-chrome-stable';
       }
     }
+
+    const isWindows = process.platform === 'win32';
+    const isLinux   = process.platform === 'linux';
 
     const browser = await puppeteer.default.launch({
       executablePath: chromiumPath,
@@ -208,7 +226,10 @@ export class PdfService {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        ...(process.platform !== 'darwin' ? ['--no-zygote', '--single-process'] : []),
+        // Linux/Lambda only — these flags crash Chrome on Windows and macOS
+        ...(isLinux ? ['--no-zygote', '--single-process'] : []),
+        // Windows-specific stability flags
+        ...(isWindows ? ['--disable-extensions', '--disable-background-networking'] : []),
       ],
     });
 
