@@ -20,6 +20,7 @@ RUN pnpm install --frozen-lockfile
 # Build shared packages first (required by services)
 RUN pnpm --filter=@tscrm/types build 2>/dev/null || true
 RUN pnpm --filter=@tscrm/auth-client build 2>/dev/null || true
+RUN pnpm --filter=@tscrm/queue build 2>/dev/null || true
 
 # Build the service
 RUN pnpm --filter=crm-service build
