@@ -15,6 +15,7 @@ import { LocalAuthModule } from './auth/local-auth.module';
 import { HealthModule } from './health/health.module';
 import { FollowupModule } from './followup/followup.module';
 import { UpsellModule } from './upsell/upsell.module';
+import { MetaModule } from './meta/meta.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -39,6 +40,7 @@ import appConfig from './config/app.config';
     CompanyModule,
     FollowupModule,
     UpsellModule,
+    MetaModule,
   ],
 })
 export class AppModule {}
