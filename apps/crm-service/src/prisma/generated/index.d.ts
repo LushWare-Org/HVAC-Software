@@ -3316,6 +3316,9 @@ export namespace Prisma {
     latitude: number | null
     longitude: number | null
     lastLoginAt: Date | null
+    pushToken: string | null
+    pushPlatform: string | null
+    pushTokenUpdatedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3336,6 +3339,9 @@ export namespace Prisma {
     latitude: number | null
     longitude: number | null
     lastLoginAt: Date | null
+    pushToken: string | null
+    pushPlatform: string | null
+    pushTokenUpdatedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3357,6 +3363,9 @@ export namespace Prisma {
     latitude: number
     longitude: number
     lastLoginAt: number
+    pushToken: number
+    pushPlatform: number
+    pushTokenUpdatedAt: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3389,6 +3398,9 @@ export namespace Prisma {
     latitude?: true
     longitude?: true
     lastLoginAt?: true
+    pushToken?: true
+    pushPlatform?: true
+    pushTokenUpdatedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3409,6 +3421,9 @@ export namespace Prisma {
     latitude?: true
     longitude?: true
     lastLoginAt?: true
+    pushToken?: true
+    pushPlatform?: true
+    pushTokenUpdatedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3430,6 +3445,9 @@ export namespace Prisma {
     latitude?: true
     longitude?: true
     lastLoginAt?: true
+    pushToken?: true
+    pushPlatform?: true
+    pushTokenUpdatedAt?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3538,6 +3556,9 @@ export namespace Prisma {
     latitude: number | null
     longitude: number | null
     lastLoginAt: Date | null
+    pushToken: string | null
+    pushPlatform: string | null
+    pushTokenUpdatedAt: Date | null
     createdAt: Date
     updatedAt: Date
     _count: CompanyUserCountAggregateOutputType | null
@@ -3578,6 +3599,9 @@ export namespace Prisma {
     latitude?: boolean
     longitude?: boolean
     lastLoginAt?: boolean
+    pushToken?: boolean
+    pushPlatform?: boolean
+    pushTokenUpdatedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
@@ -3600,6 +3624,9 @@ export namespace Prisma {
     latitude?: boolean
     longitude?: boolean
     lastLoginAt?: boolean
+    pushToken?: boolean
+    pushPlatform?: boolean
+    pushTokenUpdatedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
@@ -3622,6 +3649,9 @@ export namespace Prisma {
     latitude?: boolean
     longitude?: boolean
     lastLoginAt?: boolean
+    pushToken?: boolean
+    pushPlatform?: boolean
+    pushTokenUpdatedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
@@ -3655,6 +3685,9 @@ export namespace Prisma {
       latitude: number | null
       longitude: number | null
       lastLoginAt: Date | null
+      pushToken: string | null
+      pushPlatform: string | null
+      pushTokenUpdatedAt: Date | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["companyUser"]>
@@ -4067,6 +4100,9 @@ export namespace Prisma {
     readonly latitude: FieldRef<"CompanyUser", 'Float'>
     readonly longitude: FieldRef<"CompanyUser", 'Float'>
     readonly lastLoginAt: FieldRef<"CompanyUser", 'DateTime'>
+    readonly pushToken: FieldRef<"CompanyUser", 'String'>
+    readonly pushPlatform: FieldRef<"CompanyUser", 'String'>
+    readonly pushTokenUpdatedAt: FieldRef<"CompanyUser", 'DateTime'>
     readonly createdAt: FieldRef<"CompanyUser", 'DateTime'>
     readonly updatedAt: FieldRef<"CompanyUser", 'DateTime'>
   }
@@ -15460,6 +15496,9 @@ export namespace Prisma {
     latitude: 'latitude',
     longitude: 'longitude',
     lastLoginAt: 'lastLoginAt',
+    pushToken: 'pushToken',
+    pushPlatform: 'pushPlatform',
+    pushTokenUpdatedAt: 'pushTokenUpdatedAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -16043,6 +16082,9 @@ export namespace Prisma {
     latitude?: FloatNullableFilter<"CompanyUser"> | number | null
     longitude?: FloatNullableFilter<"CompanyUser"> | number | null
     lastLoginAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
+    pushToken?: StringNullableFilter<"CompanyUser"> | string | null
+    pushPlatform?: StringNullableFilter<"CompanyUser"> | string | null
+    pushTokenUpdatedAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     createdAt?: DateTimeFilter<"CompanyUser"> | Date | string
     updatedAt?: DateTimeFilter<"CompanyUser"> | Date | string
     company?: XOR<CompanyRelationFilter, CompanyWhereInput>
@@ -16065,6 +16107,9 @@ export namespace Prisma {
     latitude?: SortOrderInput | SortOrder
     longitude?: SortOrderInput | SortOrder
     lastLoginAt?: SortOrderInput | SortOrder
+    pushToken?: SortOrderInput | SortOrder
+    pushPlatform?: SortOrderInput | SortOrder
+    pushTokenUpdatedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     company?: CompanyOrderByWithRelationInput
@@ -16091,6 +16136,9 @@ export namespace Prisma {
     latitude?: FloatNullableFilter<"CompanyUser"> | number | null
     longitude?: FloatNullableFilter<"CompanyUser"> | number | null
     lastLoginAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
+    pushToken?: StringNullableFilter<"CompanyUser"> | string | null
+    pushPlatform?: StringNullableFilter<"CompanyUser"> | string | null
+    pushTokenUpdatedAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     createdAt?: DateTimeFilter<"CompanyUser"> | Date | string
     updatedAt?: DateTimeFilter<"CompanyUser"> | Date | string
     company?: XOR<CompanyRelationFilter, CompanyWhereInput>
@@ -16113,6 +16161,9 @@ export namespace Prisma {
     latitude?: SortOrderInput | SortOrder
     longitude?: SortOrderInput | SortOrder
     lastLoginAt?: SortOrderInput | SortOrder
+    pushToken?: SortOrderInput | SortOrder
+    pushPlatform?: SortOrderInput | SortOrder
+    pushTokenUpdatedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: CompanyUserCountOrderByAggregateInput
@@ -16142,6 +16193,9 @@ export namespace Prisma {
     latitude?: FloatNullableWithAggregatesFilter<"CompanyUser"> | number | null
     longitude?: FloatNullableWithAggregatesFilter<"CompanyUser"> | number | null
     lastLoginAt?: DateTimeNullableWithAggregatesFilter<"CompanyUser"> | Date | string | null
+    pushToken?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
+    pushPlatform?: StringNullableWithAggregatesFilter<"CompanyUser"> | string | null
+    pushTokenUpdatedAt?: DateTimeNullableWithAggregatesFilter<"CompanyUser"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"CompanyUser"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"CompanyUser"> | Date | string
   }
@@ -17438,6 +17492,9 @@ export namespace Prisma {
     latitude?: number | null
     longitude?: number | null
     lastLoginAt?: Date | string | null
+    pushToken?: string | null
+    pushPlatform?: string | null
+    pushTokenUpdatedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutUsersInput
@@ -17460,6 +17517,9 @@ export namespace Prisma {
     latitude?: number | null
     longitude?: number | null
     lastLoginAt?: Date | string | null
+    pushToken?: string | null
+    pushPlatform?: string | null
+    pushTokenUpdatedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -17480,6 +17540,9 @@ export namespace Prisma {
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pushToken?: NullableStringFieldUpdateOperationsInput | string | null
+    pushPlatform?: NullableStringFieldUpdateOperationsInput | string | null
+    pushTokenUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutUsersNestedInput
@@ -17502,6 +17565,9 @@ export namespace Prisma {
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pushToken?: NullableStringFieldUpdateOperationsInput | string | null
+    pushPlatform?: NullableStringFieldUpdateOperationsInput | string | null
+    pushTokenUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -17523,6 +17589,9 @@ export namespace Prisma {
     latitude?: number | null
     longitude?: number | null
     lastLoginAt?: Date | string | null
+    pushToken?: string | null
+    pushPlatform?: string | null
+    pushTokenUpdatedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -17543,6 +17612,9 @@ export namespace Prisma {
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pushToken?: NullableStringFieldUpdateOperationsInput | string | null
+    pushPlatform?: NullableStringFieldUpdateOperationsInput | string | null
+    pushTokenUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -17564,6 +17636,9 @@ export namespace Prisma {
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pushToken?: NullableStringFieldUpdateOperationsInput | string | null
+    pushPlatform?: NullableStringFieldUpdateOperationsInput | string | null
+    pushTokenUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -19175,6 +19250,9 @@ export namespace Prisma {
     latitude?: SortOrder
     longitude?: SortOrder
     lastLoginAt?: SortOrder
+    pushToken?: SortOrder
+    pushPlatform?: SortOrder
+    pushTokenUpdatedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -19200,6 +19278,9 @@ export namespace Prisma {
     latitude?: SortOrder
     longitude?: SortOrder
     lastLoginAt?: SortOrder
+    pushToken?: SortOrder
+    pushPlatform?: SortOrder
+    pushTokenUpdatedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -19220,6 +19301,9 @@ export namespace Prisma {
     latitude?: SortOrder
     longitude?: SortOrder
     lastLoginAt?: SortOrder
+    pushToken?: SortOrder
+    pushPlatform?: SortOrder
+    pushTokenUpdatedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -21694,6 +21778,9 @@ export namespace Prisma {
     latitude?: number | null
     longitude?: number | null
     lastLoginAt?: Date | string | null
+    pushToken?: string | null
+    pushPlatform?: string | null
+    pushTokenUpdatedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -21714,6 +21801,9 @@ export namespace Prisma {
     latitude?: number | null
     longitude?: number | null
     lastLoginAt?: Date | string | null
+    pushToken?: string | null
+    pushPlatform?: string | null
+    pushTokenUpdatedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -21955,6 +22045,9 @@ export namespace Prisma {
     latitude?: FloatNullableFilter<"CompanyUser"> | number | null
     longitude?: FloatNullableFilter<"CompanyUser"> | number | null
     lastLoginAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
+    pushToken?: StringNullableFilter<"CompanyUser"> | string | null
+    pushPlatform?: StringNullableFilter<"CompanyUser"> | string | null
+    pushTokenUpdatedAt?: DateTimeNullableFilter<"CompanyUser"> | Date | string | null
     createdAt?: DateTimeFilter<"CompanyUser"> | Date | string
     updatedAt?: DateTimeFilter<"CompanyUser"> | Date | string
   }
@@ -24565,6 +24658,9 @@ export namespace Prisma {
     latitude?: number | null
     longitude?: number | null
     lastLoginAt?: Date | string | null
+    pushToken?: string | null
+    pushPlatform?: string | null
+    pushTokenUpdatedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -24876,6 +24972,9 @@ export namespace Prisma {
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pushToken?: NullableStringFieldUpdateOperationsInput | string | null
+    pushPlatform?: NullableStringFieldUpdateOperationsInput | string | null
+    pushTokenUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -24896,6 +24995,9 @@ export namespace Prisma {
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pushToken?: NullableStringFieldUpdateOperationsInput | string | null
+    pushPlatform?: NullableStringFieldUpdateOperationsInput | string | null
+    pushTokenUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -24916,6 +25018,9 @@ export namespace Prisma {
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pushToken?: NullableStringFieldUpdateOperationsInput | string | null
+    pushPlatform?: NullableStringFieldUpdateOperationsInput | string | null
+    pushTokenUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

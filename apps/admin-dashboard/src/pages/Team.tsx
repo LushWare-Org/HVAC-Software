@@ -12,7 +12,7 @@ import {
 } from '../hooks/useTeam'
 import { useCreateTechnician } from '../hooks/useScheduling'
 import { useEnsureVan } from '../hooks/useInventory'
-import MapPicker from '../components/MapPicker'
+import MapPicker from '../components/MapPickerLazy'
 import RecommendationsPanel from '../components/RecommendationsPanel'
 
 const ROLE_MAP: Record<string, string> = {

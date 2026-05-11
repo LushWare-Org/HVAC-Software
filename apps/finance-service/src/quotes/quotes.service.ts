@@ -452,6 +452,28 @@ export class QuotesService {
         where: { id },
         data: { status: QuoteStatus.CONVERTED },
       });
+
+      // Backfill jobs.jobs.estimatedValue if the quote is attached to a job
+      // and the job's estimate is still null. We never overwrite an existing
+      // estimate — that's authoritative user input. Best-effort: if the
+      // cross-schema write fails, the conversion still succeeds.
+      if (quote.jobId) {
+        try {
+          await tx.$executeRawUnsafe(
+            `UPDATE "jobs"."jobs"
+                SET "estimatedValue" = $1
+              WHERE "id" = $2
+                AND "companyId" = $3
+                AND "estimatedValue" IS NULL`,
+            quote.total,
+            quote.jobId,
+            companyId,
+          );
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn(`[finance] could not backfill job ${quote.jobId} estimatedValue:`, err);
+        }
+      }
       return inv;
     });
 

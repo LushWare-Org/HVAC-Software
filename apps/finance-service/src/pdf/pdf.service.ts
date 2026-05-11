@@ -8,11 +8,12 @@
  * to the template so the HBS template stays logic-free.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import type { Quote, QuoteLineItem, Invoice, InvoiceLineItem, Payment } from '../prisma/generated';
+import type { Browser } from 'puppeteer-core';
 
 // ── Money formatter ──────────────────────────────────────────────────────────
 const usd = (val: number | { toString(): string } | null | undefined): string => {
@@ -51,8 +52,38 @@ type InvoiceWithRelations = Invoice & {
 };
 
 @Injectable()
-export class PdfService {
+export class PdfService implements OnModuleDestroy {
   private readonly logger = new Logger(PdfService.name);
+
+  // ── Browser pool ───────────────────────────────────────────────────────────
+  // Previously this service launched a fresh Chromium per request and closed
+  // it immediately (~1-3s cold-start each — the dominant cost of a PDF
+  // request). Now we keep a singleton Browser instance for the lifetime of
+  // the Nest module and use a fresh Page per request.
+  //
+  // Concurrency is bounded by `MAX_CONCURRENT_PDFS` so a burst of API calls
+  // can't open hundreds of tabs at once and OOM the container.
+  //
+  // The browser is launched lazily on first use; if it crashes (closes
+  // unexpectedly), the next request relaunches it.
+  private browserPromise: Promise<Browser> | null = null;
+  private inflight = 0;
+  private readonly waiters: Array<() => void> = [];
+  private static readonly MAX_CONCURRENT_PDFS = Number(process.env.PDF_MAX_CONCURRENT) > 0
+    ? Number(process.env.PDF_MAX_CONCURRENT)
+    : 4;
+
+  async onModuleDestroy() {
+    if (this.browserPromise) {
+      try {
+        const b = await this.browserPromise;
+        await b.close();
+      } catch {
+        // ignore — we're shutting down anyway
+      }
+      this.browserPromise = null;
+    }
+  }
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -165,66 +196,117 @@ export class PdfService {
     return tpl(context);
   }
 
-  // ── Puppeteer ──────────────────────────────────────────────────────────────
+  // ── Puppeteer (browser singleton + bounded concurrency) ────────────────────
 
-  private async htmlToPdf(html: string): Promise<Buffer> {
-    const puppeteer = await import('puppeteer-core');
-    let chromiumPath: string;
-
+  /** Resolve the Chrome/Chromium binary path on the current platform. */
+  private async resolveChromiumPath(): Promise<string> {
     if (process.env.CHROMIUM_PATH) {
-      // Explicit override always wins
-      chromiumPath = process.env.CHROMIUM_PATH;
-    } else if (process.platform === 'darwin') {
-      // macOS dev machine — use the installed Google Chrome
+      return process.env.CHROMIUM_PATH;
+    }
+    if (process.platform === 'darwin') {
       const macPaths = [
         '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
         '/Applications/Chromium.app/Contents/MacOS/Chromium',
         '/usr/bin/chromium-browser',
         '/usr/bin/google-chrome',
       ];
-      const fs = await import('fs');
-      const found = macPaths.find((p) => fs.existsSync(p));
+      const fsMod = await import('fs');
+      const found = macPaths.find((p) => fsMod.existsSync(p));
       if (!found) {
         throw new Error(
           'No Chrome/Chromium found on macOS. Install Google Chrome or set CHROMIUM_PATH.',
         );
       }
-      chromiumPath = found;
-    } else {
-      // Linux / Lambda / Docker — use @sparticuz/chromium serverless binary
+      return found;
+    }
+    // Linux / Lambda / Docker — try the serverless-optimised binary first.
+    try {
+      const chromium = await import('@sparticuz/chromium');
+      return await chromium.default.executablePath();
+    } catch {
+      return '/usr/bin/google-chrome-stable';
+    }
+  }
+
+  /**
+   * Get the singleton Browser, launching it on first use. If a previous
+   * launch failed or the browser disconnected, the next call relaunches.
+   */
+  private async getBrowser(): Promise<Browser> {
+    if (this.browserPromise) {
       try {
-        const chromium = await import('@sparticuz/chromium');
-        chromiumPath = await chromium.default.executablePath();
+        const browser = await this.browserPromise;
+        if (browser.connected !== false) return browser;
       } catch {
-        chromiumPath = '/usr/bin/google-chrome-stable';
+        // fall through to relaunch
       }
+      this.browserPromise = null;
     }
 
-    const browser = await puppeteer.default.launch({
-      executablePath: chromiumPath,
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        ...(process.platform !== 'darwin' ? ['--no-zygote', '--single-process'] : []),
-      ],
-    });
-
-    try {
-      const page = await browser.newPage();
-      // 'domcontentloaded' is reliable for fully-inlined HTML templates and avoids
-      // 30s timeouts caused by networkidle0 waiting for external resources.
-      await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 15000 });
-      const pdfBuffer = await page.pdf({
-        format: 'Letter',
-        printBackground: true,
-        margin: { top: '0', right: '0', bottom: '0', left: '0' },
+    this.browserPromise = (async () => {
+      const puppeteer = await import('puppeteer-core');
+      const chromiumPath = await this.resolveChromiumPath();
+      const browser = await puppeteer.default.launch({
+        executablePath: chromiumPath,
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          ...(process.platform !== 'darwin' ? ['--no-zygote', '--single-process'] : []),
+        ],
       });
-      return Buffer.from(pdfBuffer);
+      browser.on('disconnected', () => {
+        this.logger.warn('Chromium disconnected — next PDF request will relaunch');
+        this.browserPromise = null;
+      });
+      this.logger.log('Chromium launched (singleton, will be reused for all PDFs)');
+      return browser;
+    })();
+
+    return this.browserPromise;
+  }
+
+  /** Acquire a slot in the concurrency-limited PDF pool. */
+  private async acquireSlot(): Promise<void> {
+    if (this.inflight < PdfService.MAX_CONCURRENT_PDFS) {
+      this.inflight += 1;
+      return;
+    }
+    await new Promise<void>((resolve) => this.waiters.push(resolve));
+    this.inflight += 1;
+  }
+
+  /** Release a slot, waking the next waiter if any. */
+  private releaseSlot(): void {
+    this.inflight -= 1;
+    const next = this.waiters.shift();
+    if (next) next();
+  }
+
+  private async htmlToPdf(html: string): Promise<Buffer> {
+    await this.acquireSlot();
+    try {
+      const browser = await this.getBrowser();
+      const page = await browser.newPage();
+      try {
+        // 'domcontentloaded' is reliable for fully-inlined HTML templates and
+        // avoids 30s timeouts caused by networkidle0 waiting for external
+        // resources.
+        await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        const pdfBuffer = await page.pdf({
+          format: 'Letter',
+          printBackground: true,
+          margin: { top: '0', right: '0', bottom: '0', left: '0' },
+        });
+        return Buffer.from(pdfBuffer);
+      } finally {
+        // Close only the page, not the browser — the singleton lives on.
+        await page.close().catch(() => { /* ignore double-close */ });
+      }
     } finally {
-      await browser.close();
+      this.releaseSlot();
     }
   }
 }

@@ -8463,6 +8463,7 @@ export namespace Prisma {
     serviceLongitude: Decimal | null
     estimatedDurationMins: number | null
     travelDistanceKm: Decimal | null
+    estimatedValue: Decimal | null
   }
 
   export type JobSumAggregateOutputType = {
@@ -8470,6 +8471,7 @@ export namespace Prisma {
     serviceLongitude: Decimal | null
     estimatedDurationMins: number | null
     travelDistanceKm: Decimal | null
+    estimatedValue: Decimal | null
   }
 
   export type JobMinAggregateOutputType = {
@@ -8500,6 +8502,7 @@ export namespace Prisma {
     actualEnd: Date | null
     estimatedDurationMins: number | null
     travelDistanceKm: Decimal | null
+    estimatedValue: Decimal | null
     quoteId: string | null
     invoiceId: string | null
     notes: string | null
@@ -8538,6 +8541,7 @@ export namespace Prisma {
     actualEnd: Date | null
     estimatedDurationMins: number | null
     travelDistanceKm: Decimal | null
+    estimatedValue: Decimal | null
     quoteId: string | null
     invoiceId: string | null
     notes: string | null
@@ -8576,6 +8580,7 @@ export namespace Prisma {
     actualEnd: number
     estimatedDurationMins: number
     travelDistanceKm: number
+    estimatedValue: number
     quoteId: number
     invoiceId: number
     notes: number
@@ -8594,6 +8599,7 @@ export namespace Prisma {
     serviceLongitude?: true
     estimatedDurationMins?: true
     travelDistanceKm?: true
+    estimatedValue?: true
   }
 
   export type JobSumAggregateInputType = {
@@ -8601,6 +8607,7 @@ export namespace Prisma {
     serviceLongitude?: true
     estimatedDurationMins?: true
     travelDistanceKm?: true
+    estimatedValue?: true
   }
 
   export type JobMinAggregateInputType = {
@@ -8631,6 +8638,7 @@ export namespace Prisma {
     actualEnd?: true
     estimatedDurationMins?: true
     travelDistanceKm?: true
+    estimatedValue?: true
     quoteId?: true
     invoiceId?: true
     notes?: true
@@ -8669,6 +8677,7 @@ export namespace Prisma {
     actualEnd?: true
     estimatedDurationMins?: true
     travelDistanceKm?: true
+    estimatedValue?: true
     quoteId?: true
     invoiceId?: true
     notes?: true
@@ -8707,6 +8716,7 @@ export namespace Prisma {
     actualEnd?: true
     estimatedDurationMins?: true
     travelDistanceKm?: true
+    estimatedValue?: true
     quoteId?: true
     invoiceId?: true
     notes?: true
@@ -8833,6 +8843,7 @@ export namespace Prisma {
     actualEnd: Date | null
     estimatedDurationMins: number | null
     travelDistanceKm: Decimal | null
+    estimatedValue: Decimal | null
     quoteId: string | null
     invoiceId: string | null
     notes: string | null
@@ -8891,6 +8902,7 @@ export namespace Prisma {
     actualEnd?: boolean
     estimatedDurationMins?: boolean
     travelDistanceKm?: boolean
+    estimatedValue?: boolean
     quoteId?: boolean
     invoiceId?: boolean
     notes?: boolean
@@ -8937,6 +8949,7 @@ export namespace Prisma {
     actualEnd?: boolean
     estimatedDurationMins?: boolean
     travelDistanceKm?: boolean
+    estimatedValue?: boolean
     quoteId?: boolean
     invoiceId?: boolean
     notes?: boolean
@@ -8978,6 +8991,7 @@ export namespace Prisma {
     actualEnd?: boolean
     estimatedDurationMins?: boolean
     travelDistanceKm?: boolean
+    estimatedValue?: boolean
     quoteId?: boolean
     invoiceId?: boolean
     notes?: boolean
@@ -9041,6 +9055,7 @@ export namespace Prisma {
       actualEnd: Date | null
       estimatedDurationMins: number | null
       travelDistanceKm: Prisma.Decimal | null
+      estimatedValue: Prisma.Decimal | null
       quoteId: string | null
       invoiceId: string | null
       notes: string | null
@@ -9476,6 +9491,7 @@ export namespace Prisma {
     readonly actualEnd: FieldRef<"Job", 'DateTime'>
     readonly estimatedDurationMins: FieldRef<"Job", 'Int'>
     readonly travelDistanceKm: FieldRef<"Job", 'Decimal'>
+    readonly estimatedValue: FieldRef<"Job", 'Decimal'>
     readonly quoteId: FieldRef<"Job", 'String'>
     readonly invoiceId: FieldRef<"Job", 'String'>
     readonly notes: FieldRef<"Job", 'String'>
@@ -15157,6 +15173,7 @@ export namespace Prisma {
     actualEnd: 'actualEnd',
     estimatedDurationMins: 'estimatedDurationMins',
     travelDistanceKm: 'travelDistanceKm',
+    estimatedValue: 'estimatedValue',
     quoteId: 'quoteId',
     invoiceId: 'invoiceId',
     notes: 'notes',
@@ -16028,6 +16045,7 @@ export namespace Prisma {
     actualEnd?: DateTimeNullableFilter<"Job"> | Date | string | null
     estimatedDurationMins?: IntNullableFilter<"Job"> | number | null
     travelDistanceKm?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     quoteId?: StringNullableFilter<"Job"> | string | null
     invoiceId?: StringNullableFilter<"Job"> | string | null
     notes?: StringNullableFilter<"Job"> | string | null
@@ -16073,6 +16091,7 @@ export namespace Prisma {
     actualEnd?: SortOrderInput | SortOrder
     estimatedDurationMins?: SortOrderInput | SortOrder
     travelDistanceKm?: SortOrderInput | SortOrder
+    estimatedValue?: SortOrderInput | SortOrder
     quoteId?: SortOrderInput | SortOrder
     invoiceId?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
@@ -16122,6 +16141,7 @@ export namespace Prisma {
     actualEnd?: DateTimeNullableFilter<"Job"> | Date | string | null
     estimatedDurationMins?: IntNullableFilter<"Job"> | number | null
     travelDistanceKm?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     quoteId?: StringNullableFilter<"Job"> | string | null
     invoiceId?: StringNullableFilter<"Job"> | string | null
     notes?: StringNullableFilter<"Job"> | string | null
@@ -16167,6 +16187,7 @@ export namespace Prisma {
     actualEnd?: SortOrderInput | SortOrder
     estimatedDurationMins?: SortOrderInput | SortOrder
     travelDistanceKm?: SortOrderInput | SortOrder
+    estimatedValue?: SortOrderInput | SortOrder
     quoteId?: SortOrderInput | SortOrder
     invoiceId?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
@@ -16214,6 +16235,7 @@ export namespace Prisma {
     actualEnd?: DateTimeNullableWithAggregatesFilter<"Job"> | Date | string | null
     estimatedDurationMins?: IntNullableWithAggregatesFilter<"Job"> | number | null
     travelDistanceKm?: DecimalNullableWithAggregatesFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: DecimalNullableWithAggregatesFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     quoteId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     invoiceId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     notes?: StringNullableWithAggregatesFilter<"Job"> | string | null
@@ -17251,6 +17273,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -17296,6 +17319,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -17337,6 +17361,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17382,6 +17407,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17425,6 +17451,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -17462,6 +17489,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17501,6 +17529,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18784,6 +18813,7 @@ export namespace Prisma {
     actualEnd?: SortOrder
     estimatedDurationMins?: SortOrder
     travelDistanceKm?: SortOrder
+    estimatedValue?: SortOrder
     quoteId?: SortOrder
     invoiceId?: SortOrder
     notes?: SortOrder
@@ -18800,6 +18830,7 @@ export namespace Prisma {
     serviceLongitude?: SortOrder
     estimatedDurationMins?: SortOrder
     travelDistanceKm?: SortOrder
+    estimatedValue?: SortOrder
   }
 
   export type JobMaxOrderByAggregateInput = {
@@ -18830,6 +18861,7 @@ export namespace Prisma {
     actualEnd?: SortOrder
     estimatedDurationMins?: SortOrder
     travelDistanceKm?: SortOrder
+    estimatedValue?: SortOrder
     quoteId?: SortOrder
     invoiceId?: SortOrder
     notes?: SortOrder
@@ -18868,6 +18900,7 @@ export namespace Prisma {
     actualEnd?: SortOrder
     estimatedDurationMins?: SortOrder
     travelDistanceKm?: SortOrder
+    estimatedValue?: SortOrder
     quoteId?: SortOrder
     invoiceId?: SortOrder
     notes?: SortOrder
@@ -18883,6 +18916,7 @@ export namespace Prisma {
     serviceLongitude?: SortOrder
     estimatedDurationMins?: SortOrder
     travelDistanceKm?: SortOrder
+    estimatedValue?: SortOrder
   }
 
   export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -20568,6 +20602,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -20611,6 +20646,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -20750,6 +20786,7 @@ export namespace Prisma {
     actualEnd?: DateTimeNullableFilter<"Job"> | Date | string | null
     estimatedDurationMins?: IntNullableFilter<"Job"> | number | null
     travelDistanceKm?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     quoteId?: StringNullableFilter<"Job"> | string | null
     invoiceId?: StringNullableFilter<"Job"> | string | null
     notes?: StringNullableFilter<"Job"> | string | null
@@ -20858,6 +20895,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -20901,6 +20939,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -21250,6 +21289,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -21294,6 +21334,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -21385,6 +21426,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21429,6 +21471,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21977,6 +22020,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -22021,6 +22065,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -22077,6 +22122,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22121,6 +22167,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22161,6 +22208,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -22205,6 +22253,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -22261,6 +22310,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22305,6 +22355,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22345,6 +22396,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -22389,6 +22441,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -22513,6 +22566,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22557,6 +22611,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22937,6 +22992,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -23061,6 +23117,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23104,6 +23161,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23146,6 +23204,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23196,6 +23255,7 @@ export namespace Prisma {
     actualEnd?: Date | string | null
     estimatedDurationMins?: number | null
     travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
     notes?: string | null
@@ -23269,6 +23329,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23312,6 +23373,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23354,6 +23416,7 @@ export namespace Prisma {
     actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
     travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null

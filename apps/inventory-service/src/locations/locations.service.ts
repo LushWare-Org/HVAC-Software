@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LocationType } from '../prisma/generated';
+import { clampPagination } from '@tscrm/types';
 
 @Injectable()
 export class LocationsService {
@@ -13,7 +14,8 @@ export class LocationsService {
     });
   }
 
-  async getLocationStock(companyId: string, locationId: string, page = 1, limit = 50, search?: string) {
+  async getLocationStock(companyId: string, locationId: string, pageInput: number | string = 1, limitInput: number | string = 50, search?: string) {
+    const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput }, { defaultLimit: 50 });
     const location = await this.prisma.stockLocation.findFirst({ where: { id: locationId, companyId } });
     if (!location) throw new NotFoundException('Location not found');
 
@@ -31,7 +33,7 @@ export class LocationsService {
       this.prisma.stockLevel.findMany({
         where,
         include: { inventoryItem: true },
-        skip: (page - 1) * limit,
+        skip,
         take: limit,
         orderBy: { inventoryItem: { name: 'asc' } },
       }),

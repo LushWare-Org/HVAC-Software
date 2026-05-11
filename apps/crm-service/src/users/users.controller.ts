@@ -13,6 +13,7 @@ import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
 import { AuthUser } from '@tscrm/types';
 import { UsersService } from './users.service';
+import { RegisterPushTokenDto } from './dto/push-token.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -95,6 +96,31 @@ export class UsersController {
     @Body() body: { name?: string; phone?: string },
   ) {
     return this.usersService.updateMe(user.companyId, user.userId, body);
+  }
+
+  @Post('me/push-token')
+  @ApiOperation({
+    summary: 'Register / refresh the current user\'s push notification token',
+    description:
+      'Idempotent. Called by the technician app at login and whenever Expo/FCM/APNs rotates the token. ' +
+      'comms-service reads pushToken via the CompanyUser record when dispatching PUSH notifications.',
+  })
+  registerPushToken(
+    @CurrentUser() user: AuthUser,
+    @Body() body: RegisterPushTokenDto,
+  ) {
+    return this.usersService.registerPushToken(
+      user.companyId,
+      user.userId,
+      body.token,
+      body.platform,
+    );
+  }
+
+  @Delete('me/push-token')
+  @ApiOperation({ summary: 'Clear the current user\'s push token (called on logout)' })
+  clearPushToken(@CurrentUser() user: AuthUser) {
+    return this.usersService.clearPushToken(user.companyId, user.userId);
   }
 
   @Patch(':id')

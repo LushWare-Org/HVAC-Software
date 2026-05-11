@@ -4,7 +4,7 @@ import {
   DefaultValuePipe, ParseIntPipe, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { IsOptional, IsString, IsArray, IsEnum, IsBoolean, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsArray, IsEnum, IsBoolean, IsDateString, IsNumber } from 'class-validator';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { JobsService } from './jobs.service';
@@ -22,6 +22,7 @@ class UpdateJobDto {
   @IsOptional() @IsString() notes?: string;
   @IsOptional() @IsString() internalNotes?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
+  @IsOptional() @IsNumber() estimatedValue?: number;
 }
 
 // Combined PATCH DTO — allows updating fields AND status in one request

@@ -20,15 +20,13 @@ interface ExpenseDetailModalProps {
 
 type TabType = "details" | "activity";
 
+// Backend status casing is UPPER_CASE — lookups normalize at the callsite.
 const EXP_CSS: Record<string, string> = {
-  PAID: "badge-green",
+  DRAFT: "badge-neutral",
   PENDING: "badge-amber",
   APPROVED: "badge-blue",
   REJECTED: "badge-red",
-  paid: "badge-green",
-  pending: "badge-amber",
-  approved: "badge-blue",
-  rejected: "badge-red",
+  PAID: "badge-green",
 };
 
 const inputView =
@@ -100,7 +98,7 @@ export default function ExpenseDetailModal({
     );
   };
 
-  const statusCSS = EXP_CSS[expense.status] || "badge-neutral";
+  const statusCSS = EXP_CSS[String(expense.status ?? '').toUpperCase()] || "badge-neutral";
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: "details", label: "Expense Details", icon: <DollarSign size={14} /> },

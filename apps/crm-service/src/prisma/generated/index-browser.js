@@ -158,6 +158,9 @@ exports.Prisma.CompanyUserScalarFieldEnum = {
   latitude: 'latitude',
   longitude: 'longitude',
   lastLoginAt: 'lastLoginAt',
+  pushToken: 'pushToken',
+  pushPlatform: 'pushPlatform',
+  pushTokenUpdatedAt: 'pushTokenUpdatedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

@@ -63,26 +63,35 @@ func JWTMiddleware(auth0Domain, audience string) gin.HandlerFunc {
 				companyID = c.Query("x-test-company-id")
 			}
 			if companyID != "" {
-				userID := c.GetHeader("x-test-user-id")
-				if userID == "" {
-					userID = c.Query("x-test-user-id")
+				readBypassHeader := func(name string) string {
+					if v := c.GetHeader(name); v != "" {
+						return v
+					}
+					return c.Query(name)
 				}
+
+				userID := readBypassHeader("x-test-user-id")
 				if userID == "" {
 					userID = "test-user-001"
 				}
-				role := strings.ToLower(c.GetHeader("x-test-user-role"))
-				if role == "" {
-					role = strings.ToLower(c.Query("x-test-user-role"))
-				}
+				role := strings.ToLower(readBypassHeader("x-test-user-role"))
 				if role == "" {
 					role = "company_admin"
+				}
+				email := readBypassHeader("x-test-user-email")
+				if email == "" {
+					email = "test@demo.tscrm.dev"
+				}
+				name := readBypassHeader("x-test-user-name")
+				if name == "" {
+					name = "Test User"
 				}
 				claims := AuthClaims{
 					UserID:    userID,
 					CompanyID: companyID,
 					Role:      role,
-					Email:     "test@demo.tscrm.dev",
-					Name:      "Test User",
+					Email:     email,
+					Name:      name,
 				}
 				c.Set(ClaimsKey, claims)
 				c.Next()

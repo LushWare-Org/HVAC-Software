@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaginatedResponse } from '@tscrm/types';
+import { PaginatedResponse, clampPagination } from '@tscrm/types';
 
 @Injectable()
 export class PriceBookService {
@@ -8,12 +8,12 @@ export class PriceBookService {
 
   async findAll(
     companyId: string,
-    page = 1,
-    limit = 50,
+    pageInput: number | string = 1,
+    limitInput: number | string = 50,
     search?: string,
     category?: string,
   ): Promise<PaginatedResponse<unknown>> {
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput }, { defaultLimit: 50 });
     const where = {
       companyId,
       isActive: true,

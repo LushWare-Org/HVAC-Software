@@ -2,6 +2,9 @@
 // @tscrm/types — Shared TypeScript types across all services
 // ============================================================
 
+// Re-export pagination guards so every service can import from one place.
+export * from './pagination';
+
 // ---- RBAC Roles ----
 export enum Role {
   SUPER_ADMIN = 'super_admin',

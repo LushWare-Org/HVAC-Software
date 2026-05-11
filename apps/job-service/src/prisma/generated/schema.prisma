@@ -209,6 +209,12 @@ model Job {
   estimatedDurationMins Int?
   travelDistanceKm      Decimal? @db.Decimal(8, 2)
 
+  // Estimated job value, used by dashboards and forecasts before an invoice
+  // exists. Settable on create (e.g. from quote total or a template estimate)
+  // and updated by finance-service when a quote is converted. The billed
+  // amount remains authoritative on the Invoice record.
+  estimatedValue Decimal? @db.Decimal(10, 2)
+
   // Finance refs (set by finance-service)
   quoteId   String?
   invoiceId String?

@@ -4,11 +4,26 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// envInt reads a positive integer from an env var, falling back to def.
+func envInt(name string, def int) int {
+	raw := os.Getenv(name)
+	if raw == "" {
+		return def
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil || n <= 0 {
+		return def
+	}
+	return n
+}
 
 func ensureSchedulingExtensions(ctx context.Context, pool *pgxpool.Pool) {
 	queries := []string{
@@ -44,9 +59,21 @@ func NewPostgresPool(ctx context.Context, databaseURL string) *pgxpool.Pool {
 	}
 	cfg.ConnConfig.RuntimeParams["search_path"] = "scheduling,public,extensions"
 
-	// Pool settings optimised for a scheduling service with burst GPS ingestion.
-	cfg.MaxConns = 25
-	cfg.MinConns = 3
+	// Pool settings — tunable via env vars for per-environment sizing. Defaults
+	// stay at 25/3, which is safe under Supabase pgbouncer transaction-mode
+	// pooling (each pgbouncer client connection multiplexes several pgx
+	// connections at most).
+	//
+	// Sizing guidance (Supabase as of 2026):
+	//   - Free tier  pgbouncer pool size  = 60   (10 reserved for the platform)
+	//   - Pro tier   pgbouncer pool size  = 200  (15 reserved)
+	//   - Team / Ent are higher — verify before bumping.
+	//
+	// Across all 6 NestJS services + this Go service we should keep the
+	// aggregate well below the pgbouncer ceiling. Bump per-service in prod via
+	// PG_POOL_MAX_CONNS / PG_POOL_MIN_CONNS env vars rather than editing code.
+	cfg.MaxConns = int32(envInt("PG_POOL_MAX_CONNS", 25))
+	cfg.MinConns = int32(envInt("PG_POOL_MIN_CONNS", 3))
 	cfg.MaxConnLifetime = 30 * time.Minute
 	cfg.MaxConnIdleTime = 5 * time.Minute
 	cfg.HealthCheckPeriod = 1 * time.Minute

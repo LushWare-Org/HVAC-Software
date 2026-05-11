@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '../prisma/generated';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
-import { AuthUser, PaginatedResponse } from '@tscrm/types';
+import { AuthUser, PaginatedResponse, clampPagination } from '@tscrm/types';
 
 const CREATE_JOB_MAX_ATTEMPTS = 5;
 
@@ -85,8 +85,8 @@ export class JobsService {
 
   async findAll(
     companyId: string,
-    page = 1,
-    limit = 20,
+    pageInput: number | string = 1,
+    limitInput: number | string = 20,
     filters: {
       status?: string;
       assignedToId?: string;
@@ -97,7 +97,7 @@ export class JobsService {
       customerId?: string;
     } = {},
   ): Promise<PaginatedResponse<unknown>> {
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput });
     const where: any = { companyId };
 
     if (filters.status) where.status = filters.status;

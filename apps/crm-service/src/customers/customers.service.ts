@@ -10,7 +10,8 @@ import { UpsellAgentService } from '../upsell/upsell-agent.service';
 import { FollowupAgent } from '../agents/followup.agent';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
-import { PaginatedResponse } from '@tscrm/types';
+import { CustomersEquipmentService, type EquipmentInput } from './customers-equipment.service';
+import { PaginatedResponse, clampPagination } from '@tscrm/types';
 
 @Injectable()
 export class CustomersService {
@@ -21,6 +22,7 @@ export class CustomersService {
     private churnClient: ChurnClient,
     private upsellAgent: UpsellAgentService,
     private followupAgent: FollowupAgent,
+    private equipment: CustomersEquipmentService,
   ) {}
 
   private provisionalPortalSignupFilter = {
@@ -52,13 +54,13 @@ export class CustomersService {
 
   async findAll(
     companyId: string,
-    page = 1,
-    limit = 20,
+    pageInput: number | string = 1,
+    limitInput: number | string = 20,
     search?: string,
     type?: string,
     isActive?: boolean,
   ): Promise<PaginatedResponse<unknown>> {
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput });
 
     const where: any = {
       companyId,
@@ -749,72 +751,23 @@ export class CustomersService {
     return Math.min(1, Math.max(0, value));
   }
 
-  // ── Equipment CRUD ────────────────────────────────────────────────────────────
+  // ── Equipment CRUD (delegated to CustomersEquipmentService) ──────────────────
+  // The methods below remain on CustomersService for controller-level
+  // backwards compat; new callers can inject CustomersEquipmentService directly.
 
-  async getEquipment(companyId: string, customerId: string) {
-    await this.findOne(companyId, customerId); // verify customer belongs to company
-    return this.prisma.equipment.findMany({
-      where: { customerId, companyId },
-      orderBy: { createdAt: 'desc' },
-    });
+  getEquipment(companyId: string, customerId: string) {
+    return this.equipment.list(companyId, customerId);
   }
 
-  async createEquipmentItem(
-    companyId: string,
-    customerId: string,
-    dto: { type: string; brand?: string; model?: string; serialNo?: string; installDate?: string; warrantyEnd?: string; notes?: string },
-  ) {
-    await this.findOne(companyId, customerId);
-    const equipment = await this.prisma.equipment.create({
-      data: {
-        companyId,
-        customerId,
-        type: dto.type,
-        brand: dto.brand,
-        model: dto.model,
-        serialNo: dto.serialNo,
-        installDate: dto.installDate ? new Date(dto.installDate) : undefined,
-        warrantyEnd: dto.warrantyEnd ? new Date(dto.warrantyEnd) : undefined,
-        notes: dto.notes,
-      },
-    });
-
-    void this.upsellAgent.processCustomerProfileUpdate(companyId, customerId);
-    return equipment;
+  createEquipmentItem(companyId: string, customerId: string, dto: EquipmentInput) {
+    return this.equipment.create(companyId, customerId, dto);
   }
 
-  async updateEquipmentItem(
-    companyId: string,
-    customerId: string,
-    eqId: string,
-    dto: { type?: string; brand?: string; model?: string; serialNo?: string; installDate?: string; warrantyEnd?: string; notes?: string },
-  ) {
-    await this.findOne(companyId, customerId);
-    const eq = await this.prisma.equipment.findFirst({ where: { id: eqId, customerId, companyId } });
-    if (!eq) throw new NotFoundException(`Equipment ${eqId} not found`);
-    const equipment = await this.prisma.equipment.update({
-      where: { id: eqId },
-      data: {
-        ...(dto.type !== undefined && { type: dto.type }),
-        ...(dto.brand !== undefined && { brand: dto.brand }),
-        ...(dto.model !== undefined && { model: dto.model }),
-        ...(dto.serialNo !== undefined && { serialNo: dto.serialNo }),
-        ...(dto.installDate !== undefined && { installDate: dto.installDate ? new Date(dto.installDate) : null }),
-        ...(dto.warrantyEnd !== undefined && { warrantyEnd: dto.warrantyEnd ? new Date(dto.warrantyEnd) : null }),
-        ...(dto.notes !== undefined && { notes: dto.notes }),
-      },
-    });
-
-    void this.upsellAgent.processCustomerProfileUpdate(companyId, customerId);
-    return equipment;
+  updateEquipmentItem(companyId: string, customerId: string, eqId: string, dto: Partial<EquipmentInput>) {
+    return this.equipment.update(companyId, customerId, eqId, dto);
   }
 
-  async deleteEquipmentItem(companyId: string, customerId: string, eqId: string) {
-    await this.findOne(companyId, customerId);
-    const eq = await this.prisma.equipment.findFirst({ where: { id: eqId, customerId, companyId } });
-    if (!eq) throw new NotFoundException(`Equipment ${eqId} not found`);
-    const deleted = await this.prisma.equipment.delete({ where: { id: eqId } });
-    void this.upsellAgent.processCustomerProfileUpdate(companyId, customerId);
-    return deleted;
+  deleteEquipmentItem(companyId: string, customerId: string, eqId: string) {
+    return this.equipment.remove(companyId, customerId, eqId);
   }
 }

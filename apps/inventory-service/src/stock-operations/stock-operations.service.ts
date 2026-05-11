@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MovementType, Prisma } from '../prisma/generated';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
+import { clampPagination } from '@tscrm/types';
 
 function systemToken(companyId: string): string {
   const secret = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
@@ -308,13 +309,14 @@ export class StockOperationsService {
     });
   }
 
-  async findMovements(companyId: string, page = 1, limit = 50, filters?: {
+  async findMovements(companyId: string, pageInput: number | string = 1, limitInput: number | string = 50, filters?: {
     inventoryItemId?: string;
     locationId?: string;
     movementType?: string;
     dateFrom?: string;
     dateTo?: string;
   }) {
+    const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput }, { defaultLimit: 50 });
     const where: any = { companyId };
     if (filters?.inventoryItemId) where.inventoryItemId = filters.inventoryItemId;
     if (filters?.movementType) where.movementType = filters.movementType;
@@ -338,7 +340,7 @@ export class StockOperationsService {
           fromLocation: { select: { name: true, type: true } },
           toLocation: { select: { name: true, type: true } },
         },
-        skip: (page - 1) * limit,
+        skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),

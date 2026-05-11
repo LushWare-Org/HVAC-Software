@@ -11,6 +11,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisCacheService } from '../redis-cache.service';
 import { DateRangeDto, GranularityEnum } from '../dashboard/dto/dashboard.dto';
 import { Prisma } from '../prisma/generated';
 
@@ -54,10 +55,20 @@ export interface JobVolumeTrend {
 
 @Injectable()
 export class JobsAnalyticsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: RedisCacheService,
+  ) {}
 
   async getByStatus(companyId: string, dto: DateRangeDto): Promise<JobsByStatus[]> {
     const { from, to } = this.normaliseDateRange(dto);
+
+    // 2-min cache: status counts only shift when jobs transition; this aligns
+    // with the dashboard's KPI cache window so the pie chart and KPIs don't
+    // read different point-in-time snapshots of the same period.
+    const cacheKey = `analytics:jobs-by-status:${companyId}:${from.toISOString()}:${to.toISOString()}`;
+    const cached = await this.cache.get<JobsByStatus[]>(cacheKey);
+    if (cached) return cached;
 
     const rows = await this.prisma.$queryRaw<{ status: string; cnt: bigint }[]>(
       Prisma.sql`
@@ -70,7 +81,9 @@ export class JobsAnalyticsService {
       `,
     );
 
-    return rows.map((r) => ({ status: r.status, count: Number(r.cnt) }));
+    const result = rows.map((r) => ({ status: r.status, count: Number(r.cnt) }));
+    await this.cache.set(cacheKey, result, 120);
+    return result;
   }
 
   async getByTradeType(companyId: string, dto: DateRangeDto): Promise<JobsByTrade[]> {

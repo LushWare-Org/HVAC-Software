@@ -8,6 +8,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentStatus, PaymentMethod } from '../prisma/generated';
+import { clampPagination } from '@tscrm/types';
 
 @Injectable()
 export class PaymentsService {
@@ -25,8 +26,8 @@ export class PaymentsService {
       limit?: number;
     },
   ) {
-    const { status, method, invoiceId, page = 1, limit = 20 } = params;
-    const skip = (page - 1) * limit;
+    const { status, method, invoiceId } = params;
+    const { page, limit, skip } = clampPagination({ page: params.page, limit: params.limit });
     const where = {
       companyId,
       ...(status ? { status } : {}),

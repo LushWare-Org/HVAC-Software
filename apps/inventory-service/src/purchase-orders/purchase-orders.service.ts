@@ -5,6 +5,7 @@ import { LocationsService } from '../locations/locations.service';
 import { PurchaseOrderStatus } from '../prisma/generated';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
+import { clampPagination } from '@tscrm/types';
 
 function systemToken(companyId: string): string {
   const secret = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
@@ -25,13 +26,14 @@ export class PurchaseOrdersService {
     private readonly locations: LocationsService,
   ) {}
 
-  async findAll(companyId: string, page = 1, limit = 20, status?: string) {
+  async findAll(companyId: string, pageInput: number | string = 1, limitInput: number | string = 20, status?: string) {
+    const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput });
     const where: any = { companyId };
     if (status) where.status = status;
 
     const [data, count] = await this.prisma.$transaction([
       this.prisma.purchaseOrder.findMany({
-        where, skip: (page - 1) * limit, take: limit,
+        where, skip, take: limit,
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.purchaseOrder.count({ where }),

@@ -8,23 +8,24 @@ import AddQuoteModal from './AddQuoteModal'
 import AddInvoiceModal from './AddInvoiceModal'
 import AddExpenseModal from './AddExpenseModal'
 import RecommendationsPanel from '../../components/RecommendationsPanel'
+import { humanizeStatus, normalizeStatus } from '../../lib/format'
 
-// ─── Status CSS maps ──────────────────────────────────────────────────────────
+// ─── Status CSS maps (backend UPPER_CASE = source of truth) ───────────────────
+// All map keys are UPPER_SNAKE_CASE to match backend Prisma enums. Lookups
+// normalize via normalizeStatus() so any unexpected casing is handled at one
+// callsite, not by mirrored map entries.
 
 const INV_CSS: Record<string, string> = {
   DRAFT: 'badge-neutral', SENT: 'badge-blue', PARTIALLY_PAID: 'badge-amber',
   PAID: 'badge-green', OVERDUE: 'badge-red', CANCELLED: 'badge-red', VOID: 'badge-neutral',
-  // lowercase fallbacks
-  sent: 'badge-blue', paid: 'badge-green', overdue: 'badge-red', draft: 'badge-neutral', partial: 'badge-amber',
 }
 const QUO_CSS: Record<string, string> = {
-  DRAFT: 'badge-neutral', SENT: 'badge-blue', ACCEPTED: 'badge-green',
+  DRAFT: 'badge-neutral', SENT: 'badge-blue', VIEWED: 'badge-blue', ACCEPTED: 'badge-green',
   REJECTED: 'badge-red', DECLINED: 'badge-red', EXPIRED: 'badge-amber', CONVERTED: 'badge-cyan',
-  sent: 'badge-blue', accepted: 'badge-green', draft: 'badge-neutral', rejected: 'badge-red', declined: 'badge-red', expired: 'badge-amber',
 }
 const EXP_CSS: Record<string, string> = {
-  PAID: 'badge-green', PENDING: 'badge-amber', APPROVED: 'badge-blue', REJECTED: 'badge-red',
-  paid: 'badge-green', pending: 'badge-amber',
+  DRAFT: 'badge-neutral', PENDING: 'badge-amber', APPROVED: 'badge-blue',
+  REJECTED: 'badge-red', PAID: 'badge-green',
 }
 
 function Skeleton({ h = 14 }: { h?: number }) {
@@ -181,8 +182,8 @@ export default function Finance() {
                       <td className="text-sm text-3">{inv.issuedAt ? new Date(inv.issuedAt).toLocaleDateString() : '—'}</td>
                       <td className="text-sm">{inv.dueAt ? new Date(inv.dueAt).toLocaleDateString() : '—'}</td>
                       <td>
-                        <span className={`badge ${INV_CSS[String(inv.status ?? '').toUpperCase()] ?? INV_CSS[String(inv.status ?? '').toLowerCase()] ?? 'badge-neutral'}`}>
-                          {String(inv.status ?? 'unknown').toLowerCase()}
+                        <span className={`badge ${INV_CSS[normalizeStatus(inv.status)] ?? 'badge-neutral'}`}>
+                          {humanizeStatus(inv.status)}
                         </span>
                       </td>
                       <td style={{ textAlign: 'right' }}>
@@ -268,8 +269,8 @@ export default function Finance() {
                       <td className="td-primary font-600">{fmtDecimal(q.total)}</td>
                       <td className="text-sm text-3">{q.expiresAt ? new Date(q.expiresAt).toLocaleDateString() : '—'}</td>
                       <td>
-                        <span className={`badge ${QUO_CSS[String(q.status ?? '').toUpperCase()] ?? QUO_CSS[String(q.status ?? '').toLowerCase()] ?? 'badge-neutral'}`}>
-                          {String(q.status ?? 'unknown').toLowerCase()}
+                        <span className={`badge ${QUO_CSS[normalizeStatus(q.status)] ?? 'badge-neutral'}`}>
+                          {humanizeStatus(q.status)}
                         </span>
                       </td>
                       <td style={{ textAlign: 'right' }}>
@@ -341,8 +342,8 @@ export default function Finance() {
                       <td className="text-sm text-3">{exp.date ? new Date(exp.date).toLocaleDateString() : '—'}</td>
                       <td className="td-primary font-700">{fmtDecimal(exp.amount)}</td>
                       <td>
-                        <span className={`badge ${EXP_CSS[String(exp.status ?? '').toUpperCase()] ?? EXP_CSS[String(exp.status ?? '').toLowerCase()] ?? 'badge-neutral'}`}>
-                          {String(exp.status ?? 'unknown').toLowerCase()}
+                        <span className={`badge ${EXP_CSS[normalizeStatus(exp.status)] ?? 'badge-neutral'}`}>
+                          {humanizeStatus(exp.status)}
                         </span>
                       </td>
                       <td style={{ textAlign: 'right' }}>

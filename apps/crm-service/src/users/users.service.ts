@@ -2,6 +2,7 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '../prisma/generated';
+import { clampPagination } from '@tscrm/types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
 const COMMS_SERVICE_URL = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
@@ -18,8 +19,8 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(companyId: string, params: { role?: string; search?: string; isActive?: boolean; page?: number; limit?: number }) {
-    const { role, search, isActive, page = 1, limit = 50 } = params;
-    const skip = (page - 1) * limit;
+    const { role, search, isActive } = params;
+    const { page, limit, skip } = clampPagination({ page: params.page, limit: params.limit }, { defaultLimit: 50 });
 
     const where: any = { companyId };
     if (role) where.role = role;
@@ -267,6 +268,35 @@ export class UsersService {
   async updateMe(companyId: string, userId: string, data: { name?: string; phone?: string }) {
     const user = await this.findMe(companyId, userId);
     return this.prisma.companyUser.update({ where: { id: user.id }, data });
+  }
+
+  /** Register or refresh the current user's push notification token. Idempotent. */
+  async registerPushToken(
+    companyId: string,
+    userId: string,
+    token: string,
+    platform?: string,
+  ) {
+    const user = await this.findMe(companyId, userId);
+    return this.prisma.companyUser.update({
+      where: { id: user.id },
+      data: {
+        pushToken: token,
+        pushPlatform: platform ?? user.pushPlatform ?? null,
+        pushTokenUpdatedAt: new Date(),
+      },
+      select: { id: true, pushPlatform: true, pushTokenUpdatedAt: true },
+    });
+  }
+
+  /** Clear the current user's push token (called on logout / device sign-out). */
+  async clearPushToken(companyId: string, userId: string) {
+    const user = await this.findMe(companyId, userId);
+    await this.prisma.companyUser.update({
+      where: { id: user.id },
+      data: { pushToken: null, pushPlatform: null, pushTokenUpdatedAt: new Date() },
+    });
+    return { ok: true };
   }
 
   async update(companyId: string, id: string, data: { name?: string; email?: string; phone?: string; role?: string; isActive?: boolean }) {

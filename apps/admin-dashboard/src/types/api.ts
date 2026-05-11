@@ -537,6 +537,15 @@ export interface MessageThreadDetail extends MessageThread {
 }
 
 /** Legacy flat Message â€” kept for backwards compat / notifications */
+/**
+ * SMS / email / push delivery record (Notification).
+ *
+ * Direction is always present on records the backend returns — comms-service
+ * Prisma schema declares `direction MessageDirection` as required. Outbound
+ * records use `OUTBOUND`; inbound webhook deliveries (e.g. Twilio reply) use
+ * `INBOUND`. Don't reintroduce a `direction?` optional unless an endpoint
+ * provably omits it.
+ */
 export interface Message {
   id: string
   companyId: string
@@ -545,7 +554,7 @@ export interface Message {
   subject?: string
   body: string
   status: MessageStatus
-  direction?: 'INBOUND' | 'OUTBOUND'
+  direction: 'INBOUND' | 'OUTBOUND'
   customerId?: string
   customerName?: string
   createdAt: string

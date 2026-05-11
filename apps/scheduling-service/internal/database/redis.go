@@ -35,13 +35,13 @@ func NewRedisClient(ctx context.Context, redisURL string) *redis.Client {
 	// Try to ping Redis with a 5-second timeout (non-fatal if it fails)
 	pingCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	if err := client.Ping(pingCtx).Err(); err != nil {
 		fmt.Printf("⚠️  Redis connection warning (will retry): %v\n", err)
 	} else {
 		fmt.Println("✅ Redis connected")
 	}
-	
+
 	return client
 }
 

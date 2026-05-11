@@ -25,6 +25,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import api from '../lib/api'
 import { queryClient } from '../lib/queryClient'
+import { useAuth } from '../contexts/AuthContext'
 import type {
   Technician,
   DispatchAssignment,
@@ -234,19 +235,30 @@ export function useDispatchWebSocket() {
   const [lastEvent, setLastEvent] = useState<DispatchEvent | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { token, user } = useAuth()
+
+  // Auth contract for the Go scheduling /ws endpoint:
+  //   1. If we have a JWT (HS256 in dev, RS256 in prod) → send `?access_token=…`.
+  //      The Go middleware peeks the alg header and validates against either
+  //      the local JWT_SECRET or the Auth0 JWKS.
+  //   2. Else (no token) and DEV build → send the dev test-bypass query params
+  //      pulled from AuthContext (or demo defaults). The middleware honors
+  //      these only when BYPASS_AUTH=true and GIN_MODE != "release".
+  // Native browser WebSocket can't send custom headers, so query params are
+  // the only viable transport for both branches.
 
   const connect = () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return
 
-    const token = localStorage.getItem('tscrm_token')
     const params = new URLSearchParams()
     if (token) {
       params.set('access_token', token)
     } else if (import.meta.env.DEV) {
-      // Fallback for local development setups that intentionally use BYPASS_AUTH.
-      params.set('x-test-company-id', 'co-demo-001')
-      params.set('x-test-user-id', 'user-admin-001')
-      params.set('x-test-user-role', 'company_admin')
+      params.set('x-test-company-id', user?.companyId ?? 'co-demo-001')
+      params.set('x-test-user-id', user?.id ?? 'user-admin-001')
+      params.set('x-test-user-role', (user?.role ?? 'company_admin').toLowerCase())
+      if (user?.email) params.set('x-test-user-email', user.email)
+      if (user?.name) params.set('x-test-user-name', user.name)
     }
     const wsBase = resolveDispatchWsBase()
     const qs = params.toString()
@@ -325,7 +337,10 @@ export function useDispatchWebSocket() {
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current)
       wsRef.current?.close()
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    // Reconnect when the auth identity changes (login / logout / token refresh)
+    // so the new credentials are used on the WS handshake.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, user?.id])
 
   return { status, lastEvent }
 }

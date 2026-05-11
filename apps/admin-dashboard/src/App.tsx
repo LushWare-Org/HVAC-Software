@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -81,6 +81,19 @@ function useIsMobile(breakpoint = 768) {
  * a thin top progress bar keeps the shell present and feels faster than a
  * blank "Loading" screen. The chunk normally lands in <300 ms.
  */
+function RouteLoading() {
+  return (
+    <div
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999,
+        background: 'linear-gradient(90deg, transparent 0%, var(--blue, #3b82f6) 50%, transparent 100%)',
+        backgroundSize: '200% 100%',
+        animation: 'routeLoadShimmer 1.1s linear infinite',
+      }}
+      aria-hidden
+    />
+  )
+}
 
 
 function AuthenticatedApp() {
@@ -123,21 +136,26 @@ function AuthenticatedApp() {
       <div className={`main-content${!isMobile && collapsed ? ' sidebar-collapsed' : ''}`}>
         <Topbar onMenuClick={handleToggle} showMenu={isMobile} />
         <div className="page">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/jobs" element={<Jobs />} />
-            {/* <Route path="/scheduling" element={<Scheduling />} /> */}
-            <Route path="/dispatch" element={<DispatchBoard />} />
-            <Route path="/finance" element={<Finance />} />
-            <Route path="/communications" element={<Communications />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/bandit-dashboard" element={<BanditDashboard />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
+          {/* Route-level Suspense: the shell + topbar stay rendered while the
+              next page's chunk loads. The fallback is a 3px shimmer at the
+              very top, NOT a full-page spinner — perceived speed wins. */}
+          <Suspense fallback={<RouteLoading />}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/customers" element={<Customers />} />
+              <Route path="/jobs" element={<Jobs />} />
+              {/* <Route path="/scheduling" element={<Scheduling />} /> */}
+              <Route path="/dispatch" element={<DispatchBoard />} />
+              <Route path="/finance" element={<Finance />} />
+              <Route path="/communications" element={<Communications />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/bandit-dashboard" element={<BanditDashboard />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </Suspense>
         </div>
       </div>
       {/* Keyframes for the top-of-page route loader */}

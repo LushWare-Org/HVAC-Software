@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Wrench, Calendar, Loader2, AlertCircle } from "lucide-react";
 import { useCreateJob, useJobTypes } from "../../hooks/useJobs";
 import { useCustomers } from "../../hooks/useCustomers";
-import MapPicker from "../../components/MapPicker";
+import MapPicker from "../../components/MapPickerLazy";
 
 interface AddJobModalProps {
   isOpen: boolean;

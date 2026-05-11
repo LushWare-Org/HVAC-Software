@@ -38,6 +38,8 @@ export class CreateJobDto {
   @ApiPropertyOptional() @IsOptional() @IsDateString() scheduledStart?: string;
   @ApiPropertyOptional() @IsOptional() @IsDateString() scheduledEnd?: string;
   @ApiPropertyOptional() @IsOptional() @IsNumber() estimatedDurationMins?: number;
+  @ApiPropertyOptional({ description: 'Forecasted dollar value of the job; falls back to invoice total once billed.' })
+  @IsOptional() @IsNumber() estimatedValue?: number;
 
   @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() internalNotes?: string;

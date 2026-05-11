@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ExpenseCategory } from '../prisma/generated';
+import { clampPagination } from '@tscrm/types';
 
 export interface CreateExpenseDto {
   jobId?: string;
@@ -31,8 +32,8 @@ export class ExpensesService {
       limit?: number;
     },
   ) {
-    const { jobId, technicianId, category, page = 1, limit = 20 } = params;
-    const skip = (page - 1) * limit;
+    const { jobId, technicianId, category } = params;
+    const { page, limit, skip } = clampPagination({ page: params.page, limit: params.limit });
     const where = {
       companyId,
       ...(jobId ? { jobId } : {}),

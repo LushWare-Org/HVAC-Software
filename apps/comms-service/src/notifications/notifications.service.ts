@@ -12,7 +12,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { AuthUser } from '@tscrm/types';
+import { AuthUser, clampPagination } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
 import { Channel, DeliveryStatus } from '../prisma/generated';
 import { QueueName } from '@tscrm/queue';
@@ -359,8 +359,8 @@ export class NotificationsService {
     user: AuthUser,
     params: { channel?: Channel; status?: DeliveryStatus; page?: number; limit?: number },
   ) {
-    const { channel, status, page = 1, limit = 20 } = params;
-    const skip = (page - 1) * limit;
+    const { channel, status } = params;
+    const { page, limit, skip } = clampPagination({ page: params.page, limit: params.limit });
     const recipientId = user.role === 'customer' ? (user.customerId ?? user.userId) : user.userId;
     const where = {
       companyId,

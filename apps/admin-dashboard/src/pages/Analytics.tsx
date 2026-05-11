@@ -19,8 +19,10 @@ import {
     useRevenueAgentSummary,
     useRevenueAgentTrends,
     useRevenueAgentLogs,
+    useAnalyticsServiceHealth,
 } from '../hooks/useAnalytics'
 import RecommendationsPanel from '../components/RecommendationsPanel'
+import { dollarsToK } from '../lib/format'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -67,6 +69,10 @@ const JOB_STATUS_LABELS: Record<string, string> = {
 
 function Skeleton({ h = 14 }: { h?: number }) {
     return <div style={{ width: '100%', height: h, background: 'var(--bg-hover)', borderRadius: 4 }} />
+}
+
+function asArray<T>(value: T[] | undefined | null): T[] {
+    return Array.isArray(value) ? value : []
 }
 
 /** Build ISO date range strings for the revenue series hook */
@@ -161,6 +167,8 @@ export default function Analytics() {
     const itemsPerPage = 10
 
     // ── API queries ──────────────────────────────────────────────────────────────
+    const healthQuery = useAnalyticsServiceHealth()
+    const serviceDegraded = healthQuery.data?.available === false
     const kpiQuery = useAnalyticsKpis()
     const kpis     = kpiQuery.data
 
@@ -179,36 +187,38 @@ export default function Analytics() {
     const revenueAgentLogsQuery = useRevenueAgentLogs(10)
 
     // ── Derived / mapped data ────────────────────────────────────────────────────
-    // Revenue: values in dollars, display as $k
-    const revChartData = (revSeriesQuery.data ?? []).map(d => ({
+    // Backend revenue values are in DOLLARS (Decimal(10,2) → number end-to-end,
+    // verified 2026-05-08 against analytics-service raw queries). Charts render
+    // in $k via dollarsToK() — single source of truth in lib/format.ts.
+    const revChartData = asArray(revSeriesQuery.data).map(d => ({
         m:    d.period,
-        rev:  Math.round(d.revenue / 100) / 10,   // dollars → $k
+        rev:  dollarsToK(d.revenue),
         jobs: d.invoiceCount ?? d.jobCount ?? 0,
     }))
 
-    const trendChartData = (trendSeriesQuery.data ?? []).map(d => ({
+    const trendChartData = asArray(trendSeriesQuery.data).map(d => ({
         m:    d.period,
-        rev:  Math.round(d.revenue / 100) / 10,
+        rev:  dollarsToK(d.revenue),
         jobs: d.invoiceCount ?? d.jobCount ?? 0,
     }))
 
-    const jobStatusData = (jobStatusQuery.data ?? []).map(d => ({
+    const jobStatusData = asArray(jobStatusQuery.data).map(d => ({
         name:  JOB_STATUS_LABELS[d.status] ?? d.status,
         value: d.count,
     }))
 
-    const acquisitionData = (acquisitionQuery.data ?? []).map(d => ({
+    const acquisitionData = asArray(acquisitionQuery.data).map(d => ({
         year:      d.period,
         new:       d.newCustomers,
         returning: d.returningCustomers,
     }))
 
-    const serviceCategoryData = (categoryQuery.data ?? []).map(d => ({
+    const serviceCategoryData = asArray(categoryQuery.data).map(d => ({
         name:  d.category,
         value: d.percentage,
     }))
 
-    const revenueAgentTrendData = (revenueAgentTrendsQuery.data ?? []).map(d => ({
+    const revenueAgentTrendData = asArray(revenueAgentTrendsQuery.data).map(d => ({
         date: d.date,
         revenue: d.revenue_accuracy,
         demand: d.demand_accuracy,
@@ -216,11 +226,11 @@ export default function Analytics() {
         impact: d.pricing_impact,
     }))
 
-    const revenueAgentLogs = revenueAgentLogsQuery.data ?? []
+    const revenueAgentLogs = asArray(revenueAgentLogsQuery.data)
     const revenueAgentSummary = revenueAgentSummaryQuery.data
 
     // Leaderboard: filter + sort client-side (full list already fetched)
-    const allTechs     = leaderboardQuery.data ?? []
+    const allTechs     = asArray(leaderboardQuery.data)
     let filteredTechs  = allTechs.filter(t =>
         (t.technicianName ?? '').toLowerCase().includes(search.toLowerCase())
     )
@@ -242,6 +252,35 @@ export default function Analytics() {
 
     return (
         <div className="anim-fade-up">
+
+            {/* ── Service health banner (only when degraded) ─────────────────── */}
+            {serviceDegraded && (
+                <div
+                    role="status"
+                    aria-live="polite"
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 14px', marginBottom: 16,
+                        background: 'var(--amber-dim, rgba(245, 158, 11, 0.12))',
+                        border: '1px solid var(--amber, #f59e0b)',
+                        borderRadius: 8, color: 'var(--amber, #f59e0b)', fontSize: 13,
+                    }}
+                    title={healthQuery.data?.error}
+                >
+                    <AlertCircle size={14} />
+                    <div style={{ flex: 1, lineHeight: 1.5 }}>
+                        <strong>Analytics service is unreachable.</strong>{' '}
+                        Showing demo data so the dashboard stays usable. Live KPIs will return automatically once the service is healthy.
+                    </div>
+                    <button
+                        onClick={() => healthQuery.refetch()}
+                        className="btn btn-secondary btn-sm"
+                        style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                        <RefreshCw size={12} /> Retry
+                    </button>
+                </div>
+            )}
 
             {!isExpanded && (
                 <>
@@ -321,12 +360,12 @@ export default function Analytics() {
                                         </div>
                                     </div>
                                     {revenueAgentTrendsQuery.isLoading ? <Skeleton h={260} /> : (
-                                        <div style={{ height: 260 }}>
-                                            <ResponsiveContainer width="100%" height="100%">
+                                        <div style={{ height: 260, minWidth: 0 }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                                 <AreaChart data={revenueAgentTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                                     <defs>
                                                         <linearGradient id="gAgentRevenue" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.22} />
+                                                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
                                                             <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.02} />
                                                         </linearGradient>
                                                         <linearGradient id="gAgentDemand" x1="0" y1="0" x2="0" y2="1">
@@ -421,12 +460,12 @@ export default function Analytics() {
                         </div>
                         <div className="card-body" style={{ paddingTop: 0 }}>
                             {revSeriesQuery.isLoading ? <Skeleton h={280} /> : (
-                                <div style={{ height: 280 }}>
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div style={{ height: 280, minWidth: 0 }}>
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                         <AreaChart data={revChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                             <defs>
                                                 <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                                                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
                                                     <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.02} />
                                                 </linearGradient>
                                             </defs>
@@ -434,7 +473,7 @@ export default function Analytics() {
                                             <XAxis dataKey="m" tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} />
                                             <YAxis tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}k`} />
                                             <Tooltip content={<ChartTip />} />
-                                            <Area type="monotone" dataKey="rev" name="Revenue ($k)" stroke="#3B82F6" strokeWidth={2} fill="url(#gRev)" dot={false} activeDot={{ r: 4 }} />
+                                                    <Area type="monotone" dataKey="rev" name="Revenue ($k)" stroke="#3B82F6" strokeWidth={2} fill="url(#gRev)" dot={false} activeDot={{ r: 4 }} />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -467,8 +506,8 @@ export default function Analytics() {
                             </div>
                             <div className="card-body">
                                 {trendSeriesQuery.isLoading ? <Skeleton h={280} /> : (
-                                    <div style={{ height: 280 }}>
-                                        <ResponsiveContainer width="100%" height="100%">
+                                    <div style={{ height: 280, minWidth: 0 }}>
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                             <AreaChart data={trendChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                                 <defs>
                                                     <linearGradient id="gRevSmall" x1="0" y1="0" x2="0" y2="1">
@@ -544,8 +583,8 @@ export default function Analytics() {
                             </div>
                             <div className="card-body">
                                 {acquisitionQuery.isLoading ? <Skeleton h={260} /> : (
-                                    <div style={{ height: 260 }}>
-                                        <ResponsiveContainer width="100%" height="100%">
+                                    <div style={{ height: 260, minWidth: 0 }}>
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                             <BarChart data={acquisitionData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                                                 <XAxis dataKey="year" tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -573,8 +612,8 @@ export default function Analytics() {
                                         <span className="text-sm">No category data available</span>
                                     </div>
                                 ) : (
-                                <div style={{ height: 260 }}>
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div style={{ height: 260, minWidth: 0 }}>
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                         <PieChart>
                                             <Pie
                                                 data={serviceCategoryData}

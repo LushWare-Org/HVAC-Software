@@ -10,6 +10,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisCacheService } from '../redis-cache.service';
 import { DateRangeDto, GranularityEnum } from '../dashboard/dto/dashboard.dto';
 import { Prisma } from '../prisma/generated';
 
@@ -45,7 +46,10 @@ export interface RevenueSummary {
 
 @Injectable()
 export class RevenueService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: RedisCacheService,
+  ) {}
 
   async getSeries(
     companyId: string,
@@ -53,6 +57,12 @@ export class RevenueService {
     granularity: GranularityEnum = GranularityEnum.MONTH,
   ): Promise<RevenuePoint[]> {
     const { from, to } = this.normaliseDateRange(dto);
+
+    // Cache: keyed on tenant + window + granularity. 3-min TTL for daily/weekly
+    // (live-ish charts) and 10-min TTL for monthly+ (slow-changing aggregates).
+    const cacheKey = `analytics:revenue-series:${companyId}:${granularity}:${from.toISOString()}:${to.toISOString()}`;
+    const cached = await this.cache.get<RevenuePoint[]>(cacheKey);
+    if (cached) return cached;
 
     // date_trunc maps granularity to Postgres truncation level
     const trunc = this.granularityToTrunc(granularity);
@@ -97,11 +107,14 @@ export class RevenueService {
       `,
     );
 
-    return rows.map((r) => ({
+    const result = rows.map((r) => ({
       period: r.period.toISOString().slice(0, 10),
       revenue: parseFloat(r.revenue),
       invoiceCount: Number(r.cnt),
     }));
+    const ttl = granularity === GranularityEnum.DAY || granularity === GranularityEnum.WEEK ? 180 : 600;
+    await this.cache.set(cacheKey, result, ttl);
+    return result;
   }
 
   async getByCategory(companyId: string, dto: DateRangeDto): Promise<RevenueByCategory[]> {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import { X, Wrench, Calendar, Plus, CheckCircle, MapPin } from 'lucide-react'
 import { useBookService, useSubmitJobRequest, useCustomerProfile } from '../../hooks/useCustomerPortal'
-import MapPicker from '../../components/MapPicker'
+import MapPicker from '../../components/MapPickerLazy'
 
 interface BookServiceModalProps {
   onClose: () => void

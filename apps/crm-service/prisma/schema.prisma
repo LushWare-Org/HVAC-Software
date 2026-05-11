@@ -63,12 +63,21 @@ model CompanyUser {
   latitude       Float?                           // location submitted at signup
   longitude      Float?
   lastLoginAt    DateTime?
+
+  // Push notifications (FCM / APNs / Expo). Set by the technician app at login
+  // and on token refresh. Cleared on logout. comms-service.PushService reads
+  // pushToken via this user record when sending PUSH notifications.
+  pushToken           String?
+  pushPlatform        String?  // "ios" | "android" | "web" | "expo"
+  pushTokenUpdatedAt  DateTime?
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   @@unique([companyId, email])
   @@index([companyId])
   @@index([companyId, role])
+  @@index([pushToken])
   @@map("company_users")
 }
 

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -46,7 +48,23 @@ const (
 	pingPeriod     = (pongWait * 9) / 10 // slightly less than pongWait
 	maxMessageSize = 512                  // bytes — clients only send pings
 	sendBufSize    = 256
+
+	// Default ceiling on simultaneous WS clients per tenant. Each company room
+	// is bounded so a single tenant can't exhaust file descriptors / goroutines
+	// on this pod. Tunable at startup via WS_MAX_CONNS_PER_COMPANY (>=1).
+	defaultMaxConnsPerCompany = 200
 )
+
+// maxConnsPerCompany resolves the per-tenant client cap. Read once at startup
+// — env vars don't change at runtime in our deploy model.
+var maxConnsPerCompany = func() int {
+	if raw := os.Getenv("WS_MAX_CONNS_PER_COMPANY"); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil && n > 0 {
+			return n
+		}
+	}
+	return defaultMaxConnsPerCompany
+}()
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -149,7 +167,16 @@ func (h *Hub) BroadcastMessage(ctx context.Context, msg models.WSMessage) {
 
 // ServeWS upgrades an HTTP connection to WebSocket and registers the client.
 // URL: GET /ws?companyId=<uuid>   (companyId validated by auth middleware)
+//
+// Per-tenant cap: if the company already has maxConnsPerCompany sockets open
+// on this pod, the upgrade is rejected with HTTP 429 BEFORE switching protocols
+// (cheaper for the caller — they can back off without an open frame to drain).
 func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request, companyID string) {
+	if !h.canAccept(companyID) {
+		http.Error(w, "too many open WebSocket connections for this tenant", http.StatusTooManyRequests)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("⚠️  WS upgrade failed: %v", err)
@@ -163,7 +190,11 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request, companyID string) 
 		send:      make(chan []byte, sendBufSize),
 	}
 
-	h.register(client)
+	if !h.register(client) {
+		// Race: someone else filled the cap between canAccept and register.
+		_ = conn.Close()
+		return
+	}
 
 	// Each connection runs two goroutines (gorilla recommended pattern):
 	// writePump: serialises writes to the connection
@@ -172,13 +203,26 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request, companyID string) 
 	go client.readPump()
 }
 
-func (h *Hub) register(c *Client) {
+// canAccept is a fast read-locked check before the upgrade.
+func (h *Hub) canAccept(companyID string) bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return len(h.clients[companyID]) < maxConnsPerCompany
+}
+
+// register inserts the client under the cap. Returns false if the cap was hit
+// after canAccept (race) so the caller can close the connection.
+func (h *Hub) register(c *Client) bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if h.clients[c.companyID] == nil {
 		h.clients[c.companyID] = make(map[*Client]bool)
 	}
+	if len(h.clients[c.companyID]) >= maxConnsPerCompany {
+		return false
+	}
 	h.clients[c.companyID][c] = true
+	return true
 }
 
 func (h *Hub) unregister(c *Client) {

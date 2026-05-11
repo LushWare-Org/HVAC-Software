@@ -19,7 +19,7 @@ import { useCheckEmail } from "../../hooks/useCustomers";
 import { useProvisionTechnicianAccount } from "../../hooks/useScheduling";
 import { useEnsureVan } from "../../hooks/useInventory";
 import { useAuth } from "../../contexts/AuthContext";
-import MapPicker from "../../components/MapPicker";
+import MapPicker from "../../components/MapPickerLazy";
 
 // Common trade skills for quick-add chips
 const COMMON_SKILLS = [

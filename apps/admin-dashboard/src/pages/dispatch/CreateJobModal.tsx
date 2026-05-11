@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useCreateJob, useJobTypes } from "../../hooks/useJobs";
 import { useCustomers } from "../../hooks/useCustomers";
-import MapPicker from "../../components/MapPicker";
+import MapPicker from "../../components/MapPickerLazy";
 
 interface Props {
   isOpen: boolean;

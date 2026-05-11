@@ -1,18 +1,22 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { ToastProvider } from './contexts/ToastContext'
 import { useAuth } from './contexts/AuthContext'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
+// Dashboard + Login stay eager: they're the post-login landing and the
+// pre-login screen, both shown immediately. Everything else is lazy-loaded
+// so the initial JS bundle stays tight.
 import Dashboard from './pages/Dashboard'
-import Jobs from './pages/jobs/Jobs'
-import Invoices from './pages/invoices/Invoices'
-import Quotes from './pages/quotes/Quotes'
-import Messages from './pages/messages/Messages'
-import Profile from './pages/Profile'
 import Login from './pages/Login'
-import ForceResetPassword from './pages/ForceResetPassword'
+
+const Jobs                = lazy(() => import('./pages/jobs/Jobs'))
+const Invoices            = lazy(() => import('./pages/invoices/Invoices'))
+const Quotes              = lazy(() => import('./pages/quotes/Quotes'))
+const Messages            = lazy(() => import('./pages/messages/Messages'))
+const Profile             = lazy(() => import('./pages/Profile'))
+const ForceResetPassword  = lazy(() => import('./pages/ForceResetPassword'))
 
 const MOBILE_BP = 768
 
@@ -84,15 +88,20 @@ function AppShell() {
         <div className={`main-content${!isMobile && collapsed ? ' sidebar-collapsed' : ''}`}>
           <Topbar onMenuClick={handleToggle} showMenu={isMobile} />
           <div className="page">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/invoices" element={<Invoices />} />
-              <Route path="/quotes" element={<Quotes />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            {/* Route-level Suspense — the shell stays rendered while the next
+                page's chunk loads. Fallback is a thin top shimmer; perceived
+                speed wins over a full-page spinner. */}
+            <Suspense fallback={<RouteLoading />}>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/jobs" element={<Jobs />} />
+                <Route path="/invoices" element={<Invoices />} />
+                <Route path="/quotes" element={<Quotes />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
           </div>
         </div>
       </div>
@@ -122,5 +131,27 @@ function ForceResetPasswordGuard() {
   const { isAuthenticated, mustResetPassword } = useAuth()
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (!mustResetPassword) return <Navigate to="/" replace />
-  return <ForceResetPassword />
+  return (
+    <Suspense fallback={<RouteLoading />}>
+      <ForceResetPassword />
+    </Suspense>
+  )
+}
+
+/** Thin top progress shimmer — keeps the shell present while a chunk loads. */
+function RouteLoading() {
+  return (
+    <>
+      <style>{`@keyframes cpRouteLoadShimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
+      <div
+        style={{
+          position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999,
+          background: 'linear-gradient(90deg, transparent 0%, var(--blue, #3b82f6) 50%, transparent 100%)',
+          backgroundSize: '200% 100%',
+          animation: 'cpRouteLoadShimmer 1.1s linear infinite',
+        }}
+        aria-hidden
+      />
+    </>
+  )
 }

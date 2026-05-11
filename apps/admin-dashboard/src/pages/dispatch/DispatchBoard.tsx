@@ -226,7 +226,8 @@ const DispatchMap = lazy(() => import("./DispatchMap"));
 
 export default function DispatchBoard() {
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState<ViewTab>("unassigned");
+  const initialTab = searchParams.get("view") === "calendar" ? "calendar" : "unassigned";
+  const [tab, setTab] = useState<ViewTab>(initialTab);
   const [search, setSearch] = useState("");
   const [showAddTech, setShowAddTech] = useState(false);
   const [showCreateJob, setShowCreateJob] = useState(false);
@@ -242,6 +243,12 @@ export default function DispatchBoard() {
 
   // WebSocket
   const ws = useDispatchWebSocket();
+
+  useEffect(() => {
+    if (searchParams.get("view") === "calendar") {
+      setTab("calendar");
+    }
+  }, [searchParams]);
 
   // Data
   const techsQuery = useTechnicians();

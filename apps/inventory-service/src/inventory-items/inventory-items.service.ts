@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LocationsService } from '../locations/locations.service';
 import { ItemCategory } from '../prisma/generated';
+import { clampPagination } from '@tscrm/types';
 
 @Injectable()
 export class InventoryItemsService {
@@ -10,7 +11,8 @@ export class InventoryItemsService {
     private readonly locations: LocationsService,
   ) {}
 
-  async findAll(companyId: string, page = 1, limit = 50, search?: string, category?: string, priceBookItemId?: string) {
+  async findAll(companyId: string, pageInput: number | string = 1, limitInput: number | string = 50, search?: string, category?: string, priceBookItemId?: string) {
+    const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput }, { defaultLimit: 50 });
     const where: any = { companyId, isActive: true };
     if (search) {
       where.OR = [
@@ -26,7 +28,7 @@ export class InventoryItemsService {
       this.prisma.inventoryItem.findMany({
         where,
         include: { stockLevels: { include: { location: true } } },
-        skip: (page - 1) * limit,
+        skip,
         take: limit,
         orderBy: { name: 'asc' },
       }),
