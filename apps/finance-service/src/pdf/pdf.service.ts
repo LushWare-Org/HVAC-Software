@@ -203,6 +203,24 @@ export class PdfService implements OnModuleDestroy {
     if (process.env.CHROMIUM_PATH) {
       return process.env.CHROMIUM_PATH;
     }
+    if (process.platform === 'win32') {
+      // Windows — use os.homedir() which always resolves correctly
+      const osMod = await import('os');
+      const fsMod = await import('fs');
+      const home = osMod.homedir().replace(/\\/g, '/');
+      const winPaths = [
+        `${home}/AppData/Local/Google/Chrome/Application/chrome.exe`,
+        'C:/Program Files/Google/Chrome/Application/chrome.exe',
+        'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+      ];
+      const found = winPaths.find((p) => fsMod.existsSync(p));
+      if (!found) {
+        throw new Error(
+          'No Chrome found on Windows. Install Google Chrome or set CHROMIUM_PATH in .env.',
+        );
+      }
+      return found;
+    }
     if (process.platform === 'darwin') {
       const macPaths = [
         '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -246,6 +264,8 @@ export class PdfService implements OnModuleDestroy {
     this.browserPromise = (async () => {
       const puppeteer = await import('puppeteer-core');
       const chromiumPath = await this.resolveChromiumPath();
+      const isWindows = process.platform === 'win32';
+      const isLinux = process.platform === 'linux';
       const browser = await puppeteer.default.launch({
         executablePath: chromiumPath,
         headless: true,
@@ -254,7 +274,10 @@ export class PdfService implements OnModuleDestroy {
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
-          ...(process.platform !== 'darwin' ? ['--no-zygote', '--single-process'] : []),
+          // Linux/Lambda only — these flags crash Chrome on Windows and macOS
+          ...(isLinux ? ['--no-zygote', '--single-process'] : []),
+          // Windows-specific stability flags
+          ...(isWindows ? ['--disable-extensions', '--disable-background-networking'] : []),
         ],
       });
       browser.on('disconnected', () => {

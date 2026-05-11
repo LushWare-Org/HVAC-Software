@@ -49,6 +49,10 @@ export type RecurringSchedule = $Result.DefaultSelection<Prisma.$RecurringSchedu
  */
 export type Expense = $Result.DefaultSelection<Prisma.$ExpensePayload>
 
+export type QuickBooksConnection = $Result.DefaultSelection<Prisma.$QuickBooksConnectionPayload>
+
+export type QuickBooksCustomerMap = $Result.DefaultSelection<Prisma.$QuickBooksCustomerMapPayload>
+
 /**
  * Enums
  */
@@ -365,6 +369,10 @@ export class PrismaClient<
     * ```
     */
   get expense(): Prisma.ExpenseDelegate<ExtArgs>;
+
+  get quickBooksConnection(): Prisma.QuickBooksConnectionDelegate<ExtArgs>;
+
+  get quickBooksCustomerMap(): Prisma.QuickBooksCustomerMapDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -812,7 +820,9 @@ export namespace Prisma {
     InvoiceLineItem: 'InvoiceLineItem',
     Payment: 'Payment',
     RecurringSchedule: 'RecurringSchedule',
-    Expense: 'Expense'
+    Expense: 'Expense',
+    QuickBooksConnection: 'QuickBooksConnection',
+    QuickBooksCustomerMap: 'QuickBooksCustomerMap'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -828,7 +838,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "quote" | "quoteLineItem" | "invoice" | "invoiceLineItem" | "payment" | "recurringSchedule" | "expense"
+      modelProps: "quote" | "quoteLineItem" | "invoice" | "invoiceLineItem" | "payment" | "recurringSchedule" | "expense" | "quickBooksConnection" | "quickBooksCustomerMap"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1319,6 +1329,146 @@ export namespace Prisma {
           count: {
             args: Prisma.ExpenseCountArgs<ExtArgs>
             result: $Utils.Optional<ExpenseCountAggregateOutputType> | number
+          }
+        }
+      }
+      QuickBooksConnection: {
+        payload: Prisma.$QuickBooksConnectionPayload<ExtArgs>
+        fields: Prisma.QuickBooksConnectionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.QuickBooksConnectionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.QuickBooksConnectionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload>
+          }
+          findFirst: {
+            args: Prisma.QuickBooksConnectionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.QuickBooksConnectionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload>
+          }
+          findMany: {
+            args: Prisma.QuickBooksConnectionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload>[]
+          }
+          create: {
+            args: Prisma.QuickBooksConnectionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload>
+          }
+          createMany: {
+            args: Prisma.QuickBooksConnectionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.QuickBooksConnectionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload>[]
+          }
+          delete: {
+            args: Prisma.QuickBooksConnectionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload>
+          }
+          update: {
+            args: Prisma.QuickBooksConnectionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload>
+          }
+          deleteMany: {
+            args: Prisma.QuickBooksConnectionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.QuickBooksConnectionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.QuickBooksConnectionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksConnectionPayload>
+          }
+          aggregate: {
+            args: Prisma.QuickBooksConnectionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateQuickBooksConnection>
+          }
+          groupBy: {
+            args: Prisma.QuickBooksConnectionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<QuickBooksConnectionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.QuickBooksConnectionCountArgs<ExtArgs>
+            result: $Utils.Optional<QuickBooksConnectionCountAggregateOutputType> | number
+          }
+        }
+      }
+      QuickBooksCustomerMap: {
+        payload: Prisma.$QuickBooksCustomerMapPayload<ExtArgs>
+        fields: Prisma.QuickBooksCustomerMapFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.QuickBooksCustomerMapFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.QuickBooksCustomerMapFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload>
+          }
+          findFirst: {
+            args: Prisma.QuickBooksCustomerMapFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.QuickBooksCustomerMapFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload>
+          }
+          findMany: {
+            args: Prisma.QuickBooksCustomerMapFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload>[]
+          }
+          create: {
+            args: Prisma.QuickBooksCustomerMapCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload>
+          }
+          createMany: {
+            args: Prisma.QuickBooksCustomerMapCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.QuickBooksCustomerMapCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload>[]
+          }
+          delete: {
+            args: Prisma.QuickBooksCustomerMapDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload>
+          }
+          update: {
+            args: Prisma.QuickBooksCustomerMapUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload>
+          }
+          deleteMany: {
+            args: Prisma.QuickBooksCustomerMapDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.QuickBooksCustomerMapUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.QuickBooksCustomerMapUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuickBooksCustomerMapPayload>
+          }
+          aggregate: {
+            args: Prisma.QuickBooksCustomerMapAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateQuickBooksCustomerMap>
+          }
+          groupBy: {
+            args: Prisma.QuickBooksCustomerMapGroupByArgs<ExtArgs>
+            result: $Utils.Optional<QuickBooksCustomerMapGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.QuickBooksCustomerMapCountArgs<ExtArgs>
+            result: $Utils.Optional<QuickBooksCustomerMapCountAggregateOutputType> | number
           }
         }
       }
@@ -4005,6 +4155,7 @@ export namespace Prisma {
     pdfUrl: string | null
     stripePaymentIntentId: string | null
     stripePaymentUrl: string | null
+    quickbooksId: string | null
     sentAt: Date | null
     paidAt: Date | null
     voidedAt: Date | null
@@ -4046,6 +4197,7 @@ export namespace Prisma {
     pdfUrl: string | null
     stripePaymentIntentId: string | null
     stripePaymentUrl: string | null
+    quickbooksId: string | null
     sentAt: Date | null
     paidAt: Date | null
     voidedAt: Date | null
@@ -4087,6 +4239,7 @@ export namespace Prisma {
     pdfUrl: number
     stripePaymentIntentId: number
     stripePaymentUrl: number
+    quickbooksId: number
     sentAt: number
     paidAt: number
     voidedAt: number
@@ -4152,6 +4305,7 @@ export namespace Prisma {
     pdfUrl?: true
     stripePaymentIntentId?: true
     stripePaymentUrl?: true
+    quickbooksId?: true
     sentAt?: true
     paidAt?: true
     voidedAt?: true
@@ -4193,6 +4347,7 @@ export namespace Prisma {
     pdfUrl?: true
     stripePaymentIntentId?: true
     stripePaymentUrl?: true
+    quickbooksId?: true
     sentAt?: true
     paidAt?: true
     voidedAt?: true
@@ -4234,6 +4389,7 @@ export namespace Prisma {
     pdfUrl?: true
     stripePaymentIntentId?: true
     stripePaymentUrl?: true
+    quickbooksId?: true
     sentAt?: true
     paidAt?: true
     voidedAt?: true
@@ -4362,6 +4518,7 @@ export namespace Prisma {
     pdfUrl: string | null
     stripePaymentIntentId: string | null
     stripePaymentUrl: string | null
+    quickbooksId: string | null
     sentAt: Date | null
     paidAt: Date | null
     voidedAt: Date | null
@@ -4422,6 +4579,7 @@ export namespace Prisma {
     pdfUrl?: boolean
     stripePaymentIntentId?: boolean
     stripePaymentUrl?: boolean
+    quickbooksId?: boolean
     sentAt?: boolean
     paidAt?: boolean
     voidedAt?: boolean
@@ -4468,6 +4626,7 @@ export namespace Prisma {
     pdfUrl?: boolean
     stripePaymentIntentId?: boolean
     stripePaymentUrl?: boolean
+    quickbooksId?: boolean
     sentAt?: boolean
     paidAt?: boolean
     voidedAt?: boolean
@@ -4511,6 +4670,7 @@ export namespace Prisma {
     pdfUrl?: boolean
     stripePaymentIntentId?: boolean
     stripePaymentUrl?: boolean
+    quickbooksId?: boolean
     sentAt?: boolean
     paidAt?: boolean
     voidedAt?: boolean
@@ -4572,6 +4732,7 @@ export namespace Prisma {
       pdfUrl: string | null
       stripePaymentIntentId: string | null
       stripePaymentUrl: string | null
+      quickbooksId: string | null
       sentAt: Date | null
       paidAt: Date | null
       voidedAt: Date | null
@@ -5007,6 +5168,7 @@ export namespace Prisma {
     readonly pdfUrl: FieldRef<"Invoice", 'String'>
     readonly stripePaymentIntentId: FieldRef<"Invoice", 'String'>
     readonly stripePaymentUrl: FieldRef<"Invoice", 'String'>
+    readonly quickbooksId: FieldRef<"Invoice", 'String'>
     readonly sentAt: FieldRef<"Invoice", 'DateTime'>
     readonly paidAt: FieldRef<"Invoice", 'DateTime'>
     readonly voidedAt: FieldRef<"Invoice", 'DateTime'>
@@ -6479,6 +6641,7 @@ export namespace Prisma {
     status: $Enums.PaymentStatus | null
     stripePaymentIntentId: string | null
     stripeChargeId: string | null
+    quickbooksId: string | null
     paidAt: Date | null
     notes: string | null
     createdAt: Date | null
@@ -6494,6 +6657,7 @@ export namespace Prisma {
     status: $Enums.PaymentStatus | null
     stripePaymentIntentId: string | null
     stripeChargeId: string | null
+    quickbooksId: string | null
     paidAt: Date | null
     notes: string | null
     createdAt: Date | null
@@ -6509,6 +6673,7 @@ export namespace Prisma {
     status: number
     stripePaymentIntentId: number
     stripeChargeId: number
+    quickbooksId: number
     paidAt: number
     notes: number
     createdAt: number
@@ -6534,6 +6699,7 @@ export namespace Prisma {
     status?: true
     stripePaymentIntentId?: true
     stripeChargeId?: true
+    quickbooksId?: true
     paidAt?: true
     notes?: true
     createdAt?: true
@@ -6549,6 +6715,7 @@ export namespace Prisma {
     status?: true
     stripePaymentIntentId?: true
     stripeChargeId?: true
+    quickbooksId?: true
     paidAt?: true
     notes?: true
     createdAt?: true
@@ -6564,6 +6731,7 @@ export namespace Prisma {
     status?: true
     stripePaymentIntentId?: true
     stripeChargeId?: true
+    quickbooksId?: true
     paidAt?: true
     notes?: true
     createdAt?: true
@@ -6666,6 +6834,7 @@ export namespace Prisma {
     status: $Enums.PaymentStatus
     stripePaymentIntentId: string | null
     stripeChargeId: string | null
+    quickbooksId: string | null
     paidAt: Date | null
     notes: string | null
     createdAt: Date
@@ -6700,6 +6869,7 @@ export namespace Prisma {
     status?: boolean
     stripePaymentIntentId?: boolean
     stripeChargeId?: boolean
+    quickbooksId?: boolean
     paidAt?: boolean
     notes?: boolean
     createdAt?: boolean
@@ -6716,6 +6886,7 @@ export namespace Prisma {
     status?: boolean
     stripePaymentIntentId?: boolean
     stripeChargeId?: boolean
+    quickbooksId?: boolean
     paidAt?: boolean
     notes?: boolean
     createdAt?: boolean
@@ -6732,6 +6903,7 @@ export namespace Prisma {
     status?: boolean
     stripePaymentIntentId?: boolean
     stripeChargeId?: boolean
+    quickbooksId?: boolean
     paidAt?: boolean
     notes?: boolean
     createdAt?: boolean
@@ -6759,6 +6931,7 @@ export namespace Prisma {
       status: $Enums.PaymentStatus
       stripePaymentIntentId: string | null
       stripeChargeId: string | null
+      quickbooksId: string | null
       paidAt: Date | null
       notes: string | null
       createdAt: Date
@@ -7165,6 +7338,7 @@ export namespace Prisma {
     readonly status: FieldRef<"Payment", 'PaymentStatus'>
     readonly stripePaymentIntentId: FieldRef<"Payment", 'String'>
     readonly stripeChargeId: FieldRef<"Payment", 'String'>
+    readonly quickbooksId: FieldRef<"Payment", 'String'>
     readonly paidAt: FieldRef<"Payment", 'DateTime'>
     readonly notes: FieldRef<"Payment", 'String'>
     readonly createdAt: FieldRef<"Payment", 'DateTime'>
@@ -9616,6 +9790,1786 @@ export namespace Prisma {
 
 
   /**
+   * Model QuickBooksConnection
+   */
+
+  export type AggregateQuickBooksConnection = {
+    _count: QuickBooksConnectionCountAggregateOutputType | null
+    _min: QuickBooksConnectionMinAggregateOutputType | null
+    _max: QuickBooksConnectionMaxAggregateOutputType | null
+  }
+
+  export type QuickBooksConnectionMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    realmId: string | null
+    accessToken: string | null
+    refreshToken: string | null
+    tokenExpiresAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type QuickBooksConnectionMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    realmId: string | null
+    accessToken: string | null
+    refreshToken: string | null
+    tokenExpiresAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type QuickBooksConnectionCountAggregateOutputType = {
+    id: number
+    companyId: number
+    realmId: number
+    accessToken: number
+    refreshToken: number
+    tokenExpiresAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type QuickBooksConnectionMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    realmId?: true
+    accessToken?: true
+    refreshToken?: true
+    tokenExpiresAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type QuickBooksConnectionMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    realmId?: true
+    accessToken?: true
+    refreshToken?: true
+    tokenExpiresAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type QuickBooksConnectionCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    realmId?: true
+    accessToken?: true
+    refreshToken?: true
+    tokenExpiresAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type QuickBooksConnectionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which QuickBooksConnection to aggregate.
+     */
+    where?: QuickBooksConnectionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuickBooksConnections to fetch.
+     */
+    orderBy?: QuickBooksConnectionOrderByWithRelationInput | QuickBooksConnectionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: QuickBooksConnectionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuickBooksConnections from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuickBooksConnections.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned QuickBooksConnections
+    **/
+    _count?: true | QuickBooksConnectionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: QuickBooksConnectionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: QuickBooksConnectionMaxAggregateInputType
+  }
+
+  export type GetQuickBooksConnectionAggregateType<T extends QuickBooksConnectionAggregateArgs> = {
+        [P in keyof T & keyof AggregateQuickBooksConnection]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateQuickBooksConnection[P]>
+      : GetScalarType<T[P], AggregateQuickBooksConnection[P]>
+  }
+
+
+
+
+  export type QuickBooksConnectionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuickBooksConnectionWhereInput
+    orderBy?: QuickBooksConnectionOrderByWithAggregationInput | QuickBooksConnectionOrderByWithAggregationInput[]
+    by: QuickBooksConnectionScalarFieldEnum[] | QuickBooksConnectionScalarFieldEnum
+    having?: QuickBooksConnectionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: QuickBooksConnectionCountAggregateInputType | true
+    _min?: QuickBooksConnectionMinAggregateInputType
+    _max?: QuickBooksConnectionMaxAggregateInputType
+  }
+
+  export type QuickBooksConnectionGroupByOutputType = {
+    id: string
+    companyId: string
+    realmId: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date
+    createdAt: Date
+    updatedAt: Date
+    _count: QuickBooksConnectionCountAggregateOutputType | null
+    _min: QuickBooksConnectionMinAggregateOutputType | null
+    _max: QuickBooksConnectionMaxAggregateOutputType | null
+  }
+
+  type GetQuickBooksConnectionGroupByPayload<T extends QuickBooksConnectionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<QuickBooksConnectionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof QuickBooksConnectionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], QuickBooksConnectionGroupByOutputType[P]>
+            : GetScalarType<T[P], QuickBooksConnectionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type QuickBooksConnectionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    realmId?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    tokenExpiresAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["quickBooksConnection"]>
+
+  export type QuickBooksConnectionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    realmId?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    tokenExpiresAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["quickBooksConnection"]>
+
+  export type QuickBooksConnectionSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    realmId?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    tokenExpiresAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $QuickBooksConnectionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "QuickBooksConnection"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      realmId: string
+      accessToken: string
+      refreshToken: string
+      tokenExpiresAt: Date
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["quickBooksConnection"]>
+    composites: {}
+  }
+
+  type QuickBooksConnectionGetPayload<S extends boolean | null | undefined | QuickBooksConnectionDefaultArgs> = $Result.GetResult<Prisma.$QuickBooksConnectionPayload, S>
+
+  type QuickBooksConnectionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<QuickBooksConnectionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: QuickBooksConnectionCountAggregateInputType | true
+    }
+
+  export interface QuickBooksConnectionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['QuickBooksConnection'], meta: { name: 'QuickBooksConnection' } }
+    /**
+     * Find zero or one QuickBooksConnection that matches the filter.
+     * @param {QuickBooksConnectionFindUniqueArgs} args - Arguments to find a QuickBooksConnection
+     * @example
+     * // Get one QuickBooksConnection
+     * const quickBooksConnection = await prisma.quickBooksConnection.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends QuickBooksConnectionFindUniqueArgs>(args: SelectSubset<T, QuickBooksConnectionFindUniqueArgs<ExtArgs>>): Prisma__QuickBooksConnectionClient<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one QuickBooksConnection that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {QuickBooksConnectionFindUniqueOrThrowArgs} args - Arguments to find a QuickBooksConnection
+     * @example
+     * // Get one QuickBooksConnection
+     * const quickBooksConnection = await prisma.quickBooksConnection.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends QuickBooksConnectionFindUniqueOrThrowArgs>(args: SelectSubset<T, QuickBooksConnectionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__QuickBooksConnectionClient<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first QuickBooksConnection that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksConnectionFindFirstArgs} args - Arguments to find a QuickBooksConnection
+     * @example
+     * // Get one QuickBooksConnection
+     * const quickBooksConnection = await prisma.quickBooksConnection.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends QuickBooksConnectionFindFirstArgs>(args?: SelectSubset<T, QuickBooksConnectionFindFirstArgs<ExtArgs>>): Prisma__QuickBooksConnectionClient<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first QuickBooksConnection that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksConnectionFindFirstOrThrowArgs} args - Arguments to find a QuickBooksConnection
+     * @example
+     * // Get one QuickBooksConnection
+     * const quickBooksConnection = await prisma.quickBooksConnection.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends QuickBooksConnectionFindFirstOrThrowArgs>(args?: SelectSubset<T, QuickBooksConnectionFindFirstOrThrowArgs<ExtArgs>>): Prisma__QuickBooksConnectionClient<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more QuickBooksConnections that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksConnectionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all QuickBooksConnections
+     * const quickBooksConnections = await prisma.quickBooksConnection.findMany()
+     * 
+     * // Get first 10 QuickBooksConnections
+     * const quickBooksConnections = await prisma.quickBooksConnection.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const quickBooksConnectionWithIdOnly = await prisma.quickBooksConnection.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends QuickBooksConnectionFindManyArgs>(args?: SelectSubset<T, QuickBooksConnectionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a QuickBooksConnection.
+     * @param {QuickBooksConnectionCreateArgs} args - Arguments to create a QuickBooksConnection.
+     * @example
+     * // Create one QuickBooksConnection
+     * const QuickBooksConnection = await prisma.quickBooksConnection.create({
+     *   data: {
+     *     // ... data to create a QuickBooksConnection
+     *   }
+     * })
+     * 
+     */
+    create<T extends QuickBooksConnectionCreateArgs>(args: SelectSubset<T, QuickBooksConnectionCreateArgs<ExtArgs>>): Prisma__QuickBooksConnectionClient<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many QuickBooksConnections.
+     * @param {QuickBooksConnectionCreateManyArgs} args - Arguments to create many QuickBooksConnections.
+     * @example
+     * // Create many QuickBooksConnections
+     * const quickBooksConnection = await prisma.quickBooksConnection.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends QuickBooksConnectionCreateManyArgs>(args?: SelectSubset<T, QuickBooksConnectionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many QuickBooksConnections and returns the data saved in the database.
+     * @param {QuickBooksConnectionCreateManyAndReturnArgs} args - Arguments to create many QuickBooksConnections.
+     * @example
+     * // Create many QuickBooksConnections
+     * const quickBooksConnection = await prisma.quickBooksConnection.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many QuickBooksConnections and only return the `id`
+     * const quickBooksConnectionWithIdOnly = await prisma.quickBooksConnection.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends QuickBooksConnectionCreateManyAndReturnArgs>(args?: SelectSubset<T, QuickBooksConnectionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a QuickBooksConnection.
+     * @param {QuickBooksConnectionDeleteArgs} args - Arguments to delete one QuickBooksConnection.
+     * @example
+     * // Delete one QuickBooksConnection
+     * const QuickBooksConnection = await prisma.quickBooksConnection.delete({
+     *   where: {
+     *     // ... filter to delete one QuickBooksConnection
+     *   }
+     * })
+     * 
+     */
+    delete<T extends QuickBooksConnectionDeleteArgs>(args: SelectSubset<T, QuickBooksConnectionDeleteArgs<ExtArgs>>): Prisma__QuickBooksConnectionClient<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one QuickBooksConnection.
+     * @param {QuickBooksConnectionUpdateArgs} args - Arguments to update one QuickBooksConnection.
+     * @example
+     * // Update one QuickBooksConnection
+     * const quickBooksConnection = await prisma.quickBooksConnection.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends QuickBooksConnectionUpdateArgs>(args: SelectSubset<T, QuickBooksConnectionUpdateArgs<ExtArgs>>): Prisma__QuickBooksConnectionClient<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more QuickBooksConnections.
+     * @param {QuickBooksConnectionDeleteManyArgs} args - Arguments to filter QuickBooksConnections to delete.
+     * @example
+     * // Delete a few QuickBooksConnections
+     * const { count } = await prisma.quickBooksConnection.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends QuickBooksConnectionDeleteManyArgs>(args?: SelectSubset<T, QuickBooksConnectionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more QuickBooksConnections.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksConnectionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many QuickBooksConnections
+     * const quickBooksConnection = await prisma.quickBooksConnection.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends QuickBooksConnectionUpdateManyArgs>(args: SelectSubset<T, QuickBooksConnectionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one QuickBooksConnection.
+     * @param {QuickBooksConnectionUpsertArgs} args - Arguments to update or create a QuickBooksConnection.
+     * @example
+     * // Update or create a QuickBooksConnection
+     * const quickBooksConnection = await prisma.quickBooksConnection.upsert({
+     *   create: {
+     *     // ... data to create a QuickBooksConnection
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the QuickBooksConnection we want to update
+     *   }
+     * })
+     */
+    upsert<T extends QuickBooksConnectionUpsertArgs>(args: SelectSubset<T, QuickBooksConnectionUpsertArgs<ExtArgs>>): Prisma__QuickBooksConnectionClient<$Result.GetResult<Prisma.$QuickBooksConnectionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of QuickBooksConnections.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksConnectionCountArgs} args - Arguments to filter QuickBooksConnections to count.
+     * @example
+     * // Count the number of QuickBooksConnections
+     * const count = await prisma.quickBooksConnection.count({
+     *   where: {
+     *     // ... the filter for the QuickBooksConnections we want to count
+     *   }
+     * })
+    **/
+    count<T extends QuickBooksConnectionCountArgs>(
+      args?: Subset<T, QuickBooksConnectionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], QuickBooksConnectionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a QuickBooksConnection.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksConnectionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends QuickBooksConnectionAggregateArgs>(args: Subset<T, QuickBooksConnectionAggregateArgs>): Prisma.PrismaPromise<GetQuickBooksConnectionAggregateType<T>>
+
+    /**
+     * Group by QuickBooksConnection.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksConnectionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends QuickBooksConnectionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: QuickBooksConnectionGroupByArgs['orderBy'] }
+        : { orderBy?: QuickBooksConnectionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, QuickBooksConnectionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetQuickBooksConnectionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the QuickBooksConnection model
+   */
+  readonly fields: QuickBooksConnectionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for QuickBooksConnection.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__QuickBooksConnectionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the QuickBooksConnection model
+   */ 
+  interface QuickBooksConnectionFieldRefs {
+    readonly id: FieldRef<"QuickBooksConnection", 'String'>
+    readonly companyId: FieldRef<"QuickBooksConnection", 'String'>
+    readonly realmId: FieldRef<"QuickBooksConnection", 'String'>
+    readonly accessToken: FieldRef<"QuickBooksConnection", 'String'>
+    readonly refreshToken: FieldRef<"QuickBooksConnection", 'String'>
+    readonly tokenExpiresAt: FieldRef<"QuickBooksConnection", 'DateTime'>
+    readonly createdAt: FieldRef<"QuickBooksConnection", 'DateTime'>
+    readonly updatedAt: FieldRef<"QuickBooksConnection", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * QuickBooksConnection findUnique
+   */
+  export type QuickBooksConnectionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksConnection to fetch.
+     */
+    where: QuickBooksConnectionWhereUniqueInput
+  }
+
+  /**
+   * QuickBooksConnection findUniqueOrThrow
+   */
+  export type QuickBooksConnectionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksConnection to fetch.
+     */
+    where: QuickBooksConnectionWhereUniqueInput
+  }
+
+  /**
+   * QuickBooksConnection findFirst
+   */
+  export type QuickBooksConnectionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksConnection to fetch.
+     */
+    where?: QuickBooksConnectionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuickBooksConnections to fetch.
+     */
+    orderBy?: QuickBooksConnectionOrderByWithRelationInput | QuickBooksConnectionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for QuickBooksConnections.
+     */
+    cursor?: QuickBooksConnectionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuickBooksConnections from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuickBooksConnections.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of QuickBooksConnections.
+     */
+    distinct?: QuickBooksConnectionScalarFieldEnum | QuickBooksConnectionScalarFieldEnum[]
+  }
+
+  /**
+   * QuickBooksConnection findFirstOrThrow
+   */
+  export type QuickBooksConnectionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksConnection to fetch.
+     */
+    where?: QuickBooksConnectionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuickBooksConnections to fetch.
+     */
+    orderBy?: QuickBooksConnectionOrderByWithRelationInput | QuickBooksConnectionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for QuickBooksConnections.
+     */
+    cursor?: QuickBooksConnectionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuickBooksConnections from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuickBooksConnections.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of QuickBooksConnections.
+     */
+    distinct?: QuickBooksConnectionScalarFieldEnum | QuickBooksConnectionScalarFieldEnum[]
+  }
+
+  /**
+   * QuickBooksConnection findMany
+   */
+  export type QuickBooksConnectionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksConnections to fetch.
+     */
+    where?: QuickBooksConnectionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuickBooksConnections to fetch.
+     */
+    orderBy?: QuickBooksConnectionOrderByWithRelationInput | QuickBooksConnectionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing QuickBooksConnections.
+     */
+    cursor?: QuickBooksConnectionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuickBooksConnections from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuickBooksConnections.
+     */
+    skip?: number
+    distinct?: QuickBooksConnectionScalarFieldEnum | QuickBooksConnectionScalarFieldEnum[]
+  }
+
+  /**
+   * QuickBooksConnection create
+   */
+  export type QuickBooksConnectionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+    /**
+     * The data needed to create a QuickBooksConnection.
+     */
+    data: XOR<QuickBooksConnectionCreateInput, QuickBooksConnectionUncheckedCreateInput>
+  }
+
+  /**
+   * QuickBooksConnection createMany
+   */
+  export type QuickBooksConnectionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many QuickBooksConnections.
+     */
+    data: QuickBooksConnectionCreateManyInput | QuickBooksConnectionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * QuickBooksConnection createManyAndReturn
+   */
+  export type QuickBooksConnectionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many QuickBooksConnections.
+     */
+    data: QuickBooksConnectionCreateManyInput | QuickBooksConnectionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * QuickBooksConnection update
+   */
+  export type QuickBooksConnectionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+    /**
+     * The data needed to update a QuickBooksConnection.
+     */
+    data: XOR<QuickBooksConnectionUpdateInput, QuickBooksConnectionUncheckedUpdateInput>
+    /**
+     * Choose, which QuickBooksConnection to update.
+     */
+    where: QuickBooksConnectionWhereUniqueInput
+  }
+
+  /**
+   * QuickBooksConnection updateMany
+   */
+  export type QuickBooksConnectionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update QuickBooksConnections.
+     */
+    data: XOR<QuickBooksConnectionUpdateManyMutationInput, QuickBooksConnectionUncheckedUpdateManyInput>
+    /**
+     * Filter which QuickBooksConnections to update
+     */
+    where?: QuickBooksConnectionWhereInput
+  }
+
+  /**
+   * QuickBooksConnection upsert
+   */
+  export type QuickBooksConnectionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+    /**
+     * The filter to search for the QuickBooksConnection to update in case it exists.
+     */
+    where: QuickBooksConnectionWhereUniqueInput
+    /**
+     * In case the QuickBooksConnection found by the `where` argument doesn't exist, create a new QuickBooksConnection with this data.
+     */
+    create: XOR<QuickBooksConnectionCreateInput, QuickBooksConnectionUncheckedCreateInput>
+    /**
+     * In case the QuickBooksConnection was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<QuickBooksConnectionUpdateInput, QuickBooksConnectionUncheckedUpdateInput>
+  }
+
+  /**
+   * QuickBooksConnection delete
+   */
+  export type QuickBooksConnectionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+    /**
+     * Filter which QuickBooksConnection to delete.
+     */
+    where: QuickBooksConnectionWhereUniqueInput
+  }
+
+  /**
+   * QuickBooksConnection deleteMany
+   */
+  export type QuickBooksConnectionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which QuickBooksConnections to delete
+     */
+    where?: QuickBooksConnectionWhereInput
+  }
+
+  /**
+   * QuickBooksConnection without action
+   */
+  export type QuickBooksConnectionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksConnection
+     */
+    select?: QuickBooksConnectionSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model QuickBooksCustomerMap
+   */
+
+  export type AggregateQuickBooksCustomerMap = {
+    _count: QuickBooksCustomerMapCountAggregateOutputType | null
+    _min: QuickBooksCustomerMapMinAggregateOutputType | null
+    _max: QuickBooksCustomerMapMaxAggregateOutputType | null
+  }
+
+  export type QuickBooksCustomerMapMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    crmCustomerId: string | null
+    qbCustomerId: string | null
+  }
+
+  export type QuickBooksCustomerMapMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    crmCustomerId: string | null
+    qbCustomerId: string | null
+  }
+
+  export type QuickBooksCustomerMapCountAggregateOutputType = {
+    id: number
+    companyId: number
+    crmCustomerId: number
+    qbCustomerId: number
+    _all: number
+  }
+
+
+  export type QuickBooksCustomerMapMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    crmCustomerId?: true
+    qbCustomerId?: true
+  }
+
+  export type QuickBooksCustomerMapMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    crmCustomerId?: true
+    qbCustomerId?: true
+  }
+
+  export type QuickBooksCustomerMapCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    crmCustomerId?: true
+    qbCustomerId?: true
+    _all?: true
+  }
+
+  export type QuickBooksCustomerMapAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which QuickBooksCustomerMap to aggregate.
+     */
+    where?: QuickBooksCustomerMapWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuickBooksCustomerMaps to fetch.
+     */
+    orderBy?: QuickBooksCustomerMapOrderByWithRelationInput | QuickBooksCustomerMapOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: QuickBooksCustomerMapWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuickBooksCustomerMaps from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuickBooksCustomerMaps.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned QuickBooksCustomerMaps
+    **/
+    _count?: true | QuickBooksCustomerMapCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: QuickBooksCustomerMapMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: QuickBooksCustomerMapMaxAggregateInputType
+  }
+
+  export type GetQuickBooksCustomerMapAggregateType<T extends QuickBooksCustomerMapAggregateArgs> = {
+        [P in keyof T & keyof AggregateQuickBooksCustomerMap]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateQuickBooksCustomerMap[P]>
+      : GetScalarType<T[P], AggregateQuickBooksCustomerMap[P]>
+  }
+
+
+
+
+  export type QuickBooksCustomerMapGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuickBooksCustomerMapWhereInput
+    orderBy?: QuickBooksCustomerMapOrderByWithAggregationInput | QuickBooksCustomerMapOrderByWithAggregationInput[]
+    by: QuickBooksCustomerMapScalarFieldEnum[] | QuickBooksCustomerMapScalarFieldEnum
+    having?: QuickBooksCustomerMapScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: QuickBooksCustomerMapCountAggregateInputType | true
+    _min?: QuickBooksCustomerMapMinAggregateInputType
+    _max?: QuickBooksCustomerMapMaxAggregateInputType
+  }
+
+  export type QuickBooksCustomerMapGroupByOutputType = {
+    id: string
+    companyId: string
+    crmCustomerId: string
+    qbCustomerId: string
+    _count: QuickBooksCustomerMapCountAggregateOutputType | null
+    _min: QuickBooksCustomerMapMinAggregateOutputType | null
+    _max: QuickBooksCustomerMapMaxAggregateOutputType | null
+  }
+
+  type GetQuickBooksCustomerMapGroupByPayload<T extends QuickBooksCustomerMapGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<QuickBooksCustomerMapGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof QuickBooksCustomerMapGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], QuickBooksCustomerMapGroupByOutputType[P]>
+            : GetScalarType<T[P], QuickBooksCustomerMapGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type QuickBooksCustomerMapSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    crmCustomerId?: boolean
+    qbCustomerId?: boolean
+  }, ExtArgs["result"]["quickBooksCustomerMap"]>
+
+  export type QuickBooksCustomerMapSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    crmCustomerId?: boolean
+    qbCustomerId?: boolean
+  }, ExtArgs["result"]["quickBooksCustomerMap"]>
+
+  export type QuickBooksCustomerMapSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    crmCustomerId?: boolean
+    qbCustomerId?: boolean
+  }
+
+
+  export type $QuickBooksCustomerMapPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "QuickBooksCustomerMap"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      crmCustomerId: string
+      qbCustomerId: string
+    }, ExtArgs["result"]["quickBooksCustomerMap"]>
+    composites: {}
+  }
+
+  type QuickBooksCustomerMapGetPayload<S extends boolean | null | undefined | QuickBooksCustomerMapDefaultArgs> = $Result.GetResult<Prisma.$QuickBooksCustomerMapPayload, S>
+
+  type QuickBooksCustomerMapCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<QuickBooksCustomerMapFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: QuickBooksCustomerMapCountAggregateInputType | true
+    }
+
+  export interface QuickBooksCustomerMapDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['QuickBooksCustomerMap'], meta: { name: 'QuickBooksCustomerMap' } }
+    /**
+     * Find zero or one QuickBooksCustomerMap that matches the filter.
+     * @param {QuickBooksCustomerMapFindUniqueArgs} args - Arguments to find a QuickBooksCustomerMap
+     * @example
+     * // Get one QuickBooksCustomerMap
+     * const quickBooksCustomerMap = await prisma.quickBooksCustomerMap.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends QuickBooksCustomerMapFindUniqueArgs>(args: SelectSubset<T, QuickBooksCustomerMapFindUniqueArgs<ExtArgs>>): Prisma__QuickBooksCustomerMapClient<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one QuickBooksCustomerMap that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {QuickBooksCustomerMapFindUniqueOrThrowArgs} args - Arguments to find a QuickBooksCustomerMap
+     * @example
+     * // Get one QuickBooksCustomerMap
+     * const quickBooksCustomerMap = await prisma.quickBooksCustomerMap.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends QuickBooksCustomerMapFindUniqueOrThrowArgs>(args: SelectSubset<T, QuickBooksCustomerMapFindUniqueOrThrowArgs<ExtArgs>>): Prisma__QuickBooksCustomerMapClient<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first QuickBooksCustomerMap that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksCustomerMapFindFirstArgs} args - Arguments to find a QuickBooksCustomerMap
+     * @example
+     * // Get one QuickBooksCustomerMap
+     * const quickBooksCustomerMap = await prisma.quickBooksCustomerMap.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends QuickBooksCustomerMapFindFirstArgs>(args?: SelectSubset<T, QuickBooksCustomerMapFindFirstArgs<ExtArgs>>): Prisma__QuickBooksCustomerMapClient<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first QuickBooksCustomerMap that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksCustomerMapFindFirstOrThrowArgs} args - Arguments to find a QuickBooksCustomerMap
+     * @example
+     * // Get one QuickBooksCustomerMap
+     * const quickBooksCustomerMap = await prisma.quickBooksCustomerMap.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends QuickBooksCustomerMapFindFirstOrThrowArgs>(args?: SelectSubset<T, QuickBooksCustomerMapFindFirstOrThrowArgs<ExtArgs>>): Prisma__QuickBooksCustomerMapClient<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more QuickBooksCustomerMaps that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksCustomerMapFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all QuickBooksCustomerMaps
+     * const quickBooksCustomerMaps = await prisma.quickBooksCustomerMap.findMany()
+     * 
+     * // Get first 10 QuickBooksCustomerMaps
+     * const quickBooksCustomerMaps = await prisma.quickBooksCustomerMap.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const quickBooksCustomerMapWithIdOnly = await prisma.quickBooksCustomerMap.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends QuickBooksCustomerMapFindManyArgs>(args?: SelectSubset<T, QuickBooksCustomerMapFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a QuickBooksCustomerMap.
+     * @param {QuickBooksCustomerMapCreateArgs} args - Arguments to create a QuickBooksCustomerMap.
+     * @example
+     * // Create one QuickBooksCustomerMap
+     * const QuickBooksCustomerMap = await prisma.quickBooksCustomerMap.create({
+     *   data: {
+     *     // ... data to create a QuickBooksCustomerMap
+     *   }
+     * })
+     * 
+     */
+    create<T extends QuickBooksCustomerMapCreateArgs>(args: SelectSubset<T, QuickBooksCustomerMapCreateArgs<ExtArgs>>): Prisma__QuickBooksCustomerMapClient<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many QuickBooksCustomerMaps.
+     * @param {QuickBooksCustomerMapCreateManyArgs} args - Arguments to create many QuickBooksCustomerMaps.
+     * @example
+     * // Create many QuickBooksCustomerMaps
+     * const quickBooksCustomerMap = await prisma.quickBooksCustomerMap.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends QuickBooksCustomerMapCreateManyArgs>(args?: SelectSubset<T, QuickBooksCustomerMapCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many QuickBooksCustomerMaps and returns the data saved in the database.
+     * @param {QuickBooksCustomerMapCreateManyAndReturnArgs} args - Arguments to create many QuickBooksCustomerMaps.
+     * @example
+     * // Create many QuickBooksCustomerMaps
+     * const quickBooksCustomerMap = await prisma.quickBooksCustomerMap.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many QuickBooksCustomerMaps and only return the `id`
+     * const quickBooksCustomerMapWithIdOnly = await prisma.quickBooksCustomerMap.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends QuickBooksCustomerMapCreateManyAndReturnArgs>(args?: SelectSubset<T, QuickBooksCustomerMapCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a QuickBooksCustomerMap.
+     * @param {QuickBooksCustomerMapDeleteArgs} args - Arguments to delete one QuickBooksCustomerMap.
+     * @example
+     * // Delete one QuickBooksCustomerMap
+     * const QuickBooksCustomerMap = await prisma.quickBooksCustomerMap.delete({
+     *   where: {
+     *     // ... filter to delete one QuickBooksCustomerMap
+     *   }
+     * })
+     * 
+     */
+    delete<T extends QuickBooksCustomerMapDeleteArgs>(args: SelectSubset<T, QuickBooksCustomerMapDeleteArgs<ExtArgs>>): Prisma__QuickBooksCustomerMapClient<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one QuickBooksCustomerMap.
+     * @param {QuickBooksCustomerMapUpdateArgs} args - Arguments to update one QuickBooksCustomerMap.
+     * @example
+     * // Update one QuickBooksCustomerMap
+     * const quickBooksCustomerMap = await prisma.quickBooksCustomerMap.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends QuickBooksCustomerMapUpdateArgs>(args: SelectSubset<T, QuickBooksCustomerMapUpdateArgs<ExtArgs>>): Prisma__QuickBooksCustomerMapClient<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more QuickBooksCustomerMaps.
+     * @param {QuickBooksCustomerMapDeleteManyArgs} args - Arguments to filter QuickBooksCustomerMaps to delete.
+     * @example
+     * // Delete a few QuickBooksCustomerMaps
+     * const { count } = await prisma.quickBooksCustomerMap.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends QuickBooksCustomerMapDeleteManyArgs>(args?: SelectSubset<T, QuickBooksCustomerMapDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more QuickBooksCustomerMaps.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksCustomerMapUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many QuickBooksCustomerMaps
+     * const quickBooksCustomerMap = await prisma.quickBooksCustomerMap.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends QuickBooksCustomerMapUpdateManyArgs>(args: SelectSubset<T, QuickBooksCustomerMapUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one QuickBooksCustomerMap.
+     * @param {QuickBooksCustomerMapUpsertArgs} args - Arguments to update or create a QuickBooksCustomerMap.
+     * @example
+     * // Update or create a QuickBooksCustomerMap
+     * const quickBooksCustomerMap = await prisma.quickBooksCustomerMap.upsert({
+     *   create: {
+     *     // ... data to create a QuickBooksCustomerMap
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the QuickBooksCustomerMap we want to update
+     *   }
+     * })
+     */
+    upsert<T extends QuickBooksCustomerMapUpsertArgs>(args: SelectSubset<T, QuickBooksCustomerMapUpsertArgs<ExtArgs>>): Prisma__QuickBooksCustomerMapClient<$Result.GetResult<Prisma.$QuickBooksCustomerMapPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of QuickBooksCustomerMaps.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksCustomerMapCountArgs} args - Arguments to filter QuickBooksCustomerMaps to count.
+     * @example
+     * // Count the number of QuickBooksCustomerMaps
+     * const count = await prisma.quickBooksCustomerMap.count({
+     *   where: {
+     *     // ... the filter for the QuickBooksCustomerMaps we want to count
+     *   }
+     * })
+    **/
+    count<T extends QuickBooksCustomerMapCountArgs>(
+      args?: Subset<T, QuickBooksCustomerMapCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], QuickBooksCustomerMapCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a QuickBooksCustomerMap.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksCustomerMapAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends QuickBooksCustomerMapAggregateArgs>(args: Subset<T, QuickBooksCustomerMapAggregateArgs>): Prisma.PrismaPromise<GetQuickBooksCustomerMapAggregateType<T>>
+
+    /**
+     * Group by QuickBooksCustomerMap.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuickBooksCustomerMapGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends QuickBooksCustomerMapGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: QuickBooksCustomerMapGroupByArgs['orderBy'] }
+        : { orderBy?: QuickBooksCustomerMapGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, QuickBooksCustomerMapGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetQuickBooksCustomerMapGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the QuickBooksCustomerMap model
+   */
+  readonly fields: QuickBooksCustomerMapFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for QuickBooksCustomerMap.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__QuickBooksCustomerMapClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the QuickBooksCustomerMap model
+   */ 
+  interface QuickBooksCustomerMapFieldRefs {
+    readonly id: FieldRef<"QuickBooksCustomerMap", 'String'>
+    readonly companyId: FieldRef<"QuickBooksCustomerMap", 'String'>
+    readonly crmCustomerId: FieldRef<"QuickBooksCustomerMap", 'String'>
+    readonly qbCustomerId: FieldRef<"QuickBooksCustomerMap", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * QuickBooksCustomerMap findUnique
+   */
+  export type QuickBooksCustomerMapFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksCustomerMap to fetch.
+     */
+    where: QuickBooksCustomerMapWhereUniqueInput
+  }
+
+  /**
+   * QuickBooksCustomerMap findUniqueOrThrow
+   */
+  export type QuickBooksCustomerMapFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksCustomerMap to fetch.
+     */
+    where: QuickBooksCustomerMapWhereUniqueInput
+  }
+
+  /**
+   * QuickBooksCustomerMap findFirst
+   */
+  export type QuickBooksCustomerMapFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksCustomerMap to fetch.
+     */
+    where?: QuickBooksCustomerMapWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuickBooksCustomerMaps to fetch.
+     */
+    orderBy?: QuickBooksCustomerMapOrderByWithRelationInput | QuickBooksCustomerMapOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for QuickBooksCustomerMaps.
+     */
+    cursor?: QuickBooksCustomerMapWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuickBooksCustomerMaps from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuickBooksCustomerMaps.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of QuickBooksCustomerMaps.
+     */
+    distinct?: QuickBooksCustomerMapScalarFieldEnum | QuickBooksCustomerMapScalarFieldEnum[]
+  }
+
+  /**
+   * QuickBooksCustomerMap findFirstOrThrow
+   */
+  export type QuickBooksCustomerMapFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksCustomerMap to fetch.
+     */
+    where?: QuickBooksCustomerMapWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuickBooksCustomerMaps to fetch.
+     */
+    orderBy?: QuickBooksCustomerMapOrderByWithRelationInput | QuickBooksCustomerMapOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for QuickBooksCustomerMaps.
+     */
+    cursor?: QuickBooksCustomerMapWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuickBooksCustomerMaps from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuickBooksCustomerMaps.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of QuickBooksCustomerMaps.
+     */
+    distinct?: QuickBooksCustomerMapScalarFieldEnum | QuickBooksCustomerMapScalarFieldEnum[]
+  }
+
+  /**
+   * QuickBooksCustomerMap findMany
+   */
+  export type QuickBooksCustomerMapFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+    /**
+     * Filter, which QuickBooksCustomerMaps to fetch.
+     */
+    where?: QuickBooksCustomerMapWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuickBooksCustomerMaps to fetch.
+     */
+    orderBy?: QuickBooksCustomerMapOrderByWithRelationInput | QuickBooksCustomerMapOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing QuickBooksCustomerMaps.
+     */
+    cursor?: QuickBooksCustomerMapWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuickBooksCustomerMaps from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuickBooksCustomerMaps.
+     */
+    skip?: number
+    distinct?: QuickBooksCustomerMapScalarFieldEnum | QuickBooksCustomerMapScalarFieldEnum[]
+  }
+
+  /**
+   * QuickBooksCustomerMap create
+   */
+  export type QuickBooksCustomerMapCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+    /**
+     * The data needed to create a QuickBooksCustomerMap.
+     */
+    data: XOR<QuickBooksCustomerMapCreateInput, QuickBooksCustomerMapUncheckedCreateInput>
+  }
+
+  /**
+   * QuickBooksCustomerMap createMany
+   */
+  export type QuickBooksCustomerMapCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many QuickBooksCustomerMaps.
+     */
+    data: QuickBooksCustomerMapCreateManyInput | QuickBooksCustomerMapCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * QuickBooksCustomerMap createManyAndReturn
+   */
+  export type QuickBooksCustomerMapCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many QuickBooksCustomerMaps.
+     */
+    data: QuickBooksCustomerMapCreateManyInput | QuickBooksCustomerMapCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * QuickBooksCustomerMap update
+   */
+  export type QuickBooksCustomerMapUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+    /**
+     * The data needed to update a QuickBooksCustomerMap.
+     */
+    data: XOR<QuickBooksCustomerMapUpdateInput, QuickBooksCustomerMapUncheckedUpdateInput>
+    /**
+     * Choose, which QuickBooksCustomerMap to update.
+     */
+    where: QuickBooksCustomerMapWhereUniqueInput
+  }
+
+  /**
+   * QuickBooksCustomerMap updateMany
+   */
+  export type QuickBooksCustomerMapUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update QuickBooksCustomerMaps.
+     */
+    data: XOR<QuickBooksCustomerMapUpdateManyMutationInput, QuickBooksCustomerMapUncheckedUpdateManyInput>
+    /**
+     * Filter which QuickBooksCustomerMaps to update
+     */
+    where?: QuickBooksCustomerMapWhereInput
+  }
+
+  /**
+   * QuickBooksCustomerMap upsert
+   */
+  export type QuickBooksCustomerMapUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+    /**
+     * The filter to search for the QuickBooksCustomerMap to update in case it exists.
+     */
+    where: QuickBooksCustomerMapWhereUniqueInput
+    /**
+     * In case the QuickBooksCustomerMap found by the `where` argument doesn't exist, create a new QuickBooksCustomerMap with this data.
+     */
+    create: XOR<QuickBooksCustomerMapCreateInput, QuickBooksCustomerMapUncheckedCreateInput>
+    /**
+     * In case the QuickBooksCustomerMap was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<QuickBooksCustomerMapUpdateInput, QuickBooksCustomerMapUncheckedUpdateInput>
+  }
+
+  /**
+   * QuickBooksCustomerMap delete
+   */
+  export type QuickBooksCustomerMapDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+    /**
+     * Filter which QuickBooksCustomerMap to delete.
+     */
+    where: QuickBooksCustomerMapWhereUniqueInput
+  }
+
+  /**
+   * QuickBooksCustomerMap deleteMany
+   */
+  export type QuickBooksCustomerMapDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which QuickBooksCustomerMaps to delete
+     */
+    where?: QuickBooksCustomerMapWhereInput
+  }
+
+  /**
+   * QuickBooksCustomerMap without action
+   */
+  export type QuickBooksCustomerMapDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuickBooksCustomerMap
+     */
+    select?: QuickBooksCustomerMapSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -9705,6 +11659,7 @@ export namespace Prisma {
     pdfUrl: 'pdfUrl',
     stripePaymentIntentId: 'stripePaymentIntentId',
     stripePaymentUrl: 'stripePaymentUrl',
+    quickbooksId: 'quickbooksId',
     sentAt: 'sentAt',
     paidAt: 'paidAt',
     voidedAt: 'voidedAt',
@@ -9748,6 +11703,7 @@ export namespace Prisma {
     status: 'status',
     stripePaymentIntentId: 'stripePaymentIntentId',
     stripeChargeId: 'stripeChargeId',
+    quickbooksId: 'quickbooksId',
     paidAt: 'paidAt',
     notes: 'notes',
     createdAt: 'createdAt',
@@ -9795,6 +11751,30 @@ export namespace Prisma {
   };
 
   export type ExpenseScalarFieldEnum = (typeof ExpenseScalarFieldEnum)[keyof typeof ExpenseScalarFieldEnum]
+
+
+  export const QuickBooksConnectionScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    realmId: 'realmId',
+    accessToken: 'accessToken',
+    refreshToken: 'refreshToken',
+    tokenExpiresAt: 'tokenExpiresAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type QuickBooksConnectionScalarFieldEnum = (typeof QuickBooksConnectionScalarFieldEnum)[keyof typeof QuickBooksConnectionScalarFieldEnum]
+
+
+  export const QuickBooksCustomerMapScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    crmCustomerId: 'crmCustomerId',
+    qbCustomerId: 'qbCustomerId'
+  };
+
+  export type QuickBooksCustomerMapScalarFieldEnum = (typeof QuickBooksCustomerMapScalarFieldEnum)[keyof typeof QuickBooksCustomerMapScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -10309,6 +12289,7 @@ export namespace Prisma {
     pdfUrl?: StringNullableFilter<"Invoice"> | string | null
     stripePaymentIntentId?: StringNullableFilter<"Invoice"> | string | null
     stripePaymentUrl?: StringNullableFilter<"Invoice"> | string | null
+    quickbooksId?: StringNullableFilter<"Invoice"> | string | null
     sentAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     paidAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     voidedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
@@ -10354,6 +12335,7 @@ export namespace Prisma {
     pdfUrl?: SortOrderInput | SortOrder
     stripePaymentIntentId?: SortOrderInput | SortOrder
     stripePaymentUrl?: SortOrderInput | SortOrder
+    quickbooksId?: SortOrderInput | SortOrder
     sentAt?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     voidedAt?: SortOrderInput | SortOrder
@@ -10403,6 +12385,7 @@ export namespace Prisma {
     pdfUrl?: StringNullableFilter<"Invoice"> | string | null
     stripePaymentIntentId?: StringNullableFilter<"Invoice"> | string | null
     stripePaymentUrl?: StringNullableFilter<"Invoice"> | string | null
+    quickbooksId?: StringNullableFilter<"Invoice"> | string | null
     sentAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     paidAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     voidedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
@@ -10448,6 +12431,7 @@ export namespace Prisma {
     pdfUrl?: SortOrderInput | SortOrder
     stripePaymentIntentId?: SortOrderInput | SortOrder
     stripePaymentUrl?: SortOrderInput | SortOrder
+    quickbooksId?: SortOrderInput | SortOrder
     sentAt?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     voidedAt?: SortOrderInput | SortOrder
@@ -10497,6 +12481,7 @@ export namespace Prisma {
     pdfUrl?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     stripePaymentIntentId?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     stripePaymentUrl?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
+    quickbooksId?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     sentAt?: DateTimeNullableWithAggregatesFilter<"Invoice"> | Date | string | null
     paidAt?: DateTimeNullableWithAggregatesFilter<"Invoice"> | Date | string | null
     voidedAt?: DateTimeNullableWithAggregatesFilter<"Invoice"> | Date | string | null
@@ -10602,6 +12587,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
     stripePaymentIntentId?: StringNullableFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableFilter<"Payment"> | string | null
+    quickbooksId?: StringNullableFilter<"Payment"> | string | null
     paidAt?: DateTimeNullableFilter<"Payment"> | Date | string | null
     notes?: StringNullableFilter<"Payment"> | string | null
     createdAt?: DateTimeFilter<"Payment"> | Date | string
@@ -10618,6 +12604,7 @@ export namespace Prisma {
     status?: SortOrder
     stripePaymentIntentId?: SortOrderInput | SortOrder
     stripeChargeId?: SortOrderInput | SortOrder
+    quickbooksId?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -10637,6 +12624,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
     stripePaymentIntentId?: StringNullableFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableFilter<"Payment"> | string | null
+    quickbooksId?: StringNullableFilter<"Payment"> | string | null
     paidAt?: DateTimeNullableFilter<"Payment"> | Date | string | null
     notes?: StringNullableFilter<"Payment"> | string | null
     createdAt?: DateTimeFilter<"Payment"> | Date | string
@@ -10653,6 +12641,7 @@ export namespace Prisma {
     status?: SortOrder
     stripePaymentIntentId?: SortOrderInput | SortOrder
     stripeChargeId?: SortOrderInput | SortOrder
+    quickbooksId?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -10676,6 +12665,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusWithAggregatesFilter<"Payment"> | $Enums.PaymentStatus
     stripePaymentIntentId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
+    quickbooksId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     paidAt?: DateTimeNullableWithAggregatesFilter<"Payment"> | Date | string | null
     notes?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Payment"> | Date | string
@@ -10881,6 +12871,121 @@ export namespace Prisma {
     createdByUserId?: StringWithAggregatesFilter<"Expense"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Expense"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Expense"> | Date | string
+  }
+
+  export type QuickBooksConnectionWhereInput = {
+    AND?: QuickBooksConnectionWhereInput | QuickBooksConnectionWhereInput[]
+    OR?: QuickBooksConnectionWhereInput[]
+    NOT?: QuickBooksConnectionWhereInput | QuickBooksConnectionWhereInput[]
+    id?: StringFilter<"QuickBooksConnection"> | string
+    companyId?: StringFilter<"QuickBooksConnection"> | string
+    realmId?: StringFilter<"QuickBooksConnection"> | string
+    accessToken?: StringFilter<"QuickBooksConnection"> | string
+    refreshToken?: StringFilter<"QuickBooksConnection"> | string
+    tokenExpiresAt?: DateTimeFilter<"QuickBooksConnection"> | Date | string
+    createdAt?: DateTimeFilter<"QuickBooksConnection"> | Date | string
+    updatedAt?: DateTimeFilter<"QuickBooksConnection"> | Date | string
+  }
+
+  export type QuickBooksConnectionOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    realmId?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type QuickBooksConnectionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    companyId?: string
+    AND?: QuickBooksConnectionWhereInput | QuickBooksConnectionWhereInput[]
+    OR?: QuickBooksConnectionWhereInput[]
+    NOT?: QuickBooksConnectionWhereInput | QuickBooksConnectionWhereInput[]
+    realmId?: StringFilter<"QuickBooksConnection"> | string
+    accessToken?: StringFilter<"QuickBooksConnection"> | string
+    refreshToken?: StringFilter<"QuickBooksConnection"> | string
+    tokenExpiresAt?: DateTimeFilter<"QuickBooksConnection"> | Date | string
+    createdAt?: DateTimeFilter<"QuickBooksConnection"> | Date | string
+    updatedAt?: DateTimeFilter<"QuickBooksConnection"> | Date | string
+  }, "id" | "companyId">
+
+  export type QuickBooksConnectionOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    realmId?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: QuickBooksConnectionCountOrderByAggregateInput
+    _max?: QuickBooksConnectionMaxOrderByAggregateInput
+    _min?: QuickBooksConnectionMinOrderByAggregateInput
+  }
+
+  export type QuickBooksConnectionScalarWhereWithAggregatesInput = {
+    AND?: QuickBooksConnectionScalarWhereWithAggregatesInput | QuickBooksConnectionScalarWhereWithAggregatesInput[]
+    OR?: QuickBooksConnectionScalarWhereWithAggregatesInput[]
+    NOT?: QuickBooksConnectionScalarWhereWithAggregatesInput | QuickBooksConnectionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"QuickBooksConnection"> | string
+    companyId?: StringWithAggregatesFilter<"QuickBooksConnection"> | string
+    realmId?: StringWithAggregatesFilter<"QuickBooksConnection"> | string
+    accessToken?: StringWithAggregatesFilter<"QuickBooksConnection"> | string
+    refreshToken?: StringWithAggregatesFilter<"QuickBooksConnection"> | string
+    tokenExpiresAt?: DateTimeWithAggregatesFilter<"QuickBooksConnection"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"QuickBooksConnection"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"QuickBooksConnection"> | Date | string
+  }
+
+  export type QuickBooksCustomerMapWhereInput = {
+    AND?: QuickBooksCustomerMapWhereInput | QuickBooksCustomerMapWhereInput[]
+    OR?: QuickBooksCustomerMapWhereInput[]
+    NOT?: QuickBooksCustomerMapWhereInput | QuickBooksCustomerMapWhereInput[]
+    id?: StringFilter<"QuickBooksCustomerMap"> | string
+    companyId?: StringFilter<"QuickBooksCustomerMap"> | string
+    crmCustomerId?: StringFilter<"QuickBooksCustomerMap"> | string
+    qbCustomerId?: StringFilter<"QuickBooksCustomerMap"> | string
+  }
+
+  export type QuickBooksCustomerMapOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    crmCustomerId?: SortOrder
+    qbCustomerId?: SortOrder
+  }
+
+  export type QuickBooksCustomerMapWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    companyId_crmCustomerId?: QuickBooksCustomerMapCompanyIdCrmCustomerIdCompoundUniqueInput
+    AND?: QuickBooksCustomerMapWhereInput | QuickBooksCustomerMapWhereInput[]
+    OR?: QuickBooksCustomerMapWhereInput[]
+    NOT?: QuickBooksCustomerMapWhereInput | QuickBooksCustomerMapWhereInput[]
+    companyId?: StringFilter<"QuickBooksCustomerMap"> | string
+    crmCustomerId?: StringFilter<"QuickBooksCustomerMap"> | string
+    qbCustomerId?: StringFilter<"QuickBooksCustomerMap"> | string
+  }, "id" | "companyId_crmCustomerId">
+
+  export type QuickBooksCustomerMapOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    crmCustomerId?: SortOrder
+    qbCustomerId?: SortOrder
+    _count?: QuickBooksCustomerMapCountOrderByAggregateInput
+    _max?: QuickBooksCustomerMapMaxOrderByAggregateInput
+    _min?: QuickBooksCustomerMapMinOrderByAggregateInput
+  }
+
+  export type QuickBooksCustomerMapScalarWhereWithAggregatesInput = {
+    AND?: QuickBooksCustomerMapScalarWhereWithAggregatesInput | QuickBooksCustomerMapScalarWhereWithAggregatesInput[]
+    OR?: QuickBooksCustomerMapScalarWhereWithAggregatesInput[]
+    NOT?: QuickBooksCustomerMapScalarWhereWithAggregatesInput | QuickBooksCustomerMapScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"QuickBooksCustomerMap"> | string
+    companyId?: StringWithAggregatesFilter<"QuickBooksCustomerMap"> | string
+    crmCustomerId?: StringWithAggregatesFilter<"QuickBooksCustomerMap"> | string
+    qbCustomerId?: StringWithAggregatesFilter<"QuickBooksCustomerMap"> | string
   }
 
   export type QuoteCreateInput = {
@@ -11229,6 +13334,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -11273,6 +13379,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -11315,6 +13422,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -11359,6 +13467,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -11402,6 +13511,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -11442,6 +13552,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -11482,6 +13593,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -11589,6 +13701,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
+    quickbooksId?: string | null
     paidAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
@@ -11605,6 +13718,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
+    quickbooksId?: string | null
     paidAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
@@ -11619,6 +13733,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11635,6 +13750,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11650,6 +13766,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
+    quickbooksId?: string | null
     paidAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
@@ -11664,6 +13781,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11679,6 +13797,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11925,6 +14044,132 @@ export namespace Prisma {
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuickBooksConnectionCreateInput = {
+    id?: string
+    companyId: string
+    realmId: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type QuickBooksConnectionUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    realmId: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type QuickBooksConnectionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    realmId?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuickBooksConnectionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    realmId?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuickBooksConnectionCreateManyInput = {
+    id?: string
+    companyId: string
+    realmId: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type QuickBooksConnectionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    realmId?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuickBooksConnectionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    realmId?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuickBooksCustomerMapCreateInput = {
+    id?: string
+    companyId: string
+    crmCustomerId: string
+    qbCustomerId: string
+  }
+
+  export type QuickBooksCustomerMapUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    crmCustomerId: string
+    qbCustomerId: string
+  }
+
+  export type QuickBooksCustomerMapUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    crmCustomerId?: StringFieldUpdateOperationsInput | string
+    qbCustomerId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type QuickBooksCustomerMapUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    crmCustomerId?: StringFieldUpdateOperationsInput | string
+    qbCustomerId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type QuickBooksCustomerMapCreateManyInput = {
+    id?: string
+    companyId: string
+    crmCustomerId: string
+    qbCustomerId: string
+  }
+
+  export type QuickBooksCustomerMapUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    crmCustomerId?: StringFieldUpdateOperationsInput | string
+    qbCustomerId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type QuickBooksCustomerMapUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    crmCustomerId?: StringFieldUpdateOperationsInput | string
+    qbCustomerId?: StringFieldUpdateOperationsInput | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -12457,6 +14702,7 @@ export namespace Prisma {
     pdfUrl?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripePaymentUrl?: SortOrder
+    quickbooksId?: SortOrder
     sentAt?: SortOrder
     paidAt?: SortOrder
     voidedAt?: SortOrder
@@ -12509,6 +14755,7 @@ export namespace Prisma {
     pdfUrl?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripePaymentUrl?: SortOrder
+    quickbooksId?: SortOrder
     sentAt?: SortOrder
     paidAt?: SortOrder
     voidedAt?: SortOrder
@@ -12550,6 +14797,7 @@ export namespace Prisma {
     pdfUrl?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripePaymentUrl?: SortOrder
+    quickbooksId?: SortOrder
     sentAt?: SortOrder
     paidAt?: SortOrder
     voidedAt?: SortOrder
@@ -12665,6 +14913,7 @@ export namespace Prisma {
     status?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripeChargeId?: SortOrder
+    quickbooksId?: SortOrder
     paidAt?: SortOrder
     notes?: SortOrder
     createdAt?: SortOrder
@@ -12684,6 +14933,7 @@ export namespace Prisma {
     status?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripeChargeId?: SortOrder
+    quickbooksId?: SortOrder
     paidAt?: SortOrder
     notes?: SortOrder
     createdAt?: SortOrder
@@ -12699,6 +14949,7 @@ export namespace Prisma {
     status?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripeChargeId?: SortOrder
+    quickbooksId?: SortOrder
     paidAt?: SortOrder
     notes?: SortOrder
     createdAt?: SortOrder
@@ -12881,6 +15132,65 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumExpenseCategoryFilter<$PrismaModel>
     _max?: NestedEnumExpenseCategoryFilter<$PrismaModel>
+  }
+
+  export type QuickBooksConnectionCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    realmId?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type QuickBooksConnectionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    realmId?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type QuickBooksConnectionMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    realmId?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type QuickBooksCustomerMapCompanyIdCrmCustomerIdCompoundUniqueInput = {
+    companyId: string
+    crmCustomerId: string
+  }
+
+  export type QuickBooksCustomerMapCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    crmCustomerId?: SortOrder
+    qbCustomerId?: SortOrder
+  }
+
+  export type QuickBooksCustomerMapMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    crmCustomerId?: SortOrder
+    qbCustomerId?: SortOrder
+  }
+
+  export type QuickBooksCustomerMapMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    crmCustomerId?: SortOrder
+    qbCustomerId?: SortOrder
   }
 
   export type QuoteLineItemCreateNestedManyWithoutQuoteInput = {
@@ -13663,6 +15973,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -13705,6 +16016,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -13808,6 +16120,7 @@ export namespace Prisma {
     pdfUrl?: StringNullableFilter<"Invoice"> | string | null
     stripePaymentIntentId?: StringNullableFilter<"Invoice"> | string | null
     stripePaymentUrl?: StringNullableFilter<"Invoice"> | string | null
+    quickbooksId?: StringNullableFilter<"Invoice"> | string | null
     sentAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     paidAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
     voidedAt?: DateTimeNullableFilter<"Invoice"> | Date | string | null
@@ -14128,6 +16441,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
+    quickbooksId?: string | null
     paidAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
@@ -14142,6 +16456,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
+    quickbooksId?: string | null
     paidAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
@@ -14341,6 +16656,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
     stripePaymentIntentId?: StringNullableFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableFilter<"Payment"> | string | null
+    quickbooksId?: StringNullableFilter<"Payment"> | string | null
     paidAt?: DateTimeNullableFilter<"Payment"> | Date | string | null
     notes?: StringNullableFilter<"Payment"> | string | null
     createdAt?: DateTimeFilter<"Payment"> | Date | string
@@ -14371,6 +16687,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -14414,6 +16731,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -14471,6 +16789,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14514,6 +16833,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14555,6 +16875,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -14598,6 +16919,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -14655,6 +16977,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14698,6 +17021,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14739,6 +17063,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -14782,6 +17107,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -14860,6 +17186,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -14933,6 +17260,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14975,6 +17303,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -15017,6 +17346,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -15052,6 +17382,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
+    quickbooksId?: string | null
     paidAt?: Date | string | null
     notes?: string | null
     createdAt?: Date | string
@@ -15099,6 +17430,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15113,6 +17445,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15127,6 +17460,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15158,6 +17492,7 @@ export namespace Prisma {
     pdfUrl?: string | null
     stripePaymentIntentId?: string | null
     stripePaymentUrl?: string | null
+    quickbooksId?: string | null
     sentAt?: Date | string | null
     paidAt?: Date | string | null
     voidedAt?: Date | string | null
@@ -15197,6 +17532,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -15240,6 +17576,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -15282,6 +17619,7 @@ export namespace Prisma {
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     voidedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -15342,6 +17680,14 @@ export namespace Prisma {
      * @deprecated Use ExpenseDefaultArgs instead
      */
     export type ExpenseArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ExpenseDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use QuickBooksConnectionDefaultArgs instead
+     */
+    export type QuickBooksConnectionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = QuickBooksConnectionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use QuickBooksCustomerMapDefaultArgs instead
+     */
+    export type QuickBooksCustomerMapArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = QuickBooksCustomerMapDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

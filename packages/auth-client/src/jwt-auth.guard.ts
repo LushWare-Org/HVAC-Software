@@ -1,6 +1,7 @@
 import { Injectable, ExecutionContext } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
+import { Role } from '@tscrm/types';
 
 /**
  * Apply to any controller/route that requires a valid Auth0 JWT.
@@ -35,11 +36,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       if (companyId) {
         const rawRole = (req.headers['x-test-user-role'] ?? 'COMPANY_ADMIN') as string;
         req.user = {
-          userId:    req.headers['x-test-user-id']   ?? 'test-user-001',
-          email:     req.headers['x-test-user-email'] ?? 'admin@demo.tscrm.dev',
+          userId:     req.headers['x-test-user-id']     ?? 'test-user-001',
+          email:      req.headers['x-test-user-email']  ?? 'admin@demo.tscrm.dev',
           companyId,
-          role:      rawRole.toLowerCase(),
-          name:      req.headers['x-test-user-name']  ?? 'Demo Admin',
+          role:       rawRole.toLowerCase() as Role,
+          name:       req.headers['x-test-user-name']   ?? 'Demo Admin',
+          customerId: req.headers['x-test-customer-id'] as string | undefined,
         };
         return true;
       }

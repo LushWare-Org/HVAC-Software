@@ -9,12 +9,14 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { NotificationClientService } from '../notification-client/notification-client.service';
+import { QuickBooksSyncService } from '../quickbooks/quickbooks-sync.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceStatus, PaymentStatus } from '../prisma/generated';
 
@@ -38,6 +40,7 @@ export class InvoicesService {
     private readonly config: ConfigService,
     private readonly pdfService: PdfService,
     private readonly notificationClient: NotificationClientService,
+    @Optional() private readonly qbSync: QuickBooksSyncService,
   ) {
     this.stripe = new Stripe(this.config.get<string>('stripe.secretKey') ?? '', {
       apiVersion: '2023-10-16',
@@ -124,7 +127,7 @@ export class InvoicesService {
     const count = await this.prisma.invoice.count({ where: { companyId } });
     const invoiceNumber = `INV-${year}-${String(count + 1).padStart(4, '0')}`;
 
-    return this.prisma.invoice.create({
+    const invoice = await this.prisma.invoice.create({
       data: {
         ...rest,
         customerName,
@@ -159,6 +162,13 @@ export class InvoicesService {
         quote: { select: { quoteNumber: true } },
       },
     });
+
+    // Fire-and-forget QB sync — never blocks or throws
+    this.qbSync?.syncInvoice(invoice.id, companyId).catch((err: Error) =>
+      this.logger.warn(`QB sync skipped for invoice ${invoice.id}: ${err.message}`),
+    );
+
+    return invoice;
   }
 
   // ── Update status ─────────────────────────────────────────────────────────
@@ -344,7 +354,7 @@ export class InvoicesService {
     return updated;
   }
 
-  // ── Create Stripe Payment Intent ──────────────────────────────────────────
+  // ── Create Stripe Checkout Session ───────────────────────────────────────
 
   async createPaymentIntent(companyId: string, id: string) {
     const invoice = await this.findOne(companyId, id);
@@ -356,27 +366,16 @@ export class InvoicesService {
     if (balanceDue <= 0) throw new BadRequestException('Invoice has no balance due');
 
     const amountCents = Math.round(balanceDue * 100);
+    const portalUrl =
+      process.env.CUSTOMER_PORTAL_URL ??
+      this.config.get<string>('app.frontendUrl') ??
+      'https://tscrm-demo-customer.web.app';
 
-    let paymentIntent: Stripe.PaymentIntent;
-    if (invoice.stripePaymentIntentId) {
-      // Retrieve existing intent so we don't create duplicates
-      paymentIntent = await this.stripe.paymentIntents.retrieve(invoice.stripePaymentIntentId);
-    } else {
-      paymentIntent = await this.stripe.paymentIntents.create({
-        amount: amountCents,
-        currency: 'usd',
-        payment_method_types: ['card'],
-        metadata: {
-          invoiceId: invoice.id,
-          invoiceNumber: invoice.invoiceNumber,
-          companyId,
-        },
-        description: `Invoice ${invoice.invoiceNumber} — ${invoice.customerName}`,
-      });
-    }
-
-    // Create a Stripe-hosted invoice page for the payment link
-    const paymentLink = await this.stripe.paymentLinks.create({
+    // Create a Stripe Checkout Session (hosted, no orphan PaymentIntent).
+    // payment_intent_data.metadata carries invoiceId into the PaymentIntent
+    // that Stripe creates when the customer pays, so the webhook can correlate.
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
       line_items: [
         {
           price_data: {
@@ -387,21 +386,25 @@ export class InvoicesService {
           quantity: 1,
         },
       ] as any,
+      payment_intent_data: {
+        metadata: { invoiceId: invoice.id, invoiceNumber: invoice.invoiceNumber, companyId },
+        description: `Invoice ${invoice.invoiceNumber} — ${invoice.customerName}`,
+      },
       metadata: { invoiceId: invoice.id },
+      success_url: `${portalUrl}/invoices?payment=success`,
+      cancel_url: `${portalUrl}/invoices?payment=cancelled`,
+      customer_email: invoice.customerEmail ?? undefined,
     });
 
     await this.prisma.invoice.update({
       where: { id },
-      data: {
-        stripePaymentIntentId: paymentIntent.id,
-        stripePaymentUrl: paymentLink.url,
-      },
+      data: { stripePaymentUrl: session.url },
     });
 
     return {
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id,
-      paymentUrl: paymentLink.url,
+      clientSecret: null,
+      paymentIntentId: session.id,
+      paymentUrl: session.url,
     };
   }
 
@@ -424,6 +427,16 @@ export class InvoicesService {
       case 'payment_intent.payment_failed':
         await this.handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
         break;
+      case 'checkout.session.completed': {
+        // Fired when customer pays via a Stripe PaymentLink (hosted page).
+        // The session's payment_intent carries invoiceId in its metadata.
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.payment_intent && typeof session.payment_intent === 'string') {
+          const intent = await this.stripe.paymentIntents.retrieve(session.payment_intent);
+          await this.handlePaymentSucceeded(intent);
+        }
+        break;
+      }
       default:
         this.logger.debug(`Unhandled Stripe event: ${event.type}`);
     }
@@ -437,6 +450,16 @@ export class InvoicesService {
     const invoiceId = intent.metadata?.invoiceId;
     if (!invoiceId) return;
 
+    // Idempotency guard — both payment_intent.succeeded and checkout.session.completed
+    // fire for the same payment; only process once.
+    const alreadyProcessed = await this.prisma.payment.findFirst({
+      where: { stripePaymentIntentId: intent.id, status: PaymentStatus.SUCCEEDED },
+    });
+    if (alreadyProcessed) {
+      this.logger.debug(`Payment for intent ${intent.id} already recorded — skipping duplicate`);
+      return;
+    }
+
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: invoiceId },
       include: { payments: true },
@@ -448,7 +471,7 @@ export class InvoicesService {
     const balanceDue = Math.max(0, parseFloat(invoice.total.toString()) - totalPaid);
     const newStatus = balanceDue === 0 ? InvoiceStatus.PAID : InvoiceStatus.PARTIALLY_PAID;
 
-    await this.prisma.$transaction([
+    const [stripePayment] = await this.prisma.$transaction([
       this.prisma.payment.create({
         data: {
           companyId: invoice.companyId,
@@ -471,6 +494,11 @@ export class InvoicesService {
         },
       }),
     ]);
+
+    // Fire-and-forget QB sync for the Stripe payment
+    this.qbSync?.syncPayment(stripePayment.id, invoice.companyId).catch((err: Error) =>
+      this.logger.warn(`QB sync skipped for Stripe payment ${stripePayment.id}: ${err.message}`),
+    );
 
     this.logger.log(`Invoice ${invoice.invoiceNumber} — payment of $${paidAmount} succeeded`);
   }
@@ -528,7 +556,7 @@ export class InvoicesService {
     const balanceDue = Math.max(0, parseFloat(invoice.total.toString()) - totalPaid);
     const newStatus = balanceDue === 0 ? InvoiceStatus.PAID : InvoiceStatus.PARTIALLY_PAID;
 
-    return this.prisma.$transaction([
+    const [payment] = await this.prisma.$transaction([
       this.prisma.payment.create({
         data: {
           companyId,
@@ -550,6 +578,13 @@ export class InvoicesService {
         },
       }),
     ]);
+
+    // Fire-and-forget QB sync
+    this.qbSync?.syncPayment(payment.id, companyId).catch((err: Error) =>
+      this.logger.warn(`QB sync skipped for payment ${payment.id}: ${err.message}`),
+    );
+
+    return [payment];
   }
 
   // ── Void ─────────────────────────────────────────────────────────────────
@@ -560,9 +595,16 @@ export class InvoicesService {
     if (invoice.status === InvoiceStatus.PAID) {
       throw new BadRequestException('Cannot void a paid invoice');
     }
-    return this.prisma.invoice.update({
+    const voided = await this.prisma.invoice.update({
       where: { id },
       data: { status: InvoiceStatus.VOID, voidedAt: new Date() },
     });
+
+    // Fire-and-forget QB void sync
+    this.qbSync?.syncVoid(id, companyId).catch((err: Error) =>
+      this.logger.warn(`QB void sync skipped for invoice ${id}: ${err.message}`),
+    );
+
+    return voided;
   }
 }

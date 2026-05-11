@@ -195,7 +195,7 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }:
             </div>
 
             {/* Customer Dropdown */}
-            <div className="space-y-1.5 relative">
+            <div className="space-y-1.5 relative z-10">
               <label className="block text-xs font-semibold text-gray-400 uppercase">Customer <span className="text-red-500">*</span></label>
               <div className="relative">
                 <input
@@ -223,7 +223,7 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }:
                   {customersQuery.isLoading && <div className="p-3 text-sm text-gray-400">Loading...</div>}
                   {customers.length === 0 && !customersQuery.isLoading && <div className="p-3 text-sm text-gray-400">No customers found</div>}
                   {customers.map(c => (
-                    <button key={c.id} onClick={() => selectCustomer(c)} className="w-full text-left px-3 py-2 hover:bg-green-50 transition-colors flex items-center justify-between bg-transparent border-0 cursor-pointer">
+                    <button key={c.id} onMouseDown={e => { e.preventDefault(); selectCustomer(c); }} className="w-full text-left px-3 py-2 hover:bg-green-50 transition-colors flex items-center justify-between bg-transparent border-0 cursor-pointer">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{fmtCustomerName(c)}</div>
                         <div className="text-xs text-gray-500">{c.email}</div>

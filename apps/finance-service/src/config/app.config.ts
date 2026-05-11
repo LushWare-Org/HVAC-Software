@@ -16,5 +16,12 @@ export default () => ({
   },
   app: {
     frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    customerPortalUrl: process.env.CUSTOMER_PORTAL_URL ?? 'https://tscrm-demo-customer.web.app',
+  },
+  quickbooks: {
+    clientId: process.env.QB_CLIENT_ID ?? '',
+    clientSecret: process.env.QB_CLIENT_SECRET ?? '',
+    redirectUri: process.env.QB_REDIRECT_URI ?? 'http://localhost:3004/quickbooks/callback',
+    environment: process.env.QB_ENVIRONMENT ?? 'sandbox',
   },
 });

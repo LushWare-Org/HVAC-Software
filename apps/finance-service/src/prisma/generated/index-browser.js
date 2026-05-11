@@ -192,6 +192,7 @@ exports.Prisma.InvoiceScalarFieldEnum = {
   pdfUrl: 'pdfUrl',
   stripePaymentIntentId: 'stripePaymentIntentId',
   stripePaymentUrl: 'stripePaymentUrl',
+  quickbooksId: 'quickbooksId',
   sentAt: 'sentAt',
   paidAt: 'paidAt',
   voidedAt: 'voidedAt',
@@ -229,6 +230,7 @@ exports.Prisma.PaymentScalarFieldEnum = {
   status: 'status',
   stripePaymentIntentId: 'stripePaymentIntentId',
   stripeChargeId: 'stripeChargeId',
+  quickbooksId: 'quickbooksId',
   paidAt: 'paidAt',
   notes: 'notes',
   createdAt: 'createdAt',
@@ -267,6 +269,24 @@ exports.Prisma.ExpenseScalarFieldEnum = {
   createdByUserId: 'createdByUserId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.QuickBooksConnectionScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  realmId: 'realmId',
+  accessToken: 'accessToken',
+  refreshToken: 'refreshToken',
+  tokenExpiresAt: 'tokenExpiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.QuickBooksCustomerMapScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  crmCustomerId: 'crmCustomerId',
+  qbCustomerId: 'qbCustomerId'
 };
 
 exports.Prisma.SortOrder = {
@@ -353,7 +373,9 @@ exports.Prisma.ModelName = {
   InvoiceLineItem: 'InvoiceLineItem',
   Payment: 'Payment',
   RecurringSchedule: 'RecurringSchedule',
-  Expense: 'Expense'
+  Expense: 'Expense',
+  QuickBooksConnection: 'QuickBooksConnection',
+  QuickBooksCustomerMap: 'QuickBooksCustomerMap'
 };
 
 /**
