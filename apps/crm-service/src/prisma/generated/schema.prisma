@@ -158,7 +158,7 @@ model Lead {
   lastName        String
   email           String?
   phone           String?
-  source          String? // google, referral, website, etc.
+  source          String? // google, referral, website, META_LEADGEN, etc.
   serviceInterest String? // what service they're interested in
   whatsappNo      String? // WhatsApp / mobile number
   type            String? // customer type / category
@@ -167,6 +167,9 @@ model Lead {
   notes           String?
   assignedToId    String? // Auth0 user ID of assigned staff
   convertedAt     DateTime? // when lead became customer
+  leadgenId       String? // Meta Lead Ads leadgen ID (unique per lead)
+  adName          String? // Meta ad name at capture time
+  formId          String? // Meta lead gen form ID
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
@@ -174,6 +177,7 @@ model Lead {
 
   @@index([companyId])
   @@index([companyId, status])
+  @@index([leadgenId])
   @@map("leads")
 }
 

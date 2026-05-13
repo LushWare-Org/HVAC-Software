@@ -13,6 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { TemplatesModule } from './templates/templates.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { AutomationModule } from './automation/automation.module';
+import { MarketingModule } from './marketing/marketing.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { AutomationModule } from './automation/automation.module';
     TemplatesModule,
     MessagingModule,
     AutomationModule,
+    MarketingModule,
   ],
 })
 export class AppModule {}

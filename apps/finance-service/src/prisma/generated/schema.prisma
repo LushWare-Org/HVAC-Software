@@ -11,8 +11,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL") // pgbouncer pooler — used at runtime
-  directUrl = env("DIRECT_DATABASE_URL") // direct connection — used by Prisma CLI for migrations
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
   schemas   = ["finance"]
 }
 
@@ -206,7 +206,8 @@ model Invoice {
   stripePaymentIntentId String?
   stripePaymentUrl      String? // hosted payment page URL
 
-  quickbooksId String? 
+  // QuickBooks
+  quickbooksId String?
 
   // Lifecycle timestamps
   sentAt   DateTime?
@@ -273,6 +274,7 @@ model Payment {
   stripePaymentIntentId String?
   stripeChargeId        String?
 
+  // QuickBooks
   quickbooksId String?
 
   paidAt DateTime?

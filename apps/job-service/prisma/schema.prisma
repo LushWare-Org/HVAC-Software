@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("JOBS_DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("JOBS_DATABASE_URL")
+  directUrl = env("JOBS_DIRECT_DATABASE_URL")
 }
 
 // ============================================================

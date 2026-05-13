@@ -17,6 +17,8 @@ export enum QueueName {
   REVIEW_REQUEST = 'review-request',
   JOB_STATUS_NOTIFICATION = 'job-status-notification',
   FOLLOWUP = 'followup-queue',
+  MARKETING_SEND = 'marketing-send',
+  EQUIPMENT_AUTOMATION = 'equipment-automation',
 }
 
 // ---- Redis connection factory (shared config) ----

@@ -71,6 +71,40 @@ export class EquipmentService {
     await this.prisma.equipment.delete({ where: { id } });
   }
 
+  /**
+   * Returns all equipment with their customer joined, for automation scanning.
+   * Filters: active customers only, equipment with installDate or warrantyEnd set.
+   * Called by comms-service marketing automation worker.
+   */
+  async findAutomationCandidates(companyId: string) {
+    return this.prisma.equipment.findMany({
+      where: {
+        companyId,
+        customer: { isActive: true },
+        OR: [
+          { installDate: { not: null } },
+          { warrantyEnd: { not: null } },
+        ],
+      },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            companyId: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            mobile: true,
+            zipCode: true,
+            state: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+  }
+
   /** Bulk replace all equipment for a customer */
   async replaceForCustomer(
     companyId: string,

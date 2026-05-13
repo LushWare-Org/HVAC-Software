@@ -16,6 +16,8 @@ async function bootstrap() {
   // Twilio inbound webhook requires raw body to pass through unchanged
   // (Twilio signature is computed over the raw request body)
   app.use('/webhooks/twilio', express.raw({ type: '*/*' }));
+  // Marketing webhooks also need raw body for signature verification
+  app.use('/m/webhooks/', express.raw({ type: '*/*' }));
   const port = process.env.COMMS_PORT ?? 3005;
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors({origin: [

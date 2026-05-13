@@ -13,8 +13,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("ANALYTICS_DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("ANALYTICS_DATABASE_URL")
+  directUrl = env("ANALYTICS_DIRECT_DATABASE_URL")
   // Point to the same PostgreSQL database used by all services.
   // The connection user must have SELECT access on crm, jobs, finance, scheduling schemas.
   // e.g. postgresql://analytics_ro:pass@localhost:5432/tscrm

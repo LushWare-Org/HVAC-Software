@@ -48,9 +48,15 @@ export type RecurringSchedule = $Result.DefaultSelection<Prisma.$RecurringSchedu
  * 
  */
 export type Expense = $Result.DefaultSelection<Prisma.$ExpensePayload>
-
+/**
+ * Model QuickBooksConnection
+ * 
+ */
 export type QuickBooksConnection = $Result.DefaultSelection<Prisma.$QuickBooksConnectionPayload>
-
+/**
+ * Model QuickBooksCustomerMap
+ * 
+ */
 export type QuickBooksCustomerMap = $Result.DefaultSelection<Prisma.$QuickBooksCustomerMapPayload>
 
 /**
@@ -370,8 +376,24 @@ export class PrismaClient<
     */
   get expense(): Prisma.ExpenseDelegate<ExtArgs>;
 
+  /**
+   * `prisma.quickBooksConnection`: Exposes CRUD operations for the **QuickBooksConnection** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more QuickBooksConnections
+    * const quickBooksConnections = await prisma.quickBooksConnection.findMany()
+    * ```
+    */
   get quickBooksConnection(): Prisma.QuickBooksConnectionDelegate<ExtArgs>;
 
+  /**
+   * `prisma.quickBooksCustomerMap`: Exposes CRUD operations for the **QuickBooksCustomerMap** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more QuickBooksCustomerMaps
+    * const quickBooksCustomerMaps = await prisma.quickBooksCustomerMap.findMany()
+    * ```
+    */
   get quickBooksCustomerMap(): Prisma.QuickBooksCustomerMapDelegate<ExtArgs>;
 }
 

@@ -6800,6 +6800,9 @@ export namespace Prisma {
     notes: string | null
     assignedToId: string | null
     convertedAt: Date | null
+    leadgenId: string | null
+    adName: string | null
+    formId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -6821,6 +6824,9 @@ export namespace Prisma {
     notes: string | null
     assignedToId: string | null
     convertedAt: Date | null
+    leadgenId: string | null
+    adName: string | null
+    formId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -6842,6 +6848,9 @@ export namespace Prisma {
     notes: number
     assignedToId: number
     convertedAt: number
+    leadgenId: number
+    adName: number
+    formId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -6873,6 +6882,9 @@ export namespace Prisma {
     notes?: true
     assignedToId?: true
     convertedAt?: true
+    leadgenId?: true
+    adName?: true
+    formId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -6894,6 +6906,9 @@ export namespace Prisma {
     notes?: true
     assignedToId?: true
     convertedAt?: true
+    leadgenId?: true
+    adName?: true
+    formId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -6915,6 +6930,9 @@ export namespace Prisma {
     notes?: true
     assignedToId?: true
     convertedAt?: true
+    leadgenId?: true
+    adName?: true
+    formId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -7023,6 +7041,9 @@ export namespace Prisma {
     notes: string | null
     assignedToId: string | null
     convertedAt: Date | null
+    leadgenId: string | null
+    adName: string | null
+    formId: string | null
     createdAt: Date
     updatedAt: Date
     _count: LeadCountAggregateOutputType | null
@@ -7063,6 +7084,9 @@ export namespace Prisma {
     notes?: boolean
     assignedToId?: boolean
     convertedAt?: boolean
+    leadgenId?: boolean
+    adName?: boolean
+    formId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
@@ -7088,6 +7112,9 @@ export namespace Prisma {
     notes?: boolean
     assignedToId?: boolean
     convertedAt?: boolean
+    leadgenId?: boolean
+    adName?: boolean
+    formId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
@@ -7111,6 +7138,9 @@ export namespace Prisma {
     notes?: boolean
     assignedToId?: boolean
     convertedAt?: boolean
+    leadgenId?: boolean
+    adName?: boolean
+    formId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
@@ -7150,6 +7180,9 @@ export namespace Prisma {
       notes: string | null
       assignedToId: string | null
       convertedAt: Date | null
+      leadgenId: string | null
+      adName: string | null
+      formId: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["lead"]>
@@ -7564,6 +7597,9 @@ export namespace Prisma {
     readonly notes: FieldRef<"Lead", 'String'>
     readonly assignedToId: FieldRef<"Lead", 'String'>
     readonly convertedAt: FieldRef<"Lead", 'DateTime'>
+    readonly leadgenId: FieldRef<"Lead", 'String'>
+    readonly adName: FieldRef<"Lead", 'String'>
+    readonly formId: FieldRef<"Lead", 'String'>
     readonly createdAt: FieldRef<"Lead", 'DateTime'>
     readonly updatedAt: FieldRef<"Lead", 'DateTime'>
   }
@@ -15567,6 +15603,9 @@ export namespace Prisma {
     notes: 'notes',
     assignedToId: 'assignedToId',
     convertedAt: 'convertedAt',
+    leadgenId: 'leadgenId',
+    adName: 'adName',
+    formId: 'formId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -16467,6 +16506,9 @@ export namespace Prisma {
     notes?: StringNullableFilter<"Lead"> | string | null
     assignedToId?: StringNullableFilter<"Lead"> | string | null
     convertedAt?: DateTimeNullableFilter<"Lead"> | Date | string | null
+    leadgenId?: StringNullableFilter<"Lead"> | string | null
+    adName?: StringNullableFilter<"Lead"> | string | null
+    formId?: StringNullableFilter<"Lead"> | string | null
     createdAt?: DateTimeFilter<"Lead"> | Date | string
     updatedAt?: DateTimeFilter<"Lead"> | Date | string
     company?: XOR<CompanyRelationFilter, CompanyWhereInput>
@@ -16491,6 +16533,9 @@ export namespace Prisma {
     notes?: SortOrderInput | SortOrder
     assignedToId?: SortOrderInput | SortOrder
     convertedAt?: SortOrderInput | SortOrder
+    leadgenId?: SortOrderInput | SortOrder
+    adName?: SortOrderInput | SortOrder
+    formId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     company?: CompanyOrderByWithRelationInput
@@ -16518,6 +16563,9 @@ export namespace Prisma {
     notes?: StringNullableFilter<"Lead"> | string | null
     assignedToId?: StringNullableFilter<"Lead"> | string | null
     convertedAt?: DateTimeNullableFilter<"Lead"> | Date | string | null
+    leadgenId?: StringNullableFilter<"Lead"> | string | null
+    adName?: StringNullableFilter<"Lead"> | string | null
+    formId?: StringNullableFilter<"Lead"> | string | null
     createdAt?: DateTimeFilter<"Lead"> | Date | string
     updatedAt?: DateTimeFilter<"Lead"> | Date | string
     company?: XOR<CompanyRelationFilter, CompanyWhereInput>
@@ -16542,6 +16590,9 @@ export namespace Prisma {
     notes?: SortOrderInput | SortOrder
     assignedToId?: SortOrderInput | SortOrder
     convertedAt?: SortOrderInput | SortOrder
+    leadgenId?: SortOrderInput | SortOrder
+    adName?: SortOrderInput | SortOrder
+    formId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: LeadCountOrderByAggregateInput
@@ -16571,6 +16622,9 @@ export namespace Prisma {
     notes?: StringNullableWithAggregatesFilter<"Lead"> | string | null
     assignedToId?: StringNullableWithAggregatesFilter<"Lead"> | string | null
     convertedAt?: DateTimeNullableWithAggregatesFilter<"Lead"> | Date | string | null
+    leadgenId?: StringNullableWithAggregatesFilter<"Lead"> | string | null
+    adName?: StringNullableWithAggregatesFilter<"Lead"> | string | null
+    formId?: StringNullableWithAggregatesFilter<"Lead"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Lead"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Lead"> | Date | string
   }
@@ -17953,6 +18007,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutLeadsInput
@@ -17977,6 +18034,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     addresses?: AddressUncheckedCreateNestedManyWithoutLeadInput
@@ -17997,6 +18057,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutLeadsNestedInput
@@ -18021,6 +18084,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     addresses?: AddressUncheckedUpdateManyWithoutLeadNestedInput
@@ -18043,6 +18109,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -18062,6 +18131,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18083,6 +18155,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -19560,6 +19635,9 @@ export namespace Prisma {
     notes?: SortOrder
     assignedToId?: SortOrder
     convertedAt?: SortOrder
+    leadgenId?: SortOrder
+    adName?: SortOrder
+    formId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -19585,6 +19663,9 @@ export namespace Prisma {
     notes?: SortOrder
     assignedToId?: SortOrder
     convertedAt?: SortOrder
+    leadgenId?: SortOrder
+    adName?: SortOrder
+    formId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -19606,6 +19687,9 @@ export namespace Prisma {
     notes?: SortOrder
     assignedToId?: SortOrder
     convertedAt?: SortOrder
+    leadgenId?: SortOrder
+    adName?: SortOrder
+    formId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -21635,6 +21719,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     customer?: CustomerCreateNestedOneWithoutLeadsInput
@@ -21657,6 +21744,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     addresses?: AddressUncheckedCreateNestedManyWithoutLeadInput
@@ -21930,6 +22020,9 @@ export namespace Prisma {
     notes?: StringNullableFilter<"Lead"> | string | null
     assignedToId?: StringNullableFilter<"Lead"> | string | null
     convertedAt?: DateTimeNullableFilter<"Lead"> | Date | string | null
+    leadgenId?: StringNullableFilter<"Lead"> | string | null
+    adName?: StringNullableFilter<"Lead"> | string | null
+    formId?: StringNullableFilter<"Lead"> | string | null
     createdAt?: DateTimeFilter<"Lead"> | Date | string
     updatedAt?: DateTimeFilter<"Lead"> | Date | string
   }
@@ -22268,6 +22361,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutLeadsInput
@@ -22290,6 +22386,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     addresses?: AddressUncheckedCreateNestedManyWithoutLeadInput
@@ -24113,6 +24212,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutLeadsInput
@@ -24136,6 +24238,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -24244,6 +24349,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutLeadsNestedInput
@@ -24267,6 +24375,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -24603,6 +24714,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -24804,6 +24918,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customer?: CustomerUpdateOneWithoutLeadsNestedInput
@@ -24826,6 +24943,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     addresses?: AddressUncheckedUpdateManyWithoutLeadNestedInput
@@ -24847,6 +24967,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -25054,6 +25177,9 @@ export namespace Prisma {
     notes?: string | null
     assignedToId?: string | null
     convertedAt?: Date | string | null
+    leadgenId?: string | null
+    adName?: string | null
+    formId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -25210,6 +25336,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutLeadsNestedInput
@@ -25232,6 +25361,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     addresses?: AddressUncheckedUpdateManyWithoutLeadNestedInput
@@ -25253,6 +25385,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leadgenId?: NullableStringFieldUpdateOperationsInput | string | null
+    adName?: NullableStringFieldUpdateOperationsInput | string | null
+    formId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

@@ -1,0 +1,213 @@
+// ============================================================
+// Comms Service — Marketing Prisma Schema
+// Database: PostgreSQL (Supabase) — separate schema: marketing
+// Client output: ../src/marketing/prisma/generated
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/marketing/prisma/generated"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("MARKETING_DATABASE_URL")
+  directUrl = env("MARKETING_DIRECT_DATABASE_URL")
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────
+
+enum MarketingChannel {
+  EMAIL
+  SMS
+}
+
+enum AudienceType {
+  STATIC
+  DYNAMIC
+}
+
+enum SendJobStatus {
+  PENDING
+  SCHEDULED
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum SendEventType {
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  UNSUBSCRIBED
+  COMPLAINED
+}
+
+enum SuppressionReason {
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+  MANUAL
+}
+
+enum ReviewRequestStatus {
+  PENDING
+  CLICKED
+  REVIEWED
+  EXPIRED
+}
+
+// ── Campaign ──────────────────────────────────────────────────────────────
+
+model Campaign {
+  id         String           @id @default(uuid())
+  companyId  String
+  name       String
+  channel    MarketingChannel
+  status     String           @default("DRAFT") // DRAFT|SCHEDULED|SENDING|SENT|PAUSED
+  audienceId String?
+  templateId String?
+  scheduleAt DateTime?
+  createdBy  String
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  sendJobs   SendJob[]
+
+  @@index([companyId, status])
+  @@index([companyId, scheduleAt])
+  @@map("campaigns")
+}
+
+// ── Template ──────────────────────────────────────────────────────────────
+
+model Template {
+  id            String           @id @default(uuid())
+  companyId     String
+  channel       MarketingChannel
+  name          String
+  subject       String?
+  htmlBody      String?
+  smsBody       String?
+  mergeTagsJson String           @default("[]")
+  isDefault     Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([companyId, channel])
+  @@map("templates")
+}
+
+// ── Audience ──────────────────────────────────────────────────────────────
+
+model Audience {
+  id          String       @id @default(uuid())
+  companyId   String
+  name        String
+  type        AudienceType @default(STATIC)
+  filtersJson String       @default("{}")
+  lastCount   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([companyId])
+  @@map("audiences")
+}
+
+// ── SendJob ───────────────────────────────────────────────────────────────
+
+model SendJob {
+  id                 String           @id @default(uuid())
+  campaignId         String?
+  campaign           Campaign?        @relation(fields: [campaignId], references: [id])
+  companyId          String
+  customerId         String
+  channel            MarketingChannel
+  address            String
+  status             SendJobStatus    @default(PENDING)
+  scheduledAt        DateTime?
+  sentAt             DateTime?
+  externalId         String?
+  automationTemplate String?
+  error              String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  events             SendEvent[]
+
+  @@index([companyId, status])
+  @@index([companyId, customerId])
+  @@index([campaignId])
+  @@index([scheduledAt])
+  @@map("send_jobs")
+}
+
+// ── SendEvent ─────────────────────────────────────────────────────────────
+
+model SendEvent {
+  id         String        @id @default(uuid())
+  sendJobId  String
+  sendJob    SendJob       @relation(fields: [sendJobId], references: [id])
+  eventType  SendEventType
+  eventAt    DateTime      @default(now())
+  urlClicked String?
+  metadata   String        @default("{}")
+
+  @@index([sendJobId])
+  @@index([sendJobId, eventType])
+  @@map("send_events")
+}
+
+// ── Suppression ───────────────────────────────────────────────────────────
+
+model Suppression {
+  id        String            @id @default(uuid())
+  companyId String
+  channel   MarketingChannel
+  address   String
+  reason    SuppressionReason
+  createdAt DateTime          @default(now())
+
+  @@unique([companyId, channel, address])
+  @@index([companyId, channel])
+  @@map("suppressions")
+}
+
+// ── ReviewRequest ─────────────────────────────────────────────────────────
+
+model ReviewRequest {
+  id         String              @id @default(uuid())
+  companyId  String
+  customerId String
+  jobId      String
+  status     ReviewRequestStatus @default(PENDING)
+  gateScore  Float?
+  smsAt      DateTime?
+  emailAt    DateTime?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@unique([companyId, jobId])
+  @@index([companyId, customerId])
+  @@index([companyId, status])
+  @@map("review_requests")
+}
+
+// ── MarketingAttribution ──────────────────────────────────────────────────
+
+model MarketingAttribution {
+  id                String   @id @default(uuid())
+  companyId         String
+  customerId        String
+  jobId             String?
+  invoiceId         String?
+  source            String
+  adName            String?
+  formId            String?
+  clickedAt         DateTime?
+  revenueAttributed Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt         DateTime @default(now())
+
+  @@index([companyId, customerId])
+  @@index([companyId, source])
+  @@map("marketing_attributions")
+}

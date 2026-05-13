@@ -94,6 +94,45 @@ export class CustomersController {
     return this.customersService.getStats(user.companyId);
   }
 
+  // ---- Win-back candidates (internal — called by comms-service automation) ----
+  @Get('winback-candidates')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Return INACTIVE customers eligible for win-back automation' })
+  getWinbackCandidates(
+    @CurrentUser() user: AuthUser,
+    @Query('companyId') queryCompanyId?: string,
+    @Query('inactiveDays', new DefaultValuePipe(180), ParseIntPipe) inactiveDays?: number,
+  ) {
+    const companyId = user.role === Role.SUPER_ADMIN && queryCompanyId ? queryCompanyId : user.companyId;
+    return this.customersService.findWinbackCandidates(companyId, inactiveDays);
+  }
+
+  // ---- Audience builder (internal — called by comms-service campaign engine) ----
+  @Get('audience/count')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Count customers matching audience filters (preview)' })
+  countAudience(
+    @CurrentUser() user: AuthUser,
+    @Query('companyId') queryCompanyId?: string,
+    @Query('filters') filters?: string,
+  ) {
+    const companyId = user.role === Role.SUPER_ADMIN && queryCompanyId ? queryCompanyId : user.companyId;
+    return this.customersService.countAudienceMembers(companyId, filters ?? '[]');
+  }
+
+  @Get('audience/members')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Resolve customer list for a saved audience' })
+  resolveAudience(
+    @CurrentUser() user: AuthUser,
+    @Query('companyId') queryCompanyId?: string,
+    @Query('filters') filters?: string,
+    @Query('limit', new DefaultValuePipe(5000), ParseIntPipe) limit?: number,
+  ) {
+    const companyId = user.role === Role.SUPER_ADMIN && queryCompanyId ? queryCompanyId : user.companyId;
+    return this.customersService.resolveAudienceMembers(companyId, filters ?? '[]', limit);
+  }
+
   // ---- Hover summary ----
   @Get(':id/status-summary')
   @ApiOperation({ summary: 'Get customer status, churn risk, failure risk, and next step summary' })

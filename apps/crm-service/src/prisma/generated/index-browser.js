@@ -220,6 +220,9 @@ exports.Prisma.LeadScalarFieldEnum = {
   notes: 'notes',
   assignedToId: 'assignedToId',
   convertedAt: 'convertedAt',
+  leadgenId: 'leadgenId',
+  adName: 'adName',
+  formId: 'formId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

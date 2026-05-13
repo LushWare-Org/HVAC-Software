@@ -349,6 +349,92 @@ export class CustomersService {
   }
 
   // Called by customer portal: find Customer linked to the portal user's account
+  /**
+   * Returns INACTIVE customers who have been quiet for at least `inactiveDays`.
+   * Used by comms-service win-back automation scanner.
+   * Returns minimal fields only (name, contact, churn inputs).
+   */
+  async findWinbackCandidates(companyId: string, inactiveDays = 180) {
+    const cutoff = new Date(Date.now() - inactiveDays * 86_400_000);
+    return this.prisma.customer.findMany({
+      where: {
+        companyId,
+        isActive: true,
+        engagementStatus: 'INACTIVE',
+        updatedAt: { lte: cutoff },
+        OR: [{ email: { not: null } }, { phone: { not: null } }, { mobile: { not: null } }],
+      },
+      select: {
+        id: true,
+        companyId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        mobile: true,
+        zipCode: true,
+        state: true,
+        updatedAt: true,
+        bookings: {
+          orderBy: { preferredDate: 'desc' },
+          take: 1,
+          select: { preferredDate: true },
+        },
+        agreements: {
+          select: { value: true, endDate: true },
+        },
+      },
+      take: 500, // cap per run — prevents runaway scans
+    });
+  }
+
+  // ── Audience builder ───────────────────────────────────────────────────────
+
+  private buildAudienceWhere(companyId: string, filtersJson: string) {
+    const filters: Array<{ field: string; op: string; value: unknown }> = JSON.parse(filtersJson || '[]');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const andClauses: any[] = [{ companyId, isActive: true }];
+
+    for (const f of filters) {
+      switch (f.field) {
+        case 'state':
+          if (f.op === 'eq') andClauses.push({ state: { equals: f.value as string } });
+          else if (f.op === 'neq') andClauses.push({ state: { not: f.value as string } });
+          else if (f.op === 'in') andClauses.push({ state: { in: f.value as string[] } });
+          break;
+        case 'zipCode':
+          if (f.op === 'eq') andClauses.push({ zipCode: { equals: f.value as string } });
+          else if (f.op === 'in') andClauses.push({ zipCode: { in: f.value as string[] } });
+          break;
+        case 'city':
+          if (f.op === 'eq') andClauses.push({ city: { equals: f.value as string, mode: 'insensitive' } });
+          else if (f.op === 'contains') andClauses.push({ city: { contains: f.value as string, mode: 'insensitive' } });
+          break;
+        case 'lifecycleStage':
+          if (f.op === 'eq') andClauses.push({ engagementStatus: f.value as string });
+          else if (f.op === 'in') andClauses.push({ engagementStatus: { in: f.value as string[] } });
+          break;
+      }
+    }
+
+    return andClauses.length === 1 ? andClauses[0] : { AND: andClauses };
+  }
+
+  async countAudienceMembers(companyId: string, filtersJson: string): Promise<number> {
+    return this.prisma.customer.count({ where: this.buildAudienceWhere(companyId, filtersJson) });
+  }
+
+  async resolveAudienceMembers(companyId: string, filtersJson: string, limit = 5000) {
+    return this.prisma.customer.findMany({
+      where: this.buildAudienceWhere(companyId, filtersJson),
+      select: {
+        id: true, companyId: true, firstName: true, lastName: true,
+        email: true, phone: true, mobile: true, zipCode: true, state: true,
+      },
+      take: limit,
+    });
+  }
+
   async findMe(companyId: string, userId: string) {
     const customer = await this.prisma.customer.findFirst({
       where: { companyId, auth0UserId: userId },

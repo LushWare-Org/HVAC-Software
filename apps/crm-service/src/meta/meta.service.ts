@@ -59,7 +59,7 @@ export class MetaService {
 
   private async processLead(leadgenId: string): Promise<void> {
     const exists = await this.prisma.lead.findFirst({
-      where: { companyId: this.companyId, notes: { contains: leadgenId } },
+      where: { companyId: this.companyId, leadgenId },
       select: { id: true },
     });
     if (exists) {
@@ -92,13 +92,9 @@ export class MetaService {
     const lastName  = parts.slice(1).join(' ') || '-';
 
     const notes = [
-      `Source: Meta Lead Ad`,
-      `Leadgen ID: ${leadgenId}`,
-      payload.ad_name   ? `Ad: ${payload.ad_name}`     : null,
-      payload.form_id   ? `Form ID: ${payload.form_id}` : null,
-      fields.services   ? `Services: ${fields.services}` : null,
-      fields.message    ? `Message: ${fields.message}`   : null,
-    ].filter(Boolean).join('\n');
+      fields.services ? `Services: ${fields.services}` : null,
+      fields.message  ? `Message: ${fields.message}`   : null,
+    ].filter(Boolean).join('\n') || null;
 
     const lead = await this.prisma.lead.create({
       data: {
@@ -108,10 +104,13 @@ export class MetaService {
         email:           fields.email                 ?? null,
         phone:           fields.phone_number ?? fields.phone ?? null,
         whatsappNo:      fields.whatsapp_number       ?? null,
-        source:          'facebook',
+        source:          'META_LEADGEN',
         serviceInterest: fields.service_interest ?? fields.services ?? null,
         status:          'NEW',
         notes,
+        leadgenId,
+        adName:          payload.ad_name  ?? null,
+        formId:          payload.form_id  ?? null,
       },
     });
 
