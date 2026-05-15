@@ -9,16 +9,22 @@
 import axios from 'axios'
 import Constants from 'expo-constants'
 
+const DEFAULT_API_BASE_URL = 'https://nginx-gateway-2ohuhmktua-uc.a.run.app/api'
+
+function getDefaultApiBaseUrl(): string {
+  return __DEV__ ? 'http://localhost:80/api' : DEFAULT_API_BASE_URL
+}
+
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')
-  if (!trimmed) return 'http://localhost:80/api'
+  if (!trimmed) return getDefaultApiBaseUrl()
   return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`
 }
 
 const BASE_URL =
   Constants.expoConfig?.extra?.apiBaseUrl ??
   process.env.EXPO_PUBLIC_API_BASE_URL ??
-  'http://localhost:80/api'
+  getDefaultApiBaseUrl()
 
 const api = axios.create({
   baseURL: normalizeApiBaseUrl(BASE_URL),

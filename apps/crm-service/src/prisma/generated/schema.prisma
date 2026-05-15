@@ -103,6 +103,7 @@ model Customer {
   automaticFollowupEnabled Boolean                  @default(true)
   engagementStatus         CustomerEngagementStatus @default(ACTIVE)
   auth0UserId              String? // when customer has portal access
+  importBatchId            String?
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
 
@@ -332,19 +333,20 @@ model Address {
 
 // ---- Equipment (installed at customer sites) ----
 model Equipment {
-  id          String    @id @default(uuid())
-  companyId   String
-  customerId  String
-  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  type        String    @default("Boiler") // Boiler, AC Unit, Heat Pump, etc.
-  brand       String?
-  model       String?
-  serialNo    String?
-  installDate DateTime?
-  warrantyEnd DateTime?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  companyId     String
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type          String    @default("Boiler") // Boiler, AC Unit, Heat Pump, etc.
+  brand         String?
+  model         String?
+  serialNo      String?
+  installDate   DateTime?
+  warrantyEnd   DateTime?
+  notes         String?
+  importBatchId String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([customerId])
   @@map("equipment")
@@ -395,4 +397,48 @@ model UpsellRecommendation {
   @@index([companyId, customerId, createdAt])
   @@index([companyId, status, priorityScore])
   @@map("upsell_recommendations")
+}
+
+// ---- Data Import ----
+enum ImportStatus {
+  VALIDATING
+  READY
+  IMPORTING
+  DONE
+  FAILED
+  ROLLED_BACK
+}
+
+model ImportBatch {
+  id          String        @id @default(uuid())
+  companyId   String
+  source      String // 'jobber' | 'hcp' | 'generic' | 'equipment'
+  status      ImportStatus  @default(VALIDATING)
+  totalRows   Int           @default(0)
+  imported    Int           @default(0)
+  skipped     Int           @default(0)
+  failed      Int           @default(0)
+  createdBy   String
+  rawData     Json?
+  columnMap   Json?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  errors      ImportError[]
+
+  @@index([companyId])
+  @@map("import_batches")
+}
+
+model ImportError {
+  id         Int         @id @default(autoincrement())
+  batchId    String
+  batch      ImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  rowNumber  Int
+  entityType String
+  rawData    Json
+  error      String
+  createdAt  DateTime    @default(now())
+
+  @@index([batchId])
+  @@map("import_errors")
 }

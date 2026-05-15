@@ -9,7 +9,8 @@ import { MarketingPrismaService } from '../prisma/marketing-prisma.service';
 import { MarketingChannel, SendJobStatus, SendEventType } from '../prisma/generated';
 import { canSendNow, nextSendableTime } from './quiet-hours.util';
 import { signMarketingToken } from '../common/marketing-token.util';
-import { WinbackProcessor, WinbackEmailPayload, WinbackSmsPayload } from '../winback/winback.processor';
+import { WinbackProcessor, WinbackEmailPayload, WinbackSmsPayload } from '../winback/winback.processor'
+import { AutomationEmailPayload } from '../automation/equipment-automation.processor';
 
 export interface MarketingSendPayload {
   sendJobId: string;
@@ -53,13 +54,49 @@ export class MarketingSendWorker extends WorkerHost {
     if (job.name === 'review-email') return this.processReviewEmail(job.data as ReviewEmailPayload);
     if (job.name === 'winback-email') return this.winback.processEmail(job.data as WinbackEmailPayload);
     if (job.name === 'winback-sms') return this.winback.processSms(job.data as WinbackSmsPayload);
+    if (job.name === 'automation-email') return this.processAutomationEmail(job.data as AutomationEmailPayload);
     return this.processMarketingSend(job.data as MarketingSendPayload);
   }
 
   // ── Campaign / automation send ──────────────────────────────────────────────
 
+  private async isGloballyEnabled(companyId: string): Promise<boolean> {
+    const settings = await this.prisma.marketingSettings.findUnique({ where: { companyId } });
+    return settings?.globalEnabled ?? true; // fail-open if no settings row yet
+  }
+
+  private async isWithinFrequencyCap(companyId: string, sendJobId: string): Promise<boolean> {
+    const [settings, job] = await Promise.all([
+      this.prisma.marketingSettings.findUnique({ where: { companyId } }),
+      this.prisma.sendJob.findUnique({ where: { id: sendJobId }, select: { customerId: true } }),
+    ]);
+    if (!settings || !job?.customerId) return true; // fail-open
+    const now = new Date();
+    const dayAgo = new Date(now.getTime() - 86_400_000);
+    const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
+    const [dayCount, weekCount] = await Promise.all([
+      this.prisma.sendJob.count({ where: { companyId, customerId: job.customerId, status: 'SENT', sentAt: { gte: dayAgo } } }),
+      this.prisma.sendJob.count({ where: { companyId, customerId: job.customerId, status: 'SENT', sentAt: { gte: weekAgo } } }),
+    ]);
+    if (dayCount >= settings.frequencyCapPerDay) return false;
+    if (weekCount >= settings.frequencyCapPerWeek) return false;
+    return true;
+  }
+
   private async processMarketingSend(data: MarketingSendPayload): Promise<void> {
     const { sendJobId, companyId, channel, address, renderedBody, subject, zipCode, stateCode } = data;
+
+    // Sprint 6: global toggle + frequency cap
+    if (!await this.isGloballyEnabled(companyId)) {
+      this.logger.log(`Send job ${sendJobId} skipped — marketing is globally disabled for company ${companyId}`);
+      await this.prisma.sendJob.update({ where: { id: sendJobId }, data: { status: SendJobStatus.SKIPPED } });
+      return;
+    }
+    if (!await this.isWithinFrequencyCap(companyId, sendJobId)) {
+      this.logger.log(`Send job ${sendJobId} skipped — frequency cap exceeded for company ${companyId}`);
+      await this.prisma.sendJob.update({ where: { id: sendJobId }, data: { status: SendJobStatus.SKIPPED } });
+      return;
+    }
 
     const suppressed = await this.suppressionService.isSuppressed(companyId, channel, address);
     if (suppressed) {
@@ -102,6 +139,34 @@ export class MarketingSendWorker extends WorkerHost {
     await this.prisma.sendJob.update({ where: { id: sendJobId }, data: { status: SendJobStatus.SENT, sentAt: new Date(), externalId } });
     await this.prisma.sendEvent.create({ data: { sendJobId, eventType: SendEventType.DELIVERED } });
     this.logger.log(`Send job ${sendJobId} delivered via ${channel} to ${address}`);
+  }
+
+  // ── Equipment automation email ─────────────────────────────────────────────
+  // These arrive on MARKETING_SEND queue with payload shape { to, subject, htmlBody }
+  // (not { address, renderedBody }) — handle separately to avoid undefined crashes.
+
+  private async processAutomationEmail(data: AutomationEmailPayload): Promise<void> {
+    const { sendJobId, companyId, to, subject, htmlBody } = data;
+
+    const suppressed = await this.suppressionService.isSuppressed(companyId, 'EMAIL', to);
+    if (suppressed) {
+      this.logger.log(`Automation email ${sendJobId} skipped — ${to} is suppressed`);
+      await this.prisma.sendJob.update({ where: { id: sendJobId }, data: { status: SendJobStatus.SKIPPED } });
+      return;
+    }
+
+    const result = await this.emailService.send({ to, subject, htmlBody });
+
+    if (!result.success) {
+      await this.prisma.sendJob.update({ where: { id: sendJobId }, data: { status: SendJobStatus.FAILED, error: result.error } });
+      throw new Error(`Automation email failed: ${result.error}`);
+    }
+
+    await this.prisma.sendJob.update({
+      where: { id: sendJobId },
+      data: { status: SendJobStatus.SENT, sentAt: new Date(), externalId: result.externalId },
+    });
+    this.logger.log(`Automation email delivered: ${sendJobId}`);
   }
 
   // ── Review request email (day-3 delayed) ───────────────────────────────────

@@ -11,6 +11,8 @@ import { TemplatesModule } from './templates/templates.module';
 import { AudienceModule } from './audience/audience.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { MarketingStatsModule } from './stats/marketing-stats.module';
+import { MarketingSettingsModule } from './settings/marketing-settings.module';
+import { ComplianceModule } from './compliance/compliance.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { MarketingStatsModule } from './stats/marketing-stats.module';
     AudienceModule,
     CampaignModule,
     MarketingStatsModule,
+    MarketingSettingsModule,
+    ComplianceModule,
   ],
 })
 export class MarketingModule {}

@@ -50,14 +50,14 @@ async function main() {
   // Admin 1 — Primary Super Admin
   await prisma.companyUser.upsert({
     where: { companyId_email: { companyId: demoCompany.id, email: 'admin@tsbrothers.com' } },
-    update: { passwordHash: adminPw, name: 'Tom Sanders', role: 'company_admin' },
+    update: { passwordHash: adminPw, name: 'Tom Sanders', role: 'super_admin' },
     create: {
       id: 'user-admin-001',
       companyId: demoCompany.id,
       name: 'Tom Sanders',
       email: 'admin@tsbrothers.com',
       phone: '(555) 100-0010',
-      role: 'company_admin',
+      role: 'super_admin',
       passwordHash: adminPw,
     },
   });

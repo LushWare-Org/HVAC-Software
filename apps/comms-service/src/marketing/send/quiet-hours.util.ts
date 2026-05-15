@@ -1,3 +1,4 @@
+/// <reference path="./zipcode-to-timezone.d.ts" />
 import { DateTime } from 'luxon';
 import zipcodeToTimezone from 'zipcode-to-timezone';
 

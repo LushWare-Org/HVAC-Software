@@ -73,6 +73,16 @@ export type FollowupAttempt = $Result.DefaultSelection<Prisma.$FollowupAttemptPa
  * 
  */
 export type UpsellRecommendation = $Result.DefaultSelection<Prisma.$UpsellRecommendationPayload>
+/**
+ * Model ImportBatch
+ * 
+ */
+export type ImportBatch = $Result.DefaultSelection<Prisma.$ImportBatchPayload>
+/**
+ * Model ImportError
+ * 
+ */
+export type ImportError = $Result.DefaultSelection<Prisma.$ImportErrorPayload>
 
 /**
  * Enums
@@ -137,6 +147,18 @@ export const ReviewType: {
 
 export type ReviewType = (typeof ReviewType)[keyof typeof ReviewType]
 
+
+export const ImportStatus: {
+  VALIDATING: 'VALIDATING',
+  READY: 'READY',
+  IMPORTING: 'IMPORTING',
+  DONE: 'DONE',
+  FAILED: 'FAILED',
+  ROLLED_BACK: 'ROLLED_BACK'
+};
+
+export type ImportStatus = (typeof ImportStatus)[keyof typeof ImportStatus]
+
 }
 
 export type CustomerType = $Enums.CustomerType
@@ -162,6 +184,10 @@ export const BookingStatus: typeof $Enums.BookingStatus
 export type ReviewType = $Enums.ReviewType
 
 export const ReviewType: typeof $Enums.ReviewType
+
+export type ImportStatus = $Enums.ImportStatus
+
+export const ImportStatus: typeof $Enums.ImportStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -405,6 +431,26 @@ export class PrismaClient<
     * ```
     */
   get upsellRecommendation(): Prisma.UpsellRecommendationDelegate<ExtArgs>;
+
+  /**
+   * `prisma.importBatch`: Exposes CRUD operations for the **ImportBatch** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ImportBatches
+    * const importBatches = await prisma.importBatch.findMany()
+    * ```
+    */
+  get importBatch(): Prisma.ImportBatchDelegate<ExtArgs>;
+
+  /**
+   * `prisma.importError`: Exposes CRUD operations for the **ImportError** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ImportErrors
+    * const importErrors = await prisma.importError.findMany()
+    * ```
+    */
+  get importError(): Prisma.ImportErrorDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -857,7 +903,9 @@ export namespace Prisma {
     Address: 'Address',
     Equipment: 'Equipment',
     FollowupAttempt: 'FollowupAttempt',
-    UpsellRecommendation: 'UpsellRecommendation'
+    UpsellRecommendation: 'UpsellRecommendation',
+    ImportBatch: 'ImportBatch',
+    ImportError: 'ImportError'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -873,7 +921,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "company" | "companyUser" | "customer" | "contact" | "lead" | "serviceAgreement" | "booking" | "review" | "address" | "equipment" | "followupAttempt" | "upsellRecommendation"
+      modelProps: "company" | "companyUser" | "customer" | "contact" | "lead" | "serviceAgreement" | "booking" | "review" | "address" | "equipment" | "followupAttempt" | "upsellRecommendation" | "importBatch" | "importError"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1717,6 +1765,146 @@ export namespace Prisma {
           }
         }
       }
+      ImportBatch: {
+        payload: Prisma.$ImportBatchPayload<ExtArgs>
+        fields: Prisma.ImportBatchFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ImportBatchFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ImportBatchFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload>
+          }
+          findFirst: {
+            args: Prisma.ImportBatchFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ImportBatchFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload>
+          }
+          findMany: {
+            args: Prisma.ImportBatchFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload>[]
+          }
+          create: {
+            args: Prisma.ImportBatchCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload>
+          }
+          createMany: {
+            args: Prisma.ImportBatchCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ImportBatchCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload>[]
+          }
+          delete: {
+            args: Prisma.ImportBatchDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload>
+          }
+          update: {
+            args: Prisma.ImportBatchUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload>
+          }
+          deleteMany: {
+            args: Prisma.ImportBatchDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ImportBatchUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ImportBatchUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportBatchPayload>
+          }
+          aggregate: {
+            args: Prisma.ImportBatchAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateImportBatch>
+          }
+          groupBy: {
+            args: Prisma.ImportBatchGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ImportBatchGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ImportBatchCountArgs<ExtArgs>
+            result: $Utils.Optional<ImportBatchCountAggregateOutputType> | number
+          }
+        }
+      }
+      ImportError: {
+        payload: Prisma.$ImportErrorPayload<ExtArgs>
+        fields: Prisma.ImportErrorFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ImportErrorFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ImportErrorFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload>
+          }
+          findFirst: {
+            args: Prisma.ImportErrorFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ImportErrorFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload>
+          }
+          findMany: {
+            args: Prisma.ImportErrorFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload>[]
+          }
+          create: {
+            args: Prisma.ImportErrorCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload>
+          }
+          createMany: {
+            args: Prisma.ImportErrorCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ImportErrorCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload>[]
+          }
+          delete: {
+            args: Prisma.ImportErrorDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload>
+          }
+          update: {
+            args: Prisma.ImportErrorUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload>
+          }
+          deleteMany: {
+            args: Prisma.ImportErrorDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ImportErrorUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ImportErrorUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ImportErrorPayload>
+          }
+          aggregate: {
+            args: Prisma.ImportErrorAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateImportError>
+          }
+          groupBy: {
+            args: Prisma.ImportErrorGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ImportErrorGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ImportErrorCountArgs<ExtArgs>
+            result: $Utils.Optional<ImportErrorCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2071,6 +2259,37 @@ export namespace Prisma {
    */
   export type LeadCountOutputTypeCountAddressesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AddressWhereInput
+  }
+
+
+  /**
+   * Count Type ImportBatchCountOutputType
+   */
+
+  export type ImportBatchCountOutputType = {
+    errors: number
+  }
+
+  export type ImportBatchCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    errors?: boolean | ImportBatchCountOutputTypeCountErrorsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ImportBatchCountOutputType without action
+   */
+  export type ImportBatchCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatchCountOutputType
+     */
+    select?: ImportBatchCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ImportBatchCountOutputType without action
+   */
+  export type ImportBatchCountOutputTypeCountErrorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ImportErrorWhereInput
   }
 
 
@@ -4466,6 +4685,7 @@ export namespace Prisma {
     automaticFollowupEnabled: boolean | null
     engagementStatus: $Enums.CustomerEngagementStatus | null
     auth0UserId: string | null
+    importBatchId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4489,6 +4709,7 @@ export namespace Prisma {
     automaticFollowupEnabled: boolean | null
     engagementStatus: $Enums.CustomerEngagementStatus | null
     auth0UserId: string | null
+    importBatchId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4513,6 +4734,7 @@ export namespace Prisma {
     automaticFollowupEnabled: number
     engagementStatus: number
     auth0UserId: number
+    importBatchId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -4538,6 +4760,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: true
     engagementStatus?: true
     auth0UserId?: true
+    importBatchId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4561,6 +4784,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: true
     engagementStatus?: true
     auth0UserId?: true
+    importBatchId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4585,6 +4809,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: true
     engagementStatus?: true
     auth0UserId?: true
+    importBatchId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -4682,6 +4907,7 @@ export namespace Prisma {
     automaticFollowupEnabled: boolean
     engagementStatus: $Enums.CustomerEngagementStatus
     auth0UserId: string | null
+    importBatchId: string | null
     createdAt: Date
     updatedAt: Date
     _count: CustomerCountAggregateOutputType | null
@@ -4723,6 +4949,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: boolean
     auth0UserId?: boolean
+    importBatchId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
@@ -4757,6 +4984,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: boolean
     auth0UserId?: boolean
+    importBatchId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
@@ -4782,6 +5010,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: boolean
     auth0UserId?: boolean
+    importBatchId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
@@ -4835,6 +5064,7 @@ export namespace Prisma {
       automaticFollowupEnabled: boolean
       engagementStatus: $Enums.CustomerEngagementStatus
       auth0UserId: string | null
+      importBatchId: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["customer"]>
@@ -5258,6 +5488,7 @@ export namespace Prisma {
     readonly automaticFollowupEnabled: FieldRef<"Customer", 'Boolean'>
     readonly engagementStatus: FieldRef<"Customer", 'CustomerEngagementStatus'>
     readonly auth0UserId: FieldRef<"Customer", 'String'>
+    readonly importBatchId: FieldRef<"Customer", 'String'>
     readonly createdAt: FieldRef<"Customer", 'DateTime'>
     readonly updatedAt: FieldRef<"Customer", 'DateTime'>
   }
@@ -12348,6 +12579,7 @@ export namespace Prisma {
     installDate: Date | null
     warrantyEnd: Date | null
     notes: string | null
+    importBatchId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -12363,6 +12595,7 @@ export namespace Prisma {
     installDate: Date | null
     warrantyEnd: Date | null
     notes: string | null
+    importBatchId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -12378,6 +12611,7 @@ export namespace Prisma {
     installDate: number
     warrantyEnd: number
     notes: number
+    importBatchId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -12395,6 +12629,7 @@ export namespace Prisma {
     installDate?: true
     warrantyEnd?: true
     notes?: true
+    importBatchId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -12410,6 +12645,7 @@ export namespace Prisma {
     installDate?: true
     warrantyEnd?: true
     notes?: true
+    importBatchId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -12425,6 +12661,7 @@ export namespace Prisma {
     installDate?: true
     warrantyEnd?: true
     notes?: true
+    importBatchId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -12513,6 +12750,7 @@ export namespace Prisma {
     installDate: Date | null
     warrantyEnd: Date | null
     notes: string | null
+    importBatchId: string | null
     createdAt: Date
     updatedAt: Date
     _count: EquipmentCountAggregateOutputType | null
@@ -12545,6 +12783,7 @@ export namespace Prisma {
     installDate?: boolean
     warrantyEnd?: boolean
     notes?: boolean
+    importBatchId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
@@ -12561,6 +12800,7 @@ export namespace Prisma {
     installDate?: boolean
     warrantyEnd?: boolean
     notes?: boolean
+    importBatchId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
@@ -12577,6 +12817,7 @@ export namespace Prisma {
     installDate?: boolean
     warrantyEnd?: boolean
     notes?: boolean
+    importBatchId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
@@ -12604,6 +12845,7 @@ export namespace Prisma {
       installDate: Date | null
       warrantyEnd: Date | null
       notes: string | null
+      importBatchId: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["equipment"]>
@@ -13010,6 +13252,7 @@ export namespace Prisma {
     readonly installDate: FieldRef<"Equipment", 'DateTime'>
     readonly warrantyEnd: FieldRef<"Equipment", 'DateTime'>
     readonly notes: FieldRef<"Equipment", 'String'>
+    readonly importBatchId: FieldRef<"Equipment", 'String'>
     readonly createdAt: FieldRef<"Equipment", 'DateTime'>
     readonly updatedAt: FieldRef<"Equipment", 'DateTime'>
   }
@@ -15480,6 +15723,2079 @@ export namespace Prisma {
 
 
   /**
+   * Model ImportBatch
+   */
+
+  export type AggregateImportBatch = {
+    _count: ImportBatchCountAggregateOutputType | null
+    _avg: ImportBatchAvgAggregateOutputType | null
+    _sum: ImportBatchSumAggregateOutputType | null
+    _min: ImportBatchMinAggregateOutputType | null
+    _max: ImportBatchMaxAggregateOutputType | null
+  }
+
+  export type ImportBatchAvgAggregateOutputType = {
+    totalRows: number | null
+    imported: number | null
+    skipped: number | null
+    failed: number | null
+  }
+
+  export type ImportBatchSumAggregateOutputType = {
+    totalRows: number | null
+    imported: number | null
+    skipped: number | null
+    failed: number | null
+  }
+
+  export type ImportBatchMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    source: string | null
+    status: $Enums.ImportStatus | null
+    totalRows: number | null
+    imported: number | null
+    skipped: number | null
+    failed: number | null
+    createdBy: string | null
+    completedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type ImportBatchMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    source: string | null
+    status: $Enums.ImportStatus | null
+    totalRows: number | null
+    imported: number | null
+    skipped: number | null
+    failed: number | null
+    createdBy: string | null
+    completedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type ImportBatchCountAggregateOutputType = {
+    id: number
+    companyId: number
+    source: number
+    status: number
+    totalRows: number
+    imported: number
+    skipped: number
+    failed: number
+    createdBy: number
+    rawData: number
+    columnMap: number
+    completedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ImportBatchAvgAggregateInputType = {
+    totalRows?: true
+    imported?: true
+    skipped?: true
+    failed?: true
+  }
+
+  export type ImportBatchSumAggregateInputType = {
+    totalRows?: true
+    imported?: true
+    skipped?: true
+    failed?: true
+  }
+
+  export type ImportBatchMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    source?: true
+    status?: true
+    totalRows?: true
+    imported?: true
+    skipped?: true
+    failed?: true
+    createdBy?: true
+    completedAt?: true
+    createdAt?: true
+  }
+
+  export type ImportBatchMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    source?: true
+    status?: true
+    totalRows?: true
+    imported?: true
+    skipped?: true
+    failed?: true
+    createdBy?: true
+    completedAt?: true
+    createdAt?: true
+  }
+
+  export type ImportBatchCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    source?: true
+    status?: true
+    totalRows?: true
+    imported?: true
+    skipped?: true
+    failed?: true
+    createdBy?: true
+    rawData?: true
+    columnMap?: true
+    completedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ImportBatchAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ImportBatch to aggregate.
+     */
+    where?: ImportBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ImportBatches to fetch.
+     */
+    orderBy?: ImportBatchOrderByWithRelationInput | ImportBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ImportBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ImportBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ImportBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ImportBatches
+    **/
+    _count?: true | ImportBatchCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ImportBatchAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ImportBatchSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ImportBatchMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ImportBatchMaxAggregateInputType
+  }
+
+  export type GetImportBatchAggregateType<T extends ImportBatchAggregateArgs> = {
+        [P in keyof T & keyof AggregateImportBatch]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateImportBatch[P]>
+      : GetScalarType<T[P], AggregateImportBatch[P]>
+  }
+
+
+
+
+  export type ImportBatchGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ImportBatchWhereInput
+    orderBy?: ImportBatchOrderByWithAggregationInput | ImportBatchOrderByWithAggregationInput[]
+    by: ImportBatchScalarFieldEnum[] | ImportBatchScalarFieldEnum
+    having?: ImportBatchScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ImportBatchCountAggregateInputType | true
+    _avg?: ImportBatchAvgAggregateInputType
+    _sum?: ImportBatchSumAggregateInputType
+    _min?: ImportBatchMinAggregateInputType
+    _max?: ImportBatchMaxAggregateInputType
+  }
+
+  export type ImportBatchGroupByOutputType = {
+    id: string
+    companyId: string
+    source: string
+    status: $Enums.ImportStatus
+    totalRows: number
+    imported: number
+    skipped: number
+    failed: number
+    createdBy: string
+    rawData: JsonValue | null
+    columnMap: JsonValue | null
+    completedAt: Date | null
+    createdAt: Date
+    _count: ImportBatchCountAggregateOutputType | null
+    _avg: ImportBatchAvgAggregateOutputType | null
+    _sum: ImportBatchSumAggregateOutputType | null
+    _min: ImportBatchMinAggregateOutputType | null
+    _max: ImportBatchMaxAggregateOutputType | null
+  }
+
+  type GetImportBatchGroupByPayload<T extends ImportBatchGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ImportBatchGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ImportBatchGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ImportBatchGroupByOutputType[P]>
+            : GetScalarType<T[P], ImportBatchGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ImportBatchSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    source?: boolean
+    status?: boolean
+    totalRows?: boolean
+    imported?: boolean
+    skipped?: boolean
+    failed?: boolean
+    createdBy?: boolean
+    rawData?: boolean
+    columnMap?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+    errors?: boolean | ImportBatch$errorsArgs<ExtArgs>
+    _count?: boolean | ImportBatchCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["importBatch"]>
+
+  export type ImportBatchSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    source?: boolean
+    status?: boolean
+    totalRows?: boolean
+    imported?: boolean
+    skipped?: boolean
+    failed?: boolean
+    createdBy?: boolean
+    rawData?: boolean
+    columnMap?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["importBatch"]>
+
+  export type ImportBatchSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    source?: boolean
+    status?: boolean
+    totalRows?: boolean
+    imported?: boolean
+    skipped?: boolean
+    failed?: boolean
+    createdBy?: boolean
+    rawData?: boolean
+    columnMap?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type ImportBatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    errors?: boolean | ImportBatch$errorsArgs<ExtArgs>
+    _count?: boolean | ImportBatchCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type ImportBatchIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $ImportBatchPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ImportBatch"
+    objects: {
+      errors: Prisma.$ImportErrorPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      source: string
+      status: $Enums.ImportStatus
+      totalRows: number
+      imported: number
+      skipped: number
+      failed: number
+      createdBy: string
+      rawData: Prisma.JsonValue | null
+      columnMap: Prisma.JsonValue | null
+      completedAt: Date | null
+      createdAt: Date
+    }, ExtArgs["result"]["importBatch"]>
+    composites: {}
+  }
+
+  type ImportBatchGetPayload<S extends boolean | null | undefined | ImportBatchDefaultArgs> = $Result.GetResult<Prisma.$ImportBatchPayload, S>
+
+  type ImportBatchCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ImportBatchFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ImportBatchCountAggregateInputType | true
+    }
+
+  export interface ImportBatchDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ImportBatch'], meta: { name: 'ImportBatch' } }
+    /**
+     * Find zero or one ImportBatch that matches the filter.
+     * @param {ImportBatchFindUniqueArgs} args - Arguments to find a ImportBatch
+     * @example
+     * // Get one ImportBatch
+     * const importBatch = await prisma.importBatch.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ImportBatchFindUniqueArgs>(args: SelectSubset<T, ImportBatchFindUniqueArgs<ExtArgs>>): Prisma__ImportBatchClient<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ImportBatch that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ImportBatchFindUniqueOrThrowArgs} args - Arguments to find a ImportBatch
+     * @example
+     * // Get one ImportBatch
+     * const importBatch = await prisma.importBatch.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ImportBatchFindUniqueOrThrowArgs>(args: SelectSubset<T, ImportBatchFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ImportBatchClient<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ImportBatch that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportBatchFindFirstArgs} args - Arguments to find a ImportBatch
+     * @example
+     * // Get one ImportBatch
+     * const importBatch = await prisma.importBatch.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ImportBatchFindFirstArgs>(args?: SelectSubset<T, ImportBatchFindFirstArgs<ExtArgs>>): Prisma__ImportBatchClient<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ImportBatch that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportBatchFindFirstOrThrowArgs} args - Arguments to find a ImportBatch
+     * @example
+     * // Get one ImportBatch
+     * const importBatch = await prisma.importBatch.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ImportBatchFindFirstOrThrowArgs>(args?: SelectSubset<T, ImportBatchFindFirstOrThrowArgs<ExtArgs>>): Prisma__ImportBatchClient<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ImportBatches that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportBatchFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ImportBatches
+     * const importBatches = await prisma.importBatch.findMany()
+     * 
+     * // Get first 10 ImportBatches
+     * const importBatches = await prisma.importBatch.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const importBatchWithIdOnly = await prisma.importBatch.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ImportBatchFindManyArgs>(args?: SelectSubset<T, ImportBatchFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ImportBatch.
+     * @param {ImportBatchCreateArgs} args - Arguments to create a ImportBatch.
+     * @example
+     * // Create one ImportBatch
+     * const ImportBatch = await prisma.importBatch.create({
+     *   data: {
+     *     // ... data to create a ImportBatch
+     *   }
+     * })
+     * 
+     */
+    create<T extends ImportBatchCreateArgs>(args: SelectSubset<T, ImportBatchCreateArgs<ExtArgs>>): Prisma__ImportBatchClient<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ImportBatches.
+     * @param {ImportBatchCreateManyArgs} args - Arguments to create many ImportBatches.
+     * @example
+     * // Create many ImportBatches
+     * const importBatch = await prisma.importBatch.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ImportBatchCreateManyArgs>(args?: SelectSubset<T, ImportBatchCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ImportBatches and returns the data saved in the database.
+     * @param {ImportBatchCreateManyAndReturnArgs} args - Arguments to create many ImportBatches.
+     * @example
+     * // Create many ImportBatches
+     * const importBatch = await prisma.importBatch.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ImportBatches and only return the `id`
+     * const importBatchWithIdOnly = await prisma.importBatch.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ImportBatchCreateManyAndReturnArgs>(args?: SelectSubset<T, ImportBatchCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ImportBatch.
+     * @param {ImportBatchDeleteArgs} args - Arguments to delete one ImportBatch.
+     * @example
+     * // Delete one ImportBatch
+     * const ImportBatch = await prisma.importBatch.delete({
+     *   where: {
+     *     // ... filter to delete one ImportBatch
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ImportBatchDeleteArgs>(args: SelectSubset<T, ImportBatchDeleteArgs<ExtArgs>>): Prisma__ImportBatchClient<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ImportBatch.
+     * @param {ImportBatchUpdateArgs} args - Arguments to update one ImportBatch.
+     * @example
+     * // Update one ImportBatch
+     * const importBatch = await prisma.importBatch.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ImportBatchUpdateArgs>(args: SelectSubset<T, ImportBatchUpdateArgs<ExtArgs>>): Prisma__ImportBatchClient<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ImportBatches.
+     * @param {ImportBatchDeleteManyArgs} args - Arguments to filter ImportBatches to delete.
+     * @example
+     * // Delete a few ImportBatches
+     * const { count } = await prisma.importBatch.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ImportBatchDeleteManyArgs>(args?: SelectSubset<T, ImportBatchDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ImportBatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportBatchUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ImportBatches
+     * const importBatch = await prisma.importBatch.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ImportBatchUpdateManyArgs>(args: SelectSubset<T, ImportBatchUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ImportBatch.
+     * @param {ImportBatchUpsertArgs} args - Arguments to update or create a ImportBatch.
+     * @example
+     * // Update or create a ImportBatch
+     * const importBatch = await prisma.importBatch.upsert({
+     *   create: {
+     *     // ... data to create a ImportBatch
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ImportBatch we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ImportBatchUpsertArgs>(args: SelectSubset<T, ImportBatchUpsertArgs<ExtArgs>>): Prisma__ImportBatchClient<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ImportBatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportBatchCountArgs} args - Arguments to filter ImportBatches to count.
+     * @example
+     * // Count the number of ImportBatches
+     * const count = await prisma.importBatch.count({
+     *   where: {
+     *     // ... the filter for the ImportBatches we want to count
+     *   }
+     * })
+    **/
+    count<T extends ImportBatchCountArgs>(
+      args?: Subset<T, ImportBatchCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ImportBatchCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ImportBatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportBatchAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ImportBatchAggregateArgs>(args: Subset<T, ImportBatchAggregateArgs>): Prisma.PrismaPromise<GetImportBatchAggregateType<T>>
+
+    /**
+     * Group by ImportBatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportBatchGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ImportBatchGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ImportBatchGroupByArgs['orderBy'] }
+        : { orderBy?: ImportBatchGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ImportBatchGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetImportBatchGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ImportBatch model
+   */
+  readonly fields: ImportBatchFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ImportBatch.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ImportBatchClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    errors<T extends ImportBatch$errorsArgs<ExtArgs> = {}>(args?: Subset<T, ImportBatch$errorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ImportBatch model
+   */ 
+  interface ImportBatchFieldRefs {
+    readonly id: FieldRef<"ImportBatch", 'String'>
+    readonly companyId: FieldRef<"ImportBatch", 'String'>
+    readonly source: FieldRef<"ImportBatch", 'String'>
+    readonly status: FieldRef<"ImportBatch", 'ImportStatus'>
+    readonly totalRows: FieldRef<"ImportBatch", 'Int'>
+    readonly imported: FieldRef<"ImportBatch", 'Int'>
+    readonly skipped: FieldRef<"ImportBatch", 'Int'>
+    readonly failed: FieldRef<"ImportBatch", 'Int'>
+    readonly createdBy: FieldRef<"ImportBatch", 'String'>
+    readonly rawData: FieldRef<"ImportBatch", 'Json'>
+    readonly columnMap: FieldRef<"ImportBatch", 'Json'>
+    readonly completedAt: FieldRef<"ImportBatch", 'DateTime'>
+    readonly createdAt: FieldRef<"ImportBatch", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ImportBatch findUnique
+   */
+  export type ImportBatchFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportBatch to fetch.
+     */
+    where: ImportBatchWhereUniqueInput
+  }
+
+  /**
+   * ImportBatch findUniqueOrThrow
+   */
+  export type ImportBatchFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportBatch to fetch.
+     */
+    where: ImportBatchWhereUniqueInput
+  }
+
+  /**
+   * ImportBatch findFirst
+   */
+  export type ImportBatchFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportBatch to fetch.
+     */
+    where?: ImportBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ImportBatches to fetch.
+     */
+    orderBy?: ImportBatchOrderByWithRelationInput | ImportBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ImportBatches.
+     */
+    cursor?: ImportBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ImportBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ImportBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ImportBatches.
+     */
+    distinct?: ImportBatchScalarFieldEnum | ImportBatchScalarFieldEnum[]
+  }
+
+  /**
+   * ImportBatch findFirstOrThrow
+   */
+  export type ImportBatchFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportBatch to fetch.
+     */
+    where?: ImportBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ImportBatches to fetch.
+     */
+    orderBy?: ImportBatchOrderByWithRelationInput | ImportBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ImportBatches.
+     */
+    cursor?: ImportBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ImportBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ImportBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ImportBatches.
+     */
+    distinct?: ImportBatchScalarFieldEnum | ImportBatchScalarFieldEnum[]
+  }
+
+  /**
+   * ImportBatch findMany
+   */
+  export type ImportBatchFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportBatches to fetch.
+     */
+    where?: ImportBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ImportBatches to fetch.
+     */
+    orderBy?: ImportBatchOrderByWithRelationInput | ImportBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ImportBatches.
+     */
+    cursor?: ImportBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ImportBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ImportBatches.
+     */
+    skip?: number
+    distinct?: ImportBatchScalarFieldEnum | ImportBatchScalarFieldEnum[]
+  }
+
+  /**
+   * ImportBatch create
+   */
+  export type ImportBatchCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ImportBatch.
+     */
+    data: XOR<ImportBatchCreateInput, ImportBatchUncheckedCreateInput>
+  }
+
+  /**
+   * ImportBatch createMany
+   */
+  export type ImportBatchCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ImportBatches.
+     */
+    data: ImportBatchCreateManyInput | ImportBatchCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ImportBatch createManyAndReturn
+   */
+  export type ImportBatchCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ImportBatches.
+     */
+    data: ImportBatchCreateManyInput | ImportBatchCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ImportBatch update
+   */
+  export type ImportBatchUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ImportBatch.
+     */
+    data: XOR<ImportBatchUpdateInput, ImportBatchUncheckedUpdateInput>
+    /**
+     * Choose, which ImportBatch to update.
+     */
+    where: ImportBatchWhereUniqueInput
+  }
+
+  /**
+   * ImportBatch updateMany
+   */
+  export type ImportBatchUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ImportBatches.
+     */
+    data: XOR<ImportBatchUpdateManyMutationInput, ImportBatchUncheckedUpdateManyInput>
+    /**
+     * Filter which ImportBatches to update
+     */
+    where?: ImportBatchWhereInput
+  }
+
+  /**
+   * ImportBatch upsert
+   */
+  export type ImportBatchUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ImportBatch to update in case it exists.
+     */
+    where: ImportBatchWhereUniqueInput
+    /**
+     * In case the ImportBatch found by the `where` argument doesn't exist, create a new ImportBatch with this data.
+     */
+    create: XOR<ImportBatchCreateInput, ImportBatchUncheckedCreateInput>
+    /**
+     * In case the ImportBatch was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ImportBatchUpdateInput, ImportBatchUncheckedUpdateInput>
+  }
+
+  /**
+   * ImportBatch delete
+   */
+  export type ImportBatchDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+    /**
+     * Filter which ImportBatch to delete.
+     */
+    where: ImportBatchWhereUniqueInput
+  }
+
+  /**
+   * ImportBatch deleteMany
+   */
+  export type ImportBatchDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ImportBatches to delete
+     */
+    where?: ImportBatchWhereInput
+  }
+
+  /**
+   * ImportBatch.errors
+   */
+  export type ImportBatch$errorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    where?: ImportErrorWhereInput
+    orderBy?: ImportErrorOrderByWithRelationInput | ImportErrorOrderByWithRelationInput[]
+    cursor?: ImportErrorWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ImportErrorScalarFieldEnum | ImportErrorScalarFieldEnum[]
+  }
+
+  /**
+   * ImportBatch without action
+   */
+  export type ImportBatchDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportBatch
+     */
+    select?: ImportBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportBatchInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ImportError
+   */
+
+  export type AggregateImportError = {
+    _count: ImportErrorCountAggregateOutputType | null
+    _avg: ImportErrorAvgAggregateOutputType | null
+    _sum: ImportErrorSumAggregateOutputType | null
+    _min: ImportErrorMinAggregateOutputType | null
+    _max: ImportErrorMaxAggregateOutputType | null
+  }
+
+  export type ImportErrorAvgAggregateOutputType = {
+    id: number | null
+    rowNumber: number | null
+  }
+
+  export type ImportErrorSumAggregateOutputType = {
+    id: number | null
+    rowNumber: number | null
+  }
+
+  export type ImportErrorMinAggregateOutputType = {
+    id: number | null
+    batchId: string | null
+    rowNumber: number | null
+    entityType: string | null
+    error: string | null
+    createdAt: Date | null
+  }
+
+  export type ImportErrorMaxAggregateOutputType = {
+    id: number | null
+    batchId: string | null
+    rowNumber: number | null
+    entityType: string | null
+    error: string | null
+    createdAt: Date | null
+  }
+
+  export type ImportErrorCountAggregateOutputType = {
+    id: number
+    batchId: number
+    rowNumber: number
+    entityType: number
+    rawData: number
+    error: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ImportErrorAvgAggregateInputType = {
+    id?: true
+    rowNumber?: true
+  }
+
+  export type ImportErrorSumAggregateInputType = {
+    id?: true
+    rowNumber?: true
+  }
+
+  export type ImportErrorMinAggregateInputType = {
+    id?: true
+    batchId?: true
+    rowNumber?: true
+    entityType?: true
+    error?: true
+    createdAt?: true
+  }
+
+  export type ImportErrorMaxAggregateInputType = {
+    id?: true
+    batchId?: true
+    rowNumber?: true
+    entityType?: true
+    error?: true
+    createdAt?: true
+  }
+
+  export type ImportErrorCountAggregateInputType = {
+    id?: true
+    batchId?: true
+    rowNumber?: true
+    entityType?: true
+    rawData?: true
+    error?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ImportErrorAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ImportError to aggregate.
+     */
+    where?: ImportErrorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ImportErrors to fetch.
+     */
+    orderBy?: ImportErrorOrderByWithRelationInput | ImportErrorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ImportErrorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ImportErrors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ImportErrors.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ImportErrors
+    **/
+    _count?: true | ImportErrorCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ImportErrorAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ImportErrorSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ImportErrorMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ImportErrorMaxAggregateInputType
+  }
+
+  export type GetImportErrorAggregateType<T extends ImportErrorAggregateArgs> = {
+        [P in keyof T & keyof AggregateImportError]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateImportError[P]>
+      : GetScalarType<T[P], AggregateImportError[P]>
+  }
+
+
+
+
+  export type ImportErrorGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ImportErrorWhereInput
+    orderBy?: ImportErrorOrderByWithAggregationInput | ImportErrorOrderByWithAggregationInput[]
+    by: ImportErrorScalarFieldEnum[] | ImportErrorScalarFieldEnum
+    having?: ImportErrorScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ImportErrorCountAggregateInputType | true
+    _avg?: ImportErrorAvgAggregateInputType
+    _sum?: ImportErrorSumAggregateInputType
+    _min?: ImportErrorMinAggregateInputType
+    _max?: ImportErrorMaxAggregateInputType
+  }
+
+  export type ImportErrorGroupByOutputType = {
+    id: number
+    batchId: string
+    rowNumber: number
+    entityType: string
+    rawData: JsonValue
+    error: string
+    createdAt: Date
+    _count: ImportErrorCountAggregateOutputType | null
+    _avg: ImportErrorAvgAggregateOutputType | null
+    _sum: ImportErrorSumAggregateOutputType | null
+    _min: ImportErrorMinAggregateOutputType | null
+    _max: ImportErrorMaxAggregateOutputType | null
+  }
+
+  type GetImportErrorGroupByPayload<T extends ImportErrorGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ImportErrorGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ImportErrorGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ImportErrorGroupByOutputType[P]>
+            : GetScalarType<T[P], ImportErrorGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ImportErrorSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    batchId?: boolean
+    rowNumber?: boolean
+    entityType?: boolean
+    rawData?: boolean
+    error?: boolean
+    createdAt?: boolean
+    batch?: boolean | ImportBatchDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["importError"]>
+
+  export type ImportErrorSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    batchId?: boolean
+    rowNumber?: boolean
+    entityType?: boolean
+    rawData?: boolean
+    error?: boolean
+    createdAt?: boolean
+    batch?: boolean | ImportBatchDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["importError"]>
+
+  export type ImportErrorSelectScalar = {
+    id?: boolean
+    batchId?: boolean
+    rowNumber?: boolean
+    entityType?: boolean
+    rawData?: boolean
+    error?: boolean
+    createdAt?: boolean
+  }
+
+  export type ImportErrorInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    batch?: boolean | ImportBatchDefaultArgs<ExtArgs>
+  }
+  export type ImportErrorIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    batch?: boolean | ImportBatchDefaultArgs<ExtArgs>
+  }
+
+  export type $ImportErrorPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ImportError"
+    objects: {
+      batch: Prisma.$ImportBatchPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      batchId: string
+      rowNumber: number
+      entityType: string
+      rawData: Prisma.JsonValue
+      error: string
+      createdAt: Date
+    }, ExtArgs["result"]["importError"]>
+    composites: {}
+  }
+
+  type ImportErrorGetPayload<S extends boolean | null | undefined | ImportErrorDefaultArgs> = $Result.GetResult<Prisma.$ImportErrorPayload, S>
+
+  type ImportErrorCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ImportErrorFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ImportErrorCountAggregateInputType | true
+    }
+
+  export interface ImportErrorDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ImportError'], meta: { name: 'ImportError' } }
+    /**
+     * Find zero or one ImportError that matches the filter.
+     * @param {ImportErrorFindUniqueArgs} args - Arguments to find a ImportError
+     * @example
+     * // Get one ImportError
+     * const importError = await prisma.importError.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ImportErrorFindUniqueArgs>(args: SelectSubset<T, ImportErrorFindUniqueArgs<ExtArgs>>): Prisma__ImportErrorClient<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ImportError that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ImportErrorFindUniqueOrThrowArgs} args - Arguments to find a ImportError
+     * @example
+     * // Get one ImportError
+     * const importError = await prisma.importError.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ImportErrorFindUniqueOrThrowArgs>(args: SelectSubset<T, ImportErrorFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ImportErrorClient<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ImportError that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportErrorFindFirstArgs} args - Arguments to find a ImportError
+     * @example
+     * // Get one ImportError
+     * const importError = await prisma.importError.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ImportErrorFindFirstArgs>(args?: SelectSubset<T, ImportErrorFindFirstArgs<ExtArgs>>): Prisma__ImportErrorClient<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ImportError that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportErrorFindFirstOrThrowArgs} args - Arguments to find a ImportError
+     * @example
+     * // Get one ImportError
+     * const importError = await prisma.importError.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ImportErrorFindFirstOrThrowArgs>(args?: SelectSubset<T, ImportErrorFindFirstOrThrowArgs<ExtArgs>>): Prisma__ImportErrorClient<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ImportErrors that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportErrorFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ImportErrors
+     * const importErrors = await prisma.importError.findMany()
+     * 
+     * // Get first 10 ImportErrors
+     * const importErrors = await prisma.importError.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const importErrorWithIdOnly = await prisma.importError.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ImportErrorFindManyArgs>(args?: SelectSubset<T, ImportErrorFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ImportError.
+     * @param {ImportErrorCreateArgs} args - Arguments to create a ImportError.
+     * @example
+     * // Create one ImportError
+     * const ImportError = await prisma.importError.create({
+     *   data: {
+     *     // ... data to create a ImportError
+     *   }
+     * })
+     * 
+     */
+    create<T extends ImportErrorCreateArgs>(args: SelectSubset<T, ImportErrorCreateArgs<ExtArgs>>): Prisma__ImportErrorClient<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ImportErrors.
+     * @param {ImportErrorCreateManyArgs} args - Arguments to create many ImportErrors.
+     * @example
+     * // Create many ImportErrors
+     * const importError = await prisma.importError.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ImportErrorCreateManyArgs>(args?: SelectSubset<T, ImportErrorCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ImportErrors and returns the data saved in the database.
+     * @param {ImportErrorCreateManyAndReturnArgs} args - Arguments to create many ImportErrors.
+     * @example
+     * // Create many ImportErrors
+     * const importError = await prisma.importError.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ImportErrors and only return the `id`
+     * const importErrorWithIdOnly = await prisma.importError.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ImportErrorCreateManyAndReturnArgs>(args?: SelectSubset<T, ImportErrorCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ImportError.
+     * @param {ImportErrorDeleteArgs} args - Arguments to delete one ImportError.
+     * @example
+     * // Delete one ImportError
+     * const ImportError = await prisma.importError.delete({
+     *   where: {
+     *     // ... filter to delete one ImportError
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ImportErrorDeleteArgs>(args: SelectSubset<T, ImportErrorDeleteArgs<ExtArgs>>): Prisma__ImportErrorClient<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ImportError.
+     * @param {ImportErrorUpdateArgs} args - Arguments to update one ImportError.
+     * @example
+     * // Update one ImportError
+     * const importError = await prisma.importError.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ImportErrorUpdateArgs>(args: SelectSubset<T, ImportErrorUpdateArgs<ExtArgs>>): Prisma__ImportErrorClient<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ImportErrors.
+     * @param {ImportErrorDeleteManyArgs} args - Arguments to filter ImportErrors to delete.
+     * @example
+     * // Delete a few ImportErrors
+     * const { count } = await prisma.importError.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ImportErrorDeleteManyArgs>(args?: SelectSubset<T, ImportErrorDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ImportErrors.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportErrorUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ImportErrors
+     * const importError = await prisma.importError.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ImportErrorUpdateManyArgs>(args: SelectSubset<T, ImportErrorUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ImportError.
+     * @param {ImportErrorUpsertArgs} args - Arguments to update or create a ImportError.
+     * @example
+     * // Update or create a ImportError
+     * const importError = await prisma.importError.upsert({
+     *   create: {
+     *     // ... data to create a ImportError
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ImportError we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ImportErrorUpsertArgs>(args: SelectSubset<T, ImportErrorUpsertArgs<ExtArgs>>): Prisma__ImportErrorClient<$Result.GetResult<Prisma.$ImportErrorPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ImportErrors.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportErrorCountArgs} args - Arguments to filter ImportErrors to count.
+     * @example
+     * // Count the number of ImportErrors
+     * const count = await prisma.importError.count({
+     *   where: {
+     *     // ... the filter for the ImportErrors we want to count
+     *   }
+     * })
+    **/
+    count<T extends ImportErrorCountArgs>(
+      args?: Subset<T, ImportErrorCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ImportErrorCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ImportError.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportErrorAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ImportErrorAggregateArgs>(args: Subset<T, ImportErrorAggregateArgs>): Prisma.PrismaPromise<GetImportErrorAggregateType<T>>
+
+    /**
+     * Group by ImportError.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ImportErrorGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ImportErrorGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ImportErrorGroupByArgs['orderBy'] }
+        : { orderBy?: ImportErrorGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ImportErrorGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetImportErrorGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ImportError model
+   */
+  readonly fields: ImportErrorFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ImportError.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ImportErrorClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    batch<T extends ImportBatchDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ImportBatchDefaultArgs<ExtArgs>>): Prisma__ImportBatchClient<$Result.GetResult<Prisma.$ImportBatchPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ImportError model
+   */ 
+  interface ImportErrorFieldRefs {
+    readonly id: FieldRef<"ImportError", 'Int'>
+    readonly batchId: FieldRef<"ImportError", 'String'>
+    readonly rowNumber: FieldRef<"ImportError", 'Int'>
+    readonly entityType: FieldRef<"ImportError", 'String'>
+    readonly rawData: FieldRef<"ImportError", 'Json'>
+    readonly error: FieldRef<"ImportError", 'String'>
+    readonly createdAt: FieldRef<"ImportError", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ImportError findUnique
+   */
+  export type ImportErrorFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportError to fetch.
+     */
+    where: ImportErrorWhereUniqueInput
+  }
+
+  /**
+   * ImportError findUniqueOrThrow
+   */
+  export type ImportErrorFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportError to fetch.
+     */
+    where: ImportErrorWhereUniqueInput
+  }
+
+  /**
+   * ImportError findFirst
+   */
+  export type ImportErrorFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportError to fetch.
+     */
+    where?: ImportErrorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ImportErrors to fetch.
+     */
+    orderBy?: ImportErrorOrderByWithRelationInput | ImportErrorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ImportErrors.
+     */
+    cursor?: ImportErrorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ImportErrors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ImportErrors.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ImportErrors.
+     */
+    distinct?: ImportErrorScalarFieldEnum | ImportErrorScalarFieldEnum[]
+  }
+
+  /**
+   * ImportError findFirstOrThrow
+   */
+  export type ImportErrorFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportError to fetch.
+     */
+    where?: ImportErrorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ImportErrors to fetch.
+     */
+    orderBy?: ImportErrorOrderByWithRelationInput | ImportErrorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ImportErrors.
+     */
+    cursor?: ImportErrorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ImportErrors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ImportErrors.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ImportErrors.
+     */
+    distinct?: ImportErrorScalarFieldEnum | ImportErrorScalarFieldEnum[]
+  }
+
+  /**
+   * ImportError findMany
+   */
+  export type ImportErrorFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    /**
+     * Filter, which ImportErrors to fetch.
+     */
+    where?: ImportErrorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ImportErrors to fetch.
+     */
+    orderBy?: ImportErrorOrderByWithRelationInput | ImportErrorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ImportErrors.
+     */
+    cursor?: ImportErrorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ImportErrors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ImportErrors.
+     */
+    skip?: number
+    distinct?: ImportErrorScalarFieldEnum | ImportErrorScalarFieldEnum[]
+  }
+
+  /**
+   * ImportError create
+   */
+  export type ImportErrorCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ImportError.
+     */
+    data: XOR<ImportErrorCreateInput, ImportErrorUncheckedCreateInput>
+  }
+
+  /**
+   * ImportError createMany
+   */
+  export type ImportErrorCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ImportErrors.
+     */
+    data: ImportErrorCreateManyInput | ImportErrorCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ImportError createManyAndReturn
+   */
+  export type ImportErrorCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ImportErrors.
+     */
+    data: ImportErrorCreateManyInput | ImportErrorCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ImportError update
+   */
+  export type ImportErrorUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ImportError.
+     */
+    data: XOR<ImportErrorUpdateInput, ImportErrorUncheckedUpdateInput>
+    /**
+     * Choose, which ImportError to update.
+     */
+    where: ImportErrorWhereUniqueInput
+  }
+
+  /**
+   * ImportError updateMany
+   */
+  export type ImportErrorUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ImportErrors.
+     */
+    data: XOR<ImportErrorUpdateManyMutationInput, ImportErrorUncheckedUpdateManyInput>
+    /**
+     * Filter which ImportErrors to update
+     */
+    where?: ImportErrorWhereInput
+  }
+
+  /**
+   * ImportError upsert
+   */
+  export type ImportErrorUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ImportError to update in case it exists.
+     */
+    where: ImportErrorWhereUniqueInput
+    /**
+     * In case the ImportError found by the `where` argument doesn't exist, create a new ImportError with this data.
+     */
+    create: XOR<ImportErrorCreateInput, ImportErrorUncheckedCreateInput>
+    /**
+     * In case the ImportError was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ImportErrorUpdateInput, ImportErrorUncheckedUpdateInput>
+  }
+
+  /**
+   * ImportError delete
+   */
+  export type ImportErrorDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+    /**
+     * Filter which ImportError to delete.
+     */
+    where: ImportErrorWhereUniqueInput
+  }
+
+  /**
+   * ImportError deleteMany
+   */
+  export type ImportErrorDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ImportErrors to delete
+     */
+    where?: ImportErrorWhereInput
+  }
+
+  /**
+   * ImportError without action
+   */
+  export type ImportErrorDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ImportError
+     */
+    select?: ImportErrorSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ImportErrorInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -15562,6 +17878,7 @@ export namespace Prisma {
     automaticFollowupEnabled: 'automaticFollowupEnabled',
     engagementStatus: 'engagementStatus',
     auth0UserId: 'auth0UserId',
+    importBatchId: 'importBatchId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -15708,6 +18025,7 @@ export namespace Prisma {
     installDate: 'installDate',
     warrantyEnd: 'warrantyEnd',
     notes: 'notes',
+    importBatchId: 'importBatchId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -15759,6 +18077,38 @@ export namespace Prisma {
   export type UpsellRecommendationScalarFieldEnum = (typeof UpsellRecommendationScalarFieldEnum)[keyof typeof UpsellRecommendationScalarFieldEnum]
 
 
+  export const ImportBatchScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    source: 'source',
+    status: 'status',
+    totalRows: 'totalRows',
+    imported: 'imported',
+    skipped: 'skipped',
+    failed: 'failed',
+    createdBy: 'createdBy',
+    rawData: 'rawData',
+    columnMap: 'columnMap',
+    completedAt: 'completedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type ImportBatchScalarFieldEnum = (typeof ImportBatchScalarFieldEnum)[keyof typeof ImportBatchScalarFieldEnum]
+
+
+  export const ImportErrorScalarFieldEnum: {
+    id: 'id',
+    batchId: 'batchId',
+    rowNumber: 'rowNumber',
+    entityType: 'entityType',
+    rawData: 'rawData',
+    error: 'error',
+    createdAt: 'createdAt'
+  };
+
+  export type ImportErrorScalarFieldEnum = (typeof ImportErrorScalarFieldEnum)[keyof typeof ImportErrorScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -15773,6 +18123,13 @@ export namespace Prisma {
   };
 
   export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
   export const QueryMode: {
@@ -15970,6 +18327,20 @@ export namespace Prisma {
    * Reference to a field of type 'Json'
    */
   export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'ImportStatus'
+   */
+  export type EnumImportStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ImportStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'ImportStatus[]'
+   */
+  export type ListEnumImportStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ImportStatus[]'>
     
   /**
    * Deep Input Types
@@ -16262,6 +18633,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableFilter<"Customer"> | string | null
+    importBatchId?: StringNullableFilter<"Customer"> | string | null
     createdAt?: DateTimeFilter<"Customer"> | Date | string
     updatedAt?: DateTimeFilter<"Customer"> | Date | string
     company?: XOR<CompanyRelationFilter, CompanyWhereInput>
@@ -16295,6 +18667,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrderInput | SortOrder
+    importBatchId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     company?: CompanyOrderByWithRelationInput
@@ -16331,6 +18704,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableFilter<"Customer"> | string | null
+    importBatchId?: StringNullableFilter<"Customer"> | string | null
     createdAt?: DateTimeFilter<"Customer"> | Date | string
     updatedAt?: DateTimeFilter<"Customer"> | Date | string
     company?: XOR<CompanyRelationFilter, CompanyWhereInput>
@@ -16364,6 +18738,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrderInput | SortOrder
+    importBatchId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: CustomerCountOrderByAggregateInput
@@ -16394,6 +18769,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolWithAggregatesFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusWithAggregatesFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableWithAggregatesFilter<"Customer"> | string | null
+    importBatchId?: StringNullableWithAggregatesFilter<"Customer"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Customer"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Customer"> | Date | string
   }
@@ -17076,6 +19452,7 @@ export namespace Prisma {
     installDate?: DateTimeNullableFilter<"Equipment"> | Date | string | null
     warrantyEnd?: DateTimeNullableFilter<"Equipment"> | Date | string | null
     notes?: StringNullableFilter<"Equipment"> | string | null
+    importBatchId?: StringNullableFilter<"Equipment"> | string | null
     createdAt?: DateTimeFilter<"Equipment"> | Date | string
     updatedAt?: DateTimeFilter<"Equipment"> | Date | string
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
@@ -17092,6 +19469,7 @@ export namespace Prisma {
     installDate?: SortOrderInput | SortOrder
     warrantyEnd?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
+    importBatchId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     customer?: CustomerOrderByWithRelationInput
@@ -17111,6 +19489,7 @@ export namespace Prisma {
     installDate?: DateTimeNullableFilter<"Equipment"> | Date | string | null
     warrantyEnd?: DateTimeNullableFilter<"Equipment"> | Date | string | null
     notes?: StringNullableFilter<"Equipment"> | string | null
+    importBatchId?: StringNullableFilter<"Equipment"> | string | null
     createdAt?: DateTimeFilter<"Equipment"> | Date | string
     updatedAt?: DateTimeFilter<"Equipment"> | Date | string
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
@@ -17127,6 +19506,7 @@ export namespace Prisma {
     installDate?: SortOrderInput | SortOrder
     warrantyEnd?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
+    importBatchId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: EquipmentCountOrderByAggregateInput
@@ -17148,6 +19528,7 @@ export namespace Prisma {
     installDate?: DateTimeNullableWithAggregatesFilter<"Equipment"> | Date | string | null
     warrantyEnd?: DateTimeNullableWithAggregatesFilter<"Equipment"> | Date | string | null
     notes?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
+    importBatchId?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Equipment"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Equipment"> | Date | string
   }
@@ -17371,6 +19752,170 @@ export namespace Prisma {
     inputPayload?: JsonNullableWithAggregatesFilter<"UpsellRecommendation">
     createdAt?: DateTimeWithAggregatesFilter<"UpsellRecommendation"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"UpsellRecommendation"> | Date | string
+  }
+
+  export type ImportBatchWhereInput = {
+    AND?: ImportBatchWhereInput | ImportBatchWhereInput[]
+    OR?: ImportBatchWhereInput[]
+    NOT?: ImportBatchWhereInput | ImportBatchWhereInput[]
+    id?: StringFilter<"ImportBatch"> | string
+    companyId?: StringFilter<"ImportBatch"> | string
+    source?: StringFilter<"ImportBatch"> | string
+    status?: EnumImportStatusFilter<"ImportBatch"> | $Enums.ImportStatus
+    totalRows?: IntFilter<"ImportBatch"> | number
+    imported?: IntFilter<"ImportBatch"> | number
+    skipped?: IntFilter<"ImportBatch"> | number
+    failed?: IntFilter<"ImportBatch"> | number
+    createdBy?: StringFilter<"ImportBatch"> | string
+    rawData?: JsonNullableFilter<"ImportBatch">
+    columnMap?: JsonNullableFilter<"ImportBatch">
+    completedAt?: DateTimeNullableFilter<"ImportBatch"> | Date | string | null
+    createdAt?: DateTimeFilter<"ImportBatch"> | Date | string
+    errors?: ImportErrorListRelationFilter
+  }
+
+  export type ImportBatchOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    source?: SortOrder
+    status?: SortOrder
+    totalRows?: SortOrder
+    imported?: SortOrder
+    skipped?: SortOrder
+    failed?: SortOrder
+    createdBy?: SortOrder
+    rawData?: SortOrderInput | SortOrder
+    columnMap?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    errors?: ImportErrorOrderByRelationAggregateInput
+  }
+
+  export type ImportBatchWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ImportBatchWhereInput | ImportBatchWhereInput[]
+    OR?: ImportBatchWhereInput[]
+    NOT?: ImportBatchWhereInput | ImportBatchWhereInput[]
+    companyId?: StringFilter<"ImportBatch"> | string
+    source?: StringFilter<"ImportBatch"> | string
+    status?: EnumImportStatusFilter<"ImportBatch"> | $Enums.ImportStatus
+    totalRows?: IntFilter<"ImportBatch"> | number
+    imported?: IntFilter<"ImportBatch"> | number
+    skipped?: IntFilter<"ImportBatch"> | number
+    failed?: IntFilter<"ImportBatch"> | number
+    createdBy?: StringFilter<"ImportBatch"> | string
+    rawData?: JsonNullableFilter<"ImportBatch">
+    columnMap?: JsonNullableFilter<"ImportBatch">
+    completedAt?: DateTimeNullableFilter<"ImportBatch"> | Date | string | null
+    createdAt?: DateTimeFilter<"ImportBatch"> | Date | string
+    errors?: ImportErrorListRelationFilter
+  }, "id">
+
+  export type ImportBatchOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    source?: SortOrder
+    status?: SortOrder
+    totalRows?: SortOrder
+    imported?: SortOrder
+    skipped?: SortOrder
+    failed?: SortOrder
+    createdBy?: SortOrder
+    rawData?: SortOrderInput | SortOrder
+    columnMap?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: ImportBatchCountOrderByAggregateInput
+    _avg?: ImportBatchAvgOrderByAggregateInput
+    _max?: ImportBatchMaxOrderByAggregateInput
+    _min?: ImportBatchMinOrderByAggregateInput
+    _sum?: ImportBatchSumOrderByAggregateInput
+  }
+
+  export type ImportBatchScalarWhereWithAggregatesInput = {
+    AND?: ImportBatchScalarWhereWithAggregatesInput | ImportBatchScalarWhereWithAggregatesInput[]
+    OR?: ImportBatchScalarWhereWithAggregatesInput[]
+    NOT?: ImportBatchScalarWhereWithAggregatesInput | ImportBatchScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ImportBatch"> | string
+    companyId?: StringWithAggregatesFilter<"ImportBatch"> | string
+    source?: StringWithAggregatesFilter<"ImportBatch"> | string
+    status?: EnumImportStatusWithAggregatesFilter<"ImportBatch"> | $Enums.ImportStatus
+    totalRows?: IntWithAggregatesFilter<"ImportBatch"> | number
+    imported?: IntWithAggregatesFilter<"ImportBatch"> | number
+    skipped?: IntWithAggregatesFilter<"ImportBatch"> | number
+    failed?: IntWithAggregatesFilter<"ImportBatch"> | number
+    createdBy?: StringWithAggregatesFilter<"ImportBatch"> | string
+    rawData?: JsonNullableWithAggregatesFilter<"ImportBatch">
+    columnMap?: JsonNullableWithAggregatesFilter<"ImportBatch">
+    completedAt?: DateTimeNullableWithAggregatesFilter<"ImportBatch"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ImportBatch"> | Date | string
+  }
+
+  export type ImportErrorWhereInput = {
+    AND?: ImportErrorWhereInput | ImportErrorWhereInput[]
+    OR?: ImportErrorWhereInput[]
+    NOT?: ImportErrorWhereInput | ImportErrorWhereInput[]
+    id?: IntFilter<"ImportError"> | number
+    batchId?: StringFilter<"ImportError"> | string
+    rowNumber?: IntFilter<"ImportError"> | number
+    entityType?: StringFilter<"ImportError"> | string
+    rawData?: JsonFilter<"ImportError">
+    error?: StringFilter<"ImportError"> | string
+    createdAt?: DateTimeFilter<"ImportError"> | Date | string
+    batch?: XOR<ImportBatchRelationFilter, ImportBatchWhereInput>
+  }
+
+  export type ImportErrorOrderByWithRelationInput = {
+    id?: SortOrder
+    batchId?: SortOrder
+    rowNumber?: SortOrder
+    entityType?: SortOrder
+    rawData?: SortOrder
+    error?: SortOrder
+    createdAt?: SortOrder
+    batch?: ImportBatchOrderByWithRelationInput
+  }
+
+  export type ImportErrorWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: ImportErrorWhereInput | ImportErrorWhereInput[]
+    OR?: ImportErrorWhereInput[]
+    NOT?: ImportErrorWhereInput | ImportErrorWhereInput[]
+    batchId?: StringFilter<"ImportError"> | string
+    rowNumber?: IntFilter<"ImportError"> | number
+    entityType?: StringFilter<"ImportError"> | string
+    rawData?: JsonFilter<"ImportError">
+    error?: StringFilter<"ImportError"> | string
+    createdAt?: DateTimeFilter<"ImportError"> | Date | string
+    batch?: XOR<ImportBatchRelationFilter, ImportBatchWhereInput>
+  }, "id">
+
+  export type ImportErrorOrderByWithAggregationInput = {
+    id?: SortOrder
+    batchId?: SortOrder
+    rowNumber?: SortOrder
+    entityType?: SortOrder
+    rawData?: SortOrder
+    error?: SortOrder
+    createdAt?: SortOrder
+    _count?: ImportErrorCountOrderByAggregateInput
+    _avg?: ImportErrorAvgOrderByAggregateInput
+    _max?: ImportErrorMaxOrderByAggregateInput
+    _min?: ImportErrorMinOrderByAggregateInput
+    _sum?: ImportErrorSumOrderByAggregateInput
+  }
+
+  export type ImportErrorScalarWhereWithAggregatesInput = {
+    AND?: ImportErrorScalarWhereWithAggregatesInput | ImportErrorScalarWhereWithAggregatesInput[]
+    OR?: ImportErrorScalarWhereWithAggregatesInput[]
+    NOT?: ImportErrorScalarWhereWithAggregatesInput | ImportErrorScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"ImportError"> | number
+    batchId?: StringWithAggregatesFilter<"ImportError"> | string
+    rowNumber?: IntWithAggregatesFilter<"ImportError"> | number
+    entityType?: StringWithAggregatesFilter<"ImportError"> | string
+    rawData?: JsonWithAggregatesFilter<"ImportError">
+    error?: StringWithAggregatesFilter<"ImportError"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"ImportError"> | Date | string
   }
 
   export type CompanyCreateInput = {
@@ -17716,6 +20261,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutCustomersInput
@@ -17749,6 +20295,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
@@ -17780,6 +20327,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
@@ -17813,6 +20361,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
@@ -17845,6 +20394,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -17868,6 +20418,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -17892,6 +20443,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18669,6 +21221,7 @@ export namespace Prisma {
     installDate?: Date | string | null
     warrantyEnd?: Date | string | null
     notes?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     customer: CustomerCreateNestedOneWithoutEquipmentInput
@@ -18685,6 +21238,7 @@ export namespace Prisma {
     installDate?: Date | string | null
     warrantyEnd?: Date | string | null
     notes?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -18699,6 +21253,7 @@ export namespace Prisma {
     installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
@@ -18715,6 +21270,7 @@ export namespace Prisma {
     installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18730,6 +21286,7 @@ export namespace Prisma {
     installDate?: Date | string | null
     warrantyEnd?: Date | string | null
     notes?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -18744,6 +21301,7 @@ export namespace Prisma {
     installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18759,6 +21317,7 @@ export namespace Prisma {
     installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -19026,6 +21585,188 @@ export namespace Prisma {
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ImportBatchCreateInput = {
+    id?: string
+    companyId: string
+    source: string
+    status?: $Enums.ImportStatus
+    totalRows?: number
+    imported?: number
+    skipped?: number
+    failed?: number
+    createdBy: string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    errors?: ImportErrorCreateNestedManyWithoutBatchInput
+  }
+
+  export type ImportBatchUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    source: string
+    status?: $Enums.ImportStatus
+    totalRows?: number
+    imported?: number
+    skipped?: number
+    failed?: number
+    createdBy: string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    errors?: ImportErrorUncheckedCreateNestedManyWithoutBatchInput
+  }
+
+  export type ImportBatchUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    totalRows?: IntFieldUpdateOperationsInput | number
+    imported?: IntFieldUpdateOperationsInput | number
+    skipped?: IntFieldUpdateOperationsInput | number
+    failed?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errors?: ImportErrorUpdateManyWithoutBatchNestedInput
+  }
+
+  export type ImportBatchUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    totalRows?: IntFieldUpdateOperationsInput | number
+    imported?: IntFieldUpdateOperationsInput | number
+    skipped?: IntFieldUpdateOperationsInput | number
+    failed?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    errors?: ImportErrorUncheckedUpdateManyWithoutBatchNestedInput
+  }
+
+  export type ImportBatchCreateManyInput = {
+    id?: string
+    companyId: string
+    source: string
+    status?: $Enums.ImportStatus
+    totalRows?: number
+    imported?: number
+    skipped?: number
+    failed?: number
+    createdBy: string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type ImportBatchUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    totalRows?: IntFieldUpdateOperationsInput | number
+    imported?: IntFieldUpdateOperationsInput | number
+    skipped?: IntFieldUpdateOperationsInput | number
+    failed?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ImportBatchUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    totalRows?: IntFieldUpdateOperationsInput | number
+    imported?: IntFieldUpdateOperationsInput | number
+    skipped?: IntFieldUpdateOperationsInput | number
+    failed?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ImportErrorCreateInput = {
+    rowNumber: number
+    entityType: string
+    rawData: JsonNullValueInput | InputJsonValue
+    error: string
+    createdAt?: Date | string
+    batch: ImportBatchCreateNestedOneWithoutErrorsInput
+  }
+
+  export type ImportErrorUncheckedCreateInput = {
+    id?: number
+    batchId: string
+    rowNumber: number
+    entityType: string
+    rawData: JsonNullValueInput | InputJsonValue
+    error: string
+    createdAt?: Date | string
+  }
+
+  export type ImportErrorUpdateInput = {
+    rowNumber?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    rawData?: JsonNullValueInput | InputJsonValue
+    error?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    batch?: ImportBatchUpdateOneRequiredWithoutErrorsNestedInput
+  }
+
+  export type ImportErrorUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    batchId?: StringFieldUpdateOperationsInput | string
+    rowNumber?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    rawData?: JsonNullValueInput | InputJsonValue
+    error?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ImportErrorCreateManyInput = {
+    id?: number
+    batchId: string
+    rowNumber: number
+    entityType: string
+    rawData: JsonNullValueInput | InputJsonValue
+    error: string
+    createdAt?: Date | string
+  }
+
+  export type ImportErrorUpdateManyMutationInput = {
+    rowNumber?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    rawData?: JsonNullValueInput | InputJsonValue
+    error?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ImportErrorUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    batchId?: StringFieldUpdateOperationsInput | string
+    rowNumber?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    rawData?: JsonNullValueInput | InputJsonValue
+    error?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -19478,6 +22219,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrder
+    importBatchId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -19501,6 +22243,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrder
+    importBatchId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -19524,6 +22267,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: SortOrder
     engagementStatus?: SortOrder
     auth0UserId?: SortOrder
+    importBatchId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -20050,6 +22794,7 @@ export namespace Prisma {
     installDate?: SortOrder
     warrantyEnd?: SortOrder
     notes?: SortOrder
+    importBatchId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -20065,6 +22810,7 @@ export namespace Prisma {
     installDate?: SortOrder
     warrantyEnd?: SortOrder
     notes?: SortOrder
+    importBatchId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -20080,6 +22826,7 @@ export namespace Prisma {
     installDate?: SortOrder
     warrantyEnd?: SortOrder
     notes?: SortOrder
+    importBatchId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -20282,6 +23029,181 @@ export namespace Prisma {
     _sum?: NestedFloatFilter<$PrismaModel>
     _min?: NestedFloatFilter<$PrismaModel>
     _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type EnumImportStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumImportStatusFilter<$PrismaModel> | $Enums.ImportStatus
+  }
+
+  export type ImportErrorListRelationFilter = {
+    every?: ImportErrorWhereInput
+    some?: ImportErrorWhereInput
+    none?: ImportErrorWhereInput
+  }
+
+  export type ImportErrorOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ImportBatchCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    source?: SortOrder
+    status?: SortOrder
+    totalRows?: SortOrder
+    imported?: SortOrder
+    skipped?: SortOrder
+    failed?: SortOrder
+    createdBy?: SortOrder
+    rawData?: SortOrder
+    columnMap?: SortOrder
+    completedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ImportBatchAvgOrderByAggregateInput = {
+    totalRows?: SortOrder
+    imported?: SortOrder
+    skipped?: SortOrder
+    failed?: SortOrder
+  }
+
+  export type ImportBatchMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    source?: SortOrder
+    status?: SortOrder
+    totalRows?: SortOrder
+    imported?: SortOrder
+    skipped?: SortOrder
+    failed?: SortOrder
+    createdBy?: SortOrder
+    completedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ImportBatchMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    source?: SortOrder
+    status?: SortOrder
+    totalRows?: SortOrder
+    imported?: SortOrder
+    skipped?: SortOrder
+    failed?: SortOrder
+    createdBy?: SortOrder
+    completedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ImportBatchSumOrderByAggregateInput = {
+    totalRows?: SortOrder
+    imported?: SortOrder
+    skipped?: SortOrder
+    failed?: SortOrder
+  }
+
+  export type EnumImportStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumImportStatusWithAggregatesFilter<$PrismaModel> | $Enums.ImportStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumImportStatusFilter<$PrismaModel>
+    _max?: NestedEnumImportStatusFilter<$PrismaModel>
+  }
+  export type JsonFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type ImportBatchRelationFilter = {
+    is?: ImportBatchWhereInput
+    isNot?: ImportBatchWhereInput
+  }
+
+  export type ImportErrorCountOrderByAggregateInput = {
+    id?: SortOrder
+    batchId?: SortOrder
+    rowNumber?: SortOrder
+    entityType?: SortOrder
+    rawData?: SortOrder
+    error?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ImportErrorAvgOrderByAggregateInput = {
+    id?: SortOrder
+    rowNumber?: SortOrder
+  }
+
+  export type ImportErrorMaxOrderByAggregateInput = {
+    id?: SortOrder
+    batchId?: SortOrder
+    rowNumber?: SortOrder
+    entityType?: SortOrder
+    error?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ImportErrorMinOrderByAggregateInput = {
+    id?: SortOrder
+    batchId?: SortOrder
+    rowNumber?: SortOrder
+    entityType?: SortOrder
+    error?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ImportErrorSumOrderByAggregateInput = {
+    id?: SortOrder
+    rowNumber?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type CustomerCreateNestedManyWithoutCompanyInput = {
@@ -21228,6 +24150,66 @@ export namespace Prisma {
     update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutUpsellRecommendationsInput, CustomerUpdateWithoutUpsellRecommendationsInput>, CustomerUncheckedUpdateWithoutUpsellRecommendationsInput>
   }
 
+  export type ImportErrorCreateNestedManyWithoutBatchInput = {
+    create?: XOR<ImportErrorCreateWithoutBatchInput, ImportErrorUncheckedCreateWithoutBatchInput> | ImportErrorCreateWithoutBatchInput[] | ImportErrorUncheckedCreateWithoutBatchInput[]
+    connectOrCreate?: ImportErrorCreateOrConnectWithoutBatchInput | ImportErrorCreateOrConnectWithoutBatchInput[]
+    createMany?: ImportErrorCreateManyBatchInputEnvelope
+    connect?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+  }
+
+  export type ImportErrorUncheckedCreateNestedManyWithoutBatchInput = {
+    create?: XOR<ImportErrorCreateWithoutBatchInput, ImportErrorUncheckedCreateWithoutBatchInput> | ImportErrorCreateWithoutBatchInput[] | ImportErrorUncheckedCreateWithoutBatchInput[]
+    connectOrCreate?: ImportErrorCreateOrConnectWithoutBatchInput | ImportErrorCreateOrConnectWithoutBatchInput[]
+    createMany?: ImportErrorCreateManyBatchInputEnvelope
+    connect?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+  }
+
+  export type EnumImportStatusFieldUpdateOperationsInput = {
+    set?: $Enums.ImportStatus
+  }
+
+  export type ImportErrorUpdateManyWithoutBatchNestedInput = {
+    create?: XOR<ImportErrorCreateWithoutBatchInput, ImportErrorUncheckedCreateWithoutBatchInput> | ImportErrorCreateWithoutBatchInput[] | ImportErrorUncheckedCreateWithoutBatchInput[]
+    connectOrCreate?: ImportErrorCreateOrConnectWithoutBatchInput | ImportErrorCreateOrConnectWithoutBatchInput[]
+    upsert?: ImportErrorUpsertWithWhereUniqueWithoutBatchInput | ImportErrorUpsertWithWhereUniqueWithoutBatchInput[]
+    createMany?: ImportErrorCreateManyBatchInputEnvelope
+    set?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+    disconnect?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+    delete?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+    connect?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+    update?: ImportErrorUpdateWithWhereUniqueWithoutBatchInput | ImportErrorUpdateWithWhereUniqueWithoutBatchInput[]
+    updateMany?: ImportErrorUpdateManyWithWhereWithoutBatchInput | ImportErrorUpdateManyWithWhereWithoutBatchInput[]
+    deleteMany?: ImportErrorScalarWhereInput | ImportErrorScalarWhereInput[]
+  }
+
+  export type ImportErrorUncheckedUpdateManyWithoutBatchNestedInput = {
+    create?: XOR<ImportErrorCreateWithoutBatchInput, ImportErrorUncheckedCreateWithoutBatchInput> | ImportErrorCreateWithoutBatchInput[] | ImportErrorUncheckedCreateWithoutBatchInput[]
+    connectOrCreate?: ImportErrorCreateOrConnectWithoutBatchInput | ImportErrorCreateOrConnectWithoutBatchInput[]
+    upsert?: ImportErrorUpsertWithWhereUniqueWithoutBatchInput | ImportErrorUpsertWithWhereUniqueWithoutBatchInput[]
+    createMany?: ImportErrorCreateManyBatchInputEnvelope
+    set?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+    disconnect?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+    delete?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+    connect?: ImportErrorWhereUniqueInput | ImportErrorWhereUniqueInput[]
+    update?: ImportErrorUpdateWithWhereUniqueWithoutBatchInput | ImportErrorUpdateWithWhereUniqueWithoutBatchInput[]
+    updateMany?: ImportErrorUpdateManyWithWhereWithoutBatchInput | ImportErrorUpdateManyWithWhereWithoutBatchInput[]
+    deleteMany?: ImportErrorScalarWhereInput | ImportErrorScalarWhereInput[]
+  }
+
+  export type ImportBatchCreateNestedOneWithoutErrorsInput = {
+    create?: XOR<ImportBatchCreateWithoutErrorsInput, ImportBatchUncheckedCreateWithoutErrorsInput>
+    connectOrCreate?: ImportBatchCreateOrConnectWithoutErrorsInput
+    connect?: ImportBatchWhereUniqueInput
+  }
+
+  export type ImportBatchUpdateOneRequiredWithoutErrorsNestedInput = {
+    create?: XOR<ImportBatchCreateWithoutErrorsInput, ImportBatchUncheckedCreateWithoutErrorsInput>
+    connectOrCreate?: ImportBatchCreateOrConnectWithoutErrorsInput
+    upsert?: ImportBatchUpsertWithoutErrorsInput
+    connect?: ImportBatchWhereUniqueInput
+    update?: XOR<XOR<ImportBatchUpdateToOneWithWhereWithoutErrorsInput, ImportBatchUpdateWithoutErrorsInput>, ImportBatchUncheckedUpdateWithoutErrorsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -21596,6 +24578,45 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
+  export type NestedEnumImportStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumImportStatusFilter<$PrismaModel> | $Enums.ImportStatus
+  }
+
+  export type NestedEnumImportStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumImportStatusWithAggregatesFilter<$PrismaModel> | $Enums.ImportStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumImportStatusFilter<$PrismaModel>
+    _max?: NestedEnumImportStatusFilter<$PrismaModel>
+  }
+  export type NestedJsonFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
   export type CustomerCreateWithoutCompanyInput = {
     id?: string
     type?: $Enums.CustomerType
@@ -21615,6 +24636,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactCreateNestedManyWithoutCustomerInput
@@ -21646,6 +24668,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
@@ -21947,6 +24970,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFilter<"Customer"> | boolean
     engagementStatus?: EnumCustomerEngagementStatusFilter<"Customer"> | $Enums.CustomerEngagementStatus
     auth0UserId?: StringNullableFilter<"Customer"> | string | null
+    importBatchId?: StringNullableFilter<"Customer"> | string | null
     createdAt?: DateTimeFilter<"Customer"> | Date | string
     updatedAt?: DateTimeFilter<"Customer"> | Date | string
   }
@@ -22590,6 +25614,7 @@ export namespace Prisma {
     installDate?: Date | string | null
     warrantyEnd?: Date | string | null
     notes?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -22604,6 +25629,7 @@ export namespace Prisma {
     installDate?: Date | string | null
     warrantyEnd?: Date | string | null
     notes?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -22886,6 +25912,7 @@ export namespace Prisma {
     installDate?: DateTimeNullableFilter<"Equipment"> | Date | string | null
     warrantyEnd?: DateTimeNullableFilter<"Equipment"> | Date | string | null
     notes?: StringNullableFilter<"Equipment"> | string | null
+    importBatchId?: StringNullableFilter<"Equipment"> | string | null
     createdAt?: DateTimeFilter<"Equipment"> | Date | string
     updatedAt?: DateTimeFilter<"Equipment"> | Date | string
   }
@@ -22998,6 +26025,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutCustomersInput
@@ -23030,6 +26058,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     leads?: LeadUncheckedCreateNestedManyWithoutCustomerInput
@@ -23135,6 +26164,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
@@ -23167,6 +26197,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     leads?: LeadUncheckedUpdateManyWithoutCustomerNestedInput
@@ -23250,6 +26281,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutCustomersInput
@@ -23282,6 +26314,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
@@ -23427,6 +26460,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
@@ -23459,6 +26493,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
@@ -23558,6 +26593,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutCustomersInput
@@ -23590,6 +26626,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
@@ -23695,6 +26732,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
@@ -23727,6 +26765,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
@@ -23810,6 +26849,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutCustomersInput
@@ -23842,6 +26882,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
@@ -23947,6 +26988,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
@@ -23979,6 +27021,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
@@ -24009,6 +27052,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutCustomersInput
@@ -24041,6 +27085,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
@@ -24087,6 +27132,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
@@ -24119,6 +27165,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
@@ -24149,6 +27196,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutCustomersInput
@@ -24181,6 +27229,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
@@ -24280,6 +27329,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
@@ -24312,6 +27362,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
@@ -24401,6 +27452,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutCustomersInput
@@ -24433,6 +27485,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
@@ -24479,6 +27532,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
@@ -24511,6 +27565,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
@@ -24541,6 +27596,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     company: CompanyCreateNestedOneWithoutCustomersInput
@@ -24573,6 +27629,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
@@ -24619,6 +27676,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
@@ -24651,6 +27709,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
@@ -24660,6 +27719,142 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type ImportErrorCreateWithoutBatchInput = {
+    rowNumber: number
+    entityType: string
+    rawData: JsonNullValueInput | InputJsonValue
+    error: string
+    createdAt?: Date | string
+  }
+
+  export type ImportErrorUncheckedCreateWithoutBatchInput = {
+    id?: number
+    rowNumber: number
+    entityType: string
+    rawData: JsonNullValueInput | InputJsonValue
+    error: string
+    createdAt?: Date | string
+  }
+
+  export type ImportErrorCreateOrConnectWithoutBatchInput = {
+    where: ImportErrorWhereUniqueInput
+    create: XOR<ImportErrorCreateWithoutBatchInput, ImportErrorUncheckedCreateWithoutBatchInput>
+  }
+
+  export type ImportErrorCreateManyBatchInputEnvelope = {
+    data: ImportErrorCreateManyBatchInput | ImportErrorCreateManyBatchInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ImportErrorUpsertWithWhereUniqueWithoutBatchInput = {
+    where: ImportErrorWhereUniqueInput
+    update: XOR<ImportErrorUpdateWithoutBatchInput, ImportErrorUncheckedUpdateWithoutBatchInput>
+    create: XOR<ImportErrorCreateWithoutBatchInput, ImportErrorUncheckedCreateWithoutBatchInput>
+  }
+
+  export type ImportErrorUpdateWithWhereUniqueWithoutBatchInput = {
+    where: ImportErrorWhereUniqueInput
+    data: XOR<ImportErrorUpdateWithoutBatchInput, ImportErrorUncheckedUpdateWithoutBatchInput>
+  }
+
+  export type ImportErrorUpdateManyWithWhereWithoutBatchInput = {
+    where: ImportErrorScalarWhereInput
+    data: XOR<ImportErrorUpdateManyMutationInput, ImportErrorUncheckedUpdateManyWithoutBatchInput>
+  }
+
+  export type ImportErrorScalarWhereInput = {
+    AND?: ImportErrorScalarWhereInput | ImportErrorScalarWhereInput[]
+    OR?: ImportErrorScalarWhereInput[]
+    NOT?: ImportErrorScalarWhereInput | ImportErrorScalarWhereInput[]
+    id?: IntFilter<"ImportError"> | number
+    batchId?: StringFilter<"ImportError"> | string
+    rowNumber?: IntFilter<"ImportError"> | number
+    entityType?: StringFilter<"ImportError"> | string
+    rawData?: JsonFilter<"ImportError">
+    error?: StringFilter<"ImportError"> | string
+    createdAt?: DateTimeFilter<"ImportError"> | Date | string
+  }
+
+  export type ImportBatchCreateWithoutErrorsInput = {
+    id?: string
+    companyId: string
+    source: string
+    status?: $Enums.ImportStatus
+    totalRows?: number
+    imported?: number
+    skipped?: number
+    failed?: number
+    createdBy: string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type ImportBatchUncheckedCreateWithoutErrorsInput = {
+    id?: string
+    companyId: string
+    source: string
+    status?: $Enums.ImportStatus
+    totalRows?: number
+    imported?: number
+    skipped?: number
+    failed?: number
+    createdBy: string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type ImportBatchCreateOrConnectWithoutErrorsInput = {
+    where: ImportBatchWhereUniqueInput
+    create: XOR<ImportBatchCreateWithoutErrorsInput, ImportBatchUncheckedCreateWithoutErrorsInput>
+  }
+
+  export type ImportBatchUpsertWithoutErrorsInput = {
+    update: XOR<ImportBatchUpdateWithoutErrorsInput, ImportBatchUncheckedUpdateWithoutErrorsInput>
+    create: XOR<ImportBatchCreateWithoutErrorsInput, ImportBatchUncheckedCreateWithoutErrorsInput>
+    where?: ImportBatchWhereInput
+  }
+
+  export type ImportBatchUpdateToOneWithWhereWithoutErrorsInput = {
+    where?: ImportBatchWhereInput
+    data: XOR<ImportBatchUpdateWithoutErrorsInput, ImportBatchUncheckedUpdateWithoutErrorsInput>
+  }
+
+  export type ImportBatchUpdateWithoutErrorsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    totalRows?: IntFieldUpdateOperationsInput | number
+    imported?: IntFieldUpdateOperationsInput | number
+    skipped?: IntFieldUpdateOperationsInput | number
+    failed?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ImportBatchUncheckedUpdateWithoutErrorsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    totalRows?: IntFieldUpdateOperationsInput | number
+    imported?: IntFieldUpdateOperationsInput | number
+    skipped?: IntFieldUpdateOperationsInput | number
+    failed?: IntFieldUpdateOperationsInput | number
+    createdBy?: StringFieldUpdateOperationsInput | string
+    rawData?: NullableJsonNullValueInput | InputJsonValue
+    columnMap?: NullableJsonNullValueInput | InputJsonValue
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CustomerCreateManyCompanyInput = {
@@ -24681,6 +27876,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: boolean
     engagementStatus?: $Enums.CustomerEngagementStatus
     auth0UserId?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -24798,6 +27994,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUpdateManyWithoutCustomerNestedInput
@@ -24829,6 +28026,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
@@ -24860,6 +28058,7 @@ export namespace Prisma {
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
     auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -25262,6 +28461,7 @@ export namespace Prisma {
     installDate?: Date | string | null
     warrantyEnd?: Date | string | null
     notes?: string | null
+    importBatchId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -25606,6 +28806,7 @@ export namespace Prisma {
     installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -25620,6 +28821,7 @@ export namespace Prisma {
     installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -25634,6 +28836,7 @@ export namespace Prisma {
     installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -25746,6 +28949,41 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ImportErrorCreateManyBatchInput = {
+    id?: number
+    rowNumber: number
+    entityType: string
+    rawData: JsonNullValueInput | InputJsonValue
+    error: string
+    createdAt?: Date | string
+  }
+
+  export type ImportErrorUpdateWithoutBatchInput = {
+    rowNumber?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    rawData?: JsonNullValueInput | InputJsonValue
+    error?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ImportErrorUncheckedUpdateWithoutBatchInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    rowNumber?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    rawData?: JsonNullValueInput | InputJsonValue
+    error?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ImportErrorUncheckedUpdateManyWithoutBatchInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    rowNumber?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    rawData?: JsonNullValueInput | InputJsonValue
+    error?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
 
 
   /**
@@ -25763,6 +29001,10 @@ export namespace Prisma {
      * @deprecated Use LeadCountOutputTypeDefaultArgs instead
      */
     export type LeadCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = LeadCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ImportBatchCountOutputTypeDefaultArgs instead
+     */
+    export type ImportBatchCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ImportBatchCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use CompanyDefaultArgs instead
      */
@@ -25811,6 +29053,14 @@ export namespace Prisma {
      * @deprecated Use UpsellRecommendationDefaultArgs instead
      */
     export type UpsellRecommendationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = UpsellRecommendationDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ImportBatchDefaultArgs instead
+     */
+    export type ImportBatchArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ImportBatchDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ImportErrorDefaultArgs instead
+     */
+    export type ImportErrorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ImportErrorDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

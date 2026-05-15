@@ -209,6 +209,29 @@ exports.Prisma.ReviewRequestScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.MarketingSettingsScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  globalEnabled: 'globalEnabled',
+  reviewRequestsEnabled: 'reviewRequestsEnabled',
+  equipmentAutomationsEnabled: 'equipmentAutomationsEnabled',
+  winbackEnabled: 'winbackEnabled',
+  frequencyCapPerDay: 'frequencyCapPerDay',
+  frequencyCapPerWeek: 'frequencyCapPerWeek',
+  defaultSenderName: 'defaultSenderName',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MarketingDeletionLogScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  customerId: 'customerId',
+  deletedBy: 'deletedBy',
+  recordsDeleted: 'recordsDeleted',
+  deletedAt: 'deletedAt'
+};
+
 exports.Prisma.MarketingAttributionScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
@@ -286,6 +309,8 @@ exports.Prisma.ModelName = {
   SendEvent: 'SendEvent',
   Suppression: 'Suppression',
   ReviewRequest: 'ReviewRequest',
+  MarketingSettings: 'MarketingSettings',
+  MarketingDeletionLog: 'MarketingDeletionLog',
   MarketingAttribution: 'MarketingAttribution'
 };
 

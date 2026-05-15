@@ -48,6 +48,12 @@ const EVENT_TO_QUERY_KEYS: Record<string, string[][]> = {
 
 // ── URL helpers ──────────────────────────────────────────────────────────────
 
+const DEFAULT_API_BASE_URL = 'https://nginx-gateway-2ohuhmktua-uc.a.run.app/api'
+
+function getDefaultApiBaseUrl(): string {
+  return __DEV__ ? 'http://localhost:80/api' : DEFAULT_API_BASE_URL
+}
+
 function getWsBaseUrl(): string {
   // Explicit override wins
   const explicit =
@@ -58,7 +64,7 @@ function getWsBaseUrl(): string {
   const apiBase =
     Constants.expoConfig?.extra?.apiBaseUrl ??
     process.env.EXPO_PUBLIC_API_BASE_URL ??
-    'http://localhost:80/api'
+    getDefaultApiBaseUrl()
   return String(apiBase).replace(/\/api\/?$/, '')
 }
 

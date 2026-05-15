@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { TemplatesService, CreateTemplateDto, UpdateTemplateDto } from './templates.service';
-import { CurrentUser, Roles } from '@tscrm/auth-client';
+import { JwtAuthGuard, RolesGuard, CurrentUser, Roles } from '@tscrm/auth-client';
 import { AuthUser, Role } from '@tscrm/types';
 
 @ApiTags('marketing-templates')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('m/templates')
 export class TemplatesController {
   constructor(private readonly svc: TemplatesService) {}

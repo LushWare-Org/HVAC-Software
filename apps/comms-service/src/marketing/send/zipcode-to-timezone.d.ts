@@ -1,4 +1,8 @@
 declare module 'zipcode-to-timezone' {
-  function lookup(zipCode: string): string | null;
-  export { lookup };
+  interface ZipcodeToTimezone {
+    lookup(zipCode: string): string | null;
+  }
+  const zipcodeToTimezone: ZipcodeToTimezone;
+  export default zipcodeToTimezone;
+  export function lookup(zipCode: string): string | null;
 }

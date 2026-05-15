@@ -9,10 +9,9 @@ import {
     ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
 import { useDashboardKpis, useRecentJobs, useUpcomingAppointments } from '../hooks/useDashboard'
-import { useRevenueSeries, useJobsByStatus, useAnalyticsServiceHealth } from '../hooks/useAnalytics'
+import { useRevenueSeries, useJobsByStatus } from '../hooks/useAnalytics'
 import RecommendationsPanel from '../components/RecommendationsPanel'
 import type { Job, Appointment } from '../types/api'
-import { humanizeStatus, normalizeStatus, formatRevenueK } from '../lib/format'
 
 // ─── Status maps: backend UPPER_CASE → display ────────────────────────────────
 
@@ -25,14 +24,20 @@ const JOB_STATUS_MAP: Record<string, { label: string; css: string }> = {
     PAID:        { label: 'Paid',        css: 'badge-green' },
     CANCELLED:   { label: 'Cancelled',  css: 'badge-red' },
     ON_HOLD:     { label: 'On Hold',     css: 'badge-neutral' },
+    // legacy lowercase from mock data
+    in_progress: { label: 'In Progress', css: 'badge-blue' },
+    scheduled:   { label: 'Scheduled',   css: 'badge-violet' },
+    completed:   { label: 'Completed',   css: 'badge-green' },
+    pending:     { label: 'Pending',     css: 'badge-amber' },
+    invoiced:    { label: 'Invoiced',    css: 'badge-cyan' },
+    cancelled:   { label: 'Cancelled',  css: 'badge-red' },
 }
 
 
 const JOB_STATUS_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#6b7280', '#ef4444']
 
-// Backend revenue values are in dollars; centralize the $k display here.
 function fmt(n: number) {
-    return formatRevenueK(n, 1)
+    return n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n}`
 }
 
 // ─── Chart tooltip ────────────────────────────────────────────────────────────
@@ -44,7 +49,7 @@ const ChartTooltip = ({ active, payload, label }: any) => {
             <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 6, fontWeight: 600 }}>{label}</div>
             {payload.map((p: any) => (
                 <div key={p.dataKey} style={{ fontSize: 12, color: p.color, fontWeight: 600, marginBottom: 2 }}>
-                    {p.name}: {p.dataKey === 'revenue' ? formatRevenueK(p.value, 0) : p.value}
+                    {p.name}: {p.dataKey === 'revenue' ? `$${(p.value / 1000).toFixed(0)}k` : p.value}
                 </div>
             ))}
         </div>
@@ -78,8 +83,6 @@ export default function Dashboard() {
     useEffect(() => { setMounted(true) }, [])
 
     // ── API data ─────────────────────────────────────────────────────────────
-    const analyticsHealthQuery = useAnalyticsServiceHealth()
-    const analyticsDegraded = analyticsHealthQuery.data?.available === false
     const kpiQuery = useDashboardKpis()
     const recentJobsQuery = useRecentJobs(page, itemsPerPage)
     const appointmentsQuery = useUpcomingAppointments(4)
@@ -147,32 +150,6 @@ export default function Dashboard() {
 
     return (
         <div className="anim-fade-up">
-
-            {/* Analytics service degraded banner */}
-            {analyticsDegraded && (
-                <div
-                    role="status"
-                    aria-live="polite"
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '10px 14px', marginBottom: 12,
-                        background: 'var(--amber-dim, rgba(245, 158, 11, 0.12))',
-                        border: '1px solid var(--amber, #f59e0b)',
-                        borderRadius: 8, color: 'var(--amber, #f59e0b)', fontSize: 13,
-                    }}
-                >
-                    <AlertCircle size={14} />
-                    <span style={{ flex: 1 }}>
-                        Analytics service is unreachable — KPIs and revenue charts are showing demo data until it recovers.
-                    </span>
-                    <button
-                        onClick={() => analyticsHealthQuery.refetch()}
-                        style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'inherit', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }}
-                    >
-                        <RefreshCw size={12} /> Retry
-                    </button>
-                </div>
-            )}
 
             {/* Error banner */}
             {hasError && (
@@ -367,7 +344,7 @@ export default function Dashboard() {
                                     ))
                                 )}
                                 {!recentJobsQuery.isLoading && paginatedJobs.map(j => {
-                                    const s = JOB_STATUS_MAP[normalizeStatus(j.status)] ?? { label: humanizeStatus(j.status), css: 'badge-neutral' }
+                                    const s = JOB_STATUS_MAP[j.status] ?? { label: j.status, css: 'badge-neutral' }
                                     const amount = j.finalAmount ?? j.estimatedAmount ?? 0
                                     return (
                                         <tr key={j.id}>

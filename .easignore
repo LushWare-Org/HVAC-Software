@@ -1,0 +1,18 @@
+# Ensure EAS uses pnpm lockfile (not npm lockfile) in this monorepo.
+package-lock.json
+
+# Large local-only directories
+node_modules/
+**/node_modules/
+.git/
+.turbo/
+.docker-data/
+.code-review-graph/
+.pnpm-store/
+
+# Local artifacts
+dist/
+build/
+coverage/
+**/.expo/
+*.log

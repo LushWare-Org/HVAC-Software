@@ -56,6 +56,22 @@ export class PublicController {
     );
   }
 
+  @Get('p/:sendJobId')
+  @ApiOperation({ summary: '1×1 open-tracking pixel — records OPENED event' })
+  async trackOpen(@Param('sendJobId') sendJobId: string, @Res() res: Response): Promise<void> {
+    // Fire-and-forget DB write — do not block the pixel response
+    void this.prisma.sendEvent.create({
+      data: { sendJobId, eventType: SendEventType.OPENED },
+    }).catch((err: Error) => this.logger.warn(`Open-pixel DB error for ${sendJobId}: ${err.message}`));
+
+    // 1×1 transparent GIF
+    const pixel = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+    res.setHeader('Content-Type', 'image/gif');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.status(200).end(pixel);
+  }
+
   @Get('r/:token')
   @ApiOperation({ summary: 'Tracked click redirect (unauthenticated, customer-facing)' })
   async trackClick(@Param('token') token: string, @Res() res: Response): Promise<void> {

@@ -1,0 +1,7 @@
+Customer Email,Type,Brand,Model,Serial Number,Install Date,Warranty End,Notes
+james.carter@testmail.com,Heat Pump,Lennox,XP25-036,LX-SN-10001,2021-06-15,2028-06-15,Primary bedroom unit
+james.carter@testmail.com,Air Handler,Carrier,FV4CNF003,CA-SN-10002,2021-06-15,2028-06-15,
+sophia.bennett@testmail.com,AC Unit,Trane,XR15,TR-SN-10003,2019-03-20,2026-03-20,Needs annual filter
+marcus.williams@testmail.com,Commercial RTU,Daikin,DCC036,DK-SN-10004,2020-01-10,2027-01-10,Rooftop unit - Building A
+marcus.williams@testmail.com,Commercial RTU,Daikin,DCC036,DK-SN-10005,2020-01-10,2027-01-10,Rooftop unit - Building B
+david.kim@testmail.com,Chiller,York,YCAV0397,YK-SN-10006,2018-09-01,2025-09-01,Data center primary cooling

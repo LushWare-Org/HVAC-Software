@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CampaignService, CreateCampaignDto } from './campaign.service';
-import { CurrentUser, Roles } from '@tscrm/auth-client';
+import { JwtAuthGuard, RolesGuard, CurrentUser, Roles } from '@tscrm/auth-client';
 import { AuthUser, Role } from '@tscrm/types';
 
 @ApiTags('marketing-campaigns')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('m/campaigns')
 export class CampaignController {
   constructor(private readonly svc: CampaignService) {}

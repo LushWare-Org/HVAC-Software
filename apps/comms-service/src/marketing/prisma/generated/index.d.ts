@@ -49,6 +49,16 @@ export type Suppression = $Result.DefaultSelection<Prisma.$SuppressionPayload>
  */
 export type ReviewRequest = $Result.DefaultSelection<Prisma.$ReviewRequestPayload>
 /**
+ * Model MarketingSettings
+ * 
+ */
+export type MarketingSettings = $Result.DefaultSelection<Prisma.$MarketingSettingsPayload>
+/**
+ * Model MarketingDeletionLog
+ * 
+ */
+export type MarketingDeletionLog = $Result.DefaultSelection<Prisma.$MarketingDeletionLogPayload>
+/**
  * Model MarketingAttribution
  * 
  */
@@ -334,6 +344,26 @@ export class PrismaClient<
     * ```
     */
   get reviewRequest(): Prisma.ReviewRequestDelegate<ExtArgs>;
+
+  /**
+   * `prisma.marketingSettings`: Exposes CRUD operations for the **MarketingSettings** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MarketingSettings
+    * const marketingSettings = await prisma.marketingSettings.findMany()
+    * ```
+    */
+  get marketingSettings(): Prisma.MarketingSettingsDelegate<ExtArgs>;
+
+  /**
+   * `prisma.marketingDeletionLog`: Exposes CRUD operations for the **MarketingDeletionLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MarketingDeletionLogs
+    * const marketingDeletionLogs = await prisma.marketingDeletionLog.findMany()
+    * ```
+    */
+  get marketingDeletionLog(): Prisma.MarketingDeletionLogDelegate<ExtArgs>;
 
   /**
    * `prisma.marketingAttribution`: Exposes CRUD operations for the **MarketingAttribution** model.
@@ -792,6 +822,8 @@ export namespace Prisma {
     SendEvent: 'SendEvent',
     Suppression: 'Suppression',
     ReviewRequest: 'ReviewRequest',
+    MarketingSettings: 'MarketingSettings',
+    MarketingDeletionLog: 'MarketingDeletionLog',
     MarketingAttribution: 'MarketingAttribution'
   };
 
@@ -808,7 +840,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "campaign" | "template" | "audience" | "sendJob" | "sendEvent" | "suppression" | "reviewRequest" | "marketingAttribution"
+      modelProps: "campaign" | "template" | "audience" | "sendJob" | "sendEvent" | "suppression" | "reviewRequest" | "marketingSettings" | "marketingDeletionLog" | "marketingAttribution"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1299,6 +1331,146 @@ export namespace Prisma {
           count: {
             args: Prisma.ReviewRequestCountArgs<ExtArgs>
             result: $Utils.Optional<ReviewRequestCountAggregateOutputType> | number
+          }
+        }
+      }
+      MarketingSettings: {
+        payload: Prisma.$MarketingSettingsPayload<ExtArgs>
+        fields: Prisma.MarketingSettingsFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MarketingSettingsFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MarketingSettingsFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload>
+          }
+          findFirst: {
+            args: Prisma.MarketingSettingsFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MarketingSettingsFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload>
+          }
+          findMany: {
+            args: Prisma.MarketingSettingsFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload>[]
+          }
+          create: {
+            args: Prisma.MarketingSettingsCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload>
+          }
+          createMany: {
+            args: Prisma.MarketingSettingsCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MarketingSettingsCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload>[]
+          }
+          delete: {
+            args: Prisma.MarketingSettingsDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload>
+          }
+          update: {
+            args: Prisma.MarketingSettingsUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload>
+          }
+          deleteMany: {
+            args: Prisma.MarketingSettingsDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MarketingSettingsUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.MarketingSettingsUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingSettingsPayload>
+          }
+          aggregate: {
+            args: Prisma.MarketingSettingsAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMarketingSettings>
+          }
+          groupBy: {
+            args: Prisma.MarketingSettingsGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MarketingSettingsGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MarketingSettingsCountArgs<ExtArgs>
+            result: $Utils.Optional<MarketingSettingsCountAggregateOutputType> | number
+          }
+        }
+      }
+      MarketingDeletionLog: {
+        payload: Prisma.$MarketingDeletionLogPayload<ExtArgs>
+        fields: Prisma.MarketingDeletionLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MarketingDeletionLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MarketingDeletionLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload>
+          }
+          findFirst: {
+            args: Prisma.MarketingDeletionLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MarketingDeletionLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload>
+          }
+          findMany: {
+            args: Prisma.MarketingDeletionLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload>[]
+          }
+          create: {
+            args: Prisma.MarketingDeletionLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload>
+          }
+          createMany: {
+            args: Prisma.MarketingDeletionLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MarketingDeletionLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload>[]
+          }
+          delete: {
+            args: Prisma.MarketingDeletionLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload>
+          }
+          update: {
+            args: Prisma.MarketingDeletionLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.MarketingDeletionLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MarketingDeletionLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.MarketingDeletionLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MarketingDeletionLogPayload>
+          }
+          aggregate: {
+            args: Prisma.MarketingDeletionLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMarketingDeletionLog>
+          }
+          groupBy: {
+            args: Prisma.MarketingDeletionLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MarketingDeletionLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MarketingDeletionLogCountArgs<ExtArgs>
+            result: $Utils.Optional<MarketingDeletionLogCountAggregateOutputType> | number
           }
         }
       }
@@ -8402,6 +8574,1918 @@ export namespace Prisma {
 
 
   /**
+   * Model MarketingSettings
+   */
+
+  export type AggregateMarketingSettings = {
+    _count: MarketingSettingsCountAggregateOutputType | null
+    _avg: MarketingSettingsAvgAggregateOutputType | null
+    _sum: MarketingSettingsSumAggregateOutputType | null
+    _min: MarketingSettingsMinAggregateOutputType | null
+    _max: MarketingSettingsMaxAggregateOutputType | null
+  }
+
+  export type MarketingSettingsAvgAggregateOutputType = {
+    frequencyCapPerDay: number | null
+    frequencyCapPerWeek: number | null
+  }
+
+  export type MarketingSettingsSumAggregateOutputType = {
+    frequencyCapPerDay: number | null
+    frequencyCapPerWeek: number | null
+  }
+
+  export type MarketingSettingsMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    globalEnabled: boolean | null
+    reviewRequestsEnabled: boolean | null
+    equipmentAutomationsEnabled: boolean | null
+    winbackEnabled: boolean | null
+    frequencyCapPerDay: number | null
+    frequencyCapPerWeek: number | null
+    defaultSenderName: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MarketingSettingsMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    globalEnabled: boolean | null
+    reviewRequestsEnabled: boolean | null
+    equipmentAutomationsEnabled: boolean | null
+    winbackEnabled: boolean | null
+    frequencyCapPerDay: number | null
+    frequencyCapPerWeek: number | null
+    defaultSenderName: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MarketingSettingsCountAggregateOutputType = {
+    id: number
+    companyId: number
+    globalEnabled: number
+    reviewRequestsEnabled: number
+    equipmentAutomationsEnabled: number
+    winbackEnabled: number
+    frequencyCapPerDay: number
+    frequencyCapPerWeek: number
+    defaultSenderName: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type MarketingSettingsAvgAggregateInputType = {
+    frequencyCapPerDay?: true
+    frequencyCapPerWeek?: true
+  }
+
+  export type MarketingSettingsSumAggregateInputType = {
+    frequencyCapPerDay?: true
+    frequencyCapPerWeek?: true
+  }
+
+  export type MarketingSettingsMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    globalEnabled?: true
+    reviewRequestsEnabled?: true
+    equipmentAutomationsEnabled?: true
+    winbackEnabled?: true
+    frequencyCapPerDay?: true
+    frequencyCapPerWeek?: true
+    defaultSenderName?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MarketingSettingsMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    globalEnabled?: true
+    reviewRequestsEnabled?: true
+    equipmentAutomationsEnabled?: true
+    winbackEnabled?: true
+    frequencyCapPerDay?: true
+    frequencyCapPerWeek?: true
+    defaultSenderName?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MarketingSettingsCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    globalEnabled?: true
+    reviewRequestsEnabled?: true
+    equipmentAutomationsEnabled?: true
+    winbackEnabled?: true
+    frequencyCapPerDay?: true
+    frequencyCapPerWeek?: true
+    defaultSenderName?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type MarketingSettingsAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MarketingSettings to aggregate.
+     */
+    where?: MarketingSettingsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MarketingSettings to fetch.
+     */
+    orderBy?: MarketingSettingsOrderByWithRelationInput | MarketingSettingsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MarketingSettingsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MarketingSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MarketingSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MarketingSettings
+    **/
+    _count?: true | MarketingSettingsCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MarketingSettingsAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MarketingSettingsSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MarketingSettingsMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MarketingSettingsMaxAggregateInputType
+  }
+
+  export type GetMarketingSettingsAggregateType<T extends MarketingSettingsAggregateArgs> = {
+        [P in keyof T & keyof AggregateMarketingSettings]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMarketingSettings[P]>
+      : GetScalarType<T[P], AggregateMarketingSettings[P]>
+  }
+
+
+
+
+  export type MarketingSettingsGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MarketingSettingsWhereInput
+    orderBy?: MarketingSettingsOrderByWithAggregationInput | MarketingSettingsOrderByWithAggregationInput[]
+    by: MarketingSettingsScalarFieldEnum[] | MarketingSettingsScalarFieldEnum
+    having?: MarketingSettingsScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MarketingSettingsCountAggregateInputType | true
+    _avg?: MarketingSettingsAvgAggregateInputType
+    _sum?: MarketingSettingsSumAggregateInputType
+    _min?: MarketingSettingsMinAggregateInputType
+    _max?: MarketingSettingsMaxAggregateInputType
+  }
+
+  export type MarketingSettingsGroupByOutputType = {
+    id: string
+    companyId: string
+    globalEnabled: boolean
+    reviewRequestsEnabled: boolean
+    equipmentAutomationsEnabled: boolean
+    winbackEnabled: boolean
+    frequencyCapPerDay: number
+    frequencyCapPerWeek: number
+    defaultSenderName: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: MarketingSettingsCountAggregateOutputType | null
+    _avg: MarketingSettingsAvgAggregateOutputType | null
+    _sum: MarketingSettingsSumAggregateOutputType | null
+    _min: MarketingSettingsMinAggregateOutputType | null
+    _max: MarketingSettingsMaxAggregateOutputType | null
+  }
+
+  type GetMarketingSettingsGroupByPayload<T extends MarketingSettingsGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MarketingSettingsGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MarketingSettingsGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MarketingSettingsGroupByOutputType[P]>
+            : GetScalarType<T[P], MarketingSettingsGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MarketingSettingsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    globalEnabled?: boolean
+    reviewRequestsEnabled?: boolean
+    equipmentAutomationsEnabled?: boolean
+    winbackEnabled?: boolean
+    frequencyCapPerDay?: boolean
+    frequencyCapPerWeek?: boolean
+    defaultSenderName?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["marketingSettings"]>
+
+  export type MarketingSettingsSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    globalEnabled?: boolean
+    reviewRequestsEnabled?: boolean
+    equipmentAutomationsEnabled?: boolean
+    winbackEnabled?: boolean
+    frequencyCapPerDay?: boolean
+    frequencyCapPerWeek?: boolean
+    defaultSenderName?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["marketingSettings"]>
+
+  export type MarketingSettingsSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    globalEnabled?: boolean
+    reviewRequestsEnabled?: boolean
+    equipmentAutomationsEnabled?: boolean
+    winbackEnabled?: boolean
+    frequencyCapPerDay?: boolean
+    frequencyCapPerWeek?: boolean
+    defaultSenderName?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $MarketingSettingsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MarketingSettings"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      globalEnabled: boolean
+      reviewRequestsEnabled: boolean
+      equipmentAutomationsEnabled: boolean
+      winbackEnabled: boolean
+      frequencyCapPerDay: number
+      frequencyCapPerWeek: number
+      defaultSenderName: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["marketingSettings"]>
+    composites: {}
+  }
+
+  type MarketingSettingsGetPayload<S extends boolean | null | undefined | MarketingSettingsDefaultArgs> = $Result.GetResult<Prisma.$MarketingSettingsPayload, S>
+
+  type MarketingSettingsCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<MarketingSettingsFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: MarketingSettingsCountAggregateInputType | true
+    }
+
+  export interface MarketingSettingsDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MarketingSettings'], meta: { name: 'MarketingSettings' } }
+    /**
+     * Find zero or one MarketingSettings that matches the filter.
+     * @param {MarketingSettingsFindUniqueArgs} args - Arguments to find a MarketingSettings
+     * @example
+     * // Get one MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MarketingSettingsFindUniqueArgs>(args: SelectSubset<T, MarketingSettingsFindUniqueArgs<ExtArgs>>): Prisma__MarketingSettingsClient<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one MarketingSettings that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {MarketingSettingsFindUniqueOrThrowArgs} args - Arguments to find a MarketingSettings
+     * @example
+     * // Get one MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MarketingSettingsFindUniqueOrThrowArgs>(args: SelectSubset<T, MarketingSettingsFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MarketingSettingsClient<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first MarketingSettings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingSettingsFindFirstArgs} args - Arguments to find a MarketingSettings
+     * @example
+     * // Get one MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MarketingSettingsFindFirstArgs>(args?: SelectSubset<T, MarketingSettingsFindFirstArgs<ExtArgs>>): Prisma__MarketingSettingsClient<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first MarketingSettings that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingSettingsFindFirstOrThrowArgs} args - Arguments to find a MarketingSettings
+     * @example
+     * // Get one MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MarketingSettingsFindFirstOrThrowArgs>(args?: SelectSubset<T, MarketingSettingsFindFirstOrThrowArgs<ExtArgs>>): Prisma__MarketingSettingsClient<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more MarketingSettings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingSettingsFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.findMany()
+     * 
+     * // Get first 10 MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const marketingSettingsWithIdOnly = await prisma.marketingSettings.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MarketingSettingsFindManyArgs>(args?: SelectSubset<T, MarketingSettingsFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a MarketingSettings.
+     * @param {MarketingSettingsCreateArgs} args - Arguments to create a MarketingSettings.
+     * @example
+     * // Create one MarketingSettings
+     * const MarketingSettings = await prisma.marketingSettings.create({
+     *   data: {
+     *     // ... data to create a MarketingSettings
+     *   }
+     * })
+     * 
+     */
+    create<T extends MarketingSettingsCreateArgs>(args: SelectSubset<T, MarketingSettingsCreateArgs<ExtArgs>>): Prisma__MarketingSettingsClient<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many MarketingSettings.
+     * @param {MarketingSettingsCreateManyArgs} args - Arguments to create many MarketingSettings.
+     * @example
+     * // Create many MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MarketingSettingsCreateManyArgs>(args?: SelectSubset<T, MarketingSettingsCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MarketingSettings and returns the data saved in the database.
+     * @param {MarketingSettingsCreateManyAndReturnArgs} args - Arguments to create many MarketingSettings.
+     * @example
+     * // Create many MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MarketingSettings and only return the `id`
+     * const marketingSettingsWithIdOnly = await prisma.marketingSettings.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MarketingSettingsCreateManyAndReturnArgs>(args?: SelectSubset<T, MarketingSettingsCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a MarketingSettings.
+     * @param {MarketingSettingsDeleteArgs} args - Arguments to delete one MarketingSettings.
+     * @example
+     * // Delete one MarketingSettings
+     * const MarketingSettings = await prisma.marketingSettings.delete({
+     *   where: {
+     *     // ... filter to delete one MarketingSettings
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MarketingSettingsDeleteArgs>(args: SelectSubset<T, MarketingSettingsDeleteArgs<ExtArgs>>): Prisma__MarketingSettingsClient<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one MarketingSettings.
+     * @param {MarketingSettingsUpdateArgs} args - Arguments to update one MarketingSettings.
+     * @example
+     * // Update one MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MarketingSettingsUpdateArgs>(args: SelectSubset<T, MarketingSettingsUpdateArgs<ExtArgs>>): Prisma__MarketingSettingsClient<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more MarketingSettings.
+     * @param {MarketingSettingsDeleteManyArgs} args - Arguments to filter MarketingSettings to delete.
+     * @example
+     * // Delete a few MarketingSettings
+     * const { count } = await prisma.marketingSettings.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MarketingSettingsDeleteManyArgs>(args?: SelectSubset<T, MarketingSettingsDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MarketingSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingSettingsUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MarketingSettingsUpdateManyArgs>(args: SelectSubset<T, MarketingSettingsUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one MarketingSettings.
+     * @param {MarketingSettingsUpsertArgs} args - Arguments to update or create a MarketingSettings.
+     * @example
+     * // Update or create a MarketingSettings
+     * const marketingSettings = await prisma.marketingSettings.upsert({
+     *   create: {
+     *     // ... data to create a MarketingSettings
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MarketingSettings we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MarketingSettingsUpsertArgs>(args: SelectSubset<T, MarketingSettingsUpsertArgs<ExtArgs>>): Prisma__MarketingSettingsClient<$Result.GetResult<Prisma.$MarketingSettingsPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of MarketingSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingSettingsCountArgs} args - Arguments to filter MarketingSettings to count.
+     * @example
+     * // Count the number of MarketingSettings
+     * const count = await prisma.marketingSettings.count({
+     *   where: {
+     *     // ... the filter for the MarketingSettings we want to count
+     *   }
+     * })
+    **/
+    count<T extends MarketingSettingsCountArgs>(
+      args?: Subset<T, MarketingSettingsCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MarketingSettingsCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MarketingSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingSettingsAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MarketingSettingsAggregateArgs>(args: Subset<T, MarketingSettingsAggregateArgs>): Prisma.PrismaPromise<GetMarketingSettingsAggregateType<T>>
+
+    /**
+     * Group by MarketingSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingSettingsGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MarketingSettingsGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MarketingSettingsGroupByArgs['orderBy'] }
+        : { orderBy?: MarketingSettingsGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MarketingSettingsGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMarketingSettingsGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MarketingSettings model
+   */
+  readonly fields: MarketingSettingsFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MarketingSettings.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MarketingSettingsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MarketingSettings model
+   */ 
+  interface MarketingSettingsFieldRefs {
+    readonly id: FieldRef<"MarketingSettings", 'String'>
+    readonly companyId: FieldRef<"MarketingSettings", 'String'>
+    readonly globalEnabled: FieldRef<"MarketingSettings", 'Boolean'>
+    readonly reviewRequestsEnabled: FieldRef<"MarketingSettings", 'Boolean'>
+    readonly equipmentAutomationsEnabled: FieldRef<"MarketingSettings", 'Boolean'>
+    readonly winbackEnabled: FieldRef<"MarketingSettings", 'Boolean'>
+    readonly frequencyCapPerDay: FieldRef<"MarketingSettings", 'Int'>
+    readonly frequencyCapPerWeek: FieldRef<"MarketingSettings", 'Int'>
+    readonly defaultSenderName: FieldRef<"MarketingSettings", 'String'>
+    readonly createdAt: FieldRef<"MarketingSettings", 'DateTime'>
+    readonly updatedAt: FieldRef<"MarketingSettings", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MarketingSettings findUnique
+   */
+  export type MarketingSettingsFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingSettings to fetch.
+     */
+    where: MarketingSettingsWhereUniqueInput
+  }
+
+  /**
+   * MarketingSettings findUniqueOrThrow
+   */
+  export type MarketingSettingsFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingSettings to fetch.
+     */
+    where: MarketingSettingsWhereUniqueInput
+  }
+
+  /**
+   * MarketingSettings findFirst
+   */
+  export type MarketingSettingsFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingSettings to fetch.
+     */
+    where?: MarketingSettingsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MarketingSettings to fetch.
+     */
+    orderBy?: MarketingSettingsOrderByWithRelationInput | MarketingSettingsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MarketingSettings.
+     */
+    cursor?: MarketingSettingsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MarketingSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MarketingSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MarketingSettings.
+     */
+    distinct?: MarketingSettingsScalarFieldEnum | MarketingSettingsScalarFieldEnum[]
+  }
+
+  /**
+   * MarketingSettings findFirstOrThrow
+   */
+  export type MarketingSettingsFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingSettings to fetch.
+     */
+    where?: MarketingSettingsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MarketingSettings to fetch.
+     */
+    orderBy?: MarketingSettingsOrderByWithRelationInput | MarketingSettingsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MarketingSettings.
+     */
+    cursor?: MarketingSettingsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MarketingSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MarketingSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MarketingSettings.
+     */
+    distinct?: MarketingSettingsScalarFieldEnum | MarketingSettingsScalarFieldEnum[]
+  }
+
+  /**
+   * MarketingSettings findMany
+   */
+  export type MarketingSettingsFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingSettings to fetch.
+     */
+    where?: MarketingSettingsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MarketingSettings to fetch.
+     */
+    orderBy?: MarketingSettingsOrderByWithRelationInput | MarketingSettingsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MarketingSettings.
+     */
+    cursor?: MarketingSettingsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MarketingSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MarketingSettings.
+     */
+    skip?: number
+    distinct?: MarketingSettingsScalarFieldEnum | MarketingSettingsScalarFieldEnum[]
+  }
+
+  /**
+   * MarketingSettings create
+   */
+  export type MarketingSettingsCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+    /**
+     * The data needed to create a MarketingSettings.
+     */
+    data: XOR<MarketingSettingsCreateInput, MarketingSettingsUncheckedCreateInput>
+  }
+
+  /**
+   * MarketingSettings createMany
+   */
+  export type MarketingSettingsCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MarketingSettings.
+     */
+    data: MarketingSettingsCreateManyInput | MarketingSettingsCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MarketingSettings createManyAndReturn
+   */
+  export type MarketingSettingsCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many MarketingSettings.
+     */
+    data: MarketingSettingsCreateManyInput | MarketingSettingsCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MarketingSettings update
+   */
+  export type MarketingSettingsUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+    /**
+     * The data needed to update a MarketingSettings.
+     */
+    data: XOR<MarketingSettingsUpdateInput, MarketingSettingsUncheckedUpdateInput>
+    /**
+     * Choose, which MarketingSettings to update.
+     */
+    where: MarketingSettingsWhereUniqueInput
+  }
+
+  /**
+   * MarketingSettings updateMany
+   */
+  export type MarketingSettingsUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MarketingSettings.
+     */
+    data: XOR<MarketingSettingsUpdateManyMutationInput, MarketingSettingsUncheckedUpdateManyInput>
+    /**
+     * Filter which MarketingSettings to update
+     */
+    where?: MarketingSettingsWhereInput
+  }
+
+  /**
+   * MarketingSettings upsert
+   */
+  export type MarketingSettingsUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+    /**
+     * The filter to search for the MarketingSettings to update in case it exists.
+     */
+    where: MarketingSettingsWhereUniqueInput
+    /**
+     * In case the MarketingSettings found by the `where` argument doesn't exist, create a new MarketingSettings with this data.
+     */
+    create: XOR<MarketingSettingsCreateInput, MarketingSettingsUncheckedCreateInput>
+    /**
+     * In case the MarketingSettings was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MarketingSettingsUpdateInput, MarketingSettingsUncheckedUpdateInput>
+  }
+
+  /**
+   * MarketingSettings delete
+   */
+  export type MarketingSettingsDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+    /**
+     * Filter which MarketingSettings to delete.
+     */
+    where: MarketingSettingsWhereUniqueInput
+  }
+
+  /**
+   * MarketingSettings deleteMany
+   */
+  export type MarketingSettingsDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MarketingSettings to delete
+     */
+    where?: MarketingSettingsWhereInput
+  }
+
+  /**
+   * MarketingSettings without action
+   */
+  export type MarketingSettingsDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingSettings
+     */
+    select?: MarketingSettingsSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model MarketingDeletionLog
+   */
+
+  export type AggregateMarketingDeletionLog = {
+    _count: MarketingDeletionLogCountAggregateOutputType | null
+    _avg: MarketingDeletionLogAvgAggregateOutputType | null
+    _sum: MarketingDeletionLogSumAggregateOutputType | null
+    _min: MarketingDeletionLogMinAggregateOutputType | null
+    _max: MarketingDeletionLogMaxAggregateOutputType | null
+  }
+
+  export type MarketingDeletionLogAvgAggregateOutputType = {
+    recordsDeleted: number | null
+  }
+
+  export type MarketingDeletionLogSumAggregateOutputType = {
+    recordsDeleted: number | null
+  }
+
+  export type MarketingDeletionLogMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    customerId: string | null
+    deletedBy: string | null
+    recordsDeleted: number | null
+    deletedAt: Date | null
+  }
+
+  export type MarketingDeletionLogMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    customerId: string | null
+    deletedBy: string | null
+    recordsDeleted: number | null
+    deletedAt: Date | null
+  }
+
+  export type MarketingDeletionLogCountAggregateOutputType = {
+    id: number
+    companyId: number
+    customerId: number
+    deletedBy: number
+    recordsDeleted: number
+    deletedAt: number
+    _all: number
+  }
+
+
+  export type MarketingDeletionLogAvgAggregateInputType = {
+    recordsDeleted?: true
+  }
+
+  export type MarketingDeletionLogSumAggregateInputType = {
+    recordsDeleted?: true
+  }
+
+  export type MarketingDeletionLogMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    deletedBy?: true
+    recordsDeleted?: true
+    deletedAt?: true
+  }
+
+  export type MarketingDeletionLogMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    deletedBy?: true
+    recordsDeleted?: true
+    deletedAt?: true
+  }
+
+  export type MarketingDeletionLogCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    deletedBy?: true
+    recordsDeleted?: true
+    deletedAt?: true
+    _all?: true
+  }
+
+  export type MarketingDeletionLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MarketingDeletionLog to aggregate.
+     */
+    where?: MarketingDeletionLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MarketingDeletionLogs to fetch.
+     */
+    orderBy?: MarketingDeletionLogOrderByWithRelationInput | MarketingDeletionLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MarketingDeletionLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MarketingDeletionLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MarketingDeletionLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MarketingDeletionLogs
+    **/
+    _count?: true | MarketingDeletionLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MarketingDeletionLogAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MarketingDeletionLogSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MarketingDeletionLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MarketingDeletionLogMaxAggregateInputType
+  }
+
+  export type GetMarketingDeletionLogAggregateType<T extends MarketingDeletionLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateMarketingDeletionLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMarketingDeletionLog[P]>
+      : GetScalarType<T[P], AggregateMarketingDeletionLog[P]>
+  }
+
+
+
+
+  export type MarketingDeletionLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MarketingDeletionLogWhereInput
+    orderBy?: MarketingDeletionLogOrderByWithAggregationInput | MarketingDeletionLogOrderByWithAggregationInput[]
+    by: MarketingDeletionLogScalarFieldEnum[] | MarketingDeletionLogScalarFieldEnum
+    having?: MarketingDeletionLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MarketingDeletionLogCountAggregateInputType | true
+    _avg?: MarketingDeletionLogAvgAggregateInputType
+    _sum?: MarketingDeletionLogSumAggregateInputType
+    _min?: MarketingDeletionLogMinAggregateInputType
+    _max?: MarketingDeletionLogMaxAggregateInputType
+  }
+
+  export type MarketingDeletionLogGroupByOutputType = {
+    id: string
+    companyId: string
+    customerId: string
+    deletedBy: string
+    recordsDeleted: number
+    deletedAt: Date
+    _count: MarketingDeletionLogCountAggregateOutputType | null
+    _avg: MarketingDeletionLogAvgAggregateOutputType | null
+    _sum: MarketingDeletionLogSumAggregateOutputType | null
+    _min: MarketingDeletionLogMinAggregateOutputType | null
+    _max: MarketingDeletionLogMaxAggregateOutputType | null
+  }
+
+  type GetMarketingDeletionLogGroupByPayload<T extends MarketingDeletionLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MarketingDeletionLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MarketingDeletionLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MarketingDeletionLogGroupByOutputType[P]>
+            : GetScalarType<T[P], MarketingDeletionLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MarketingDeletionLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    deletedBy?: boolean
+    recordsDeleted?: boolean
+    deletedAt?: boolean
+  }, ExtArgs["result"]["marketingDeletionLog"]>
+
+  export type MarketingDeletionLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    deletedBy?: boolean
+    recordsDeleted?: boolean
+    deletedAt?: boolean
+  }, ExtArgs["result"]["marketingDeletionLog"]>
+
+  export type MarketingDeletionLogSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    deletedBy?: boolean
+    recordsDeleted?: boolean
+    deletedAt?: boolean
+  }
+
+
+  export type $MarketingDeletionLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MarketingDeletionLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      customerId: string
+      deletedBy: string
+      recordsDeleted: number
+      deletedAt: Date
+    }, ExtArgs["result"]["marketingDeletionLog"]>
+    composites: {}
+  }
+
+  type MarketingDeletionLogGetPayload<S extends boolean | null | undefined | MarketingDeletionLogDefaultArgs> = $Result.GetResult<Prisma.$MarketingDeletionLogPayload, S>
+
+  type MarketingDeletionLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<MarketingDeletionLogFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: MarketingDeletionLogCountAggregateInputType | true
+    }
+
+  export interface MarketingDeletionLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MarketingDeletionLog'], meta: { name: 'MarketingDeletionLog' } }
+    /**
+     * Find zero or one MarketingDeletionLog that matches the filter.
+     * @param {MarketingDeletionLogFindUniqueArgs} args - Arguments to find a MarketingDeletionLog
+     * @example
+     * // Get one MarketingDeletionLog
+     * const marketingDeletionLog = await prisma.marketingDeletionLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MarketingDeletionLogFindUniqueArgs>(args: SelectSubset<T, MarketingDeletionLogFindUniqueArgs<ExtArgs>>): Prisma__MarketingDeletionLogClient<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one MarketingDeletionLog that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {MarketingDeletionLogFindUniqueOrThrowArgs} args - Arguments to find a MarketingDeletionLog
+     * @example
+     * // Get one MarketingDeletionLog
+     * const marketingDeletionLog = await prisma.marketingDeletionLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MarketingDeletionLogFindUniqueOrThrowArgs>(args: SelectSubset<T, MarketingDeletionLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MarketingDeletionLogClient<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first MarketingDeletionLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingDeletionLogFindFirstArgs} args - Arguments to find a MarketingDeletionLog
+     * @example
+     * // Get one MarketingDeletionLog
+     * const marketingDeletionLog = await prisma.marketingDeletionLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MarketingDeletionLogFindFirstArgs>(args?: SelectSubset<T, MarketingDeletionLogFindFirstArgs<ExtArgs>>): Prisma__MarketingDeletionLogClient<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first MarketingDeletionLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingDeletionLogFindFirstOrThrowArgs} args - Arguments to find a MarketingDeletionLog
+     * @example
+     * // Get one MarketingDeletionLog
+     * const marketingDeletionLog = await prisma.marketingDeletionLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MarketingDeletionLogFindFirstOrThrowArgs>(args?: SelectSubset<T, MarketingDeletionLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__MarketingDeletionLogClient<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more MarketingDeletionLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingDeletionLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MarketingDeletionLogs
+     * const marketingDeletionLogs = await prisma.marketingDeletionLog.findMany()
+     * 
+     * // Get first 10 MarketingDeletionLogs
+     * const marketingDeletionLogs = await prisma.marketingDeletionLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const marketingDeletionLogWithIdOnly = await prisma.marketingDeletionLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MarketingDeletionLogFindManyArgs>(args?: SelectSubset<T, MarketingDeletionLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a MarketingDeletionLog.
+     * @param {MarketingDeletionLogCreateArgs} args - Arguments to create a MarketingDeletionLog.
+     * @example
+     * // Create one MarketingDeletionLog
+     * const MarketingDeletionLog = await prisma.marketingDeletionLog.create({
+     *   data: {
+     *     // ... data to create a MarketingDeletionLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends MarketingDeletionLogCreateArgs>(args: SelectSubset<T, MarketingDeletionLogCreateArgs<ExtArgs>>): Prisma__MarketingDeletionLogClient<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many MarketingDeletionLogs.
+     * @param {MarketingDeletionLogCreateManyArgs} args - Arguments to create many MarketingDeletionLogs.
+     * @example
+     * // Create many MarketingDeletionLogs
+     * const marketingDeletionLog = await prisma.marketingDeletionLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MarketingDeletionLogCreateManyArgs>(args?: SelectSubset<T, MarketingDeletionLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MarketingDeletionLogs and returns the data saved in the database.
+     * @param {MarketingDeletionLogCreateManyAndReturnArgs} args - Arguments to create many MarketingDeletionLogs.
+     * @example
+     * // Create many MarketingDeletionLogs
+     * const marketingDeletionLog = await prisma.marketingDeletionLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MarketingDeletionLogs and only return the `id`
+     * const marketingDeletionLogWithIdOnly = await prisma.marketingDeletionLog.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MarketingDeletionLogCreateManyAndReturnArgs>(args?: SelectSubset<T, MarketingDeletionLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a MarketingDeletionLog.
+     * @param {MarketingDeletionLogDeleteArgs} args - Arguments to delete one MarketingDeletionLog.
+     * @example
+     * // Delete one MarketingDeletionLog
+     * const MarketingDeletionLog = await prisma.marketingDeletionLog.delete({
+     *   where: {
+     *     // ... filter to delete one MarketingDeletionLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MarketingDeletionLogDeleteArgs>(args: SelectSubset<T, MarketingDeletionLogDeleteArgs<ExtArgs>>): Prisma__MarketingDeletionLogClient<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one MarketingDeletionLog.
+     * @param {MarketingDeletionLogUpdateArgs} args - Arguments to update one MarketingDeletionLog.
+     * @example
+     * // Update one MarketingDeletionLog
+     * const marketingDeletionLog = await prisma.marketingDeletionLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MarketingDeletionLogUpdateArgs>(args: SelectSubset<T, MarketingDeletionLogUpdateArgs<ExtArgs>>): Prisma__MarketingDeletionLogClient<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more MarketingDeletionLogs.
+     * @param {MarketingDeletionLogDeleteManyArgs} args - Arguments to filter MarketingDeletionLogs to delete.
+     * @example
+     * // Delete a few MarketingDeletionLogs
+     * const { count } = await prisma.marketingDeletionLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MarketingDeletionLogDeleteManyArgs>(args?: SelectSubset<T, MarketingDeletionLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MarketingDeletionLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingDeletionLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MarketingDeletionLogs
+     * const marketingDeletionLog = await prisma.marketingDeletionLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MarketingDeletionLogUpdateManyArgs>(args: SelectSubset<T, MarketingDeletionLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one MarketingDeletionLog.
+     * @param {MarketingDeletionLogUpsertArgs} args - Arguments to update or create a MarketingDeletionLog.
+     * @example
+     * // Update or create a MarketingDeletionLog
+     * const marketingDeletionLog = await prisma.marketingDeletionLog.upsert({
+     *   create: {
+     *     // ... data to create a MarketingDeletionLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MarketingDeletionLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MarketingDeletionLogUpsertArgs>(args: SelectSubset<T, MarketingDeletionLogUpsertArgs<ExtArgs>>): Prisma__MarketingDeletionLogClient<$Result.GetResult<Prisma.$MarketingDeletionLogPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of MarketingDeletionLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingDeletionLogCountArgs} args - Arguments to filter MarketingDeletionLogs to count.
+     * @example
+     * // Count the number of MarketingDeletionLogs
+     * const count = await prisma.marketingDeletionLog.count({
+     *   where: {
+     *     // ... the filter for the MarketingDeletionLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends MarketingDeletionLogCountArgs>(
+      args?: Subset<T, MarketingDeletionLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MarketingDeletionLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MarketingDeletionLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingDeletionLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MarketingDeletionLogAggregateArgs>(args: Subset<T, MarketingDeletionLogAggregateArgs>): Prisma.PrismaPromise<GetMarketingDeletionLogAggregateType<T>>
+
+    /**
+     * Group by MarketingDeletionLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MarketingDeletionLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MarketingDeletionLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MarketingDeletionLogGroupByArgs['orderBy'] }
+        : { orderBy?: MarketingDeletionLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MarketingDeletionLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMarketingDeletionLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MarketingDeletionLog model
+   */
+  readonly fields: MarketingDeletionLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MarketingDeletionLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MarketingDeletionLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MarketingDeletionLog model
+   */ 
+  interface MarketingDeletionLogFieldRefs {
+    readonly id: FieldRef<"MarketingDeletionLog", 'String'>
+    readonly companyId: FieldRef<"MarketingDeletionLog", 'String'>
+    readonly customerId: FieldRef<"MarketingDeletionLog", 'String'>
+    readonly deletedBy: FieldRef<"MarketingDeletionLog", 'String'>
+    readonly recordsDeleted: FieldRef<"MarketingDeletionLog", 'Int'>
+    readonly deletedAt: FieldRef<"MarketingDeletionLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MarketingDeletionLog findUnique
+   */
+  export type MarketingDeletionLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingDeletionLog to fetch.
+     */
+    where: MarketingDeletionLogWhereUniqueInput
+  }
+
+  /**
+   * MarketingDeletionLog findUniqueOrThrow
+   */
+  export type MarketingDeletionLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingDeletionLog to fetch.
+     */
+    where: MarketingDeletionLogWhereUniqueInput
+  }
+
+  /**
+   * MarketingDeletionLog findFirst
+   */
+  export type MarketingDeletionLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingDeletionLog to fetch.
+     */
+    where?: MarketingDeletionLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MarketingDeletionLogs to fetch.
+     */
+    orderBy?: MarketingDeletionLogOrderByWithRelationInput | MarketingDeletionLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MarketingDeletionLogs.
+     */
+    cursor?: MarketingDeletionLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MarketingDeletionLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MarketingDeletionLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MarketingDeletionLogs.
+     */
+    distinct?: MarketingDeletionLogScalarFieldEnum | MarketingDeletionLogScalarFieldEnum[]
+  }
+
+  /**
+   * MarketingDeletionLog findFirstOrThrow
+   */
+  export type MarketingDeletionLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingDeletionLog to fetch.
+     */
+    where?: MarketingDeletionLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MarketingDeletionLogs to fetch.
+     */
+    orderBy?: MarketingDeletionLogOrderByWithRelationInput | MarketingDeletionLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MarketingDeletionLogs.
+     */
+    cursor?: MarketingDeletionLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MarketingDeletionLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MarketingDeletionLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MarketingDeletionLogs.
+     */
+    distinct?: MarketingDeletionLogScalarFieldEnum | MarketingDeletionLogScalarFieldEnum[]
+  }
+
+  /**
+   * MarketingDeletionLog findMany
+   */
+  export type MarketingDeletionLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+    /**
+     * Filter, which MarketingDeletionLogs to fetch.
+     */
+    where?: MarketingDeletionLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MarketingDeletionLogs to fetch.
+     */
+    orderBy?: MarketingDeletionLogOrderByWithRelationInput | MarketingDeletionLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MarketingDeletionLogs.
+     */
+    cursor?: MarketingDeletionLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MarketingDeletionLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MarketingDeletionLogs.
+     */
+    skip?: number
+    distinct?: MarketingDeletionLogScalarFieldEnum | MarketingDeletionLogScalarFieldEnum[]
+  }
+
+  /**
+   * MarketingDeletionLog create
+   */
+  export type MarketingDeletionLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+    /**
+     * The data needed to create a MarketingDeletionLog.
+     */
+    data: XOR<MarketingDeletionLogCreateInput, MarketingDeletionLogUncheckedCreateInput>
+  }
+
+  /**
+   * MarketingDeletionLog createMany
+   */
+  export type MarketingDeletionLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MarketingDeletionLogs.
+     */
+    data: MarketingDeletionLogCreateManyInput | MarketingDeletionLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MarketingDeletionLog createManyAndReturn
+   */
+  export type MarketingDeletionLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many MarketingDeletionLogs.
+     */
+    data: MarketingDeletionLogCreateManyInput | MarketingDeletionLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MarketingDeletionLog update
+   */
+  export type MarketingDeletionLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+    /**
+     * The data needed to update a MarketingDeletionLog.
+     */
+    data: XOR<MarketingDeletionLogUpdateInput, MarketingDeletionLogUncheckedUpdateInput>
+    /**
+     * Choose, which MarketingDeletionLog to update.
+     */
+    where: MarketingDeletionLogWhereUniqueInput
+  }
+
+  /**
+   * MarketingDeletionLog updateMany
+   */
+  export type MarketingDeletionLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MarketingDeletionLogs.
+     */
+    data: XOR<MarketingDeletionLogUpdateManyMutationInput, MarketingDeletionLogUncheckedUpdateManyInput>
+    /**
+     * Filter which MarketingDeletionLogs to update
+     */
+    where?: MarketingDeletionLogWhereInput
+  }
+
+  /**
+   * MarketingDeletionLog upsert
+   */
+  export type MarketingDeletionLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+    /**
+     * The filter to search for the MarketingDeletionLog to update in case it exists.
+     */
+    where: MarketingDeletionLogWhereUniqueInput
+    /**
+     * In case the MarketingDeletionLog found by the `where` argument doesn't exist, create a new MarketingDeletionLog with this data.
+     */
+    create: XOR<MarketingDeletionLogCreateInput, MarketingDeletionLogUncheckedCreateInput>
+    /**
+     * In case the MarketingDeletionLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MarketingDeletionLogUpdateInput, MarketingDeletionLogUncheckedUpdateInput>
+  }
+
+  /**
+   * MarketingDeletionLog delete
+   */
+  export type MarketingDeletionLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+    /**
+     * Filter which MarketingDeletionLog to delete.
+     */
+    where: MarketingDeletionLogWhereUniqueInput
+  }
+
+  /**
+   * MarketingDeletionLog deleteMany
+   */
+  export type MarketingDeletionLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MarketingDeletionLogs to delete
+     */
+    where?: MarketingDeletionLogWhereInput
+  }
+
+  /**
+   * MarketingDeletionLog without action
+   */
+  export type MarketingDeletionLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MarketingDeletionLog
+     */
+    select?: MarketingDeletionLogSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Model MarketingAttribution
    */
 
@@ -9507,6 +11591,35 @@ export namespace Prisma {
   export type ReviewRequestScalarFieldEnum = (typeof ReviewRequestScalarFieldEnum)[keyof typeof ReviewRequestScalarFieldEnum]
 
 
+  export const MarketingSettingsScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    globalEnabled: 'globalEnabled',
+    reviewRequestsEnabled: 'reviewRequestsEnabled',
+    equipmentAutomationsEnabled: 'equipmentAutomationsEnabled',
+    winbackEnabled: 'winbackEnabled',
+    frequencyCapPerDay: 'frequencyCapPerDay',
+    frequencyCapPerWeek: 'frequencyCapPerWeek',
+    defaultSenderName: 'defaultSenderName',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type MarketingSettingsScalarFieldEnum = (typeof MarketingSettingsScalarFieldEnum)[keyof typeof MarketingSettingsScalarFieldEnum]
+
+
+  export const MarketingDeletionLogScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    customerId: 'customerId',
+    deletedBy: 'deletedBy',
+    recordsDeleted: 'recordsDeleted',
+    deletedAt: 'deletedAt'
+  };
+
+  export type MarketingDeletionLogScalarFieldEnum = (typeof MarketingDeletionLogScalarFieldEnum)[keyof typeof MarketingDeletionLogScalarFieldEnum]
+
+
   export const MarketingAttributionScalarFieldEnum: {
     id: 'id',
     companyId: 'companyId',
@@ -10254,6 +12367,149 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ReviewRequest"> | Date | string
   }
 
+  export type MarketingSettingsWhereInput = {
+    AND?: MarketingSettingsWhereInput | MarketingSettingsWhereInput[]
+    OR?: MarketingSettingsWhereInput[]
+    NOT?: MarketingSettingsWhereInput | MarketingSettingsWhereInput[]
+    id?: StringFilter<"MarketingSettings"> | string
+    companyId?: StringFilter<"MarketingSettings"> | string
+    globalEnabled?: BoolFilter<"MarketingSettings"> | boolean
+    reviewRequestsEnabled?: BoolFilter<"MarketingSettings"> | boolean
+    equipmentAutomationsEnabled?: BoolFilter<"MarketingSettings"> | boolean
+    winbackEnabled?: BoolFilter<"MarketingSettings"> | boolean
+    frequencyCapPerDay?: IntFilter<"MarketingSettings"> | number
+    frequencyCapPerWeek?: IntFilter<"MarketingSettings"> | number
+    defaultSenderName?: StringNullableFilter<"MarketingSettings"> | string | null
+    createdAt?: DateTimeFilter<"MarketingSettings"> | Date | string
+    updatedAt?: DateTimeFilter<"MarketingSettings"> | Date | string
+  }
+
+  export type MarketingSettingsOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    globalEnabled?: SortOrder
+    reviewRequestsEnabled?: SortOrder
+    equipmentAutomationsEnabled?: SortOrder
+    winbackEnabled?: SortOrder
+    frequencyCapPerDay?: SortOrder
+    frequencyCapPerWeek?: SortOrder
+    defaultSenderName?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MarketingSettingsWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    companyId?: string
+    AND?: MarketingSettingsWhereInput | MarketingSettingsWhereInput[]
+    OR?: MarketingSettingsWhereInput[]
+    NOT?: MarketingSettingsWhereInput | MarketingSettingsWhereInput[]
+    globalEnabled?: BoolFilter<"MarketingSettings"> | boolean
+    reviewRequestsEnabled?: BoolFilter<"MarketingSettings"> | boolean
+    equipmentAutomationsEnabled?: BoolFilter<"MarketingSettings"> | boolean
+    winbackEnabled?: BoolFilter<"MarketingSettings"> | boolean
+    frequencyCapPerDay?: IntFilter<"MarketingSettings"> | number
+    frequencyCapPerWeek?: IntFilter<"MarketingSettings"> | number
+    defaultSenderName?: StringNullableFilter<"MarketingSettings"> | string | null
+    createdAt?: DateTimeFilter<"MarketingSettings"> | Date | string
+    updatedAt?: DateTimeFilter<"MarketingSettings"> | Date | string
+  }, "id" | "companyId">
+
+  export type MarketingSettingsOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    globalEnabled?: SortOrder
+    reviewRequestsEnabled?: SortOrder
+    equipmentAutomationsEnabled?: SortOrder
+    winbackEnabled?: SortOrder
+    frequencyCapPerDay?: SortOrder
+    frequencyCapPerWeek?: SortOrder
+    defaultSenderName?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: MarketingSettingsCountOrderByAggregateInput
+    _avg?: MarketingSettingsAvgOrderByAggregateInput
+    _max?: MarketingSettingsMaxOrderByAggregateInput
+    _min?: MarketingSettingsMinOrderByAggregateInput
+    _sum?: MarketingSettingsSumOrderByAggregateInput
+  }
+
+  export type MarketingSettingsScalarWhereWithAggregatesInput = {
+    AND?: MarketingSettingsScalarWhereWithAggregatesInput | MarketingSettingsScalarWhereWithAggregatesInput[]
+    OR?: MarketingSettingsScalarWhereWithAggregatesInput[]
+    NOT?: MarketingSettingsScalarWhereWithAggregatesInput | MarketingSettingsScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MarketingSettings"> | string
+    companyId?: StringWithAggregatesFilter<"MarketingSettings"> | string
+    globalEnabled?: BoolWithAggregatesFilter<"MarketingSettings"> | boolean
+    reviewRequestsEnabled?: BoolWithAggregatesFilter<"MarketingSettings"> | boolean
+    equipmentAutomationsEnabled?: BoolWithAggregatesFilter<"MarketingSettings"> | boolean
+    winbackEnabled?: BoolWithAggregatesFilter<"MarketingSettings"> | boolean
+    frequencyCapPerDay?: IntWithAggregatesFilter<"MarketingSettings"> | number
+    frequencyCapPerWeek?: IntWithAggregatesFilter<"MarketingSettings"> | number
+    defaultSenderName?: StringNullableWithAggregatesFilter<"MarketingSettings"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"MarketingSettings"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"MarketingSettings"> | Date | string
+  }
+
+  export type MarketingDeletionLogWhereInput = {
+    AND?: MarketingDeletionLogWhereInput | MarketingDeletionLogWhereInput[]
+    OR?: MarketingDeletionLogWhereInput[]
+    NOT?: MarketingDeletionLogWhereInput | MarketingDeletionLogWhereInput[]
+    id?: StringFilter<"MarketingDeletionLog"> | string
+    companyId?: StringFilter<"MarketingDeletionLog"> | string
+    customerId?: StringFilter<"MarketingDeletionLog"> | string
+    deletedBy?: StringFilter<"MarketingDeletionLog"> | string
+    recordsDeleted?: IntFilter<"MarketingDeletionLog"> | number
+    deletedAt?: DateTimeFilter<"MarketingDeletionLog"> | Date | string
+  }
+
+  export type MarketingDeletionLogOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    deletedBy?: SortOrder
+    recordsDeleted?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type MarketingDeletionLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: MarketingDeletionLogWhereInput | MarketingDeletionLogWhereInput[]
+    OR?: MarketingDeletionLogWhereInput[]
+    NOT?: MarketingDeletionLogWhereInput | MarketingDeletionLogWhereInput[]
+    companyId?: StringFilter<"MarketingDeletionLog"> | string
+    customerId?: StringFilter<"MarketingDeletionLog"> | string
+    deletedBy?: StringFilter<"MarketingDeletionLog"> | string
+    recordsDeleted?: IntFilter<"MarketingDeletionLog"> | number
+    deletedAt?: DateTimeFilter<"MarketingDeletionLog"> | Date | string
+  }, "id">
+
+  export type MarketingDeletionLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    deletedBy?: SortOrder
+    recordsDeleted?: SortOrder
+    deletedAt?: SortOrder
+    _count?: MarketingDeletionLogCountOrderByAggregateInput
+    _avg?: MarketingDeletionLogAvgOrderByAggregateInput
+    _max?: MarketingDeletionLogMaxOrderByAggregateInput
+    _min?: MarketingDeletionLogMinOrderByAggregateInput
+    _sum?: MarketingDeletionLogSumOrderByAggregateInput
+  }
+
+  export type MarketingDeletionLogScalarWhereWithAggregatesInput = {
+    AND?: MarketingDeletionLogScalarWhereWithAggregatesInput | MarketingDeletionLogScalarWhereWithAggregatesInput[]
+    OR?: MarketingDeletionLogScalarWhereWithAggregatesInput[]
+    NOT?: MarketingDeletionLogScalarWhereWithAggregatesInput | MarketingDeletionLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MarketingDeletionLog"> | string
+    companyId?: StringWithAggregatesFilter<"MarketingDeletionLog"> | string
+    customerId?: StringWithAggregatesFilter<"MarketingDeletionLog"> | string
+    deletedBy?: StringWithAggregatesFilter<"MarketingDeletionLog"> | string
+    recordsDeleted?: IntWithAggregatesFilter<"MarketingDeletionLog"> | number
+    deletedAt?: DateTimeWithAggregatesFilter<"MarketingDeletionLog"> | Date | string
+  }
+
   export type MarketingAttributionWhereInput = {
     AND?: MarketingAttributionWhereInput | MarketingAttributionWhereInput[]
     OR?: MarketingAttributionWhereInput[]
@@ -10951,6 +13207,167 @@ export namespace Prisma {
     emailAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MarketingSettingsCreateInput = {
+    id?: string
+    companyId: string
+    globalEnabled?: boolean
+    reviewRequestsEnabled?: boolean
+    equipmentAutomationsEnabled?: boolean
+    winbackEnabled?: boolean
+    frequencyCapPerDay?: number
+    frequencyCapPerWeek?: number
+    defaultSenderName?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MarketingSettingsUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    globalEnabled?: boolean
+    reviewRequestsEnabled?: boolean
+    equipmentAutomationsEnabled?: boolean
+    winbackEnabled?: boolean
+    frequencyCapPerDay?: number
+    frequencyCapPerWeek?: number
+    defaultSenderName?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MarketingSettingsUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    globalEnabled?: BoolFieldUpdateOperationsInput | boolean
+    reviewRequestsEnabled?: BoolFieldUpdateOperationsInput | boolean
+    equipmentAutomationsEnabled?: BoolFieldUpdateOperationsInput | boolean
+    winbackEnabled?: BoolFieldUpdateOperationsInput | boolean
+    frequencyCapPerDay?: IntFieldUpdateOperationsInput | number
+    frequencyCapPerWeek?: IntFieldUpdateOperationsInput | number
+    defaultSenderName?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MarketingSettingsUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    globalEnabled?: BoolFieldUpdateOperationsInput | boolean
+    reviewRequestsEnabled?: BoolFieldUpdateOperationsInput | boolean
+    equipmentAutomationsEnabled?: BoolFieldUpdateOperationsInput | boolean
+    winbackEnabled?: BoolFieldUpdateOperationsInput | boolean
+    frequencyCapPerDay?: IntFieldUpdateOperationsInput | number
+    frequencyCapPerWeek?: IntFieldUpdateOperationsInput | number
+    defaultSenderName?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MarketingSettingsCreateManyInput = {
+    id?: string
+    companyId: string
+    globalEnabled?: boolean
+    reviewRequestsEnabled?: boolean
+    equipmentAutomationsEnabled?: boolean
+    winbackEnabled?: boolean
+    frequencyCapPerDay?: number
+    frequencyCapPerWeek?: number
+    defaultSenderName?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MarketingSettingsUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    globalEnabled?: BoolFieldUpdateOperationsInput | boolean
+    reviewRequestsEnabled?: BoolFieldUpdateOperationsInput | boolean
+    equipmentAutomationsEnabled?: BoolFieldUpdateOperationsInput | boolean
+    winbackEnabled?: BoolFieldUpdateOperationsInput | boolean
+    frequencyCapPerDay?: IntFieldUpdateOperationsInput | number
+    frequencyCapPerWeek?: IntFieldUpdateOperationsInput | number
+    defaultSenderName?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MarketingSettingsUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    globalEnabled?: BoolFieldUpdateOperationsInput | boolean
+    reviewRequestsEnabled?: BoolFieldUpdateOperationsInput | boolean
+    equipmentAutomationsEnabled?: BoolFieldUpdateOperationsInput | boolean
+    winbackEnabled?: BoolFieldUpdateOperationsInput | boolean
+    frequencyCapPerDay?: IntFieldUpdateOperationsInput | number
+    frequencyCapPerWeek?: IntFieldUpdateOperationsInput | number
+    defaultSenderName?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MarketingDeletionLogCreateInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    deletedBy: string
+    recordsDeleted: number
+    deletedAt?: Date | string
+  }
+
+  export type MarketingDeletionLogUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    deletedBy: string
+    recordsDeleted: number
+    deletedAt?: Date | string
+  }
+
+  export type MarketingDeletionLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    deletedBy?: StringFieldUpdateOperationsInput | string
+    recordsDeleted?: IntFieldUpdateOperationsInput | number
+    deletedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MarketingDeletionLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    deletedBy?: StringFieldUpdateOperationsInput | string
+    recordsDeleted?: IntFieldUpdateOperationsInput | number
+    deletedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MarketingDeletionLogCreateManyInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    deletedBy: string
+    recordsDeleted: number
+    deletedAt?: Date | string
+  }
+
+  export type MarketingDeletionLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    deletedBy?: StringFieldUpdateOperationsInput | string
+    recordsDeleted?: IntFieldUpdateOperationsInput | number
+    deletedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MarketingDeletionLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    deletedBy?: StringFieldUpdateOperationsInput | string
+    recordsDeleted?: IntFieldUpdateOperationsInput | number
+    deletedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type MarketingAttributionCreateInput = {
@@ -11657,6 +14074,93 @@ export namespace Prisma {
     _sum?: NestedFloatNullableFilter<$PrismaModel>
     _min?: NestedFloatNullableFilter<$PrismaModel>
     _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type MarketingSettingsCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    globalEnabled?: SortOrder
+    reviewRequestsEnabled?: SortOrder
+    equipmentAutomationsEnabled?: SortOrder
+    winbackEnabled?: SortOrder
+    frequencyCapPerDay?: SortOrder
+    frequencyCapPerWeek?: SortOrder
+    defaultSenderName?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MarketingSettingsAvgOrderByAggregateInput = {
+    frequencyCapPerDay?: SortOrder
+    frequencyCapPerWeek?: SortOrder
+  }
+
+  export type MarketingSettingsMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    globalEnabled?: SortOrder
+    reviewRequestsEnabled?: SortOrder
+    equipmentAutomationsEnabled?: SortOrder
+    winbackEnabled?: SortOrder
+    frequencyCapPerDay?: SortOrder
+    frequencyCapPerWeek?: SortOrder
+    defaultSenderName?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MarketingSettingsMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    globalEnabled?: SortOrder
+    reviewRequestsEnabled?: SortOrder
+    equipmentAutomationsEnabled?: SortOrder
+    winbackEnabled?: SortOrder
+    frequencyCapPerDay?: SortOrder
+    frequencyCapPerWeek?: SortOrder
+    defaultSenderName?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MarketingSettingsSumOrderByAggregateInput = {
+    frequencyCapPerDay?: SortOrder
+    frequencyCapPerWeek?: SortOrder
+  }
+
+  export type MarketingDeletionLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    deletedBy?: SortOrder
+    recordsDeleted?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type MarketingDeletionLogAvgOrderByAggregateInput = {
+    recordsDeleted?: SortOrder
+  }
+
+  export type MarketingDeletionLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    deletedBy?: SortOrder
+    recordsDeleted?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type MarketingDeletionLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    deletedBy?: SortOrder
+    recordsDeleted?: SortOrder
+    deletedAt?: SortOrder
+  }
+
+  export type MarketingDeletionLogSumOrderByAggregateInput = {
+    recordsDeleted?: SortOrder
   }
 
   export type DecimalFilter<$PrismaModel = never> = {
@@ -12677,6 +15181,14 @@ export namespace Prisma {
      * @deprecated Use ReviewRequestDefaultArgs instead
      */
     export type ReviewRequestArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ReviewRequestDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use MarketingSettingsDefaultArgs instead
+     */
+    export type MarketingSettingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = MarketingSettingsDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use MarketingDeletionLogDefaultArgs instead
+     */
+    export type MarketingDeletionLogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = MarketingDeletionLogDefaultArgs<ExtArgs>
     /**
      * @deprecated Use MarketingAttributionDefaultArgs instead
      */

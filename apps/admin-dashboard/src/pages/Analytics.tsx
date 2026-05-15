@@ -19,10 +19,8 @@ import {
     useRevenueAgentSummary,
     useRevenueAgentTrends,
     useRevenueAgentLogs,
-    useAnalyticsServiceHealth,
 } from '../hooks/useAnalytics'
 import RecommendationsPanel from '../components/RecommendationsPanel'
-import { dollarsToK } from '../lib/format'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -167,8 +165,6 @@ export default function Analytics() {
     const itemsPerPage = 10
 
     // ── API queries ──────────────────────────────────────────────────────────────
-    const healthQuery = useAnalyticsServiceHealth()
-    const serviceDegraded = healthQuery.data?.available === false
     const kpiQuery = useAnalyticsKpis()
     const kpis     = kpiQuery.data
 
@@ -187,18 +183,16 @@ export default function Analytics() {
     const revenueAgentLogsQuery = useRevenueAgentLogs(10)
 
     // ── Derived / mapped data ────────────────────────────────────────────────────
-    // Backend revenue values are in DOLLARS (Decimal(10,2) → number end-to-end,
-    // verified 2026-05-08 against analytics-service raw queries). Charts render
-    // in $k via dollarsToK() — single source of truth in lib/format.ts.
+    // Revenue: values in dollars, display as $k
     const revChartData = asArray(revSeriesQuery.data).map(d => ({
         m:    d.period,
-        rev:  dollarsToK(d.revenue),
+        rev:  Math.round(d.revenue / 100) / 10,   // dollars → $k
         jobs: d.invoiceCount ?? d.jobCount ?? 0,
     }))
 
     const trendChartData = asArray(trendSeriesQuery.data).map(d => ({
         m:    d.period,
-        rev:  dollarsToK(d.revenue),
+        rev:  Math.round(d.revenue / 100) / 10,
         jobs: d.invoiceCount ?? d.jobCount ?? 0,
     }))
 
@@ -252,35 +246,6 @@ export default function Analytics() {
 
     return (
         <div className="anim-fade-up">
-
-            {/* ── Service health banner (only when degraded) ─────────────────── */}
-            {serviceDegraded && (
-                <div
-                    role="status"
-                    aria-live="polite"
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '10px 14px', marginBottom: 16,
-                        background: 'var(--amber-dim, rgba(245, 158, 11, 0.12))',
-                        border: '1px solid var(--amber, #f59e0b)',
-                        borderRadius: 8, color: 'var(--amber, #f59e0b)', fontSize: 13,
-                    }}
-                    title={healthQuery.data?.error}
-                >
-                    <AlertCircle size={14} />
-                    <div style={{ flex: 1, lineHeight: 1.5 }}>
-                        <strong>Analytics service is unreachable.</strong>{' '}
-                        Showing demo data so the dashboard stays usable. Live KPIs will return automatically once the service is healthy.
-                    </div>
-                    <button
-                        onClick={() => healthQuery.refetch()}
-                        className="btn btn-secondary btn-sm"
-                        style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                    >
-                        <RefreshCw size={12} /> Retry
-                    </button>
-                </div>
-            )}
 
             {!isExpanded && (
                 <>

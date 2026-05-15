@@ -1,0 +1,6 @@
+First Name,Last Name,Email,Phone,Address,City,State,Zip Code,Type,Notes
+James,Carter,james.carter@testmail.com,+14085551001,12 Oak Street,San Jose,CA,95101,RESIDENTIAL,Regular maintenance customer
+Sophia,Bennett,sophia.bennett@testmail.com,+14085551002,98 Pine Ave,Sunnyvale,CA,94086,RESIDENTIAL,Referred by James Carter
+Marcus,Williams,marcus.williams@testmail.com,+14085551003,300 Commerce Blvd,San Jose,CA,95110,COMMERCIAL,Owns 3 office units
+Elena,Rodriguez,elena.rodriguez@testmail.com,+14085551004,45 Maple Drive,Campbell,CA,95008,RESIDENTIAL,Seasonal AC service
+David,Kim,david.kim@testmail.com,+14085551005,200 Tech Park Way,Santa Clara,CA,95054,COMMERCIAL,Data center cooling

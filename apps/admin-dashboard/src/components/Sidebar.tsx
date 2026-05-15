@@ -16,7 +16,7 @@ function prefetchRoute(path: string) {
 import {
     LayoutDashboard, Users, Wrench, /* CalendarDays, */ Zap,
     DollarSign, MessageSquare, BarChart3, Settings,
-    Menu, X, LogOut, Shield, Package, Brain,
+    Menu, X, LogOut, Shield, Package, Brain, Megaphone, Upload,
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { usePendingTechnicians } from '../hooks/useTeam'
@@ -80,6 +80,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
             items: [
                 { icon: DollarSign, label: 'Finance', path: '/finance' },
                 { icon: MessageSquare, label: 'Communications', path: '/communications', badge: unreadMessages },
+                { icon: Megaphone, label: 'Marketing', path: '/marketing' },
                 { icon: BarChart3, label: 'Analytics', path: '/analytics' },
                 { icon: Brain, label: 'Bandit AI', path: '/bandit-dashboard' },
                 { icon: Package, label: 'Inventory', path: '/inventory' },
@@ -87,6 +88,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
         },
         {
             items: [
+                { icon: Upload, label: 'Data Import', path: '/import' },
                 { icon: Shield, label: 'Team', path: '/team', pendingDot: pendingCount > 0 },
                 { icon: Settings, label: 'Settings', path: '/settings' },
             ],

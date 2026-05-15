@@ -95,48 +95,6 @@ const DEMO_REVENUE_CATEGORY: RevenueByCategory[] = [
   { category: 'Other Services', total: 18000, percentage: 0.15 },
 ]
 
-// ─── Service health gate ──────────────────────────────────────────────────────
-// Periodically pings /api/analytics/health so the UI can show a "degraded"
-// banner when the service is unreachable. Per-query try/catch + demo data
-// remain the chart-level safety net; this is the user-visible indicator.
-
-export interface AnalyticsServiceHealth {
-  available: boolean
-  status: 'ok' | 'degraded' | 'unknown'
-  service?: string
-  checkedAt: number
-  error?: string
-}
-
-export function useAnalyticsServiceHealth(intervalMs = 60_000) {
-  return useQuery<AnalyticsServiceHealth>({
-    queryKey: ['analytics', 'service-health'],
-    queryFn: async () => {
-      try {
-        const res = await api.get('/analytics/health', { timeout: 4_000 })
-        const ok = res.status >= 200 && res.status < 300 && res.data?.status === 'ok'
-        return {
-          available: ok,
-          status: ok ? 'ok' : 'degraded',
-          service: res.data?.service,
-          checkedAt: Date.now(),
-        }
-      } catch (error) {
-        return {
-          available: false,
-          status: 'degraded',
-          checkedAt: Date.now(),
-          error: error instanceof Error ? error.message : String(error),
-        }
-      }
-    },
-    refetchInterval: intervalMs,
-    refetchIntervalInBackground: false,
-    staleTime: intervalMs,
-    retry: false,
-  })
-}
-
 // ─── KPI summary ──────────────────────────────────────────────────────────────
 
 export function useAnalyticsKpis(from?: string, to?: string) {

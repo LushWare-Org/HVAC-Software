@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AudienceService, CreateAudienceDto } from './audience.service';
-import { CurrentUser, Roles } from '@tscrm/auth-client';
+import { JwtAuthGuard, RolesGuard, CurrentUser, Roles } from '@tscrm/auth-client';
 import { AuthUser, Role } from '@tscrm/types';
 
 @ApiTags('marketing-audiences')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('m/audiences')
 export class AudienceController {
   constructor(private readonly svc: AudienceService) {}

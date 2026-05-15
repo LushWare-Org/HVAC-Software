@@ -1,8 +1,10 @@
 ﻿import { useState, useEffect } from 'react'
-import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock, Loader2, AlertCircle, ClipboardList, ChevronDown, ChevronRight, Bot } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock, Loader2, AlertCircle, ClipboardList, ChevronDown, ChevronRight, Bot, Upload, RotateCcw, ArrowRight } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useMyProfile, useUpdateMyProfile, useCompany, useUpdateCompany } from '../hooks/useSettings'
 import { useJobTypes, useJobTemplates } from '../hooks/useJobs'
+import { useImportBatches, useImportRollback } from '../hooks/useImport'
 
 export default function Settings() {
     const [tab, setTab] = useState<'profile' | 'company' | 'notifications' | 'appearance' | 'security' | 'templates'>('profile')
@@ -428,6 +430,58 @@ export default function Settings() {
 
             {/* Job Templates */}
             {tab === 'templates' && <JobTemplatesTab />}
+
+            {/* Data Import */}
+            {tab === 'profile' && <DataImportCard />}
+        </div>
+    )
+}
+
+function DataImportCard() {
+    const batches = useImportBatches()
+    const rollback = useImportRollback()
+    const lastBatch = batches.data?.[0]
+    const canRollback = lastBatch?.status === 'DONE' && lastBatch.imported > 0
+
+    const handleRollback = async () => {
+        if (!lastBatch) return
+        if (!confirm(`Roll back the last import? This will permanently delete ${lastBatch.imported} imported records.`)) return
+        await rollback.mutateAsync(lastBatch.id)
+    }
+
+    return (
+        <div className="card anim-fade-in" style={{ marginTop: 20 }}>
+            <div className="card-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, var(--blue), #7c3aed)', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Upload size={16} color="white" />
+                    </div>
+                    <div>
+                        <div className="card-title">Data Import</div>
+                        <div className="card-subtitle">Migrate customers and equipment from Jobber, Housecall Pro, or a spreadsheet</div>
+                    </div>
+                </div>
+            </div>
+            <div className="card-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                {lastBatch ? (
+                    <div style={{ fontSize: 13, color: 'var(--t2)' }}>
+                        Last import: <strong>{lastBatch.imported.toLocaleString()}</strong> {lastBatch.source} records ·{' '}
+                        <span style={{ color: 'var(--t3)' }}>{new Date(lastBatch.createdAt).toLocaleDateString()}</span>
+                    </div>
+                ) : (
+                    <div style={{ fontSize: 13, color: 'var(--t3)' }}>No imports yet — get your existing data into T&S CRM in minutes.</div>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                    {canRollback && (
+                        <button className="btn btn-secondary btn-sm" onClick={handleRollback} disabled={rollback.isPending} style={{ color: 'var(--red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <RotateCcw size={12} /> Rollback last
+                        </button>
+                    )}
+                    <Link to="/import" className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, textDecoration: 'none' }}>
+                        <Upload size={12} /> Start Import <ArrowRight size={12} />
+                    </Link>
+                </div>
+            </div>
         </div>
     )
 }

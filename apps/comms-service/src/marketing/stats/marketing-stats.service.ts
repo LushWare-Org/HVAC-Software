@@ -35,7 +35,7 @@ export class MarketingStatsService {
     const openRate = delivered > 0 ? Math.round((opened / delivered) * 100) : 0;
     const clickRate = opened > 0 ? Math.round((clicked / opened) * 100) : 0;
 
-    return { sent, delivered, opened, clicked, reviews, deliveryRate, openRate, clickRate };
+    return { sent, delivered, opened, clicked, reviewsSent: reviews, deliveryRate, openRate, clickRate };
   }
 
   async getCampaignStats(companyId: string, range: StatsRange) {
@@ -77,6 +77,31 @@ export class MarketingStatsService {
         clickRate: opened > 0 ? Math.round((clicked / opened) * 100) : 0,
       };
     });
+  }
+
+  async getAttributionStats(companyId: string, range: StatsRange) {
+    const since = rangeStart(range);
+
+    const [totalClicks, reviewClicks, reviewSends, winbackSends, automationSends] = await Promise.all([
+      this.db.sendEvent.count({
+        where: { sendJob: { companyId }, eventType: 'CLICKED', eventAt: { gte: since } },
+      }),
+      this.db.reviewRequest.count({ where: { companyId, createdAt: { gte: since }, status: 'CLICKED' } }),
+      this.db.reviewRequest.count({ where: { companyId, createdAt: { gte: since } } }),
+      this.db.sendJob.count({
+        where: { companyId, createdAt: { gte: since }, automationTemplate: { startsWith: 'winback-' } },
+      }),
+      this.db.sendJob.count({
+        where: {
+          companyId, createdAt: { gte: since },
+          automationTemplate: { in: ['hvac-tune-up-6mo', 'hvac-replacement-7yr', 'warranty-expiry-30d'] },
+        },
+      }),
+    ]);
+
+    const reviewClickRate = reviewSends > 0 ? Math.round((reviewClicks / reviewSends) * 100) : 0;
+
+    return { totalClicks, reviewClicks, reviewSends, reviewClickRate, winbackSends, automationSends };
   }
 
   async getCampaignFunnel(companyId: string, campaignId: string) {

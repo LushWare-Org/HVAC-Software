@@ -414,6 +414,31 @@ export class CustomersService {
           if (f.op === 'eq') andClauses.push({ engagementStatus: f.value as string });
           else if (f.op === 'in') andClauses.push({ engagementStatus: { in: f.value as string[] } });
           break;
+        case 'equipmentType':
+          if (f.op === 'eq') andClauses.push({ equipment: { some: { type: { equals: f.value as string, mode: 'insensitive' } } } });
+          else if (f.op === 'contains') andClauses.push({ equipment: { some: { type: { contains: f.value as string, mode: 'insensitive' } } } });
+          else if (f.op === 'has_any') andClauses.push({ equipment: { some: {} } }); // has any equipment
+          break;
+        case 'equipmentBrand':
+          if (f.op === 'eq') andClauses.push({ equipment: { some: { brand: { equals: f.value as string, mode: 'insensitive' } } } });
+          else if (f.op === 'contains') andClauses.push({ equipment: { some: { brand: { contains: f.value as string, mode: 'insensitive' } } } });
+          break;
+        case 'warrantyEndBefore':
+          andClauses.push({ equipment: { some: { warrantyEnd: { lte: new Date(f.value as string) } } } });
+          break;
+        case 'warrantyEndAfter':
+          andClauses.push({ equipment: { some: { warrantyEnd: { gte: new Date(f.value as string) } } } });
+          break;
+        case 'installDateBefore':
+          andClauses.push({ equipment: { some: { installDate: { lte: new Date(f.value as string) } } } });
+          break;
+        case 'installDateAfter':
+          andClauses.push({ equipment: { some: { installDate: { gte: new Date(f.value as string) } } } });
+          break;
+        case 'hasEquipment':
+          if (f.value === 'true' || f.value === true) andClauses.push({ equipment: { some: {} } });
+          else andClauses.push({ equipment: { none: {} } });
+          break;
       }
     }
 

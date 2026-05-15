@@ -185,6 +185,7 @@ exports.Prisma.CustomerScalarFieldEnum = {
   automaticFollowupEnabled: 'automaticFollowupEnabled',
   engagementStatus: 'engagementStatus',
   auth0UserId: 'auth0UserId',
+  importBatchId: 'importBatchId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -310,6 +311,7 @@ exports.Prisma.EquipmentScalarFieldEnum = {
   installDate: 'installDate',
   warrantyEnd: 'warrantyEnd',
   notes: 'notes',
+  importBatchId: 'importBatchId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -352,6 +354,32 @@ exports.Prisma.UpsellRecommendationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ImportBatchScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  source: 'source',
+  status: 'status',
+  totalRows: 'totalRows',
+  imported: 'imported',
+  skipped: 'skipped',
+  failed: 'failed',
+  createdBy: 'createdBy',
+  rawData: 'rawData',
+  columnMap: 'columnMap',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ImportErrorScalarFieldEnum = {
+  id: 'id',
+  batchId: 'batchId',
+  rowNumber: 'rowNumber',
+  entityType: 'entityType',
+  rawData: 'rawData',
+  error: 'error',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -359,6 +387,10 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -419,6 +451,15 @@ exports.ReviewType = exports.$Enums.ReviewType = {
   COMPANY: 'COMPANY'
 };
 
+exports.ImportStatus = exports.$Enums.ImportStatus = {
+  VALIDATING: 'VALIDATING',
+  READY: 'READY',
+  IMPORTING: 'IMPORTING',
+  DONE: 'DONE',
+  FAILED: 'FAILED',
+  ROLLED_BACK: 'ROLLED_BACK'
+};
+
 exports.Prisma.ModelName = {
   Company: 'Company',
   CompanyUser: 'CompanyUser',
@@ -431,7 +472,9 @@ exports.Prisma.ModelName = {
   Address: 'Address',
   Equipment: 'Equipment',
   FollowupAttempt: 'FollowupAttempt',
-  UpsellRecommendation: 'UpsellRecommendation'
+  UpsellRecommendation: 'UpsellRecommendation',
+  ImportBatch: 'ImportBatch',
+  ImportError: 'ImportError'
 };
 
 /**

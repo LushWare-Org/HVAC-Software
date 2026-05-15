@@ -192,6 +192,39 @@ model ReviewRequest {
   @@map("review_requests")
 }
 
+// ── MarketingSettings ─────────────────────────────────────────────────────
+
+model MarketingSettings {
+  id                          String   @id @default(uuid())
+  companyId                   String   @unique
+  globalEnabled               Boolean  @default(true)
+  reviewRequestsEnabled       Boolean  @default(true)
+  equipmentAutomationsEnabled Boolean  @default(true)
+  winbackEnabled              Boolean  @default(true)
+  frequencyCapPerDay          Int      @default(3)
+  frequencyCapPerWeek         Int      @default(10)
+  defaultSenderName           String?
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  @@map("marketing_settings")
+}
+
+// ── MarketingDeletionLog ──────────────────────────────────────────────────
+
+model MarketingDeletionLog {
+  id             String   @id @default(uuid())
+  companyId      String
+  customerId     String
+  deletedBy      String
+  recordsDeleted Int
+  deletedAt      DateTime @default(now())
+
+  @@index([companyId])
+  @@index([companyId, customerId])
+  @@map("marketing_deletion_logs")
+}
+
 // ── MarketingAttribution ──────────────────────────────────────────────────
 
 model MarketingAttribution {

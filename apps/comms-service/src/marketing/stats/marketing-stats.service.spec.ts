@@ -31,7 +31,7 @@ describe('MarketingStatsService', () => {
     expect(result.deliveryRate).toBe(90);
     expect(result.openRate).toBe(50); // 45/90
     expect(result.clickRate).toBe(22); // 10/45 ≈ 22%
-    expect(result.reviews).toBe(3);
+    expect(result.reviewsSent).toBe(3);
   });
 
   it('returns zero rates when sent is 0', async () => {

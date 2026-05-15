@@ -22,11 +22,14 @@ const Jobs            = lazy(() => import('./pages/jobs/Jobs'))
 const DispatchBoard   = lazy(() => import('./pages/dispatch/DispatchBoard'))
 const Finance         = lazy(() => import('./pages/finance/Finance'))
 const Communications  = lazy(() => import('./pages/Communications'))
+const Marketing       = lazy(() => import('./pages/marketing/Marketing'))
 const Analytics       = lazy(() => import('./pages/Analytics'))
 const Inventory       = lazy(() => import('./pages/inventory/Inventory'))
 const Settings        = lazy(() => import('./pages/Settings'))
 const Team            = lazy(() => import('./pages/Team'))
 const Profile         = lazy(() => import('./pages/Profile'))
+const ImportWizard    = lazy(() => import('./pages/import/Import'))
+const AdminImports    = lazy(() => import('./pages/import/AdminImports'))
 
 // Map each path to its dynamic importer so we can warm up chunks on hover
 // (see Sidebar). Keys match react-router paths.
@@ -36,9 +39,11 @@ export const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   '/dispatch':       () => import('./pages/dispatch/DispatchBoard'),
   '/finance':        () => import('./pages/finance/Finance'),
   '/communications': () => import('./pages/Communications'),
+  '/marketing':      () => import('./pages/marketing/Marketing'),
   '/analytics':      () => import('./pages/Analytics'),
   '/inventory':      () => import('./pages/inventory/Inventory'),
   '/settings':       () => import('./pages/Settings'),
+  '/import':         () => import('./pages/import/Import'),
   '/team':           () => import('./pages/Team'),
   '/profile':        () => import('./pages/Profile'),
 }
@@ -148,10 +153,13 @@ function AuthenticatedApp() {
               <Route path="/dispatch" element={<DispatchBoard />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/communications" element={<Communications />} />
+              <Route path="/marketing" element={<Marketing />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/bandit-dashboard" element={<BanditDashboard />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/import" element={<ImportWizard />} />
+              <Route path="/import/admin" element={<AdminImports />} />
               <Route path="/team" element={<Team />} />
               <Route path="/profile" element={<Profile />} />
             </Routes>

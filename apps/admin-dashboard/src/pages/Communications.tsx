@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
     MessageSquare, Send, Bell, Plus, Search,
     Paperclip, Smile, Check, CheckCheck, AlertCircle, RefreshCw, Archive,
-    X, Loader2, Megaphone, Info, CheckCircle2, AlertTriangle, XCircle, Wifi, WifiOff,
+    Loader2, Megaphone, Info, CheckCircle2, AlertTriangle, XCircle, Wifi, WifiOff,
     Trash2,
 } from 'lucide-react'
 import {
@@ -15,7 +15,6 @@ import {
     useNotifications,
     useMarkNotificationRead,
     useMarkAllNotificationsRead,
-    useCreateThread,
     useSendInAppNotification,
     useDeleteThread,
 } from '../hooks/useComms'

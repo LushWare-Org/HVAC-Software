@@ -1,0 +1,5 @@
+First Name,Last Name,Email,Phone,Address,City,State,Zip Code,Type,Notes
+,Smith,no-firstname@testmail.com,+14085559001,1 Error Lane,San Jose,CA,95101,RESIDENTIAL,WILL FAIL - missing first name
+Bad,Data,,+14085559002,,,,,RESIDENTIAL,WILL IMPORT - no email (not required)
+james.carter@testmail.com,Duplicate,james.carter@testmail.com,+14085559003,12 Oak Street,San Jose,CA,95101,RESIDENTIAL,WILL SKIP - email already exists
+Emma,Watson,emma.watson@testmail.com,+14085559004,5 Privet Drive,Sunnyvale,CA,94086,RESIDENTIAL,WILL IMPORT - new customer

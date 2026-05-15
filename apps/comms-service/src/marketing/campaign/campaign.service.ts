@@ -7,6 +7,7 @@ import { AudienceService } from '../audience/audience.service';
 import { TemplatesService } from '../templates/templates.service';
 import { MarketingChannel } from '../prisma/generated';
 import type { MarketingSendPayload } from '../send/marketing-send.worker';
+import { signMarketingToken } from '../common/marketing-token.util';
 
 const CLICK_BASE = process.env.MARKETING_CLICK_BASE_URL ?? 'http://localhost:3000';
 
@@ -86,22 +87,7 @@ export class CampaignService {
 
       if (!address) { skipped++; continue; }
 
-      const vars: Record<string, string> = {
-        'customer.firstName': member.firstName,
-        'customer.lastName': member.lastName ?? '',
-        'company.name': 'T&S Services',
-        trackedLink: `${CLICK_BASE}/book`,
-        unsubLink: `${CLICK_BASE}/m/u/placeholder`,
-      };
-
-      const renderedBody = renderMergeTags(
-        campaign.channel === 'SMS'
-          ? (template.smsBody ?? '')
-          : (template.htmlBody ?? ''),
-        vars,
-      );
-      const subject = template.subject ? renderMergeTags(template.subject, vars) : undefined;
-
+      // Create the sendJob first so we can embed its ID in tracking tokens
       const sendJob = await this.db.sendJob.create({
         data: {
           campaignId: id,
@@ -112,6 +98,37 @@ export class CampaignService {
           status: 'PENDING',
         },
       });
+
+      // Build per-recipient tracked URLs
+      const clickToken = signMarketingToken({ type: 'click', sendJobId: sendJob.id, destinationUrl: `${CLICK_BASE}/book` });
+      const unsubToken = signMarketingToken({ type: 'unsub', companyId, customerId: member.id, channel: 'EMAIL', address, sendJobId: sendJob.id });
+      const trackedLink = `${CLICK_BASE}/m/r/${clickToken}`;
+      const unsubLink   = `${CLICK_BASE}/m/u/${unsubToken}`;
+      const openPixel   = `<img src="${CLICK_BASE}/m/p/${sendJob.id}" width="1" height="1" style="display:none" alt="" />`;
+
+      const vars: Record<string, string> = {
+        'customer.firstName': member.firstName,
+        'customer.lastName': member.lastName ?? '',
+        'company.name': 'T&S Services',
+        trackedLink,
+        unsubLink,
+      };
+
+      let renderedBody = renderMergeTags(
+        campaign.channel === 'SMS'
+          ? (template.smsBody ?? '')
+          : (template.htmlBody ?? ''),
+        vars,
+      );
+
+      // Inject open-tracking pixel at the end of HTML emails
+      if (campaign.channel === 'EMAIL' && renderedBody.includes('</body>')) {
+        renderedBody = renderedBody.replace('</body>', `${openPixel}</body>`);
+      } else if (campaign.channel === 'EMAIL') {
+        renderedBody += openPixel;
+      }
+
+      const subject = template.subject ? renderMergeTags(template.subject, vars) : undefined;
 
       const payload: MarketingSendPayload = {
         sendJobId: sendJob.id,
