@@ -73,8 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error.response?.status === 401) {
           const url = String(error.config?.url ?? '')
           // Don't auto-logout for background/non-critical routes (GPS, scheduling)
+          // or for force-reset-password (user just logged in; let the screen handle the error)
           const isBackgroundRoute = url.includes('/scheduling/gps') || url.includes('/scheduling/technicians')
-          if (!url.includes('/auth/login') && !isBackgroundRoute) await _clearSession()
+          const isAuthSetupRoute = url.includes('/auth/force-reset-password')
+          if (!url.includes('/auth/login') && !isBackgroundRoute && !isAuthSetupRoute) await _clearSession()
         }
         return Promise.reject(error)
       },

@@ -85,6 +85,26 @@ export function useTechnician(id: string) {
   })
 }
 
+// ─── Technician login map (CRM lastLoginAt cross-referenced by userId) ────────
+// Gives availability signals beyond GPS pings — reflects actual app logins.
+
+export function useTechnicianLoginMap(): Record<string, string> {
+  const query = useQuery<Record<string, string>>({
+    queryKey: ['crm', 'tech-login-map'],
+    queryFn: async () => {
+      const res = await api.get('/crm/users', { params: { role: 'technician', limit: 100 } })
+      const users: Array<{ id: string; lastLoginAt?: string }> = res.data?.data ?? []
+      const map: Record<string, string> = {}
+      for (const u of users) {
+        if (u.lastLoginAt) map[u.id] = u.lastLoginAt
+      }
+      return map
+    },
+    staleTime: 2 * 60 * 1000,
+  })
+  return query.data ?? {}
+}
+
 // ─── Assignments for a specific technician ────────────────────────────────────
 // Used to build per-technician dispatch grid rows.
 

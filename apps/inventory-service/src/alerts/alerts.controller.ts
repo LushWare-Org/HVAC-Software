@@ -12,7 +12,7 @@ export class AlertsController {
   constructor(private readonly svc: AlertsService) {}
 
   @Get('low-stock')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Get items below reorder point in warehouse' })
   getLowStock(@CurrentUser() user: AuthUser) {
     return this.svc.getLowStockItems(user.companyId);

@@ -42,7 +42,7 @@ class ReceivePODto {
 @ApiTags('Purchase Orders')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+@Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
 @Controller('purchase-orders')
 export class PurchaseOrdersController {
   constructor(private readonly svc: PurchaseOrdersService) {}

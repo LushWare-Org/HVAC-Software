@@ -51,7 +51,7 @@ export class CustomerAddressesController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Add address to a customer' })
   create(
     @CurrentUser() user: AuthUser,
@@ -62,7 +62,7 @@ export class CustomerAddressesController {
   }
 
   @Put()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Bulk replace all addresses for a customer' })
   replaceAll(
     @CurrentUser() user: AuthUser,
@@ -73,7 +73,7 @@ export class CustomerAddressesController {
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove an address' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
@@ -97,7 +97,7 @@ export class LeadAddressesController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Add address to a lead' })
   create(
     @CurrentUser() user: AuthUser,
@@ -108,7 +108,7 @@ export class LeadAddressesController {
   }
 
   @Put()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Bulk replace all addresses for a lead' })
   replaceAll(
     @CurrentUser() user: AuthUser,
@@ -119,7 +119,7 @@ export class LeadAddressesController {
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove an address' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {

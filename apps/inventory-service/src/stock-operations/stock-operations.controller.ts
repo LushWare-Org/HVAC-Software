@@ -47,35 +47,35 @@ export class StockOperationsController {
   constructor(private readonly svc: StockOperationsService) {}
 
   @Post('intake')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Receive stock into a location (purchase intake)' })
   intake(@CurrentUser() user: AuthUser, @Body() dto: IntakeDto) {
     return this.svc.intake(user.companyId, user.userId, user.name ?? 'Unknown', dto);
   }
 
   @Post('transfer')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Transfer stock between warehouse and van' })
   transfer(@CurrentUser() user: AuthUser, @Body() dto: TransferDto) {
     return this.svc.transfer(user.companyId, user.userId, user.name ?? 'Unknown', dto);
   }
 
   @Post('consume')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.TECHNICIAN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.TECHNICIAN)
   @ApiOperation({ summary: 'Consume stock from a location (used on job)' })
   consume(@CurrentUser() user: AuthUser, @Body() dto: ConsumeDto) {
     return this.svc.consume(user.companyId, user.userId, user.name ?? 'Unknown', dto);
   }
 
   @Post('adjust')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Manual stock count adjustment' })
   adjust(@CurrentUser() user: AuthUser, @Body() dto: AdjustDto) {
     return this.svc.adjust(user.companyId, user.userId, user.name ?? 'Unknown', dto);
   }
 
   @Post('return')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN)
   @ApiOperation({ summary: 'Return excess stock from van back to warehouse' })
   return(@CurrentUser() user: AuthUser, @Body() dto: TransferDto) {
     return this.svc.returnStock(user.companyId, user.userId, user.name ?? 'Unknown', dto);

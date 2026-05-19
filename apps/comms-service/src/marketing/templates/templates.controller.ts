@@ -22,26 +22,26 @@ export class TemplatesController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateTemplateDto) {
     return this.svc.create(user.companyId, dto);
   }
 
   @Patch(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateTemplateDto) {
     return this.svc.update(user.companyId, id, dto);
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.svc.remove(user.companyId, id);
   }
 
   @Post('seed-defaults')
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'Seed 6 default trade templates (idempotent — skips if already seeded)' })
   seedDefaults(@CurrentUser() user: AuthUser) {
     return this.svc.seedDefaults(user.companyId).then((n) => ({ seeded: n }));

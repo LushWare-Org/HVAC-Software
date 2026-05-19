@@ -22,7 +22,7 @@ export class UpsellController {
   }
 
   @Post('customers/:customerId/recommendations')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Generate an upsell recommendation for a customer' })
   @ApiParam({ name: 'customerId', type: String })
   recommendForCustomer(
@@ -33,7 +33,7 @@ export class UpsellController {
   }
 
   @Post('run')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Run the upsell recommendation batch' })
   runBatch() {
     return this.upsellAgent.runDailyBatch();

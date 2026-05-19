@@ -34,7 +34,7 @@ export class BookingsController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Create a booking request (also used by customer portal)' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateBookingDto) {
     return this.bookingsService.create(user.companyId, {
@@ -45,14 +45,14 @@ export class BookingsController {
   }
 
   @Patch(':id/confirm')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Confirm a booking' })
   confirm(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.bookingsService.confirm(user.companyId, id);
   }
 
   @Patch(':id/convert')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Convert a booking to a job (provide jobId from job-service)' })
   convert(
     @CurrentUser() user: AuthUser,

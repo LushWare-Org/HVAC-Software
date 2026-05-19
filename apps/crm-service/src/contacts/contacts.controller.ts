@@ -30,7 +30,7 @@ export class ContactsController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Add a contact to a customer' })
   create(
     @CurrentUser() user: AuthUser,
@@ -41,7 +41,7 @@ export class ContactsController {
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove a contact' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {

@@ -43,8 +43,10 @@ export function useCustomerDashboard() {
   const invoices = invoicesQuery.data?.data ?? []
 
   const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const upcomingJobs = jobs.filter(j =>
-    ['SCHEDULED', 'EN_ROUTE', 'ON_SITE', 'PENDING'].includes(j.status),
+    ['SCHEDULED', 'EN_ROUTE', 'ON_SITE', 'PENDING'].includes(j.status) &&
+    (!j.scheduledStart || new Date(j.scheduledStart) >= startOfToday),
   )
   const completedJobs = jobs.filter(j => ['COMPLETED', 'INVOICED', 'PAID'].includes(j.status))
   const pendingInvoices = invoices.filter(i => ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(i.status))

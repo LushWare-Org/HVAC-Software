@@ -16,14 +16,14 @@ import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Zap, UserPlus, MapPin, Star, Briefcase,
-  CheckCircle2, Clock, AlertCircle, Loader2, Navigation,
+  CheckCircle2, Clock, AlertCircle, Loader2,
   Users, Wrench, RefreshCw, Search, X, Truck, Phone,
-  Award, Activity, Target, Plus, Map, CalendarDays,
+  Activity, Target, Plus, Map, CalendarDays,
 } from "lucide-react";
 import {
   useTechnicians, useSmartAssign, useManualAssign,
   useUpdateAssignmentStatus, useAllTechAssignments,
-  useDispatchWebSocket,
+  useDispatchWebSocket, useTechnicianLoginMap,
 } from "../../hooks/useScheduling";
 import { useJobs, useUpdateJobStatus } from "../../hooks/useJobs";
 import type {
@@ -32,20 +32,13 @@ import type {
 import AddTechnicianModal from "./AddTechnicianModal";
 import CreateJobModal from "./CreateJobModal";
 import JobDetailPanel from "./JobDetailPanel";
+import TechnicianDetailPanel from "./TechnicianDetailPanel";
 import AddQuoteModal from "../finance/AddQuoteModal";
 import AddInvoiceModal from "../finance/AddInvoiceModal";
 import DispatchCalendar from "./DispatchCalendar";
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
 
-const ASSIGN_STATUS_CSS: Record<string, string> = {
-  ASSIGNED: "bg-blue-100 text-blue-700 border-blue-200",
-  EN_ROUTE: "bg-amber-100 text-amber-700 border-amber-200",
-  ON_SITE: "bg-purple-100 text-purple-700 border-purple-200",
-  COMPLETED: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-red-100 text-red-700 border-red-200",
-  SUGGESTED: "bg-gray-100 text-gray-600 border-gray-200",
-};
 
 const ASSIGN_STATUS_NEXT: Record<string, { label: string; status: string; icon: any }> = {
   ASSIGNED: { label: "Mark En Route", status: "EN_ROUTE", icon: Truck },
@@ -167,44 +160,6 @@ function ScoreBar({ label, score, weight, color }: { label: string; score: numbe
   );
 }
 
-// ─── Assignment timeline helper ────────────────────────────────────────────────
-
-function AssignmentTimeline({ assignment }: { assignment: any }) {
-  const steps = [
-    { label: "Assigned", time: assignment.assignedAt, status: "ASSIGNED" },
-    { label: "En Route", time: assignment.enRouteAt, status: "EN_ROUTE" },
-    { label: "On Site", time: assignment.onSiteAt, status: "ON_SITE" },
-    { label: "Completed", time: assignment.completedAt, status: "COMPLETED" },
-  ];
-  const currentIdx = steps.findIndex((s) => s.status === assignment.status);
-
-  return (
-    <div className="flex items-center gap-1">
-      {steps.map((step, i) => {
-        const done = i <= currentIdx;
-        const isCurrent = i === currentIdx;
-        return (
-          <div key={step.label} className="flex items-center gap-1">
-            <div className="flex flex-col items-center">
-              <div
-                className={`w-2.5 h-2.5 rounded-full border-2 ${
-                  done ? (isCurrent ? "bg-blue-500 border-blue-500" : "bg-emerald-500 border-emerald-500") : "bg-white border-gray-300"
-                }`}
-              />
-              <span className={`text-[8px] mt-0.5 ${done ? "text-gray-700 font-medium" : "text-gray-400"}`}>{step.label}</span>
-              {step.time && (
-                <span className="text-[7px] text-gray-400">{new Date(step.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-              )}
-            </div>
-            {i < steps.length - 1 && (
-              <div className={`w-6 h-0.5 ${i < currentIdx ? "bg-emerald-400" : "bg-gray-200"} mb-4`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Main DispatchBoard Component
@@ -219,7 +174,32 @@ function timeElapsed(dateStr: string) {
   return rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`;
 }
 
-type ViewTab = "unassigned" | "active" | "technicians" | "calendar" | "map";
+// ─── Technician availability ───────────────────────────────────────────────────
+// Sources: scheduling.last_seen_at (GPS/WS pings + login stamp) + crm.lastLoginAt
+// Tiers: ONLINE < 15 min · AVAILABLE < 8 h · AWAY < 24 h · OFFLINE ≥ 24 h / never
+export type AvailabilityTier = "ONLINE" | "AVAILABLE" | "AWAY" | "OFFLINE";
+
+export function getTechAvailability(tech: { lastSeenAt?: string; locationUpdatedAt?: string }, lastLoginAt?: string): AvailabilityTier {
+  const signals = [tech.lastSeenAt, tech.locationUpdatedAt, lastLoginAt]
+    .filter(Boolean).map(d => new Date(d!).getTime());
+  if (!signals.length) return "OFFLINE";
+  const newest = Math.max(...signals);
+  const mins = (Date.now() - newest) / 60000;
+  if (mins < 15)       return "ONLINE";
+  if (mins < 8 * 60)   return "AVAILABLE";
+  if (mins < 24 * 60)  return "AWAY";
+  return "OFFLINE";
+}
+
+export const AVAIL_META: Record<AvailabilityTier, { label: string; color: string; dot: string; dim: number }> = {
+  ONLINE:    { label: "Online",    color: "#10b981", dot: "#10b981", dim: 1 },
+  AVAILABLE: { label: "Available", color: "#2563eb", dot: "#2563eb", dim: 1 },
+  AWAY:      { label: "Away",      color: "#f59e0b", dot: "#f59e0b", dim: 0.75 },
+  OFFLINE:   { label: "Offline",   color: "#9ca3af", dot: "#9ca3af", dim: 0.45 },
+};
+
+
+type ViewTab = "unassigned" | "active" | "technicians" | "completed" | "calendar" | "map";
 
 // Lazy-load map to avoid loading leaflet on initial page load
 const DispatchMap = lazy(() => import("./DispatchMap"));
@@ -231,6 +211,7 @@ export default function DispatchBoard() {
   const [search, setSearch] = useState("");
   const [showAddTech, setShowAddTech] = useState(false);
   const [showCreateJob, setShowCreateJob] = useState(false);
+  const [selectedTech, setSelectedTech] = useState<Technician | null>(null);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -253,6 +234,7 @@ export default function DispatchBoard() {
   // Data
   const techsQuery = useTechnicians();
   const techs: Technician[] = techsQuery.data ?? [];
+  const loginMap = useTechnicianLoginMap(); // userId → lastLoginAt from CRM
   const techIds = useMemo(() => techs.map(t => t.id), [techs]);
 
   const pendingJobsQuery = useJobs({ status: "PENDING", limit: 50 });
@@ -299,8 +281,10 @@ export default function DispatchBoard() {
     [assignmentByJobId],
   );
 
-  const assignedJobs = allJobs.filter(job => !!assignmentByJobId[job.id]);
-  const unassignedJobs = allJobs.filter(job => !assignmentByJobId[job.id]);
+  const TERMINAL = ['CANCELLED', 'COMPLETED', 'INVOICED', 'PAID'] as const;
+  const activeJobs = allJobs.filter(job => !TERMINAL.includes(job.status as any));
+  const assignedJobs = activeJobs.filter(job => !!assignmentByJobId[job.id]);
+  const unassignedJobs = activeJobs.filter(job => !assignmentByJobId[job.id]);
 
   // Mutations
   const smartAssign = useSmartAssign();
@@ -513,7 +497,7 @@ export default function DispatchBoard() {
           { icon: Clock, label: "Unassigned Jobs", value: pendingJobs.length, color: "text-amber-600", bg: "bg-amber-50" },
           { icon: Activity, label: "Active Assignments", value: activeAssignments.length, color: "text-blue-600", bg: "bg-blue-50" },
           { icon: Users, label: "Technicians", value: techs.length, color: "text-purple-600", bg: "bg-purple-50" },
-          { icon: CheckCircle2, label: "Completed Today", value: allAssignments.filter(a => a.status === "COMPLETED").length, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { icon: CheckCircle2, label: "Completed", value: allJobs.filter(j => ["COMPLETED", "INVOICED", "PAID"].includes(j.status)).length, color: "text-emerald-600", bg: "bg-emerald-50" },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-gray-200 bg-white p-4 flex items-center gap-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
             <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center shrink-0`}>
@@ -568,6 +552,9 @@ export default function DispatchBoard() {
         </button>
         <button className={`tab-btn ${tab === "technicians" ? "active" : ""}`} onClick={() => setTab("technicians")}>
           <Users size={14} /> Technicians <span className="tab-count">{techs.length}</span>
+        </button>
+        <button className={`tab-btn ${tab === "completed" ? "active" : ""}`} onClick={() => setTab("completed")}>
+          <CheckCircle2 size={14} /> Completed <span className="tab-count">{allJobs.filter(j => ["COMPLETED", "INVOICED", "PAID"].includes(j.status)).length}</span>
         </button>
         <button className={`tab-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>
           <CalendarDays size={14} /> Calendar View
@@ -725,96 +712,196 @@ export default function DispatchBoard() {
       )}
 
       {/* ── Tab: Active Assignments ── */}
-      {tab === "active" && (
-        <div className="card anim-fade-in">
-          <div className="card-body" style={{ paddingBottom: 0 }}>
-            <div className="filter-bar">
-              <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search jobs, customer, technician…" value={search} onChange={e => setSearch(e.target.value)} /></div>
-              <button className="btn btn-secondary btn-sm flex items-center gap-1.5" onClick={() => { allAssignmentsQuery.refetch(); allJobsQuery.refetch(); }}>
-                <RefreshCw size={12} /> Refresh
-              </button>
+      {tab === "active" && (() => {
+        const CARD_STATUS: Record<string, { color: string; bg: string; border: string; label: string }> = {
+          ASSIGNED:  { color: "#2563eb", bg: "rgba(37,99,235,0.07)",  border: "rgba(37,99,235,0.18)",  label: "Assigned" },
+          EN_ROUTE:  { color: "#d97706", bg: "rgba(217,119,6,0.07)",  border: "rgba(217,119,6,0.18)",  label: "En Route" },
+          ON_SITE:   { color: "#7c3aed", bg: "rgba(124,58,237,0.07)", border: "rgba(124,58,237,0.18)", label: "On Site" },
+          COMPLETED: { color: "#10b981", bg: "rgba(16,185,129,0.07)", border: "rgba(16,185,129,0.18)", label: "Completed" },
+        };
+        const TL_ORDER = ["ASSIGNED", "EN_ROUTE", "ON_SITE", "COMPLETED"];
+        const TL_LABELS = ["Assigned", "En Route", "On Site", "Done"];
+
+        return (
+          <div className="anim-fade-in" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Toolbar */}
+            <div className="card">
+              <div className="card-body" style={{ paddingBottom: 12 }}>
+                <div className="filter-bar">
+                  <div className="filter-search">
+                    <Search size={13} color="var(--t4)" />
+                    <input placeholder="Search jobs, customer, technician…" value={search} onChange={e => setSearch(e.target.value)} />
+                  </div>
+                  <button className="btn btn-secondary btn-sm" style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    onClick={() => { allAssignmentsQuery.refetch(); allJobsQuery.refetch(); }}>
+                    <RefreshCw size={12} /> Refresh
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="card-body-flush mt-2">
+
             {allAssignmentsQuery.isLoading ? (
-              <div className="flex items-center justify-center py-16 text-[var(--t4)]"><Loader2 size={24} className="animate-spin mr-2" /> Loading…</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0", color: "var(--t4)" }}>
+                <Loader2 size={22} className="animate-spin" style={{ marginRight: 8 }} /> Loading assignments…
+              </div>
             ) : activeAssignmentsWithJob.length === 0 ? (
-              <div className="text-center py-16 text-[var(--t4)]">
-                <Briefcase size={32} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-medium">No active assignments</p>
-                <p className="text-xs mt-1">Assign some jobs to get started.</p>
+              <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
+                <Briefcase size={34} style={{ margin: "0 auto 12px", display: "block", opacity: 0.2, color: "var(--t3)" }} />
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--t2)" }}>No active assignments</div>
+                <div style={{ fontSize: 12, color: "var(--t4)", marginTop: 4 }}>Assign jobs from the Unassigned tab to get started.</div>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 12 }}>
                 {activeAssignmentsWithJob.map(({ assignment: a, technician: tech, job }) => {
+                  const st = CARD_STATUS[a.status] ?? CARD_STATUS.ASSIGNED;
                   const next = ASSIGN_STATUS_NEXT[a.status];
+                  const elapsed = a.assignedAt ? timeElapsed(a.assignedAt) : null;
+                  const currentIdx = TL_ORDER.indexOf(a.status);
+
                   return (
                     <div
                       key={a.id}
-                      className="px-5 py-4 hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
                       onClick={() => {
-                        if (job) {
-                          handleOpenJob(job, a);
-                          return;
-                        }
+                        if (job) { handleOpenJob(job, a); return; }
                         setSelectedAssignment(a);
-                        setSelectedJob(({ id: (a as any).jobId, title: 'Job' }) as Job);
+                        setSelectedJob({ id: (a as any).jobId, title: "Job" } as Job);
                       }}
+                      style={{
+                        background: "var(--bg-card)", border: "1px solid var(--bd)", borderRadius: "var(--r-md)",
+                        borderLeft: `3px solid ${st.color}`, cursor: "pointer",
+                        display: "flex", flexDirection: "column", overflow: "hidden",
+                        transition: "box-shadow 0.15s",
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.09)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
                     >
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
-                          <Briefcase size={16} />
+                      {/* Card top: tech info + status/elapsed */}
+                      <div style={{ padding: "13px 14px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                          <div style={{
+                            width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                            background: `linear-gradient(135deg, ${st.color}bb, ${st.color})`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: "#fff", fontSize: 13, fontWeight: 700,
+                          }}>
+                            {(tech?.name ?? "?").charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--t1)", lineHeight: 1.2 }}>
+                              {tech?.name ?? "Technician unavailable"}
+                            </div>
+                            {tech?.phone && (
+                              <div style={{ fontSize: 10, color: "var(--t4)", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}>
+                                <Phone size={8} /> {tech.phone}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-bold text-[var(--t1)]">{job?.title ?? 'Job details unavailable'}</p>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${ASSIGN_STATUS_CSS[a.status] ?? "bg-gray-100 text-gray-600"}`}>
-                              {a.status.replace("_", " ")}
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+                          {elapsed && (
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "var(--t3)", background: "var(--bg-hover)", padding: "2px 7px", borderRadius: 8 }}>
+                              {elapsed}
                             </span>
-                            {(a as any).score && <ScoreBadge score={(a as any).score} />}
-                            {(a as any).distanceKm != null && (
-                              <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
-                                <MapPin size={9} /> {Number((a as any).distanceKm).toFixed(1)} km
-                              </span>
-                            )}
-                            {(a as any).assignedBy ? (
-                              <span className="text-[9px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">Manual</span>
-                            ) : (
-                              <span className="text-[9px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Auto</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4 text-xs text-[var(--t3)] mb-2 flex-wrap">
-                            <span className="flex items-center gap-1 font-mono text-[10px]"><Briefcase size={10} /> {job?.id ? `${job.id.slice(0, 12)}...` : `${(a as any).jobId?.slice(0, 12)}...`}</span>
-                            <span className="flex items-center gap-1"><Users size={10} /> {job?.customerName ?? 'Customer unavailable'}</span>
-                            <span className="flex items-center gap-1"><Wrench size={10} /> {tech?.name ?? 'Technician unavailable'}</span>
-                            {(a as any).assignedAt && (
-                              <span className="flex items-center gap-1 font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-                                <Clock size={9} /> {timeElapsed((a as any).assignedAt)} elapsed
-                              </span>
-                            )}
-                            {(a as any).assignedByName && (
-                              <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">By {(a as any).assignedByName}</span>
-                            )}
-                            {tech?.phone && <span className="flex items-center gap-1"><Phone size={10} /> {tech.phone}</span>}
-                          </div>
-                          {/* Timeline */}
-                          <AssignmentTimeline assignment={a} />
+                          )}
+                          <span style={{ fontSize: 10, fontWeight: 700, color: st.color, background: st.bg, border: `1px solid ${st.border}`, padding: "2px 9px", borderRadius: 10 }}>
+                            {st.label}
+                          </span>
                         </div>
-                        {/* Action button */}
-                        <div className="shrink-0">
-                          {next ? (
-                            <button
-                              onClick={() => handleStatusTransition(a.id, next.status, (a as any).jobId)}
-                              disabled={updateStatus.isPending}
-                              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors disabled:opacity-50 cursor-pointer border-0"
-                            >
-                              {updateStatus.isPending ? <Loader2 size={10} className="animate-spin" /> : <next.icon size={10} />}
-                              {next.label}
-                            </button>
+                      </div>
+
+                      {/* Job info */}
+                      <div style={{ padding: "0 14px 11px", borderBottom: "1px solid var(--bd)" }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t1)", marginBottom: 5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {job?.title ?? "Job details unavailable"}
+                        </div>
+                        {job?.customerName && (
+                          <div style={{ fontSize: 11, color: "var(--t3)", display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+                            <Users size={10} style={{ flexShrink: 0 }} /> {job.customerName}
+                          </div>
+                        )}
+                        {(job?.serviceAddress ?? job?.customerAddress) && (
+                          <div style={{ fontSize: 10, color: "var(--t4)", display: "flex", alignItems: "center", gap: 5, overflow: "hidden" }}>
+                            <MapPin size={9} style={{ flexShrink: 0 }} />
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {job?.serviceAddress ?? job?.customerAddress}
+                            </span>
+                          </div>
+                        )}
+                        {/* Meta chips */}
+                        <div style={{ display: "flex", gap: 5, marginTop: 7, flexWrap: "wrap" }}>
+                          {a.distanceKm != null && (
+                            <span style={{ fontSize: 10, color: "var(--t4)", background: "var(--bg-hover)", padding: "2px 7px", borderRadius: 8, display: "flex", alignItems: "center", gap: 3 }}>
+                              <MapPin size={8} /> {Number(a.distanceKm).toFixed(1)} km
+                            </span>
+                          )}
+                          {a.score != null && (
+                            <span style={{ fontSize: 10, color: "var(--t4)", background: "var(--bg-hover)", padding: "2px 7px", borderRadius: 8, display: "flex", alignItems: "center", gap: 3 }}>
+                              <Target size={8} /> {Number(a.score).toFixed(0)}
+                            </span>
+                          )}
+                          {a.assignedBy ? (
+                            <span style={{ fontSize: 10, color: "var(--t4)", background: "var(--bg-hover)", padding: "2px 7px", borderRadius: 8 }}>Manual</span>
                           ) : (
-                            <span className="text-xs text-emerald-500 flex items-center gap-1"><CheckCircle2 size={12} /> Done</span>
+                            <span style={{ fontSize: 10, color: "#d97706", background: "rgba(217,119,6,0.08)", padding: "2px 7px", borderRadius: 8 }}>
+                              <Zap size={8} style={{ display: "inline", marginRight: 2, verticalAlign: "middle" }} />Auto
+                            </span>
                           )}
                         </div>
+                      </div>
+
+                      {/* Timeline */}
+                      <div style={{ padding: "10px 14px" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start" }}>
+                          {TL_LABELS.map((label, i) => {
+                            const isDone = i < currentIdx;
+                            const isCurrent = i === currentIdx;
+                            const dotColor = isCurrent ? st.color : isDone ? "#10b981" : "var(--bd)";
+                            const timeVal = [a.assignedAt, a.enRouteAt, a.onSiteAt, a.completedAt][i];
+                            return (
+                              <div key={label} style={{ display: "flex", alignItems: "center", flex: i < 3 ? 1 : "none" }}>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: (isDone || isCurrent) ? dotColor : "var(--bg-hover)", border: `2px solid ${dotColor}`, transition: "all 0.2s" }} />
+                                  <span style={{ fontSize: 8, color: (isDone || isCurrent) ? "var(--t2)" : "var(--t4)", fontWeight: (isDone || isCurrent) ? 600 : 400, marginTop: 3, whiteSpace: "nowrap" }}>{label}</span>
+                                  {timeVal && (
+                                    <span style={{ fontSize: 7, color: "var(--t4)", marginTop: 1 }}>
+                                      {new Date(timeVal).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                    </span>
+                                  )}
+                                </div>
+                                {i < 3 && (
+                                  <div style={{ flex: 1, height: 1.5, background: isDone ? "#10b981" : "var(--bd)", margin: "0 3px", marginBottom: isDone || isCurrent ? 20 : 20, transition: "background 0.2s" }} />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Action button */}
+                      <div style={{ padding: "0 14px 13px" }} onClick={e => e.stopPropagation()}>
+                        {next ? (
+                          <button
+                            onClick={() => handleStatusTransition(a.id, next.status, (a as any).jobId)}
+                            disabled={updateStatus.isPending}
+                            style={{
+                              width: "100%", padding: "8px", borderRadius: "var(--r)", border: "none",
+                              background: st.color, color: "#fff", fontSize: 12, fontWeight: 700,
+                              cursor: updateStatus.isPending ? "not-allowed" : "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                              fontFamily: "inherit", opacity: updateStatus.isPending ? 0.6 : 1,
+                              transition: "filter 0.15s",
+                            }}
+                            onMouseEnter={e => { if (!updateStatus.isPending) (e.currentTarget as HTMLElement).style.filter = "brightness(0.88)"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "none"; }}
+                          >
+                            {updateStatus.isPending ? <Loader2 size={11} className="animate-spin" /> : <next.icon size={11} />}
+                            {next.label}
+                          </button>
+                        ) : (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "7px 0", fontSize: 12, fontWeight: 600, color: "#10b981" }}>
+                            <CheckCircle2 size={13} /> Completed
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -822,115 +909,342 @@ export default function DispatchBoard() {
               </div>
             )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Tab: Technicians ── */}
-      {tab === "technicians" && (
-        <div className="card anim-fade-in">
-          <div className="card-body" style={{ paddingBottom: 0 }}>
-            <div className="filter-bar">
-              <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search technicians…" value={search} onChange={e => setSearch(e.target.value)} /></div>
-              <button onClick={() => setShowAddTech(true)} className="btn btn-primary btn-sm flex items-center gap-1.5 ml-auto">
-                <UserPlus size={12} /> Add Technician
-              </button>
+      {tab === "technicians" && (() => {
+        // Compute availability for every tech using both scheduling + CRM login signals
+        const withAvail = filteredTechs.map(t => ({
+          t,
+          avail: getTechAvailability(t, loginMap[t.userId]),
+        }));
+
+        const allGroups: Array<{ tier: AvailabilityTier; items: typeof withAvail }> = [
+          { tier: "ONLINE" as AvailabilityTier,    items: withAvail.filter(x => x.avail === "ONLINE") },
+          { tier: "AVAILABLE" as AvailabilityTier, items: withAvail.filter(x => x.avail === "AVAILABLE") },
+          { tier: "AWAY" as AvailabilityTier,      items: withAvail.filter(x => x.avail === "AWAY") },
+          { tier: "OFFLINE" as AvailabilityTier,   items: withAvail.filter(x => x.avail === "OFFLINE") },
+        ];
+        const groups = allGroups.filter(g => g.items.length > 0);
+
+        const dispatchable = withAvail.filter(x => x.avail === "ONLINE" || x.avail === "AVAILABLE").length;
+
+        const TechCard = ({ t: tech, avail }: { t: Technician; avail: AvailabilityTier }) => {
+          const meta = AVAIL_META[avail];
+          const techActiveAsgns = allAssignments.filter(
+            a => a.technicianId === tech.id && ["ASSIGNED", "EN_ROUTE", "ON_SITE"].includes(a.status),
+          );
+          const workloadPct = tech.maxDailyJobs > 0 ? techActiveAsgns.length / tech.maxDailyJobs : 0;
+          const workloadColor = workloadPct >= 1 ? "#ef4444" : workloadPct >= 0.7 ? "#f59e0b" : "#3b82f6";
+          const visibleSkills = (tech.skills ?? []).slice(0, 3);
+          const extraSkills = (tech.skills ?? []).length - visibleSkills.length;
+
+          // Last-active timestamp for display
+          const signals = [tech.lastSeenAt, tech.locationUpdatedAt, loginMap[tech.userId]]
+            .filter(Boolean).map(d => new Date(d!).getTime());
+          const newestSignal = signals.length ? new Date(Math.max(...signals)) : null;
+          const lastActiveLabel = newestSignal
+            ? (() => {
+                const mins = (Date.now() - newestSignal.getTime()) / 60000;
+                if (mins < 1) return "Just now";
+                if (mins < 60) return `${Math.floor(mins)}m ago`;
+                if (mins < 24 * 60) return `${Math.floor(mins / 60)}h ago`;
+                return newestSignal.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              })()
+            : "Never";
+
+          return (
+            <div
+              onClick={() => setSelectedTech(tech)}
+              style={{
+                background: "var(--bg-card)", borderRadius: 12, cursor: "pointer",
+                border: "1px solid var(--bd)",
+                borderLeft: `3px solid ${meta.color}`,
+                padding: "14px 14px 12px",
+                transition: "transform .15s, box-shadow .15s",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                display: "flex", flexDirection: "column", gap: 10,
+                opacity: meta.dim,
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = "translateY(-2px)";
+                el.style.boxShadow = "0 5px 18px rgba(0,0,0,0.09)";
+                el.style.opacity = "1";
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = "translateY(0)";
+                el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)";
+                el.style.opacity = String(meta.dim);
+              }}
+            >
+              {/* Top row */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {/* Avatar with availability dot */}
+                <div style={{ position: "relative", flexShrink: 0 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: "50%",
+                    background: "#2563eb",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "#fff", fontWeight: 700, fontSize: 13,
+                  }}>
+                    {tech.name.charAt(0).toUpperCase()}
+                  </div>
+                  {/* Availability dot */}
+                  <div style={{
+                    position: "absolute", bottom: -1, right: -1,
+                    width: 9, height: 9, borderRadius: "50%",
+                    background: meta.color,
+                    border: "2px solid var(--bg-card)",
+                    boxShadow: avail === "ONLINE" ? `0 0 0 2px ${meta.color}44` : "none",
+                  }} />
+                </div>
+
+                {/* Name + phone */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {tech.name}
+                  </div>
+                  {tech.phone && (
+                    <div style={{ fontSize: 10, color: "var(--t3)", display: "flex", alignItems: "center", gap: 3, marginTop: 1 }}>
+                      <Phone size={8} /> {tech.phone}
+                    </div>
+                  )}
+                </div>
+
+                {/* Last active */}
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: meta.color }}>{meta.label}</div>
+                  <div style={{ fontSize: 9, color: "var(--t4)", marginTop: 1 }}>{lastActiveLabel}</div>
+                </div>
+              </div>
+
+              {/* Workload + rating */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                    <span style={{ fontSize: 9, color: "var(--t4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Workload</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: workloadColor }}>{techActiveAsgns.length}/{tech.maxDailyJobs}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 2.5 }}>
+                    {Array.from({ length: Math.min(tech.maxDailyJobs, 8) }, (_, i) => (
+                      <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < techActiveAsgns.length ? workloadColor : "var(--bd)" }} />
+                    ))}
+                  </div>
+                </div>
+                <div style={{ width: 1, height: 24, background: "var(--bd)", flexShrink: 0 }} />
+                <div style={{ textAlign: "center", flexShrink: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Star size={10} color="#f59e0b" fill="#f59e0b" />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--t1)" }}>{(tech.rating ?? 0).toFixed(1)}</span>
+                  </div>
+                  <div style={{ fontSize: 9, color: "var(--t4)" }}>{tech.totalRatings ?? 0} rev</div>
+                </div>
+              </div>
+
+              {/* Skills */}
+              {visibleSkills.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {visibleSkills.map(sk => (
+                    <span key={sk} style={{ fontSize: 9, fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "rgba(99,102,241,0.07)", color: "#6366f1", border: "1px solid rgba(99,102,241,0.18)" }}>{sk}</span>
+                  ))}
+                  {extraSkills > 0 && (
+                    <span style={{ fontSize: 9, fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "var(--bg-hover)", color: "var(--t4)", border: "1px solid var(--bd)" }}>+{extraSkills}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Active jobs */}
+              {techActiveAsgns.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 9px", borderRadius: 7, background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.14)" }}>
+                  <Briefcase size={9} color="#2563eb" />
+                  <span style={{ fontSize: 10, color: "#2563eb", fontWeight: 600 }}>
+                    {techActiveAsgns.length} active job{techActiveAsgns.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
-          <div className="card-body-flush mt-2">
+          );
+        };
+
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Filter + summary bar */}
+            <div className="card">
+              <div className="card-body" style={{ paddingBottom: 12 }}>
+                <div className="filter-bar">
+                  <div className="filter-search">
+                    <Search size={13} color="var(--t4)" />
+                    <input placeholder="Search technicians…" value={search} onChange={e => setSearch(e.target.value)} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14, marginLeft: "auto" }}>
+                    {/* Availability summary pills */}
+                    {(["ONLINE","AVAILABLE","AWAY","OFFLINE"] as AvailabilityTier[]).map(tier => {
+                      const count = withAvail.filter(x => x.avail === tier).length;
+                      if (!count) return null;
+                      const m = AVAIL_META[tier];
+                      return (
+                        <span key={tier} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--t2)", fontWeight: 500 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: m.color, display: "inline-block" }} />
+                          <span style={{ color: m.color, fontWeight: 700 }}>{count}</span> {m.label}
+                        </span>
+                      );
+                    })}
+                    <div style={{ width: 1, height: 16, background: "var(--bd)" }} />
+                    <span style={{ fontSize: 11, color: "var(--t3)" }}>
+                      <span style={{ fontWeight: 700, color: "var(--t1)" }}>{dispatchable}</span> dispatchable
+                    </span>
+                    <button onClick={() => setShowAddTech(true)} className="btn btn-primary btn-sm" style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <UserPlus size={12} /> Add Technician
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {techsQuery.isLoading ? (
-              <div className="flex items-center justify-center py-16 text-[var(--t4)]"><Loader2 size={24} className="animate-spin mr-2" /> Loading…</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "64px 0", color: "var(--t4)" }}>
+                <Loader2 size={22} className="animate-spin" style={{ marginRight: 8 }} /> Loading…
+              </div>
             ) : filteredTechs.length === 0 ? (
-              <div className="text-center py-16 text-[var(--t4)]">
-                <Users size={32} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-medium">No technicians registered</p>
-                <p className="text-xs mt-1">Add technicians to start dispatching jobs.</p>
+              <div style={{ textAlign: "center", padding: "64px 0", color: "var(--t4)" }}>
+                <Users size={30} style={{ margin: "0 auto 10px", opacity: 0.28 }} />
+                <p style={{ fontSize: 13, fontWeight: 600 }}>No technicians found</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
-                {filteredTechs.map(t => {
-                  const techAssignments = allAssignments.filter(a => a.technicianId === t.id && ["ASSIGNED", "EN_ROUTE", "ON_SITE"].includes(a.status));
-                  const hasGPS = !!t.currentLocation;
-                  const activeJobTitles = techAssignments.map(a => allJobs.find(j => j.id === (a as any).jobId)?.title).filter((v): v is string => !!v);
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {groups.map(({ tier, items }) => {
+                  const m = AVAIL_META[tier];
                   return (
-                    <div key={t.id} className="rounded-xl border border-gray-200 bg-white p-5 hover:shadow-md transition-shadow space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shrink-0">
-                          {t.name.charAt(0)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-[var(--t1)] truncate">{t.name}</p>
-                          <div className="flex items-center gap-2 text-xs text-[var(--t3)]">
-                            {t.phone && <span className="flex items-center gap-0.5"><Phone size={9} /> {t.phone}</span>}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <div
-                            className={`w-3 h-3 rounded-full ${t.isActive ? "bg-emerald-500" : "bg-gray-300"}`}
-                            title={t.isActive ? "Active" : "Inactive"}
-                          />
-                          {hasGPS && (
-                            <span className="text-[8px] text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1 py-0.5 flex items-center gap-0.5">
-                              <MapPin size={7} /> GPS
-                            </span>
-                          )}
-                        </div>
+                    <div key={tier}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--t4)", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: m.color, display: "inline-block",
+                          boxShadow: tier === "ONLINE" ? `0 0 0 3px ${m.color}33` : "none" }} />
+                        {m.label} — {items.length}
                       </div>
-                      {/* Stats row */}
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="bg-gray-50 rounded-lg p-2">
-                          <Briefcase size={12} className="mx-auto text-gray-400 mb-0.5" />
-                          <p className="text-xs font-bold text-gray-700">{techAssignments.length}/{t.maxDailyJobs}</p>
-                          <p className="text-[9px] text-gray-400">Active</p>
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-2">
-                          <Star size={12} className="mx-auto text-amber-400 mb-0.5" />
-                          <p className="text-xs font-bold text-gray-700">{(t.rating ?? 0).toFixed(1)}</p>
-                          <p className="text-[9px] text-gray-400">Rating ({t.totalRatings ?? 0})</p>
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-2">
-                          <Award size={12} className="mx-auto text-blue-400 mb-0.5" />
-                          <p className="text-xs font-bold text-gray-700">{t.maxDailyJobs}</p>
-                          <p className="text-[9px] text-gray-400">Max/Day</p>
-                        </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px,1fr))", gap: 10 }}>
+                        {items.map(({ t, avail }) => <TechCard key={t.id} t={t} avail={avail} />)}
                       </div>
-                      {/* Skills tags */}
-                      {t.skills?.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {t.skills.map((sk) => (
-                            <span key={sk} className="px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full text-[9px] font-medium border border-purple-200">
-                              {sk}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {/* GPS location */}
-                      {hasGPS && (
-                        <p className="text-[9px] text-gray-400 flex items-center gap-1">
-                          <Navigation size={8} /> {t.currentLocation!.lat.toFixed(4)}, {t.currentLocation!.lng.toFixed(4)}
-                        </p>
-                      )}
-                      {/* Active job titles */}
-                      {activeJobTitles.length > 0 && (
-                        <div>
-                          <p className="text-[9px] text-gray-400 uppercase tracking-wide font-semibold mb-1">Active Jobs</p>
-                          <div className="flex flex-col gap-1">
-                            {activeJobTitles.map((title, i) => (
-                              <div key={i} className="flex items-center gap-1.5 text-[10px] text-gray-700 bg-blue-50 border border-blue-100 rounded-lg px-2 py-1.5">
-                                <Briefcase size={9} className="text-blue-400 shrink-0" />
-                                <span className="truncate">{title}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
               </div>
             )}
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {/* ── Tab: Completed Jobs ── */}
+      {tab === "completed" && (() => {
+        const completedJobs = allJobs
+          .filter(j => ["COMPLETED", "INVOICED", "PAID"].includes(j.status))
+          .sort((a, b) => {
+            const da = a.completedAt ?? a.updatedAt ?? a.createdAt
+            const db = b.completedAt ?? b.updatedAt ?? b.createdAt
+            return new Date(db).getTime() - new Date(da).getTime()
+          })
+        const byStatus = {
+          COMPLETED: completedJobs.filter(j => j.status === "COMPLETED").length,
+          INVOICED:  completedJobs.filter(j => j.status === "INVOICED").length,
+          PAID:      completedJobs.filter(j => j.status === "PAID").length,
+        }
+        return (
+          <div className="anim-fade-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Funnel summary strip */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+              {[
+                { label: "Completed", count: byStatus.COMPLETED, color: "#10b981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.2)" },
+                { label: "Invoiced", count: byStatus.INVOICED, color: "#0891b2", bg: "rgba(8,145,178,0.08)", border: "rgba(8,145,178,0.2)" },
+                { label: "Paid", count: byStatus.PAID, color: "#7c3aed", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.2)" },
+              ].map(s => (
+                <div key={s.label} style={{ padding: "14px 18px", borderRadius: "var(--r-md)", background: s.bg, border: `1px solid ${s.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.count}</div>
+                    <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 3 }}>{s.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Jobs grid */}
+            {completedJobs.length === 0 ? (
+              <div className="card" style={{ textAlign: "center", padding: "48px 20px" }}>
+                <CheckCircle2 size={36} style={{ margin: "0 auto 12px", display: "block", color: "#10b981", opacity: 0.4 }} />
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--t2)" }}>No completed jobs yet</div>
+                <div style={{ fontSize: 12, color: "var(--t4)", marginTop: 4 }}>Completed, invoiced, and paid jobs will appear here.</div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
+                {completedJobs.map(job => {
+                  const assignment = assignmentByJobId[job.id]
+                  const statusColor = job.status === "PAID" ? "#7c3aed" : job.status === "INVOICED" ? "#0891b2" : "#10b981"
+                  const statusBg    = job.status === "PAID" ? "rgba(124,58,237,0.08)" : job.status === "INVOICED" ? "rgba(8,145,178,0.08)" : "rgba(16,185,129,0.08)"
+                  const doneAt = job.completedAt ?? job.updatedAt
+                  return (
+                    <div
+                      key={job.id}
+                      onClick={() => handleOpenJob(job, assignment)}
+                      style={{
+                        background: "var(--bg-card)", border: "1px solid var(--bd)", borderRadius: "var(--r-md)",
+                        padding: "16px", cursor: "pointer", transition: "box-shadow 0.15s, border-color 0.15s",
+                        borderLeft: `3px solid ${statusColor}`,
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-md)"; (e.currentTarget as HTMLElement).style.borderColor = statusColor; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; (e.currentTarget as HTMLElement).style.borderColor = "var(--bd)"; (e.currentTarget as HTMLElement).style.borderLeftColor = statusColor; }}
+                    >
+                      {/* Top row: title + status badge */}
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t1)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{job.title}</div>
+                          <div style={{ fontSize: 11, color: "var(--t4)", marginTop: 2 }}>#{job.id.slice(0, 8)}</div>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: statusColor, background: statusBg, padding: "3px 9px", borderRadius: 12, flexShrink: 0, border: `1px solid ${statusColor}22` }}>
+                          {job.status}
+                        </span>
+                      </div>
+                      {/* Details */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--t3)" }}>
+                          <Users size={11} style={{ flexShrink: 0 }} />
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{job.customerName ?? "—"}</span>
+                        </div>
+                        {(assignment?.technicianName ?? job.assignedToName) && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--t3)" }}>
+                            <Wrench size={11} style={{ flexShrink: 0 }} />
+                            <span>{assignment?.technicianName ?? job.assignedToName}</span>
+                          </div>
+                        )}
+                        {job.serviceAddress && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--t3)" }}>
+                            <MapPin size={11} style={{ flexShrink: 0 }} />
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{job.serviceAddress}</span>
+                          </div>
+                        )}
+                        {doneAt && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--t4)" }}>
+                            <CheckCircle2 size={11} style={{ flexShrink: 0 }} />
+                            <span>{new Date(doneAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · {new Date(doneAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Amount */}
+                      {(job.finalAmount ?? job.estimatedAmount) ? (
+                        <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--bd)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: 11, color: "var(--t4)" }}>Amount</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--t1)" }}>${Number(job.finalAmount ?? job.estimatedAmount).toLocaleString()}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {tab === "calendar" && (
         <div className="anim-fade-in">
@@ -967,6 +1281,12 @@ export default function DispatchBoard() {
                 assignedJobs={assignedJobs}
                 unassignedJobs={unassignedJobs}
                 assignmentByJobId={assignmentByJobId}
+                loginMap={loginMap}
+                onOpenJob={handleOpenJob}
+                onSmartAssign={handleSmartAssign}
+                onAssign={handleManualAssign}
+                isAssigning={manualAssign.isPending}
+                smartAssigningJobId={smartAssign.isPending ? pendingJobId : null}
               />
             </Suspense>
           </div>
@@ -975,6 +1295,16 @@ export default function DispatchBoard() {
 
       <AddTechnicianModal isOpen={showAddTech} onClose={() => setShowAddTech(false)} />
       <CreateJobModal isOpen={showCreateJob} onClose={() => setShowCreateJob(false)} />
+
+      {selectedTech && (
+        <TechnicianDetailPanel
+          technician={selectedTech}
+          assignments={allAssignments}
+          jobs={allJobs}
+          lastLoginAt={loginMap[selectedTech.userId]}
+          onClose={() => setSelectedTech(null)}
+        />
+      )}
 
       {/* Job Detail Panel (active assignment click) */}
       {selectedJob && (

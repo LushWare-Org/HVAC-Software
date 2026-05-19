@@ -38,9 +38,10 @@ api.interceptors.request.use((config) => {
       const cpUser = localStorage.getItem('cp_user')
       if (cpUser) {
         const parsed = JSON.parse(cpUser)
-        if (parsed?.customerId) {
-          config.headers['x-test-customer-id'] = parsed.customerId
-        }
+        if (parsed?.id)         config.headers['x-test-user-id']      = parsed.id
+        if (parsed?.email)      config.headers['x-test-user-email']   = parsed.email
+        if (parsed?.name)       config.headers['x-test-user-name']    = parsed.name
+        if (parsed?.customerId) config.headers['x-test-customer-id']  = parsed.customerId
       }
     } catch { /* localStorage not available */ }
   }

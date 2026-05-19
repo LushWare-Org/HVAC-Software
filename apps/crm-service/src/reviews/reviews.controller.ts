@@ -145,6 +145,7 @@ export class ReviewsController {
 
   @Post()
   @Roles(
+    Role.SUPER_ADMIN,
     Role.CUSTOMER,
     Role.COMPANY_ADMIN,
     Role.OFFICE_MANAGER,

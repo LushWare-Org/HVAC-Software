@@ -100,7 +100,7 @@ export class JobsController {
 
   // ---- Create ----
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Create a new job' })
   async create(@CurrentUser() user: AuthUser, @Body() dto: CreateJobDto) {
     if (user.role === Role.CUSTOMER) {
@@ -119,7 +119,7 @@ export class JobsController {
 
   // ---- Update general fields (PUT) ----
   @Put(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Update job fields (not status — use /status for that)' })
   update(
     @CurrentUser() user: AuthUser,
@@ -131,7 +131,7 @@ export class JobsController {
 
   // ---- Combined PATCH (fields + optional status in one call) ----
   @Patch(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN, Role.CUSTOMER)
   @ApiOperation({ summary: 'Patch job: update fields and/or transition status in one request' })
   async patch(
     @CurrentUser() user: AuthUser,
@@ -180,7 +180,7 @@ export class JobsController {
 
   // ---- Delete ----
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a job (admin/office manager only)' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
@@ -189,7 +189,7 @@ export class JobsController {
 
   // ---- Custom field values ----
   @Patch(':id/custom-fields')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN)
   @ApiOperation({ summary: 'Update trade-specific custom field values for a job' })
   updateCustomFields(
     @CurrentUser() user: AuthUser,

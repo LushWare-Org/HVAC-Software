@@ -14,7 +14,7 @@ export class SuppressionController {
 
   @Post()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Manually add an address to the suppression list' })
   async add(@CurrentUser() user: AuthUser, @Body() dto: AddSuppressionDto): Promise<void> {
     await this.suppressionService.addSuppression(user.companyId, dto.channel, dto.address, dto.reason);
@@ -22,7 +22,7 @@ export class SuppressionController {
 
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Remove an address from the suppression list (re-subscribe)' })
   async remove(@CurrentUser() user: AuthUser, @Body() dto: RemoveSuppressionDto): Promise<void> {
     await this.suppressionService.removeSuppression(user.companyId, dto.channel, dto.address);

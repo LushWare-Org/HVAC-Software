@@ -49,7 +49,7 @@ export class EquipmentController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Add equipment to a customer' })
   create(
     @CurrentUser() user: AuthUser,
@@ -64,7 +64,7 @@ export class EquipmentController {
   }
 
   @Put()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Bulk replace all equipment for a customer' })
   replaceAll(
     @CurrentUser() user: AuthUser,
@@ -79,7 +79,7 @@ export class EquipmentController {
   }
 
   @Patch(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Update a single equipment item' })
   async update(
     @CurrentUser() user: AuthUser,
@@ -94,7 +94,7 @@ export class EquipmentController {
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove equipment' })
   async remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {

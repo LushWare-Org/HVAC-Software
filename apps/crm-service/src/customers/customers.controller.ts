@@ -43,7 +43,7 @@ export class CustomersController {
   @Get('me')
   @ApiOperation({ summary: 'Get current customer portal user\'s customer profile' })
   getMe(@CurrentUser() user: AuthUser) {
-    return this.customersService.findMe(user.companyId, user.userId);
+    return this.customersService.findMe(user.companyId, user.userId, user.customerId);
   }
 
   // ---- Customer Portal: Update own profile ----
@@ -53,12 +53,12 @@ export class CustomersController {
     @CurrentUser() user: AuthUser,
     @Body() dto: { firstName?: string; lastName?: string; phone?: string; mobile?: string; address?: string; city?: string; state?: string; zipCode?: string },
   ) {
-    return this.customersService.updateMe(user.companyId, user.userId, dto);
+    return this.customersService.updateMe(user.companyId, user.userId, dto, user.customerId);
   }
 
   // ---- Create ----
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Create a new customer' })
   create(
     @CurrentUser() user: AuthUser,
@@ -157,7 +157,7 @@ export class CustomersController {
 
   // ---- Update ----
   @Put(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Update a customer' })
   update(
     @CurrentUser() user: AuthUser,
@@ -169,7 +169,7 @@ export class CustomersController {
 
   // ---- Soft delete ----
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Deactivate (soft-delete) a customer' })
   remove(
@@ -182,7 +182,7 @@ export class CustomersController {
   // ── Per-customer recommendation execute endpoints ────────────────────────────
 
   @Post(':id/followup')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Trigger an immediate follow-up action for a customer' })
   @ApiParam({ name: 'id', type: String })
   triggerFollowup(
@@ -193,7 +193,7 @@ export class CustomersController {
   }
 
   @Post(':id/retention')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Trigger a retention action for a customer' })
   @ApiParam({ name: 'id', type: String })
   triggerRetention(

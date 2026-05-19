@@ -31,7 +31,7 @@ export class QuickBooksController {
   @Get('status')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Check QuickBooks connection status for this company' })
   getStatus(@CurrentUser() user: AuthUser) {
     return this.qbService.getStatus(user.companyId);
@@ -42,7 +42,7 @@ export class QuickBooksController {
   @Get('connect')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'Initiate QuickBooks OAuth 2.0 flow' })
   async connect(@CurrentUser() user: AuthUser, @Res() res: Response) {
     const authUri = this.qbService.getAuthUri(user.companyId);
@@ -97,7 +97,7 @@ export class QuickBooksController {
   @Post('disconnect')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'Disconnect QuickBooks account' })
   async disconnect(@CurrentUser() user: AuthUser) {
     await this.qbService.disconnect(user.companyId);
@@ -109,7 +109,7 @@ export class QuickBooksController {
   @Post('sync/invoice/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Manually push an invoice to QuickBooks' })
   async syncInvoice(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     await this.qbSync.syncInvoice(id, user.companyId);
@@ -119,7 +119,7 @@ export class QuickBooksController {
   @Post('sync/payment/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Manually push a payment to QuickBooks' })
   async syncPayment(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     await this.qbSync.syncPayment(id, user.companyId);

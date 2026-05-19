@@ -460,9 +460,12 @@ export class CustomersService {
     });
   }
 
-  async findMe(companyId: string, userId: string) {
+  async findMe(companyId: string, userId: string, customerId?: string) {
+    const whereClause = customerId
+      ? { companyId, id: customerId }
+      : { companyId, auth0UserId: userId };
     const customer = await this.prisma.customer.findFirst({
-      where: { companyId, auth0UserId: userId },
+      where: whereClause,
       include: {
         contacts: true,
         addresses: { orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }] },
@@ -474,8 +477,8 @@ export class CustomersService {
     return customer;
   }
 
-  async updateMe(companyId: string, userId: string, dto: Partial<{ firstName: string; lastName: string; email: string; phone: string; mobile: string; address: string; city: string; state: string; zipCode: string; notes: string }>) {
-    const customer = await this.findMe(companyId, userId);
+  async updateMe(companyId: string, userId: string, dto: Partial<{ firstName: string; lastName: string; email: string; phone: string; mobile: string; address: string; city: string; state: string; zipCode: string; notes: string }>, customerId?: string) {
+    const customer = await this.findMe(companyId, userId, customerId);
     return this.prisma.customer.update({ where: { id: customer.id }, data: dto });
   }
 

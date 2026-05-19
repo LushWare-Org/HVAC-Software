@@ -5,6 +5,7 @@ import { ToastProvider } from './contexts/ToastContext'
 import { useAuth } from './contexts/AuthContext'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
+import ChatWidget from './components/ChatWidget'
 // Dashboard + Login stay eager: they're the post-login landing and the
 // pre-login screen, both shown immediately. Everything else is lazy-loaded
 // so the initial JS bundle stays tight.
@@ -104,6 +105,7 @@ function AppShell() {
             </Suspense>
           </div>
         </div>
+        <ChatWidget />
       </div>
     </RequireAuth>
   )

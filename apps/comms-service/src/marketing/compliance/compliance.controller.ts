@@ -12,7 +12,7 @@ export class ComplianceController {
   constructor(private readonly svc: ComplianceService) {}
 
   @Delete('customers/:customerId')
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'CCPA right-to-delete: erase all marketing data for a customer' })
   deleteCustomerData(
     @CurrentUser() user: AuthUser,
@@ -22,7 +22,7 @@ export class ComplianceController {
   }
 
   @Get('deletion-log')
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'Audit log of all CCPA deletions for this company' })
   getDeletionLog(@CurrentUser() user: AuthUser) {
     return this.svc.getDeletionLog(user.companyId);

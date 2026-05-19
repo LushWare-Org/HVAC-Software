@@ -65,6 +65,18 @@ export class AuthService {
 
     await this.prisma.companyUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
 
+    // Stamp last_seen_at on the scheduling technician record so dispatch
+    // availability reflects actual app logins, not just GPS pings.
+    if (user.role === 'technician') {
+      try {
+        await this.prisma.$executeRaw`
+          UPDATE scheduling.technicians
+          SET last_seen_at = NOW(), updated_at = NOW()
+          WHERE user_id = ${user.id} AND company_id = ${user.companyId}
+        `;
+      } catch (_) { /* fire-and-forget — scheduling schema may not exist in test env */ }
+    }
+
     let customerId: string | undefined;
     if (user.role === 'customer') {
       const customer = await this.prisma.customer.findFirst({

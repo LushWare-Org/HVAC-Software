@@ -13,14 +13,14 @@ export class MarketingSettingsController {
   constructor(private readonly svc: MarketingSettingsService) {}
 
   @Get()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Get marketing settings (upserts defaults on first call)' })
   get(@CurrentUser() user: AuthUser) {
     return this.svc.get(user.companyId);
   }
 
   @Patch()
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'Update marketing settings — COMPANY_ADMIN only' })
   update(@CurrentUser() user: AuthUser, @Body() dto: UpdateMarketingSettingsDto) {
     return this.svc.update(user.companyId, dto);

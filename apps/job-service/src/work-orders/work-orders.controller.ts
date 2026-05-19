@@ -56,7 +56,7 @@ export class WorkOrdersController {
 
   // ---- Create work order from a job ----
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Create a work order for a job (pre-populates template tasks)' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateWorkOrderDto) {
     return this.svc.create(user.companyId, user, dto);
@@ -85,7 +85,7 @@ export class WorkOrdersController {
 
   // ---- Check-in (technician arrives on site) ----
   @Patch(':id/check-in')
-  @Roles(Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Technician checks in — marks work order ON_SITE' })
   checkIn(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.svc.checkIn(user.companyId, id, user.userId);
@@ -93,7 +93,7 @@ export class WorkOrdersController {
 
   // ---- Check-out (technician completes work) ----
   @Patch(':id/check-out')
-  @Roles(Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Technician checks out — marks work order COMPLETED' })
   checkOut(
     @CurrentUser() user: AuthUser,
@@ -105,7 +105,7 @@ export class WorkOrdersController {
 
   // ---- Add ad-hoc task ----
   @Post(':id/tasks')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Add an ad-hoc task to a work order' })
   addAdHocTask(
     @CurrentUser() user: AuthUser,
@@ -117,7 +117,7 @@ export class WorkOrdersController {
 
   // ---- Mark task complete ----
   @Patch(':id/tasks/:taskCompletionId')
-  @Roles(Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER, Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'Mark a checklist task as complete/incomplete' })
   completeTask(
     @CurrentUser() user: AuthUser,
@@ -130,7 +130,7 @@ export class WorkOrdersController {
 
   // ---- Add line item ----
   @Post(':id/line-items')
-  @Roles(Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER, Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'Add a part or labour line item to the work order' })
   addLineItem(
     @CurrentUser() user: AuthUser,
@@ -142,7 +142,7 @@ export class WorkOrdersController {
 
   // ---- Remove line item ----
   @Delete(':id/line-items/:lineItemId')
-  @Roles(Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER, Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.TECHNICIAN, Role.DISPATCHER, Role.OFFICE_MANAGER, Role.COMPANY_ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove a line item from a work order' })
   removeLineItem(

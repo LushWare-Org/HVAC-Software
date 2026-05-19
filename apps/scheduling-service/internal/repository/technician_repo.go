@@ -46,7 +46,8 @@ func (r *TechnicianRepository) Create(ctx context.Context, companyID string, req
 				ST_SetSRID(ST_MakePoint($9, $8), 4326), NOW())
 			RETURNING id, company_id, user_id, name, phone, avatar_url, skills,
 			          max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
-			          created_at, updated_at`,
+			          created_at, updated_at,
+			          ST_Y(current_location::geometry), ST_X(current_location::geometry)`,
 			companyID, req.UserID, req.Name, req.Phone, req.AvatarURL, skills, maxDailyJobs,
 			*req.Latitude, *req.Longitude,
 		)
@@ -59,7 +60,8 @@ func (r *TechnicianRepository) Create(ctx context.Context, companyID string, req
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, company_id, user_id, name, phone, avatar_url, skills,
 		          max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
-		          created_at, updated_at`,
+		          created_at, updated_at,
+		          ST_Y(current_location::geometry), ST_X(current_location::geometry)`,
 		companyID, req.UserID, req.Name, req.Phone, req.AvatarURL, skills, maxDailyJobs,
 	)
 
@@ -71,7 +73,8 @@ func (r *TechnicianRepository) FindByID(ctx context.Context, companyID, id strin
 	row := r.db.QueryRow(ctx, `
 		SELECT id, company_id, user_id, name, phone, avatar_url, skills,
 		       max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
-		       created_at, updated_at
+		       created_at, updated_at,
+		       ST_Y(current_location::geometry), ST_X(current_location::geometry)
 		FROM scheduling.technicians
 		WHERE id = $1 AND company_id = $2`, id, companyID)
 
@@ -90,7 +93,8 @@ func (r *TechnicianRepository) FindByUserID(ctx context.Context, companyID, user
 	row := r.db.QueryRow(ctx, `
 		SELECT id, company_id, user_id, name, phone, avatar_url, skills,
 		       max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
-		       created_at, updated_at
+		       created_at, updated_at,
+		       ST_Y(current_location::geometry), ST_X(current_location::geometry)
 		FROM scheduling.technicians
 		WHERE user_id = $1 AND company_id = $2`, userID, companyID)
 
@@ -140,7 +144,8 @@ func (r *TechnicianRepository) ListActive(ctx context.Context, companyID string)
 	rows, err := r.db.Query(ctx, `
 		SELECT id, company_id, user_id, name, phone, avatar_url, skills,
 		       max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
-		       created_at, updated_at
+		       created_at, updated_at,
+		       ST_Y(current_location::geometry), ST_X(current_location::geometry)
 		FROM scheduling.technicians
 		WHERE company_id = $1 AND is_active = TRUE
 		ORDER BY name`, companyID)
@@ -175,7 +180,8 @@ func (r *TechnicianRepository) SyncOneFromCRM(ctx context.Context, companyID, us
 				updated_at = NOW()
 			RETURNING id, company_id, user_id, name, phone, avatar_url, skills,
 			          max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
-			          created_at, updated_at
+			          created_at, updated_at,
+			          ST_Y(current_location::geometry), ST_X(current_location::geometry)
 		)
 		SELECT * FROM inserted`, companyID, userID)
 
@@ -207,7 +213,8 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 		SELECT sub.id, sub.company_id, sub.user_id, sub.name, sub.phone, sub.avatar_url,
 		       sub.skills, sub.max_daily_jobs, sub.is_active, sub.rating, sub.total_ratings,
 		       sub.last_seen_at, sub.created_at, sub.updated_at,
-		       sub.distance_km
+		       sub.distance_km,
+		       sub.lat, sub.lng
 		FROM (
 		  SELECT t.id, t.company_id, t.user_id, t.name, t.phone, t.avatar_url,
 		         t.skills, t.max_daily_jobs, t.is_active, t.rating, t.total_ratings,
@@ -215,7 +222,9 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 		         ST_DistanceSphere(
 		           t.current_location,
 		           ST_SetSRID(ST_MakePoint($3, $2), 4326)
-		         ) / 1000.0 AS distance_km
+		         ) / 1000.0 AS distance_km,
+		         ST_Y(t.current_location::geometry) AS lat,
+		         ST_X(t.current_location::geometry) AS lng
 		  FROM scheduling.technicians t
 		  WHERE t.company_id = $1
 		    AND t.is_active = TRUE
@@ -224,7 +233,7 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 		WHERE sub.distance_km <= $4
 		ORDER BY sub.distance_km ASC
 		LIMIT 20`,
-		companyID, jobLat, jobLng, maxDistanceKm, // $4 is km now (not metres)
+		companyID, jobLat, jobLng, maxDistanceKm,
 	)
 	if err != nil {
 		return nil, err
@@ -235,6 +244,7 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 	for rows.Next() {
 		var twd TechnicianWithDistance
 		var skills []string
+		var lat, lng *float64
 		err := rows.Scan(
 			&twd.Technician.ID, &twd.Technician.CompanyID, &twd.Technician.UserID,
 			&twd.Technician.Name, &twd.Technician.Phone, &twd.Technician.AvatarURL,
@@ -244,11 +254,15 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 			&twd.Technician.LastSeenAt,
 			&twd.Technician.CreatedAt, &twd.Technician.UpdatedAt,
 			&twd.DistanceKm,
+			&lat, &lng,
 		)
 		if err != nil {
 			return nil, err
 		}
 		twd.Technician.Skills = skills
+		if lat != nil && lng != nil {
+			twd.Technician.CurrentLocation = &models.GeoPoint{Lat: *lat, Lng: *lng}
+		}
 
 		// Apply skills filter in Go (avoids GIN index interference with spatial index)
 		if len(requiredSkills) > 0 && !hasRequiredSkills(skills, requiredSkills) {
@@ -370,7 +384,8 @@ func (r *TechnicianRepository) UpdateTechnician(
 			WHERE id = $7 AND company_id = $8
 			RETURNING id, company_id, user_id, name, phone, avatar_url, skills,
 			          max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
-			          created_at, updated_at`,
+			          created_at, updated_at,
+			          ST_Y(current_location::geometry), ST_X(current_location::geometry)`,
 			name, phone, avatarURL, skills, maxDailyJobs, isActive, id, companyID,
 			*req.Latitude, *req.Longitude,
 		)
@@ -384,7 +399,8 @@ func (r *TechnicianRepository) UpdateTechnician(
 		WHERE id = $7 AND company_id = $8
 		RETURNING id, company_id, user_id, name, phone, avatar_url, skills,
 		          max_daily_jobs, is_active, rating, total_ratings, last_seen_at,
-		          created_at, updated_at`,
+		          created_at, updated_at,
+		          ST_Y(current_location::geometry), ST_X(current_location::geometry)`,
 		name, phone, avatarURL, skills, maxDailyJobs, isActive, id, companyID,
 	)
 	return scanTechnician(row)
@@ -425,17 +441,22 @@ type TechnicianWithDistance struct {
 func scanTechnician(row pgx.Row) (*models.Technician, error) {
 	var t models.Technician
 	var skills []string
+	var lat, lng *float64
 	err := row.Scan(
 		&t.ID, &t.CompanyID, &t.UserID, &t.Name, &t.Phone, &t.AvatarURL,
 		&skills,
 		&t.MaxDailyJobs, &t.IsActive, &t.Rating, &t.TotalRatings,
 		&t.LastSeenAt,
 		&t.CreatedAt, &t.UpdatedAt,
+		&lat, &lng,
 	)
 	if err != nil {
 		return nil, err
 	}
 	t.Skills = skills
+	if lat != nil && lng != nil {
+		t.CurrentLocation = &models.GeoPoint{Lat: *lat, Lng: *lng}
+	}
 	return &t, nil
 }
 
@@ -444,17 +465,22 @@ func collectTechnicians(rows pgx.Rows) ([]*models.Technician, error) {
 	for rows.Next() {
 		var t models.Technician
 		var skills []string
+		var lat, lng *float64
 		err := rows.Scan(
 			&t.ID, &t.CompanyID, &t.UserID, &t.Name, &t.Phone, &t.AvatarURL,
 			&skills,
 			&t.MaxDailyJobs, &t.IsActive, &t.Rating, &t.TotalRatings,
 			&t.LastSeenAt,
 			&t.CreatedAt, &t.UpdatedAt,
+			&lat, &lng,
 		)
 		if err != nil {
 			return nil, err
 		}
 		t.Skills = skills
+		if lat != nil && lng != nil {
+			t.CurrentLocation = &models.GeoPoint{Lat: *lat, Lng: *lng}
+		}
 		result = append(result, &t)
 	}
 	return result, rows.Err()

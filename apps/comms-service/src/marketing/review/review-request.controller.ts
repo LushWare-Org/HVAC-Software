@@ -15,7 +15,7 @@ export class ReviewRequestController {
    * Called by job-service webhook or admin manually.
    */
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   trigger(@Body() dto: TriggerReviewRequestDto) {
     return this.service.trigger(dto);
   }
@@ -24,7 +24,7 @@ export class ReviewRequestController {
    * GET /marketing/review-requests/job/:jobId?companyId=...
    */
   @Get('job/:jobId')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   getByJob(@Param('jobId') jobId: string, @Query('companyId') companyId: string) {
     return this.service.getStatus(companyId, jobId);
   }
@@ -33,7 +33,7 @@ export class ReviewRequestController {
    * GET /marketing/review-requests/customer/:customerId?companyId=...
    */
   @Get('customer/:customerId')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   getByCustomer(@Param('customerId') customerId: string, @Query('companyId') companyId: string) {
     return this.service.listForCustomer(companyId, customerId);
   }

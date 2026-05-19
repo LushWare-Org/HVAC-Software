@@ -72,7 +72,7 @@ export class QuotesController {
 
   // ── Create ────────────────────────────────────────────────────────────────
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new quote' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateQuoteDto) {
     return this.quotesService.create(user.companyId, user.userId, dto);
@@ -80,7 +80,7 @@ export class QuotesController {
 
   // ── Update (PUT) ─────────────────────────────────────────────────────────
   @Put(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update a quote (incl. line items and status)' })
   update(
     @CurrentUser() user: AuthUser,
@@ -92,7 +92,7 @@ export class QuotesController {
 
   // ── Update (PATCH — alias for PUT, accepts same DTO) ─────────────────────
   @Patch(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Partially update a quote status or fields' })
   patch(
     @CurrentUser() user: AuthUser,
@@ -104,7 +104,7 @@ export class QuotesController {
 
   // ── Send ──────────────────────────────────────────────────────────────────
   @Patch(':id/send')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Mark quote as sent (generates approval token)' })
   send(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.quotesService.send(user.companyId, id);
@@ -113,7 +113,7 @@ export class QuotesController {
   // ── Approve by ID (test/admin endpoint) ──────────────────────────────────
   @Post(':id/approve')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Approve a quote directly by ID (no token required)' })
   approveById(
     @CurrentUser() user: AuthUser,
@@ -132,7 +132,7 @@ export class QuotesController {
   // ── Decline by ID (portal/customer endpoint) ────────────────────────────
   @Post(':id/decline')
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Decline a quote directly by ID' })
   declineById(
     @CurrentUser() user: AuthUser,
@@ -158,7 +158,7 @@ export class QuotesController {
 
   // ── Convert to Invoice ────────────────────────────────────────────────────
   @Post(':id/convert')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Convert an accepted quote to an invoice' })
   convertToInvoice(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.quotesService.convertToInvoice(user.companyId, id, user.userId);
@@ -187,7 +187,7 @@ export class QuotesController {
 
   // ── Delete ────────────────────────────────────────────────────────────────
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a draft quote' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {

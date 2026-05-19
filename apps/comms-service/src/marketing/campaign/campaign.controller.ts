@@ -21,13 +21,13 @@ export class CampaignController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateCampaignDto) {
     return this.svc.create(user.companyId, user.userId, dto);
   }
 
   @Post(':id/launch')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Launch a campaign immediately — queues sends for all audience members' })
   launch(@CurrentUser() user: AuthUser, @Param('id') id: string) {

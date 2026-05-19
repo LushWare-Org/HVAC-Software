@@ -249,6 +249,95 @@ ON CONFLICT DO NOTHING;
 
 
 -- ─────────────────────────────────────────────────────────────
+-- Sprint 5: marketing_settings + marketing_deletion_logs
+-- Migration: 20260513000000_marketing_settings_compliance
+-- ─────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS "marketing"."marketing_settings" (
+  "id"                           TEXT        NOT NULL DEFAULT gen_random_uuid()::text,
+  "companyId"                    TEXT        NOT NULL,
+  "globalEnabled"                BOOLEAN     NOT NULL DEFAULT true,
+  "reviewRequestsEnabled"        BOOLEAN     NOT NULL DEFAULT true,
+  "equipmentAutomationsEnabled"  BOOLEAN     NOT NULL DEFAULT true,
+  "winbackEnabled"               BOOLEAN     NOT NULL DEFAULT true,
+  "frequencyCapPerDay"           INTEGER     NOT NULL DEFAULT 3,
+  "frequencyCapPerWeek"          INTEGER     NOT NULL DEFAULT 10,
+  "defaultSenderName"            TEXT,
+  "createdAt"                    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "updatedAt"                    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT "marketing_settings_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "marketing_settings_companyId_key" UNIQUE ("companyId")
+);
+
+CREATE TABLE IF NOT EXISTS "marketing"."marketing_deletion_logs" (
+  "id"             TEXT        NOT NULL DEFAULT gen_random_uuid()::text,
+  "companyId"      TEXT        NOT NULL,
+  "customerId"     TEXT        NOT NULL,
+  "deletedBy"      TEXT        NOT NULL,
+  "recordsDeleted" INTEGER     NOT NULL,
+  "deletedAt"      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT "marketing_deletion_logs_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX IF NOT EXISTS "marketing_deletion_logs_companyId_idx"
+  ON "marketing"."marketing_deletion_logs"("companyId");
+CREATE INDEX IF NOT EXISTS "marketing_deletion_logs_companyId_customerId_idx"
+  ON "marketing"."marketing_deletion_logs"("companyId", "customerId");
+
+INSERT INTO "marketing"."_prisma_migrations"
+  (id, checksum, migration_name, finished_at, applied_steps_count)
+VALUES
+  (gen_random_uuid()::text, 'manual', '20260513000000_marketing_settings_compliance', now(), 1)
+ON CONFLICT DO NOTHING;
+
+-- ─────────────────────────────────────────────────────────────
+-- 2026-05-14: Data Import tables + importBatchId columns
+-- Tables go in "crm" schema (same as the rest of the app).
+-- Run ONLY this block in Supabase SQL Editor.
+-- ─────────────────────────────────────────────────────────────
+
+DO $$ BEGIN
+  CREATE TYPE "crm"."ImportStatus" AS ENUM (
+    'VALIDATING','READY','IMPORTING','DONE','FAILED','ROLLED_BACK'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE TABLE IF NOT EXISTS "crm"."import_batches" (
+  "id"          TEXT NOT NULL,
+  "companyId"   TEXT NOT NULL,
+  "source"      TEXT NOT NULL,
+  "status"      "crm"."ImportStatus" NOT NULL DEFAULT 'VALIDATING',
+  "totalRows"   INTEGER NOT NULL DEFAULT 0,
+  "imported"    INTEGER NOT NULL DEFAULT 0,
+  "skipped"     INTEGER NOT NULL DEFAULT 0,
+  "failed"      INTEGER NOT NULL DEFAULT 0,
+  "createdBy"   TEXT NOT NULL,
+  "rawData"     JSONB,
+  "columnMap"   JSONB,
+  "completedAt" TIMESTAMPTZ,
+  "createdAt"   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT "import_batches_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX IF NOT EXISTS "import_batches_companyId_idx"
+  ON "crm"."import_batches"("companyId");
+
+CREATE TABLE IF NOT EXISTS "crm"."import_errors" (
+  "id"         SERIAL,
+  "batchId"    TEXT NOT NULL REFERENCES "crm"."import_batches"("id") ON DELETE CASCADE,
+  "rowNumber"  INTEGER NOT NULL,
+  "entityType" TEXT NOT NULL,
+  "rawData"    JSONB NOT NULL,
+  "error"      TEXT NOT NULL,
+  "createdAt"  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT "import_errors_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX IF NOT EXISTS "import_errors_batchId_idx"
+  ON "crm"."import_errors"("batchId");
+
+ALTER TABLE "crm"."customers" ADD COLUMN IF NOT EXISTS "importBatchId" TEXT;
+ALTER TABLE "crm"."equipment" ADD COLUMN IF NOT EXISTS "importBatchId" TEXT;
+
+-- ─────────────────────────────────────────────────────────────
 -- Done. Verify with:
 -- SELECT table_name FROM information_schema.tables
 --   WHERE table_schema IN ('crm','marketing')

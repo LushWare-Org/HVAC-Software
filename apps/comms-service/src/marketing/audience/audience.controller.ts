@@ -27,26 +27,26 @@ export class AudienceController {
   }
 
   @Get(':id/members')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Resolve member list for a saved audience' })
   resolveMembers(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.svc.resolveMembers(user.companyId, id);
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateAudienceDto) {
     return this.svc.create(user.companyId, dto);
   }
 
   @Patch(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: Partial<CreateAudienceDto>) {
     return this.svc.update(user.companyId, id, dto);
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.svc.remove(user.companyId, id);

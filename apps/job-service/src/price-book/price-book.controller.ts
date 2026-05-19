@@ -69,14 +69,14 @@ export class PriceBookController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Add a new item to the price book' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreatePriceBookItemDto) {
     return this.svc.create(user.companyId, dto);
   }
 
   @Put(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update a price book item' })
   update(
     @CurrentUser() user: AuthUser,
@@ -87,7 +87,7 @@ export class PriceBookController {
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Deactivate a price book item' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {

@@ -72,14 +72,14 @@ export class LeadsController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Create a lead' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateLeadDto) {
     return this.leadsService.create(user.companyId, dto);
   }
 
   @Patch(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Partially update a lead (status, estimated value, notes, etc.)' })
   patch(
     @CurrentUser() user: AuthUser,
@@ -90,7 +90,7 @@ export class LeadsController {
   }
 
   @Patch(':id/status')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Update lead status (advance pipeline stage)' })
   updateStatus(
     @CurrentUser() user: AuthUser,
@@ -101,7 +101,7 @@ export class LeadsController {
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a lead' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {

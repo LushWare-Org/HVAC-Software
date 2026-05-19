@@ -65,14 +65,14 @@ export class InvoicesController {
 
   // ── Create ────────────────────────────────────────────────────────────────
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new invoice' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateInvoiceDto) {
     return this.invoicesService.create(user.companyId, user.userId, dto);
   }
   // ── Update status / fields (PATCH) ───────────────────────────────────────
   @Patch(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Partially update invoice (status, etc.)' })
   patch(
     @CurrentUser() user: AuthUser,
@@ -83,7 +83,7 @@ export class InvoicesController {
   }
   // ── Send ──────────────────────────────────────────────────────────────────
   @Patch(':id/send')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Mark invoice as sent' })
   send(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.invoicesService.send(user.companyId, id);
@@ -91,7 +91,7 @@ export class InvoicesController {
 
   // ── Update Status ─────────────────────────────────────────────────────────
   @Patch(':id/status')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update invoice status' })
   updateStatus(
     @CurrentUser() user: AuthUser,
@@ -103,7 +103,7 @@ export class InvoicesController {
 
   // ── Stripe: Create Payment Intent ─────────────────────────────────────────
   @Post(':id/payment-intent')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Create a Stripe payment intent for online payment' })
   createPaymentIntent(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.invoicesService.createPaymentIntent(user.companyId, id);
@@ -111,7 +111,7 @@ export class InvoicesController {
 
   // ── Customer approve / decline actions ───────────────────────────────────
   @Post(':id/approve')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Customer approves invoice review (records decision)' })
   approveByCustomer(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.invoicesService.approveByCustomer(
@@ -123,7 +123,7 @@ export class InvoicesController {
   }
 
   @Post(':id/decline')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Customer declines an invoice (marks as VOID with note)' })
   declineByCustomer(
     @CurrentUser() user: AuthUser,
@@ -141,7 +141,7 @@ export class InvoicesController {
 
   // ── Record Manual Payment ─────────────────────────────────────────────────
   @Post(':id/payments')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Record a manual payment (cash, check, ACH)' })
   recordManualPayment(
     @CurrentUser() user: AuthUser,
@@ -159,7 +159,7 @@ export class InvoicesController {
 
   // ── Void ──────────────────────────────────────────────────────────────────
   @Patch(':id/void')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Void an invoice' })
   void(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.invoicesService.voidInvoice(user.companyId, id);

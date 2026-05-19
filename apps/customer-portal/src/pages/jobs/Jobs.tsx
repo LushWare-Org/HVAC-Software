@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import {
   Briefcase,
   CheckCircle,
@@ -30,6 +30,7 @@ const STATUS_MAP: Record<string, { label: string; css: string }> = {
 }
 
 const ITEMS_PER_PAGE = 10
+const ACTIVE_STATUSES = ['PENDING', 'SCHEDULED', 'EN_ROUTE', 'ON_SITE']
 
 function fmtDate(iso?: string) {
   if (!iso) return '—'
@@ -50,12 +51,32 @@ export default function MyJobs() {
   const [jobToCancel, setJobToCancel] = useState<Job | null>(null)
 
   const { data, isLoading, refetch } = useMyJobs({ page: 1, limit: 200 })
-  const jobs = useMemo(
-    () => [...(data?.data ?? [])].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    ),
-    [data],
-  )
+
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfWeek = new Date(startOfToday)
+  startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay())
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const jobs = useMemo(() => {
+    const all = [...(data?.data ?? [])]
+    const upcoming = all
+      .filter(j => ACTIVE_STATUSES.includes(j.status) && (!j.scheduledStart || new Date(j.scheduledStart) >= startOfToday))
+      .sort((a, b) => {
+        if (!a.scheduledStart && !b.scheduledStart) return 0
+        if (!a.scheduledStart) return 1
+        if (!b.scheduledStart) return -1
+        return new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime()
+      })
+    const past = all
+      .filter(j => !ACTIVE_STATUSES.includes(j.status) || (j.scheduledStart && new Date(j.scheduledStart) < startOfToday))
+      .sort((a, b) => {
+        const getTime = (x: typeof a) => new Date(x.scheduledStart ?? x.createdAt).getTime()
+        return getTime(b) - getTime(a)
+      })
+    return [...upcoming, ...past]
+  }, [data])
+
   const technicianNames = useJobTechnicianNames(jobs)
 
   const filtered = useMemo(() => {
@@ -71,15 +92,34 @@ export default function MyJobs() {
         (typeFilter === 'maintenance' && (title.includes('maintenance') || jobTypeName.includes('maintenance'))) ||
         (typeFilter === 'repair' && (title.includes('repair') || jobTypeName.includes('repair'))) ||
         (typeFilter === 'installation' && (title.includes('installation') || jobTypeName.includes('installation')))
-      return matchSearch && matchStatus && matchType
+      let matchDate = true
+      if (dateFilter !== 'all') {
+        const jobDate = job.scheduledStart ? new Date(job.scheduledStart) : null
+        if (!jobDate) {
+          matchDate = false
+        } else if (dateFilter === 'today') {
+          matchDate = jobDate >= startOfToday && jobDate < new Date(startOfToday.getTime() + 86400000)
+        } else if (dateFilter === 'week') {
+          matchDate = jobDate >= startOfWeek
+        } else if (dateFilter === 'month') {
+          matchDate = jobDate >= startOfMonth
+        }
+      }
+      return matchSearch && matchStatus && matchType && matchDate
     })
-  }, [jobs, searchQuery, statusFilter, technicianNames, typeFilter])
+  }, [jobs, searchQuery, statusFilter, technicianNames, typeFilter, dateFilter])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
+  const isUpcoming = (job: Job) =>
+    ACTIVE_STATUSES.includes(job.status) && (!job.scheduledStart || new Date(job.scheduledStart) >= startOfToday)
+
+  // Index in paginated where past jobs start (for divider row)
+  const pastStartIndex = paginated.findIndex(j => !isUpcoming(j))
+
   const completedCount = jobs.filter(j => ['COMPLETED', 'INVOICED', 'PAID'].includes(j.status)).length
-  const scheduledCount = jobs.filter(j => ['SCHEDULED', 'EN_ROUTE', 'ON_SITE'].includes(j.status)).length
+  const upcomingCount = jobs.filter(j => isUpcoming(j)).length
   const pendingCount = jobs.filter(j => j.status === 'PENDING').length
 
   const hasActiveFilters = statusFilter !== 'all' || typeFilter !== 'all' || dateFilter !== 'all' || !!searchQuery
@@ -104,7 +144,7 @@ export default function MyJobs() {
 
   const statCards = [
     { title: 'Completed', value: completedCount, icon: CheckCircle },
-    { title: 'Scheduled', value: scheduledCount, icon: Clock },
+    { title: 'Upcoming', value: upcomingCount, icon: Clock },
     { title: 'Pending', value: pendingCount, icon: Briefcase },
     { title: 'Total Jobs', value: data?.meta?.total ?? jobs.length, icon: Briefcase },
   ]
@@ -189,44 +229,57 @@ export default function MyJobs() {
                     <td colSpan={6} style={{ textAlign: 'center', color: 'var(--t3)', padding: '24px' }}>Loading jobs…</td>
                   </tr>
                 ) : paginated.length > 0 ? (
-                  paginated.map(job => {
+                  paginated.map((job, idx) => {
                     const s = STATUS_MAP[job.status] || { label: job.status, css: 'badge-neutral' }
                     const technicianLabel = technicianNames[job.id] ?? job.assignedToName ?? 'Unassigned'
+                    const isPast = !isUpcoming(job)
                     return (
-                      <tr key={job.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(job)}>
-                        <td><span className="td-mono td-primary">{job.jobNumber}</span></td>
-                        <td>
-                          <div className="font-600" style={{ color: 'var(--t1)', fontSize: 13 }}>{job.title}</div>
-                          <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{job.description || job.jobType?.name || '—'}</div>
-                        </td>
-                        <td style={{ fontSize: 12, color: 'var(--t3)' }}>{fmtDate(job.scheduledStart ?? job.createdAt)}</td>
-                        <td>{technicianLabel}</td>
-                        <td><span className={`badge ${s.css}`}>{s.label}</span></td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }} onClick={e => e.stopPropagation()}>
-                            <button
-                              title="View Details"
-                              onClick={() => openDetail(job)}
-                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 'var(--r)', border: 'none', background: 'transparent', color: 'var(--blue)', cursor: 'pointer', transition: 'background var(--dur-fast)' }}
-                              onMouseOver={e => (e.currentTarget.style.background = '#EFF6FF')}
-                              onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
-                            >
-                              <Eye size={15} />
-                            </button>
-                            {['PENDING', 'SCHEDULED'].includes(job.status) && (
+                      <Fragment key={job.id}>
+                        {idx === pastStartIndex && pastStartIndex > 0 && (
+                          <tr>
+                            <td colSpan={6} style={{ padding: '8px 16px', background: 'var(--bg-card-2)', borderTop: '1px solid var(--bd)', borderBottom: '1px solid var(--bd)' }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Past Jobs</span>
+                            </td>
+                          </tr>
+                        )}
+                        <tr
+                          style={{ cursor: 'pointer', opacity: isPast ? 0.65 : 1 }}
+                          onClick={() => openDetail(job)}
+                        >
+                          <td><span className="td-mono td-primary">{job.jobNumber}</span></td>
+                          <td>
+                            <div className="font-600" style={{ color: isPast ? 'var(--t3)' : 'var(--t1)', fontSize: 13 }}>{job.title}</div>
+                            <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{job.description || job.jobType?.name || '—'}</div>
+                          </td>
+                          <td style={{ fontSize: 12, color: 'var(--t3)' }}>{fmtDate(job.scheduledStart ?? job.createdAt)}</td>
+                          <td>{technicianLabel}</td>
+                          <td><span className={`badge ${s.css}`}>{s.label}</span></td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }} onClick={e => e.stopPropagation()}>
                               <button
-                                title="Cancel Job"
-                                onClick={() => openCancel(job)}
-                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 'var(--r)', border: 'none', background: 'transparent', color: 'var(--red)', cursor: 'pointer', transition: 'background var(--dur-fast)' }}
-                                onMouseOver={e => (e.currentTarget.style.background = '#FEE2E2')}
+                                title="View Details"
+                                onClick={() => openDetail(job)}
+                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 'var(--r)', border: 'none', background: 'transparent', color: 'var(--blue)', cursor: 'pointer', transition: 'background var(--dur-fast)' }}
+                                onMouseOver={e => (e.currentTarget.style.background = '#EFF6FF')}
                                 onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
                               >
-                                <XCircle size={15} />
+                                <Eye size={15} />
                               </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
+                              {['PENDING', 'SCHEDULED'].includes(job.status) && isUpcoming(job) && (
+                                <button
+                                  title="Cancel Job"
+                                  onClick={() => openCancel(job)}
+                                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 'var(--r)', border: 'none', background: 'transparent', color: 'var(--red)', cursor: 'pointer', transition: 'background var(--dur-fast)' }}
+                                  onMouseOver={e => (e.currentTarget.style.background = '#FEE2E2')}
+                                  onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                  <XCircle size={15} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      </Fragment>
                     )
                   })
                 ) : (

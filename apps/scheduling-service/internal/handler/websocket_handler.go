@@ -33,6 +33,7 @@ func (h *WebSocketHandler) ServeWS(c *gin.Context) {
 	// Roles that may open a WebSocket (dispatcher dashboard, office manager, admin)
 	// Values match @tscrm/types Role enum (lowercase snake_case injected by Auth0 Action)
 	allowedRoles := map[string]bool{
+		"super_admin":    true,
 		"company_admin":  true,
 		"office_manager": true,
 		"dispatcher":     true,

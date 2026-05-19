@@ -40,7 +40,7 @@ export class ImportController {
   }
 
   @Post('start')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Start background import' })
   async start(
     @Body() body: { batchId: string; columnMap: ColumnMap[] },
@@ -96,7 +96,7 @@ export class ImportController {
   }
 
   @Delete('batches/:id')
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rollback import — deletes all records created in this batch' })
   rollback(@Param('id') id: string, @CurrentUser() user: AuthUser) {

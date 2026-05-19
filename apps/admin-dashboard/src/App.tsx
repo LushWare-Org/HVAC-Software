@@ -6,6 +6,7 @@ import { ToastProvider } from './contexts/ToastContext'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Login from './pages/Login'
+import ChatWidget from './components/ChatWidget'
 
 // ── Code-split page routes ──────────────────────────────────────────────────
 // Each page is loaded only when its route is first visited. This keeps the
@@ -166,6 +167,7 @@ function AuthenticatedApp() {
           </Suspense>
         </div>
       </div>
+      <ChatWidget />
       {/* Keyframes for the top-of-page route loader */}
       <style>{`
         @keyframes routeLoadShimmer {

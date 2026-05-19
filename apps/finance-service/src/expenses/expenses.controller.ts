@@ -65,7 +65,7 @@ export class ExpensesController {
   }
 
   @Put(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update an expense record' })
   update(
     @CurrentUser() user: AuthUser,
@@ -76,7 +76,7 @@ export class ExpensesController {
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete an expense record' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {

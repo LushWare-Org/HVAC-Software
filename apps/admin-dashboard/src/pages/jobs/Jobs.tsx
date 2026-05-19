@@ -3,7 +3,7 @@ import {
   Wrench, Clock, CheckCircle, FileText, Search, AlertTriangle,
   Maximize2, Minimize2, Edit2,
   ChevronLeft, ChevronRight, RefreshCw, AlertCircle,
-  ChevronDown, ChevronUp, Zap, CalendarDays, Shield, Trash2,
+  Zap, CalendarDays, Shield, Trash2,
 } from "lucide-react";
 import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
 import type { Job } from "../../types/api";
@@ -33,11 +33,38 @@ const PRIORITY_ORDER: Record<string, number> = {
 
 const ACTIVE_STATUSES = new Set(["PENDING", "SCHEDULED", "EN_ROUTE", "ON_SITE", "IN_PROGRESS", "ON_HOLD"]);
 
+const ACTIVE_STATUS_CHIPS = [
+  { status: "PENDING",     label: "Pending",     color: "#d97706", bg: "rgba(217,119,6,0.08)" },
+  { status: "SCHEDULED",   label: "Scheduled",   color: "#7c3aed", bg: "rgba(124,58,237,0.08)" },
+  { status: "EN_ROUTE",    label: "En Route",    color: "#2563eb", bg: "rgba(37,99,235,0.08)" },
+  { status: "ON_SITE",     label: "In Progress", color: "#0284c7", bg: "rgba(2,132,199,0.08)" },
+  { status: "ON_HOLD",     label: "On Hold",     color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
+];
+
+const PRIORITY_CHIPS = [
+  { priority: "EMERGENCY", label: "Emergency", color: "#dc2626", bg: "rgba(220,38,38,0.08)" },
+  { priority: "URGENT",    label: "Urgent",    color: "#ea580c", bg: "rgba(234,88,12,0.08)" },
+  { priority: "HIGH",      label: "High",      color: "#d97706", bg: "rgba(217,119,6,0.08)" },
+  { priority: "NORMAL",    label: "Normal",    color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
+  { priority: "LOW",       label: "Low",       color: "#9ca3af", bg: "rgba(156,163,175,0.08)" },
+];
+
 function Skeleton({ h = 14 }: { h?: number }) {
   return <div style={{ width: "100%", height: h, background: "var(--bg-hover)", borderRadius: 4 }} />;
 }
 
-function JobTable({ jobs, loading, onView, onDelete }: { jobs: Job[]; loading: boolean; onView: (j: Job) => void; onDelete: (j: Job) => void }) {
+function SortArrow() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ display: "inline-block", marginLeft: 3, verticalAlign: "middle" }}>
+      <path d="M5 2L8.5 7H1.5L5 2Z" fill="currentColor" opacity="0.9" />
+    </svg>
+  );
+}
+
+function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
+  jobs: Job[]; loading: boolean; onView: (j: Job) => void; onDelete: (j: Job) => void;
+  sortMode?: 'priority' | 'date';
+}) {
   return (
     <table className="data-table">
       <thead>
@@ -46,8 +73,12 @@ function JobTable({ jobs, loading, onView, onDelete }: { jobs: Job[]; loading: b
           <th>Customer</th>
           <th>Service</th>
           <th>Technician</th>
-          <th>Scheduled</th>
-          <th>Priority</th>
+          <th style={sortMode === 'date' ? { color: "var(--blue)", fontWeight: 700 } : undefined}>
+            Scheduled {sortMode === 'date' && <SortArrow />}
+          </th>
+          <th style={sortMode === 'priority' ? { color: "var(--blue)", fontWeight: 700 } : undefined}>
+            Priority {sortMode === 'priority' && <SortArrow />}
+          </th>
           <th>Status</th>
           <th>Amount</th>
           <th className="sticky-actions">Actions</th>
@@ -140,8 +171,8 @@ export default function Jobs() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showPast, setShowPast] = useState(false);
   const [pastPage, setPastPage] = useState(1);
+  const [pastStatusFilter, setPastStatusFilter] = useState("all");
   const [sortMode, setSortMode] = useState<'priority' | 'date'>('priority');
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
   const PAST_PER_PAGE = 10;
@@ -153,67 +184,83 @@ export default function Jobs() {
   const stats = statsQuery.data;
   const allJobs: Job[] = jobsQuery.data?.data ?? [];
 
-  const { activeJobs, pastJobs } = useMemo(() => {
-    let filtered = allJobs;
-    if (filterStatus !== "all") filtered = filtered.filter(j => j.status === filterStatus);
-    if (filterPriority !== "all") filtered = filtered.filter(j => (j.priority ?? "NORMAL") === filterPriority);
-
+  const { activeJobs, pastJobs, activeStatusCounts, activePriorityCounts } = useMemo(() => {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-    // Active list = jobs that are still actionable AND (unscheduled OR scheduled for today / future).
-    // Everything else — including active-status jobs whose scheduled date is already in the past —
-    // falls into "Past Jobs" so dispatchers see a clean current-and-future view on top.
-    const active = filtered
-      .filter(j => {
-        if (!ACTIVE_STATUSES.has(j.status)) return false;
-        if (!j.scheduledStart) return true; // keep unscheduled in the upcoming table
-        return new Date(j.scheduledStart).getTime() >= todayStart.getTime();
-      })
-      .sort((a, b) => {
-        if (sortMode === 'date') {
-          // Date mode: soonest upcoming date first (ascending), unscheduled last
-          const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : null;
-          const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : null;
-          // Unscheduled sink to the bottom
-          if (da !== null && db === null) return -1;
-          if (da === null && db !== null) return 1;
-          if (da === null && db === null) return 0;
-          return (da ?? 0) - (db ?? 0); // earliest / most imminent date on top
-        }
-        // Priority mode (default): Emergency first, then date
-        const pa = PRIORITY_ORDER[a.priority ?? "NORMAL"] ?? 3;
-        const pb = PRIORITY_ORDER[b.priority ?? "NORMAL"] ?? 3;
-        if (pa !== pb) return pa - pb;
-        const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : null;
-        const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : null;
-        const aToday = da ? (da >= todayStart.getTime() && da <= todayEnd.getTime()) : false;
-        const bToday = db ? (db >= todayStart.getTime() && db <= todayEnd.getTime()) : false;
-        if (aToday && !bToday) return -1;
-        if (!aToday && bToday) return 1;
-        if (da === null && db !== null) return -1;
-        if (da !== null && db === null) return 1;
-        return (da ?? 0) - (db ?? 0);
-      });
+    const isActiveUpcoming = (j: Job) => {
+      if (!ACTIVE_STATUSES.has(j.status)) return false;
+      if (!j.scheduledStart) return true;
+      return new Date(j.scheduledStart).getTime() >= todayStart.getTime();
+    };
 
-    const past = filtered
-      .filter(j => {
-        // Past = terminal status OR active-status but scheduled in a past date
-        if (!ACTIVE_STATUSES.has(j.status)) return true;
-        if (!j.scheduledStart) return false;
-        return new Date(j.scheduledStart).getTime() < todayStart.getTime();
-      })
+    // Past jobs from ALL jobs — not affected by active-section filters
+    const past = allJobs
+      .filter(j => !isActiveUpcoming(j))
       .sort((a, b) => {
         const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : 0;
         const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : 0;
         return db - da;
       });
 
-    return { activeJobs: active, pastJobs: past };
+    // Base active pool for chip counts (no filters)
+    const activeBase = allJobs.filter(isActiveUpcoming);
+    const statusCounts: Record<string, number> = {};
+    const priorityCounts: Record<string, number> = {};
+    for (const j of activeBase) {
+      statusCounts[j.status] = (statusCounts[j.status] ?? 0) + 1;
+      const p = j.priority ?? "NORMAL";
+      priorityCounts[p] = (priorityCounts[p] ?? 0) + 1;
+    }
+
+    // Active jobs with filters applied
+    let filtered = activeBase;
+    if (filterStatus !== "all") filtered = filtered.filter(j => j.status === filterStatus);
+    if (filterPriority !== "all") filtered = filtered.filter(j => (j.priority ?? "NORMAL") === filterPriority);
+
+    const active = [...filtered].sort((a, b) => {
+      if (sortMode === 'date') {
+        const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : null;
+        const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : null;
+        if (da !== null && db === null) return -1;
+        if (da === null && db !== null) return 1;
+        if (da === null && db === null) return 0;
+        return (da ?? 0) - (db ?? 0);
+      }
+      const pa = PRIORITY_ORDER[a.priority ?? "NORMAL"] ?? 3;
+      const pb = PRIORITY_ORDER[b.priority ?? "NORMAL"] ?? 3;
+      if (pa !== pb) return pa - pb;
+      const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : null;
+      const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : null;
+      const aToday = da ? (da >= todayStart.getTime() && da <= todayEnd.getTime()) : false;
+      const bToday = db ? (db >= todayStart.getTime() && db <= todayEnd.getTime()) : false;
+      if (aToday && !bToday) return -1;
+      if (!aToday && bToday) return 1;
+      // Within same priority and same today/non-today bucket:
+      // dated jobs rise above unscheduled ones
+      if (da === null && db !== null) return 1;
+      if (da !== null && db === null) return -1;
+      if (da === null && db === null) return 0;
+      return (da ?? 0) - (db ?? 0); // both non-null here: ascending (nearest first)
+    });
+
+    return { activeJobs: active, pastJobs: past, activeStatusCounts: statusCounts, activePriorityCounts: priorityCounts };
   }, [allJobs, filterStatus, filterPriority, sortMode]);
 
-  const pastPageData = pastJobs.slice((pastPage - 1) * PAST_PER_PAGE, pastPage * PAST_PER_PAGE);
-  const pastTotalPages = Math.max(1, Math.ceil(pastJobs.length / PAST_PER_PAGE));
+  const filteredPastJobs = pastStatusFilter === "all"
+    ? pastJobs
+    : pastStatusFilter === "OVERDUE"
+      ? pastJobs.filter(j => ACTIVE_STATUSES.has(j.status))
+      : pastJobs.filter(j => j.status === pastStatusFilter);
+  const pastPageData = filteredPastJobs.slice((pastPage - 1) * PAST_PER_PAGE, pastPage * PAST_PER_PAGE);
+  const pastTotalPages = Math.max(1, Math.ceil(filteredPastJobs.length / PAST_PER_PAGE));
+
+  // Past section counts — these now sum to pastJobs.length
+  const completedCount = pastJobs.filter(j => j.status === "COMPLETED").length;
+  const invoicedCount  = pastJobs.filter(j => j.status === "INVOICED").length;
+  const paidCount      = pastJobs.filter(j => j.status === "PAID").length;
+  const cancelledCount = pastJobs.filter(j => j.status === "CANCELLED").length;
+  const overdueCount   = pastJobs.filter(j => ACTIVE_STATUSES.has(j.status)).length;
 
   const handleViewJob = (job: Job) => {
     window.dispatchEvent(new CustomEvent("open-job-detail", { detail: job }));
@@ -238,7 +285,7 @@ export default function Jobs() {
           {[
             { icon: Wrench, v: stats ? (stats.pending + stats.scheduled + stats.inProgress).toString() : "—", l: "Open Jobs", loading: statsQuery.isLoading },
             { icon: AlertTriangle, v: stats ? stats.pending.toString() : "—", l: "Pending", loading: statsQuery.isLoading },
-            { icon: CheckCircle, v: stats ? (stats.completedToday ?? stats.completed ?? 0).toString() : "—", l: "Completed Today", loading: statsQuery.isLoading },
+            { icon: CheckCircle, v: stats ? (stats.completed ?? 0).toString() : "—", l: "Completed", loading: statsQuery.isLoading },
             { icon: FileText, v: stats ? stats.invoiced.toString() : "—", l: "Awaiting Invoice", loading: statsQuery.isLoading },
             { icon: Clock, v: "—", l: "Avg Job Duration", loading: false },
           ].map((k) => (
@@ -282,43 +329,50 @@ export default function Jobs() {
                 {jobsQuery.isLoading ? "…" : activeJobs.length}
               </span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ display: "flex", background: "var(--bg-hover)", borderRadius: 8, padding: 2 }}>
-                <button
-                  onClick={() => setSortMode('priority')}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
-                    fontSize: 12, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s",
-                    background: sortMode === 'priority' ? "var(--card)" : "transparent",
-                    color: sortMode === 'priority' ? "var(--t1)" : "var(--t3)",
-                    boxShadow: sortMode === 'priority' ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-                  }}
-                >
-                  <Shield size={12} /> Priority
-                </button>
-                <button
-                  onClick={() => setSortMode('date')}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
-                    fontSize: 12, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s",
-                    background: sortMode === 'date' ? "var(--card)" : "transparent",
-                    color: sortMode === 'date' ? "var(--t1)" : "var(--t3)",
-                    boxShadow: sortMode === 'date' ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-                  }}
-                >
-                  <CalendarDays size={12} /> Date
-                </button>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                <div style={{ display: "flex", background: "var(--bg-hover)", borderRadius: 8, padding: 2 }}>
+                  <button
+                    onClick={() => setSortMode('priority')}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
+                      fontSize: 12, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s",
+                      background: sortMode === 'priority' ? "var(--card)" : "transparent",
+                      color: sortMode === 'priority' ? "var(--t1)" : "var(--t3)",
+                      boxShadow: sortMode === 'priority' ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                    }}
+                  >
+                    <Shield size={12} /> Priority
+                  </button>
+                  <button
+                    onClick={() => setSortMode('date')}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
+                      fontSize: 12, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s",
+                      background: sortMode === 'date' ? "var(--card)" : "transparent",
+                      color: sortMode === 'date' ? "var(--t1)" : "var(--t3)",
+                      boxShadow: sortMode === 'date' ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                    }}
+                  >
+                    <CalendarDays size={12} /> Date
+                  </button>
+                </div>
+                <div style={{ fontSize: 10, color: "var(--t4)", letterSpacing: "0.01em" }}>
+                  {sortMode === 'priority'
+                    ? "Emergency → Urgent → High, then nearest date"
+                    : "Nearest scheduled date first · unscheduled last"}
+                </div>
               </div>
-              <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: "0 12px", fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
+              <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: "0 12px", fontWeight: 600, marginBottom: 16 }} onClick={() => setIsExpanded(!isExpanded)}>
                 {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
               </button>
             </div>
           </div>
 
-          <div className="filter-bar">
-            <div className="filter-search">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="filter-search" style={{ maxWidth: 320 }}>
               <Search size={13} color="var(--t4)" />
               <input
                 placeholder="Search jobs, customers, services…"
@@ -326,73 +380,163 @@ export default function Jobs() {
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
-            <select className="select" style={{ width: 150 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-              <option value="all">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="SCHEDULED">Scheduled</option>
-              <option value="EN_ROUTE">En Route</option>
-              <option value="ON_SITE">In Progress</option>
-              <option value="ON_HOLD">On Hold</option>
-            </select>
-            <select className="select" style={{ width: 140 }} value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
-              <option value="all">All Priority</option>
-              <option value="EMERGENCY">🔴 Emergency</option>
-              <option value="URGENT">🟠 Urgent</option>
-              <option value="HIGH">🟡 High</option>
-              <option value="NORMAL">Normal</option>
-              <option value="LOW">Low</option>
-            </select>
+            {/* Status chips */}
+            <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--t4)", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 2, whiteSpace: "nowrap" }}>Status</span>
+              {ACTIVE_STATUS_CHIPS.map(chip => {
+                const count = activeStatusCounts[chip.status] ?? 0;
+                const isActive = filterStatus === chip.status;
+                return (
+                  <button
+                    key={chip.status}
+                    onClick={() => setFilterStatus(f => f === chip.status ? "all" : chip.status)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      padding: "4px 10px", borderRadius: 20,
+                      border: `1px solid ${isActive ? chip.color : "transparent"}`,
+                      background: isActive ? chip.bg : "var(--bg-hover)",
+                      color: isActive ? chip.color : "var(--t3)",
+                      cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
+                      opacity: count === 0 ? 0.4 : 1,
+                    }}
+                  >
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: chip.color, flexShrink: 0 }} />
+                    {chip.label}
+                    <span style={{ fontWeight: 700 }}>{jobsQuery.isLoading ? "…" : count}</span>
+                  </button>
+                );
+              })}
+              {filterStatus !== "all" && (
+                <button onClick={() => setFilterStatus("all")} style={{ padding: "4px 10px", borderRadius: 20, border: "1px solid var(--bd)", background: "none", color: "var(--t4)", cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>
+                  Clear
+                </button>
+              )}
+            </div>
+            {/* Priority chips */}
+            <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--t4)", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 2, whiteSpace: "nowrap" }}>Priority</span>
+              {PRIORITY_CHIPS.map(chip => {
+                const count = activePriorityCounts[chip.priority] ?? 0;
+                const isActive = filterPriority === chip.priority;
+                return (
+                  <button
+                    key={chip.priority}
+                    onClick={() => setFilterPriority(f => f === chip.priority ? "all" : chip.priority)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      padding: "4px 10px", borderRadius: 20,
+                      border: `1px solid ${isActive ? chip.color : "transparent"}`,
+                      background: isActive ? chip.bg : "var(--bg-hover)",
+                      color: isActive ? chip.color : "var(--t3)",
+                      cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
+                      opacity: count === 0 ? 0.4 : 1,
+                    }}
+                  >
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: chip.color, flexShrink: 0 }} />
+                    {chip.label}
+                    <span style={{ fontWeight: 700 }}>{jobsQuery.isLoading ? "…" : count}</span>
+                  </button>
+                );
+              })}
+              {filterPriority !== "all" && (
+                <button onClick={() => setFilterPriority("all")} style={{ padding: "4px 10px", borderRadius: 20, border: "1px solid var(--bd)", background: "none", color: "var(--t4)", cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="card-body-flush">
           <div className="table-container jobs-table-container">
-            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} />
+            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} />
           </div>
         </div>
       </div>
 
-      {/* Past Jobs — collapsible */}
-      <div className="card anim-fade-up delay-3">
-        <div className="card-body" style={{ paddingBottom: showPast ? 0 : undefined }}>
-          <button
-            onClick={() => { setShowPast(s => !s); setPastPage(1); }}
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Clock size={15} color="var(--t3)" />
-              <span style={{ fontWeight: 600, fontSize: 14, color: "var(--t2)" }}>Past Jobs</span>
-              <span style={{ fontSize: 11, color: "var(--t3)" }}>Past-dated, completed, invoiced, paid & cancelled — most recent first</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--t3)", background: "var(--bg-hover)", padding: "2px 9px", borderRadius: 12 }}>
-                {jobsQuery.isLoading ? "…" : pastJobs.length}
-              </span>
+      {/* Completed Jobs Section */}
+      <div className="card anim-fade-up delay-3" style={{ borderTop: "3px solid var(--green, #10b981)" }}>
+        {/* Section header */}
+        <div className="card-body" style={{ paddingBottom: 0 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 16 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(16,185,129,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <CheckCircle size={15} color="#10b981" />
+                </div>
+                <span style={{ fontWeight: 700, fontSize: 15, color: "var(--t1)" }}>Completed Jobs</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#10b981", background: "rgba(16,185,129,0.1)", padding: "2px 9px", borderRadius: 12, border: "1px solid rgba(16,185,129,0.2)" }}>
+                  {jobsQuery.isLoading ? "…" : pastJobs.length} total
+                </span>
+              </div>
+              {/* Funnel stats row */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                {[
+                  { label: "Completed", count: completedCount, color: "#10b981", bg: "rgba(16,185,129,0.08)", status: "COMPLETED" },
+                  { label: "Invoiced", count: invoicedCount, color: "#0891b2", bg: "rgba(8,145,178,0.08)", status: "INVOICED" },
+                  { label: "Paid", count: paidCount, color: "#7c3aed", bg: "rgba(124,58,237,0.08)", status: "PAID" },
+                  { label: "Cancelled", count: cancelledCount, color: "#dc2626", bg: "rgba(220,38,38,0.08)", status: "CANCELLED" },
+                  ...(overdueCount > 0 ? [{ label: "Overdue", count: overdueCount, color: "#ea580c", bg: "rgba(234,88,12,0.08)", status: "OVERDUE" }] : []),
+                ].map(s => (
+                  <button
+                    key={s.status}
+                    onClick={() => { setPastStatusFilter(f => f === s.status ? "all" : s.status); setPastPage(1); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      padding: "4px 10px", borderRadius: 20, border: `1px solid ${pastStatusFilter === s.status ? s.color : "transparent"}`,
+                      background: pastStatusFilter === s.status ? s.bg : "var(--bg-hover)",
+                      color: pastStatusFilter === s.status ? s.color : "var(--t3)",
+                      cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
+                    }}
+                  >
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
+                    {s.label}
+                    <span style={{ fontWeight: 700 }}>{jobsQuery.isLoading ? "…" : s.count}</span>
+                  </button>
+                ))}
+                {pastStatusFilter !== "all" && (
+                  <button
+                    onClick={() => { setPastStatusFilter("all"); setPastPage(1); }}
+                    style={{ padding: "4px 10px", borderRadius: 20, border: "1px solid var(--bd)", background: "none", color: "var(--t4)", cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}
+                  >
+                    Clear filter
+                  </button>
+                )}
+              </div>
             </div>
-            {showPast ? <ChevronUp size={16} color="var(--t3)" /> : <ChevronDown size={16} color="var(--t3)" />}
-          </button>
+            <div style={{ fontSize: 11, color: "var(--t4)", textAlign: "right", marginTop: 4 }}>
+              Most recent first
+            </div>
+          </div>
         </div>
 
-        {showPast && (
-          <>
-            <div className="card-body-flush">
-              <div className="table-container jobs-table-container">
-                <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} />
-              </div>
+        <div className="card-body-flush">
+          {filteredPastJobs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--t4)" }}>
+              <CheckCircle size={32} style={{ margin: "0 auto 10px", opacity: 0.3, display: "block" }} />
+              <div style={{ fontSize: 13, fontWeight: 500 }}>No {pastStatusFilter !== "all" ? pastStatusFilter.toLowerCase() : "completed"} jobs yet</div>
             </div>
+          ) : (
+            <div className="table-container jobs-table-container">
+              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} />
+            </div>
+          )}
+        </div>
 
-            {pastTotalPages > 1 && (
-              <div className="card-footer" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderTop: "1px solid var(--border)" }}>
-                <span className="text-[13px] text-[var(--t3)]">
-                  Showing {pastJobs.length > 0 ? (pastPage - 1) * PAST_PER_PAGE + 1 : 0}–{Math.min(pastPage * PAST_PER_PAGE, pastJobs.length)} of {pastJobs.length}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setPastPage(p => Math.max(1, p - 1))} disabled={pastPage === 1}><ChevronLeft size={18} /></button>
-                  <span className="text-[13px] text-[var(--t2)] mx-2">Page {pastPage} of {pastTotalPages}</span>
-                  <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setPastPage(p => Math.min(pastTotalPages, p + 1))} disabled={pastPage === pastTotalPages}><ChevronRight size={18} /></button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        <div className="card-footer" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderTop: "1px solid var(--bd)" }}>
+          <span style={{ fontSize: 13, color: "var(--t3)" }}>
+            {filteredPastJobs.length > 0
+              ? `Showing ${(pastPage - 1) * PAST_PER_PAGE + 1}–${Math.min(pastPage * PAST_PER_PAGE, filteredPastJobs.length)} of ${filteredPastJobs.length}`
+              : "0 jobs"}
+          </span>
+          {pastTotalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setPastPage(p => Math.max(1, p - 1))} disabled={pastPage === 1}><ChevronLeft size={18} /></button>
+              <span style={{ fontSize: 13, color: "var(--t2)", margin: "0 4px" }}>Page {pastPage} of {pastTotalPages}</span>
+              <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setPastPage(p => Math.min(pastTotalPages, p + 1))} disabled={pastPage === pastTotalPages}><ChevronRight size={18} /></button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}

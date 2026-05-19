@@ -44,6 +44,14 @@ function buildCalendarDays(currentMonth: Date) {
   return days
 }
 
+// Statuses that mean the job is done or cancelled — should never appear in
+// "Needs Assignment" or "Past Unassigned" panels.
+const TERMINAL_STATUSES = new Set(['CANCELLED', 'COMPLETED', 'INVOICED', 'PAID'])
+
+function isDispatchable(job: Job) {
+  return !TERMINAL_STATUSES.has(job.status)
+}
+
 function jobDate(job: Job) {
   return job.scheduledStart ? new Date(job.scheduledStart) : null
 }
@@ -67,13 +75,14 @@ export default function DispatchCalendar({
 
   const scheduledJobs = useMemo(() => {
     return jobs
-      .filter((job) => !!job.scheduledStart)
+      .filter((job) => !!job.scheduledStart && job.status !== 'CANCELLED')
       .sort((left, right) => new Date(left.scheduledStart ?? 0).getTime() - new Date(right.scheduledStart ?? 0).getTime())
   }, [jobs])
 
+  // Only dispatchable (PENDING / SCHEDULED / ON_HOLD) jobs with no assignment.
   const unscheduledJobs = useMemo(() => {
     return jobs
-      .filter((job) => !job.scheduledStart || !assignmentByJobId[job.id])
+      .filter((job) => isDispatchable(job) && (!job.scheduledStart || !assignmentByJobId[job.id]))
       .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
   }, [assignmentByJobId, jobs])
 

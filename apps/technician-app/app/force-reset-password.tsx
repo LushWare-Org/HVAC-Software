@@ -29,7 +29,7 @@ const STRENGTH_LABEL = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong']
 const STRENGTH_COLOR = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#16a34a']
 
 export default function ForceResetPassword() {
-  const { user, logout, clearMustResetPassword } = useAuth()
+  const { user, token, logout, clearMustResetPassword } = useAuth()
   const router = useRouter()
 
   const [newPwd, setNewPwd]       = useState('')
@@ -62,10 +62,20 @@ export default function ForceResetPassword() {
 
     setIsLoading(true)
     try {
-      await api.post('/crm/auth/force-reset-password', { newPassword: newPwd })
+      // Pass the token explicitly — avoids any edge case where api.defaults.headers
+      // was cleared by a concurrent 401 before this request fires.
+      const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
+      await api.post('/crm/auth/force-reset-password', { newPassword: newPwd }, { headers: authHeader })
       clearMustResetPassword()
       router.replace('/(tabs)')
     } catch (err: any) {
+      const status = err?.response?.status
+      if (status === 401) {
+        // Session expired — send them back to login to get a fresh token
+        await logout()
+        router.replace('/login')
+        return
+      }
       setError(err?.response?.data?.message ?? 'Failed to update password. Please try again.')
     } finally {
       setIsLoading(false)

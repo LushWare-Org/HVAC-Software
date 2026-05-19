@@ -42,14 +42,14 @@ export class LocationsController {
   }
 
   @Post('ensure-warehouse')
-  @Roles(Role.COMPANY_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
   @ApiOperation({ summary: 'Ensure warehouse exists for company' })
   ensureWarehouse(@CurrentUser() user: AuthUser) {
     return this.svc.ensureWarehouse(user.companyId);
   }
 
   @Post('ensure-van')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Ensure van location exists for a technician' })
   ensureVan(@CurrentUser() user: AuthUser, @Body() dto: EnsureVanDto) {
     return this.svc.ensureVan(user.companyId, dto.technicianId, dto.technicianName);

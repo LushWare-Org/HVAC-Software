@@ -70,21 +70,21 @@ export class InventoryItemsController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new inventory item' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateInventoryItemDto) {
     return this.svc.create(user.companyId, dto as any);
   }
 
   @Patch(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update an inventory item' })
   update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateInventoryItemDto) {
     return this.svc.update(user.companyId, id, dto);
   }
 
   @Delete(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft-delete an inventory item' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {

@@ -153,7 +153,7 @@ export class DashboardService {
         FROM   jobs.jobs
         WHERE  "companyId" = ${companyId}
           AND  status IN ('COMPLETED', 'INVOICED', 'PAID')
-          AND  "completedAt" BETWEEN ${from} AND ${to}
+          AND  COALESCE("completedAt", "updatedAt") BETWEEN ${from} AND ${to}
       `,
     );
     return Number(rows[0]?.cnt ?? 0);
@@ -166,6 +166,11 @@ export class DashboardService {
         FROM   crm.customers
         WHERE  "companyId" = ${companyId}
           AND  "isActive" = TRUE
+          AND NOT (
+            source = 'portal'
+            AND "engagementStatus" = 'INACTIVE'
+            AND tags @> ARRAY['portal-signup']::text[]
+          )
       `,
     );
     return Number(rows[0]?.cnt ?? 0);

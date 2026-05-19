@@ -33,7 +33,7 @@ export class PaymentsController {
   ) {}
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Record a payment against an invoice' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreatePaymentDto) {
     return this.invoicesService.recordManualPayment(

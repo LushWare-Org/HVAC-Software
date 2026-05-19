@@ -108,7 +108,7 @@ func main() {
 	// Note: role values MUST match @tscrm/types Role enum (lowercase snake_case injected by Auth0 Action)
 	tech := r.Group("/technicians", auth)
 	{
-		tech.POST("", middleware.RequireRole("company_admin", "office_manager"), techH.Create)
+		tech.POST("", middleware.RequireRole("super_admin", "company_admin", "office_manager"), techH.Create)
 		tech.GET("", techH.List)
 		tech.GET("/me", techH.GetMe) // must be before :id to avoid route conflict
 		tech.GET("/:id", techH.GetOne)
@@ -120,12 +120,12 @@ func main() {
 	{
 		// Smart assignment (Phase 1 scoring)
 		dispatch.POST("/assign",
-			middleware.RequireRole("company_admin", "office_manager", "dispatcher"),
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
 			dispatchH.Assign,
 		)
 		// Manual override
 		dispatch.POST("/assign/manual",
-			middleware.RequireRole("company_admin", "office_manager", "dispatcher"),
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
 			dispatchH.ManualAssign,
 		)
 		// Querying

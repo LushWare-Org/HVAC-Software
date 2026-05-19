@@ -97,14 +97,14 @@ export class JobTypesController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new job type (e.g. Landscaping)' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateJobTypeDto) {
     return this.svc.createJobType(user.companyId, dto);
   }
 
   @Put(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update a job type' })
   update(
     @CurrentUser() user: AuthUser,
@@ -139,14 +139,14 @@ export class JobTemplatesController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new job template with tasks' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateTemplateDto) {
     return this.svc.createTemplate(user.companyId, dto);
   }
 
   @Put(':id')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update template details' })
   update(
     @CurrentUser() user: AuthUser,
@@ -169,7 +169,7 @@ export class TemplateTasksController {
   constructor(private readonly svc: TradeTemplatesService) {}
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Add a task to a template' })
   addTask(
     @CurrentUser() user: AuthUser,
@@ -180,7 +180,7 @@ export class TemplateTasksController {
   }
 
   @Put(':taskId')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update a task' })
   updateTask(
     @CurrentUser() user: AuthUser,
@@ -192,7 +192,7 @@ export class TemplateTasksController {
   }
 
   @Delete(':taskId')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove a task from a template' })
   removeTask(
@@ -204,7 +204,7 @@ export class TemplateTasksController {
   }
 
   @Patch('reorder')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Reorder tasks by providing ordered array of task IDs' })
   reorder(
     @CurrentUser() user: AuthUser,
@@ -233,7 +233,7 @@ export class CustomFieldDefsController {
   }
 
   @Post()
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Add a custom field definition to a job type' })
   create(
     @CurrentUser() user: AuthUser,
@@ -244,7 +244,7 @@ export class CustomFieldDefsController {
   }
 
   @Put(':defId')
-  @Roles(Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Update a custom field definition' })
   update(
     @CurrentUser() user: AuthUser,
