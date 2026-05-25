@@ -116,9 +116,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null)
     setUser(null)
     delete api.defaults.headers.common['Authorization']
-    // Drop the persisted cache so the next user doesn't briefly see the
-    // previous user's data while fresh queries are in flight.
     clearPersistedQueryCache()
+    window.location.href = '/'
   }, [])
 
   return (

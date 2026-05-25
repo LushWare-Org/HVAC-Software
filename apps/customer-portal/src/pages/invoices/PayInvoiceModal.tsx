@@ -1,5 +1,5 @@
 import { AlertCircle, CheckCircle, CreditCard, Loader2, Lock, Upload, X } from 'lucide-react'
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { useCreatePaymentIntent } from '../../hooks/useCustomerPortal'
 import api from '../../lib/api'

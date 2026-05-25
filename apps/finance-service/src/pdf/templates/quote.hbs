@@ -4,55 +4,109 @@
   <meta charset="UTF-8" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 12px; color: #0f172a; background: #eef2f7; }
-    .page { width: 100%; max-width: 860px; margin: 0 auto; padding: 26px; }
-    .sheet { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06); }
-    .hero { background: linear-gradient(120deg, #f8fbff, #edf5ff); color: #0f172a; padding: 28px 32px 24px; border-bottom: 1px solid #dbe7ff; }
-    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-    .eyebrow { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #3b82f6; margin-bottom: 8px; }
-    .brand-name { font-size: 24px; font-weight: 700; line-height: 1.1; }
-    .brand-address { margin-top: 8px; max-width: 320px; font-size: 11px; line-height: 1.6; color: #475569; white-space: pre-line; }
-    .doc-card { min-width: 220px; padding: 14px 16px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; }
-    .doc-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #64748b; }
-    .doc-number { margin-top: 6px; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
-    .status-badge { display: inline-block; margin-top: 10px; padding: 4px 9px; border: 1px solid #93c5fd; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #1d4ed8; background: #eff6ff; }
-    .status-DRAFT, .status-SENT, .status-VIEWED, .status-ACCEPTED, .status-DECLINED, .status-EXPIRED { color: #1d4ed8; background: #eff6ff; border-color: #93c5fd; }
-    .hero-summary { margin-top: 18px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 10px; }
-    .summary-card { border-radius: 8px; padding: 14px 16px; background: #ffffff; border: 1px solid #cbd5e1; }
-    .summary-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: #64748b; }
-    .summary-value { margin-top: 6px; font-size: 20px; font-weight: 700; }
-    .summary-copy { margin-top: 6px; font-size: 12px; line-height: 1.55; color: #475569; }
-    .body { padding: 28px 32px 32px; }
-    .info-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
-    .info-card { border: 1px solid #c8c8c8; border-radius: 6px; padding: 12px 14px; background: #f7f7f7; }
-    .info-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.11em; color: #555555; margin-bottom: 5px; }
-    .info-value { font-size: 12px; font-weight: 600; color: #111111; line-height: 1.5; }
-    .headline { font-size: 22px; font-weight: 700; color: #111111; line-height: 1.2; letter-spacing: -0.01em; }
-    .subcopy { margin-top: 8px; margin-bottom: 18px; font-size: 12px; line-height: 1.6; color: #333333; }
+    body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #f0f2f5; }
+    .page { width: 100%; max-width: 860px; margin: 0 auto; padding: 28px; }
+    .sheet { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.12); }
+
+    /* ── Dark executive header (indigo accent) ── */
+    .hero { background: #0f172a; color: #ffffff; padding: 36px 40px 32px; position: relative; overflow: hidden; }
+    .hero::before {
+      content: '';
+      position: absolute; top: -80px; right: -40px;
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; bottom: -50px; left: 20%;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; position: relative; z-index: 1; }
+    .eyebrow { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #34d399; margin-bottom: 10px; font-weight: 700; }
+    .brand-name { font-size: 26px; font-weight: 800; line-height: 1.1; color: #ffffff; letter-spacing: -0.02em; }
+    .brand-address { margin-top: 10px; max-width: 300px; font-size: 11px; line-height: 1.7; color: #94a3b8; white-space: pre-line; }
+    .doc-card {
+      min-width: 210px; padding: 18px 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+    }
+    .doc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
+    .doc-number { margin-top: 6px; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #ffffff; }
+    .status-badge {
+      display: inline-block; margin-top: 10px; padding: 4px 10px;
+      border-radius: 999px; font-size: 9px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .status-DRAFT    { background: rgba(148,163,184,0.2); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+    .status-SENT     { background: rgba(99,102,241,0.25); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.4); }
+    .status-VIEWED   { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+    .status-ACCEPTED { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .status-DECLINED { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .status-EXPIRED  { background: rgba(251,191,36,0.2); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+    .status-CONVERTED{ background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+
+    .hero-summary { margin-top: 24px; display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 12px; position: relative; z-index: 1; }
+    .summary-card { border-radius: 8px; padding: 16px 18px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); }
+    .summary-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: #64748b; font-weight: 700; }
+    .summary-value { margin-top: 6px; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
+    .summary-copy { margin-top: 6px; font-size: 11px; line-height: 1.55; color: #94a3b8; }
+    .total-accent { color: #34d399; }
+
+    /* ── Body ── */
+    .body { padding: 32px 40px 40px; }
+    .info-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 28px; }
+    .info-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; background: #f8fafc; }
+    .info-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.13em; color: #64748b; margin-bottom: 6px; font-weight: 700; }
+    .info-value { font-size: 12px; font-weight: 700; color: #0f172a; line-height: 1.4; }
+
+    .section-title { font-size: 13px; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; margin-bottom: 6px; }
+    .section-subtitle { font-size: 11px; line-height: 1.6; color: #64748b; margin-bottom: 18px; }
+
     table { width: 100%; border-collapse: collapse; }
-    thead th { padding: 10px 11px; background: #efefef; border-bottom: 1px solid #bcbcbc; border-top: 1px solid #bcbcbc; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #333333; text-align: left; }
-    tbody td { padding: 12px 11px; border-bottom: 1px solid #dcdcdc; vertical-align: top; }
-    tbody tr:nth-child(even) { background: #fafafa; }
+    thead th {
+      padding: 11px 12px; background: #0f172a; color: #94a3b8;
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; text-align: left;
+    }
+    thead th:first-child { border-radius: 6px 0 0 0; }
+    thead th:last-child { border-radius: 0 6px 0 0; }
+    tbody td { padding: 13px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; color: #334155; font-size: 12px; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #f8fafc; }
     .td-right { text-align: right; }
-    .item-title { font-weight: 600; color: #111111; }
-    .item-category { margin-top: 3px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #555555; }
-    .totals-wrap { margin-top: 18px; display: flex; justify-content: flex-end; }
-    .totals-card { width: 320px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #ffffff; }
+    .item-title { font-weight: 700; color: #0f172a; }
+    .item-category { margin-top: 3px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-weight: 700; }
+
+    .totals-wrap { margin-top: 24px; display: flex; justify-content: flex-end; }
+    .totals-card { width: 320px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
     .totals-card table { width: 100%; }
-    .totals-card td { padding: 10px 14px; }
-    .totals-card .label { color: #333333; }
-    .totals-card .value { text-align: right; font-weight: 600; color: #111111; }
-    .discount-row .label, .discount-row .value { color: #111111; }
-    .grand-total { background: #1d4ed8; color: #ffffff; }
-    .grand-total td { padding-top: 12px; padding-bottom: 12px; }
-    .approval-block { margin-top: 18px; border: 1px solid #bcbcbc; border-radius: 6px; padding: 14px 16px; background: #f7f7f7; }
-    .approval-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #222222; margin-bottom: 6px; }
-    .approval-detail { font-size: 12px; line-height: 1.6; color: #222222; }
-    .notes-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .note-card { border: 1px solid #c8c8c8; border-radius: 6px; padding: 13px 14px; background: #ffffff; }
-    .note-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #555555; margin-bottom: 6px; }
-    .note-text { font-size: 12px; line-height: 1.6; color: #222222; white-space: pre-line; }
-    .footer { margin-top: 20px; padding-top: 13px; border-top: 1px solid #c8c8c8; display: flex; justify-content: space-between; gap: 10px; font-size: 10px; color: #555555; }
+    .totals-card td { padding: 11px 16px; font-size: 12px; }
+    .totals-card .label { color: #475569; }
+    .totals-card .value { text-align: right; font-weight: 700; color: #0f172a; }
+    .discount-row td { color: #16a34a; }
+    .grand-total-row { background: #0f172a; }
+    .grand-total-row td { padding-top: 14px; padding-bottom: 14px; color: #ffffff !important; font-weight: 800 !important; font-size: 13px; }
+
+    .approval-block { margin-top: 24px; border-left: 4px solid #10b981; border-radius: 0 8px 8px 0; padding: 16px 20px; background: #f0fdf4; }
+    .approval-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: #065f46; margin-bottom: 6px; }
+    .approval-detail { font-size: 12px; line-height: 1.6; color: #047857; }
+
+    .notes-grid { margin-top: 24px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .note-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; background: #f8fafc; }
+    .note-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.13em; color: #64748b; margin-bottom: 8px; font-weight: 700; }
+    .note-text { font-size: 12px; line-height: 1.7; color: #334155; white-space: pre-line; }
+
+    .footer {
+      margin-top: 28px; padding: 16px 20px;
+      background: #0f172a; border-radius: 8px;
+      display: flex; justify-content: space-between; gap: 10px;
+      font-size: 10px; color: #64748b;
+    }
+    .footer strong { color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -79,7 +133,7 @@
           </div>
           <div class="summary-card">
             <div class="summary-label">Quoted total</div>
-            <div class="summary-value">{{totalFmt}}</div>
+            <div class="summary-value total-accent">{{totalFmt}}</div>
             <div class="summary-copy">Valid until {{validUntil}}</div>
           </div>
         </div>
@@ -105,18 +159,18 @@
           </div>
         </div>
 
-        <div class="headline">Quote details</div>
-        <div class="subcopy">Review the scope, pricing, and terms below. This quotation has been formatted for approval, internal record keeping, and client sharing.</div>
+        <div class="section-title">Quote details</div>
+        <div class="section-subtitle">Review scope, pricing, and terms below. This proposal is formatted for approval, record keeping, and client sharing.</div>
 
         <table>
           <thead>
             <tr>
               <th style="width:40%">Description</th>
               <th style="width:16%">Category</th>
-              <th style="width:8%">Qty</th>
-              <th style="width:16%">Unit price</th>
-              <th style="width:8%">Tax</th>
-              <th style="width:12%">Total</th>
+              <th style="width:8%;text-align:right">Qty</th>
+              <th style="width:16%;text-align:right">Unit price</th>
+              <th style="width:8%;text-align:right">Tax</th>
+              <th style="width:12%;text-align:right">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -146,15 +200,15 @@
                 {{#if hasDiscount}}
                 <tr class="discount-row">
                   <td class="label">Discount {{discountLabel}}</td>
-                  <td class="value">-{{discountAmountFmt}}</td>
+                  <td class="value">−{{discountAmountFmt}}</td>
                 </tr>
                 {{/if}}
                 <tr>
                   <td class="label">Tax ({{taxRatePct}}%)</td>
                   <td class="value">{{taxAmountFmt}}</td>
                 </tr>
-                <tr class="grand-total">
-                  <td>Total</td>
+                <tr class="grand-total-row">
+                  <td>Quoted total</td>
                   <td class="value">{{totalFmt}}</td>
                 </tr>
               </tbody>
@@ -178,15 +232,15 @@
           {{/if}}
           {{#if terms}}
           <div class="note-card">
-            <div class="note-label">Terms and conditions</div>
+            <div class="note-label">Terms &amp; conditions</div>
             <div class="note-text">{{terms}}</div>
           </div>
           {{/if}}
         </div>
 
         <div class="footer">
-          <div>Generated {{generatedAt}} by T&amp;S CRM</div>
-          <div>Quote valid until {{validUntil}}</div>
+          <div>Generated {{generatedAt}} · T&amp;S CRM</div>
+          <div><strong>Valid until {{validUntil}}</strong></div>
         </div>
       </div>
     </div>

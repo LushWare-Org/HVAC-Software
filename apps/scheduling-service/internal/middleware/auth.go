@@ -151,22 +151,32 @@ func JWTMiddleware(auth0Domain, audience string) gin.HandlerFunc {
 
 		token := parsedToken
 
-		// 4. Extract custom claims injected by Auth0 Actions
-		companyID, _ := token.Get(companyIDKey)
-		role, _ := token.Get(roleKey)
+		// 4. Extract custom claims from the validated token.
+		// lestrrat-go/jwx/v2 private claim extraction via token.Get() can silently
+		// return nil for non-registered claims in some configurations. We validate
+		// the signature with the library (above) and then read the raw payload
+		// directly so that company_id/role always resolve correctly.
+		rawPayload := peekJWTPayload(tokenStr)
+
+		getStr := func(key string) string {
+			if rawPayload != nil {
+				if v, ok := rawPayload[key].(string); ok {
+					return v
+				}
+			}
+			// Fallback: try lestrrat-go/jwx token.Get()
+			if v, ok := token.Get(key); ok {
+				return fmt.Sprintf("%v", v)
+			}
+			return ""
+		}
 
 		claims := AuthClaims{
 			UserID:    token.Subject(),
-			CompanyID: fmt.Sprintf("%v", companyID),
-			Role:      fmt.Sprintf("%v", role),
-		}
-
-		// Optional standard claims
-		if email, ok := token.Get("email"); ok {
-			claims.Email = fmt.Sprintf("%v", email)
-		}
-		if name, ok := token.Get("name"); ok {
-			claims.Name = fmt.Sprintf("%v", name)
+			CompanyID: getStr(companyIDKey),
+			Role:      getStr(roleKey),
+			Email:     getStr("email"),
+			Name:      getStr("name"),
 		}
 
 		// 5. Guard: company_id must be present (all our users must belong to a company)
@@ -231,4 +241,22 @@ func peekJWTAlgorithm(tokenStr string) string {
 		return alg
 	}
 	return ""
+}
+
+// peekJWTPayload decodes the JWT payload (without verification) and returns
+// the claims map. Only call this AFTER the token signature has been verified.
+func peekJWTPayload(tokenStr string) map[string]interface{} {
+	parts := strings.SplitN(tokenStr, ".", 3)
+	if len(parts) < 2 {
+		return nil
+	}
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil
+	}
+	var payload map[string]interface{}
+	if err := json.Unmarshal(payloadBytes, &payload); err != nil {
+		return nil
+	}
+	return payload
 }

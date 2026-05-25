@@ -38,7 +38,7 @@ export default function QuoteDetailModal({
   const [isEditMode, setIsEditMode] = useState(false);
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState(false);
-  const [formData, setFormData] = useState({ notes: "", expiresAt: "" });
+  const [formData, setFormData] = useState({ notes: "", validUntil: "" });
 
   const updateQuote  = useUpdateQuote();
   const sendQuote    = useSendQuote();
@@ -57,7 +57,7 @@ export default function QuoteDetailModal({
     if (quote) {
       setFormData({
         notes:     quote.notes ?? "",
-        expiresAt: quote.expiresAt ? quote.expiresAt.split("T")[0] : "",
+        validUntil: quote.validUntil ? quote.validUntil.split("T")[0] : "",
       });
       setIsEditMode(false);
       setActiveTab("details");
@@ -81,7 +81,7 @@ export default function QuoteDetailModal({
         id: q!.id,
         data: {
           notes:     formData.notes || undefined,
-          expiresAt: formData.expiresAt || undefined,
+          validUntil: formData.validUntil || undefined,
         },
       },
       {
@@ -238,7 +238,7 @@ export default function QuoteDetailModal({
                   Save
                 </button>
                 <button
-                  onClick={() => { setFormData({ notes: q!.notes ?? "", expiresAt: q!.expiresAt ? q!.expiresAt.split("T")[0] : "" }); setIsEditMode(false); setError(""); }}
+                  onClick={() => { setFormData({ notes: q!.notes ?? "", validUntil: q!.validUntil ? q!.validUntil.split("T")[0] : "" }); setIsEditMode(false); setError(""); }}
                   disabled={isBusy}
                   className="flex items-center gap-1.5 text-green-100 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0 disabled:opacity-50"
                 >
@@ -346,8 +346,8 @@ export default function QuoteDetailModal({
                   </label>
                   <input
                     type="date"
-                    name="expiresAt"
-                    value={formData.expiresAt}
+                    name="validUntil"
+                    value={formData.validUntil}
                     onChange={handleChange}
                     disabled={!isEditMode || isBusy}
                     className={!isEditMode ? inputView : inputEdit}
@@ -391,11 +391,11 @@ export default function QuoteDetailModal({
                     Created: {new Date(q!.createdAt).toLocaleString()}
                   </p>
                 </div>
-                {q!.expiresAt && (
+                {q!.validUntil && (
                   <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
                     <p className="text-sm text-amber-700 flex items-center gap-2">
                       <Calendar size={14} />
-                      Expires: {new Date(q!.expiresAt).toLocaleDateString()}
+                      Valid Until: {new Date(q!.validUntil).toLocaleDateString()}
                     </p>
                   </div>
                 )}

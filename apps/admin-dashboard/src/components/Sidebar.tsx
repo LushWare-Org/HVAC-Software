@@ -16,7 +16,7 @@ function prefetchRoute(path: string) {
 import {
     LayoutDashboard, Users, Wrench, /* CalendarDays, */ Zap,
     DollarSign, MessageSquare, BarChart3, Settings,
-    Menu, X, LogOut, Shield, Package, Brain, Megaphone, Upload,
+    Menu, X, LogOut, Shield, Package, Megaphone, Upload,
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { usePendingTechnicians } from '../hooks/useTeam'
@@ -82,7 +82,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                 { icon: MessageSquare, label: 'Communications', path: '/communications', badge: unreadMessages },
                 { icon: Megaphone, label: 'Marketing', path: '/marketing' },
                 { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-                { icon: Brain, label: 'Bandit AI', path: '/bandit-dashboard' },
+                // { icon: Brain, label: 'Bandit AI', path: '/bandit-dashboard' },
                 { icon: Package, label: 'Inventory', path: '/inventory' },
             ],
         },

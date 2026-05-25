@@ -2,28 +2,19 @@
 FROM node:20-bullseye-slim AS builder
 WORKDIR /repo
 
-# Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy workspace manifests (for layer caching — only reinstall when these change)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY tsconfig.base.json ./
 COPY packages/ ./packages/
-COPY apps/comms-service/ ./apps/comms-service/
+COPY apps/chat-service/ ./apps/chat-service/
 
-# Install all workspace dependencies
 RUN pnpm install --frozen-lockfile
 
-# Build shared packages first (required by services)
 RUN pnpm --filter=@tscrm/types build 2>/dev/null || true
 RUN pnpm --filter=@tscrm/auth-client build 2>/dev/null || true
 
-# Build the service
-RUN pnpm --filter=comms-service build
-
-# Generate Prisma clients (main comms schema + marketing schema)
-RUN cd apps/comms-service && npx prisma generate --schema=prisma/schema.prisma
-RUN cd apps/comms-service && npx prisma generate --schema=prisma/marketing.prisma
+RUN pnpm --filter=chat-service build
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 FROM node:20-bullseye-slim AS runner
@@ -35,18 +26,15 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY tsconfig.base.json ./
 COPY packages/ ./packages/
-COPY apps/comms-service/package.json ./apps/comms-service/package.json
+COPY apps/chat-service/package.json ./apps/chat-service/package.json
 
-RUN pnpm install --frozen-lockfile --prod --filter=comms-service...
+RUN pnpm install --frozen-lockfile --prod --filter=chat-service...
 
-WORKDIR /app/apps/comms-service
+WORKDIR /app/apps/chat-service
 
 COPY --from=builder /repo/packages ./packages
-COPY --from=builder /repo/apps/comms-service/dist ./dist
-COPY --from=builder /repo/apps/comms-service/prisma ./prisma
-COPY --from=builder /repo/apps/comms-service/src/prisma/generated ./dist/prisma/generated
-COPY --from=builder /repo/apps/comms-service/src/marketing/prisma/generated ./dist/marketing/prisma/generated
-COPY --from=builder /repo/apps/comms-service/package.json ./
+COPY --from=builder /repo/apps/chat-service/dist ./dist
+COPY --from=builder /repo/apps/chat-service/package.json ./
 
-EXPOSE 3005
-CMD ["node", "dist/main.js"]
+EXPOSE 3008
+CMD ["node", "dist/main"]

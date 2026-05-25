@@ -18,6 +18,8 @@ COPY apps/analytics-service/package.json ./apps/analytics-service/package.json
 COPY apps/analytics-service/prisma ./apps/analytics-service/prisma
 COPY apps/inventory-service/package.json ./apps/inventory-service/package.json
 COPY apps/inventory-service/prisma ./apps/inventory-service/prisma
+COPY apps/comms-service/package.json ./apps/comms-service/package.json
+COPY apps/comms-service/prisma ./apps/comms-service/prisma
 
 RUN pnpm install --frozen-lockfile
 

@@ -321,7 +321,7 @@ export default function CustomerDetailsSidebar({
   const currentYear = new Date().getFullYear();
   const lifetimeRevenue = decimalToNumber(person?.totalRevenue ?? customerInvoices.reduce((sum, invoice) => sum + decimalToNumber(invoice.total), 0));
   const ytdRevenue = customerInvoices.reduce((sum, invoice) => {
-    const invoiceDate = new Date(invoice.issuedAt ?? invoice.createdAt);
+    const invoiceDate = new Date(invoice.createdAt);
     if (invoiceDate.getFullYear() !== currentYear) return sum;
     if (['DRAFT', 'VOID', 'CANCELLED'].includes(invoice.status)) return sum;
     return sum + decimalToNumber(invoice.total);
@@ -1388,7 +1388,7 @@ export default function CustomerDetailsSidebar({
                                   <div className="flex-1 min-w-0">
                                     <div className="text-sm font-600 text-gray-900 truncate">{inv.invoiceNumber}</div>
                                     <div className="text-xs text-gray-500 mt-0.5">
-                                      {inv.dueAt ? `Due ${new Date(inv.dueAt).toLocaleDateString()}` : new Date(inv.createdAt).toLocaleDateString()}
+                                      {inv.dueDate ? `Due ${new Date(inv.dueDate).toLocaleDateString()}` : new Date(inv.createdAt).toLocaleDateString()}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2 ml-3">

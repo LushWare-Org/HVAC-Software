@@ -4,61 +4,125 @@
   <meta charset="UTF-8" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 12px; color: #0f172a; background: #eef2f7; }
-    .page { width: 100%; max-width: 860px; margin: 0 auto; padding: 26px; }
-    .sheet { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06); }
-    .hero { background: linear-gradient(120deg, #f8fbff, #edf5ff); color: #0f172a; padding: 28px 32px 24px; border-bottom: 1px solid #dbe7ff; }
-    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-    .eyebrow { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #2563eb; margin-bottom: 8px; }
-    .brand-name { font-size: 24px; font-weight: 700; line-height: 1.1; }
-    .brand-address { margin-top: 8px; max-width: 320px; font-size: 11px; line-height: 1.6; color: #475569; white-space: pre-line; }
-    .doc-card { min-width: 220px; padding: 14px 16px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; }
-    .doc-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #64748b; }
-    .doc-number { margin-top: 6px; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
-    .status-badge { display: inline-block; margin-top: 10px; padding: 4px 9px; border: 1px solid #93c5fd; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #1d4ed8; background: #eff6ff; }
-    .status-DRAFT, .status-SENT, .status-PARTIALLY_PAID, .status-PAID, .status-OVERDUE, .status-VOID { color: #1d4ed8; background: #eff6ff; border-color: #93c5fd; }
-    .hero-summary { margin-top: 18px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 10px; }
-    .summary-card { border-radius: 8px; padding: 14px 16px; background: #ffffff; border: 1px solid #cbd5e1; }
-    .summary-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: #64748b; }
-    .summary-value { margin-top: 6px; font-size: 20px; font-weight: 700; }
-    .summary-copy { margin-top: 6px; font-size: 12px; line-height: 1.55; color: #475569; }
-    .body { padding: 28px 32px 32px; }
-    .alert { margin-bottom: 14px; border: 1px solid #7e7e7e; border-radius: 6px; padding: 10px 12px; background: #efefef; color: #111111; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
-    .info-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
-    .info-card { border: 1px solid #c8c8c8; border-radius: 6px; padding: 12px 14px; background: #f7f7f7; }
-    .info-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.11em; color: #555555; margin-bottom: 5px; }
-    .info-value { font-size: 12px; font-weight: 600; color: #111111; line-height: 1.5; }
-    .headline { font-size: 22px; font-weight: 700; color: #111111; line-height: 1.2; letter-spacing: -0.01em; }
-    .subcopy { margin-top: 8px; margin-bottom: 18px; font-size: 12px; line-height: 1.6; color: #333333; }
+    body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #f0f2f5; }
+    .page { width: 100%; max-width: 860px; margin: 0 auto; padding: 28px; }
+    .sheet { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.12); }
+
+    /* ── Dark executive header ── */
+    .hero { background: #0f172a; color: #ffffff; padding: 36px 40px 32px; position: relative; overflow: hidden; }
+    .hero::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; bottom: -40px; left: 30%;
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; position: relative; z-index: 1; }
+    .eyebrow { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #6366f1; margin-bottom: 10px; font-weight: 700; }
+    .brand-name { font-size: 26px; font-weight: 800; line-height: 1.1; color: #ffffff; letter-spacing: -0.02em; }
+    .brand-address { margin-top: 10px; max-width: 300px; font-size: 11px; line-height: 1.7; color: #94a3b8; white-space: pre-line; }
+    .doc-card {
+      min-width: 210px; padding: 18px 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+    }
+    .doc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
+    .doc-number { margin-top: 6px; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #ffffff; }
+    .status-badge {
+      display: inline-block; margin-top: 10px; padding: 4px 10px;
+      border-radius: 999px; font-size: 9px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .status-DRAFT   { background: rgba(148,163,184,0.2); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+    .status-SENT    { background: rgba(99,102,241,0.25); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.4); }
+    .status-PARTIALLY_PAID { background: rgba(251,191,36,0.2); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+    .status-PAID    { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .status-OVERDUE { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .status-VOID    { background: rgba(71,85,105,0.2); color: #64748b; border: 1px solid rgba(71,85,105,0.3); }
+
+    .hero-summary { margin-top: 24px; display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 12px; position: relative; z-index: 1; }
+    .summary-card { border-radius: 8px; padding: 16px 18px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); }
+    .summary-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: #64748b; font-weight: 700; }
+    .summary-value { margin-top: 6px; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
+    .summary-copy { margin-top: 6px; font-size: 11px; line-height: 1.55; color: #94a3b8; }
+    .balance-accent { color: #34d399; }
+
+    /* ── Body ── */
+    .body { padding: 32px 40px 40px; }
+    .alert {
+      margin-bottom: 18px; border-left: 4px solid #ef4444;
+      border-radius: 0 6px 6px 0; padding: 12px 16px;
+      background: #fff5f5; color: #b91c1c;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .info-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 28px; }
+    .info-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; background: #f8fafc; }
+    .info-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.13em; color: #64748b; margin-bottom: 6px; font-weight: 700; }
+    .info-value { font-size: 12px; font-weight: 700; color: #0f172a; line-height: 1.4; }
+
+    .section-title { font-size: 13px; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; margin-bottom: 6px; }
+    .section-subtitle { font-size: 11px; line-height: 1.6; color: #64748b; margin-bottom: 18px; }
+
     table { width: 100%; border-collapse: collapse; }
-    thead th { padding: 10px 11px; background: #efefef; border-bottom: 1px solid #bcbcbc; border-top: 1px solid #bcbcbc; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #333333; text-align: left; }
-    tbody td { padding: 12px 11px; border-bottom: 1px solid #dcdcdc; vertical-align: top; }
-    tbody tr:nth-child(even) { background: #fafafa; }
+    thead th {
+      padding: 11px 12px; background: #0f172a; color: #94a3b8;
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; text-align: left;
+    }
+    thead th:first-child { border-radius: 6px 0 0 0; }
+    thead th:last-child { border-radius: 0 6px 0 0; }
+    tbody td { padding: 13px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; color: #334155; font-size: 12px; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #f8fafc; }
     .td-right { text-align: right; }
-    .item-title { font-weight: 600; color: #111111; }
-    .item-category { margin-top: 3px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #555555; }
-    .totals-wrap { margin-top: 18px; display: grid; grid-template-columns: 1fr 330px; gap: 12px; align-items: start; }
-    .pay-card { border: 1px solid #bcbcbc; border-radius: 6px; padding: 14px 16px; background: #f7f7f7; }
-    .pay-card-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #222222; margin-bottom: 6px; }
-    .pay-card-text { font-size: 12px; line-height: 1.6; color: #222222; }
-    .pay-button { display: inline-block; margin-top: 10px; padding: 9px 14px; border-radius: 999px; background: #111111; color: #ffffff; font-size: 11px; font-weight: 700; text-decoration: none; }
-    .totals-card { border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #ffffff; }
+    .item-title { font-weight: 700; color: #0f172a; }
+    .item-category { margin-top: 3px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-weight: 700; }
+
+    .totals-wrap { margin-top: 24px; display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+    .pay-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px 20px; background: #f8fafc; }
+    .pay-card-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.13em; color: #0f172a; margin-bottom: 8px; }
+    .pay-card-text { font-size: 11px; line-height: 1.7; color: #475569; }
+    .pay-button {
+      display: inline-block; margin-top: 12px; padding: 10px 18px;
+      border-radius: 6px; background: #0f172a; color: #ffffff;
+      font-size: 11px; font-weight: 700; text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+
+    .totals-card { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
     .totals-card table { width: 100%; }
-    .totals-card td { padding: 10px 14px; }
-    .totals-card .label { color: #333333; }
-    .totals-card .value { text-align: right; font-weight: 600; color: #111111; }
-    .paid-row .label, .paid-row .value { color: #111111; }
-    .balance-row { background: #efefef; }
-    .balance-row .label, .balance-row .value { color: #111111; font-weight: 700; }
-    .grand-total { background: #1d4ed8; color: #ffffff; }
-    .grand-total td { padding-top: 12px; padding-bottom: 12px; }
-    .payment-section { margin-top: 20px; border: 1px solid #c8c8c8; border-radius: 6px; padding: 14px 16px; background: #ffffff; }
-    .section-heading { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #555555; margin-bottom: 8px; }
-    .notes-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .note-card { border: 1px solid #c8c8c8; border-radius: 6px; padding: 13px 14px; background: #ffffff; }
-    .note-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #555555; margin-bottom: 6px; }
-    .note-text { font-size: 12px; line-height: 1.6; color: #222222; white-space: pre-line; }
-    .footer { margin-top: 20px; padding-top: 13px; border-top: 1px solid #c8c8c8; display: flex; justify-content: space-between; gap: 10px; font-size: 10px; color: #555555; }
+    .totals-card td { padding: 11px 16px; font-size: 12px; }
+    .totals-card .label { color: #475569; }
+    .totals-card .value { text-align: right; font-weight: 700; color: #0f172a; }
+    .grand-total-row { background: #0f172a; }
+    .grand-total-row td { padding-top: 14px; padding-bottom: 14px; color: #ffffff !important; font-weight: 800 !important; font-size: 13px; }
+    .paid-row td { color: #16a34a; }
+    .balance-row { background: #f0fdf4; }
+    .balance-row .label, .balance-row .value { color: #166534; font-weight: 800; font-size: 13px; }
+
+    .payment-section { margin-top: 24px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px 20px; background: #ffffff; }
+    .section-heading { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.13em; color: #64748b; margin-bottom: 12px; }
+    .notes-grid { margin-top: 24px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .note-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; background: #f8fafc; }
+    .note-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.13em; color: #64748b; margin-bottom: 8px; font-weight: 700; }
+    .note-text { font-size: 12px; line-height: 1.7; color: #334155; white-space: pre-line; }
+
+    .footer {
+      margin-top: 28px; padding: 16px 20px;
+      background: #0f172a; border-radius: 8px;
+      display: flex; justify-content: space-between; gap: 10px;
+      font-size: 10px; color: #64748b;
+    }
+    .footer strong { color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -85,7 +149,7 @@
           </div>
           <div class="summary-card">
             <div class="summary-label">Balance due</div>
-            <div class="summary-value">{{#if balanceDue}}{{balanceDueFmt}}{{else}}{{totalFmt}}{{/if}}</div>
+            <div class="summary-value balance-accent">{{#if balanceDue}}{{balanceDueFmt}}{{else}}{{totalFmt}}{{/if}}</div>
             <div class="summary-copy">Payment due {{dueDate}}</div>
           </div>
         </div>
@@ -93,7 +157,7 @@
 
       <div class="body">
         {{#if isOverdue}}
-        <div class="alert">Past due: please arrange payment immediately</div>
+        <div class="alert">⚠ Past due — please arrange payment immediately</div>
         {{/if}}
 
         <div class="info-grid">
@@ -115,18 +179,18 @@
           </div>
         </div>
 
-        <div class="headline">Invoice details</div>
-        <div class="subcopy">This invoice summarizes the completed services and charges associated with your work order. Retain this PDF for finance and project records.</div>
+        <div class="section-title">Invoice details</div>
+        <div class="section-subtitle">Services and charges for your work order. Retain this document for your financial records.</div>
 
         <table>
           <thead>
             <tr>
               <th style="width:40%">Description</th>
               <th style="width:16%">Category</th>
-              <th style="width:8%">Qty</th>
-              <th style="width:16%">Unit price</th>
-              <th style="width:8%">Tax</th>
-              <th style="width:12%">Total</th>
+              <th style="width:8%;text-align:right">Qty</th>
+              <th style="width:16%;text-align:right">Unit price</th>
+              <th style="width:8%;text-align:right">Tax</th>
+              <th style="width:12%;text-align:right">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -149,9 +213,9 @@
           <div>
             {{#if stripePaymentUrl}}
             <div class="pay-card">
-              <div class="pay-card-title">Online payment</div>
-              <div class="pay-card-text">A secure payment link is available for this invoice. Use it to pay the outstanding balance online.</div>
-              <a class="pay-button" href="{{stripePaymentUrl}}">Pay {{#if balanceDue}}{{balanceDueFmt}}{{else}}{{totalFmt}}{{/if}} online</a>
+              <div class="pay-card-title">Pay online</div>
+              <div class="pay-card-text">A secure payment link is available for this invoice. Pay the outstanding balance safely online.</div>
+              <a class="pay-button" href="{{stripePaymentUrl}}">Pay {{#if balanceDue}}{{balanceDueFmt}}{{else}}{{totalFmt}}{{/if}} →</a>
             </div>
             {{/if}}
           </div>
@@ -165,21 +229,21 @@
                 {{#if hasDiscount}}
                 <tr>
                   <td class="label">Discount</td>
-                  <td class="value">-{{discountAmountFmt}}</td>
+                  <td class="value">−{{discountAmountFmt}}</td>
                 </tr>
                 {{/if}}
                 <tr>
                   <td class="label">Tax ({{taxRatePct}}%)</td>
                   <td class="value">{{taxAmountFmt}}</td>
                 </tr>
-                <tr class="grand-total">
+                <tr class="grand-total-row">
                   <td>Invoice total</td>
                   <td class="value">{{totalFmt}}</td>
                 </tr>
                 {{#if amountPaid}}
                 <tr class="paid-row">
                   <td class="label">Amount paid</td>
-                  <td class="value">-{{amountPaidFmt}}</td>
+                  <td class="value">−{{amountPaidFmt}}</td>
                 </tr>
                 {{/if}}
                 {{#if balanceDue}}
@@ -228,15 +292,15 @@
           {{/if}}
           {{#if terms}}
           <div class="note-card">
-            <div class="note-label">Terms and conditions</div>
+            <div class="note-label">Terms &amp; conditions</div>
             <div class="note-text">{{terms}}</div>
           </div>
           {{/if}}
         </div>
 
         <div class="footer">
-          <div>Generated {{generatedAt}} by T&amp;S CRM</div>
-          <div>Payment due {{dueDate}}</div>
+          <div>Generated {{generatedAt}} · T&amp;S CRM</div>
+          <div><strong>Payment due {{dueDate}}</strong></div>
         </div>
       </div>
     </div>

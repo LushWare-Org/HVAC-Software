@@ -341,8 +341,7 @@ export interface Invoice {
   total: string        // Prisma Decimal serialised as string
   balanceDue: string
   amountPaid: string
-  issuedAt?: string
-  dueAt?: string
+  dueDate?: string
   paidAt?: string
   notes?: string
   createdAt: string
@@ -362,7 +361,7 @@ export interface Quote {
   status: QuoteStatus
   total: string        // Prisma Decimal serialised as string
   taxRate?: number
-  expiresAt?: string
+  validUntil?: string
   notes?: string
   createdAt: string
   updatedAt: string

@@ -86,7 +86,7 @@ type ScopeFilter = 'today' | 'week' | 'all'
 function jobInScope(job: Job, scope: ScopeFilter): boolean {
   if (scope === 'all') return true
   const ref = job.scheduledStart ?? job.createdAt
-  if (!ref) return scope === 'all'
+  if (!ref) return false
   const d = new Date(ref)
   const now = new Date()
   if (scope === 'today') {
@@ -415,7 +415,7 @@ export default function DispatchMap({
   const defaultCenter: [number, number] = allPoints.length > 0 ? allPoints[0] : [6.9271, 79.8612]
 
   // ── Summary stats ──────────────────────────────────────────────────────────────
-  const totalWithGPS  = allPoints.length
+
   const onlineCount   = liveTechs.length
   const staleCount    = staleTechs.length
   const noGPSTechs    = technicians.filter(t => !t.currentLocation).length

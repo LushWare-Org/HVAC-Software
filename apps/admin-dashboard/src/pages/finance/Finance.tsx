@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw } from 'lucide-react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download } from 'lucide-react'
 import { useInvoices, useQuotes, useExpenses, useFinanceKpis, decimalToNumber, useDeleteExpense, useSendInvoice } from '../../hooks/useFinance'
 import { useJobs } from '../../hooks/useJobs'
 import { useToast } from '../../contexts/ToastContext'
@@ -36,6 +36,73 @@ function fmtDecimal(val: string | number | undefined | null): string {
   const n = decimalToNumber(val)
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
+
+function PillGroup({ options, value, onChange }: {
+  options: { label: string; value: string }[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingBottom: 4 }}>
+      {options.map(o => {
+        const active = value === o.value
+        return (
+          <button
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            style={{
+              padding: '5px 14px',
+              borderRadius: 999,
+              fontSize: 12,
+              fontWeight: 600,
+              border: '1.5px solid',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              borderColor: active ? 'var(--blue)' : 'var(--bd-md)',
+              background: active ? 'var(--blue)' : 'var(--bg-card)',
+              color: active ? '#fff' : 'var(--t2)',
+              boxShadow: active ? '0 1px 4px rgba(37,99,235,0.25)' : 'none',
+            }}
+          >
+            {o.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function exportToCsv(filename: string, rows: string[][], headers: string[]) {
+  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
+  const lines = [headers.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))]
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+}
+
+const INV_STATUS_PILLS = [
+  { label: 'All', value: 'all' },
+  { label: 'Draft', value: 'draft' },
+  { label: 'Sent', value: 'sent' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Overdue', value: 'overdue' },
+]
+const QUO_STATUS_PILLS = [
+  { label: 'All', value: 'all' },
+  { label: 'Draft', value: 'draft' },
+  { label: 'Sent', value: 'sent' },
+  { label: 'Accepted', value: 'accepted' },
+  { label: 'Declined', value: 'declined' },
+  { label: 'Expired', value: 'expired' },
+]
+const EXP_STATUS_PILLS = [
+  { label: 'All', value: 'all' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Approved', value: 'approved' },
+]
 
 export default function Finance() {
   const { showError, showSuccess } = useToast()
@@ -93,6 +160,54 @@ export default function Finance() {
   const deleteExpense = useDeleteExpense()
   const sendInvoice = useSendInvoice()
 
+  const handleExport = useCallback(() => {
+    if (tab === 'invoices') {
+      exportToCsv('invoices.csv',
+        invoices.map(inv => [
+          inv.invoiceNumber,
+          inv.customerName ?? '',
+          inv.jobTitle ?? '',
+          fmtDecimal(inv.total),
+          inv.status,
+          inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '',
+          inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '',
+        ]),
+        ['Invoice No', 'Customer', 'Job', 'Amount', 'Status', 'Issue Date', 'Due Date'],
+      )
+    } else if (tab === 'quotes') {
+      exportToCsv('quotes.csv',
+        quotes.map(q => [
+          q.quoteNumber,
+          q.customerName ?? '',
+          q.title,
+          fmtDecimal(q.total),
+          q.status,
+          q.createdAt ? new Date(q.createdAt).toLocaleDateString() : '',
+          q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '',
+        ]),
+        ['Quote No', 'Customer', 'Title', 'Amount', 'Status', 'Created', 'Valid Until'],
+      )
+    } else {
+      exportToCsv('expenses.csv',
+        expenses.map(exp => [
+          exp.id.slice(0, 8),
+          exp.category,
+          exp.vendor ?? '',
+          fmtDecimal(exp.amount),
+          exp.status,
+          exp.date ? new Date(exp.date).toLocaleDateString() : '',
+        ]),
+        ['Ref', 'Category', 'Vendor', 'Amount', 'Status', 'Date'],
+      )
+    }
+  }, [tab, invoices, quotes, expenses])
+
+  useEffect(() => {
+    const handler = () => handleExport()
+    window.addEventListener('finance-export', handler)
+    return () => window.removeEventListener('finance-export', handler)
+  }, [handleExport])
+
   return (
     <div className="anim-fade-up">
 
@@ -141,19 +256,18 @@ export default function Finance() {
             </div>
           )}
           <div className="card-body" style={{ paddingBottom: 0 }}>
-            <div className="filter-bar">
-              <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search invoices…" value={invSearch} onChange={e => { setInvSearch(e.target.value); setInvPage(1); }} /></div>
-              <select className="select" style={{ width: 140 }} value={invStatus} onChange={e => { setInvStatus(e.target.value); setInvPage(1); }}>
-                <option value="all">All Status</option>
-                <option value="sent">Sent</option><option value="paid">Paid</option>
-                <option value="overdue">Overdue</option><option value="draft">Draft</option>
-              </select>
-              <div className="flex items-center gap-2 ml-auto">
-                <button className="btn btn-primary btn-sm" onClick={() => setIsAddInvoiceOpen(true)}><Plus size={12} /> Create Invoice</button>
-                <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: '0 12px', fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
-                  {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
-                </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="filter-bar">
+                <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search invoices…" value={invSearch} onChange={e => { setInvSearch(e.target.value); setInvPage(1); }} /></div>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button className="btn btn-secondary btn-sm flex items-center gap-1" onClick={handleExport}><Download size={12} /> Export CSV</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => setIsAddInvoiceOpen(true)}><Plus size={12} /> Create Invoice</button>
+                  <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: '0 12px', fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
+                    {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
+                  </button>
+                </div>
               </div>
+              <PillGroup options={INV_STATUS_PILLS} value={invStatus} onChange={v => { setInvStatus(v); setInvPage(1); }} />
             </div>
           </div>
           <div className="card-body-flush mt-2">
@@ -179,8 +293,8 @@ export default function Finance() {
                       <td>{inv.jobId ? <div><span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-[11px] font-bold border border-blue-100">{inv.jobTitle || getJobTitle(inv.jobId) || inv.jobId.slice(0, 8)}</span></div> : '—'}</td>
                       <td><div className="cell-user"><span className="cell-name">{inv.customerName ?? '—'}</span></div></td>
                       <td className="td-primary font-600">{fmtDecimal(inv.total)}</td>
-                      <td className="text-sm text-3">{inv.issuedAt ? new Date(inv.issuedAt).toLocaleDateString() : '—'}</td>
-                      <td className="text-sm">{inv.dueAt ? new Date(inv.dueAt).toLocaleDateString() : '—'}</td>
+                      <td className="text-sm text-3">{new Date(inv.createdAt).toLocaleDateString()}</td>
+                      <td className="text-sm">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '—'}</td>
                       <td>
                         <span className={`badge ${INV_CSS[normalizeStatus(inv.status)] ?? 'badge-neutral'}`}>
                           {humanizeStatus(inv.status)}
@@ -228,19 +342,18 @@ export default function Finance() {
       {tab === 'quotes' && (
         <div className="card anim-fade-in">
           <div className="card-body" style={{ paddingBottom: 0 }}>
-            <div className="filter-bar">
-              <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search quotes…" value={quoSearch} onChange={e => { setQuoSearch(e.target.value); setQuoPage(1); }} /></div>
-              <select className="select" style={{ width: 140 }} value={quoStatus} onChange={e => { setQuoStatus(e.target.value); setQuoPage(1); }}>
-                <option value="all">All Status</option>
-                <option value="sent">Sent</option><option value="accepted">Accepted</option>
-                <option value="draft">Draft</option><option value="declined">Declined</option><option value="expired">Expired</option>
-              </select>
-              <div className="flex items-center gap-2 ml-auto">
-                <button className="btn btn-primary btn-sm" onClick={() => setIsAddQuoteOpen(true)}><Plus size={12} /> Create Quote</button>
-                <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: '0 12px', fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
-                  {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
-                </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="filter-bar">
+                <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search quotes…" value={quoSearch} onChange={e => { setQuoSearch(e.target.value); setQuoPage(1); }} /></div>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button className="btn btn-secondary btn-sm flex items-center gap-1" onClick={handleExport}><Download size={12} /> Export CSV</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => setIsAddQuoteOpen(true)}><Plus size={12} /> Create Quote</button>
+                  <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: '0 12px', fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
+                    {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
+                  </button>
+                </div>
               </div>
+              <PillGroup options={QUO_STATUS_PILLS} value={quoStatus} onChange={v => { setQuoStatus(v); setQuoPage(1); }} />
             </div>
           </div>
           <div className="card-body-flush mt-2">
@@ -267,7 +380,7 @@ export default function Finance() {
                       <td><div className="cell-user"><span className="cell-name">{q.customerName ?? '—'}</span></div></td>
                       <td>{q.title}</td>
                       <td className="td-primary font-600">{fmtDecimal(q.total)}</td>
-                      <td className="text-sm text-3">{q.expiresAt ? new Date(q.expiresAt).toLocaleDateString() : '—'}</td>
+                      <td className="text-sm text-3">{q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '—'}</td>
                       <td>
                         <span className={`badge ${QUO_CSS[normalizeStatus(q.status)] ?? 'badge-neutral'}`}>
                           {humanizeStatus(q.status)}
@@ -302,18 +415,18 @@ export default function Finance() {
       {tab === 'expenses' && (
         <div className="card anim-fade-in">
           <div className="card-body" style={{ paddingBottom: 0 }}>
-            <div className="filter-bar">
-              <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search expenses…" value={expSearch} onChange={e => { setExpSearch(e.target.value); setExpPage(1); }} /></div>
-              <select className="select" style={{ width: 140 }} value={expStatus} onChange={e => { setExpStatus(e.target.value); setExpPage(1); }}>
-                <option value="all">All Status</option>
-                <option value="paid">Paid</option><option value="pending">Pending</option>
-              </select>
-              <div className="flex items-center gap-2 ml-auto">
-                <button className="btn btn-primary btn-sm" onClick={() => setIsAddExpenseOpen(true)}><Plus size={12} /> Log Expense</button>
-                <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: '0 12px', fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
-                  {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
-                </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="filter-bar">
+                <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search expenses…" value={expSearch} onChange={e => { setExpSearch(e.target.value); setExpPage(1); }} /></div>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button className="btn btn-secondary btn-sm flex items-center gap-1" onClick={handleExport}><Download size={12} /> Export CSV</button>
+                  <button className="btn btn-primary btn-sm" onClick={() => setIsAddExpenseOpen(true)}><Plus size={12} /> Log Expense</button>
+                  <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: '0 12px', fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
+                    {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
+                  </button>
+                </div>
               </div>
+              <PillGroup options={EXP_STATUS_PILLS} value={expStatus} onChange={v => { setExpStatus(v); setExpPage(1); }} />
             </div>
           </div>
           <div className="card-body-flush mt-2">

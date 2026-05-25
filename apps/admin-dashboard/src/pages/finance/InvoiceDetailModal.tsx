@@ -37,7 +37,7 @@ export default function InvoiceDetailModal({
   const [activeTab, setActiveTab] = useState<TabType>("details");
   const [isEditMode, setIsEditMode]   = useState(false);
   const [error, setError]             = useState("");
-  const [formData, setFormData]       = useState({ notes: "", dueAt: "" });
+  const [formData, setFormData]       = useState({ notes: "", dueDate: "" });
   const [payAmount, setPayAmount]     = useState("");
   const [payMethod, setPayMethod]     = useState("CASH");
   const [payReference, setPayReference] = useState("");
@@ -60,7 +60,7 @@ export default function InvoiceDetailModal({
     if (invoice) {
       setFormData({
         notes: invoice.notes ?? "",
-        dueAt: invoice.dueAt ? invoice.dueAt.split("T")[0] : "",
+        dueDate: invoice.dueDate ? invoice.dueDate.split("T")[0] : "",
       });
       setIsEditMode(false);
       setActiveTab("details");
@@ -87,7 +87,7 @@ export default function InvoiceDetailModal({
         id: inv!.id,
         data: {
           notes: formData.notes || undefined,
-          dueAt: formData.dueAt || undefined,
+          dueDate: formData.dueDate || undefined,
         },
       },
       {
@@ -266,7 +266,7 @@ export default function InvoiceDetailModal({
                   Save
                 </button>
                 <button
-                  onClick={() => { setFormData({ notes: inv!.notes ?? "", dueAt: inv!.dueAt ? inv!.dueAt.split("T")[0] : "" }); setIsEditMode(false); setError(""); }}
+                  onClick={() => { setFormData({ notes: inv!.notes ?? "", dueDate: inv!.dueDate ? inv!.dueDate.split("T")[0] : "" }); setIsEditMode(false); setError(""); }}
                   disabled={isBusy}
                   className="flex items-center gap-1.5 text-blue-100 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer border-0 disabled:opacity-50"
                 >
@@ -337,8 +337,8 @@ export default function InvoiceDetailModal({
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Due Date</label>
                   <input
                     type="date"
-                    name="dueAt"
-                    value={formData.dueAt}
+                    name="dueDate"
+                    value={formData.dueDate}
                     onChange={handleChange}
                     disabled={!isEditMode || isBusy}
                     className={!isEditMode ? inputView : inputEdit}
@@ -433,11 +433,11 @@ export default function InvoiceDetailModal({
                     Created: {new Date(inv!.createdAt).toLocaleString()}
                   </p>
                 </div>
-                {inv!.issuedAt && (
+                {inv!.dueDate && (
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm text-blue-700 flex items-center gap-2">
                       <Calendar size={14} />
-                      Issued: {new Date(inv!.issuedAt).toLocaleString()}
+                      Due Date: {new Date(inv!.dueDate).toLocaleDateString()}
                     </p>
                   </div>
                 )}

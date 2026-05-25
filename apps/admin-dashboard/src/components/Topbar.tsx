@@ -203,7 +203,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
             case '/jobs': return <button className={`${btnPrimary} ${btnSm}`} id="btn-create-job" onClick={() => setIsAddJobOpen(true)}><Plus size={13} /> Create Job</button>
             case '/finance': return (
                 <>
-                    <button className={`${btnPrimary} ${btnSm}`}><Download size={13} />Export</button>
+                    <button className={`${btnSecondary} ${btnSm}`} onClick={() => window.dispatchEvent(new CustomEvent('finance-export'))}><Download size={13} /> Export CSV</button>
                 </>
             )
             case '/analytics': return <button className={`${btnPrimary} ${btnSm}`}><Download size={13} /> Export Report</button>
