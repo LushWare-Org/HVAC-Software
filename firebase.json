@@ -4,7 +4,13 @@
       "site": "tscrm-demo-admin",
       "public": "apps/admin-dashboard/dist",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "rewrites": [{ "source": "**", "destination": "/index.html" }],
+      "rewrites": [
+        {
+          "source": "/api/**",
+          "run": { "serviceId": "nginx-gateway", "region": "us-central1" }
+        },
+        { "source": "**", "destination": "/index.html" }
+      ],
       "headers": [
         {
           "source": "**/*.@(js|css)",
@@ -16,7 +22,13 @@
       "site": "tscrm-demo-customer",
       "public": "apps/customer-portal/dist",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "rewrites": [{ "source": "**", "destination": "/index.html" }]
+      "rewrites": [
+        {
+          "source": "/api/**",
+          "run": { "serviceId": "nginx-gateway", "region": "us-central1" }
+        },
+        { "source": "**", "destination": "/index.html" }
+      ]
     }
   ]
 }

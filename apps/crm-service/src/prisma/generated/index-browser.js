@@ -380,6 +380,40 @@ exports.Prisma.ImportErrorScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.CustomerIotConnectionScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  customerId: 'customerId',
+  provider: 'provider',
+  accessToken: 'accessToken',
+  refreshToken: 'refreshToken',
+  tokenExpiresAt: 'tokenExpiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CustomerIotDeviceScalarFieldEnum = {
+  id: 'id',
+  connectionId: 'connectionId',
+  deviceId: 'deviceId',
+  locationId: 'locationId',
+  name: 'name',
+  type: 'type',
+  lastSnapshot: 'lastSnapshot',
+  lastSyncedAt: 'lastSyncedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.IotDeviceHistoryScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  companyId: 'companyId',
+  customerId: 'customerId',
+  snapshot: 'snapshot',
+  recordedAt: 'recordedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -474,7 +508,10 @@ exports.Prisma.ModelName = {
   FollowupAttempt: 'FollowupAttempt',
   UpsellRecommendation: 'UpsellRecommendation',
   ImportBatch: 'ImportBatch',
-  ImportError: 'ImportError'
+  ImportError: 'ImportError',
+  CustomerIotConnection: 'CustomerIotConnection',
+  CustomerIotDevice: 'CustomerIotDevice',
+  IotDeviceHistory: 'IotDeviceHistory'
 };
 
 /**

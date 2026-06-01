@@ -21,7 +21,9 @@ import {
   ShieldCheck,
   Trash2,
   ExternalLink,
+  Wifi,
 } from "lucide-react";
+import { IotDevicesTab } from "./IotDevicesTab";
 import AddAgreementModal from "./AddAgreementModal";
 import AddJobModal from "../jobs/AddJobModal";
 import { useCustomerStatusSummary, useUpdateCustomer } from "../../hooks/useCustomers";
@@ -40,7 +42,8 @@ type TabType =
   | "agreements"
   | "reviews"
   | "activity"
-  | "reasoning";
+  | "reasoning"
+  | "iot";
 
 interface CustomerDetailsSidebarProps {
   person: any | null;
@@ -488,6 +491,7 @@ export default function CustomerDetailsSidebar({
     { id: "reviews", label: "Reviews", icon: <Star size={14} /> },
     { id: "activity", label: "Activity", icon: <Activity size={14} /> },
     { id: "reasoning", label: "Reasoning", icon: <FileText size={14} /> },
+    { id: "iot", label: "IoT", icon: <Wifi size={14} /> },
   ];
 
   // Real activity timeline derived from the actual record — no DB activity log yet
@@ -795,24 +799,46 @@ export default function CustomerDetailsSidebar({
                   className="rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col"
                   style={{ background: "var(--bg-card)", minHeight: 560 }}
                 >
+                  {/* Tab nav — pill grid, always fully visible, no scroll needed */}
                   <div
-                    className="border-b border-gray-200 flex overflow-x-auto shrink-0 px-2 pt-2"
-                    style={{ scrollbarWidth: "none" }}
+                    className="shrink-0 px-3 pt-3 pb-2 border-b"
+                    style={{ borderColor: 'var(--bd)' }}
                   >
-                    {tabs.map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center justify-center gap-1.5 px-4 py-3 text-[12px] font-600 whitespace-nowrap transition-all border-b-[3px] bg-transparent cursor-pointer hover:bg-gray-50 rounded-t-lg ml-1 ${activeTab === tab.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500"}`}
-                      >
-                        {tab.icon} {tab.label}{" "}
-                        {tab.id === "jobs" && customerJobs.length > 0 && (
-                          <span className="text-red-500 ml-0.5">
-                            {customerJobs.length}
-                          </span>
-                        )}
-                      </button>
-                    ))}
+                    <div className="flex flex-wrap gap-1">
+                      {tabs.map((tab) => {
+                        const isActive = activeTab === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-600 whitespace-nowrap transition-all cursor-pointer relative"
+                            style={{
+                              background: isActive ? 'var(--blue)' : 'var(--bg-surface)',
+                              color: isActive ? '#fff' : 'var(--t3)',
+                              boxShadow: isActive ? '0 1px 4px rgba(37,99,235,0.25)' : 'none',
+                            }}
+                          >
+                            <span style={{ opacity: isActive ? 1 : 0.7 }}>{tab.icon}</span>
+                            {tab.label}
+                            {tab.id === "jobs" && customerJobs.length > 0 && (
+                              <span
+                                className="ml-0.5 text-[10px] font-700 px-1 rounded-full"
+                                style={{
+                                  background: isActive ? 'rgba(255,255,255,0.25)' : '#EF4444',
+                                  color: isActive ? '#fff' : '#fff',
+                                  lineHeight: '16px',
+                                  minWidth: 16,
+                                  textAlign: 'center',
+                                  display: 'inline-block',
+                                }}
+                              >
+                                {customerJobs.length}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div
@@ -2256,6 +2282,16 @@ export default function CustomerDetailsSidebar({
                             </>
                           );
                         })()}
+                      </div>
+                    )}
+
+                    {activeTab === "iot" && customerId && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Wifi size={15} style={{ color: 'var(--blue-light)' }} />
+                          <span className="font-700 text-sm" style={{ color: 'var(--t1)' }}>IoT Devices</span>
+                        </div>
+                        <IotDevicesTab customerId={customerId} />
                       </div>
                     )}
 

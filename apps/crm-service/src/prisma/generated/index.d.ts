@@ -83,6 +83,21 @@ export type ImportBatch = $Result.DefaultSelection<Prisma.$ImportBatchPayload>
  * 
  */
 export type ImportError = $Result.DefaultSelection<Prisma.$ImportErrorPayload>
+/**
+ * Model CustomerIotConnection
+ * 
+ */
+export type CustomerIotConnection = $Result.DefaultSelection<Prisma.$CustomerIotConnectionPayload>
+/**
+ * Model CustomerIotDevice
+ * 
+ */
+export type CustomerIotDevice = $Result.DefaultSelection<Prisma.$CustomerIotDevicePayload>
+/**
+ * Model IotDeviceHistory
+ * 
+ */
+export type IotDeviceHistory = $Result.DefaultSelection<Prisma.$IotDeviceHistoryPayload>
 
 /**
  * Enums
@@ -451,6 +466,36 @@ export class PrismaClient<
     * ```
     */
   get importError(): Prisma.ImportErrorDelegate<ExtArgs>;
+
+  /**
+   * `prisma.customerIotConnection`: Exposes CRUD operations for the **CustomerIotConnection** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CustomerIotConnections
+    * const customerIotConnections = await prisma.customerIotConnection.findMany()
+    * ```
+    */
+  get customerIotConnection(): Prisma.CustomerIotConnectionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.customerIotDevice`: Exposes CRUD operations for the **CustomerIotDevice** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CustomerIotDevices
+    * const customerIotDevices = await prisma.customerIotDevice.findMany()
+    * ```
+    */
+  get customerIotDevice(): Prisma.CustomerIotDeviceDelegate<ExtArgs>;
+
+  /**
+   * `prisma.iotDeviceHistory`: Exposes CRUD operations for the **IotDeviceHistory** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more IotDeviceHistories
+    * const iotDeviceHistories = await prisma.iotDeviceHistory.findMany()
+    * ```
+    */
+  get iotDeviceHistory(): Prisma.IotDeviceHistoryDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -905,7 +950,10 @@ export namespace Prisma {
     FollowupAttempt: 'FollowupAttempt',
     UpsellRecommendation: 'UpsellRecommendation',
     ImportBatch: 'ImportBatch',
-    ImportError: 'ImportError'
+    ImportError: 'ImportError',
+    CustomerIotConnection: 'CustomerIotConnection',
+    CustomerIotDevice: 'CustomerIotDevice',
+    IotDeviceHistory: 'IotDeviceHistory'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -921,7 +969,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "company" | "companyUser" | "customer" | "contact" | "lead" | "serviceAgreement" | "booking" | "review" | "address" | "equipment" | "followupAttempt" | "upsellRecommendation" | "importBatch" | "importError"
+      modelProps: "company" | "companyUser" | "customer" | "contact" | "lead" | "serviceAgreement" | "booking" | "review" | "address" | "equipment" | "followupAttempt" | "upsellRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1905,6 +1953,216 @@ export namespace Prisma {
           }
         }
       }
+      CustomerIotConnection: {
+        payload: Prisma.$CustomerIotConnectionPayload<ExtArgs>
+        fields: Prisma.CustomerIotConnectionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CustomerIotConnectionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CustomerIotConnectionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload>
+          }
+          findFirst: {
+            args: Prisma.CustomerIotConnectionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CustomerIotConnectionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload>
+          }
+          findMany: {
+            args: Prisma.CustomerIotConnectionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload>[]
+          }
+          create: {
+            args: Prisma.CustomerIotConnectionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload>
+          }
+          createMany: {
+            args: Prisma.CustomerIotConnectionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CustomerIotConnectionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload>[]
+          }
+          delete: {
+            args: Prisma.CustomerIotConnectionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload>
+          }
+          update: {
+            args: Prisma.CustomerIotConnectionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload>
+          }
+          deleteMany: {
+            args: Prisma.CustomerIotConnectionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CustomerIotConnectionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.CustomerIotConnectionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotConnectionPayload>
+          }
+          aggregate: {
+            args: Prisma.CustomerIotConnectionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCustomerIotConnection>
+          }
+          groupBy: {
+            args: Prisma.CustomerIotConnectionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CustomerIotConnectionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CustomerIotConnectionCountArgs<ExtArgs>
+            result: $Utils.Optional<CustomerIotConnectionCountAggregateOutputType> | number
+          }
+        }
+      }
+      CustomerIotDevice: {
+        payload: Prisma.$CustomerIotDevicePayload<ExtArgs>
+        fields: Prisma.CustomerIotDeviceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CustomerIotDeviceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CustomerIotDeviceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload>
+          }
+          findFirst: {
+            args: Prisma.CustomerIotDeviceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CustomerIotDeviceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload>
+          }
+          findMany: {
+            args: Prisma.CustomerIotDeviceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload>[]
+          }
+          create: {
+            args: Prisma.CustomerIotDeviceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload>
+          }
+          createMany: {
+            args: Prisma.CustomerIotDeviceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CustomerIotDeviceCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload>[]
+          }
+          delete: {
+            args: Prisma.CustomerIotDeviceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload>
+          }
+          update: {
+            args: Prisma.CustomerIotDeviceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload>
+          }
+          deleteMany: {
+            args: Prisma.CustomerIotDeviceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CustomerIotDeviceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.CustomerIotDeviceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CustomerIotDevicePayload>
+          }
+          aggregate: {
+            args: Prisma.CustomerIotDeviceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCustomerIotDevice>
+          }
+          groupBy: {
+            args: Prisma.CustomerIotDeviceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CustomerIotDeviceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CustomerIotDeviceCountArgs<ExtArgs>
+            result: $Utils.Optional<CustomerIotDeviceCountAggregateOutputType> | number
+          }
+        }
+      }
+      IotDeviceHistory: {
+        payload: Prisma.$IotDeviceHistoryPayload<ExtArgs>
+        fields: Prisma.IotDeviceHistoryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.IotDeviceHistoryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.IotDeviceHistoryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload>
+          }
+          findFirst: {
+            args: Prisma.IotDeviceHistoryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.IotDeviceHistoryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload>
+          }
+          findMany: {
+            args: Prisma.IotDeviceHistoryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload>[]
+          }
+          create: {
+            args: Prisma.IotDeviceHistoryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload>
+          }
+          createMany: {
+            args: Prisma.IotDeviceHistoryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.IotDeviceHistoryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload>[]
+          }
+          delete: {
+            args: Prisma.IotDeviceHistoryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload>
+          }
+          update: {
+            args: Prisma.IotDeviceHistoryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload>
+          }
+          deleteMany: {
+            args: Prisma.IotDeviceHistoryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.IotDeviceHistoryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.IotDeviceHistoryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$IotDeviceHistoryPayload>
+          }
+          aggregate: {
+            args: Prisma.IotDeviceHistoryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateIotDeviceHistory>
+          }
+          groupBy: {
+            args: Prisma.IotDeviceHistoryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<IotDeviceHistoryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.IotDeviceHistoryCountArgs<ExtArgs>
+            result: $Utils.Optional<IotDeviceHistoryCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2150,6 +2408,7 @@ export namespace Prisma {
     addresses: number
     equipment: number
     upsellRecommendations: number
+    iotConnections: number
   }
 
   export type CustomerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2161,6 +2420,7 @@ export namespace Prisma {
     addresses?: boolean | CustomerCountOutputTypeCountAddressesArgs
     equipment?: boolean | CustomerCountOutputTypeCountEquipmentArgs
     upsellRecommendations?: boolean | CustomerCountOutputTypeCountUpsellRecommendationsArgs
+    iotConnections?: boolean | CustomerCountOutputTypeCountIotConnectionsArgs
   }
 
   // Custom InputTypes
@@ -2230,6 +2490,13 @@ export namespace Prisma {
     where?: UpsellRecommendationWhereInput
   }
 
+  /**
+   * CustomerCountOutputType without action
+   */
+  export type CustomerCountOutputTypeCountIotConnectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CustomerIotConnectionWhereInput
+  }
+
 
   /**
    * Count Type LeadCountOutputType
@@ -2290,6 +2557,68 @@ export namespace Prisma {
    */
   export type ImportBatchCountOutputTypeCountErrorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ImportErrorWhereInput
+  }
+
+
+  /**
+   * Count Type CustomerIotConnectionCountOutputType
+   */
+
+  export type CustomerIotConnectionCountOutputType = {
+    devices: number
+  }
+
+  export type CustomerIotConnectionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    devices?: boolean | CustomerIotConnectionCountOutputTypeCountDevicesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CustomerIotConnectionCountOutputType without action
+   */
+  export type CustomerIotConnectionCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnectionCountOutputType
+     */
+    select?: CustomerIotConnectionCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CustomerIotConnectionCountOutputType without action
+   */
+  export type CustomerIotConnectionCountOutputTypeCountDevicesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CustomerIotDeviceWhereInput
+  }
+
+
+  /**
+   * Count Type CustomerIotDeviceCountOutputType
+   */
+
+  export type CustomerIotDeviceCountOutputType = {
+    histories: number
+  }
+
+  export type CustomerIotDeviceCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    histories?: boolean | CustomerIotDeviceCountOutputTypeCountHistoriesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CustomerIotDeviceCountOutputType without action
+   */
+  export type CustomerIotDeviceCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDeviceCountOutputType
+     */
+    select?: CustomerIotDeviceCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CustomerIotDeviceCountOutputType without action
+   */
+  export type CustomerIotDeviceCountOutputTypeCountHistoriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: IotDeviceHistoryWhereInput
   }
 
 
@@ -4961,6 +5290,7 @@ export namespace Prisma {
     addresses?: boolean | Customer$addressesArgs<ExtArgs>
     equipment?: boolean | Customer$equipmentArgs<ExtArgs>
     upsellRecommendations?: boolean | Customer$upsellRecommendationsArgs<ExtArgs>
+    iotConnections?: boolean | Customer$iotConnectionsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["customer"]>
 
@@ -5025,6 +5355,7 @@ export namespace Prisma {
     addresses?: boolean | Customer$addressesArgs<ExtArgs>
     equipment?: boolean | Customer$equipmentArgs<ExtArgs>
     upsellRecommendations?: boolean | Customer$upsellRecommendationsArgs<ExtArgs>
+    iotConnections?: boolean | Customer$iotConnectionsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CustomerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5043,6 +5374,7 @@ export namespace Prisma {
       addresses: Prisma.$AddressPayload<ExtArgs>[]
       equipment: Prisma.$EquipmentPayload<ExtArgs>[]
       upsellRecommendations: Prisma.$UpsellRecommendationPayload<ExtArgs>[]
+      iotConnections: Prisma.$CustomerIotConnectionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -5440,6 +5772,7 @@ export namespace Prisma {
     addresses<T extends Customer$addressesArgs<ExtArgs> = {}>(args?: Subset<T, Customer$addressesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AddressPayload<ExtArgs>, T, "findMany"> | Null>
     equipment<T extends Customer$equipmentArgs<ExtArgs> = {}>(args?: Subset<T, Customer$equipmentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentPayload<ExtArgs>, T, "findMany"> | Null>
     upsellRecommendations<T extends Customer$upsellRecommendationsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$upsellRecommendationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "findMany"> | Null>
+    iotConnections<T extends Customer$iotConnectionsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$iotConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5966,6 +6299,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: UpsellRecommendationScalarFieldEnum | UpsellRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * Customer.iotConnections
+   */
+  export type Customer$iotConnectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    where?: CustomerIotConnectionWhereInput
+    orderBy?: CustomerIotConnectionOrderByWithRelationInput | CustomerIotConnectionOrderByWithRelationInput[]
+    cursor?: CustomerIotConnectionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CustomerIotConnectionScalarFieldEnum | CustomerIotConnectionScalarFieldEnum[]
   }
 
   /**
@@ -17796,6 +18149,2969 @@ export namespace Prisma {
 
 
   /**
+   * Model CustomerIotConnection
+   */
+
+  export type AggregateCustomerIotConnection = {
+    _count: CustomerIotConnectionCountAggregateOutputType | null
+    _min: CustomerIotConnectionMinAggregateOutputType | null
+    _max: CustomerIotConnectionMaxAggregateOutputType | null
+  }
+
+  export type CustomerIotConnectionMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    customerId: string | null
+    provider: string | null
+    accessToken: string | null
+    refreshToken: string | null
+    tokenExpiresAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CustomerIotConnectionMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    customerId: string | null
+    provider: string | null
+    accessToken: string | null
+    refreshToken: string | null
+    tokenExpiresAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CustomerIotConnectionCountAggregateOutputType = {
+    id: number
+    companyId: number
+    customerId: number
+    provider: number
+    accessToken: number
+    refreshToken: number
+    tokenExpiresAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CustomerIotConnectionMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    provider?: true
+    accessToken?: true
+    refreshToken?: true
+    tokenExpiresAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CustomerIotConnectionMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    provider?: true
+    accessToken?: true
+    refreshToken?: true
+    tokenExpiresAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CustomerIotConnectionCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    provider?: true
+    accessToken?: true
+    refreshToken?: true
+    tokenExpiresAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CustomerIotConnectionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CustomerIotConnection to aggregate.
+     */
+    where?: CustomerIotConnectionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CustomerIotConnections to fetch.
+     */
+    orderBy?: CustomerIotConnectionOrderByWithRelationInput | CustomerIotConnectionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CustomerIotConnectionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CustomerIotConnections from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CustomerIotConnections.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CustomerIotConnections
+    **/
+    _count?: true | CustomerIotConnectionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CustomerIotConnectionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CustomerIotConnectionMaxAggregateInputType
+  }
+
+  export type GetCustomerIotConnectionAggregateType<T extends CustomerIotConnectionAggregateArgs> = {
+        [P in keyof T & keyof AggregateCustomerIotConnection]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCustomerIotConnection[P]>
+      : GetScalarType<T[P], AggregateCustomerIotConnection[P]>
+  }
+
+
+
+
+  export type CustomerIotConnectionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CustomerIotConnectionWhereInput
+    orderBy?: CustomerIotConnectionOrderByWithAggregationInput | CustomerIotConnectionOrderByWithAggregationInput[]
+    by: CustomerIotConnectionScalarFieldEnum[] | CustomerIotConnectionScalarFieldEnum
+    having?: CustomerIotConnectionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CustomerIotConnectionCountAggregateInputType | true
+    _min?: CustomerIotConnectionMinAggregateInputType
+    _max?: CustomerIotConnectionMaxAggregateInputType
+  }
+
+  export type CustomerIotConnectionGroupByOutputType = {
+    id: string
+    companyId: string
+    customerId: string
+    provider: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date
+    createdAt: Date
+    updatedAt: Date
+    _count: CustomerIotConnectionCountAggregateOutputType | null
+    _min: CustomerIotConnectionMinAggregateOutputType | null
+    _max: CustomerIotConnectionMaxAggregateOutputType | null
+  }
+
+  type GetCustomerIotConnectionGroupByPayload<T extends CustomerIotConnectionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CustomerIotConnectionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CustomerIotConnectionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CustomerIotConnectionGroupByOutputType[P]>
+            : GetScalarType<T[P], CustomerIotConnectionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CustomerIotConnectionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    provider?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    tokenExpiresAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    devices?: boolean | CustomerIotConnection$devicesArgs<ExtArgs>
+    _count?: boolean | CustomerIotConnectionCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["customerIotConnection"]>
+
+  export type CustomerIotConnectionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    provider?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    tokenExpiresAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["customerIotConnection"]>
+
+  export type CustomerIotConnectionSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    provider?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    tokenExpiresAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CustomerIotConnectionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    devices?: boolean | CustomerIotConnection$devicesArgs<ExtArgs>
+    _count?: boolean | CustomerIotConnectionCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type CustomerIotConnectionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }
+
+  export type $CustomerIotConnectionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CustomerIotConnection"
+    objects: {
+      customer: Prisma.$CustomerPayload<ExtArgs>
+      devices: Prisma.$CustomerIotDevicePayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      customerId: string
+      provider: string
+      accessToken: string
+      refreshToken: string
+      tokenExpiresAt: Date
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["customerIotConnection"]>
+    composites: {}
+  }
+
+  type CustomerIotConnectionGetPayload<S extends boolean | null | undefined | CustomerIotConnectionDefaultArgs> = $Result.GetResult<Prisma.$CustomerIotConnectionPayload, S>
+
+  type CustomerIotConnectionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<CustomerIotConnectionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: CustomerIotConnectionCountAggregateInputType | true
+    }
+
+  export interface CustomerIotConnectionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CustomerIotConnection'], meta: { name: 'CustomerIotConnection' } }
+    /**
+     * Find zero or one CustomerIotConnection that matches the filter.
+     * @param {CustomerIotConnectionFindUniqueArgs} args - Arguments to find a CustomerIotConnection
+     * @example
+     * // Get one CustomerIotConnection
+     * const customerIotConnection = await prisma.customerIotConnection.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CustomerIotConnectionFindUniqueArgs>(args: SelectSubset<T, CustomerIotConnectionFindUniqueArgs<ExtArgs>>): Prisma__CustomerIotConnectionClient<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one CustomerIotConnection that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {CustomerIotConnectionFindUniqueOrThrowArgs} args - Arguments to find a CustomerIotConnection
+     * @example
+     * // Get one CustomerIotConnection
+     * const customerIotConnection = await prisma.customerIotConnection.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CustomerIotConnectionFindUniqueOrThrowArgs>(args: SelectSubset<T, CustomerIotConnectionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CustomerIotConnectionClient<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first CustomerIotConnection that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotConnectionFindFirstArgs} args - Arguments to find a CustomerIotConnection
+     * @example
+     * // Get one CustomerIotConnection
+     * const customerIotConnection = await prisma.customerIotConnection.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CustomerIotConnectionFindFirstArgs>(args?: SelectSubset<T, CustomerIotConnectionFindFirstArgs<ExtArgs>>): Prisma__CustomerIotConnectionClient<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first CustomerIotConnection that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotConnectionFindFirstOrThrowArgs} args - Arguments to find a CustomerIotConnection
+     * @example
+     * // Get one CustomerIotConnection
+     * const customerIotConnection = await prisma.customerIotConnection.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CustomerIotConnectionFindFirstOrThrowArgs>(args?: SelectSubset<T, CustomerIotConnectionFindFirstOrThrowArgs<ExtArgs>>): Prisma__CustomerIotConnectionClient<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more CustomerIotConnections that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotConnectionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CustomerIotConnections
+     * const customerIotConnections = await prisma.customerIotConnection.findMany()
+     * 
+     * // Get first 10 CustomerIotConnections
+     * const customerIotConnections = await prisma.customerIotConnection.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const customerIotConnectionWithIdOnly = await prisma.customerIotConnection.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CustomerIotConnectionFindManyArgs>(args?: SelectSubset<T, CustomerIotConnectionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a CustomerIotConnection.
+     * @param {CustomerIotConnectionCreateArgs} args - Arguments to create a CustomerIotConnection.
+     * @example
+     * // Create one CustomerIotConnection
+     * const CustomerIotConnection = await prisma.customerIotConnection.create({
+     *   data: {
+     *     // ... data to create a CustomerIotConnection
+     *   }
+     * })
+     * 
+     */
+    create<T extends CustomerIotConnectionCreateArgs>(args: SelectSubset<T, CustomerIotConnectionCreateArgs<ExtArgs>>): Prisma__CustomerIotConnectionClient<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many CustomerIotConnections.
+     * @param {CustomerIotConnectionCreateManyArgs} args - Arguments to create many CustomerIotConnections.
+     * @example
+     * // Create many CustomerIotConnections
+     * const customerIotConnection = await prisma.customerIotConnection.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CustomerIotConnectionCreateManyArgs>(args?: SelectSubset<T, CustomerIotConnectionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CustomerIotConnections and returns the data saved in the database.
+     * @param {CustomerIotConnectionCreateManyAndReturnArgs} args - Arguments to create many CustomerIotConnections.
+     * @example
+     * // Create many CustomerIotConnections
+     * const customerIotConnection = await prisma.customerIotConnection.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CustomerIotConnections and only return the `id`
+     * const customerIotConnectionWithIdOnly = await prisma.customerIotConnection.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CustomerIotConnectionCreateManyAndReturnArgs>(args?: SelectSubset<T, CustomerIotConnectionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a CustomerIotConnection.
+     * @param {CustomerIotConnectionDeleteArgs} args - Arguments to delete one CustomerIotConnection.
+     * @example
+     * // Delete one CustomerIotConnection
+     * const CustomerIotConnection = await prisma.customerIotConnection.delete({
+     *   where: {
+     *     // ... filter to delete one CustomerIotConnection
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CustomerIotConnectionDeleteArgs>(args: SelectSubset<T, CustomerIotConnectionDeleteArgs<ExtArgs>>): Prisma__CustomerIotConnectionClient<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one CustomerIotConnection.
+     * @param {CustomerIotConnectionUpdateArgs} args - Arguments to update one CustomerIotConnection.
+     * @example
+     * // Update one CustomerIotConnection
+     * const customerIotConnection = await prisma.customerIotConnection.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CustomerIotConnectionUpdateArgs>(args: SelectSubset<T, CustomerIotConnectionUpdateArgs<ExtArgs>>): Prisma__CustomerIotConnectionClient<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more CustomerIotConnections.
+     * @param {CustomerIotConnectionDeleteManyArgs} args - Arguments to filter CustomerIotConnections to delete.
+     * @example
+     * // Delete a few CustomerIotConnections
+     * const { count } = await prisma.customerIotConnection.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CustomerIotConnectionDeleteManyArgs>(args?: SelectSubset<T, CustomerIotConnectionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CustomerIotConnections.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotConnectionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CustomerIotConnections
+     * const customerIotConnection = await prisma.customerIotConnection.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CustomerIotConnectionUpdateManyArgs>(args: SelectSubset<T, CustomerIotConnectionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one CustomerIotConnection.
+     * @param {CustomerIotConnectionUpsertArgs} args - Arguments to update or create a CustomerIotConnection.
+     * @example
+     * // Update or create a CustomerIotConnection
+     * const customerIotConnection = await prisma.customerIotConnection.upsert({
+     *   create: {
+     *     // ... data to create a CustomerIotConnection
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CustomerIotConnection we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CustomerIotConnectionUpsertArgs>(args: SelectSubset<T, CustomerIotConnectionUpsertArgs<ExtArgs>>): Prisma__CustomerIotConnectionClient<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of CustomerIotConnections.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotConnectionCountArgs} args - Arguments to filter CustomerIotConnections to count.
+     * @example
+     * // Count the number of CustomerIotConnections
+     * const count = await prisma.customerIotConnection.count({
+     *   where: {
+     *     // ... the filter for the CustomerIotConnections we want to count
+     *   }
+     * })
+    **/
+    count<T extends CustomerIotConnectionCountArgs>(
+      args?: Subset<T, CustomerIotConnectionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CustomerIotConnectionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CustomerIotConnection.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotConnectionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CustomerIotConnectionAggregateArgs>(args: Subset<T, CustomerIotConnectionAggregateArgs>): Prisma.PrismaPromise<GetCustomerIotConnectionAggregateType<T>>
+
+    /**
+     * Group by CustomerIotConnection.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotConnectionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CustomerIotConnectionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CustomerIotConnectionGroupByArgs['orderBy'] }
+        : { orderBy?: CustomerIotConnectionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CustomerIotConnectionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCustomerIotConnectionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CustomerIotConnection model
+   */
+  readonly fields: CustomerIotConnectionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CustomerIotConnection.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CustomerIotConnectionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    devices<T extends CustomerIotConnection$devicesArgs<ExtArgs> = {}>(args?: Subset<T, CustomerIotConnection$devicesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CustomerIotConnection model
+   */ 
+  interface CustomerIotConnectionFieldRefs {
+    readonly id: FieldRef<"CustomerIotConnection", 'String'>
+    readonly companyId: FieldRef<"CustomerIotConnection", 'String'>
+    readonly customerId: FieldRef<"CustomerIotConnection", 'String'>
+    readonly provider: FieldRef<"CustomerIotConnection", 'String'>
+    readonly accessToken: FieldRef<"CustomerIotConnection", 'String'>
+    readonly refreshToken: FieldRef<"CustomerIotConnection", 'String'>
+    readonly tokenExpiresAt: FieldRef<"CustomerIotConnection", 'DateTime'>
+    readonly createdAt: FieldRef<"CustomerIotConnection", 'DateTime'>
+    readonly updatedAt: FieldRef<"CustomerIotConnection", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CustomerIotConnection findUnique
+   */
+  export type CustomerIotConnectionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotConnection to fetch.
+     */
+    where: CustomerIotConnectionWhereUniqueInput
+  }
+
+  /**
+   * CustomerIotConnection findUniqueOrThrow
+   */
+  export type CustomerIotConnectionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotConnection to fetch.
+     */
+    where: CustomerIotConnectionWhereUniqueInput
+  }
+
+  /**
+   * CustomerIotConnection findFirst
+   */
+  export type CustomerIotConnectionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotConnection to fetch.
+     */
+    where?: CustomerIotConnectionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CustomerIotConnections to fetch.
+     */
+    orderBy?: CustomerIotConnectionOrderByWithRelationInput | CustomerIotConnectionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CustomerIotConnections.
+     */
+    cursor?: CustomerIotConnectionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CustomerIotConnections from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CustomerIotConnections.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CustomerIotConnections.
+     */
+    distinct?: CustomerIotConnectionScalarFieldEnum | CustomerIotConnectionScalarFieldEnum[]
+  }
+
+  /**
+   * CustomerIotConnection findFirstOrThrow
+   */
+  export type CustomerIotConnectionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotConnection to fetch.
+     */
+    where?: CustomerIotConnectionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CustomerIotConnections to fetch.
+     */
+    orderBy?: CustomerIotConnectionOrderByWithRelationInput | CustomerIotConnectionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CustomerIotConnections.
+     */
+    cursor?: CustomerIotConnectionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CustomerIotConnections from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CustomerIotConnections.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CustomerIotConnections.
+     */
+    distinct?: CustomerIotConnectionScalarFieldEnum | CustomerIotConnectionScalarFieldEnum[]
+  }
+
+  /**
+   * CustomerIotConnection findMany
+   */
+  export type CustomerIotConnectionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotConnections to fetch.
+     */
+    where?: CustomerIotConnectionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CustomerIotConnections to fetch.
+     */
+    orderBy?: CustomerIotConnectionOrderByWithRelationInput | CustomerIotConnectionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CustomerIotConnections.
+     */
+    cursor?: CustomerIotConnectionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CustomerIotConnections from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CustomerIotConnections.
+     */
+    skip?: number
+    distinct?: CustomerIotConnectionScalarFieldEnum | CustomerIotConnectionScalarFieldEnum[]
+  }
+
+  /**
+   * CustomerIotConnection create
+   */
+  export type CustomerIotConnectionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CustomerIotConnection.
+     */
+    data: XOR<CustomerIotConnectionCreateInput, CustomerIotConnectionUncheckedCreateInput>
+  }
+
+  /**
+   * CustomerIotConnection createMany
+   */
+  export type CustomerIotConnectionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CustomerIotConnections.
+     */
+    data: CustomerIotConnectionCreateManyInput | CustomerIotConnectionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CustomerIotConnection createManyAndReturn
+   */
+  export type CustomerIotConnectionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many CustomerIotConnections.
+     */
+    data: CustomerIotConnectionCreateManyInput | CustomerIotConnectionCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CustomerIotConnection update
+   */
+  export type CustomerIotConnectionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CustomerIotConnection.
+     */
+    data: XOR<CustomerIotConnectionUpdateInput, CustomerIotConnectionUncheckedUpdateInput>
+    /**
+     * Choose, which CustomerIotConnection to update.
+     */
+    where: CustomerIotConnectionWhereUniqueInput
+  }
+
+  /**
+   * CustomerIotConnection updateMany
+   */
+  export type CustomerIotConnectionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CustomerIotConnections.
+     */
+    data: XOR<CustomerIotConnectionUpdateManyMutationInput, CustomerIotConnectionUncheckedUpdateManyInput>
+    /**
+     * Filter which CustomerIotConnections to update
+     */
+    where?: CustomerIotConnectionWhereInput
+  }
+
+  /**
+   * CustomerIotConnection upsert
+   */
+  export type CustomerIotConnectionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CustomerIotConnection to update in case it exists.
+     */
+    where: CustomerIotConnectionWhereUniqueInput
+    /**
+     * In case the CustomerIotConnection found by the `where` argument doesn't exist, create a new CustomerIotConnection with this data.
+     */
+    create: XOR<CustomerIotConnectionCreateInput, CustomerIotConnectionUncheckedCreateInput>
+    /**
+     * In case the CustomerIotConnection was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CustomerIotConnectionUpdateInput, CustomerIotConnectionUncheckedUpdateInput>
+  }
+
+  /**
+   * CustomerIotConnection delete
+   */
+  export type CustomerIotConnectionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+    /**
+     * Filter which CustomerIotConnection to delete.
+     */
+    where: CustomerIotConnectionWhereUniqueInput
+  }
+
+  /**
+   * CustomerIotConnection deleteMany
+   */
+  export type CustomerIotConnectionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CustomerIotConnections to delete
+     */
+    where?: CustomerIotConnectionWhereInput
+  }
+
+  /**
+   * CustomerIotConnection.devices
+   */
+  export type CustomerIotConnection$devicesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    where?: CustomerIotDeviceWhereInput
+    orderBy?: CustomerIotDeviceOrderByWithRelationInput | CustomerIotDeviceOrderByWithRelationInput[]
+    cursor?: CustomerIotDeviceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CustomerIotDeviceScalarFieldEnum | CustomerIotDeviceScalarFieldEnum[]
+  }
+
+  /**
+   * CustomerIotConnection without action
+   */
+  export type CustomerIotConnectionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotConnection
+     */
+    select?: CustomerIotConnectionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotConnectionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CustomerIotDevice
+   */
+
+  export type AggregateCustomerIotDevice = {
+    _count: CustomerIotDeviceCountAggregateOutputType | null
+    _min: CustomerIotDeviceMinAggregateOutputType | null
+    _max: CustomerIotDeviceMaxAggregateOutputType | null
+  }
+
+  export type CustomerIotDeviceMinAggregateOutputType = {
+    id: string | null
+    connectionId: string | null
+    deviceId: string | null
+    locationId: string | null
+    name: string | null
+    type: string | null
+    lastSyncedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CustomerIotDeviceMaxAggregateOutputType = {
+    id: string | null
+    connectionId: string | null
+    deviceId: string | null
+    locationId: string | null
+    name: string | null
+    type: string | null
+    lastSyncedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CustomerIotDeviceCountAggregateOutputType = {
+    id: number
+    connectionId: number
+    deviceId: number
+    locationId: number
+    name: number
+    type: number
+    lastSnapshot: number
+    lastSyncedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CustomerIotDeviceMinAggregateInputType = {
+    id?: true
+    connectionId?: true
+    deviceId?: true
+    locationId?: true
+    name?: true
+    type?: true
+    lastSyncedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CustomerIotDeviceMaxAggregateInputType = {
+    id?: true
+    connectionId?: true
+    deviceId?: true
+    locationId?: true
+    name?: true
+    type?: true
+    lastSyncedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CustomerIotDeviceCountAggregateInputType = {
+    id?: true
+    connectionId?: true
+    deviceId?: true
+    locationId?: true
+    name?: true
+    type?: true
+    lastSnapshot?: true
+    lastSyncedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CustomerIotDeviceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CustomerIotDevice to aggregate.
+     */
+    where?: CustomerIotDeviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CustomerIotDevices to fetch.
+     */
+    orderBy?: CustomerIotDeviceOrderByWithRelationInput | CustomerIotDeviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CustomerIotDeviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CustomerIotDevices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CustomerIotDevices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CustomerIotDevices
+    **/
+    _count?: true | CustomerIotDeviceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CustomerIotDeviceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CustomerIotDeviceMaxAggregateInputType
+  }
+
+  export type GetCustomerIotDeviceAggregateType<T extends CustomerIotDeviceAggregateArgs> = {
+        [P in keyof T & keyof AggregateCustomerIotDevice]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCustomerIotDevice[P]>
+      : GetScalarType<T[P], AggregateCustomerIotDevice[P]>
+  }
+
+
+
+
+  export type CustomerIotDeviceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CustomerIotDeviceWhereInput
+    orderBy?: CustomerIotDeviceOrderByWithAggregationInput | CustomerIotDeviceOrderByWithAggregationInput[]
+    by: CustomerIotDeviceScalarFieldEnum[] | CustomerIotDeviceScalarFieldEnum
+    having?: CustomerIotDeviceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CustomerIotDeviceCountAggregateInputType | true
+    _min?: CustomerIotDeviceMinAggregateInputType
+    _max?: CustomerIotDeviceMaxAggregateInputType
+  }
+
+  export type CustomerIotDeviceGroupByOutputType = {
+    id: string
+    connectionId: string
+    deviceId: string
+    locationId: string | null
+    name: string
+    type: string
+    lastSnapshot: JsonValue | null
+    lastSyncedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: CustomerIotDeviceCountAggregateOutputType | null
+    _min: CustomerIotDeviceMinAggregateOutputType | null
+    _max: CustomerIotDeviceMaxAggregateOutputType | null
+  }
+
+  type GetCustomerIotDeviceGroupByPayload<T extends CustomerIotDeviceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CustomerIotDeviceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CustomerIotDeviceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CustomerIotDeviceGroupByOutputType[P]>
+            : GetScalarType<T[P], CustomerIotDeviceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CustomerIotDeviceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    connectionId?: boolean
+    deviceId?: boolean
+    locationId?: boolean
+    name?: boolean
+    type?: boolean
+    lastSnapshot?: boolean
+    lastSyncedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    connection?: boolean | CustomerIotConnectionDefaultArgs<ExtArgs>
+    histories?: boolean | CustomerIotDevice$historiesArgs<ExtArgs>
+    _count?: boolean | CustomerIotDeviceCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["customerIotDevice"]>
+
+  export type CustomerIotDeviceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    connectionId?: boolean
+    deviceId?: boolean
+    locationId?: boolean
+    name?: boolean
+    type?: boolean
+    lastSnapshot?: boolean
+    lastSyncedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    connection?: boolean | CustomerIotConnectionDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["customerIotDevice"]>
+
+  export type CustomerIotDeviceSelectScalar = {
+    id?: boolean
+    connectionId?: boolean
+    deviceId?: boolean
+    locationId?: boolean
+    name?: boolean
+    type?: boolean
+    lastSnapshot?: boolean
+    lastSyncedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CustomerIotDeviceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    connection?: boolean | CustomerIotConnectionDefaultArgs<ExtArgs>
+    histories?: boolean | CustomerIotDevice$historiesArgs<ExtArgs>
+    _count?: boolean | CustomerIotDeviceCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type CustomerIotDeviceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    connection?: boolean | CustomerIotConnectionDefaultArgs<ExtArgs>
+  }
+
+  export type $CustomerIotDevicePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CustomerIotDevice"
+    objects: {
+      connection: Prisma.$CustomerIotConnectionPayload<ExtArgs>
+      histories: Prisma.$IotDeviceHistoryPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      connectionId: string
+      deviceId: string
+      locationId: string | null
+      name: string
+      type: string
+      lastSnapshot: Prisma.JsonValue | null
+      lastSyncedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["customerIotDevice"]>
+    composites: {}
+  }
+
+  type CustomerIotDeviceGetPayload<S extends boolean | null | undefined | CustomerIotDeviceDefaultArgs> = $Result.GetResult<Prisma.$CustomerIotDevicePayload, S>
+
+  type CustomerIotDeviceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<CustomerIotDeviceFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: CustomerIotDeviceCountAggregateInputType | true
+    }
+
+  export interface CustomerIotDeviceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CustomerIotDevice'], meta: { name: 'CustomerIotDevice' } }
+    /**
+     * Find zero or one CustomerIotDevice that matches the filter.
+     * @param {CustomerIotDeviceFindUniqueArgs} args - Arguments to find a CustomerIotDevice
+     * @example
+     * // Get one CustomerIotDevice
+     * const customerIotDevice = await prisma.customerIotDevice.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CustomerIotDeviceFindUniqueArgs>(args: SelectSubset<T, CustomerIotDeviceFindUniqueArgs<ExtArgs>>): Prisma__CustomerIotDeviceClient<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one CustomerIotDevice that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {CustomerIotDeviceFindUniqueOrThrowArgs} args - Arguments to find a CustomerIotDevice
+     * @example
+     * // Get one CustomerIotDevice
+     * const customerIotDevice = await prisma.customerIotDevice.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CustomerIotDeviceFindUniqueOrThrowArgs>(args: SelectSubset<T, CustomerIotDeviceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CustomerIotDeviceClient<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first CustomerIotDevice that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotDeviceFindFirstArgs} args - Arguments to find a CustomerIotDevice
+     * @example
+     * // Get one CustomerIotDevice
+     * const customerIotDevice = await prisma.customerIotDevice.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CustomerIotDeviceFindFirstArgs>(args?: SelectSubset<T, CustomerIotDeviceFindFirstArgs<ExtArgs>>): Prisma__CustomerIotDeviceClient<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first CustomerIotDevice that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotDeviceFindFirstOrThrowArgs} args - Arguments to find a CustomerIotDevice
+     * @example
+     * // Get one CustomerIotDevice
+     * const customerIotDevice = await prisma.customerIotDevice.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CustomerIotDeviceFindFirstOrThrowArgs>(args?: SelectSubset<T, CustomerIotDeviceFindFirstOrThrowArgs<ExtArgs>>): Prisma__CustomerIotDeviceClient<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more CustomerIotDevices that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotDeviceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CustomerIotDevices
+     * const customerIotDevices = await prisma.customerIotDevice.findMany()
+     * 
+     * // Get first 10 CustomerIotDevices
+     * const customerIotDevices = await prisma.customerIotDevice.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const customerIotDeviceWithIdOnly = await prisma.customerIotDevice.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CustomerIotDeviceFindManyArgs>(args?: SelectSubset<T, CustomerIotDeviceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a CustomerIotDevice.
+     * @param {CustomerIotDeviceCreateArgs} args - Arguments to create a CustomerIotDevice.
+     * @example
+     * // Create one CustomerIotDevice
+     * const CustomerIotDevice = await prisma.customerIotDevice.create({
+     *   data: {
+     *     // ... data to create a CustomerIotDevice
+     *   }
+     * })
+     * 
+     */
+    create<T extends CustomerIotDeviceCreateArgs>(args: SelectSubset<T, CustomerIotDeviceCreateArgs<ExtArgs>>): Prisma__CustomerIotDeviceClient<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many CustomerIotDevices.
+     * @param {CustomerIotDeviceCreateManyArgs} args - Arguments to create many CustomerIotDevices.
+     * @example
+     * // Create many CustomerIotDevices
+     * const customerIotDevice = await prisma.customerIotDevice.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CustomerIotDeviceCreateManyArgs>(args?: SelectSubset<T, CustomerIotDeviceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CustomerIotDevices and returns the data saved in the database.
+     * @param {CustomerIotDeviceCreateManyAndReturnArgs} args - Arguments to create many CustomerIotDevices.
+     * @example
+     * // Create many CustomerIotDevices
+     * const customerIotDevice = await prisma.customerIotDevice.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CustomerIotDevices and only return the `id`
+     * const customerIotDeviceWithIdOnly = await prisma.customerIotDevice.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CustomerIotDeviceCreateManyAndReturnArgs>(args?: SelectSubset<T, CustomerIotDeviceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a CustomerIotDevice.
+     * @param {CustomerIotDeviceDeleteArgs} args - Arguments to delete one CustomerIotDevice.
+     * @example
+     * // Delete one CustomerIotDevice
+     * const CustomerIotDevice = await prisma.customerIotDevice.delete({
+     *   where: {
+     *     // ... filter to delete one CustomerIotDevice
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CustomerIotDeviceDeleteArgs>(args: SelectSubset<T, CustomerIotDeviceDeleteArgs<ExtArgs>>): Prisma__CustomerIotDeviceClient<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one CustomerIotDevice.
+     * @param {CustomerIotDeviceUpdateArgs} args - Arguments to update one CustomerIotDevice.
+     * @example
+     * // Update one CustomerIotDevice
+     * const customerIotDevice = await prisma.customerIotDevice.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CustomerIotDeviceUpdateArgs>(args: SelectSubset<T, CustomerIotDeviceUpdateArgs<ExtArgs>>): Prisma__CustomerIotDeviceClient<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more CustomerIotDevices.
+     * @param {CustomerIotDeviceDeleteManyArgs} args - Arguments to filter CustomerIotDevices to delete.
+     * @example
+     * // Delete a few CustomerIotDevices
+     * const { count } = await prisma.customerIotDevice.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CustomerIotDeviceDeleteManyArgs>(args?: SelectSubset<T, CustomerIotDeviceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CustomerIotDevices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotDeviceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CustomerIotDevices
+     * const customerIotDevice = await prisma.customerIotDevice.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CustomerIotDeviceUpdateManyArgs>(args: SelectSubset<T, CustomerIotDeviceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one CustomerIotDevice.
+     * @param {CustomerIotDeviceUpsertArgs} args - Arguments to update or create a CustomerIotDevice.
+     * @example
+     * // Update or create a CustomerIotDevice
+     * const customerIotDevice = await prisma.customerIotDevice.upsert({
+     *   create: {
+     *     // ... data to create a CustomerIotDevice
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CustomerIotDevice we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CustomerIotDeviceUpsertArgs>(args: SelectSubset<T, CustomerIotDeviceUpsertArgs<ExtArgs>>): Prisma__CustomerIotDeviceClient<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of CustomerIotDevices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotDeviceCountArgs} args - Arguments to filter CustomerIotDevices to count.
+     * @example
+     * // Count the number of CustomerIotDevices
+     * const count = await prisma.customerIotDevice.count({
+     *   where: {
+     *     // ... the filter for the CustomerIotDevices we want to count
+     *   }
+     * })
+    **/
+    count<T extends CustomerIotDeviceCountArgs>(
+      args?: Subset<T, CustomerIotDeviceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CustomerIotDeviceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CustomerIotDevice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotDeviceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CustomerIotDeviceAggregateArgs>(args: Subset<T, CustomerIotDeviceAggregateArgs>): Prisma.PrismaPromise<GetCustomerIotDeviceAggregateType<T>>
+
+    /**
+     * Group by CustomerIotDevice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CustomerIotDeviceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CustomerIotDeviceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CustomerIotDeviceGroupByArgs['orderBy'] }
+        : { orderBy?: CustomerIotDeviceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CustomerIotDeviceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCustomerIotDeviceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CustomerIotDevice model
+   */
+  readonly fields: CustomerIotDeviceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CustomerIotDevice.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CustomerIotDeviceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    connection<T extends CustomerIotConnectionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerIotConnectionDefaultArgs<ExtArgs>>): Prisma__CustomerIotConnectionClient<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    histories<T extends CustomerIotDevice$historiesArgs<ExtArgs> = {}>(args?: Subset<T, CustomerIotDevice$historiesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CustomerIotDevice model
+   */ 
+  interface CustomerIotDeviceFieldRefs {
+    readonly id: FieldRef<"CustomerIotDevice", 'String'>
+    readonly connectionId: FieldRef<"CustomerIotDevice", 'String'>
+    readonly deviceId: FieldRef<"CustomerIotDevice", 'String'>
+    readonly locationId: FieldRef<"CustomerIotDevice", 'String'>
+    readonly name: FieldRef<"CustomerIotDevice", 'String'>
+    readonly type: FieldRef<"CustomerIotDevice", 'String'>
+    readonly lastSnapshot: FieldRef<"CustomerIotDevice", 'Json'>
+    readonly lastSyncedAt: FieldRef<"CustomerIotDevice", 'DateTime'>
+    readonly createdAt: FieldRef<"CustomerIotDevice", 'DateTime'>
+    readonly updatedAt: FieldRef<"CustomerIotDevice", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CustomerIotDevice findUnique
+   */
+  export type CustomerIotDeviceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotDevice to fetch.
+     */
+    where: CustomerIotDeviceWhereUniqueInput
+  }
+
+  /**
+   * CustomerIotDevice findUniqueOrThrow
+   */
+  export type CustomerIotDeviceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotDevice to fetch.
+     */
+    where: CustomerIotDeviceWhereUniqueInput
+  }
+
+  /**
+   * CustomerIotDevice findFirst
+   */
+  export type CustomerIotDeviceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotDevice to fetch.
+     */
+    where?: CustomerIotDeviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CustomerIotDevices to fetch.
+     */
+    orderBy?: CustomerIotDeviceOrderByWithRelationInput | CustomerIotDeviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CustomerIotDevices.
+     */
+    cursor?: CustomerIotDeviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CustomerIotDevices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CustomerIotDevices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CustomerIotDevices.
+     */
+    distinct?: CustomerIotDeviceScalarFieldEnum | CustomerIotDeviceScalarFieldEnum[]
+  }
+
+  /**
+   * CustomerIotDevice findFirstOrThrow
+   */
+  export type CustomerIotDeviceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotDevice to fetch.
+     */
+    where?: CustomerIotDeviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CustomerIotDevices to fetch.
+     */
+    orderBy?: CustomerIotDeviceOrderByWithRelationInput | CustomerIotDeviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CustomerIotDevices.
+     */
+    cursor?: CustomerIotDeviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CustomerIotDevices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CustomerIotDevices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CustomerIotDevices.
+     */
+    distinct?: CustomerIotDeviceScalarFieldEnum | CustomerIotDeviceScalarFieldEnum[]
+  }
+
+  /**
+   * CustomerIotDevice findMany
+   */
+  export type CustomerIotDeviceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    /**
+     * Filter, which CustomerIotDevices to fetch.
+     */
+    where?: CustomerIotDeviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CustomerIotDevices to fetch.
+     */
+    orderBy?: CustomerIotDeviceOrderByWithRelationInput | CustomerIotDeviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CustomerIotDevices.
+     */
+    cursor?: CustomerIotDeviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CustomerIotDevices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CustomerIotDevices.
+     */
+    skip?: number
+    distinct?: CustomerIotDeviceScalarFieldEnum | CustomerIotDeviceScalarFieldEnum[]
+  }
+
+  /**
+   * CustomerIotDevice create
+   */
+  export type CustomerIotDeviceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CustomerIotDevice.
+     */
+    data: XOR<CustomerIotDeviceCreateInput, CustomerIotDeviceUncheckedCreateInput>
+  }
+
+  /**
+   * CustomerIotDevice createMany
+   */
+  export type CustomerIotDeviceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CustomerIotDevices.
+     */
+    data: CustomerIotDeviceCreateManyInput | CustomerIotDeviceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CustomerIotDevice createManyAndReturn
+   */
+  export type CustomerIotDeviceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many CustomerIotDevices.
+     */
+    data: CustomerIotDeviceCreateManyInput | CustomerIotDeviceCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CustomerIotDevice update
+   */
+  export type CustomerIotDeviceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CustomerIotDevice.
+     */
+    data: XOR<CustomerIotDeviceUpdateInput, CustomerIotDeviceUncheckedUpdateInput>
+    /**
+     * Choose, which CustomerIotDevice to update.
+     */
+    where: CustomerIotDeviceWhereUniqueInput
+  }
+
+  /**
+   * CustomerIotDevice updateMany
+   */
+  export type CustomerIotDeviceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CustomerIotDevices.
+     */
+    data: XOR<CustomerIotDeviceUpdateManyMutationInput, CustomerIotDeviceUncheckedUpdateManyInput>
+    /**
+     * Filter which CustomerIotDevices to update
+     */
+    where?: CustomerIotDeviceWhereInput
+  }
+
+  /**
+   * CustomerIotDevice upsert
+   */
+  export type CustomerIotDeviceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CustomerIotDevice to update in case it exists.
+     */
+    where: CustomerIotDeviceWhereUniqueInput
+    /**
+     * In case the CustomerIotDevice found by the `where` argument doesn't exist, create a new CustomerIotDevice with this data.
+     */
+    create: XOR<CustomerIotDeviceCreateInput, CustomerIotDeviceUncheckedCreateInput>
+    /**
+     * In case the CustomerIotDevice was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CustomerIotDeviceUpdateInput, CustomerIotDeviceUncheckedUpdateInput>
+  }
+
+  /**
+   * CustomerIotDevice delete
+   */
+  export type CustomerIotDeviceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+    /**
+     * Filter which CustomerIotDevice to delete.
+     */
+    where: CustomerIotDeviceWhereUniqueInput
+  }
+
+  /**
+   * CustomerIotDevice deleteMany
+   */
+  export type CustomerIotDeviceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CustomerIotDevices to delete
+     */
+    where?: CustomerIotDeviceWhereInput
+  }
+
+  /**
+   * CustomerIotDevice.histories
+   */
+  export type CustomerIotDevice$historiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    where?: IotDeviceHistoryWhereInput
+    orderBy?: IotDeviceHistoryOrderByWithRelationInput | IotDeviceHistoryOrderByWithRelationInput[]
+    cursor?: IotDeviceHistoryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: IotDeviceHistoryScalarFieldEnum | IotDeviceHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * CustomerIotDevice without action
+   */
+  export type CustomerIotDeviceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerIotDevice
+     */
+    select?: CustomerIotDeviceSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerIotDeviceInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model IotDeviceHistory
+   */
+
+  export type AggregateIotDeviceHistory = {
+    _count: IotDeviceHistoryCountAggregateOutputType | null
+    _min: IotDeviceHistoryMinAggregateOutputType | null
+    _max: IotDeviceHistoryMaxAggregateOutputType | null
+  }
+
+  export type IotDeviceHistoryMinAggregateOutputType = {
+    id: string | null
+    deviceId: string | null
+    companyId: string | null
+    customerId: string | null
+    recordedAt: Date | null
+  }
+
+  export type IotDeviceHistoryMaxAggregateOutputType = {
+    id: string | null
+    deviceId: string | null
+    companyId: string | null
+    customerId: string | null
+    recordedAt: Date | null
+  }
+
+  export type IotDeviceHistoryCountAggregateOutputType = {
+    id: number
+    deviceId: number
+    companyId: number
+    customerId: number
+    snapshot: number
+    recordedAt: number
+    _all: number
+  }
+
+
+  export type IotDeviceHistoryMinAggregateInputType = {
+    id?: true
+    deviceId?: true
+    companyId?: true
+    customerId?: true
+    recordedAt?: true
+  }
+
+  export type IotDeviceHistoryMaxAggregateInputType = {
+    id?: true
+    deviceId?: true
+    companyId?: true
+    customerId?: true
+    recordedAt?: true
+  }
+
+  export type IotDeviceHistoryCountAggregateInputType = {
+    id?: true
+    deviceId?: true
+    companyId?: true
+    customerId?: true
+    snapshot?: true
+    recordedAt?: true
+    _all?: true
+  }
+
+  export type IotDeviceHistoryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which IotDeviceHistory to aggregate.
+     */
+    where?: IotDeviceHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IotDeviceHistories to fetch.
+     */
+    orderBy?: IotDeviceHistoryOrderByWithRelationInput | IotDeviceHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: IotDeviceHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IotDeviceHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IotDeviceHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned IotDeviceHistories
+    **/
+    _count?: true | IotDeviceHistoryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: IotDeviceHistoryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: IotDeviceHistoryMaxAggregateInputType
+  }
+
+  export type GetIotDeviceHistoryAggregateType<T extends IotDeviceHistoryAggregateArgs> = {
+        [P in keyof T & keyof AggregateIotDeviceHistory]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateIotDeviceHistory[P]>
+      : GetScalarType<T[P], AggregateIotDeviceHistory[P]>
+  }
+
+
+
+
+  export type IotDeviceHistoryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: IotDeviceHistoryWhereInput
+    orderBy?: IotDeviceHistoryOrderByWithAggregationInput | IotDeviceHistoryOrderByWithAggregationInput[]
+    by: IotDeviceHistoryScalarFieldEnum[] | IotDeviceHistoryScalarFieldEnum
+    having?: IotDeviceHistoryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: IotDeviceHistoryCountAggregateInputType | true
+    _min?: IotDeviceHistoryMinAggregateInputType
+    _max?: IotDeviceHistoryMaxAggregateInputType
+  }
+
+  export type IotDeviceHistoryGroupByOutputType = {
+    id: string
+    deviceId: string
+    companyId: string
+    customerId: string
+    snapshot: JsonValue
+    recordedAt: Date
+    _count: IotDeviceHistoryCountAggregateOutputType | null
+    _min: IotDeviceHistoryMinAggregateOutputType | null
+    _max: IotDeviceHistoryMaxAggregateOutputType | null
+  }
+
+  type GetIotDeviceHistoryGroupByPayload<T extends IotDeviceHistoryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<IotDeviceHistoryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof IotDeviceHistoryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], IotDeviceHistoryGroupByOutputType[P]>
+            : GetScalarType<T[P], IotDeviceHistoryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type IotDeviceHistorySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    deviceId?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    snapshot?: boolean
+    recordedAt?: boolean
+    device?: boolean | CustomerIotDeviceDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["iotDeviceHistory"]>
+
+  export type IotDeviceHistorySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    deviceId?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    snapshot?: boolean
+    recordedAt?: boolean
+    device?: boolean | CustomerIotDeviceDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["iotDeviceHistory"]>
+
+  export type IotDeviceHistorySelectScalar = {
+    id?: boolean
+    deviceId?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    snapshot?: boolean
+    recordedAt?: boolean
+  }
+
+  export type IotDeviceHistoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    device?: boolean | CustomerIotDeviceDefaultArgs<ExtArgs>
+  }
+  export type IotDeviceHistoryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    device?: boolean | CustomerIotDeviceDefaultArgs<ExtArgs>
+  }
+
+  export type $IotDeviceHistoryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "IotDeviceHistory"
+    objects: {
+      device: Prisma.$CustomerIotDevicePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      deviceId: string
+      companyId: string
+      customerId: string
+      snapshot: Prisma.JsonValue
+      recordedAt: Date
+    }, ExtArgs["result"]["iotDeviceHistory"]>
+    composites: {}
+  }
+
+  type IotDeviceHistoryGetPayload<S extends boolean | null | undefined | IotDeviceHistoryDefaultArgs> = $Result.GetResult<Prisma.$IotDeviceHistoryPayload, S>
+
+  type IotDeviceHistoryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<IotDeviceHistoryFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: IotDeviceHistoryCountAggregateInputType | true
+    }
+
+  export interface IotDeviceHistoryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['IotDeviceHistory'], meta: { name: 'IotDeviceHistory' } }
+    /**
+     * Find zero or one IotDeviceHistory that matches the filter.
+     * @param {IotDeviceHistoryFindUniqueArgs} args - Arguments to find a IotDeviceHistory
+     * @example
+     * // Get one IotDeviceHistory
+     * const iotDeviceHistory = await prisma.iotDeviceHistory.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends IotDeviceHistoryFindUniqueArgs>(args: SelectSubset<T, IotDeviceHistoryFindUniqueArgs<ExtArgs>>): Prisma__IotDeviceHistoryClient<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one IotDeviceHistory that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {IotDeviceHistoryFindUniqueOrThrowArgs} args - Arguments to find a IotDeviceHistory
+     * @example
+     * // Get one IotDeviceHistory
+     * const iotDeviceHistory = await prisma.iotDeviceHistory.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends IotDeviceHistoryFindUniqueOrThrowArgs>(args: SelectSubset<T, IotDeviceHistoryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__IotDeviceHistoryClient<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first IotDeviceHistory that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IotDeviceHistoryFindFirstArgs} args - Arguments to find a IotDeviceHistory
+     * @example
+     * // Get one IotDeviceHistory
+     * const iotDeviceHistory = await prisma.iotDeviceHistory.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends IotDeviceHistoryFindFirstArgs>(args?: SelectSubset<T, IotDeviceHistoryFindFirstArgs<ExtArgs>>): Prisma__IotDeviceHistoryClient<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first IotDeviceHistory that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IotDeviceHistoryFindFirstOrThrowArgs} args - Arguments to find a IotDeviceHistory
+     * @example
+     * // Get one IotDeviceHistory
+     * const iotDeviceHistory = await prisma.iotDeviceHistory.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends IotDeviceHistoryFindFirstOrThrowArgs>(args?: SelectSubset<T, IotDeviceHistoryFindFirstOrThrowArgs<ExtArgs>>): Prisma__IotDeviceHistoryClient<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more IotDeviceHistories that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IotDeviceHistoryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all IotDeviceHistories
+     * const iotDeviceHistories = await prisma.iotDeviceHistory.findMany()
+     * 
+     * // Get first 10 IotDeviceHistories
+     * const iotDeviceHistories = await prisma.iotDeviceHistory.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const iotDeviceHistoryWithIdOnly = await prisma.iotDeviceHistory.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends IotDeviceHistoryFindManyArgs>(args?: SelectSubset<T, IotDeviceHistoryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a IotDeviceHistory.
+     * @param {IotDeviceHistoryCreateArgs} args - Arguments to create a IotDeviceHistory.
+     * @example
+     * // Create one IotDeviceHistory
+     * const IotDeviceHistory = await prisma.iotDeviceHistory.create({
+     *   data: {
+     *     // ... data to create a IotDeviceHistory
+     *   }
+     * })
+     * 
+     */
+    create<T extends IotDeviceHistoryCreateArgs>(args: SelectSubset<T, IotDeviceHistoryCreateArgs<ExtArgs>>): Prisma__IotDeviceHistoryClient<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many IotDeviceHistories.
+     * @param {IotDeviceHistoryCreateManyArgs} args - Arguments to create many IotDeviceHistories.
+     * @example
+     * // Create many IotDeviceHistories
+     * const iotDeviceHistory = await prisma.iotDeviceHistory.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends IotDeviceHistoryCreateManyArgs>(args?: SelectSubset<T, IotDeviceHistoryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many IotDeviceHistories and returns the data saved in the database.
+     * @param {IotDeviceHistoryCreateManyAndReturnArgs} args - Arguments to create many IotDeviceHistories.
+     * @example
+     * // Create many IotDeviceHistories
+     * const iotDeviceHistory = await prisma.iotDeviceHistory.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many IotDeviceHistories and only return the `id`
+     * const iotDeviceHistoryWithIdOnly = await prisma.iotDeviceHistory.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends IotDeviceHistoryCreateManyAndReturnArgs>(args?: SelectSubset<T, IotDeviceHistoryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a IotDeviceHistory.
+     * @param {IotDeviceHistoryDeleteArgs} args - Arguments to delete one IotDeviceHistory.
+     * @example
+     * // Delete one IotDeviceHistory
+     * const IotDeviceHistory = await prisma.iotDeviceHistory.delete({
+     *   where: {
+     *     // ... filter to delete one IotDeviceHistory
+     *   }
+     * })
+     * 
+     */
+    delete<T extends IotDeviceHistoryDeleteArgs>(args: SelectSubset<T, IotDeviceHistoryDeleteArgs<ExtArgs>>): Prisma__IotDeviceHistoryClient<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one IotDeviceHistory.
+     * @param {IotDeviceHistoryUpdateArgs} args - Arguments to update one IotDeviceHistory.
+     * @example
+     * // Update one IotDeviceHistory
+     * const iotDeviceHistory = await prisma.iotDeviceHistory.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends IotDeviceHistoryUpdateArgs>(args: SelectSubset<T, IotDeviceHistoryUpdateArgs<ExtArgs>>): Prisma__IotDeviceHistoryClient<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more IotDeviceHistories.
+     * @param {IotDeviceHistoryDeleteManyArgs} args - Arguments to filter IotDeviceHistories to delete.
+     * @example
+     * // Delete a few IotDeviceHistories
+     * const { count } = await prisma.iotDeviceHistory.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends IotDeviceHistoryDeleteManyArgs>(args?: SelectSubset<T, IotDeviceHistoryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more IotDeviceHistories.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IotDeviceHistoryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many IotDeviceHistories
+     * const iotDeviceHistory = await prisma.iotDeviceHistory.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends IotDeviceHistoryUpdateManyArgs>(args: SelectSubset<T, IotDeviceHistoryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one IotDeviceHistory.
+     * @param {IotDeviceHistoryUpsertArgs} args - Arguments to update or create a IotDeviceHistory.
+     * @example
+     * // Update or create a IotDeviceHistory
+     * const iotDeviceHistory = await prisma.iotDeviceHistory.upsert({
+     *   create: {
+     *     // ... data to create a IotDeviceHistory
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the IotDeviceHistory we want to update
+     *   }
+     * })
+     */
+    upsert<T extends IotDeviceHistoryUpsertArgs>(args: SelectSubset<T, IotDeviceHistoryUpsertArgs<ExtArgs>>): Prisma__IotDeviceHistoryClient<$Result.GetResult<Prisma.$IotDeviceHistoryPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of IotDeviceHistories.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IotDeviceHistoryCountArgs} args - Arguments to filter IotDeviceHistories to count.
+     * @example
+     * // Count the number of IotDeviceHistories
+     * const count = await prisma.iotDeviceHistory.count({
+     *   where: {
+     *     // ... the filter for the IotDeviceHistories we want to count
+     *   }
+     * })
+    **/
+    count<T extends IotDeviceHistoryCountArgs>(
+      args?: Subset<T, IotDeviceHistoryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], IotDeviceHistoryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a IotDeviceHistory.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IotDeviceHistoryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends IotDeviceHistoryAggregateArgs>(args: Subset<T, IotDeviceHistoryAggregateArgs>): Prisma.PrismaPromise<GetIotDeviceHistoryAggregateType<T>>
+
+    /**
+     * Group by IotDeviceHistory.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {IotDeviceHistoryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends IotDeviceHistoryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: IotDeviceHistoryGroupByArgs['orderBy'] }
+        : { orderBy?: IotDeviceHistoryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, IotDeviceHistoryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetIotDeviceHistoryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the IotDeviceHistory model
+   */
+  readonly fields: IotDeviceHistoryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for IotDeviceHistory.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__IotDeviceHistoryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    device<T extends CustomerIotDeviceDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerIotDeviceDefaultArgs<ExtArgs>>): Prisma__CustomerIotDeviceClient<$Result.GetResult<Prisma.$CustomerIotDevicePayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the IotDeviceHistory model
+   */ 
+  interface IotDeviceHistoryFieldRefs {
+    readonly id: FieldRef<"IotDeviceHistory", 'String'>
+    readonly deviceId: FieldRef<"IotDeviceHistory", 'String'>
+    readonly companyId: FieldRef<"IotDeviceHistory", 'String'>
+    readonly customerId: FieldRef<"IotDeviceHistory", 'String'>
+    readonly snapshot: FieldRef<"IotDeviceHistory", 'Json'>
+    readonly recordedAt: FieldRef<"IotDeviceHistory", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * IotDeviceHistory findUnique
+   */
+  export type IotDeviceHistoryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which IotDeviceHistory to fetch.
+     */
+    where: IotDeviceHistoryWhereUniqueInput
+  }
+
+  /**
+   * IotDeviceHistory findUniqueOrThrow
+   */
+  export type IotDeviceHistoryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which IotDeviceHistory to fetch.
+     */
+    where: IotDeviceHistoryWhereUniqueInput
+  }
+
+  /**
+   * IotDeviceHistory findFirst
+   */
+  export type IotDeviceHistoryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which IotDeviceHistory to fetch.
+     */
+    where?: IotDeviceHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IotDeviceHistories to fetch.
+     */
+    orderBy?: IotDeviceHistoryOrderByWithRelationInput | IotDeviceHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for IotDeviceHistories.
+     */
+    cursor?: IotDeviceHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IotDeviceHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IotDeviceHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of IotDeviceHistories.
+     */
+    distinct?: IotDeviceHistoryScalarFieldEnum | IotDeviceHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * IotDeviceHistory findFirstOrThrow
+   */
+  export type IotDeviceHistoryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which IotDeviceHistory to fetch.
+     */
+    where?: IotDeviceHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IotDeviceHistories to fetch.
+     */
+    orderBy?: IotDeviceHistoryOrderByWithRelationInput | IotDeviceHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for IotDeviceHistories.
+     */
+    cursor?: IotDeviceHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IotDeviceHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IotDeviceHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of IotDeviceHistories.
+     */
+    distinct?: IotDeviceHistoryScalarFieldEnum | IotDeviceHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * IotDeviceHistory findMany
+   */
+  export type IotDeviceHistoryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which IotDeviceHistories to fetch.
+     */
+    where?: IotDeviceHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of IotDeviceHistories to fetch.
+     */
+    orderBy?: IotDeviceHistoryOrderByWithRelationInput | IotDeviceHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing IotDeviceHistories.
+     */
+    cursor?: IotDeviceHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` IotDeviceHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` IotDeviceHistories.
+     */
+    skip?: number
+    distinct?: IotDeviceHistoryScalarFieldEnum | IotDeviceHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * IotDeviceHistory create
+   */
+  export type IotDeviceHistoryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a IotDeviceHistory.
+     */
+    data: XOR<IotDeviceHistoryCreateInput, IotDeviceHistoryUncheckedCreateInput>
+  }
+
+  /**
+   * IotDeviceHistory createMany
+   */
+  export type IotDeviceHistoryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many IotDeviceHistories.
+     */
+    data: IotDeviceHistoryCreateManyInput | IotDeviceHistoryCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * IotDeviceHistory createManyAndReturn
+   */
+  export type IotDeviceHistoryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many IotDeviceHistories.
+     */
+    data: IotDeviceHistoryCreateManyInput | IotDeviceHistoryCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * IotDeviceHistory update
+   */
+  export type IotDeviceHistoryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a IotDeviceHistory.
+     */
+    data: XOR<IotDeviceHistoryUpdateInput, IotDeviceHistoryUncheckedUpdateInput>
+    /**
+     * Choose, which IotDeviceHistory to update.
+     */
+    where: IotDeviceHistoryWhereUniqueInput
+  }
+
+  /**
+   * IotDeviceHistory updateMany
+   */
+  export type IotDeviceHistoryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update IotDeviceHistories.
+     */
+    data: XOR<IotDeviceHistoryUpdateManyMutationInput, IotDeviceHistoryUncheckedUpdateManyInput>
+    /**
+     * Filter which IotDeviceHistories to update
+     */
+    where?: IotDeviceHistoryWhereInput
+  }
+
+  /**
+   * IotDeviceHistory upsert
+   */
+  export type IotDeviceHistoryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the IotDeviceHistory to update in case it exists.
+     */
+    where: IotDeviceHistoryWhereUniqueInput
+    /**
+     * In case the IotDeviceHistory found by the `where` argument doesn't exist, create a new IotDeviceHistory with this data.
+     */
+    create: XOR<IotDeviceHistoryCreateInput, IotDeviceHistoryUncheckedCreateInput>
+    /**
+     * In case the IotDeviceHistory was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<IotDeviceHistoryUpdateInput, IotDeviceHistoryUncheckedUpdateInput>
+  }
+
+  /**
+   * IotDeviceHistory delete
+   */
+  export type IotDeviceHistoryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+    /**
+     * Filter which IotDeviceHistory to delete.
+     */
+    where: IotDeviceHistoryWhereUniqueInput
+  }
+
+  /**
+   * IotDeviceHistory deleteMany
+   */
+  export type IotDeviceHistoryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which IotDeviceHistories to delete
+     */
+    where?: IotDeviceHistoryWhereInput
+  }
+
+  /**
+   * IotDeviceHistory without action
+   */
+  export type IotDeviceHistoryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the IotDeviceHistory
+     */
+    select?: IotDeviceHistorySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: IotDeviceHistoryInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -18107,6 +21423,49 @@ export namespace Prisma {
   };
 
   export type ImportErrorScalarFieldEnum = (typeof ImportErrorScalarFieldEnum)[keyof typeof ImportErrorScalarFieldEnum]
+
+
+  export const CustomerIotConnectionScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    customerId: 'customerId',
+    provider: 'provider',
+    accessToken: 'accessToken',
+    refreshToken: 'refreshToken',
+    tokenExpiresAt: 'tokenExpiresAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CustomerIotConnectionScalarFieldEnum = (typeof CustomerIotConnectionScalarFieldEnum)[keyof typeof CustomerIotConnectionScalarFieldEnum]
+
+
+  export const CustomerIotDeviceScalarFieldEnum: {
+    id: 'id',
+    connectionId: 'connectionId',
+    deviceId: 'deviceId',
+    locationId: 'locationId',
+    name: 'name',
+    type: 'type',
+    lastSnapshot: 'lastSnapshot',
+    lastSyncedAt: 'lastSyncedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CustomerIotDeviceScalarFieldEnum = (typeof CustomerIotDeviceScalarFieldEnum)[keyof typeof CustomerIotDeviceScalarFieldEnum]
+
+
+  export const IotDeviceHistoryScalarFieldEnum: {
+    id: 'id',
+    deviceId: 'deviceId',
+    companyId: 'companyId',
+    customerId: 'customerId',
+    snapshot: 'snapshot',
+    recordedAt: 'recordedAt'
+  };
+
+  export type IotDeviceHistoryScalarFieldEnum = (typeof IotDeviceHistoryScalarFieldEnum)[keyof typeof IotDeviceHistoryScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -18645,6 +22004,7 @@ export namespace Prisma {
     addresses?: AddressListRelationFilter
     equipment?: EquipmentListRelationFilter
     upsellRecommendations?: UpsellRecommendationListRelationFilter
+    iotConnections?: CustomerIotConnectionListRelationFilter
   }
 
   export type CustomerOrderByWithRelationInput = {
@@ -18679,6 +22039,7 @@ export namespace Prisma {
     addresses?: AddressOrderByRelationAggregateInput
     equipment?: EquipmentOrderByRelationAggregateInput
     upsellRecommendations?: UpsellRecommendationOrderByRelationAggregateInput
+    iotConnections?: CustomerIotConnectionOrderByRelationAggregateInput
   }
 
   export type CustomerWhereUniqueInput = Prisma.AtLeast<{
@@ -18716,6 +22077,7 @@ export namespace Prisma {
     addresses?: AddressListRelationFilter
     equipment?: EquipmentListRelationFilter
     upsellRecommendations?: UpsellRecommendationListRelationFilter
+    iotConnections?: CustomerIotConnectionListRelationFilter
   }, "id">
 
   export type CustomerOrderByWithAggregationInput = {
@@ -19918,6 +23280,229 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"ImportError"> | Date | string
   }
 
+  export type CustomerIotConnectionWhereInput = {
+    AND?: CustomerIotConnectionWhereInput | CustomerIotConnectionWhereInput[]
+    OR?: CustomerIotConnectionWhereInput[]
+    NOT?: CustomerIotConnectionWhereInput | CustomerIotConnectionWhereInput[]
+    id?: StringFilter<"CustomerIotConnection"> | string
+    companyId?: StringFilter<"CustomerIotConnection"> | string
+    customerId?: StringFilter<"CustomerIotConnection"> | string
+    provider?: StringFilter<"CustomerIotConnection"> | string
+    accessToken?: StringFilter<"CustomerIotConnection"> | string
+    refreshToken?: StringFilter<"CustomerIotConnection"> | string
+    tokenExpiresAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+    createdAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+    updatedAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+    devices?: CustomerIotDeviceListRelationFilter
+  }
+
+  export type CustomerIotConnectionOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    provider?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    customer?: CustomerOrderByWithRelationInput
+    devices?: CustomerIotDeviceOrderByRelationAggregateInput
+  }
+
+  export type CustomerIotConnectionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    customerId_provider?: CustomerIotConnectionCustomerIdProviderCompoundUniqueInput
+    AND?: CustomerIotConnectionWhereInput | CustomerIotConnectionWhereInput[]
+    OR?: CustomerIotConnectionWhereInput[]
+    NOT?: CustomerIotConnectionWhereInput | CustomerIotConnectionWhereInput[]
+    companyId?: StringFilter<"CustomerIotConnection"> | string
+    customerId?: StringFilter<"CustomerIotConnection"> | string
+    provider?: StringFilter<"CustomerIotConnection"> | string
+    accessToken?: StringFilter<"CustomerIotConnection"> | string
+    refreshToken?: StringFilter<"CustomerIotConnection"> | string
+    tokenExpiresAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+    createdAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+    updatedAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+    devices?: CustomerIotDeviceListRelationFilter
+  }, "id" | "customerId_provider">
+
+  export type CustomerIotConnectionOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    provider?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CustomerIotConnectionCountOrderByAggregateInput
+    _max?: CustomerIotConnectionMaxOrderByAggregateInput
+    _min?: CustomerIotConnectionMinOrderByAggregateInput
+  }
+
+  export type CustomerIotConnectionScalarWhereWithAggregatesInput = {
+    AND?: CustomerIotConnectionScalarWhereWithAggregatesInput | CustomerIotConnectionScalarWhereWithAggregatesInput[]
+    OR?: CustomerIotConnectionScalarWhereWithAggregatesInput[]
+    NOT?: CustomerIotConnectionScalarWhereWithAggregatesInput | CustomerIotConnectionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CustomerIotConnection"> | string
+    companyId?: StringWithAggregatesFilter<"CustomerIotConnection"> | string
+    customerId?: StringWithAggregatesFilter<"CustomerIotConnection"> | string
+    provider?: StringWithAggregatesFilter<"CustomerIotConnection"> | string
+    accessToken?: StringWithAggregatesFilter<"CustomerIotConnection"> | string
+    refreshToken?: StringWithAggregatesFilter<"CustomerIotConnection"> | string
+    tokenExpiresAt?: DateTimeWithAggregatesFilter<"CustomerIotConnection"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"CustomerIotConnection"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CustomerIotConnection"> | Date | string
+  }
+
+  export type CustomerIotDeviceWhereInput = {
+    AND?: CustomerIotDeviceWhereInput | CustomerIotDeviceWhereInput[]
+    OR?: CustomerIotDeviceWhereInput[]
+    NOT?: CustomerIotDeviceWhereInput | CustomerIotDeviceWhereInput[]
+    id?: StringFilter<"CustomerIotDevice"> | string
+    connectionId?: StringFilter<"CustomerIotDevice"> | string
+    deviceId?: StringFilter<"CustomerIotDevice"> | string
+    locationId?: StringNullableFilter<"CustomerIotDevice"> | string | null
+    name?: StringFilter<"CustomerIotDevice"> | string
+    type?: StringFilter<"CustomerIotDevice"> | string
+    lastSnapshot?: JsonNullableFilter<"CustomerIotDevice">
+    lastSyncedAt?: DateTimeNullableFilter<"CustomerIotDevice"> | Date | string | null
+    createdAt?: DateTimeFilter<"CustomerIotDevice"> | Date | string
+    updatedAt?: DateTimeFilter<"CustomerIotDevice"> | Date | string
+    connection?: XOR<CustomerIotConnectionRelationFilter, CustomerIotConnectionWhereInput>
+    histories?: IotDeviceHistoryListRelationFilter
+  }
+
+  export type CustomerIotDeviceOrderByWithRelationInput = {
+    id?: SortOrder
+    connectionId?: SortOrder
+    deviceId?: SortOrder
+    locationId?: SortOrderInput | SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    lastSnapshot?: SortOrderInput | SortOrder
+    lastSyncedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    connection?: CustomerIotConnectionOrderByWithRelationInput
+    histories?: IotDeviceHistoryOrderByRelationAggregateInput
+  }
+
+  export type CustomerIotDeviceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    connectionId_deviceId?: CustomerIotDeviceConnectionIdDeviceIdCompoundUniqueInput
+    AND?: CustomerIotDeviceWhereInput | CustomerIotDeviceWhereInput[]
+    OR?: CustomerIotDeviceWhereInput[]
+    NOT?: CustomerIotDeviceWhereInput | CustomerIotDeviceWhereInput[]
+    connectionId?: StringFilter<"CustomerIotDevice"> | string
+    deviceId?: StringFilter<"CustomerIotDevice"> | string
+    locationId?: StringNullableFilter<"CustomerIotDevice"> | string | null
+    name?: StringFilter<"CustomerIotDevice"> | string
+    type?: StringFilter<"CustomerIotDevice"> | string
+    lastSnapshot?: JsonNullableFilter<"CustomerIotDevice">
+    lastSyncedAt?: DateTimeNullableFilter<"CustomerIotDevice"> | Date | string | null
+    createdAt?: DateTimeFilter<"CustomerIotDevice"> | Date | string
+    updatedAt?: DateTimeFilter<"CustomerIotDevice"> | Date | string
+    connection?: XOR<CustomerIotConnectionRelationFilter, CustomerIotConnectionWhereInput>
+    histories?: IotDeviceHistoryListRelationFilter
+  }, "id" | "connectionId_deviceId">
+
+  export type CustomerIotDeviceOrderByWithAggregationInput = {
+    id?: SortOrder
+    connectionId?: SortOrder
+    deviceId?: SortOrder
+    locationId?: SortOrderInput | SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    lastSnapshot?: SortOrderInput | SortOrder
+    lastSyncedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CustomerIotDeviceCountOrderByAggregateInput
+    _max?: CustomerIotDeviceMaxOrderByAggregateInput
+    _min?: CustomerIotDeviceMinOrderByAggregateInput
+  }
+
+  export type CustomerIotDeviceScalarWhereWithAggregatesInput = {
+    AND?: CustomerIotDeviceScalarWhereWithAggregatesInput | CustomerIotDeviceScalarWhereWithAggregatesInput[]
+    OR?: CustomerIotDeviceScalarWhereWithAggregatesInput[]
+    NOT?: CustomerIotDeviceScalarWhereWithAggregatesInput | CustomerIotDeviceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CustomerIotDevice"> | string
+    connectionId?: StringWithAggregatesFilter<"CustomerIotDevice"> | string
+    deviceId?: StringWithAggregatesFilter<"CustomerIotDevice"> | string
+    locationId?: StringNullableWithAggregatesFilter<"CustomerIotDevice"> | string | null
+    name?: StringWithAggregatesFilter<"CustomerIotDevice"> | string
+    type?: StringWithAggregatesFilter<"CustomerIotDevice"> | string
+    lastSnapshot?: JsonNullableWithAggregatesFilter<"CustomerIotDevice">
+    lastSyncedAt?: DateTimeNullableWithAggregatesFilter<"CustomerIotDevice"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"CustomerIotDevice"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CustomerIotDevice"> | Date | string
+  }
+
+  export type IotDeviceHistoryWhereInput = {
+    AND?: IotDeviceHistoryWhereInput | IotDeviceHistoryWhereInput[]
+    OR?: IotDeviceHistoryWhereInput[]
+    NOT?: IotDeviceHistoryWhereInput | IotDeviceHistoryWhereInput[]
+    id?: StringFilter<"IotDeviceHistory"> | string
+    deviceId?: StringFilter<"IotDeviceHistory"> | string
+    companyId?: StringFilter<"IotDeviceHistory"> | string
+    customerId?: StringFilter<"IotDeviceHistory"> | string
+    snapshot?: JsonFilter<"IotDeviceHistory">
+    recordedAt?: DateTimeFilter<"IotDeviceHistory"> | Date | string
+    device?: XOR<CustomerIotDeviceRelationFilter, CustomerIotDeviceWhereInput>
+  }
+
+  export type IotDeviceHistoryOrderByWithRelationInput = {
+    id?: SortOrder
+    deviceId?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    snapshot?: SortOrder
+    recordedAt?: SortOrder
+    device?: CustomerIotDeviceOrderByWithRelationInput
+  }
+
+  export type IotDeviceHistoryWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: IotDeviceHistoryWhereInput | IotDeviceHistoryWhereInput[]
+    OR?: IotDeviceHistoryWhereInput[]
+    NOT?: IotDeviceHistoryWhereInput | IotDeviceHistoryWhereInput[]
+    deviceId?: StringFilter<"IotDeviceHistory"> | string
+    companyId?: StringFilter<"IotDeviceHistory"> | string
+    customerId?: StringFilter<"IotDeviceHistory"> | string
+    snapshot?: JsonFilter<"IotDeviceHistory">
+    recordedAt?: DateTimeFilter<"IotDeviceHistory"> | Date | string
+    device?: XOR<CustomerIotDeviceRelationFilter, CustomerIotDeviceWhereInput>
+  }, "id">
+
+  export type IotDeviceHistoryOrderByWithAggregationInput = {
+    id?: SortOrder
+    deviceId?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    snapshot?: SortOrder
+    recordedAt?: SortOrder
+    _count?: IotDeviceHistoryCountOrderByAggregateInput
+    _max?: IotDeviceHistoryMaxOrderByAggregateInput
+    _min?: IotDeviceHistoryMinOrderByAggregateInput
+  }
+
+  export type IotDeviceHistoryScalarWhereWithAggregatesInput = {
+    AND?: IotDeviceHistoryScalarWhereWithAggregatesInput | IotDeviceHistoryScalarWhereWithAggregatesInput[]
+    OR?: IotDeviceHistoryScalarWhereWithAggregatesInput[]
+    NOT?: IotDeviceHistoryScalarWhereWithAggregatesInput | IotDeviceHistoryScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"IotDeviceHistory"> | string
+    deviceId?: StringWithAggregatesFilter<"IotDeviceHistory"> | string
+    companyId?: StringWithAggregatesFilter<"IotDeviceHistory"> | string
+    customerId?: StringWithAggregatesFilter<"IotDeviceHistory"> | string
+    snapshot?: JsonWithAggregatesFilter<"IotDeviceHistory">
+    recordedAt?: DateTimeWithAggregatesFilter<"IotDeviceHistory"> | Date | string
+  }
+
   export type CompanyCreateInput = {
     id?: string
     name: string
@@ -20273,6 +23858,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateInput = {
@@ -20306,6 +23892,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUpdateInput = {
@@ -20339,6 +23926,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateInput = {
@@ -20372,6 +23960,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerCreateManyInput = {
@@ -21769,6 +25358,249 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CustomerIotConnectionCreateInput = {
+    id?: string
+    companyId: string
+    provider: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer: CustomerCreateNestedOneWithoutIotConnectionsInput
+    devices?: CustomerIotDeviceCreateNestedManyWithoutConnectionInput
+  }
+
+  export type CustomerIotConnectionUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    provider: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    devices?: CustomerIotDeviceUncheckedCreateNestedManyWithoutConnectionInput
+  }
+
+  export type CustomerIotConnectionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneRequiredWithoutIotConnectionsNestedInput
+    devices?: CustomerIotDeviceUpdateManyWithoutConnectionNestedInput
+  }
+
+  export type CustomerIotConnectionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    devices?: CustomerIotDeviceUncheckedUpdateManyWithoutConnectionNestedInput
+  }
+
+  export type CustomerIotConnectionCreateManyInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    provider: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CustomerIotConnectionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CustomerIotConnectionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CustomerIotDeviceCreateInput = {
+    id?: string
+    deviceId: string
+    locationId?: string | null
+    name: string
+    type?: string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    connection: CustomerIotConnectionCreateNestedOneWithoutDevicesInput
+    histories?: IotDeviceHistoryCreateNestedManyWithoutDeviceInput
+  }
+
+  export type CustomerIotDeviceUncheckedCreateInput = {
+    id?: string
+    connectionId: string
+    deviceId: string
+    locationId?: string | null
+    name: string
+    type?: string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    histories?: IotDeviceHistoryUncheckedCreateNestedManyWithoutDeviceInput
+  }
+
+  export type CustomerIotDeviceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    connection?: CustomerIotConnectionUpdateOneRequiredWithoutDevicesNestedInput
+    histories?: IotDeviceHistoryUpdateManyWithoutDeviceNestedInput
+  }
+
+  export type CustomerIotDeviceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    connectionId?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    histories?: IotDeviceHistoryUncheckedUpdateManyWithoutDeviceNestedInput
+  }
+
+  export type CustomerIotDeviceCreateManyInput = {
+    id?: string
+    connectionId: string
+    deviceId: string
+    locationId?: string | null
+    name: string
+    type?: string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CustomerIotDeviceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CustomerIotDeviceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    connectionId?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IotDeviceHistoryCreateInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    snapshot: JsonNullValueInput | InputJsonValue
+    recordedAt?: Date | string
+    device: CustomerIotDeviceCreateNestedOneWithoutHistoriesInput
+  }
+
+  export type IotDeviceHistoryUncheckedCreateInput = {
+    id?: string
+    deviceId: string
+    companyId: string
+    customerId: string
+    snapshot: JsonNullValueInput | InputJsonValue
+    recordedAt?: Date | string
+  }
+
+  export type IotDeviceHistoryUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    snapshot?: JsonNullValueInput | InputJsonValue
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    device?: CustomerIotDeviceUpdateOneRequiredWithoutHistoriesNestedInput
+  }
+
+  export type IotDeviceHistoryUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    snapshot?: JsonNullValueInput | InputJsonValue
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IotDeviceHistoryCreateManyInput = {
+    id?: string
+    deviceId: string
+    companyId: string
+    customerId: string
+    snapshot: JsonNullValueInput | InputJsonValue
+    recordedAt?: Date | string
+  }
+
+  export type IotDeviceHistoryUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    snapshot?: JsonNullValueInput | InputJsonValue
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IotDeviceHistoryUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    snapshot?: JsonNullValueInput | InputJsonValue
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -22183,6 +26015,12 @@ export namespace Prisma {
     none?: UpsellRecommendationWhereInput
   }
 
+  export type CustomerIotConnectionListRelationFilter = {
+    every?: CustomerIotConnectionWhereInput
+    some?: CustomerIotConnectionWhereInput
+    none?: CustomerIotConnectionWhereInput
+  }
+
   export type ReviewOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -22196,6 +26034,10 @@ export namespace Prisma {
   }
 
   export type UpsellRecommendationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CustomerIotConnectionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -23206,6 +27048,144 @@ export namespace Prisma {
     _max?: NestedJsonFilter<$PrismaModel>
   }
 
+  export type CustomerIotDeviceListRelationFilter = {
+    every?: CustomerIotDeviceWhereInput
+    some?: CustomerIotDeviceWhereInput
+    none?: CustomerIotDeviceWhereInput
+  }
+
+  export type CustomerIotDeviceOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CustomerIotConnectionCustomerIdProviderCompoundUniqueInput = {
+    customerId: string
+    provider: string
+  }
+
+  export type CustomerIotConnectionCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    provider?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CustomerIotConnectionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    provider?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CustomerIotConnectionMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    provider?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    tokenExpiresAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CustomerIotConnectionRelationFilter = {
+    is?: CustomerIotConnectionWhereInput
+    isNot?: CustomerIotConnectionWhereInput
+  }
+
+  export type IotDeviceHistoryListRelationFilter = {
+    every?: IotDeviceHistoryWhereInput
+    some?: IotDeviceHistoryWhereInput
+    none?: IotDeviceHistoryWhereInput
+  }
+
+  export type IotDeviceHistoryOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CustomerIotDeviceConnectionIdDeviceIdCompoundUniqueInput = {
+    connectionId: string
+    deviceId: string
+  }
+
+  export type CustomerIotDeviceCountOrderByAggregateInput = {
+    id?: SortOrder
+    connectionId?: SortOrder
+    deviceId?: SortOrder
+    locationId?: SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    lastSnapshot?: SortOrder
+    lastSyncedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CustomerIotDeviceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    connectionId?: SortOrder
+    deviceId?: SortOrder
+    locationId?: SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    lastSyncedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CustomerIotDeviceMinOrderByAggregateInput = {
+    id?: SortOrder
+    connectionId?: SortOrder
+    deviceId?: SortOrder
+    locationId?: SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    lastSyncedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CustomerIotDeviceRelationFilter = {
+    is?: CustomerIotDeviceWhereInput
+    isNot?: CustomerIotDeviceWhereInput
+  }
+
+  export type IotDeviceHistoryCountOrderByAggregateInput = {
+    id?: SortOrder
+    deviceId?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    snapshot?: SortOrder
+    recordedAt?: SortOrder
+  }
+
+  export type IotDeviceHistoryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    deviceId?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    recordedAt?: SortOrder
+  }
+
+  export type IotDeviceHistoryMinOrderByAggregateInput = {
+    id?: SortOrder
+    deviceId?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    recordedAt?: SortOrder
+  }
+
   export type CustomerCreateNestedManyWithoutCompanyInput = {
     create?: XOR<CustomerCreateWithoutCompanyInput, CustomerUncheckedCreateWithoutCompanyInput> | CustomerCreateWithoutCompanyInput[] | CustomerUncheckedCreateWithoutCompanyInput[]
     connectOrCreate?: CustomerCreateOrConnectWithoutCompanyInput | CustomerCreateOrConnectWithoutCompanyInput[]
@@ -23575,6 +27555,13 @@ export namespace Prisma {
     connect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
   }
 
+  export type CustomerIotConnectionCreateNestedManyWithoutCustomerInput = {
+    create?: XOR<CustomerIotConnectionCreateWithoutCustomerInput, CustomerIotConnectionUncheckedCreateWithoutCustomerInput> | CustomerIotConnectionCreateWithoutCustomerInput[] | CustomerIotConnectionUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: CustomerIotConnectionCreateOrConnectWithoutCustomerInput | CustomerIotConnectionCreateOrConnectWithoutCustomerInput[]
+    createMany?: CustomerIotConnectionCreateManyCustomerInputEnvelope
+    connect?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+  }
+
   export type ContactUncheckedCreateNestedManyWithoutCustomerInput = {
     create?: XOR<ContactCreateWithoutCustomerInput, ContactUncheckedCreateWithoutCustomerInput> | ContactCreateWithoutCustomerInput[] | ContactUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: ContactCreateOrConnectWithoutCustomerInput | ContactCreateOrConnectWithoutCustomerInput[]
@@ -23629,6 +27616,13 @@ export namespace Prisma {
     connectOrCreate?: UpsellRecommendationCreateOrConnectWithoutCustomerInput | UpsellRecommendationCreateOrConnectWithoutCustomerInput[]
     createMany?: UpsellRecommendationCreateManyCustomerInputEnvelope
     connect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+  }
+
+  export type CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput = {
+    create?: XOR<CustomerIotConnectionCreateWithoutCustomerInput, CustomerIotConnectionUncheckedCreateWithoutCustomerInput> | CustomerIotConnectionCreateWithoutCustomerInput[] | CustomerIotConnectionUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: CustomerIotConnectionCreateOrConnectWithoutCustomerInput | CustomerIotConnectionCreateOrConnectWithoutCustomerInput[]
+    createMany?: CustomerIotConnectionCreateManyCustomerInputEnvelope
+    connect?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
   }
 
   export type EnumCustomerTypeFieldUpdateOperationsInput = {
@@ -23764,6 +27758,20 @@ export namespace Prisma {
     deleteMany?: UpsellRecommendationScalarWhereInput | UpsellRecommendationScalarWhereInput[]
   }
 
+  export type CustomerIotConnectionUpdateManyWithoutCustomerNestedInput = {
+    create?: XOR<CustomerIotConnectionCreateWithoutCustomerInput, CustomerIotConnectionUncheckedCreateWithoutCustomerInput> | CustomerIotConnectionCreateWithoutCustomerInput[] | CustomerIotConnectionUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: CustomerIotConnectionCreateOrConnectWithoutCustomerInput | CustomerIotConnectionCreateOrConnectWithoutCustomerInput[]
+    upsert?: CustomerIotConnectionUpsertWithWhereUniqueWithoutCustomerInput | CustomerIotConnectionUpsertWithWhereUniqueWithoutCustomerInput[]
+    createMany?: CustomerIotConnectionCreateManyCustomerInputEnvelope
+    set?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+    disconnect?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+    delete?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+    connect?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+    update?: CustomerIotConnectionUpdateWithWhereUniqueWithoutCustomerInput | CustomerIotConnectionUpdateWithWhereUniqueWithoutCustomerInput[]
+    updateMany?: CustomerIotConnectionUpdateManyWithWhereWithoutCustomerInput | CustomerIotConnectionUpdateManyWithWhereWithoutCustomerInput[]
+    deleteMany?: CustomerIotConnectionScalarWhereInput | CustomerIotConnectionScalarWhereInput[]
+  }
+
   export type ContactUncheckedUpdateManyWithoutCustomerNestedInput = {
     create?: XOR<ContactCreateWithoutCustomerInput, ContactUncheckedCreateWithoutCustomerInput> | ContactCreateWithoutCustomerInput[] | ContactUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: ContactCreateOrConnectWithoutCustomerInput | ContactCreateOrConnectWithoutCustomerInput[]
@@ -23874,6 +27882,20 @@ export namespace Prisma {
     update?: UpsellRecommendationUpdateWithWhereUniqueWithoutCustomerInput | UpsellRecommendationUpdateWithWhereUniqueWithoutCustomerInput[]
     updateMany?: UpsellRecommendationUpdateManyWithWhereWithoutCustomerInput | UpsellRecommendationUpdateManyWithWhereWithoutCustomerInput[]
     deleteMany?: UpsellRecommendationScalarWhereInput | UpsellRecommendationScalarWhereInput[]
+  }
+
+  export type CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput = {
+    create?: XOR<CustomerIotConnectionCreateWithoutCustomerInput, CustomerIotConnectionUncheckedCreateWithoutCustomerInput> | CustomerIotConnectionCreateWithoutCustomerInput[] | CustomerIotConnectionUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: CustomerIotConnectionCreateOrConnectWithoutCustomerInput | CustomerIotConnectionCreateOrConnectWithoutCustomerInput[]
+    upsert?: CustomerIotConnectionUpsertWithWhereUniqueWithoutCustomerInput | CustomerIotConnectionUpsertWithWhereUniqueWithoutCustomerInput[]
+    createMany?: CustomerIotConnectionCreateManyCustomerInputEnvelope
+    set?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+    disconnect?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+    delete?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+    connect?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+    update?: CustomerIotConnectionUpdateWithWhereUniqueWithoutCustomerInput | CustomerIotConnectionUpdateWithWhereUniqueWithoutCustomerInput[]
+    updateMany?: CustomerIotConnectionUpdateManyWithWhereWithoutCustomerInput | CustomerIotConnectionUpdateManyWithWhereWithoutCustomerInput[]
+    deleteMany?: CustomerIotConnectionScalarWhereInput | CustomerIotConnectionScalarWhereInput[]
   }
 
   export type CompanyCreateNestedOneWithoutContactsInput = {
@@ -24208,6 +28230,132 @@ export namespace Prisma {
     upsert?: ImportBatchUpsertWithoutErrorsInput
     connect?: ImportBatchWhereUniqueInput
     update?: XOR<XOR<ImportBatchUpdateToOneWithWhereWithoutErrorsInput, ImportBatchUpdateWithoutErrorsInput>, ImportBatchUncheckedUpdateWithoutErrorsInput>
+  }
+
+  export type CustomerCreateNestedOneWithoutIotConnectionsInput = {
+    create?: XOR<CustomerCreateWithoutIotConnectionsInput, CustomerUncheckedCreateWithoutIotConnectionsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutIotConnectionsInput
+    connect?: CustomerWhereUniqueInput
+  }
+
+  export type CustomerIotDeviceCreateNestedManyWithoutConnectionInput = {
+    create?: XOR<CustomerIotDeviceCreateWithoutConnectionInput, CustomerIotDeviceUncheckedCreateWithoutConnectionInput> | CustomerIotDeviceCreateWithoutConnectionInput[] | CustomerIotDeviceUncheckedCreateWithoutConnectionInput[]
+    connectOrCreate?: CustomerIotDeviceCreateOrConnectWithoutConnectionInput | CustomerIotDeviceCreateOrConnectWithoutConnectionInput[]
+    createMany?: CustomerIotDeviceCreateManyConnectionInputEnvelope
+    connect?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+  }
+
+  export type CustomerIotDeviceUncheckedCreateNestedManyWithoutConnectionInput = {
+    create?: XOR<CustomerIotDeviceCreateWithoutConnectionInput, CustomerIotDeviceUncheckedCreateWithoutConnectionInput> | CustomerIotDeviceCreateWithoutConnectionInput[] | CustomerIotDeviceUncheckedCreateWithoutConnectionInput[]
+    connectOrCreate?: CustomerIotDeviceCreateOrConnectWithoutConnectionInput | CustomerIotDeviceCreateOrConnectWithoutConnectionInput[]
+    createMany?: CustomerIotDeviceCreateManyConnectionInputEnvelope
+    connect?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+  }
+
+  export type CustomerUpdateOneRequiredWithoutIotConnectionsNestedInput = {
+    create?: XOR<CustomerCreateWithoutIotConnectionsInput, CustomerUncheckedCreateWithoutIotConnectionsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutIotConnectionsInput
+    upsert?: CustomerUpsertWithoutIotConnectionsInput
+    connect?: CustomerWhereUniqueInput
+    update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutIotConnectionsInput, CustomerUpdateWithoutIotConnectionsInput>, CustomerUncheckedUpdateWithoutIotConnectionsInput>
+  }
+
+  export type CustomerIotDeviceUpdateManyWithoutConnectionNestedInput = {
+    create?: XOR<CustomerIotDeviceCreateWithoutConnectionInput, CustomerIotDeviceUncheckedCreateWithoutConnectionInput> | CustomerIotDeviceCreateWithoutConnectionInput[] | CustomerIotDeviceUncheckedCreateWithoutConnectionInput[]
+    connectOrCreate?: CustomerIotDeviceCreateOrConnectWithoutConnectionInput | CustomerIotDeviceCreateOrConnectWithoutConnectionInput[]
+    upsert?: CustomerIotDeviceUpsertWithWhereUniqueWithoutConnectionInput | CustomerIotDeviceUpsertWithWhereUniqueWithoutConnectionInput[]
+    createMany?: CustomerIotDeviceCreateManyConnectionInputEnvelope
+    set?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+    disconnect?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+    delete?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+    connect?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+    update?: CustomerIotDeviceUpdateWithWhereUniqueWithoutConnectionInput | CustomerIotDeviceUpdateWithWhereUniqueWithoutConnectionInput[]
+    updateMany?: CustomerIotDeviceUpdateManyWithWhereWithoutConnectionInput | CustomerIotDeviceUpdateManyWithWhereWithoutConnectionInput[]
+    deleteMany?: CustomerIotDeviceScalarWhereInput | CustomerIotDeviceScalarWhereInput[]
+  }
+
+  export type CustomerIotDeviceUncheckedUpdateManyWithoutConnectionNestedInput = {
+    create?: XOR<CustomerIotDeviceCreateWithoutConnectionInput, CustomerIotDeviceUncheckedCreateWithoutConnectionInput> | CustomerIotDeviceCreateWithoutConnectionInput[] | CustomerIotDeviceUncheckedCreateWithoutConnectionInput[]
+    connectOrCreate?: CustomerIotDeviceCreateOrConnectWithoutConnectionInput | CustomerIotDeviceCreateOrConnectWithoutConnectionInput[]
+    upsert?: CustomerIotDeviceUpsertWithWhereUniqueWithoutConnectionInput | CustomerIotDeviceUpsertWithWhereUniqueWithoutConnectionInput[]
+    createMany?: CustomerIotDeviceCreateManyConnectionInputEnvelope
+    set?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+    disconnect?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+    delete?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+    connect?: CustomerIotDeviceWhereUniqueInput | CustomerIotDeviceWhereUniqueInput[]
+    update?: CustomerIotDeviceUpdateWithWhereUniqueWithoutConnectionInput | CustomerIotDeviceUpdateWithWhereUniqueWithoutConnectionInput[]
+    updateMany?: CustomerIotDeviceUpdateManyWithWhereWithoutConnectionInput | CustomerIotDeviceUpdateManyWithWhereWithoutConnectionInput[]
+    deleteMany?: CustomerIotDeviceScalarWhereInput | CustomerIotDeviceScalarWhereInput[]
+  }
+
+  export type CustomerIotConnectionCreateNestedOneWithoutDevicesInput = {
+    create?: XOR<CustomerIotConnectionCreateWithoutDevicesInput, CustomerIotConnectionUncheckedCreateWithoutDevicesInput>
+    connectOrCreate?: CustomerIotConnectionCreateOrConnectWithoutDevicesInput
+    connect?: CustomerIotConnectionWhereUniqueInput
+  }
+
+  export type IotDeviceHistoryCreateNestedManyWithoutDeviceInput = {
+    create?: XOR<IotDeviceHistoryCreateWithoutDeviceInput, IotDeviceHistoryUncheckedCreateWithoutDeviceInput> | IotDeviceHistoryCreateWithoutDeviceInput[] | IotDeviceHistoryUncheckedCreateWithoutDeviceInput[]
+    connectOrCreate?: IotDeviceHistoryCreateOrConnectWithoutDeviceInput | IotDeviceHistoryCreateOrConnectWithoutDeviceInput[]
+    createMany?: IotDeviceHistoryCreateManyDeviceInputEnvelope
+    connect?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+  }
+
+  export type IotDeviceHistoryUncheckedCreateNestedManyWithoutDeviceInput = {
+    create?: XOR<IotDeviceHistoryCreateWithoutDeviceInput, IotDeviceHistoryUncheckedCreateWithoutDeviceInput> | IotDeviceHistoryCreateWithoutDeviceInput[] | IotDeviceHistoryUncheckedCreateWithoutDeviceInput[]
+    connectOrCreate?: IotDeviceHistoryCreateOrConnectWithoutDeviceInput | IotDeviceHistoryCreateOrConnectWithoutDeviceInput[]
+    createMany?: IotDeviceHistoryCreateManyDeviceInputEnvelope
+    connect?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+  }
+
+  export type CustomerIotConnectionUpdateOneRequiredWithoutDevicesNestedInput = {
+    create?: XOR<CustomerIotConnectionCreateWithoutDevicesInput, CustomerIotConnectionUncheckedCreateWithoutDevicesInput>
+    connectOrCreate?: CustomerIotConnectionCreateOrConnectWithoutDevicesInput
+    upsert?: CustomerIotConnectionUpsertWithoutDevicesInput
+    connect?: CustomerIotConnectionWhereUniqueInput
+    update?: XOR<XOR<CustomerIotConnectionUpdateToOneWithWhereWithoutDevicesInput, CustomerIotConnectionUpdateWithoutDevicesInput>, CustomerIotConnectionUncheckedUpdateWithoutDevicesInput>
+  }
+
+  export type IotDeviceHistoryUpdateManyWithoutDeviceNestedInput = {
+    create?: XOR<IotDeviceHistoryCreateWithoutDeviceInput, IotDeviceHistoryUncheckedCreateWithoutDeviceInput> | IotDeviceHistoryCreateWithoutDeviceInput[] | IotDeviceHistoryUncheckedCreateWithoutDeviceInput[]
+    connectOrCreate?: IotDeviceHistoryCreateOrConnectWithoutDeviceInput | IotDeviceHistoryCreateOrConnectWithoutDeviceInput[]
+    upsert?: IotDeviceHistoryUpsertWithWhereUniqueWithoutDeviceInput | IotDeviceHistoryUpsertWithWhereUniqueWithoutDeviceInput[]
+    createMany?: IotDeviceHistoryCreateManyDeviceInputEnvelope
+    set?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+    disconnect?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+    delete?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+    connect?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+    update?: IotDeviceHistoryUpdateWithWhereUniqueWithoutDeviceInput | IotDeviceHistoryUpdateWithWhereUniqueWithoutDeviceInput[]
+    updateMany?: IotDeviceHistoryUpdateManyWithWhereWithoutDeviceInput | IotDeviceHistoryUpdateManyWithWhereWithoutDeviceInput[]
+    deleteMany?: IotDeviceHistoryScalarWhereInput | IotDeviceHistoryScalarWhereInput[]
+  }
+
+  export type IotDeviceHistoryUncheckedUpdateManyWithoutDeviceNestedInput = {
+    create?: XOR<IotDeviceHistoryCreateWithoutDeviceInput, IotDeviceHistoryUncheckedCreateWithoutDeviceInput> | IotDeviceHistoryCreateWithoutDeviceInput[] | IotDeviceHistoryUncheckedCreateWithoutDeviceInput[]
+    connectOrCreate?: IotDeviceHistoryCreateOrConnectWithoutDeviceInput | IotDeviceHistoryCreateOrConnectWithoutDeviceInput[]
+    upsert?: IotDeviceHistoryUpsertWithWhereUniqueWithoutDeviceInput | IotDeviceHistoryUpsertWithWhereUniqueWithoutDeviceInput[]
+    createMany?: IotDeviceHistoryCreateManyDeviceInputEnvelope
+    set?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+    disconnect?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+    delete?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+    connect?: IotDeviceHistoryWhereUniqueInput | IotDeviceHistoryWhereUniqueInput[]
+    update?: IotDeviceHistoryUpdateWithWhereUniqueWithoutDeviceInput | IotDeviceHistoryUpdateWithWhereUniqueWithoutDeviceInput[]
+    updateMany?: IotDeviceHistoryUpdateManyWithWhereWithoutDeviceInput | IotDeviceHistoryUpdateManyWithWhereWithoutDeviceInput[]
+    deleteMany?: IotDeviceHistoryScalarWhereInput | IotDeviceHistoryScalarWhereInput[]
+  }
+
+  export type CustomerIotDeviceCreateNestedOneWithoutHistoriesInput = {
+    create?: XOR<CustomerIotDeviceCreateWithoutHistoriesInput, CustomerIotDeviceUncheckedCreateWithoutHistoriesInput>
+    connectOrCreate?: CustomerIotDeviceCreateOrConnectWithoutHistoriesInput
+    connect?: CustomerIotDeviceWhereUniqueInput
+  }
+
+  export type CustomerIotDeviceUpdateOneRequiredWithoutHistoriesNestedInput = {
+    create?: XOR<CustomerIotDeviceCreateWithoutHistoriesInput, CustomerIotDeviceUncheckedCreateWithoutHistoriesInput>
+    connectOrCreate?: CustomerIotDeviceCreateOrConnectWithoutHistoriesInput
+    upsert?: CustomerIotDeviceUpsertWithoutHistoriesInput
+    connect?: CustomerIotDeviceWhereUniqueInput
+    update?: XOR<XOR<CustomerIotDeviceUpdateToOneWithWhereWithoutHistoriesInput, CustomerIotDeviceUpdateWithoutHistoriesInput>, CustomerIotDeviceUncheckedUpdateWithoutHistoriesInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -24647,6 +28795,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutCompanyInput = {
@@ -24679,6 +28828,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutCompanyInput = {
@@ -25686,6 +29836,40 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type CustomerIotConnectionCreateWithoutCustomerInput = {
+    id?: string
+    companyId: string
+    provider: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    devices?: CustomerIotDeviceCreateNestedManyWithoutConnectionInput
+  }
+
+  export type CustomerIotConnectionUncheckedCreateWithoutCustomerInput = {
+    id?: string
+    companyId: string
+    provider: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    devices?: CustomerIotDeviceUncheckedCreateNestedManyWithoutConnectionInput
+  }
+
+  export type CustomerIotConnectionCreateOrConnectWithoutCustomerInput = {
+    where: CustomerIotConnectionWhereUniqueInput
+    create: XOR<CustomerIotConnectionCreateWithoutCustomerInput, CustomerIotConnectionUncheckedCreateWithoutCustomerInput>
+  }
+
+  export type CustomerIotConnectionCreateManyCustomerInputEnvelope = {
+    data: CustomerIotConnectionCreateManyCustomerInput | CustomerIotConnectionCreateManyCustomerInput[]
+    skipDuplicates?: boolean
+  }
+
   export type CompanyUpsertWithoutCustomersInput = {
     update: XOR<CompanyUpdateWithoutCustomersInput, CompanyUncheckedUpdateWithoutCustomersInput>
     create: XOR<CompanyCreateWithoutCustomersInput, CompanyUncheckedCreateWithoutCustomersInput>
@@ -25953,6 +30137,37 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
   }
 
+  export type CustomerIotConnectionUpsertWithWhereUniqueWithoutCustomerInput = {
+    where: CustomerIotConnectionWhereUniqueInput
+    update: XOR<CustomerIotConnectionUpdateWithoutCustomerInput, CustomerIotConnectionUncheckedUpdateWithoutCustomerInput>
+    create: XOR<CustomerIotConnectionCreateWithoutCustomerInput, CustomerIotConnectionUncheckedCreateWithoutCustomerInput>
+  }
+
+  export type CustomerIotConnectionUpdateWithWhereUniqueWithoutCustomerInput = {
+    where: CustomerIotConnectionWhereUniqueInput
+    data: XOR<CustomerIotConnectionUpdateWithoutCustomerInput, CustomerIotConnectionUncheckedUpdateWithoutCustomerInput>
+  }
+
+  export type CustomerIotConnectionUpdateManyWithWhereWithoutCustomerInput = {
+    where: CustomerIotConnectionScalarWhereInput
+    data: XOR<CustomerIotConnectionUpdateManyMutationInput, CustomerIotConnectionUncheckedUpdateManyWithoutCustomerInput>
+  }
+
+  export type CustomerIotConnectionScalarWhereInput = {
+    AND?: CustomerIotConnectionScalarWhereInput | CustomerIotConnectionScalarWhereInput[]
+    OR?: CustomerIotConnectionScalarWhereInput[]
+    NOT?: CustomerIotConnectionScalarWhereInput | CustomerIotConnectionScalarWhereInput[]
+    id?: StringFilter<"CustomerIotConnection"> | string
+    companyId?: StringFilter<"CustomerIotConnection"> | string
+    customerId?: StringFilter<"CustomerIotConnection"> | string
+    provider?: StringFilter<"CustomerIotConnection"> | string
+    accessToken?: StringFilter<"CustomerIotConnection"> | string
+    refreshToken?: StringFilter<"CustomerIotConnection"> | string
+    tokenExpiresAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+    createdAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+    updatedAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+  }
+
   export type CompanyCreateWithoutContactsInput = {
     id?: string
     name: string
@@ -26036,6 +30251,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutContactsInput = {
@@ -26068,6 +30284,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutContactsInput = {
@@ -26175,6 +30392,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutContactsInput = {
@@ -26207,6 +30425,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CompanyCreateWithoutLeadsInput = {
@@ -26292,6 +30511,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutLeadsInput = {
@@ -26324,6 +30544,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutLeadsInput = {
@@ -26471,6 +30692,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutLeadsInput = {
@@ -26503,6 +30725,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type AddressUpsertWithWhereUniqueWithoutLeadInput = {
@@ -26604,6 +30827,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutAgreementsInput = {
@@ -26636,6 +30860,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutAgreementsInput = {
@@ -26743,6 +30968,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutAgreementsInput = {
@@ -26775,6 +31001,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CompanyCreateWithoutBookingsInput = {
@@ -26860,6 +31087,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutBookingsInput = {
@@ -26892,6 +31120,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutBookingsInput = {
@@ -26999,6 +31228,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutBookingsInput = {
@@ -27031,6 +31261,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerCreateWithoutReviewsInput = {
@@ -27063,6 +31294,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutReviewsInput = {
@@ -27095,6 +31327,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutReviewsInput = {
@@ -27143,6 +31376,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutReviewsInput = {
@@ -27175,6 +31409,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerCreateWithoutAddressesInput = {
@@ -27207,6 +31442,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutAddressesInput = {
@@ -27239,6 +31475,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutAddressesInput = {
@@ -27340,6 +31577,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutAddressesInput = {
@@ -27372,6 +31610,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type LeadUpsertWithoutAddressesInput = {
@@ -27463,6 +31702,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutEquipmentInput = {
@@ -27495,6 +31735,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutEquipmentInput = {
@@ -27543,6 +31784,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutEquipmentInput = {
@@ -27575,6 +31817,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerCreateWithoutUpsellRecommendationsInput = {
@@ -27607,6 +31850,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutUpsellRecommendationsInput = {
@@ -27639,6 +31883,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutUpsellRecommendationsInput = {
@@ -27687,6 +31932,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutUpsellRecommendationsInput = {
@@ -27719,6 +31965,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type ImportErrorCreateWithoutBatchInput = {
@@ -27855,6 +32102,408 @@ export namespace Prisma {
     columnMap?: NullableJsonNullValueInput | InputJsonValue
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CustomerCreateWithoutIotConnectionsInput = {
+    id?: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutCustomersInput
+    contacts?: ContactCreateNestedManyWithoutCustomerInput
+    leads?: LeadCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementCreateNestedManyWithoutCustomerInput
+    bookings?: BookingCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewCreateNestedManyWithoutCustomerInput
+    addresses?: AddressCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerUncheckedCreateWithoutIotConnectionsInput = {
+    id?: string
+    companyId: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
+    leads?: LeadUncheckedCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCustomerInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
+    addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerCreateOrConnectWithoutIotConnectionsInput = {
+    where: CustomerWhereUniqueInput
+    create: XOR<CustomerCreateWithoutIotConnectionsInput, CustomerUncheckedCreateWithoutIotConnectionsInput>
+  }
+
+  export type CustomerIotDeviceCreateWithoutConnectionInput = {
+    id?: string
+    deviceId: string
+    locationId?: string | null
+    name: string
+    type?: string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    histories?: IotDeviceHistoryCreateNestedManyWithoutDeviceInput
+  }
+
+  export type CustomerIotDeviceUncheckedCreateWithoutConnectionInput = {
+    id?: string
+    deviceId: string
+    locationId?: string | null
+    name: string
+    type?: string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    histories?: IotDeviceHistoryUncheckedCreateNestedManyWithoutDeviceInput
+  }
+
+  export type CustomerIotDeviceCreateOrConnectWithoutConnectionInput = {
+    where: CustomerIotDeviceWhereUniqueInput
+    create: XOR<CustomerIotDeviceCreateWithoutConnectionInput, CustomerIotDeviceUncheckedCreateWithoutConnectionInput>
+  }
+
+  export type CustomerIotDeviceCreateManyConnectionInputEnvelope = {
+    data: CustomerIotDeviceCreateManyConnectionInput | CustomerIotDeviceCreateManyConnectionInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type CustomerUpsertWithoutIotConnectionsInput = {
+    update: XOR<CustomerUpdateWithoutIotConnectionsInput, CustomerUncheckedUpdateWithoutIotConnectionsInput>
+    create: XOR<CustomerCreateWithoutIotConnectionsInput, CustomerUncheckedCreateWithoutIotConnectionsInput>
+    where?: CustomerWhereInput
+  }
+
+  export type CustomerUpdateToOneWithWhereWithoutIotConnectionsInput = {
+    where?: CustomerWhereInput
+    data: XOR<CustomerUpdateWithoutIotConnectionsInput, CustomerUncheckedUpdateWithoutIotConnectionsInput>
+  }
+
+  export type CustomerUpdateWithoutIotConnectionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
+    contacts?: ContactUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type CustomerUncheckedUpdateWithoutIotConnectionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUncheckedUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUncheckedUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type CustomerIotDeviceUpsertWithWhereUniqueWithoutConnectionInput = {
+    where: CustomerIotDeviceWhereUniqueInput
+    update: XOR<CustomerIotDeviceUpdateWithoutConnectionInput, CustomerIotDeviceUncheckedUpdateWithoutConnectionInput>
+    create: XOR<CustomerIotDeviceCreateWithoutConnectionInput, CustomerIotDeviceUncheckedCreateWithoutConnectionInput>
+  }
+
+  export type CustomerIotDeviceUpdateWithWhereUniqueWithoutConnectionInput = {
+    where: CustomerIotDeviceWhereUniqueInput
+    data: XOR<CustomerIotDeviceUpdateWithoutConnectionInput, CustomerIotDeviceUncheckedUpdateWithoutConnectionInput>
+  }
+
+  export type CustomerIotDeviceUpdateManyWithWhereWithoutConnectionInput = {
+    where: CustomerIotDeviceScalarWhereInput
+    data: XOR<CustomerIotDeviceUpdateManyMutationInput, CustomerIotDeviceUncheckedUpdateManyWithoutConnectionInput>
+  }
+
+  export type CustomerIotDeviceScalarWhereInput = {
+    AND?: CustomerIotDeviceScalarWhereInput | CustomerIotDeviceScalarWhereInput[]
+    OR?: CustomerIotDeviceScalarWhereInput[]
+    NOT?: CustomerIotDeviceScalarWhereInput | CustomerIotDeviceScalarWhereInput[]
+    id?: StringFilter<"CustomerIotDevice"> | string
+    connectionId?: StringFilter<"CustomerIotDevice"> | string
+    deviceId?: StringFilter<"CustomerIotDevice"> | string
+    locationId?: StringNullableFilter<"CustomerIotDevice"> | string | null
+    name?: StringFilter<"CustomerIotDevice"> | string
+    type?: StringFilter<"CustomerIotDevice"> | string
+    lastSnapshot?: JsonNullableFilter<"CustomerIotDevice">
+    lastSyncedAt?: DateTimeNullableFilter<"CustomerIotDevice"> | Date | string | null
+    createdAt?: DateTimeFilter<"CustomerIotDevice"> | Date | string
+    updatedAt?: DateTimeFilter<"CustomerIotDevice"> | Date | string
+  }
+
+  export type CustomerIotConnectionCreateWithoutDevicesInput = {
+    id?: string
+    companyId: string
+    provider: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer: CustomerCreateNestedOneWithoutIotConnectionsInput
+  }
+
+  export type CustomerIotConnectionUncheckedCreateWithoutDevicesInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    provider: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CustomerIotConnectionCreateOrConnectWithoutDevicesInput = {
+    where: CustomerIotConnectionWhereUniqueInput
+    create: XOR<CustomerIotConnectionCreateWithoutDevicesInput, CustomerIotConnectionUncheckedCreateWithoutDevicesInput>
+  }
+
+  export type IotDeviceHistoryCreateWithoutDeviceInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    snapshot: JsonNullValueInput | InputJsonValue
+    recordedAt?: Date | string
+  }
+
+  export type IotDeviceHistoryUncheckedCreateWithoutDeviceInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    snapshot: JsonNullValueInput | InputJsonValue
+    recordedAt?: Date | string
+  }
+
+  export type IotDeviceHistoryCreateOrConnectWithoutDeviceInput = {
+    where: IotDeviceHistoryWhereUniqueInput
+    create: XOR<IotDeviceHistoryCreateWithoutDeviceInput, IotDeviceHistoryUncheckedCreateWithoutDeviceInput>
+  }
+
+  export type IotDeviceHistoryCreateManyDeviceInputEnvelope = {
+    data: IotDeviceHistoryCreateManyDeviceInput | IotDeviceHistoryCreateManyDeviceInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type CustomerIotConnectionUpsertWithoutDevicesInput = {
+    update: XOR<CustomerIotConnectionUpdateWithoutDevicesInput, CustomerIotConnectionUncheckedUpdateWithoutDevicesInput>
+    create: XOR<CustomerIotConnectionCreateWithoutDevicesInput, CustomerIotConnectionUncheckedCreateWithoutDevicesInput>
+    where?: CustomerIotConnectionWhereInput
+  }
+
+  export type CustomerIotConnectionUpdateToOneWithWhereWithoutDevicesInput = {
+    where?: CustomerIotConnectionWhereInput
+    data: XOR<CustomerIotConnectionUpdateWithoutDevicesInput, CustomerIotConnectionUncheckedUpdateWithoutDevicesInput>
+  }
+
+  export type CustomerIotConnectionUpdateWithoutDevicesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneRequiredWithoutIotConnectionsNestedInput
+  }
+
+  export type CustomerIotConnectionUncheckedUpdateWithoutDevicesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IotDeviceHistoryUpsertWithWhereUniqueWithoutDeviceInput = {
+    where: IotDeviceHistoryWhereUniqueInput
+    update: XOR<IotDeviceHistoryUpdateWithoutDeviceInput, IotDeviceHistoryUncheckedUpdateWithoutDeviceInput>
+    create: XOR<IotDeviceHistoryCreateWithoutDeviceInput, IotDeviceHistoryUncheckedCreateWithoutDeviceInput>
+  }
+
+  export type IotDeviceHistoryUpdateWithWhereUniqueWithoutDeviceInput = {
+    where: IotDeviceHistoryWhereUniqueInput
+    data: XOR<IotDeviceHistoryUpdateWithoutDeviceInput, IotDeviceHistoryUncheckedUpdateWithoutDeviceInput>
+  }
+
+  export type IotDeviceHistoryUpdateManyWithWhereWithoutDeviceInput = {
+    where: IotDeviceHistoryScalarWhereInput
+    data: XOR<IotDeviceHistoryUpdateManyMutationInput, IotDeviceHistoryUncheckedUpdateManyWithoutDeviceInput>
+  }
+
+  export type IotDeviceHistoryScalarWhereInput = {
+    AND?: IotDeviceHistoryScalarWhereInput | IotDeviceHistoryScalarWhereInput[]
+    OR?: IotDeviceHistoryScalarWhereInput[]
+    NOT?: IotDeviceHistoryScalarWhereInput | IotDeviceHistoryScalarWhereInput[]
+    id?: StringFilter<"IotDeviceHistory"> | string
+    deviceId?: StringFilter<"IotDeviceHistory"> | string
+    companyId?: StringFilter<"IotDeviceHistory"> | string
+    customerId?: StringFilter<"IotDeviceHistory"> | string
+    snapshot?: JsonFilter<"IotDeviceHistory">
+    recordedAt?: DateTimeFilter<"IotDeviceHistory"> | Date | string
+  }
+
+  export type CustomerIotDeviceCreateWithoutHistoriesInput = {
+    id?: string
+    deviceId: string
+    locationId?: string | null
+    name: string
+    type?: string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    connection: CustomerIotConnectionCreateNestedOneWithoutDevicesInput
+  }
+
+  export type CustomerIotDeviceUncheckedCreateWithoutHistoriesInput = {
+    id?: string
+    connectionId: string
+    deviceId: string
+    locationId?: string | null
+    name: string
+    type?: string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CustomerIotDeviceCreateOrConnectWithoutHistoriesInput = {
+    where: CustomerIotDeviceWhereUniqueInput
+    create: XOR<CustomerIotDeviceCreateWithoutHistoriesInput, CustomerIotDeviceUncheckedCreateWithoutHistoriesInput>
+  }
+
+  export type CustomerIotDeviceUpsertWithoutHistoriesInput = {
+    update: XOR<CustomerIotDeviceUpdateWithoutHistoriesInput, CustomerIotDeviceUncheckedUpdateWithoutHistoriesInput>
+    create: XOR<CustomerIotDeviceCreateWithoutHistoriesInput, CustomerIotDeviceUncheckedCreateWithoutHistoriesInput>
+    where?: CustomerIotDeviceWhereInput
+  }
+
+  export type CustomerIotDeviceUpdateToOneWithWhereWithoutHistoriesInput = {
+    where?: CustomerIotDeviceWhereInput
+    data: XOR<CustomerIotDeviceUpdateWithoutHistoriesInput, CustomerIotDeviceUncheckedUpdateWithoutHistoriesInput>
+  }
+
+  export type CustomerIotDeviceUpdateWithoutHistoriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    connection?: CustomerIotConnectionUpdateOneRequiredWithoutDevicesNestedInput
+  }
+
+  export type CustomerIotDeviceUncheckedUpdateWithoutHistoriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    connectionId?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CustomerCreateManyCompanyInput = {
@@ -28005,6 +32654,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutCompanyInput = {
@@ -28037,6 +32687,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateManyWithoutCompanyInput = {
@@ -28482,6 +33133,17 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type CustomerIotConnectionCreateManyCustomerInput = {
+    id?: string
+    companyId: string
+    provider: string
+    accessToken: string
+    refreshToken: string
+    tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type ContactUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     firstName?: StringFieldUpdateOperationsInput | string
@@ -28889,6 +33551,41 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CustomerIotConnectionUpdateWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    devices?: CustomerIotDeviceUpdateManyWithoutConnectionNestedInput
+  }
+
+  export type CustomerIotConnectionUncheckedUpdateWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    devices?: CustomerIotDeviceUncheckedUpdateManyWithoutConnectionNestedInput
+  }
+
+  export type CustomerIotConnectionUncheckedUpdateManyWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    accessToken?: StringFieldUpdateOperationsInput | string
+    refreshToken?: StringFieldUpdateOperationsInput | string
+    tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AddressCreateManyLeadInput = {
     id?: string
     companyId: string
@@ -28984,6 +33681,88 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CustomerIotDeviceCreateManyConnectionInput = {
+    id?: string
+    deviceId: string
+    locationId?: string | null
+    name: string
+    type?: string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CustomerIotDeviceUpdateWithoutConnectionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    histories?: IotDeviceHistoryUpdateManyWithoutDeviceNestedInput
+  }
+
+  export type CustomerIotDeviceUncheckedUpdateWithoutConnectionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    histories?: IotDeviceHistoryUncheckedUpdateManyWithoutDeviceNestedInput
+  }
+
+  export type CustomerIotDeviceUncheckedUpdateManyWithoutConnectionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deviceId?: StringFieldUpdateOperationsInput | string
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    lastSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    lastSyncedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IotDeviceHistoryCreateManyDeviceInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    snapshot: JsonNullValueInput | InputJsonValue
+    recordedAt?: Date | string
+  }
+
+  export type IotDeviceHistoryUpdateWithoutDeviceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    snapshot?: JsonNullValueInput | InputJsonValue
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IotDeviceHistoryUncheckedUpdateWithoutDeviceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    snapshot?: JsonNullValueInput | InputJsonValue
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type IotDeviceHistoryUncheckedUpdateManyWithoutDeviceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    snapshot?: JsonNullValueInput | InputJsonValue
+    recordedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
 
 
   /**
@@ -29005,6 +33784,14 @@ export namespace Prisma {
      * @deprecated Use ImportBatchCountOutputTypeDefaultArgs instead
      */
     export type ImportBatchCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ImportBatchCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use CustomerIotConnectionCountOutputTypeDefaultArgs instead
+     */
+    export type CustomerIotConnectionCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CustomerIotConnectionCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use CustomerIotDeviceCountOutputTypeDefaultArgs instead
+     */
+    export type CustomerIotDeviceCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CustomerIotDeviceCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use CompanyDefaultArgs instead
      */
@@ -29061,6 +33848,18 @@ export namespace Prisma {
      * @deprecated Use ImportErrorDefaultArgs instead
      */
     export type ImportErrorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ImportErrorDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use CustomerIotConnectionDefaultArgs instead
+     */
+    export type CustomerIotConnectionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CustomerIotConnectionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use CustomerIotDeviceDefaultArgs instead
+     */
+    export type CustomerIotDeviceArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CustomerIotDeviceDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use IotDeviceHistoryDefaultArgs instead
+     */
+    export type IotDeviceHistoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = IotDeviceHistoryDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

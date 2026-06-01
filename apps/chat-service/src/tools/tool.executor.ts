@@ -43,7 +43,9 @@ export class ToolExecutor {
   }
 
   private authHeaders(ctx: ExecutionContext) {
-    if (process.env.BYPASS_AUTH === 'true') {
+    // In production (NODE_ENV=production), always forward the user's JWT even if BYPASS_AUTH is set.
+    // Downstream services reject dev-bypass headers in production mode.
+    if (process.env.BYPASS_AUTH === 'true' && process.env.NODE_ENV !== 'production') {
       return devHeaders(ctx.companyId, ctx.userId, ctx.role, ctx.email, ctx.customerId);
     }
     return { Authorization: `Bearer ${ctx.token}` };

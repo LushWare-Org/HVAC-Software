@@ -17,6 +17,7 @@ import { FollowupModule } from './followup/followup.module';
 import { UpsellModule } from './upsell/upsell.module';
 import { MetaModule } from './meta/meta.module';
 import { ImportModule } from './import/import.module';
+import { IotModule } from './iot/iot.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -43,6 +44,7 @@ import appConfig from './config/app.config';
     UpsellModule,
     MetaModule,
     ImportModule,
+    IotModule,
   ],
 })
 export class AppModule {}

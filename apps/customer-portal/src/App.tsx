@@ -17,6 +17,7 @@ const Invoices            = lazy(() => import('./pages/invoices/Invoices'))
 const Quotes              = lazy(() => import('./pages/quotes/Quotes'))
 const Messages            = lazy(() => import('./pages/messages/Messages'))
 const Profile             = lazy(() => import('./pages/Profile'))
+const Devices             = lazy(() => import('./pages/Devices'))
 const ForceResetPassword  = lazy(() => import('./pages/ForceResetPassword'))
 
 const MOBILE_BP = 768
@@ -99,6 +100,7 @@ function AppShell() {
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/quotes" element={<Quotes />} />
                 <Route path="/messages" element={<Messages />} />
+                <Route path="/devices" element={<Devices />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

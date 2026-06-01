@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import {
   useMarketingKpis, useCampaignStats, useCampaigns, useCreateCampaign, useLaunchCampaign,
-  useMarketingTemplates, useSeedDefaultTemplates, useDeleteTemplate, useCreateTemplate,
+  useMarketingTemplates, useSeedDefaultTemplates, useDeleteTemplate, useCreateTemplate, useUpdateTemplate,
   useAudiences, useCreateAudience, useDeleteAudience, useAudiencePreviewCount,
   useMarketingSettings, useUpdateMarketingSettings,
   useDeletionLog, useDeleteCustomerMarketingData,
@@ -603,24 +603,495 @@ function CampaignsTab() {
   )
 }
 
+// ── BLOCK-BASED EMAIL BUILDER ─────────────────────────────────────────────────
+
+type BlockType = 'header' | 'greeting' | 'text' | 'button' | 'highlight' | 'bullets' | 'divider' | 'footer'
+
+interface EmailBlock {
+  id: string
+  type: BlockType
+  data: Record<string, string>
+}
+
+const EMAIL_THEMES = [
+  { id: 'ocean',  name: 'Ocean',  dot: '#3b82f6', primary: '#1e40af', accent: '#3b82f6', bg: '#f0f4f8' },
+  { id: 'forest', name: 'Forest', dot: '#10b981', primary: '#065f46', accent: '#10b981', bg: '#f0fdf4' },
+  { id: 'sunset', name: 'Sunset', dot: '#f97316', primary: '#c2410c', accent: '#f97316', bg: '#fff7ed' },
+  { id: 'slate',  name: 'Slate',  dot: '#475569', primary: '#1e293b', accent: '#475569', bg: '#f8fafc' },
+  { id: 'rose',   name: 'Rose',   dot: '#e11d48', primary: '#9f1239', accent: '#e11d48', bg: '#fff1f2' },
+]
+
+const BLOCK_DEFS: Record<BlockType, { label: string; icon: string; defaultData: Record<string, string> }> = {
+  header:    { label: 'Header',        icon: '▤',  defaultData: { company: '{{company.name}}', headline: 'Your Headline Here' } },
+  greeting:  { label: 'Greeting',      icon: '👋', defaultData: { text: 'Hi {{customer.firstName}},' } },
+  text:      { label: 'Text Paragraph',icon: '¶',  defaultData: { body: 'Write your message here. Explain the value and why the customer should act now.' } },
+  button:    { label: 'CTA Button',    icon: '▶',  defaultData: { label: 'Book Now', url: '{{trackedLink}}' } },
+  highlight: { label: 'Highlight Box', icon: '💡', defaultData: { title: 'Why choose us?', body: 'Licensed technicians · Same-day availability · Satisfaction guaranteed' } },
+  bullets:   { label: 'Bullet List',   icon: '≡',  defaultData: { title: "What's included:", items: "Full system inspection & cleaning\nFilter replacement\nPerformance report" } },
+  divider:   { label: 'Divider',       icon: '─',  defaultData: {} },
+  footer:    { label: 'Footer',        icon: '▣',  defaultData: { company: '{{company.name}}', unsubUrl: '{{unsubLink}}' } },
+}
+
+const ADD_BLOCK_OPTIONS: BlockType[] = ['header','greeting','text','button','highlight','bullets','divider','footer']
+
+const MERGE_TAGS = [
+  { label: 'First Name',   tag: '{{customer.firstName}}' },
+  { label: 'Last Name',    tag: '{{customer.lastName}}' },
+  { label: 'Company',      tag: '{{company.name}}' },
+  { label: 'Tracked Link', tag: '{{trackedLink}}' },
+  { label: 'Unsub Link',   tag: '{{unsubLink}}' },
+]
+
+function mkBlock(type: BlockType): EmailBlock {
+  return { id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`, type, data: { ...BLOCK_DEFS[type].defaultData } }
+}
+
+function initialBlocks(): EmailBlock[] {
+  return ['header','greeting','text','button','footer'].map(t => mkBlock(t as BlockType))
+}
+
+function renderBlock(b: EmailBlock, theme: typeof EMAIL_THEMES[0]): string {
+  const { primary, accent, bg } = theme
+  switch (b.type) {
+    case 'header':
+      return `<tr><td style="background:linear-gradient(135deg,${primary} 0%,${accent} 100%);padding:36px 48px"><p style="margin:0 0 4px;color:rgba(255,255,255,0.75);font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:600">${b.data.company||''}</p><h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;line-height:1.3">${b.data.headline||''}</h1></td></tr>`
+    case 'greeting':
+      return `<tr><td style="padding:32px 48px 0"><p style="margin:0;font-size:18px;font-weight:700;color:#1a1a2e">${b.data.text||''}</p></td></tr>`
+    case 'text':
+      return `<tr><td style="padding:20px 48px"><p style="margin:0;color:#475569;font-size:15px;line-height:1.75">${(b.data.body||'').replace(/\n/g,'<br>')}</p></td></tr>`
+    case 'button':
+      return `<tr><td style="padding:24px 48px"><table width="100%" cellpadding="0" cellspacing="0"><tr><td><a href="${b.data.url||'#'}" style="display:inline-block;background:linear-gradient(135deg,${primary},${accent});color:#fff;text-decoration:none;padding:16px 48px;border-radius:8px;font-size:15px;font-weight:700">${b.data.label||'Click Here'} →</a></td></tr></table></td></tr>`
+    case 'highlight':
+      return `<tr><td style="padding:12px 48px"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:${bg};border-left:4px solid ${accent};border-radius:0 8px 8px 0;padding:16px 20px"><p style="margin:0 0 6px;font-size:13px;font-weight:700;color:${primary}">${b.data.title||''}</p><p style="margin:0;font-size:13px;color:#64748b;line-height:1.7">${(b.data.body||'').replace(/\n/g,'<br>')}</p></td></tr></table></td></tr>`
+    case 'bullets': {
+      const items = (b.data.items||'').split('\n').filter(Boolean)
+      return `<tr><td style="padding:12px 48px"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:${bg};border-radius:8px;padding:16px 20px;border-left:4px solid ${accent}">${b.data.title?`<p style="margin:0 0 8px;font-size:13px;font-weight:700;color:${primary}">${b.data.title}</p>`:''}<p style="margin:0;font-size:13px;color:#64748b;line-height:1.8">${items.map(i=>`• ${i}`).join('<br>')}</p></td></tr></table></td></tr>`
+    }
+    case 'divider':
+      return `<tr><td style="padding:8px 48px"><hr style="border:none;border-top:1px solid #e2e8f0;margin:0"></td></tr>`
+    case 'footer':
+      return `<tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 48px;text-align:center"><p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.7">${b.data.company||''} · You're receiving this as a valued customer.<br><a href="${b.data.unsubUrl||'{{unsubLink}}'}" style="color:#94a3b8;text-decoration:underline">Unsubscribe</a></p></td></tr>`
+    default: return ''
+  }
+}
+
+function buildHtml(blocks: EmailBlock[], themeId: string): string {
+  const theme = EMAIL_THEMES.find(t => t.id === themeId) ?? EMAIL_THEMES[0]
+  const rows = blocks.map(b => renderBlock(b, theme)).join('\n')
+  const meta = JSON.stringify({ v: 1, themeId, blocks })
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:${theme.bg};font-family:'Helvetica Neue',Arial,sans-serif">
+<!-- TSCRM_BLOCKS:${meta} -->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:${theme.bg};padding:40px 20px"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+${rows}
+</table></td></tr></table>
+</body></html>`
+}
+
+function extractBlocks(html: string): { blocks: EmailBlock[]; themeId: string } | null {
+  const match = html.match(/<!-- TSCRM_BLOCKS:(.*?) -->/)
+  if (!match) return null
+  try {
+    const parsed = JSON.parse(match[1])
+    if (parsed.blocks && parsed.themeId) return { blocks: parsed.blocks, themeId: parsed.themeId }
+  } catch { /* */ }
+  return null
+}
+
+// ── Inline merge-tag dropdown ─────────────────────────────────────────────────
+function MergeTagBtn({ onSelect }: { onSelect: (tag: string) => void }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button onClick={() => setOpen(o => !o)} style={{ padding: '2px 8px', fontSize: 10, borderRadius: 'var(--r-sm)', border: '1px solid var(--violet)', background: 'var(--violet-dim)', color: 'var(--violet)', cursor: 'pointer', fontWeight: 600 }}>
+        + Merge Tag
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 50, background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 'var(--r-md)', boxShadow: 'var(--shadow-md)', minWidth: 140, overflow: 'hidden', marginTop: 2 }}
+          onMouseLeave={() => setOpen(false)}>
+          {MERGE_TAGS.map(mt => (
+            <button key={mt.tag} onClick={() => { onSelect(mt.tag); setOpen(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--t1)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+              {mt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Friendly link options for the CTA button block ───────────────────────────
+const LINK_OPTIONS = [
+  { label: '📅  Book a Service',   value: '{{trackedLink}}',             hint: 'Sends customers to the booking page (recommended)' },
+  { label: '💳  View Invoices',     value: '{{trackedLink}}',             hint: 'Link goes to the customer portal — set destination in campaign' },
+  { label: '🔗  Custom URL',        value: 'custom',                      hint: 'Paste any URL you want the button to open' },
+]
+
+// ── Block inline editor ───────────────────────────────────────────────────────
+function BlockEditor({ block, onChange }: { block: EmailBlock; onChange: (data: Record<string, string>) => void }) {
+  const set = (key: string, val: string) => onChange({ ...block.data, [key]: val })
+  const append = (key: string, tag: string) => set(key, (block.data[key] || '') + tag)
+
+  // Determine if the current URL is a custom one (not one of the preset tracked values)
+  const isCustomUrl = block.type === 'button' && block.data.url !== undefined && block.data.url !== '{{trackedLink}}' && block.data.url !== ''
+  const selectedLink = isCustomUrl ? 'custom' : (block.data.url || '{{trackedLink}}')
+
+  const inputRow = (label: string, key: string, placeholder?: string, hint?: string) => (
+    <div key={key} style={{ marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)', flex: 1 }}>{label}</span>
+        <MergeTagBtn onSelect={tag => append(key, tag)} />
+      </div>
+      <input className="form-input" value={block.data[key] || ''} onChange={e => set(key, e.target.value)}
+        placeholder={placeholder} style={{ fontSize: 14, padding: '10px 12px' }} />
+      {hint && <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--t3)' }}>{hint}</p>}
+    </div>
+  )
+
+  const textareaRow = (label: string, key: string, rows: number, placeholder?: string, hint?: string) => (
+    <div key={key} style={{ marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)', flex: 1 }}>{label}</span>
+        <MergeTagBtn onSelect={tag => append(key, tag)} />
+      </div>
+      <textarea className="form-input" value={block.data[key] || ''} onChange={e => set(key, e.target.value)}
+        rows={rows} placeholder={placeholder}
+        style={{ fontSize: 14, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.65, padding: '10px 12px', minHeight: rows * 26 }} />
+      {hint && <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--t3)' }}>{hint}</p>}
+    </div>
+  )
+
+  const buttonLinkPicker = () => {
+    return (
+      <div style={{ marginBottom: 14 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Button Label</span>
+        <input className="form-input" value={block.data.label || ''} onChange={e => set('label', e.target.value)}
+          placeholder="Book Now" style={{ fontSize: 14, padding: '10px 12px', marginBottom: 14 }} />
+
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Button Links To</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+          {LINK_OPTIONS.map(opt => {
+            const isSel = selectedLink === opt.value
+            return (
+              <button key={opt.value} onClick={() => {
+                if (opt.value === 'custom') set('url', '')
+                else set('url', opt.value)
+              }} style={{
+                display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px',
+                borderRadius: 'var(--r-md)', border: `1.5px solid ${isSel ? 'var(--blue)' : 'var(--bd)'}`,
+                background: isSel ? 'var(--blue-glow)' : 'var(--bg-card-2)', cursor: 'pointer', textAlign: 'left',
+              }}>
+                <div style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${isSel ? 'var(--blue)' : 'var(--bd)'}`, marginTop: 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {isSel && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--blue)' }} />}
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: isSel ? 'var(--blue)' : 'var(--t1)' }}>{opt.label}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--t3)', lineHeight: 1.4 }}>{opt.hint}</p>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Custom URL input */}
+        {selectedLink === 'custom' && (
+          <div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Paste your URL</span>
+            <input className="form-input" value={isCustomUrl ? block.data.url || '' : ''} onChange={e => set('url', e.target.value)}
+              placeholder="https://example.com/your-page" style={{ fontSize: 14, padding: '10px 12px' }} />
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--t3)' }}>Must start with https://</p>
+          </div>
+        )}
+
+        {/* Helpful note for tracked link */}
+        {selectedLink !== 'custom' && (
+          <div style={{ padding: '8px 12px', borderRadius: 'var(--r-md)', background: 'var(--bg-card-2)', border: '1px solid var(--bd)' }}>
+            <p style={{ margin: 0, fontSize: 11, color: 'var(--t3)', lineHeight: 1.5 }}>
+              💡 The actual destination is set when you <strong style={{ color: 'var(--t2)' }}>create a campaign</strong>. This button will track clicks automatically.
+            </p>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  switch (block.type) {
+    case 'header':    return <>{inputRow('Company Name', 'company', '{{company.name}}')}{inputRow('Headline', 'headline', 'Your Headline Here', 'This is the big title customers see first')}</>
+    case 'greeting':  return <>{inputRow('Greeting Text', 'text', 'Hi {{customer.firstName}},', 'Use the merge tag button to insert the customer\'s name')}</>
+    case 'text':      return <>{textareaRow('Body Text', 'body', 6, 'Write your message here…', 'Keep it short — 2 to 3 sentences work best for emails')}</>
+    case 'button':    return <>{buttonLinkPicker()}</>
+    case 'highlight': return <>{inputRow('Title', 'title', 'Why choose us?')}{textareaRow('Body', 'body', 4, 'Key points…', 'Short, punchy lines work best here')}</>
+    case 'bullets':   return <>{inputRow('Title (optional)', 'title', "What's included:")}{textareaRow('Bullet Items (one per line)', 'items', 5, 'Item one\nItem two\nItem three', 'Each line becomes a bullet point')}</>
+    case 'divider':   return <p style={{ fontSize: 13, color: 'var(--t3)', margin: 0, padding: '4px 0' }}>Adds a thin horizontal line — great for separating sections.</p>
+    case 'footer':    return <>{inputRow('Company Name', 'company', '{{company.name}}')}{inputRow('Unsubscribe URL', 'unsubUrl', '{{unsubLink}}', 'Required by email law — keep this as {{unsubLink}}')}</>
+    default:          return null
+  }
+}
+
+// ── Email block list (accordion) ──────────────────────────────────────────────
+function BlockList({ blocks, themeId, onChange }: {
+  blocks: EmailBlock[]
+  themeId: string
+  onChange: (blocks: EmailBlock[]) => void
+}) {
+  const [expandedId, setExpandedId] = useState<string | null>(blocks[0]?.id ?? null)
+  const [showAddMenu, setShowAddMenu] = useState(false)
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const next = [...blocks]
+    const swap = idx + dir
+    if (swap < 0 || swap >= next.length) return
+    ;[next[idx], next[swap]] = [next[swap], next[idx]]
+    onChange(next)
+  }
+
+  const remove = (id: string) => {
+    onChange(blocks.filter(b => b.id !== id))
+    if (expandedId === id) setExpandedId(null)
+  }
+
+  const update = (id: string, data: Record<string, string>) => {
+    onChange(blocks.map(b => b.id === id ? { ...b, data } : b))
+  }
+
+  const add = (type: BlockType) => {
+    const nb = mkBlock(type)
+    onChange([...blocks, nb])
+    setExpandedId(nb.id)
+    setShowAddMenu(false)
+  }
+
+  const theme = EMAIL_THEMES.find(t => t.id === themeId) ?? EMAIL_THEMES[0]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {blocks.map((b, idx) => {
+        const isOpen = expandedId === b.id
+        const def = BLOCK_DEFS[b.type]
+        return (
+          <div key={b.id} style={{ border: `1px solid ${isOpen ? theme.accent : 'var(--bd)'}`, borderRadius: 'var(--r-md)', overflow: 'hidden', background: 'var(--bg-card)', transition: 'border-color 0.15s' }}>
+            {/* Block header row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', cursor: 'pointer', background: isOpen ? `${theme.accent}14` : 'transparent', userSelect: 'none' }}
+              onClick={() => setExpandedId(isOpen ? null : b.id)}>
+              <span style={{ fontSize: 14, width: 20, textAlign: 'center', flexShrink: 0 }}>{def.icon}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', flex: 1 }}>{def.label}</span>
+              <button onClick={e => { e.stopPropagation(); move(idx, -1) }} disabled={idx === 0}
+                style={{ padding: '2px 5px', border: 'none', background: 'none', cursor: idx === 0 ? 'not-allowed' : 'pointer', color: 'var(--t3)', fontSize: 11, opacity: idx === 0 ? 0.3 : 1 }} title="Move up">↑</button>
+              <button onClick={e => { e.stopPropagation(); move(idx, 1) }} disabled={idx === blocks.length - 1}
+                style={{ padding: '2px 5px', border: 'none', background: 'none', cursor: idx === blocks.length - 1 ? 'not-allowed' : 'pointer', color: 'var(--t3)', fontSize: 11, opacity: idx === blocks.length - 1 ? 0.3 : 1 }} title="Move down">↓</button>
+              <button onClick={e => { e.stopPropagation(); remove(b.id) }}
+                style={{ padding: '2px 5px', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 11 }} title="Remove">✕</button>
+              <span style={{ fontSize: 11, color: 'var(--t3)', marginLeft: 2 }}>{isOpen ? '▲' : '▼'}</span>
+            </div>
+            {/* Editor fields */}
+            {isOpen && (
+              <div style={{ padding: '16px 16px 12px', borderTop: '1px solid var(--bd)' }}>
+                <BlockEditor block={b} onChange={data => update(b.id, data)} />
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+      {/* Add block */}
+      <div style={{ position: 'relative' }}>
+        <button onClick={() => setShowAddMenu(o => !o)} style={{ width: '100%', padding: '8px', border: '1px dashed var(--bd)', borderRadius: 'var(--r-md)', background: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--t3)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+          <Plus size={12} /> Add Block
+        </button>
+        {showAddMenu && (
+          <div style={{ position: 'absolute', bottom: '110%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 'var(--r-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden', zIndex: 20 }}>
+            {ADD_BLOCK_OPTIONS.map(type => (
+              <button key={type} onClick={() => add(type)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--t1)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                <span style={{ width: 18, textAlign: 'center' }}>{BLOCK_DEFS[type].icon}</span>
+                {BLOCK_DEFS[type].label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── SMS phone mockup preview ──────────────────────────────────────────────────
+function SmsPhoneMockup({ text }: { text: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '24px 16px' }}>
+      <div style={{ width: 260, background: '#1c1c1e', borderRadius: 36, padding: '16px 12px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+        <div style={{ background: '#2c2c2e', borderRadius: 24, overflow: 'hidden' }}>
+          <div style={{ background: '#1c1c1e', padding: '10px 16px', textAlign: 'center', borderBottom: '1px solid #3a3a3c' }}>
+            <p style={{ margin: 0, fontSize: 11, color: '#98989e', fontWeight: 600 }}>Messages</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#fff', fontWeight: 600 }}>T&S Services</p>
+          </div>
+          <div style={{ padding: '16px 12px', minHeight: 120 }}>
+            {text ? (
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <div style={{ maxWidth: '80%', background: '#3a3a3c', borderRadius: '16px 16px 16px 4px', padding: '10px 14px' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: '#fff', lineHeight: 1.5, wordBreak: 'break-word' }}>{text}</p>
+                </div>
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: '#636366', fontSize: 12, margin: '20px 0' }}>Preview appears here</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
 // ── TEMPLATES TAB ─────────────────────────────────────────────────────────────
 function TemplatesTab() {
   const templates = useMarketingTemplates()
   const seedDefaults = useSeedDefaultTemplates()
   const deleteTemplate = useDeleteTemplate()
   const createTemplate = useCreateTemplate()
+  const updateTemplate = useUpdateTemplate()
   const { showSuccess, showError } = useToast()
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [tplForm, setTplForm] = useState({ name: '', channel: 'EMAIL' as 'EMAIL' | 'SMS', subject: '', htmlBody: '', smsBody: '' })
+
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+
+  const [form, setForm] = useState({ name: '', channel: 'EMAIL' as 'EMAIL' | 'SMS', subject: '', smsBody: '' })
+  const [isDirty, setIsDirty] = useState(false)
+
+  const [blocks, setBlocks] = useState<EmailBlock[]>(initialBlocks)
+  const [themeId, setThemeId] = useState('ocean')
+  const [legacyHtml, setLegacyHtml] = useState<string | null>(null)
+  const [previewHtml, setPreviewHtml] = useState('')
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isEditing = isCreating || selectedId !== null
+  const selected = templates.data?.find(t => t.id === selectedId) ?? null
+  const isSaving = createTemplate.isPending || updateTemplate.isPending
+
+  useEffect(() => {
+    if (form.channel === 'EMAIL' && !legacyHtml) {
+      setPreviewHtml(buildHtml(blocks, themeId))
+    }
+  }, [blocks, themeId, form.channel, legacyHtml])
+
+  const selectTemplate = (t: { id: string; channel: string; name: string; subject?: string; htmlBody?: string; smsBody?: string }) => {
+    setSelectedId(t.id)
+    setIsCreating(false)
+    setIsDirty(false)
+    setLegacyHtml(null)
+    const ch = t.channel as 'EMAIL' | 'SMS'
+    setForm({ name: t.name, channel: ch, subject: t.subject ?? '', smsBody: t.smsBody ?? '' })
+    if (ch === 'EMAIL') {
+      const html = t.htmlBody ?? ''
+      const extracted = extractBlocks(html)
+      if (extracted) {
+        setBlocks(extracted.blocks)
+        setThemeId(extracted.themeId)
+        setPreviewHtml(buildHtml(extracted.blocks, extracted.themeId))
+      } else {
+        setBlocks(initialBlocks())
+        setLegacyHtml(html)
+        setPreviewHtml(html)
+      }
+    } else {
+      setPreviewHtml('')
+    }
+  }
+
+  const startCreate = () => {
+    setSelectedId(null)
+    setIsCreating(true)
+    setIsDirty(false)
+    setLegacyHtml(null)
+    setForm({ name: '', channel: 'EMAIL', subject: '', smsBody: '' })
+    const b = initialBlocks()
+    setBlocks(b)
+    setThemeId('ocean')
+    setPreviewHtml(buildHtml(b, 'ocean'))
+  }
+
+  const handleCancel = () => {
+    setSelectedId(null)
+    setIsCreating(false)
+    setIsDirty(false)
+    setLegacyHtml(null)
+  }
+
+  const switchToBuilder = () => {
+    setLegacyHtml(null)
+    const b = initialBlocks()
+    setBlocks(b)
+    setThemeId('ocean')
+    setPreviewHtml(buildHtml(b, 'ocean'))
+    setIsDirty(true)
+  }
+
+  const setField = (field: keyof typeof form, value: string) => {
+    setForm(p => ({ ...p, [field]: value }))
+    setIsDirty(true)
+    if (field === 'channel') {
+      setLegacyHtml(null)
+      if (value === 'EMAIL') {
+        const b = initialBlocks()
+        setBlocks(b)
+        setThemeId('ocean')
+        setPreviewHtml(buildHtml(b, 'ocean'))
+      } else {
+        setPreviewHtml('')
+      }
+    }
+    if (field === 'smsBody') {
+      if (previewTimer.current) clearTimeout(previewTimer.current)
+      previewTimer.current = setTimeout(() => setPreviewHtml(value), 300)
+    }
+  }
+
+  const handleBlocksChange = (next: EmailBlock[]) => {
+    setBlocks(next)
+    setIsDirty(true)
+  }
+
+  const handleThemeChange = (id: string) => {
+    setThemeId(id)
+    setIsDirty(true)
+  }
+
+  const handleSave = async () => {
+    if (!form.name.trim()) return showError('Name is required')
+    if (form.channel === 'SMS' && !form.smsBody.trim()) return showError('SMS body is required')
+    try {
+      const htmlBody = form.channel === 'EMAIL' ? buildHtml(blocks, themeId) : undefined
+      const payload = {
+        name: form.name, channel: form.channel,
+        subject: form.channel === 'EMAIL' ? form.subject : undefined,
+        htmlBody,
+        smsBody: form.channel === 'SMS' ? form.smsBody : undefined,
+      }
+      if (isCreating) {
+        const created = await createTemplate.mutateAsync(payload)
+        showSuccess('Template created')
+        setIsCreating(false)
+        setSelectedId(created.id)
+        setIsDirty(false)
+        setLegacyHtml(null)
+      } else if (selectedId) {
+        await updateTemplate.mutateAsync({ id: selectedId, data: payload })
+        showSuccess('Changes saved')
+        setIsDirty(false)
+        setLegacyHtml(null)
+      }
+    } catch { showError('Failed to save template') }
+  }
 
   const handleSeed = async () => {
     try {
       const { seeded } = await seedDefaults.mutateAsync()
-      showSuccess(seeded > 0 ? `${seeded} default templates seeded` : 'Defaults already exist')
-    } catch {
-      showError('Failed to seed templates')
-    }
+      showSuccess(seeded > 0 ? `${seeded} templates seeded` : 'Defaults already exist')
+    } catch { showError('Failed to seed templates') }
   }
 
   const confirmDelete = async () => {
@@ -629,158 +1100,215 @@ function TemplatesTab() {
       await deleteTemplate.mutateAsync(deleteTarget.id)
       showSuccess('Template deleted')
       setDeleteTarget(null)
-    } catch {
-      showError('Failed to delete template')
-      setDeleteTarget(null)
-    }
+      setSelectedId(null)
+      setIsCreating(false)
+    } catch { showError('Failed to delete template'); setDeleteTarget(null) }
   }
 
-  const handleCreate = async () => {
-    if (!tplForm.name.trim()) return showError('Template name is required')
-    if (tplForm.channel === 'EMAIL' && !tplForm.htmlBody.trim()) return showError('HTML body is required for email templates')
-    if (tplForm.channel === 'SMS' && !tplForm.smsBody.trim()) return showError('SMS body is required')
-    try {
-      await createTemplate.mutateAsync({
-        name: tplForm.name,
-        channel: tplForm.channel,
-        subject: tplForm.channel === 'EMAIL' ? tplForm.subject : undefined,
-        htmlBody: tplForm.channel === 'EMAIL' ? tplForm.htmlBody : undefined,
-        smsBody: tplForm.channel === 'SMS' ? tplForm.smsBody : undefined,
-      })
-      showSuccess('Template created')
-      setShowCreateForm(false)
-      setTplForm({ name: '', channel: 'EMAIL', subject: '', htmlBody: '', smsBody: '' })
-    } catch {
-      showError('Failed to create template')
-    }
-  }
+  const currentTheme = EMAIL_THEMES.find(t => t.id === themeId) ?? EMAIL_THEMES[0]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', gap: 16, height: 'calc(100vh - 220px)', minHeight: 600 }}>
       {deleteTarget && (
-        <ConfirmModal
-          title="Delete Template"
-          message={`Delete "${deleteTarget.name}"? This cannot be undone.`}
-          confirmLabel="Delete"
-          isPending={deleteTemplate.isPending}
-          onConfirm={confirmDelete}
-          onClose={() => !deleteTemplate.isPending && setDeleteTarget(null)}
-        />
+        <ConfirmModal title="Delete Template" message={`Delete "${deleteTarget.name}"? This cannot be undone.`}
+          confirmLabel="Delete" isPending={deleteTemplate.isPending} onConfirm={confirmDelete}
+          onClose={() => !deleteTemplate.isPending && setDeleteTarget(null)} />
       )}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-        <button className="btn btn-secondary btn-sm" onClick={handleSeed} disabled={seedDefaults.isPending}>
-          {seedDefaults.isPending ? <><Loader2 size={12} className="spin" /> Seeding...</> : <><RefreshCw size={12} /> Seed Defaults</>}
-        </button>
-        <button className="btn btn-primary btn-sm" onClick={() => setShowCreateForm(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Plus size={13} /> Add Template
-        </button>
-      </div>
 
-      {showCreateForm && (
-        <div className="card" style={{ padding: 20 }}>
-          <p style={{ fontWeight: 700, color: 'var(--t1)', marginBottom: 16 }}>New Template</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div>
-              <label className="form-label">Name *</label>
-              <input className="form-input" placeholder="e.g. Summer Tune-Up Offer" value={tplForm.name}
-                onChange={e => setTplForm(p => ({ ...p, name: e.target.value }))} />
+      {/* ── Left: Template List ── */}
+      <div style={{ width: 268, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+        <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="card-header" style={{ gap: 6, flexShrink: 0 }}>
+            <div style={{ flex: 1 }}>
+              <div className="card-title">Templates</div>
+              <div className="card-subtitle">{templates.data?.length ?? 0} total</div>
             </div>
-            <div>
-              <label className="form-label">Channel</label>
-              <select className="form-input" value={tplForm.channel}
-                onChange={e => setTplForm(p => ({ ...p, channel: e.target.value as 'EMAIL' | 'SMS' }))}>
-                <option value="EMAIL">Email</option>
-                <option value="SMS">SMS</option>
-              </select>
-            </div>
-          </div>
-          {tplForm.channel === 'EMAIL' && (
-            <div style={{ marginBottom: 12 }}>
-              <label className="form-label">Subject Line</label>
-              <input className="form-input" placeholder="{{customer.firstName}}, your annual tune-up is due" value={tplForm.subject}
-                onChange={e => setTplForm(p => ({ ...p, subject: e.target.value }))} />
-            </div>
-          )}
-          <div style={{ marginBottom: 16 }}>
-            <label className="form-label">{tplForm.channel === 'EMAIL' ? 'HTML Body *' : 'SMS Body *'}</label>
-            {tplForm.channel === 'EMAIL' ? (
-              <textarea className="form-input" rows={8} placeholder={`<p>Hi {{customer.firstName}},</p>\n<p>Your annual HVAC tune-up is due. <a href="{{trackedLink}}">Book Now</a></p>\n<p><a href="{{unsubLink}}">Unsubscribe</a></p>`}
-                value={tplForm.htmlBody} onChange={e => setTplForm(p => ({ ...p, htmlBody: e.target.value }))}
-                style={{ fontFamily: 'monospace', fontSize: 12, resize: 'vertical' }} />
-            ) : (
-              <textarea className="form-input" rows={3} placeholder="Hi {{customer.firstName}}, your HVAC tune-up is due. Reply STOP to opt out."
-                value={tplForm.smsBody} onChange={e => setTplForm(p => ({ ...p, smsBody: e.target.value }))}
-                style={{ resize: 'vertical' }} />
-            )}
-            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 4 }}>
-              Available tags: <code style={{ background: 'var(--bg-card-2)', padding: '1px 4px', borderRadius: 3 }}>{'{{customer.firstName}}'}</code>{' '}
-              <code style={{ background: 'var(--bg-card-2)', padding: '1px 4px', borderRadius: 3 }}>{'{{customer.lastName}}'}</code>{' '}
-              <code style={{ background: 'var(--bg-card-2)', padding: '1px 4px', borderRadius: 3 }}>{'{{trackedLink}}'}</code>{' '}
-              <code style={{ background: 'var(--bg-card-2)', padding: '1px 4px', borderRadius: 3 }}>{'{{unsubLink}}'}</code>
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button className="btn btn-secondary btn-sm" onClick={() => setShowCreateForm(false)}>Cancel</button>
-            <button className="btn btn-primary btn-sm" onClick={handleCreate} disabled={createTemplate.isPending}>
-              {createTemplate.isPending ? <><Loader2 size={12} className="spin" /> Creating…</> : <><Save size={12} /> Save Template</>}
+            <button className="btn btn-ghost btn-sm btn-icon" onClick={handleSeed} disabled={seedDefaults.isPending} title="Seed Defaults">
+              {seedDefaults.isPending ? <Loader2 size={12} className="spin" /> : <RefreshCw size={12} />}
+            </button>
+            <button className="btn btn-primary btn-sm btn-icon" onClick={startCreate} title="New Template">
+              <Plus size={13} />
             </button>
           </div>
-        </div>
-      )}
-
-      <div className="card">
-        <div className="card-header">
-          <div>
-            <div className="card-title">Message Templates</div>
-            <div className="card-subtitle">Reusable email and SMS templates with merge tag support</div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
+            {templates.isLoading ? <div style={{ padding: 16 }}><Spinner /></div> : (
+              <>
+                {isCreating && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 'var(--r-md)', background: 'var(--blue-glow)', border: '1px solid var(--blue)', marginBottom: 4 }}>
+                    <ChannelBadge channel={form.channel} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--blue)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {form.name || 'New Template'}
+                    </span>
+                  </div>
+                )}
+                {!templates.data?.length && !isCreating && (
+                  <div style={{ padding: '24px 12px', textAlign: 'center' }}>
+                    <p style={{ fontSize: 12, color: 'var(--t3)', margin: 0 }}>No templates yet — seed defaults or create one</p>
+                  </div>
+                )}
+                {templates.data?.map(t => {
+                  const isSelected = t.id === selectedId
+                  return (
+                    <button key={t.id} onClick={() => selectTemplate(t)} style={{
+                      width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '10px 12px', borderRadius: 'var(--r-md)', border: 'none', cursor: 'pointer',
+                      marginBottom: 2,
+                      background: isSelected ? 'var(--blue-glow)' : 'transparent',
+                      outline: isSelected ? '1px solid var(--blue)' : 'none',
+                    }}>
+                      <ChannelBadge channel={t.channel} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: isSelected ? 600 : 400, color: isSelected ? 'var(--blue)' : 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {t.name}
+                        </p>
+                        {t.subject && <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject}</p>}
+                      </div>
+                      {t.isDefault && <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 'var(--r-full)', background: 'var(--bg-card-2)', color: 'var(--t3)', fontWeight: 700, flexShrink: 0 }}>DEFAULT</span>}
+                    </button>
+                  )
+                })}
+              </>
+            )}
           </div>
-        </div>
-        <div className="card-body-flush">
-          {templates.isLoading ? <Spinner /> : !templates.data?.length ? (
-            <Empty icon={Layout} message="No templates — click 'Seed Defaults' to add 6 trade templates" />
-          ) : (
-            <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {templates.data.map(t => (
-                <div key={t.id} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 16px', borderRadius: 'var(--r-md)', border: '1px solid var(--bd)',
-                  background: 'var(--bg-card-2)', gap: 12,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                    <ChannelBadge channel={t.channel} />
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', marginBottom: 2 }}>{t.name}</p>
-                      {t.subject && <p style={{ fontSize: 11, color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Subject: {t.subject}</p>}
-                      {t.smsBody && <p style={{ fontSize: 11, color: 'var(--t3)' }}>{t.smsBody.slice(0, 80)}…</p>}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    {t.isDefault && (
-                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 'var(--r-full)', background: 'var(--blue-glow)', color: 'var(--blue)', fontWeight: 600 }}>DEFAULT</span>
-                    )}
-                    {!t.isDefault && (
-                      <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setDeleteTarget({ id: t.id, name: t.name })}>
-                        <Trash2 size={13} style={{ color: 'var(--red)' }} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Merge tags reference */}
-      <div className="card">
-        <div className="card-header"><div className="card-title">Merge Tags Reference</div></div>
-        <div className="card-body">
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {['{{customer.firstName}}', '{{customer.lastName}}', '{{company.name}}', '{{trackedLink}}', '{{unsubLink}}'].map(tag => (
-              <code key={tag} style={{ padding: '4px 10px', borderRadius: 'var(--r-sm)', background: 'var(--bg-card-2)', border: '1px solid var(--bd)', fontSize: 12, color: 'var(--violet)', fontFamily: 'monospace' }}>{tag}</code>
-            ))}
+      {/* ── Right: Builder ── */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {!isEditing ? (
+          <div className="card" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Empty icon={Layout} message="Select a template to edit, or click + to create a new one" />
           </div>
-        </div>
+        ) : (
+          <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+            {/* ── Top bar ── */}
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--bd)', flexShrink: 0 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: 10, marginBottom: form.channel === 'EMAIL' ? 10 : 0 }}>
+                <div>
+                  <label className="form-label" style={{ marginBottom: 4 }}>Template Name</label>
+                  <input className="form-input" placeholder="e.g. Summer Tune-Up Offer" value={form.name}
+                    onChange={e => setField('name', e.target.value)} style={{ fontSize: 14 }} />
+                </div>
+                <div>
+                  <label className="form-label" style={{ marginBottom: 4 }}>Channel</label>
+                  <select className="form-input" value={form.channel}
+                    onChange={e => setField('channel', e.target.value)}
+                    disabled={!isCreating}>
+                    <option value="EMAIL">Email</option>
+                    <option value="SMS">SMS</option>
+                  </select>
+                </div>
+              </div>
+              {form.channel === 'EMAIL' && (
+                <div>
+                  <label className="form-label" style={{ marginBottom: 4 }}>Subject Line</label>
+                  <input className="form-input" placeholder="{{customer.firstName}}, your annual tune-up is due…" value={form.subject}
+                    onChange={e => setField('subject', e.target.value)} style={{ fontSize: 13 }} />
+                </div>
+              )}
+            </div>
+
+            {/* ── Split: builder left / preview right ── */}
+            <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+
+              {/* ── Builder panel ── */}
+              <div style={{ flex: '0 0 48%', display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--bd)', overflow: 'hidden' }}>
+                {form.channel === 'EMAIL' ? (
+                  <>
+                    {/* Color theme swatches */}
+                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--bd)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)', marginRight: 2 }}>THEME</span>
+                      {EMAIL_THEMES.map(th => (
+                        <button key={th.id} onClick={() => handleThemeChange(th.id)} title={th.name}
+                          style={{ width: 22, height: 22, borderRadius: '50%', background: th.dot, border: themeId === th.id ? '3px solid var(--t1)' : '2px solid transparent', cursor: 'pointer', outline: 'none', flexShrink: 0, boxShadow: themeId === th.id ? '0 0 0 1px var(--t1)' : 'none' }} />
+                      ))}
+                      <span style={{ fontSize: 11, color: 'var(--t2)', marginLeft: 4 }}>{currentTheme.name}</span>
+                    </div>
+
+                    {legacyHtml ? (
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 }}>
+                        <div style={{ textAlign: 'center', maxWidth: 280 }}>
+                          <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>This template uses custom HTML</p>
+                          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--t3)', lineHeight: 1.6 }}>Switch to the visual builder to edit with simple fields. You'll start fresh but can keep the preview as a reference.</p>
+                          <button className="btn btn-primary btn-sm" onClick={switchToBuilder}>
+                            <Layout size={12} /> Switch to Visual Builder
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
+                        <BlockList blocks={blocks} themeId={themeId} onChange={handleBlocksChange} />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--bd)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)' }}>SMS BODY</span>
+                      <span style={{ fontSize: 10, color: 'var(--t3)', marginLeft: 'auto' }}>{form.smsBody.length}/160</span>
+                    </div>
+                    <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <textarea className="form-input" value={form.smsBody} onChange={e => setField('smsBody', e.target.value)}
+                        rows={8} placeholder="Hi {{customer.firstName}}, your service reminder from {{company.name}}: {{trackedLink}} Reply STOP to opt out."
+                        style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: 14, lineHeight: 1.7, padding: '10px 12px' }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 11, color: 'var(--t3)', fontWeight: 600 }}>INSERT:</span>
+                        {MERGE_TAGS.map(mt => (
+                          <button key={mt.tag} onClick={() => setField('smsBody', form.smsBody + mt.tag)} style={{
+                            padding: '2px 8px', borderRadius: 'var(--r-full)', border: '1px solid var(--violet)',
+                            background: 'var(--violet-dim)', color: 'var(--violet)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                          }}>{mt.label}</button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Preview panel ── */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: form.channel === 'EMAIL' ? '#f0f4f8' : 'var(--bg-card-2)' }}>
+                <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--bd)', background: 'var(--bg-card)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)' }}>LIVE PREVIEW</span>
+                  {form.channel === 'EMAIL' && !legacyHtml && (
+                    <span style={{ fontSize: 10, marginLeft: 'auto', padding: '1px 6px', borderRadius: 'var(--r-full)', background: `${currentTheme.dot}22`, color: currentTheme.dot }}>
+                      {currentTheme.name} theme
+                    </span>
+                  )}
+                </div>
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  {form.channel === 'EMAIL' ? (
+                    previewHtml ? (
+                      <iframe srcDoc={previewHtml} title="Email Preview" sandbox="allow-same-origin"
+                        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }} />
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                        <p style={{ fontSize: 12, color: 'var(--t3)', textAlign: 'center' }}>Add blocks to see preview</p>
+                      </div>
+                    )
+                  ) : (
+                    <SmsPhoneMockup text={form.smsBody} />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Action bar ── */}
+            <div style={{ padding: '12px 20px', borderTop: '1px solid var(--bd)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button className="btn btn-ghost btn-sm" onClick={handleCancel}>Cancel</button>
+              {selectedId && !selected?.isDefault && (
+                <button className="btn btn-ghost btn-sm" onClick={() => setDeleteTarget({ id: selectedId, name: selected?.name ?? '' })} style={{ color: 'var(--red)' }}>
+                  <Trash2 size={13} /> Delete
+                </button>
+              )}
+              <div style={{ flex: 1 }} />
+              {isDirty && <span style={{ fontSize: 11, color: 'var(--t3)' }}>Unsaved changes</span>}
+              <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={isSaving || !isDirty}>
+                {isSaving ? <><Loader2 size={12} className="spin" /> Saving…</> : <><Save size={12} /> Save Template</>}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -147,6 +147,10 @@ export class EmailService {
     await this.send({ to: opts.to, subject, html });
   }
 
+  async sendMail(opts: { to: string; subject: string; html: string }): Promise<void> {
+    return this.send(opts);
+  }
+
   private async send(opts: { to: string; subject: string; html: string }): Promise<void> {
     if (!this.transporter) {
       // Dev fallback — print to console so admins can see the temp password

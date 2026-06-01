@@ -40,6 +40,7 @@ export interface SendEmailOptions {
   textBody?: string;     // Plain text fallback
   replyTo?: string;
   attachments?: SendEmailAttachment[];
+  headers?: Record<string, string>;
 }
 
 @Injectable()
@@ -47,6 +48,8 @@ export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private readonly fromEmail: string;
   private readonly fromName: string;
+
+  get senderEmail(): string { return this.fromEmail; }
   private readonly provider: EmailProvider;
   private readonly smtpTransporter?: Transporter;
 
@@ -124,6 +127,7 @@ export class EmailService {
           subject: opts.subject,
           html: opts.htmlBody,
           text: opts.textBody ?? this.htmlToText(opts.htmlBody),
+          headers: opts.headers,
           attachments: (opts.attachments ?? []).map((attachment) => ({
             filename: attachment.filename,
             content: Buffer.from(attachment.contentBase64, 'base64'),

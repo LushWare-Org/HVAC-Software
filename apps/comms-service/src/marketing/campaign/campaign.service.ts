@@ -10,6 +10,7 @@ import type { MarketingSendPayload } from '../send/marketing-send.worker';
 import { signMarketingToken } from '../common/marketing-token.util';
 
 const CLICK_BASE = process.env.MARKETING_CLICK_BASE_URL ?? 'http://localhost:3000';
+const CUSTOMER_PORTAL_URL = process.env.CUSTOMER_PORTAL_URL ?? 'https://tscrm-demo-customer.web.app';
 
 export interface CreateCampaignDto {
   name: string;
@@ -100,7 +101,7 @@ export class CampaignService {
       });
 
       // Build per-recipient tracked URLs
-      const clickToken = signMarketingToken({ type: 'click', sendJobId: sendJob.id, destinationUrl: `${CLICK_BASE}/book` });
+      const clickToken = signMarketingToken({ type: 'click', sendJobId: sendJob.id, destinationUrl: `${CUSTOMER_PORTAL_URL}/jobs` });
       const unsubToken = signMarketingToken({ type: 'unsub', companyId, customerId: member.id, channel: 'EMAIL', address, sendJobId: sendJob.id });
       const trackedLink = `${CLICK_BASE}/m/r/${clickToken}`;
       const unsubLink   = `${CLICK_BASE}/m/u/${unsubToken}`;

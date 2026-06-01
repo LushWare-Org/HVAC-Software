@@ -125,7 +125,22 @@ export class MarketingSendWorker extends WorkerHost {
       externalId = result.externalId;
       if (!result.success) sendError = result.error;
     } else {
-      const result = await this.emailService.send({ to: address, subject: subject ?? 'A message from us', htmlBody: renderedBody });
+      // Unsubscribe token so recipients can opt out (also required by Gmail bulk-sender rules)
+      const unsubToken = signMarketingToken({ type: 'unsub', companyId, customerId: sendJobId, channel: 'EMAIL', address });
+      const unsubUrl = `${CLICK_BASE}/m/u/${unsubToken}`;
+
+      const result = await this.emailService.send({
+        to: address,
+        subject: subject ?? 'A message from us',
+        htmlBody: renderedBody,
+        headers: {
+          // Required by Gmail for bulk senders since Feb 2024 — without this Gmail silently discards the email
+          'List-Unsubscribe': `<${unsubUrl}>, <mailto:${this.emailService.senderEmail}?subject=unsubscribe>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          'Precedence': 'bulk',
+          'X-Campaign-Id': sendJobId,
+        },
+      });
       externalId = result.externalId;
       if (!result.success) sendError = result.error;
     }
