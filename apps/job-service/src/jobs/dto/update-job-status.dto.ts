@@ -31,4 +31,5 @@ export const STATUS_TRANSITIONS: Record<JobStatusDto, JobStatusDto[]> = {
 export class UpdateJobStatusDto {
   @ApiProperty({ enum: JobStatusDto }) @IsEnum(JobStatusDto) status!: JobStatusDto;
   @ApiPropertyOptional() @IsOptional() @IsString() note?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() cancellationReason?: string;
 }

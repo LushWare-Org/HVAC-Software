@@ -16,6 +16,8 @@ import { useMyJobs } from '@/hooks/useJobs'
 import { useMyAssignments } from '@/hooks/useSchedule'
 import { useTechnicianProfile } from '@/hooks/useProfile'
 import { useGPSTracking } from '@/hooks/useGPS'
+import { uploadPendingAvatarIfAny } from '@/hooks/useAvatar'
+import { AvatarReminderBanner } from '@/components/AvatarReminderBanner'
 import { JobCard } from '@/components/JobCard'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
@@ -87,6 +89,15 @@ export default function HomeScreen() {
     return 'Good evening'
   }, [])
 
+  // Photo picked at signup couldn't upload then (account pending approval) —
+  // push it up now that we're authenticated.
+  const pendingAvatarChecked = React.useRef(false)
+  React.useEffect(() => {
+    if (pendingAvatarChecked.current) return
+    pendingAvatarChecked.current = true
+    uploadPendingAvatarIfAny()
+  }, [])
+
   const [refreshing, setRefreshing] = React.useState(false)
   const onRefresh = async () => {
     setRefreshing(true)
@@ -118,6 +129,9 @@ export default function HomeScreen() {
             <Text style={styles.avatarText}>{getInitials(user?.name)}</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Photo reminder — shown each launch until a profile photo exists */}
+        <AvatarReminderBanner />
 
         {/* Date */}
         <Text style={styles.dateText}>

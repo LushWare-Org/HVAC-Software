@@ -193,6 +193,7 @@ model Job {
   jobType          JobType?    @relation(fields: [jobTypeId], references: [id])
   templateId       String?
   template         JobTemplate? @relation(fields: [templateId], references: [id])
+  projectId        String?                       // FK to crm.projects (cross-service ref)
 
   title            String
   description      String?
@@ -220,9 +221,17 @@ model Job {
   quoteId          String?
   invoiceId        String?
 
+  // Agreement ref (set when auto-created from a crm.service_agreements row)
+  agreementId      String?
+  isAgreementJob   Boolean     @default(false)
+
   notes            String?
   internalNotes    String?
   tags             String[]
+
+  cancellationReason  String?
+  hasPartShortage     Boolean  @default(false)
+  partShortageNote    String?
 
   createdByUserId  String      // Auth0 user ID
   createdAt        DateTime    @default(now())
@@ -240,6 +249,7 @@ model Job {
   @@index([companyId, assignedToId])
   @@index([companyId, scheduledStart])
   @@index([customerId])
+  @@index([agreementId])
   @@map("jobs")
 }
 

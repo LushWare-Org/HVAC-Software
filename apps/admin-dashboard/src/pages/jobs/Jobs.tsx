@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Wrench, Clock, CheckCircle, FileText, Search, AlertTriangle,
   Maximize2, Minimize2, Edit2,
@@ -115,7 +116,12 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
                 </div></div>
               </td>
               <td>
-                <div className="font-500">{j.title}</div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-500">{j.title}</span>
+                  {j.hasPartShortage && (
+                    <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#d97706', fontWeight: 800, letterSpacing: '0.04em', flexShrink: 0 }}>⚠ PARTS</span>
+                  )}
+                </div>
                 {j.description && (
                   <div className="text-xs text-4 mt-0.5 truncate" style={{ maxWidth: 160 }}>{j.description}</div>
                 )}
@@ -167,14 +173,17 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
 }
 
 export default function Jobs() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
+  const [filterAgreement, setFilterAgreement] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [pastPage, setPastPage] = useState(1);
   const [pastStatusFilter, setPastStatusFilter] = useState("all");
   const [sortMode, setSortMode] = useState<'priority' | 'date'>('priority');
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
+  const [forecastDays, setForecastDays] = useState<number>(7);
   const PAST_PER_PAGE = 10;
 
   const statsQuery = useJobStats();
@@ -217,6 +226,7 @@ export default function Jobs() {
     let filtered = activeBase;
     if (filterStatus !== "all") filtered = filtered.filter(j => j.status === filterStatus);
     if (filterPriority !== "all") filtered = filtered.filter(j => (j.priority ?? "NORMAL") === filterPriority);
+    if (filterAgreement) filtered = filtered.filter(j => j.isAgreementJob);
 
     const active = [...filtered].sort((a, b) => {
       if (sortMode === 'date') {
@@ -245,7 +255,7 @@ export default function Jobs() {
     });
 
     return { activeJobs: active, pastJobs: past, activeStatusCounts: statusCounts, activePriorityCounts: priorityCounts };
-  }, [allJobs, filterStatus, filterPriority, sortMode]);
+  }, [allJobs, filterStatus, filterPriority, filterAgreement, sortMode]);
 
   const filteredPastJobs = pastStatusFilter === "all"
     ? pastJobs
@@ -283,13 +293,13 @@ export default function Jobs() {
       {!isExpanded && (
         <div className="kpi-grid mb-5">
           {[
-            { icon: Wrench, v: stats ? (stats.pending + stats.scheduled + stats.inProgress).toString() : "—", l: "Open Jobs", loading: statsQuery.isLoading },
-            { icon: AlertTriangle, v: stats ? stats.pending.toString() : "—", l: "Pending", loading: statsQuery.isLoading },
-            { icon: CheckCircle, v: stats ? (stats.completed ?? 0).toString() : "—", l: "Completed", loading: statsQuery.isLoading },
-            { icon: FileText, v: stats ? stats.invoiced.toString() : "—", l: "Awaiting Invoice", loading: statsQuery.isLoading },
-            { icon: Clock, v: "—", l: "Avg Job Duration", loading: false },
+            { icon: Wrench, v: stats ? (stats.pending + stats.scheduled + stats.inProgress).toString() : "—", l: "Open Jobs", loading: statsQuery.isLoading, onClick: () => setFilterStatus("all") },
+            { icon: AlertTriangle, v: stats ? stats.pending.toString() : "—", l: "Pending", loading: statsQuery.isLoading, onClick: () => setFilterStatus("PENDING") },
+            { icon: CheckCircle, v: stats ? (stats.completed ?? 0).toString() : "—", l: "Completed", loading: statsQuery.isLoading, onClick: () => setFilterStatus("COMPLETED") },
+            { icon: FileText, v: stats ? stats.invoiced.toString() : "—", l: "Awaiting Invoice", loading: statsQuery.isLoading, onClick: () => navigate('/finance') },
+            { icon: Clock, v: "—", l: "Avg Job Duration", loading: false, onClick: undefined },
           ].map((k) => (
-            <div key={k.l} className="kpi-card" style={{ padding: "16px 20px", borderRadius: "var(--r-md)" }}>
+            <div key={k.l} className="kpi-card" style={{ padding: "16px 20px", borderRadius: "var(--r-md)", cursor: k.onClick ? "pointer" : "default" }} onClick={k.onClick}>
               <div className="kpi-card-top" style={{ marginBottom: 12, alignItems: "center", justifyContent: "space-between" }}>
                 <div className="kpi-label" style={{ fontSize: 13, color: "var(--t3)", fontWeight: 500, margin: 0 }}>{k.l}</div>
                 <k.icon size={16} strokeWidth={1.5} color="var(--t3)" />
@@ -300,7 +310,25 @@ export default function Jobs() {
         </div>
       )}
 
-      {!isExpanded && <RecommendationsPanel filterActions={['discount_20', 'same_day_offer', 'increase_price']} />}
+      {!isExpanded && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 500 }}>Forecast window:</span>
+            {[7, 14, 30].map(d => (
+              <button
+                key={d}
+                onClick={() => setForecastDays(d)}
+                style={{
+                  padding: '3px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)',
+                  background: forecastDays === d ? 'var(--blue)' : 'var(--bg-card)',
+                  color: forecastDays === d ? '#fff' : 'var(--t2)',
+                }}
+              >{d}d</button>
+            ))}
+          </div>
+          <RecommendationsPanel filterActions={['discount_20', 'same_day_offer', 'increase_price']} forecastDays={forecastDays} />
+        </>
+      )}
 
       {/* Urgent banner */}
       {urgentCount > 0 && (
@@ -443,6 +471,24 @@ export default function Jobs() {
                   Clear
                 </button>
               )}
+              <button
+                onClick={() => setFilterAgreement(v => !v)}
+                title="Only jobs auto-created from service agreements"
+                style={{
+                  display: "flex", alignItems: "center", gap: 5, marginLeft: 8,
+                  padding: "4px 10px", borderRadius: 20,
+                  border: `1px solid ${filterAgreement ? "var(--green)" : "transparent"}`,
+                  background: filterAgreement ? "var(--green-dim)" : "var(--bg-hover)",
+                  color: filterAgreement ? "var(--green)" : "var(--t3)",
+                  cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
+                }}
+              >
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--green)", flexShrink: 0 }} />
+                Agreement
+                <span style={{ fontWeight: 700 }}>
+                  {jobsQuery.isLoading ? "…" : allJobs.filter(j => j.isAgreementJob).length}
+                </span>
+              </button>
             </div>
           </div>
         </div>

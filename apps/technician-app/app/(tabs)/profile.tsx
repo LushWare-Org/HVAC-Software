@@ -15,8 +15,10 @@ import { useRouter } from 'expo-router'
 import * as Location from 'expo-location'
 import MapView, { Marker, Region, MapPressEvent } from 'react-native-maps'
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius, Shadow } from '@/constants/theme'
+import { Image } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUserProfile, useTechnicianProfile, useUpdateProfile, useChangePassword, useUpdateBaseLocation } from '@/hooks/useProfile'
+import { pickAvatarImage, useUploadAvatar, useRemoveAvatar } from '@/hooks/useAvatar'
 import { useMyExpenses } from '@/hooks/useExpenses'
 import { useMyReviews, useMyReviewStats } from '@/hooks/useReviews'
 import { ActionButton } from '@/components/ActionButton'
@@ -29,7 +31,10 @@ interface GeoResult { place_id: number; display_name: string; lat: string; lon: 
 export default function ProfileScreen() {
   const { user, logout } = useAuth()
   const router = useRouter()
+  const { data: me } = useUserProfile()
   const { data: techProfile } = useTechnicianProfile()
+  const uploadAvatar = useUploadAvatar()
+  const removeAvatar = useRemoveAvatar()
   const { data: expensesData } = useMyExpenses({ limit: 5 })
   const { data: myReviews } = useMyReviews()
   const { data: reviewStats } = useMyReviewStats()
@@ -60,6 +65,39 @@ export default function ProfileScreen() {
   const [currentPwd, setCurrentPwd] = useState('')
   const [newPwd, setNewPwd] = useState('')
   const [confirmPwd, setConfirmPwd] = useState('')
+
+  const handleChangePhoto = () => {
+    // Android alerts cap at 3 buttons — remove lives on its own link below.
+    Alert.alert('Profile photo', 'Customers see this photo when you are on the way.', [
+      { text: 'Take photo', onPress: () => pickAndUpload('camera') },
+      { text: 'Choose from gallery', onPress: () => pickAndUpload('library') },
+      { text: 'Cancel', style: 'cancel' },
+    ])
+  }
+
+  const handleRemovePhoto = () => {
+    Alert.alert('Remove photo?', 'Your en-route emails will show your initials instead.', [
+      { text: 'Keep it', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () =>
+          removeAvatar.mutate(undefined, {
+            onError: () => Alert.alert('Error', 'Could not remove the photo — try again'),
+          }),
+      },
+    ])
+  }
+
+  const pickAndUpload = async (source: 'camera' | 'library') => {
+    try {
+      const uri = await pickAvatarImage(source)
+      if (!uri) return
+      await uploadAvatar.mutateAsync(uri)
+    } catch {
+      Alert.alert('Error', 'Photo upload failed — check your connection and try again')
+    }
+  }
 
   const handleSaveProfile = async () => {
     try {
@@ -247,9 +285,31 @@ export default function ProfileScreen() {
 
         {/* Profile Card */}
         <View style={styles.profileCard}>
-          <View style={styles.avatarLarge}>
-            <Text style={styles.avatarLargeText}>{getInitials(user?.name)}</Text>
-          </View>
+          <TouchableOpacity onPress={handleChangePhoto} disabled={uploadAvatar.isPending}>
+            {me?.avatarUrl ? (
+              <Image source={{ uri: me.avatarUrl }} style={styles.avatarPhoto} />
+            ) : (
+              <View style={styles.avatarLarge}>
+                <Text style={styles.avatarLargeText}>{getInitials(user?.name)}</Text>
+              </View>
+            )}
+            <View style={styles.avatarEditBadge}>
+              {uploadAvatar.isPending
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={styles.avatarEditBadgeText}>📷</Text>}
+            </View>
+          </TouchableOpacity>
+          {me?.avatarUrl ? (
+            <TouchableOpacity onPress={handleRemovePhoto} disabled={removeAvatar.isPending}>
+              <Text style={styles.removePhotoLink}>
+                {removeAvatar.isPending ? 'Removing…' : 'Remove photo'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handleChangePhoto}>
+              <Text style={styles.addPhotoHint}>Add your photo — customers see who's coming</Text>
+            </TouchableOpacity>
+          )}
           <Text style={styles.profileName}>{user?.name ?? 'Technician'}</Text>
           <Text style={styles.profileEmail}>{user?.email}</Text>
 
@@ -643,6 +703,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.md,
+  },
+  avatarPhoto: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    marginBottom: Spacing.md,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    right: -4,
+    bottom: Spacing.md - 4,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.white,
+  },
+  avatarEditBadgeText: { fontSize: 12 },
+  addPhotoHint: {
+    fontSize: FontSize.sm,
+    color: '#B45309',
+    fontWeight: FontWeight.medium,
+    marginBottom: Spacing.sm,
+  },
+  removePhotoLink: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
   },
   avatarLargeText: {
     color: Colors.white,

@@ -67,6 +67,7 @@ export interface CustomerEquipment {
   installDate?: string
   warrantyEnd?: string
   notes?: string
+  manualUrl?: string
 }
 
 // ---- CRM: Bookings ----
@@ -117,6 +118,7 @@ export interface Job {
   completedAt?: string
   jobType?: { id: string; name: string; tradeType: string }
   statusHistory?: JobStatusHistory[]
+  workOrders?: WorkOrder[]
 }
 
 export interface JobStatusHistory {
@@ -125,6 +127,65 @@ export interface JobStatusHistory {
   note?: string
   changedByName: string
   createdAt: string
+}
+
+export interface WorkOrderTaskCompletion {
+  id: string
+  taskName: string
+  isRequired: boolean
+  isCompleted: boolean
+  photoUrl?: string
+  notes?: string
+  completedAt?: string
+}
+
+export interface WorkOrderLineItem {
+  id: string
+  description: string
+  category: string
+  quantity: string | number // Prisma Decimal serializes as string
+  unitPrice: string | number
+  lineTotal: string | number
+}
+
+export interface WorkOrder {
+  id: string
+  workOrderNumber: string
+  technicianName: string
+  status: string
+  checkinAt?: string
+  checkoutAt?: string
+  signatureUrl?: string
+  technicianNotes?: string
+  lineItems: WorkOrderLineItem[]
+  taskCompletions: WorkOrderTaskCompletion[]
+}
+
+// ---- Equipment (customer-owned assets) ----
+export interface EquipmentConsumable {
+  id: string
+  kind: string
+  partNumber?: string
+  description?: string
+  sizeSpec?: string
+  rating?: string
+  intervalDays: number
+  lastReplacedAt?: string
+  purchaseUrl?: string
+  nextDueAt?: string
+  dueInDays?: number | null
+}
+
+export interface CustomerEquipment {
+  id: string
+  type: string
+  brand?: string
+  model?: string
+  serialNo?: string
+  installDate?: string
+  warrantyEnd?: string
+  notes?: string
+  manualUrl?: string
 }
 
 export interface DispatchAssignment {
@@ -339,6 +400,20 @@ export interface TechnicianReviewStats extends ReviewStats {
 export interface CompanyReviewStats {
   companyReviews: ReviewStats
   jobReviews: ReviewStats
+}
+
+export interface ContractorPost {
+  id: string
+  type: 'TIP' | 'VIDEO' | 'OFFER'
+  title: string
+  body?: string
+  videoUrl?: string
+  heroImageUrl?: string
+  isPinned: boolean
+  isPublished: boolean
+  publishedAt?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Notification {

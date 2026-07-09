@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { computeLeadStatusSummary, formatLeadPct, leadRiskColor } from "../pages/customers/leadInsights";
 import { leadName } from "../types/api";
 import type { Lead } from "../types/api";
+import { formatMoney } from '../lib/format'
 
 type Priority = "low" | "medium" | "high";
 
@@ -118,7 +119,7 @@ export default function LeadRecommendationsModal({ lead, onClose }: { lead: Lead
                 <Detail label="Recommended offer" value={label(summary.valueRecommendation.recommendedOffer)} />
                 <Detail label="Confidence" value={formatLeadPct(summary.valueRecommendation.confidence)} />
                 <Detail label="Priority score" value={summary.valueRecommendation.priorityScore.toFixed(3)} />
-                <Detail label="Estimated value" value={`$${Math.round(summary.signals.estimatedValue).toLocaleString()}`} />
+                <Detail label="Estimated value" value={formatMoney(summary.signals.estimatedValue, { decimals: 0 })} />
                 <Detail label="Status" value={summary.valueRecommendation.status} />
               </div>
             </Section>

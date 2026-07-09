@@ -106,11 +106,24 @@ export function useCreateJob() {
 
 export function useUpdateJobStatus() {
   return useMutation({
-    mutationFn: async ({ id, status, statusNote }: { id: string; status: string; statusNote?: string }) => {
+    mutationFn: async ({ id, status, statusNote, cancellationReason }: { id: string; status: string; statusNote?: string; cancellationReason?: string }) => {
       const res = await api.patch(`/jobs/jobs/${id}`, {
         status: status.toUpperCase(),
         statusNote,
+        cancellationReason,
       })
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    },
+  })
+}
+
+export function useUpdateJobFields() {
+  return useMutation({
+    mutationFn: async ({ id, ...fields }: { id: string; hasPartShortage?: boolean; partShortageNote?: string; [key: string]: unknown }) => {
+      const res = await api.patch(`/jobs/jobs/${id}`, fields)
       return res.data
     },
     onSuccess: () => {

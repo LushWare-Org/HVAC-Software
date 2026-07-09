@@ -261,6 +261,34 @@ func (r *AssignmentRepository) SyncJobAssignment(ctx context.Context, companyID,
 	return err
 }
 
+// JobEnRouteInfo carries the job fields needed for the en-route customer notification.
+type JobEnRouteInfo struct {
+	Title          string
+	CustomerName   *string
+	CustomerEmail  *string
+	CustomerPhone  *string
+	ServiceAddress *string
+	Latitude       *float64
+	Longitude      *float64
+}
+
+// GetJobEnRouteInfo reads customer contact + location for a job (cross-schema).
+func (r *AssignmentRepository) GetJobEnRouteInfo(ctx context.Context, companyID, jobID string) (*JobEnRouteInfo, error) {
+	var info JobEnRouteInfo
+	err := r.db.QueryRow(ctx, `
+		SELECT title, "customerName", "customerEmail", "customerPhone", "serviceAddress",
+		       "serviceLatitude"::float8, "serviceLongitude"::float8
+		FROM jobs.jobs
+		WHERE id = $1 AND "companyId" = $2`,
+		jobID, companyID).
+		Scan(&info.Title, &info.CustomerName, &info.CustomerEmail, &info.CustomerPhone,
+			&info.ServiceAddress, &info.Latitude, &info.Longitude)
+	if err != nil {
+		return nil, err
+	}
+	return &info, nil
+}
+
 // GetTechnicianUserInfo returns the userId and name from the scheduling.technicians table.
 func (r *AssignmentRepository) GetTechnicianUserInfo(ctx context.Context, techID string) (userID, name string, err error) {
 	err = r.db.QueryRow(ctx,

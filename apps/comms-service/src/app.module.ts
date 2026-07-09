@@ -10,10 +10,13 @@ import { SmsModule } from './sms/sms.module';
 import { EmailModule } from './email/email.module';
 import { PushModule } from './push/push.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { EnRouteModule } from './enroute/enroute.module';
 import { TemplatesModule } from './templates/templates.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { AutomationModule } from './automation/automation.module';
 import { MarketingModule } from './marketing/marketing.module';
+import { WebPushModule } from './web-push/web-push.module';
+import { CompanySettingsModule } from './company-settings/company-settings.module';
 
 @Module({
   imports: [
@@ -50,6 +53,7 @@ import { MarketingModule } from './marketing/marketing.module';
     // ── Infrastructure ─────────────────────────────────────────────────────
     HealthModule,
     PrismaModule,
+    CompanySettingsModule,
 
     // ── Provider modules ───────────────────────────────────────────────────
     SmsModule,
@@ -58,10 +62,12 @@ import { MarketingModule } from './marketing/marketing.module';
 
     // ── Domain modules ─────────────────────────────────────────────────────
     NotificationsModule,
+    EnRouteModule,
     TemplatesModule,
     MessagingModule,
     AutomationModule,
     MarketingModule,
+    WebPushModule,
   ],
 })
 export class AppModule {}

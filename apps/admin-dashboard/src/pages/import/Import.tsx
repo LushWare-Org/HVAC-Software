@@ -787,6 +787,14 @@ export default function Import() {
     if (step === 1) { setStep(0); setPlatform(null); setDetectResult(null); setUploadError(undefined); return }
   }
 
+  // DI2: KPI stats from import history
+  const batchHistory = useImportBatches()
+  const batches = batchHistory.data ?? []
+  const totalImported  = batches.reduce((s, b) => s + (b.imported ?? 0), 0)
+  const totalSkipped   = batches.reduce((s, b) => s + (b.skipped  ?? 0), 0)
+  const totalFailed    = batches.reduce((s, b) => s + (b.failed   ?? 0), 0)
+  const successBatches = batches.filter(b => b.status === 'DONE').length
+
   return (
     <div style={{ padding: '28px 32px', maxWidth: 900, margin: '0 auto' }}>
       <style>{`
@@ -814,6 +822,26 @@ export default function Import() {
           </Link>
         )}
       </div>
+
+      {/* DI2: KPI cards */}
+      {batches.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+          {[
+            { label: 'Records Imported', value: totalImported.toLocaleString(), color: 'var(--green)',  bg: 'var(--green-dim)',  icon: CheckCircle },
+            { label: 'Skipped',          value: totalSkipped.toLocaleString(),  color: 'var(--amber)',  bg: 'var(--amber-dim)',  icon: AlertTriangle },
+            { label: 'Failed',           value: totalFailed.toLocaleString(),   color: 'var(--red)',    bg: 'var(--red-dim)',    icon: AlertCircle },
+            { label: 'Batches Done',     value: successBatches,                 color: 'var(--blue)',   bg: 'var(--blue-glow)',  icon: Database },
+          ].map(k => (
+            <div key={k.label} style={{ padding: '16px 18px', borderRadius: 'var(--r-md)', background: k.bg, border: `1px solid ${k.color}22` }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k.label}</span>
+                <k.icon size={14} style={{ color: k.color }} />
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: k.color }}>{k.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Wizard card */}
       <div className="card">

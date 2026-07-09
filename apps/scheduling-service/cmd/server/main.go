@@ -47,7 +47,8 @@ func main() {
 	assignRepo := repository.NewAssignmentRepository(db)
 
 	// ── 5. Wire services ─────────────────────────────────────────────────
-	assignSvc := service.NewAssignmentService(cfg, techRepo, assignRepo, hub)
+	rosterRepo := repository.NewProjectRosterRepository(db)
+	assignSvc := service.NewAssignmentService(cfg, techRepo, assignRepo, hub).WithRosterGate(rosterRepo)
 
 	// ── 6. Wire handlers ─────────────────────────────────────────────────
 	healthH := handler.NewHealthHandler(db, redisClient)

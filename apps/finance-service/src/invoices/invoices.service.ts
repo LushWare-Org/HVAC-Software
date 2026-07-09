@@ -8,13 +8,16 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
   Logger,
   Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
+import { isFeatureEnabled } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { NotificationClientService } from '../notification-client/notification-client.service';
 import { QuickBooksSyncService } from '../quickbooks/quickbooks-sync.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -40,6 +43,7 @@ export class InvoicesService {
     private readonly config: ConfigService,
     private readonly pdfService: PdfService,
     private readonly notificationClient: NotificationClientService,
+    private readonly companySettings: CompanySettingsClient,
     @Optional() private readonly qbSync: QuickBooksSyncService,
   ) {
     this.stripe = new Stripe(this.config.get<string>('stripe.secretKey') ?? '', {
@@ -55,11 +59,12 @@ export class InvoicesService {
       status?: InvoiceStatus;
       customerId?: string;
       jobId?: string;
+      projectId?: string;
       page?: number;
       limit?: number;
     },
   ) {
-    const { status, customerId, jobId } = params;
+    const { status, customerId, jobId, projectId } = params;
     const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
     const limit = Number.isFinite(Number(params.limit)) ? Math.min(100, Math.max(1, Math.trunc(Number(params.limit)))) : 20;
     const skip = (page - 1) * limit;
@@ -68,6 +73,7 @@ export class InvoicesService {
       ...(status ? { status } : {}),
       ...(customerId ? { customerId } : {}),
       ...(jobId ? { jobId } : {}),
+      ...(projectId ? { projectId } : {}),
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.invoice.findMany({
@@ -331,7 +337,11 @@ export class InvoicesService {
         </div>
       `;
 
-      const invoicePdf = await this.pdfService.generateInvoicePdf(updated as any, companyName, companyAddress);
+      const sendSettings = await this.companySettings.getSettings(companyId);
+      const invoicePdf = await this.pdfService.generateInvoicePdf(updated as any, companyName, companyAddress, {
+        currency: sendSettings.currency,
+        timezone: sendSettings.timezone,
+      });
       await this.notificationClient.sendEmail({
         companyId,
         recipientId: updated.customerId ?? updated.id,
@@ -357,6 +367,11 @@ export class InvoicesService {
   // ── Create Stripe Checkout Session ───────────────────────────────────────
 
   async createPaymentIntent(companyId: string, id: string) {
+    const settings = await this.companySettings.getSettings(companyId);
+    if (!isFeatureEnabled(settings.features, 'onlinePayments')) {
+      throw new ForbiddenException('Online payments are not enabled for this company');
+    }
+
     const invoice = await this.findOne(companyId, id);
     if (([InvoiceStatus.PAID, InvoiceStatus.VOID] as InvoiceStatus[]).includes(invoice.status)) {
       throw new BadRequestException(`Invoice is ${invoice.status} — cannot create payment intent`);

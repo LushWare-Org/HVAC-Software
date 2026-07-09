@@ -5,14 +5,21 @@ import {
   FileText,
   MessageSquare,
   Thermometer,
+  Fan,
+  Lightbulb,
+  Tag,
   User,
   LogOut,
   Menu,
   X,
+  ShieldCheck,
+  FolderKanban,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useMyProjects } from '../hooks/useMyProjects'
 import { useTheme } from '../contexts/ThemeContext'
 import { useUnreadMyThreadsCount } from '../hooks/useCustomerPortal'
+import { useCompany } from '../contexts/CompanyContext'
 
 interface Props {
   collapsed: boolean
@@ -27,6 +34,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const unreadMessages = useUnreadMyThreadsCount()
+  const { data: myProjects } = useMyProjects()
+  const hasProjects = (myProjects?.length ?? 0) > 0
 
   const NAV = [
     {
@@ -39,7 +48,18 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
         { icon: FileText, label: 'Quotes', path: '/quotes', badge: 0 },
         { icon: MessageSquare, label: 'Messages', path: '/messages', badge: unreadMessages },
         { icon: Thermometer, label: 'My Devices', path: '/devices', badge: 0 },
+        { icon: Fan, label: 'My Equipment', path: '/equipment', badge: 0 },
+        { icon: ShieldCheck, label: 'My Plans', path: '/agreements', badge: 0 },
+        // Only shown when the customer actually has a project
+        ...(hasProjects ? [{ icon: FolderKanban, label: 'My Projects', path: '/projects', badge: 0 }] : []),
         { icon: User, label: 'Profile', path: '/profile', badge: 0 },
+      ],
+    },
+    {
+      label: 'From Us',
+      items: [
+        { icon: Lightbulb, label: 'Tips & Videos', path: '/tips', badge: 0 },
+        { icon: Tag, label: 'Offers', path: '/offers', badge: 0 },
       ],
     },
   ]
@@ -88,19 +108,24 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     ? 'bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white border-0'
     : 'border border-[var(--bd)] bg-[var(--bg-card)] text-[var(--t2)] hover:bg-[var(--bg-hover)] hover:text-[var(--t1)]'
 
+  const { settings } = useCompany()
+  const brandName = settings?.name || 'HomePulse'
+
   return (
     <aside className={sidebarClasses}>
       <div className={`flex items-center flex-shrink-0 h-20 border-b ${headerBorder} ${collapsed ? 'justify-center px-0' : 'justify-start px-5 gap-3.5'}`}>
         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0 font-bold text-white text-xl overflow-hidden shadow-lg">
-          {initials[0] ?? 'U'}
+          {settings?.logoUrl
+            ? <img src={settings.logoUrl} alt={brandName} className="w-full h-full object-cover" />
+            : (initials[0] ?? 'U')}
         </div>
         {!collapsed && (
           <div className="min-w-0">
             <h2 className={`text-lg font-bold leading-tight truncate ${isLight ? 'text-white' : 'text-[var(--t1)]'}`}>
-              T&S Services
+              {brandName}
             </h2>
             <p className={`text-[11px] leading-tight mt-0.5 truncate ${isLight ? 'text-slate-400' : 'text-[var(--t3)]'}`}>
-              Customer Portal
+              {settings?.name ? 'Powered by HomePulse' : 'Your Service Portal'}
             </p>
           </div>
         )}
@@ -109,6 +134,21 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
       <nav className={`flex-1 overflow-y-auto flex flex-col gap-1.5 ${collapsed ? 'px-1 py-5' : 'px-2 py-5'}`}>
         {NAV.map((group, index) => (
           <div key={index} className="flex flex-col gap-1">
+            {'label' in group && group.label && !collapsed && (
+              <div style={{
+                fontSize: 9, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: isLight ? 'rgba(255,255,255,0.35)' : 'var(--t4)',
+                padding: '12px 16px 4px',
+              }}>
+                {group.label}
+              </div>
+            )}
+            {index > 0 && !('label' in group && group.label) && (
+              <div style={{
+                height: 1, margin: '4px 12px 6px',
+                background: isLight ? 'rgba(255,255,255,0.08)' : 'var(--bd)',
+              }} />
+            )}
             {group.items.map(item => {
               const Icon = item.icon
               const active = loc.pathname === item.path

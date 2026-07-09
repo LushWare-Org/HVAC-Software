@@ -9,6 +9,7 @@ import { useRecommendations } from '../hooks/useAnalytics'
 import api from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import type { Recommendation, ExecuteActionResponse } from '../types/api'
+import { formatMoney } from '../lib/format'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -94,6 +95,31 @@ const ACTION_PARAMS: Record<string, { params: ParamDef[]; defaults: Record<strin
 
 function getDefaults(action: string): Record<string, unknown> {
   return ACTION_PARAMS[action]?.defaults ?? {}
+}
+
+// ─── Expected outcome copy per action type ────────────────────────────────────
+
+function getExpectedOutcome(rec: Recommendation): string {
+  const impact = formatMoney(rec.impact, { decimals: 0 })
+  const conf = Math.round(rec.confidence * 100)
+  switch (rec.action) {
+    case 'discount_20':
+      return `Reactivating inactive customers with a targeted offer is projected to recover ${impact} in revenue this period (${conf}% confidence based on your past campaign data).`
+    case 'call':
+      return `Direct outreach to at-risk accounts can prevent an estimated ${impact} in churn. Past calls in this segment converted at ${conf}%.`
+    case 'increase_price':
+      return `Based on your current job volume and market rates, a price adjustment could add ${impact} to annual revenue without a meaningful drop in bookings.`
+    case 'geo_target_discount':
+      return `A targeted follow-up to prospects with pending quotes converts at ~${conf}% based on your history. Closing the open pipeline could bring in approximately ${impact} without acquiring new leads.`
+    case 'same_day_offer':
+      return `Prospects near tomorrow's job routes are primed for a same-day offer. Filling 2–3 idle slots this way is projected to generate ${impact} in revenue at minimal marginal cost.`
+    case 'upsell':
+      return `Customers with this service history convert to upsells at ${conf}%. Reaching out now is projected to add ${impact} in average order value.`
+    case 'review_request':
+      return `A well-timed review request to recently satisfied customers lifts your average rating within 30 days and is projected to drive ${impact} in new leads via improved local search ranking.`
+    default:
+      return `This action has a ${conf}% confidence rating and is projected to generate up to ${impact} in additional revenue based on your current customer data.`
+  }
 }
 
 // ─── Modify params panel ──────────────────────────────────────────────────────
@@ -291,6 +317,23 @@ function RecommendationCard({
         {rec.description}
       </p>
 
+      {/* ── Expected outcome ── */}
+      <div style={{
+        display: 'flex', gap: 8, alignItems: 'flex-start',
+        background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)',
+        borderRadius: 'var(--r-sm)', padding: '9px 12px',
+      }}>
+        <TrendingUp size={13} style={{ color: 'var(--green)', flexShrink: 0, marginTop: 1 }} />
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 3 }}>
+            Expected outcome
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--t2)', margin: 0, lineHeight: 1.6 }}>
+            {getExpectedOutcome(rec)}
+          </p>
+        </div>
+      </div>
+
       {/* ── Recommended action ── */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
@@ -403,11 +446,13 @@ function RecommendationCard({
 export default function RecommendationsPanel({
   filterActions,
   limit,
+  forecastDays,
 }: {
   filterActions?: string[]
   limit?: number
+  forecastDays?: number
 } = {}) {
-  const { data, isLoading, isError, refetch, isFetching } = useRecommendations()
+  const { data, isLoading, isError, refetch, isFetching } = useRecommendations(forecastDays)
   const [ignored, setIgnored] = useState<Set<string>>(new Set())
 
   const visible = (data ?? [])

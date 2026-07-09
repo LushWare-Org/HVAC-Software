@@ -1,7 +1,8 @@
 export type AutomationTemplateKey =
   | 'hvac-tune-up-6mo'
   | 'hvac-replacement-7yr'
-  | 'warranty-expiry-30d';
+  | 'warranty-expiry-30d'
+  | 'filter-replacement-due';
 
 export interface AutomationTemplate {
   key: AutomationTemplateKey;
@@ -19,6 +20,7 @@ export interface TemplateVars {
   unsubLink: string;
   warrantyEndDate?: string;
   companyName?: string;
+  filterSpec?: string; // e.g. "X6673 20x25x5 MERV 11"
 }
 
 export const EQUIPMENT_TEMPLATES: Record<AutomationTemplateKey, AutomationTemplate> = {
@@ -116,6 +118,36 @@ export const EQUIPMENT_TEMPLATES: Record<AutomationTemplateKey, AutomationTempla
         companyName,
       ),
   },
+  'filter-replacement-due': {
+    key: 'filter-replacement-due',
+    channel: 'BOTH',
+
+    smsBody: ({ customerName, equipmentType, filterSpec, trackedLink }) =>
+      `Hi ${customerName}, the filter on your ${equipmentType}${filterSpec ? ` (${filterSpec})` : ''} is due for replacement. A fresh filter protects your system and your air quality. Order or book here: ${trackedLink} Reply STOP to opt out.`,
+
+    emailSubject: ({ equipmentType }) =>
+      `Your ${equipmentType} filter is due for replacement`,
+
+    emailBody: ({ customerName, equipmentType, brand, filterSpec, trackedLink, unsubLink, companyName }) =>
+      buildEmail(
+        `Time to replace your ${equipmentType} filter`,
+        `
+        <p>Hi ${customerName},</p>
+        <p>The air filter on your <strong>${brand} ${equipmentType}</strong> is due for replacement.</p>
+        ${filterSpec ? `<p>Your system takes: <strong>${filterSpec}</strong></p>` : ''}
+        <p>A clogged filter makes your system work harder, raises your energy bills, and degrades
+        indoor air quality. Swapping it takes two minutes.</p>
+        <ul>
+          <li>Order the exact filter from your customer portal</li>
+          <li>Or book a visit and we'll replace it during a tune-up</li>
+        </ul>
+        `,
+        'Get My Replacement Filter',
+        trackedLink,
+        unsubLink,
+        companyName,
+      ),
+  },
 };
 
 // ── Shared HTML email builder ─────────────────────────────────────────────────
@@ -126,7 +158,7 @@ function buildEmail(
   ctaText: string,
   ctaUrl: string,
   unsubLink: string,
-  companyName = 'T&S Services',
+  companyName = 'HomePulse',
 ): string {
   return `<!DOCTYPE html>
 <html>

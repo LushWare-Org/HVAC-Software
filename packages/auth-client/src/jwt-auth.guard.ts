@@ -26,14 +26,19 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     // ── Test / demo bypass ────────────────────────────────────────────────────
+    // Only honored when the request carries NO real JWT — a Bearer token always
+    // wins, otherwise stale x-test-* headers from a dev frontend can silently
+    // impersonate the wrong tenant (e.g. co-demo-001 overriding a KASE login).
     if (
       process.env.NODE_ENV !== 'production' &&
       process.env.BYPASS_AUTH === 'true'
     ) {
       const req = context.switchToHttp().getRequest();
+      const authHeader = req.headers['authorization'] as string | undefined;
+      const hasBearerToken = !!authHeader && authHeader.startsWith('Bearer ');
       const companyId = req.headers['x-test-company-id'] as string | undefined;
 
-      if (companyId) {
+      if (companyId && !hasBearerToken) {
         const rawRole = (req.headers['x-test-user-role'] ?? 'COMPANY_ADMIN') as string;
         req.user = {
           userId:     req.headers['x-test-user-id']     ?? 'test-user-001',

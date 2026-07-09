@@ -7,6 +7,7 @@ import { useJobs } from "../../hooks/useJobs";
 import { useToast } from "../../contexts/ToastContext";
 import { customerName as fmtCustomerName } from "../../types/api";
 import type { Customer, Job } from "../../types/api";
+import { formatMoney } from '../../lib/format'
 
 interface PrefilledJob {
   id: string;
@@ -16,10 +17,22 @@ interface PrefilledJob {
   customerEmail?: string | null;
 }
 
+export interface PresetCustomer {
+  id: string;
+  name: string;
+  email?: string;
+}
+
 interface AddQuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   prefilledJob?: PrefilledJob | null;
+  /** Prefills the customer without linking a specific job (e.g. creating a quote from a project page). */
+  presetCustomer?: PresetCustomer | null;
+  /** Attaches the quote to a project on create (finance-service accepts an optional projectId). */
+  projectId?: string;
+  contextLabel?: string;
+  onCreated?: (quote: any) => void;
   onBack?: () => void;
 }
 
@@ -42,7 +55,7 @@ const CATEGORIES = [
 const inputClass =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none";
 
-export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }: AddQuoteModalProps) {
+export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCustomer, projectId, contextLabel, onCreated, onBack }: AddQuoteModalProps) {
   const { showError, showSuccess, showInfo } = useToast();
   const [error, setError] = useState("");
   const [title, setTitle] = useState("");
@@ -90,7 +103,8 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }:
 
   const createQuote = useCreateQuote();
 
-  // Auto-fill when opened from a specific job's Finance tab
+  // Auto-fill when opened from a specific job's Finance tab, or a fixed
+  // customer context (e.g. creating a quote from a project page).
   useEffect(() => {
     if (isOpen && prefilledJob) {
       setJobId(prefilledJob.id);
@@ -100,8 +114,12 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }:
         if (prefilledJob.customerName) setCustomerNameVal(prefilledJob.customerName);
         if (prefilledJob.customerEmail) setCustomerEmail(prefilledJob.customerEmail);
       }
+    } else if (isOpen && presetCustomer) {
+      setCustomerId(presetCustomer.id);
+      setCustomerNameVal(presetCustomer.name);
+      if (presetCustomer.email) setCustomerEmail(presetCustomer.email);
     }
-  }, [isOpen, prefilledJob]);
+  }, [isOpen, prefilledJob, presetCustomer]);
 
   if (!isOpen) return null;
 
@@ -129,6 +147,7 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }:
         customerEmail,
         customerId,
         jobId: jobId || undefined,
+        projectId: projectId || undefined,
         taxRate: (parseFloat(taxRate) || 0) / 100,
         validUntil: validUntil || undefined,
         notes: notes || undefined,
@@ -142,7 +161,8 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }:
         })),
       } as any,
       {
-        onSuccess: () => {
+        onSuccess: (created) => {
+          onCreated?.(created);
           showSuccess("Quote created successfully.", "Quote Ready");
           onClose();
           setTitle(""); setCustomerNameVal(""); setCustomerEmail(""); setCustomerId("");
@@ -171,7 +191,7 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }:
                 ← Back to Job
               </button>
             )}
-            <h2 className="text-xl font-bold">Create Quote</h2>
+            <h2 className="text-xl font-bold">{contextLabel ? `Create Quote — ${contextLabel}` : 'Create Quote'}</h2>
             <p className="text-green-100 text-sm mt-0.5">
               {prefilledJob ? `For: ${prefilledJob.title}` : "Add a new quote with line items"}
             </p>
@@ -341,9 +361,9 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, onBack }:
               ))}
             </div>
             <div className="mt-3 text-right space-y-1 text-sm">
-              <div className="text-gray-500">Subtotal: <span className="font-semibold text-gray-800">${subtotal.toFixed(2)}</span></div>
-              <div className="text-gray-500">Tax ({taxRate}%): <span className="font-semibold text-gray-800">${tax.toFixed(2)}</span></div>
-              <div className="text-gray-700 font-bold text-base">Total: ${total.toFixed(2)}</div>
+              <div className="text-gray-500">Subtotal: <span className="font-semibold text-gray-800">{formatMoney(subtotal)}</span></div>
+              <div className="text-gray-500">Tax ({taxRate}%): <span className="font-semibold text-gray-800">{formatMoney(tax)}</span></div>
+              <div className="text-gray-700 font-bold text-base">Total: {formatMoney(total)}</div>
             </div>
           </div>
 

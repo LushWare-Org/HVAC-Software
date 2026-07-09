@@ -121,7 +121,7 @@ export class MarketingSendWorker extends WorkerHost {
     let sendError: string | undefined;
 
     if (channel === MarketingChannel.SMS) {
-      const result = await this.smsService.send(address, renderedBody);
+      const result = await this.smsService.send(address, renderedBody, companyId);
       externalId = result.externalId;
       if (!result.success) sendError = result.error;
     } else {

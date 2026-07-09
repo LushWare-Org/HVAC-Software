@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Wrench, Calendar, Loader2, AlertCircle } from "lucide-react";
 import { useCreateJob, useJobTypes } from "../../hooks/useJobs";
 import { useCustomers } from "../../hooks/useCustomers";
@@ -53,6 +54,24 @@ export default function AddJobModal({
       }));
     }
   }, [isOpen, preselectedCustomer]);
+
+  // Lock the dashboard behind the modal — without this, wheel/trackpad input
+  // over the backdrop scrolls the page underneath instead of staying put.
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prevOverflow; };
+  }, [isOpen]);
+
+  // Escape closes — standard modal affordance
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -162,14 +181,17 @@ export default function AddJobModal({
     setActiveTab('scheduling');
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 admin-modal-backdrop"
+      className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4 py-6 admin-modal-backdrop"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl max-w-2xl w-full flex flex-col shadow-2xl admin-modal-box"
-        style={{ height: 620 }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Create New Job"
+        className="bg-white rounded-xl max-w-2xl w-full flex flex-col shadow-2xl admin-modal-box overflow-hidden"
+        style={{ height: "min(660px, calc(100vh - 48px))" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5 flex items-center justify-between rounded-t-xl shrink-0">
@@ -215,7 +237,9 @@ export default function AddJobModal({
           })}
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        {/* min-h-0 is required so this flex child actually shrinks and
+            scrolls instead of growing past the dialog's fixed height */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-8 space-y-5">
 
             {error && (
@@ -418,6 +442,7 @@ export default function AddJobModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

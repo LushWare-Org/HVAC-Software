@@ -5,6 +5,9 @@
 // Re-export pagination guards so every service can import from one place.
 export * from './pagination';
 
+// Per-tenant settings (currency, timezone, feature flags).
+export * from './company-settings';
+
 // ---- RBAC Roles ----
 export enum Role {
   SUPER_ADMIN = 'super_admin',

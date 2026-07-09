@@ -113,7 +113,7 @@ export class WinbackService {
         const trackedLink = `${CLICK_BASE}/m/r/${token}?dest=${encodeURIComponent(CLICK_BASE + '/book')}`;
 
         try {
-          await this.sms.send(phone, step1Sms({ customerName, companyName: 'T&S Services', trackedLink, unsubLink: '' }));
+          await this.sms.send(phone, step1Sms({ customerName, companyName: 'T&S Services', trackedLink, unsubLink: '' }), companyId);
           await this.recordSend(companyId, candidate.id, phone, 'SMS', 'winback-step1');
           result.step1SmsSent = true;
         } catch (err) {

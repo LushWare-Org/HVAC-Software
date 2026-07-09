@@ -71,6 +71,9 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     const [isAddInvoiceFromJobOpen, setIsAddInvoiceFromJobOpen] = useState(false)
     const [financeContextJob, setFinanceContextJob] = useState<any>(null)
 
+    // Return context when navigating job → finance doc and back
+    const [financeReturn, setFinanceReturn] = useState<{ type: 'invoice' | 'quote'; label: string; doc: any } | null>(null)
+
     useEffect(() => {
         const handler = (e: Event) => {
             const job = (e as CustomEvent).detail
@@ -79,6 +82,19 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
         }
         window.addEventListener('open-job-detail', handler)
         return () => window.removeEventListener('open-job-detail', handler)
+    }, [])
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const { job, returnTo } = (e as CustomEvent).detail
+            setIsInvoiceDetailOpen(false)
+            setIsQuoteDetailOpen(false)
+            setSelectedJob(job)
+            setFinanceReturn({ type: returnTo.type, label: returnTo.label, doc: returnTo.doc })
+            setIsDetailOpen(true)
+        }
+        window.addEventListener('open-job-from-finance', handler)
+        return () => window.removeEventListener('open-job-from-finance', handler)
     }, [])
 
     useEffect(() => {
@@ -164,13 +180,24 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
             case '/customers': return { title: 'Customers & CRM', sub: 'Manage customers and leads' }
             case '/jobs': return { title: 'Jobs', sub: 'Manage and track all your service work orders' }
             case '/scheduling': return { title: 'Scheduling & Dispatch', sub: 'Assign jobs and track field operations' }
+            case '/dispatch': return { title: 'Dispatch', sub: 'Smart technician assignment and live field tracking' }
+            case '/agreements': return { title: 'Service Agreements', sub: 'Maintenance plans and recurring service contracts' }
+            case '/planner': return { title: 'Day Planner', sub: 'Plan and assign a full day of jobs on the map' }
+            case '/projects': return { title: 'Projects', sub: 'Long-running engagements with dedicated crews' }
+            case '/marketing': return { title: 'Marketing', sub: 'Campaigns, templates and automations' }
+            case '/inventory': return { title: 'Inventory', sub: 'Items, stock levels and purchase orders' }
+            case '/bandit-dashboard': return { title: 'ML Operations', sub: '' }
+            case '/import': return { title: 'Data Import', sub: 'Bring customers and jobs in from other systems' }
+            case '/import/admin': return { title: 'Import History', sub: '' }
             case '/finance': return { title: 'Finance', sub: 'Invoices, quotes, expenses and cash flow' }
             case '/communications': return { title: 'Communications', sub: 'Customer messaging and marketing automations' }
             case '/analytics': return { title: 'Analytics', sub: 'Business intelligence and performance insights' }
             case '/settings': return { title: 'Settings', sub: '' }
             case '/profile': return { title: 'My Profile', sub: 'Manage your account and preferences' }
             case '/team': return { title: 'Team Management', sub: '' }
-            default: return { title: 'Admin Platform', sub: '' }
+            default:
+                if (pathname.startsWith('/projects/')) return { title: 'Project', sub: '' }
+                return { title: 'Admin Platform', sub: '' }
         }
     }
     const headerParams = getPageHeader()
@@ -440,10 +467,20 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
             />
             <JobDetailModal
                 isOpen={isDetailOpen}
-                onClose={() => setIsDetailOpen(false)}
+                onClose={() => { setIsDetailOpen(false); setFinanceReturn(null); }}
                 job={selectedJob}
-                onCreateQuote={(j) => { setFinanceContextJob(j); setIsDetailOpen(false); setIsAddQuoteFromJobOpen(true); }}
-                onCreateInvoice={(j) => { setFinanceContextJob(j); setIsDetailOpen(false); setIsAddInvoiceFromJobOpen(true); }}
+                onCreateQuote={(j) => { setFinanceContextJob(j); setIsDetailOpen(false); setFinanceReturn(null); setIsAddQuoteFromJobOpen(true); }}
+                onCreateInvoice={(j) => { setFinanceContextJob(j); setIsDetailOpen(false); setFinanceReturn(null); setIsAddInvoiceFromJobOpen(true); }}
+                backLabel={financeReturn?.label}
+                onBack={financeReturn ? () => {
+                    if (financeReturn.type === 'invoice') {
+                        setSelectedInvoice(financeReturn.doc)
+                        setIsInvoiceDetailOpen(true)
+                    } else {
+                        setSelectedQuote(financeReturn.doc)
+                        setIsQuoteDetailOpen(true)
+                    }
+                } : undefined}
             />
             <InvoiceDetailModal
                 isOpen={isInvoiceDetailOpen}

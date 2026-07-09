@@ -23,6 +23,7 @@ export default function AddInventoryItemModal({ isOpen, onClose }: AddInventoryI
   const [unit, setUnit] = useState('each')
   const [reorderPoint, setReorderPoint] = useState(5)
   const [reorderQty, setReorderQty] = useState(10)
+  const [unitCost, setUnitCost] = useState<number | ''>('')
 
   const createItem = useCreateInventoryItem()
 
@@ -36,6 +37,7 @@ export default function AddInventoryItemModal({ isOpen, onClose }: AddInventoryI
     setUnit('each')
     setReorderPoint(5)
     setReorderQty(10)
+    setUnitCost('')
     setError('')
   }
 
@@ -61,6 +63,7 @@ export default function AddInventoryItemModal({ isOpen, onClose }: AddInventoryI
         unit: unit || undefined,
         reorderPoint,
         reorderQty,
+        unitCost: unitCost !== '' ? unitCost : undefined,
       },
       {
         onSuccess: () => {
@@ -138,7 +141,7 @@ export default function AddInventoryItemModal({ isOpen, onClose }: AddInventoryI
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-400 uppercase">Reorder Point</label>
               <input type="number" min={0} value={reorderPoint} onChange={e => setReorderPoint(parseInt(e.target.value) || 0)} className={inputClass} />
@@ -146,6 +149,10 @@ export default function AddInventoryItemModal({ isOpen, onClose }: AddInventoryI
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-400 uppercase">Reorder Qty</label>
               <input type="number" min={0} value={reorderQty} onChange={e => setReorderQty(parseInt(e.target.value) || 0)} className={inputClass} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-400 uppercase">Unit Cost ($)</label>
+              <input type="number" min={0} step="0.01" value={unitCost} onChange={e => setUnitCost(e.target.value === '' ? '' : parseFloat(e.target.value))} placeholder="0.00" className={inputClass} />
             </div>
           </div>
         </div>

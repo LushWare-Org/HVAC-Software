@@ -42,7 +42,11 @@ export class EquipmentAutomationController {
     const rows = await this.prisma.equipment.findMany({
       where: {
         customer: { isActive: true },
-        OR: [{ installDate: { not: null } }, { warrantyEnd: { not: null } }],
+        OR: [
+          { installDate: { not: null } },
+          { warrantyEnd: { not: null } },
+          { consumables: { some: {} } },
+        ],
       },
       distinct: ['companyId'],
       select: { companyId: true },

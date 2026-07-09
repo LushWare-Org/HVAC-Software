@@ -15,7 +15,7 @@
  */
 
 import { useState, useMemo, useEffect } from 'react'
-import { MapContainer, Marker, Popup, TileLayer, Polyline, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer, Tooltip, Polyline, useMap } from 'react-leaflet'
 import { useQuery } from '@tanstack/react-query'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -45,6 +45,15 @@ L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, 
     .dmap-online-ring { animation: dmap-pulse 1.8s ease-in-out infinite; }
     @keyframes dmap-pop { from { transform: scale(0.6) translateY(4px); opacity:0; } to { transform: scale(1) translateY(0); opacity:1; } }
     .dmap-marker { animation: dmap-pop 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
+    .dmap-tip {
+      background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.18); padding: 6px 9px;
+      font: 500 11px/1.45 sans-serif; color: #334155;
+      max-width: 220px; white-space: normal;
+    }
+    .dmap-tip.leaflet-tooltip-top::before { border-top-color: white; }
+    .dmap-tip .dt-title { font-weight: 700; font-size: 11.5px; color: #0f172a; }
+    .dmap-tip .dt-sub { color: #64748b; }
   `
   document.head.appendChild(style)
 })()
@@ -340,6 +349,9 @@ export default function DispatchMap({
   smartAssigningJobId,
 }: Props) {
   const [scope, setScope] = useState<ScopeFilter>('all')
+  // "Job details" mode: every plotted job shows a permanent floating detail bar
+  // (same info as its click popup) so the whole board is readable at a glance.
+  const [showDetails, setShowDetails] = useState(false)
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>({
     liveTechs: true, staleTechs: true,
     assignedJobs: true, unassignedJobs: true,
@@ -485,6 +497,23 @@ export default function DispatchMap({
           })}
         </div>
 
+        {/* "Job details" toggle — permanent info bars on every plotted job */}
+        <button
+          onClick={() => setShowDetails(v => !v)}
+          title={showDetails ? 'Hide job detail bars' : 'Show every job\'s details on the map'}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '4px 10px', fontSize: 10, fontWeight: 700,
+            borderRadius: 20, cursor: 'pointer',
+            border: `1.5px solid ${showDetails ? '#2563eb' : '#d1d5db'}`,
+            background: showDetails ? '#2563eb' : 'white',
+            color: showDetails ? 'white' : '#6b7280',
+            transition: 'all 0.15s',
+          }}
+        >
+          Job details {showDetails ? 'ON' : 'OFF'}
+        </button>
+
         {/* Missing coords warning */}
         {missingCoords > 0 && (
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#d97706', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '4px 9px', fontWeight: 600 }}>
@@ -499,7 +528,9 @@ export default function DispatchMap({
       </div>
 
       {/* ── Map ─────────────────────────────────────────────────────────────────── */}
-      <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #e5e7eb', height: 560, boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
+      {/* zIndex: 0 traps the Leaflet panes/controls in their own stacking context
+          so page modals (z-index 1000 at the root) always paint above the map */}
+      <div style={{ position: 'relative', zIndex: 0, borderRadius: 12, overflow: 'hidden', border: '1px solid #e5e7eb', height: 560, boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
         <MapContainer
           center={defaultCenter}
           zoom={12}
@@ -615,10 +646,19 @@ export default function DispatchMap({
 
             return (
               <Marker
-                key={`assigned-${job.id}`}
+                key={`assigned-${job.id}-${showDetails}`}
                 position={[c.lat, c.lng]}
                 icon={jobIcon(job.priority, true, assignment?.status)}
               >
+                {showDetails && (
+                  <Tooltip permanent direction="top" offset={[0, -42]} className="dmap-tip">
+                    <div className="dt-title">{job.title}</div>
+                    {job.customerName && <div className="dt-sub">{job.customerName}</div>}
+                    <div style={{ color: '#059669', fontWeight: 600 }}>
+                      {assignment?.status === 'EN_ROUTE' ? '🚗 En route' : assignment?.status === 'ON_SITE' ? '🔧 On site' : '✓ Assigned'} · {techName}
+                    </div>
+                  </Tooltip>
+                )}
                 <Popup maxWidth={240}>
                   <div style={{ fontSize: 12, minWidth: 190 }}>
                     <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{job.title}</div>
@@ -654,10 +694,19 @@ export default function DispatchMap({
             const isAssigningThis = smartAssigningJobId === job.id
             return (
               <Marker
-                key={`unassigned-${job.id}`}
+                key={`unassigned-${job.id}-${showDetails}`}
                 position={[c.lat, c.lng]}
                 icon={jobIcon(job.priority, false)}
               >
+                {showDetails && (
+                  <Tooltip permanent direction="top" offset={[0, -42]} className="dmap-tip">
+                    <div className="dt-title">{job.title}</div>
+                    {job.customerName && <div className="dt-sub">{job.customerName}</div>}
+                    <div style={{ color: '#d97706', fontWeight: 600 }}>
+                      ! Unassigned · {job.priority}
+                    </div>
+                  </Tooltip>
+                )}
                 <Popup maxWidth={250}>
                   <div style={{ fontSize: 12, minWidth: 200 }}>
                     <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{job.title}</div>

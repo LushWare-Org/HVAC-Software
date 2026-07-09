@@ -110,6 +110,30 @@ export class AutomationService {
       technicianName: event.technicianName ?? '',
       scheduledAt: event.scheduledAt ?? '',
     };
+
+    if (event.jobStatus === 'EN_ROUTE' && event.customerEmail) {
+      const techName = event.technicianName ? event.technicianName : 'Your technician';
+      const addressLine = event.jobAddress ? `<p>Service address: <strong>${event.jobAddress}</strong></p>` : '';
+      await this.notifications.sendEmail({
+        companyId: event.companyId,
+        customerId: event.customerId,
+        jobId: event.jobId,
+        recipientId: event.customerId,
+        recipientName: event.customerName,
+        recipientEmail: event.customerEmail,
+        subject: `${techName} is on the way — Job #${event.jobId.slice(-6).toUpperCase()}`,
+        htmlBody: `
+          <p>Hi ${event.customerName},</p>
+          <p><strong>${techName}</strong> is now en route to your location and should arrive shortly.</p>
+          ${addressLine}
+          <p>If you have any questions, please don't hesitate to contact us.</p>
+          <p>Thank you for choosing our service.</p>
+        `,
+      }).catch((err: unknown) => {
+        this.logger.warn(`EN_ROUTE email failed: ${err instanceof Error ? err.message : String(err)}`);
+      });
+    }
+
     await this.executeRules(event.companyId, AutomationTrigger.JOB_STATUS_CHANGED, event as any, context);
   }
 

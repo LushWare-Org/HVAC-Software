@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download } from 'lucide-react'
-import { useInvoices, useQuotes, useExpenses, useFinanceKpis, decimalToNumber, useDeleteExpense, useSendInvoice } from '../../hooks/useFinance'
+import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download, UploadCloud, Briefcase } from 'lucide-react'
+import { useInvoices, useQuotes, useExpenses, useFinanceKpis, decimalToNumber, useDeleteExpense, useSendInvoice, useQBStatus, useQBSyncInvoice } from '../../hooks/useFinance'
 import { useJobs } from '../../hooks/useJobs'
 import { useToast } from '../../contexts/ToastContext'
 import type { Invoice, Quote, Expense } from '../../types/api'
@@ -8,7 +8,7 @@ import AddQuoteModal from './AddQuoteModal'
 import AddInvoiceModal from './AddInvoiceModal'
 import AddExpenseModal from './AddExpenseModal'
 import RecommendationsPanel from '../../components/RecommendationsPanel'
-import { humanizeStatus, normalizeStatus } from '../../lib/format'
+import { humanizeStatus, normalizeStatus, formatMoney } from '../../lib/format'
 
 // ─── Status CSS maps (backend UPPER_CASE = source of truth) ───────────────────
 // All map keys are UPPER_SNAKE_CASE to match backend Prisma enums. Lookups
@@ -34,7 +34,7 @@ function Skeleton({ h = 14 }: { h?: number }) {
 
 function fmtDecimal(val: string | number | undefined | null): string {
   const n = decimalToNumber(val)
-  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return formatMoney(n)
 }
 
 function PillGroup({ options, value, onChange }: {
@@ -156,9 +156,29 @@ export default function Finance() {
     return jobTitleMap[jobId] || null
   }
 
+  const openJobDetail = (jobId: string, jobTitle?: string | null) => {
+    // Look up full job from the pre-loaded list first; fall back to a stub
+    // that JobDetailModal can enrich via its internal useJob(id) fetch.
+    const full = (jobsLookupQuery.data?.data ?? []).find(j => j.id === jobId)
+    const payload = full ?? {
+      id: jobId,
+      companyId: '',
+      title: jobTitle || jobId.slice(0, 8),
+      status: 'PENDING' as const,
+      priority: 'NORMAL' as const,
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    window.dispatchEvent(new CustomEvent('open-job-detail', { detail: payload }))
+  }
+
   const kpi = kpiQuery.data
   const deleteExpense = useDeleteExpense()
   const sendInvoice = useSendInvoice()
+  const qbStatus = useQBStatus()
+  const qbSync = useQBSyncInvoice()
+  const qbConnected = qbStatus.data?.connected ?? false
 
   const handleExport = useCallback(() => {
     if (tab === 'invoices') {
@@ -215,13 +235,13 @@ export default function Finance() {
       {!isExpanded && (
         <div className="kpi-grid mb-5">
           {[
-            { icon: DollarSign, v: kpi?.revenue.formattedValue ?? '—', l: 'Revenue This Month', loading: kpiQuery.isLoading },
-            { icon: FileText, v: kpi?.outstandingInvoices.formattedValue ?? '—', l: 'Accounts Receivable', loading: kpiQuery.isLoading },
-            { icon: AlertCircle, v: '—', l: 'Overdue Balance', loading: false },
-            { icon: TrendingUp, v: '—', l: 'Gross Profit Margin', loading: false },
-            { icon: CreditCard, v: '—', l: 'Pending Quotes', loading: false },
+            { icon: DollarSign, v: kpi?.revenue.formattedValue ?? '—', l: 'Revenue This Month', loading: kpiQuery.isLoading, onClick: () => setTab('invoices') },
+            { icon: FileText, v: kpi?.outstandingInvoices.formattedValue ?? '—', l: 'Accounts Receivable', loading: kpiQuery.isLoading, onClick: () => setTab('invoices') },
+            { icon: AlertCircle, v: '—', l: 'Overdue Balance', loading: false, onClick: () => setTab('invoices') },
+            { icon: TrendingUp, v: '—', l: 'Gross Profit Margin', loading: false, onClick: undefined },
+            { icon: CreditCard, v: '—', l: 'Pending Quotes', loading: false, onClick: () => setTab('quotes') },
           ].map(k => (
-            <div key={k.l} className="kpi-card" style={{ padding: '16px 20px', borderRadius: 'var(--r-md)' }}>
+            <div key={k.l} className="kpi-card" style={{ padding: '16px 20px', borderRadius: 'var(--r-md)', cursor: k.onClick ? 'pointer' : 'default' }} onClick={k.onClick}>
               <div className="kpi-card-top" style={{ marginBottom: 12, alignItems: 'center', justifyContent: 'space-between' }}>
                 <div className="kpi-label" style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 500, margin: 0 }}>{k.l}</div>
                 <k.icon size={16} strokeWidth={1.5} color="var(--t3)" />
@@ -282,6 +302,7 @@ export default function Finance() {
                     <th style={{ textAlign: 'left' }}>Issue Date</th>
                     <th style={{ textAlign: 'left' }}>Due Date</th>
                     <th style={{ textAlign: 'left' }}>Status</th>
+                    {qbConnected && <th style={{ textAlign: 'center' }}>QB</th>}
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
@@ -290,7 +311,20 @@ export default function Finance() {
                   {!invoicesQuery.isLoading && invoices.map(inv => (
                     <tr key={inv.id} onClick={() => window.dispatchEvent(new CustomEvent("open-invoice-detail", { detail: inv }))} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
                       <td><span className="td-mono td-primary">{inv.invoiceNumber}</span></td>
-                      <td>{inv.jobId ? <div><span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-[11px] font-bold border border-blue-100">{inv.jobTitle || getJobTitle(inv.jobId) || inv.jobId.slice(0, 8)}</span></div> : '—'}</td>
+                      <td>
+                        {inv.jobId ? (
+                          <button
+                            onClick={e => { e.stopPropagation(); openJobDetail(inv.jobId!, inv.jobTitle || getJobTitle(inv.jobId)) }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(59,130,246,0.1)', color: 'var(--blue)', fontSize: 11, fontWeight: 700, border: '1px solid rgba(59,130,246,0.2)', cursor: 'pointer', transition: 'background 0.15s, box-shadow 0.15s' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(59,130,246,0.18)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 2px rgba(59,130,246,0.12)' }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(59,130,246,0.1)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none' }}
+                            title="View job details"
+                          >
+                            <Briefcase size={10} />
+                            {inv.jobTitle || getJobTitle(inv.jobId) || inv.jobId!.slice(0, 8)}
+                          </button>
+                        ) : '—'}
+                      </td>
                       <td><div className="cell-user"><span className="cell-name">{inv.customerName ?? '—'}</span></div></td>
                       <td className="td-primary font-600">{fmtDecimal(inv.total)}</td>
                       <td className="text-sm text-3">{new Date(inv.createdAt).toLocaleDateString()}</td>
@@ -300,6 +334,27 @@ export default function Finance() {
                           {humanizeStatus(inv.status)}
                         </span>
                       </td>
+                      {qbConnected && (
+                        <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                          {inv.quickbooksId ? (
+                            <span title={`Synced to QB: ${inv.quickbooksId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 700, color: '#2CA01C', background: 'rgba(44,160,28,0.12)', border: '1px solid rgba(44,160,28,0.3)', borderRadius: 999, padding: '2px 7px' }}>
+                              QB ✓
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => qbSync.mutate(inv.id, {
+                                onSuccess: () => showSuccess(`Invoice ${inv.invoiceNumber} pushed to QuickBooks.`, 'Synced'),
+                                onError: () => showError('QuickBooks sync failed. Ensure QB is connected and the invoice is valid.'),
+                              })}
+                              disabled={qbSync.isPending || inv.status === 'VOID'}
+                              title="Push to QuickBooks"
+                              style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '3px 6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--t4)', fontSize: 11, fontWeight: 600 }}
+                            >
+                              <UploadCloud size={12} /> Sync
+                            </button>
+                          )}
+                        </td>
+                      )}
                       <td style={{ textAlign: 'right' }}>
                         <div className="flex gap-1 justify-end">
                           <button onClick={e => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("open-invoice-detail", { detail: inv })); }} className="p-2 hover:bg-emerald-50 rounded-lg text-emerald-600 transition-colors" title="View Invoice"><Eye size={14} strokeWidth={2.5} /></button>
@@ -322,7 +377,7 @@ export default function Finance() {
                       </td>
                     </tr>
                   ))}
-                  {!invoicesQuery.isLoading && invoices.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No invoices found</td></tr>}
+                  {!invoicesQuery.isLoading && invoices.length === 0 && <tr><td colSpan={qbConnected ? 9 : 8} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No invoices found</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -376,7 +431,20 @@ export default function Finance() {
                   {!quotesQuery.isLoading && quotes.map(q => (
                     <tr key={q.id} onClick={() => window.dispatchEvent(new CustomEvent("open-quote-detail", { detail: q }))} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
                       <td><span className="td-mono td-primary">{q.quoteNumber}</span></td>
-                      <td>{q.jobId ? <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-[11px] font-bold border border-blue-100">{q.jobTitle || getJobTitle(q.jobId) || q.jobId.slice(0, 8)}</span> : '—'}</td>
+                      <td>
+                        {q.jobId ? (
+                          <button
+                            onClick={e => { e.stopPropagation(); openJobDetail(q.jobId!, q.jobTitle || getJobTitle(q.jobId)) }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(59,130,246,0.1)', color: 'var(--blue)', fontSize: 11, fontWeight: 700, border: '1px solid rgba(59,130,246,0.2)', cursor: 'pointer', transition: 'background 0.15s, box-shadow 0.15s' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(59,130,246,0.18)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 2px rgba(59,130,246,0.12)' }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(59,130,246,0.1)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none' }}
+                            title="View job details"
+                          >
+                            <Briefcase size={10} />
+                            {q.jobTitle || getJobTitle(q.jobId) || q.jobId!.slice(0, 8)}
+                          </button>
+                        ) : '—'}
+                      </td>
                       <td><div className="cell-user"><span className="cell-name">{q.customerName ?? '—'}</span></div></td>
                       <td>{q.title}</td>
                       <td className="td-primary font-600">{fmtDecimal(q.total)}</td>
@@ -449,7 +517,20 @@ export default function Finance() {
                   {!expensesQuery.isLoading && expenses.map(exp => (
                     <tr key={exp.id} onClick={() => window.dispatchEvent(new CustomEvent("open-expense-detail", { detail: exp }))} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
                       <td><span className="td-mono td-primary">{exp.id.slice(0, 8)}</span></td>
-                      <td>{exp.jobId ? <span className="px-2 py-1 rounded bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100">{getJobTitle(exp.jobId) || exp.jobId.slice(0, 8)}</span> : '—'}</td>
+                      <td>
+                        {exp.jobId ? (
+                          <button
+                            onClick={e => { e.stopPropagation(); openJobDetail(exp.jobId!, getJobTitle(exp.jobId)) }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(59,130,246,0.1)', color: 'var(--blue)', fontSize: 11, fontWeight: 700, border: '1px solid rgba(59,130,246,0.2)', cursor: 'pointer', transition: 'background 0.15s, box-shadow 0.15s' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(59,130,246,0.18)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 2px rgba(59,130,246,0.12)' }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(59,130,246,0.1)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none' }}
+                            title="View job details"
+                          >
+                            <Briefcase size={10} />
+                            {getJobTitle(exp.jobId) || exp.jobId!.slice(0, 8)}
+                          </button>
+                        ) : '—'}
+                      </td>
                       <td><span className="font-600 text-[13px]">{exp.category}</span></td>
                       <td className="text-sm text-2">{exp.vendor ?? '—'}</td>
                       <td className="text-sm text-3">{exp.date ? new Date(exp.date).toLocaleDateString() : '—'}</td>

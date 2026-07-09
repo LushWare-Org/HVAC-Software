@@ -16,6 +16,9 @@ type AlertType = 'EMERGENCY_HEAT' | 'OFFLINE' | 'UNDERPERFORMING'
 @Injectable()
 export class IotAlertsService {
   private readonly logger = new Logger(IotAlertsService.name)
+  // In-memory dedup set: `${customerId}:${deviceId}:${type}` → true while alert is active.
+  // Resets on service restart (acceptable — worst case one extra job is created).
+  private readonly activeFlags = new Set<string>()
 
   constructor(
     private readonly prisma: PrismaService,
@@ -37,7 +40,7 @@ export class IotAlertsService {
 
       // ── Emergency heat ──────────────────────────────────────────────────────
       if (snapshot.emergencyHeat === true) {
-        const added = await this.upsertIotFlag(companyId, customerId, device.id, 'EMERGENCY_HEAT',
+        const added = this.upsertIotFlag(companyId, customerId, device.id, 'EMERGENCY_HEAT',
           `Emergency heat active on "${device.name}" — heat pump may have failed`)
         if (added) {
           await this.createIotJob(companyId, customerId, device.name, 'EMERGENCY', {
@@ -55,7 +58,7 @@ export class IotAlertsService {
       if (snapshot.online === false && device.lastSyncedAt) {
         const offlineMs = Date.now() - device.lastSyncedAt.getTime()
         if (offlineMs > OFFLINE_THRESHOLD_MS) {
-          await this.upsertIotFlag(companyId, customerId, device.id, 'OFFLINE',
+          this.upsertIotFlag(companyId, customerId, device.id, 'OFFLINE',
             `Thermostat "${device.name}" has been offline for ${Math.floor(offlineMs / 3600000)}h — check connectivity`)
         }
       }
@@ -64,7 +67,7 @@ export class IotAlertsService {
       if (snapshot.online && (snapshot.hvacState === 'HEATING' || snapshot.hvacState === 'COOLING')) {
         const underperforming = await this.detectUnderperformance(device.id)
         if (underperforming) {
-          const added = await this.upsertIotFlag(companyId, customerId, device.id, 'UNDERPERFORMING',
+          const added = this.upsertIotFlag(companyId, customerId, device.id, 'UNDERPERFORMING',
             `${device.name} cannot reach setpoint — system may be failing`)
           if (added) {
             await this.createIotJob(companyId, customerId, device.name, 'HIGH', {
@@ -154,44 +157,28 @@ export class IotAlertsService {
     })
   }
 
-  // ── Tag management ────────────────────────────────────────────────────────
-  // Returns true if the tag was newly added (not already present) — caller uses
-  // this to fire one-shot actions like job creation without duplicating per cron tick.
-  private async upsertIotFlag(
-    companyId: string,
+  // ── Alert flag management (in-memory — no customer tag pollution) ──────────
+  // Returns true if the flag was newly set — caller uses this to fire one-shot
+  // actions like job creation without duplicating per cron tick.
+  private upsertIotFlag(
+    _companyId: string,
     customerId: string,
     deviceId: string,
     type: AlertType,
     notes: string,
-  ): Promise<boolean> {
-    const tag = `iot:${type.toLowerCase()}:${deviceId}`
-    const customer = await this.prisma.customer.findUnique({
-      where: { id: customerId },
-      select: { tags: true },
-    })
-    if (!customer) return false
-    if (customer.tags.includes(tag)) return false
-
-    await this.prisma.customer.update({
-      where: { id: customerId },
-      data: { tags: { push: tag } },
-    })
+  ): boolean {
+    const key = `${customerId}:${deviceId}:${type}`
+    if (this.activeFlags.has(key)) return false
+    this.activeFlags.add(key)
     this.logger.warn(`IoT alert [${type}] flagged on customer ${customerId} — ${notes}`)
     return true
   }
 
   // Call this when a device comes back online / emergency heat clears
-  async clearIotFlag(customerId: string, deviceId: string, type: AlertType) {
-    const tag = `iot:${type.toLowerCase()}:${deviceId}`
-    const customer = await this.prisma.customer.findUnique({
-      where: { id: customerId },
-      select: { tags: true },
-    })
-    if (!customer || !customer.tags.includes(tag)) return
-    await this.prisma.customer.update({
-      where: { id: customerId },
-      data: { tags: customer.tags.filter(t => t !== tag) },
-    })
+  clearIotFlag(customerId: string, deviceId: string, type: AlertType) {
+    const key = `${customerId}:${deviceId}:${type}`
+    if (!this.activeFlags.has(key)) return
+    this.activeFlags.delete(key)
     this.logger.log(`IoT alert [${type}] cleared for customer ${customerId}`)
   }
 }

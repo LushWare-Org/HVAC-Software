@@ -3,20 +3,36 @@
  * After creation, the job appears in the unassigned list for smart dispatch.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
-  X, Wrench, Loader2, AlertCircle, Calendar,
+  X, Wrench, Loader2, AlertCircle, Calendar, Lock, FolderKanban,
 } from "lucide-react";
 import { useCreateJob, useJobTypes } from "../../hooks/useJobs";
 import { useCustomers } from "../../hooks/useCustomers";
 import MapPicker from "../../components/MapPickerLazy";
 
+/** When set, the job is created for a fixed customer (e.g. from a project page) — the customer picker is replaced with a locked chip. */
+export interface PresetCustomer {
+  id: string;
+  name: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  presetCustomer?: PresetCustomer | null;
+  /** Attaches the job to a project on create (job-service accepts an optional projectId). */
+  projectId?: string;
+  /** Extra label shown next to the header, e.g. the project name. */
+  contextLabel?: string;
+  onCreated?: (job: any) => void;
 }
 
-export default function CreateJobModal({ isOpen, onClose }: Props) {
+export default function CreateJobModal({ isOpen, onClose, presetCustomer, projectId, contextLabel, onCreated }: Props) {
   const createJob = useCreateJob();
   const [error, setError] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
@@ -29,15 +45,48 @@ export default function CreateJobModal({ isOpen, onClose }: Props) {
     title: "",
     description: "",
     priority: "NORMAL",
-    customerId: "",
-    customerName: "",
-    serviceAddress: "",
+    customerId: presetCustomer?.id ?? "",
+    customerName: presetCustomer?.name ?? "",
+    serviceAddress: presetCustomer?.address ?? "",
     jobTypeId: "",
     date: new Date().toISOString().split("T")[0],
     time: "09:00",
-    lat: 6.9271,
-    lng: 79.8612,
+    lat: presetCustomer?.lat ?? 6.9271,
+    lng: presetCustomer?.lng ?? 79.8612,
   });
+
+  // Re-seed the preset customer each time the modal opens (props may change between opens)
+  useEffect(() => {
+    if (isOpen && presetCustomer) {
+      setForm((p) => ({
+        ...p,
+        customerId: presetCustomer.id,
+        customerName: presetCustomer.name,
+        serviceAddress: presetCustomer.address ?? p.serviceAddress,
+        lat: presetCustomer.lat ?? p.lat,
+        lng: presetCustomer.lng ?? p.lng,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, presetCustomer?.id]);
+
+  // Lock the dashboard behind the modal — without this, wheel/trackpad input
+  // over the backdrop scrolls the page underneath instead of staying put.
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prevOverflow; };
+  }, [isOpen]);
+
+  // Escape closes — standard modal affordance
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -78,15 +127,18 @@ export default function CreateJobModal({ isOpen, onClose }: Props) {
         scheduledStart,
         serviceLatitude: form.lat,
         serviceLongitude: form.lng,
+        projectId: projectId || undefined,
       } as any,
       {
-        onSuccess: () => {
+        onSuccess: (job) => {
+          onCreated?.(job);
           onClose();
           setForm({
             title: "", description: "", priority: "NORMAL",
-            customerId: "", customerName: "", serviceAddress: "",
+            customerId: presetCustomer?.id ?? "", customerName: presetCustomer?.name ?? "",
+            serviceAddress: presetCustomer?.address ?? "",
             jobTypeId: "", date: new Date().toISOString().split("T")[0],
-            time: "09:00", lat: 6.9271, lng: 79.8612,
+            time: "09:00", lat: presetCustomer?.lat ?? 6.9271, lng: presetCustomer?.lng ?? 79.8612,
           });
           setError("");
         },
@@ -101,26 +153,33 @@ export default function CreateJobModal({ isOpen, onClose }: Props) {
   const inputCls =
     "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white";
 
-  return (
-    <div className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-start justify-center pt-[72px] px-4 pb-4 admin-modal-backdrop" onClick={onClose}>
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4 py-6 admin-modal-backdrop" onClick={onClose}>
       <div
-        className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col admin-modal-box overflow-x-hidden"
-        style={{ maxHeight: "calc(100vh - 80px)" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={contextLabel ? `Create Job — ${contextLabel}` : "Create Job for Dispatch"}
+        className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col admin-modal-box overflow-hidden"
+        style={{ height: "min(700px, calc(100vh - 48px))" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 rounded-t-xl flex items-center justify-between shrink-0">
           <div className="text-white">
-            <h3 className="text-lg font-bold flex items-center gap-2"><Wrench size={18} /> Create Job for Dispatch</h3>
-            <p className="text-blue-200 text-xs mt-0.5">Job will appear in the unassigned queue for scheduling</p>
+            <h3 className="text-lg font-bold flex items-center gap-2"><Wrench size={18} /> {contextLabel ? `Create Job — ${contextLabel}` : 'Create Job for Dispatch'}</h3>
+            <p className="text-blue-200 text-xs mt-0.5 flex items-center gap-1.5">
+              {projectId && <FolderKanban size={11} />}
+              {projectId ? 'Linked to this project · appears in the unassigned queue for scheduling' : 'Job will appear in the unassigned queue for scheduling'}
+            </p>
           </div>
           <button onClick={onClose} className="text-blue-200 hover:text-white p-1 rounded bg-transparent border-0 cursor-pointer">
             <X size={18} />
           </button>
         </div>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        {/* Scrollable body — min-h-0 is required so this flex child actually
+            shrinks and scrolls instead of growing past the dialog's height */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
           {error && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
               <AlertCircle size={14} /> {error}
@@ -130,25 +189,35 @@ export default function CreateJobModal({ isOpen, onClose }: Props) {
           {/* Customer selection */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-500 uppercase">Customer *</label>
-            <input
-              type="text"
-              placeholder="Search customers…"
-              value={customerSearch}
-              onChange={(e) => setCustomerSearch(e.target.value)}
-              className={`${inputCls} mb-1.5`}
-            />
-            <select
-              value={form.customerId}
-              onChange={(e) => handleCustomerSelect(e.target.value)}
-              className={inputCls}
-            >
-              <option value="">-- Select Customer --</option>
-              {customers.map((c: any) => (
-                <option key={c.id} value={c.id}>
-                  {c.firstName} {c.lastName}{c.email ? ` (${c.email})` : ""}
-                </option>
-              ))}
-            </select>
+            {presetCustomer ? (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-blue-50 border border-blue-100 text-sm text-blue-900">
+                <Lock size={12} className="text-blue-400 shrink-0" />
+                <span className="font-medium">{form.customerName}</span>
+                <span className="text-blue-400 text-xs ml-auto">Set by the project</span>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Search customers…"
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                  className={`${inputCls} mb-1.5`}
+                />
+                <select
+                  value={form.customerId}
+                  onChange={(e) => handleCustomerSelect(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">-- Select Customer --</option>
+                  {customers.map((c: any) => (
+                    <option key={c.id} value={c.id}>
+                      {c.firstName} {c.lastName}{c.email ? ` (${c.email})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
           </div>
 
           {/* Title & Description */}
@@ -259,6 +328,7 @@ export default function CreateJobModal({ isOpen, onClose }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

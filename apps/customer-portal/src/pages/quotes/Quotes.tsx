@@ -5,6 +5,7 @@ import { useToast } from '../../contexts/ToastContext'
 import { downloadPdf, viewPdf } from '../../lib/pdf'
 import QuoteDetailModal from './QuoteDetailModal'
 import type { Quote } from '../../types/api'
+import { formatMoney } from '../../lib/format'
 
 const STATUS_MAP: Record<string, { label: string; css: string }> = {
   DRAFT: { label: 'Draft', css: 'badge-neutral' },
@@ -19,7 +20,7 @@ const STATUS_MAP: Record<string, { label: string; css: string }> = {
 const ITEMS_PER_PAGE = 10
 
 function fmtMoney(val?: string | number) {
-  return `$${Number(val ?? 0).toLocaleString()}`
+  return formatMoney(val)
 }
 
 function fmtDate(iso?: string) {

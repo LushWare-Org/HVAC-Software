@@ -21,6 +21,8 @@ import { downloadPdf, viewPdf } from '../../lib/pdf'
 import InvoiceDetailModal from './InvoiceDetailModal.tsx'
 import PayInvoiceModal from './PayInvoiceModal.tsx'
 import type { Invoice } from '../../types/api'
+import { featureEnabled, formatMoney } from '../../lib/format'
+import { useCompany } from '../../contexts/CompanyContext'
 
 const STATUS_MAP: Record<string, { label: string; css: string }> = {
   DRAFT: { label: 'Draft', css: 'badge-amber' },
@@ -34,7 +36,7 @@ const STATUS_MAP: Record<string, { label: string; css: string }> = {
 const ITEMS_PER_PAGE = 10
 
 function fmtMoney(val?: string | number) {
-  return `$${Number(val ?? 0).toLocaleString()}`
+  return formatMoney(val)
 }
 
 function fmtDate(iso?: string) {
@@ -51,6 +53,8 @@ export default function Invoices() {
 
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [showDetail, setShowDetail] = useState(false)
+  const { settings: companySettings } = useCompany()
+  const canPayOnline = featureEnabled(companySettings?.features, 'onlinePayments')
   const [showPay, setShowPay] = useState(false)
   const [invoiceToPay, setInvoiceToPay] = useState<Invoice | null>(null)
   const [invoiceStatusOverrides, setInvoiceStatusOverrides] = useState<Record<string, Invoice['status']>>({})
@@ -205,9 +209,9 @@ export default function Invoices() {
             </select>
             <select className="select" style={{ width: 150 }} value={amountFilter} onChange={e => { setAmountFilter(e.target.value); setPage(1) }}>
               <option value="all">All Amounts</option>
-              <option value="under200">Under $200</option>
-              <option value="200to500">$200 - $500</option>
-              <option value="over500">Over $500</option>
+              <option value="under200">Under {formatMoney(200, { decimals: 0 })}</option>
+              <option value="200to500">{formatMoney(200, { decimals: 0 })} - {formatMoney(500, { decimals: 0 })}</option>
+              <option value="over500">Over {formatMoney(500, { decimals: 0 })}</option>
             </select>
             <select className="select" style={{ width: 150 }} value={dateFilter} onChange={e => { setDateFilter(e.target.value); setPage(1) }}>
               <option value="all">All Dates</option>
@@ -250,7 +254,7 @@ export default function Invoices() {
                   paginated.map(invoice => {
                     const s = STATUS_MAP[invoice.status] || { label: invoice.status, css: 'badge-neutral' }
                     const outstanding = Number(invoice.total) - Number(invoice.amountPaid)
-                    const canPay = ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
+                    const canPay = canPayOnline && ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
                     const alreadyDecided =
                       Boolean(invoice.approvedAt) ||
                       Boolean(invoice.declinedAt) ||

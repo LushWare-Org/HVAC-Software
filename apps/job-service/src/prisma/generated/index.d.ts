@@ -8490,6 +8490,7 @@ export namespace Prisma {
     serviceLongitude: Decimal | null
     jobTypeId: string | null
     templateId: string | null
+    projectId: string | null
     title: string | null
     description: string | null
     status: $Enums.JobStatus | null
@@ -8505,8 +8506,13 @@ export namespace Prisma {
     estimatedValue: Decimal | null
     quoteId: string | null
     invoiceId: string | null
+    agreementId: string | null
+    isAgreementJob: boolean | null
     notes: string | null
     internalNotes: string | null
+    cancellationReason: string | null
+    hasPartShortage: boolean | null
+    partShortageNote: string | null
     createdByUserId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -8529,6 +8535,7 @@ export namespace Prisma {
     serviceLongitude: Decimal | null
     jobTypeId: string | null
     templateId: string | null
+    projectId: string | null
     title: string | null
     description: string | null
     status: $Enums.JobStatus | null
@@ -8544,8 +8551,13 @@ export namespace Prisma {
     estimatedValue: Decimal | null
     quoteId: string | null
     invoiceId: string | null
+    agreementId: string | null
+    isAgreementJob: boolean | null
     notes: string | null
     internalNotes: string | null
+    cancellationReason: string | null
+    hasPartShortage: boolean | null
+    partShortageNote: string | null
     createdByUserId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -8568,6 +8580,7 @@ export namespace Prisma {
     serviceLongitude: number
     jobTypeId: number
     templateId: number
+    projectId: number
     title: number
     description: number
     status: number
@@ -8583,9 +8596,14 @@ export namespace Prisma {
     estimatedValue: number
     quoteId: number
     invoiceId: number
+    agreementId: number
+    isAgreementJob: number
     notes: number
     internalNotes: number
     tags: number
+    cancellationReason: number
+    hasPartShortage: number
+    partShortageNote: number
     createdByUserId: number
     createdAt: number
     updatedAt: number
@@ -8626,6 +8644,7 @@ export namespace Prisma {
     serviceLongitude?: true
     jobTypeId?: true
     templateId?: true
+    projectId?: true
     title?: true
     description?: true
     status?: true
@@ -8641,8 +8660,13 @@ export namespace Prisma {
     estimatedValue?: true
     quoteId?: true
     invoiceId?: true
+    agreementId?: true
+    isAgreementJob?: true
     notes?: true
     internalNotes?: true
+    cancellationReason?: true
+    hasPartShortage?: true
+    partShortageNote?: true
     createdByUserId?: true
     createdAt?: true
     updatedAt?: true
@@ -8665,6 +8689,7 @@ export namespace Prisma {
     serviceLongitude?: true
     jobTypeId?: true
     templateId?: true
+    projectId?: true
     title?: true
     description?: true
     status?: true
@@ -8680,8 +8705,13 @@ export namespace Prisma {
     estimatedValue?: true
     quoteId?: true
     invoiceId?: true
+    agreementId?: true
+    isAgreementJob?: true
     notes?: true
     internalNotes?: true
+    cancellationReason?: true
+    hasPartShortage?: true
+    partShortageNote?: true
     createdByUserId?: true
     createdAt?: true
     updatedAt?: true
@@ -8704,6 +8734,7 @@ export namespace Prisma {
     serviceLongitude?: true
     jobTypeId?: true
     templateId?: true
+    projectId?: true
     title?: true
     description?: true
     status?: true
@@ -8719,9 +8750,14 @@ export namespace Prisma {
     estimatedValue?: true
     quoteId?: true
     invoiceId?: true
+    agreementId?: true
+    isAgreementJob?: true
     notes?: true
     internalNotes?: true
     tags?: true
+    cancellationReason?: true
+    hasPartShortage?: true
+    partShortageNote?: true
     createdByUserId?: true
     createdAt?: true
     updatedAt?: true
@@ -8831,6 +8867,7 @@ export namespace Prisma {
     serviceLongitude: Decimal | null
     jobTypeId: string | null
     templateId: string | null
+    projectId: string | null
     title: string
     description: string | null
     status: $Enums.JobStatus
@@ -8846,9 +8883,14 @@ export namespace Prisma {
     estimatedValue: Decimal | null
     quoteId: string | null
     invoiceId: string | null
+    agreementId: string | null
+    isAgreementJob: boolean
     notes: string | null
     internalNotes: string | null
     tags: string[]
+    cancellationReason: string | null
+    hasPartShortage: boolean
+    partShortageNote: string | null
     createdByUserId: string
     createdAt: Date
     updatedAt: Date
@@ -8890,6 +8932,7 @@ export namespace Prisma {
     serviceLongitude?: boolean
     jobTypeId?: boolean
     templateId?: boolean
+    projectId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -8905,9 +8948,14 @@ export namespace Prisma {
     estimatedValue?: boolean
     quoteId?: boolean
     invoiceId?: boolean
+    agreementId?: boolean
+    isAgreementJob?: boolean
     notes?: boolean
     internalNotes?: boolean
     tags?: boolean
+    cancellationReason?: boolean
+    hasPartShortage?: boolean
+    partShortageNote?: boolean
     createdByUserId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -8937,6 +8985,7 @@ export namespace Prisma {
     serviceLongitude?: boolean
     jobTypeId?: boolean
     templateId?: boolean
+    projectId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -8952,9 +9001,14 @@ export namespace Prisma {
     estimatedValue?: boolean
     quoteId?: boolean
     invoiceId?: boolean
+    agreementId?: boolean
+    isAgreementJob?: boolean
     notes?: boolean
     internalNotes?: boolean
     tags?: boolean
+    cancellationReason?: boolean
+    hasPartShortage?: boolean
+    partShortageNote?: boolean
     createdByUserId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -8979,6 +9033,7 @@ export namespace Prisma {
     serviceLongitude?: boolean
     jobTypeId?: boolean
     templateId?: boolean
+    projectId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -8994,9 +9049,14 @@ export namespace Prisma {
     estimatedValue?: boolean
     quoteId?: boolean
     invoiceId?: boolean
+    agreementId?: boolean
+    isAgreementJob?: boolean
     notes?: boolean
     internalNotes?: boolean
     tags?: boolean
+    cancellationReason?: boolean
+    hasPartShortage?: boolean
+    partShortageNote?: boolean
     createdByUserId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -9043,6 +9103,7 @@ export namespace Prisma {
       serviceLongitude: Prisma.Decimal | null
       jobTypeId: string | null
       templateId: string | null
+      projectId: string | null
       title: string
       description: string | null
       status: $Enums.JobStatus
@@ -9058,9 +9119,14 @@ export namespace Prisma {
       estimatedValue: Prisma.Decimal | null
       quoteId: string | null
       invoiceId: string | null
+      agreementId: string | null
+      isAgreementJob: boolean
       notes: string | null
       internalNotes: string | null
       tags: string[]
+      cancellationReason: string | null
+      hasPartShortage: boolean
+      partShortageNote: string | null
       createdByUserId: string
       createdAt: Date
       updatedAt: Date
@@ -9479,6 +9545,7 @@ export namespace Prisma {
     readonly serviceLongitude: FieldRef<"Job", 'Decimal'>
     readonly jobTypeId: FieldRef<"Job", 'String'>
     readonly templateId: FieldRef<"Job", 'String'>
+    readonly projectId: FieldRef<"Job", 'String'>
     readonly title: FieldRef<"Job", 'String'>
     readonly description: FieldRef<"Job", 'String'>
     readonly status: FieldRef<"Job", 'JobStatus'>
@@ -9494,9 +9561,14 @@ export namespace Prisma {
     readonly estimatedValue: FieldRef<"Job", 'Decimal'>
     readonly quoteId: FieldRef<"Job", 'String'>
     readonly invoiceId: FieldRef<"Job", 'String'>
+    readonly agreementId: FieldRef<"Job", 'String'>
+    readonly isAgreementJob: FieldRef<"Job", 'Boolean'>
     readonly notes: FieldRef<"Job", 'String'>
     readonly internalNotes: FieldRef<"Job", 'String'>
     readonly tags: FieldRef<"Job", 'String[]'>
+    readonly cancellationReason: FieldRef<"Job", 'String'>
+    readonly hasPartShortage: FieldRef<"Job", 'Boolean'>
+    readonly partShortageNote: FieldRef<"Job", 'String'>
     readonly createdByUserId: FieldRef<"Job", 'String'>
     readonly createdAt: FieldRef<"Job", 'DateTime'>
     readonly updatedAt: FieldRef<"Job", 'DateTime'>
@@ -15161,6 +15233,7 @@ export namespace Prisma {
     serviceLongitude: 'serviceLongitude',
     jobTypeId: 'jobTypeId',
     templateId: 'templateId',
+    projectId: 'projectId',
     title: 'title',
     description: 'description',
     status: 'status',
@@ -15176,9 +15249,14 @@ export namespace Prisma {
     estimatedValue: 'estimatedValue',
     quoteId: 'quoteId',
     invoiceId: 'invoiceId',
+    agreementId: 'agreementId',
+    isAgreementJob: 'isAgreementJob',
     notes: 'notes',
     internalNotes: 'internalNotes',
     tags: 'tags',
+    cancellationReason: 'cancellationReason',
+    hasPartShortage: 'hasPartShortage',
+    partShortageNote: 'partShortageNote',
     createdByUserId: 'createdByUserId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -16033,6 +16111,7 @@ export namespace Prisma {
     serviceLongitude?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: StringNullableFilter<"Job"> | string | null
     templateId?: StringNullableFilter<"Job"> | string | null
+    projectId?: StringNullableFilter<"Job"> | string | null
     title?: StringFilter<"Job"> | string
     description?: StringNullableFilter<"Job"> | string | null
     status?: EnumJobStatusFilter<"Job"> | $Enums.JobStatus
@@ -16048,9 +16127,14 @@ export namespace Prisma {
     estimatedValue?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     quoteId?: StringNullableFilter<"Job"> | string | null
     invoiceId?: StringNullableFilter<"Job"> | string | null
+    agreementId?: StringNullableFilter<"Job"> | string | null
+    isAgreementJob?: BoolFilter<"Job"> | boolean
     notes?: StringNullableFilter<"Job"> | string | null
     internalNotes?: StringNullableFilter<"Job"> | string | null
     tags?: StringNullableListFilter<"Job">
+    cancellationReason?: StringNullableFilter<"Job"> | string | null
+    hasPartShortage?: BoolFilter<"Job"> | boolean
+    partShortageNote?: StringNullableFilter<"Job"> | string | null
     createdByUserId?: StringFilter<"Job"> | string
     createdAt?: DateTimeFilter<"Job"> | Date | string
     updatedAt?: DateTimeFilter<"Job"> | Date | string
@@ -16079,6 +16163,7 @@ export namespace Prisma {
     serviceLongitude?: SortOrderInput | SortOrder
     jobTypeId?: SortOrderInput | SortOrder
     templateId?: SortOrderInput | SortOrder
+    projectId?: SortOrderInput | SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -16094,9 +16179,14 @@ export namespace Prisma {
     estimatedValue?: SortOrderInput | SortOrder
     quoteId?: SortOrderInput | SortOrder
     invoiceId?: SortOrderInput | SortOrder
+    agreementId?: SortOrderInput | SortOrder
+    isAgreementJob?: SortOrder
     notes?: SortOrderInput | SortOrder
     internalNotes?: SortOrderInput | SortOrder
     tags?: SortOrder
+    cancellationReason?: SortOrderInput | SortOrder
+    hasPartShortage?: SortOrder
+    partShortageNote?: SortOrderInput | SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -16129,6 +16219,7 @@ export namespace Prisma {
     serviceLongitude?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: StringNullableFilter<"Job"> | string | null
     templateId?: StringNullableFilter<"Job"> | string | null
+    projectId?: StringNullableFilter<"Job"> | string | null
     title?: StringFilter<"Job"> | string
     description?: StringNullableFilter<"Job"> | string | null
     status?: EnumJobStatusFilter<"Job"> | $Enums.JobStatus
@@ -16144,9 +16235,14 @@ export namespace Prisma {
     estimatedValue?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     quoteId?: StringNullableFilter<"Job"> | string | null
     invoiceId?: StringNullableFilter<"Job"> | string | null
+    agreementId?: StringNullableFilter<"Job"> | string | null
+    isAgreementJob?: BoolFilter<"Job"> | boolean
     notes?: StringNullableFilter<"Job"> | string | null
     internalNotes?: StringNullableFilter<"Job"> | string | null
     tags?: StringNullableListFilter<"Job">
+    cancellationReason?: StringNullableFilter<"Job"> | string | null
+    hasPartShortage?: BoolFilter<"Job"> | boolean
+    partShortageNote?: StringNullableFilter<"Job"> | string | null
     createdByUserId?: StringFilter<"Job"> | string
     createdAt?: DateTimeFilter<"Job"> | Date | string
     updatedAt?: DateTimeFilter<"Job"> | Date | string
@@ -16175,6 +16271,7 @@ export namespace Prisma {
     serviceLongitude?: SortOrderInput | SortOrder
     jobTypeId?: SortOrderInput | SortOrder
     templateId?: SortOrderInput | SortOrder
+    projectId?: SortOrderInput | SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -16190,9 +16287,14 @@ export namespace Prisma {
     estimatedValue?: SortOrderInput | SortOrder
     quoteId?: SortOrderInput | SortOrder
     invoiceId?: SortOrderInput | SortOrder
+    agreementId?: SortOrderInput | SortOrder
+    isAgreementJob?: SortOrder
     notes?: SortOrderInput | SortOrder
     internalNotes?: SortOrderInput | SortOrder
     tags?: SortOrder
+    cancellationReason?: SortOrderInput | SortOrder
+    hasPartShortage?: SortOrder
+    partShortageNote?: SortOrderInput | SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -16223,6 +16325,7 @@ export namespace Prisma {
     serviceLongitude?: DecimalNullableWithAggregatesFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     templateId?: StringNullableWithAggregatesFilter<"Job"> | string | null
+    projectId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     title?: StringWithAggregatesFilter<"Job"> | string
     description?: StringNullableWithAggregatesFilter<"Job"> | string | null
     status?: EnumJobStatusWithAggregatesFilter<"Job"> | $Enums.JobStatus
@@ -16238,9 +16341,14 @@ export namespace Prisma {
     estimatedValue?: DecimalNullableWithAggregatesFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     quoteId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     invoiceId?: StringNullableWithAggregatesFilter<"Job"> | string | null
+    agreementId?: StringNullableWithAggregatesFilter<"Job"> | string | null
+    isAgreementJob?: BoolWithAggregatesFilter<"Job"> | boolean
     notes?: StringNullableWithAggregatesFilter<"Job"> | string | null
     internalNotes?: StringNullableWithAggregatesFilter<"Job"> | string | null
     tags?: StringNullableListFilter<"Job">
+    cancellationReason?: StringNullableWithAggregatesFilter<"Job"> | string | null
+    hasPartShortage?: BoolWithAggregatesFilter<"Job"> | boolean
+    partShortageNote?: StringNullableWithAggregatesFilter<"Job"> | string | null
     createdByUserId?: StringWithAggregatesFilter<"Job"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Job"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Job"> | Date | string
@@ -17261,6 +17369,7 @@ export namespace Prisma {
     serviceZip?: string | null
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -17276,9 +17385,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -17307,6 +17421,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
     templateId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -17322,9 +17437,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -17349,6 +17469,7 @@ export namespace Prisma {
     serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -17364,9 +17485,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17395,6 +17521,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -17410,9 +17537,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17439,6 +17571,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
     templateId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -17454,9 +17587,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -17477,6 +17615,7 @@ export namespace Prisma {
     serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -17492,9 +17631,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17517,6 +17661,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -17532,9 +17677,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18801,6 +18951,7 @@ export namespace Prisma {
     serviceLongitude?: SortOrder
     jobTypeId?: SortOrder
     templateId?: SortOrder
+    projectId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     status?: SortOrder
@@ -18816,9 +18967,14 @@ export namespace Prisma {
     estimatedValue?: SortOrder
     quoteId?: SortOrder
     invoiceId?: SortOrder
+    agreementId?: SortOrder
+    isAgreementJob?: SortOrder
     notes?: SortOrder
     internalNotes?: SortOrder
     tags?: SortOrder
+    cancellationReason?: SortOrder
+    hasPartShortage?: SortOrder
+    partShortageNote?: SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -18849,6 +19005,7 @@ export namespace Prisma {
     serviceLongitude?: SortOrder
     jobTypeId?: SortOrder
     templateId?: SortOrder
+    projectId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     status?: SortOrder
@@ -18864,8 +19021,13 @@ export namespace Prisma {
     estimatedValue?: SortOrder
     quoteId?: SortOrder
     invoiceId?: SortOrder
+    agreementId?: SortOrder
+    isAgreementJob?: SortOrder
     notes?: SortOrder
     internalNotes?: SortOrder
+    cancellationReason?: SortOrder
+    hasPartShortage?: SortOrder
+    partShortageNote?: SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -18888,6 +19050,7 @@ export namespace Prisma {
     serviceLongitude?: SortOrder
     jobTypeId?: SortOrder
     templateId?: SortOrder
+    projectId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     status?: SortOrder
@@ -18903,8 +19066,13 @@ export namespace Prisma {
     estimatedValue?: SortOrder
     quoteId?: SortOrder
     invoiceId?: SortOrder
+    agreementId?: SortOrder
+    isAgreementJob?: SortOrder
     notes?: SortOrder
     internalNotes?: SortOrder
+    cancellationReason?: SortOrder
+    hasPartShortage?: SortOrder
+    partShortageNote?: SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -20590,6 +20758,7 @@ export namespace Prisma {
     serviceZip?: string | null
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -20605,9 +20774,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20634,6 +20808,7 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     templateId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -20649,9 +20824,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20774,6 +20954,7 @@ export namespace Prisma {
     serviceLongitude?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: StringNullableFilter<"Job"> | string | null
     templateId?: StringNullableFilter<"Job"> | string | null
+    projectId?: StringNullableFilter<"Job"> | string | null
     title?: StringFilter<"Job"> | string
     description?: StringNullableFilter<"Job"> | string | null
     status?: EnumJobStatusFilter<"Job"> | $Enums.JobStatus
@@ -20789,9 +20970,14 @@ export namespace Prisma {
     estimatedValue?: DecimalNullableFilter<"Job"> | Decimal | DecimalJsLike | number | string | null
     quoteId?: StringNullableFilter<"Job"> | string | null
     invoiceId?: StringNullableFilter<"Job"> | string | null
+    agreementId?: StringNullableFilter<"Job"> | string | null
+    isAgreementJob?: BoolFilter<"Job"> | boolean
     notes?: StringNullableFilter<"Job"> | string | null
     internalNotes?: StringNullableFilter<"Job"> | string | null
     tags?: StringNullableListFilter<"Job">
+    cancellationReason?: StringNullableFilter<"Job"> | string | null
+    hasPartShortage?: BoolFilter<"Job"> | boolean
+    partShortageNote?: StringNullableFilter<"Job"> | string | null
     createdByUserId?: StringFilter<"Job"> | string
     createdAt?: DateTimeFilter<"Job"> | Date | string
     updatedAt?: DateTimeFilter<"Job"> | Date | string
@@ -20883,6 +21069,7 @@ export namespace Prisma {
     serviceZip?: string | null
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -20898,9 +21085,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20927,6 +21119,7 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -20942,9 +21135,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21277,6 +21475,7 @@ export namespace Prisma {
     serviceZip?: string | null
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -21292,9 +21491,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21322,6 +21526,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
     templateId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -21337,9 +21542,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21414,6 +21624,7 @@ export namespace Prisma {
     serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -21429,9 +21640,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21459,6 +21675,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -21474,9 +21691,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22008,6 +22230,7 @@ export namespace Prisma {
     serviceZip?: string | null
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22023,9 +22246,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22053,6 +22281,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
     templateId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22068,9 +22297,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22110,6 +22344,7 @@ export namespace Prisma {
     serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22125,9 +22360,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22155,6 +22395,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22170,9 +22411,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22196,6 +22442,7 @@ export namespace Prisma {
     serviceZip?: string | null
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22211,9 +22458,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22241,6 +22493,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
     templateId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22256,9 +22509,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22298,6 +22556,7 @@ export namespace Prisma {
     serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22313,9 +22572,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22343,6 +22607,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22358,9 +22623,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22384,6 +22654,7 @@ export namespace Prisma {
     serviceZip?: string | null
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22399,9 +22670,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22429,6 +22705,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
     templateId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22444,9 +22721,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22554,6 +22836,7 @@ export namespace Prisma {
     serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22569,9 +22852,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22599,6 +22887,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22614,9 +22903,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22980,6 +23274,7 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     templateId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22995,9 +23290,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23105,6 +23405,7 @@ export namespace Prisma {
     serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23120,9 +23421,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23149,6 +23455,7 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23164,9 +23471,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23192,6 +23504,7 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23207,9 +23520,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23243,6 +23561,7 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
+    projectId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -23258,9 +23577,14 @@ export namespace Prisma {
     estimatedValue?: Decimal | DecimalJsLike | number | string | null
     quoteId?: string | null
     invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
     notes?: string | null
     internalNotes?: string | null
     tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23317,6 +23641,7 @@ export namespace Prisma {
     serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23332,9 +23657,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23361,6 +23691,7 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23376,9 +23707,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23404,6 +23740,7 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23419,9 +23756,14 @@ export namespace Prisma {
     estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
     tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

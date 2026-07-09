@@ -48,6 +48,7 @@ model InventoryItem {
   unit             String       @default("each")
   reorderPoint     Int          @default(5)
   reorderQty       Int          @default(10)
+  unitCost         Decimal?     @db.Decimal(10, 2)
   isActive         Boolean      @default(true)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt

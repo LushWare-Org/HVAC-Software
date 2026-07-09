@@ -10,6 +10,7 @@ import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client
 import { Role, AuthUser } from '@tscrm/types';
 import { InvoicesService } from './invoices.service';
 import { PdfService } from '../pdf/pdf.service';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceStatus, PaymentMethod } from '../prisma/generated';
 
@@ -35,6 +36,7 @@ export class InvoicesController {
   constructor(
     private readonly invoicesService: InvoicesService,
     private readonly pdfService: PdfService,
+    private readonly companySettings: CompanySettingsClient,
   ) {}
 
   // ── List ──────────────────────────────────────────────────────────────────
@@ -50,10 +52,11 @@ export class InvoicesController {
     @Query('status') status?: InvoiceStatus,
     @Query('customerId') customerId?: string,
     @Query('jobId') jobId?: string,
+    @Query('projectId') projectId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    return this.invoicesService.findAll(user.companyId, { status, customerId, jobId, page, limit });
+    return this.invoicesService.findAll(user.companyId, { status, customerId, jobId, projectId, page, limit });
   }
 
   // ── Single ────────────────────────────────────────────────────────────────
@@ -176,7 +179,11 @@ export class InvoicesController {
     const invoice = await this.invoicesService.findOne(user.companyId, id);
     const companyName = process.env.COMPANY_NAME ?? 'T&S Services';
     const companyAddress = process.env.COMPANY_ADDRESS ?? '';
-    const pdf = await this.pdfService.generateInvoicePdf(invoice as any, companyName, companyAddress);
+    const settings = await this.companySettings.getSettings(user.companyId);
+    const pdf = await this.pdfService.generateInvoicePdf(invoice as any, companyName, companyAddress, {
+      currency: settings.currency,
+      timezone: settings.timezone,
+    });
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${invoice.invoiceNumber}.pdf"`,

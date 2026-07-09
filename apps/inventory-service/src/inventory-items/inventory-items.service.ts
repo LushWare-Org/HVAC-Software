@@ -56,6 +56,7 @@ export class InventoryItemsService {
     priceBookItemId?: string;
     reorderPoint?: number;
     reorderQty?: number;
+    unitCost?: number;
   }) {
     // Ensure warehouse exists for this company
     const warehouse = await this.locations.ensureWarehouse(companyId);
@@ -71,6 +72,7 @@ export class InventoryItemsService {
         priceBookItemId: dto.priceBookItemId,
         reorderPoint: dto.reorderPoint ?? 5,
         reorderQty: dto.reorderQty ?? 10,
+        unitCost: dto.unitCost,
       },
     });
 
@@ -89,6 +91,7 @@ export class InventoryItemsService {
     reorderPoint?: number;
     reorderQty?: number;
     priceBookItemId?: string;
+    unitCost?: number;
     isActive?: boolean;
   }) {
     await this.findOne(companyId, id); // verify exists

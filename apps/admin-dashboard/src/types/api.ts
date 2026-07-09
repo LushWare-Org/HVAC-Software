@@ -287,10 +287,17 @@ export interface Job {
   jobTypeName?: string
   scheduledStart?: string
   scheduledEnd?: string
+  estimatedDurationMins?: number
   completedAt?: string
   estimatedAmount?: number
   finalAmount?: number
   tags: string[]
+  agreementId?: string
+  isAgreementJob?: boolean
+  projectId?: string
+  cancellationReason?: string
+  hasPartShortage?: boolean
+  partShortageNote?: string
   createdAt: string
   updatedAt: string
   statusHistory?: { id: string; fromStatus?: string; toStatus: string; changedById?: string; notes?: string; createdAt: string }[]
@@ -344,6 +351,7 @@ export interface Invoice {
   dueDate?: string
   paidAt?: string
   notes?: string
+  quickbooksId?: string
   createdAt: string
   updatedAt: string
 }
@@ -618,6 +626,9 @@ export interface TechLeaderboard {
   totalRevenue: number
   avgRating: number
   completionRate: number
+  onTimeRate?: number
+  performanceScore?: number
+  avgJobDurationMins?: number
 }
 
 export interface CustomerAcquisition {
@@ -734,6 +745,7 @@ export interface InventoryItem {
   unit: string
   reorderPoint: number
   reorderQty: number
+  unitCost?: number
   isActive: boolean
   createdAt: string
   updatedAt: string

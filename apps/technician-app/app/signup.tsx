@@ -10,12 +10,15 @@ import {
   Platform,
   ActivityIndicator,
   FlatList,
+  Alert,
+  Image,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import * as Location from 'expo-location'
 import MapView, { Marker, Region, MapPressEvent } from 'react-native-maps'
 import { useAuth } from '@/contexts/AuthContext'
+import { pickAvatarImage, stashPendingAvatar } from '@/hooks/useAvatar'
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius, Shadow } from '@/constants/theme'
 
 const SKILL_OPTIONS = [
@@ -47,6 +50,7 @@ export default function SignupScreen() {
 
   // Step 2
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
+  const [photoUri, setPhotoUri] = useState<string | null>(null)
 
   // Step 3 — map
   const [mapRegion, setMapRegion] = useState<Region>(DEFAULT_REGION)
@@ -161,6 +165,9 @@ export default function SignupScreen() {
         latitude: pin!.latitude,
         longitude: pin!.longitude,
       })
+      // Account is pending approval so we can't upload the photo yet —
+      // stash it locally; it uploads automatically after the first login.
+      if (photoUri) await stashPendingAvatar(photoUri)
       router.replace('/pending-approval')
     } catch (err: any) {
       setError(err.response?.data?.message ?? err.message ?? 'Registration failed')
@@ -248,6 +255,36 @@ export default function SignupScreen() {
                 ))}
               </View>
               {selectedSkills.length > 0 && <Text style={styles.selectedCount}>{selectedSkills.length} skill{selectedSkills.length > 1 ? 's' : ''} selected</Text>}
+            </View>
+
+            {/* Optional profile photo — customers see it in "on the way" emails */}
+            <View style={styles.card}>
+              <Text style={styles.photoTitle}>Profile photo (optional)</Text>
+              <Text style={styles.skillsHint}>Customers see your photo when you're on the way — you can add it later from your profile.</Text>
+              <View style={styles.photoRow}>
+                {photoUri ? (
+                  <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+                ) : (
+                  <View style={styles.photoPlaceholder}><Text style={{ fontSize: 24 }}>📷</Text></View>
+                )}
+                <TouchableOpacity
+                  style={styles.photoBtn}
+                  onPress={() =>
+                    Alert.alert('Add a photo', undefined, [
+                      { text: 'Take photo', onPress: async () => setPhotoUri((await pickAvatarImage('camera')) ?? photoUri) },
+                      { text: 'Choose from gallery', onPress: async () => setPhotoUri((await pickAvatarImage('library')) ?? photoUri) },
+                      { text: 'Cancel', style: 'cancel' },
+                    ])
+                  }
+                >
+                  <Text style={styles.photoBtnText}>{photoUri ? 'Change photo' : 'Add photo'}</Text>
+                </TouchableOpacity>
+                {photoUri && (
+                  <TouchableOpacity onPress={() => setPhotoUri(null)}>
+                    <Text style={styles.photoRemove}>Remove</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
             <TouchableOpacity style={styles.nextBtn} onPress={nextStep} activeOpacity={0.85}>
               <Text style={styles.nextBtnText}>Continue →</Text>
@@ -378,6 +415,13 @@ const styles = StyleSheet.create({
   eyeBtn: { padding: Spacing.sm },
 
   skillsHint: { fontSize: FontSize.sm, color: Colors.textSecondary, marginBottom: Spacing.md },
+  photoTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.textPrimary, marginBottom: Spacing.xs },
+  photoRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  photoPreview: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: Colors.primary },
+  photoPlaceholder: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border, justifyContent: 'center', alignItems: 'center' },
+  photoBtn: { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.md, backgroundColor: Colors.primary },
+  photoBtnText: { color: Colors.white, fontSize: FontSize.sm, fontWeight: FontWeight.semibold },
+  photoRemove: { fontSize: FontSize.sm, color: Colors.textSecondary },
   skillGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   skillChip: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: 20, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.background },
   skillChipOn: { backgroundColor: Colors.primary, borderColor: Colors.primary },

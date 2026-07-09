@@ -1,8 +1,10 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '../prisma/generated';
 import { CreateJobDto } from './dto/create-job.dto';
@@ -13,6 +15,7 @@ const CREATE_JOB_MAX_ATTEMPTS = 5;
 
 @Injectable()
 export class JobsService {
+  private readonly logger = new Logger(JobsService.name);
   constructor(private prisma: PrismaService) {}
 
   // ============================================================
@@ -95,6 +98,9 @@ export class JobsService {
       dateFrom?: string;
       dateTo?: string;
       customerId?: string;
+      agreementId?: string;
+      projectId?: string;
+      isAgreementJob?: boolean;
     } = {},
   ): Promise<PaginatedResponse<unknown>> {
     const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput });
@@ -104,6 +110,9 @@ export class JobsService {
     if (filters.assignedToId) where.assignedToId = filters.assignedToId;
     if (filters.jobTypeId) where.jobTypeId = filters.jobTypeId;
     if (filters.customerId) where.customerId = filters.customerId;
+    if (filters.agreementId) where.agreementId = filters.agreementId;
+    if (filters.projectId) where.projectId = filters.projectId;
+    if (filters.isAgreementJob !== undefined) where.isAgreementJob = filters.isAgreementJob;
     if (filters.dateFrom || filters.dateTo) {
       where.scheduledStart = {};
       if (filters.dateFrom) where.scheduledStart.gte = new Date(filters.dateFrom);
@@ -200,7 +209,12 @@ export class JobsService {
   ) {
     const job = await this.prisma.job.findFirst({
       where: { id: jobId, companyId },
-      select: { id: true, status: true },
+      select: {
+        id: true, status: true, customerId: true,
+        customerName: true, customerEmail: true,
+        serviceAddress: true, assignedToName: true, scheduledStart: true,
+        agreementId: true,
+      },
     });
     if (!job) throw new NotFoundException(`Job ${jobId} not found`);
 
@@ -221,9 +235,12 @@ export class JobsService {
     if (newStatus === JobStatusDto.ON_SITE) extraData.actualStart = now;
     if (newStatus === JobStatusDto.COMPLETED) extraData.actualEnd = now;
     if (newStatus === JobStatusDto.COMPLETED) extraData.completedAt = now;
+    if (newStatus === JobStatusDto.CANCELLED && dto.cancellationReason) {
+      extraData.cancellationReason = dto.cancellationReason;
+    }
 
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.job.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.job.update({
         where: { id: jobId },
         data: { status: newStatus as any, ...extraData },
       });
@@ -239,8 +256,51 @@ export class JobsService {
         },
       });
 
-      return updated;
+      return result;
     });
+
+    if (newStatus === JobStatusDto.EN_ROUTE) {
+      const commsBase = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
+      const payload = {
+        companyId,
+        jobId,
+        jobStatus: newStatus,
+        customerId: job.customerId,
+        customerName: job.customerName,
+        customerEmail: job.customerEmail ?? undefined,
+        jobAddress: job.serviceAddress,
+        technicianName: job.assignedToName ?? undefined,
+        scheduledAt: job.scheduledStart?.toISOString() ?? undefined,
+      };
+      axios.post(`${commsBase}/automation/events/job-status-changed`, payload).catch((err: unknown) => {
+        this.logger.warn(`Failed to notify comms-service of EN_ROUTE: ${err instanceof Error ? err.message : String(err)}`);
+      });
+    }
+
+    // Agreement jobs: completing a visit advances the agreement's service
+    // schedule in crm-service (lastServiceDate, visitsUsed, nextServiceDate).
+    if (newStatus === JobStatusDto.COMPLETED && job.agreementId) {
+      const crmBase = process.env.CRM_SERVICE_URL || 'http://localhost:3001';
+      const headers: Record<string, string> =
+        process.env.BYPASS_AUTH === 'true'
+          ? {
+              'x-test-user-role': 'super_admin',
+              'x-test-company-id': companyId,
+              'x-test-user-id': 'job-service',
+              'x-test-user-email': 'jobs@tscrm.internal',
+              'x-test-user-name': 'Job Service',
+            }
+          : { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+      axios
+        .post(`${crmBase}/agreements/${job.agreementId}/record-visit`, { jobId }, { headers, timeout: 8_000 })
+        .catch((err: unknown) => {
+          this.logger.warn(
+            `Failed to record agreement visit for ${job.agreementId}: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        });
+    }
+
+    return updated;
   }
 
   // ============================================================
@@ -265,6 +325,8 @@ export class JobsService {
       tags: string[];
       gpsTrackingEnabled?: boolean;  // no DB column — ignored
       completedAt?: string;
+      hasPartShortage?: boolean;
+      partShortageNote?: string;
     }>,
   ) {
     await this.findOne(companyId, id);
@@ -300,6 +362,7 @@ export class JobsService {
       notes: string;
       internalNotes: string;
       tags: string[];
+      projectId: string | null;
     }>,
   ) {
     await this.findOne(companyId, id);

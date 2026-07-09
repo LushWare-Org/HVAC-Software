@@ -124,6 +124,7 @@ export function useMarketingKpis(range: StatsRange = '30d') {
       const res = await api.get(`/comms/m/stats/kpis?range=${range}`)
       return res.data
     },
+    staleTime: 2 * 60_000,
   })
 }
 
@@ -134,6 +135,7 @@ export function useCampaignStats(range: StatsRange = '30d') {
       const res = await api.get(`/comms/m/stats/campaigns?range=${range}`)
       return res.data
     },
+    staleTime: 2 * 60_000,
   })
 }
 
@@ -144,6 +146,7 @@ export function useAttributionStats(range: StatsRange = '30d') {
       const res = await api.get(`/comms/m/stats/attribution?range=${range}`)
       return res.data
     },
+    staleTime: 2 * 60_000,
   })
 }
 
@@ -155,6 +158,7 @@ export function useCampaignFunnel(id: string) {
       return res.data
     },
     enabled: !!id,
+    staleTime: 60_000,
   })
 }
 
@@ -167,6 +171,7 @@ export function useCampaigns() {
       const res = await api.get('/comms/m/campaigns')
       return res.data
     },
+    staleTime: 30_000,
   })
 }
 
@@ -182,7 +187,25 @@ export function useCreateCampaign() {
       const res = await api.post('/comms/m/campaigns', data)
       return res.data as Campaign
     },
-    onSuccess: () => {
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['marketing', 'campaigns'] })
+      const prev = queryClient.getQueryData<Campaign[]>(['marketing', 'campaigns'])
+      const optimistic: Campaign = {
+        id: `_temp_${Date.now()}`,
+        companyId: '',
+        createdBy: '',
+        status: data.scheduleAt ? 'SCHEDULED' : 'DRAFT',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...data,
+      }
+      queryClient.setQueryData<Campaign[]>(['marketing', 'campaigns'], old => [optimistic, ...(old ?? [])])
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['marketing', 'campaigns'], ctx?.prev)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['marketing', 'campaigns'] })
     },
   })
@@ -194,7 +217,18 @@ export function useLaunchCampaign() {
       const res = await api.post(`/comms/m/campaigns/${id}/launch`)
       return res.data
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['marketing', 'campaigns'] })
+      const prev = queryClient.getQueryData<Campaign[]>(['marketing', 'campaigns'])
+      queryClient.setQueryData<Campaign[]>(['marketing', 'campaigns'], old =>
+        (old ?? []).map(c => c.id === id ? { ...c, status: 'SENT' } : c)
+      )
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['marketing', 'campaigns'], ctx?.prev)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['marketing', 'campaigns'] })
       queryClient.invalidateQueries({ queryKey: ['marketing', 'campaign-stats'] })
     },
@@ -210,6 +244,7 @@ export function useMarketingTemplates() {
       const res = await api.get('/comms/m/templates')
       return res.data
     },
+    staleTime: 5 * 60_000,
   })
 }
 
@@ -225,7 +260,25 @@ export function useCreateTemplate() {
       const res = await api.post('/comms/m/templates', data)
       return res.data as Template
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'templates'] }),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['marketing', 'templates'] })
+      const prev = queryClient.getQueryData<Template[]>(['marketing', 'templates'])
+      const optimistic: Template = {
+        id: `_temp_${Date.now()}`,
+        companyId: '',
+        mergeTagsJson: '[]',
+        isDefault: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...data,
+      }
+      queryClient.setQueryData<Template[]>(['marketing', 'templates'], old => [optimistic, ...(old ?? [])])
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['marketing', 'templates'], ctx?.prev)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'templates'] }),
   })
 }
 
@@ -235,7 +288,18 @@ export function useUpdateTemplate() {
       const res = await api.patch(`/comms/m/templates/${id}`, data)
       return res.data as Template
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'templates'] }),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ['marketing', 'templates'] })
+      const prev = queryClient.getQueryData<Template[]>(['marketing', 'templates'])
+      queryClient.setQueryData<Template[]>(['marketing', 'templates'], old =>
+        (old ?? []).map(t => t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t)
+      )
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['marketing', 'templates'], ctx?.prev)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'templates'] }),
   })
 }
 
@@ -244,7 +308,18 @@ export function useDeleteTemplate() {
     mutationFn: async (id: string) => {
       await api.delete(`/comms/m/templates/${id}`)
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'templates'] }),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['marketing', 'templates'] })
+      const prev = queryClient.getQueryData<Template[]>(['marketing', 'templates'])
+      queryClient.setQueryData<Template[]>(['marketing', 'templates'], old =>
+        (old ?? []).filter(t => t.id !== id)
+      )
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['marketing', 'templates'], ctx?.prev)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'templates'] }),
   })
 }
 
@@ -267,6 +342,7 @@ export function useAudiences() {
       const res = await api.get('/comms/m/audiences')
       return res.data
     },
+    staleTime: 2 * 60_000,
   })
 }
 
@@ -276,7 +352,26 @@ export function useCreateAudience() {
       const res = await api.post('/comms/m/audiences', data)
       return res.data as Audience
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'audiences'] }),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['marketing', 'audiences'] })
+      const prev = queryClient.getQueryData<Audience[]>(['marketing', 'audiences'])
+      const optimistic: Audience = {
+        id: `_temp_${Date.now()}`,
+        companyId: '',
+        name: data.name,
+        type: data.type ?? 'DYNAMIC',
+        filtersJson: data.filtersJson ?? '[]',
+        lastCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      queryClient.setQueryData<Audience[]>(['marketing', 'audiences'], old => [optimistic, ...(old ?? [])])
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['marketing', 'audiences'], ctx?.prev)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'audiences'] }),
   })
 }
 
@@ -285,7 +380,18 @@ export function useDeleteAudience() {
     mutationFn: async (id: string) => {
       await api.delete(`/comms/m/audiences/${id}`)
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'audiences'] }),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['marketing', 'audiences'] })
+      const prev = queryClient.getQueryData<Audience[]>(['marketing', 'audiences'])
+      queryClient.setQueryData<Audience[]>(['marketing', 'audiences'], old =>
+        (old ?? []).filter(a => a.id !== id)
+      )
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['marketing', 'audiences'], ctx?.prev)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'audiences'] }),
   })
 }
 
@@ -310,6 +416,7 @@ export function useMarketingSettings() {
       const res = await api.get('/comms/m/settings')
       return res.data
     },
+    staleTime: 10 * 60_000,
   })
 }
 
@@ -319,7 +426,18 @@ export function useUpdateMarketingSettings() {
       const res = await api.patch('/comms/m/settings', data)
       return res.data as MarketingSettings
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'settings'] }),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['marketing', 'settings'] })
+      const prev = queryClient.getQueryData<MarketingSettings>(['marketing', 'settings'])
+      queryClient.setQueryData<MarketingSettings>(['marketing', 'settings'], old =>
+        old ? { ...old, ...data } : old
+      )
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['marketing', 'settings'], ctx?.prev)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['marketing', 'settings'] }),
   })
 }
 
@@ -332,6 +450,7 @@ export function useDeletionLog() {
       const res = await api.get('/comms/m/compliance/deletion-log')
       return res.data
     },
+    staleTime: 2 * 60_000,
   })
 }
 

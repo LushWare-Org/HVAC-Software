@@ -10,8 +10,17 @@ import {
 } from 'recharts'
 import { useDashboardKpis, useRecentJobs, useUpcomingAppointments } from '../hooks/useDashboard'
 import { useRevenueSeries, useJobsByStatus } from '../hooks/useAnalytics'
+import { useCompany } from '../hooks/useSettings'
 import RecommendationsPanel from '../components/RecommendationsPanel'
 import type { Job, Appointment } from '../types/api'
+import { formatMoneyCompact } from '../lib/format'
+
+function getGreeting() {
+    const h = new Date().getHours()
+    if (h < 12) return 'Good morning'
+    if (h < 17) return 'Good afternoon'
+    return 'Good evening'
+}
 
 // ─── Status maps: backend UPPER_CASE → display ────────────────────────────────
 
@@ -37,7 +46,7 @@ const JOB_STATUS_MAP: Record<string, { label: string; css: string }> = {
 const JOB_STATUS_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#6b7280', '#ef4444']
 
 function fmt(n: number) {
-    return n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n}`
+    return formatMoneyCompact(n)
 }
 
 // ─── Chart tooltip ────────────────────────────────────────────────────────────
@@ -49,7 +58,7 @@ const ChartTooltip = ({ active, payload, label }: any) => {
             <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 6, fontWeight: 600 }}>{label}</div>
             {payload.map((p: any) => (
                 <div key={p.dataKey} style={{ fontSize: 12, color: p.color, fontWeight: 600, marginBottom: 2 }}>
-                    {p.name}: {p.dataKey === 'revenue' ? `$${(p.value / 1000).toFixed(0)}k` : p.value}
+                    {p.name}: {p.dataKey === 'revenue' ? formatMoneyCompact(p.value, 0) : p.value}
                 </div>
             ))}
         </div>
@@ -88,6 +97,8 @@ export default function Dashboard() {
     const appointmentsQuery = useUpcomingAppointments(4)
     const revenueQuery = useRevenueSeries('month')
     const jobStatusQuery = useJobsByStatus()
+    const companyQuery = useCompany()
+    const company = companyQuery.data
 
     // ── Derived data ──────────────────────────────────────────────────────────
 
@@ -121,6 +132,7 @@ export default function Dashboard() {
             sub: kpi?.revenue.trend != null ? `${kpi.revenue.trend > 0 ? '+' : ''}${kpi.revenue.trend}% vs prior period` : 'Loading…',
             icon: DollarSign,
             loading: kpiQuery.isLoading,
+            href: '/finance',
         },
         {
             title: 'Jobs Completed',
@@ -128,6 +140,7 @@ export default function Dashboard() {
             sub: kpi?.jobsCompleted.trend != null ? `${kpi.jobsCompleted.trend > 0 ? '+' : ''}${kpi.jobsCompleted.trend}% vs prior period` : 'Loading…',
             icon: Briefcase,
             loading: kpiQuery.isLoading,
+            href: '/jobs',
         },
         {
             title: 'Active Customers',
@@ -135,6 +148,7 @@ export default function Dashboard() {
             sub: 'Current active accounts',
             icon: Users,
             loading: kpiQuery.isLoading,
+            href: '/customers',
         },
         {
             title: 'Lead Conversion',
@@ -142,6 +156,7 @@ export default function Dashboard() {
             sub: kpi?.leadConversionRate.unit ?? 'leads converted',
             icon: CheckCircle,
             loading: kpiQuery.isLoading,
+            href: '/customers',
         },
     ]
 
@@ -174,12 +189,66 @@ export default function Dashboard() {
                 </div>
             )}
 
+            {/* Company welcome header */}
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: 16,
+                marginBottom: 24, padding: '18px 24px',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--bd)',
+                borderRadius: 'var(--r-lg)',
+                borderLeft: '4px solid var(--blue)',
+            }}>
+                {company?.logoUrl ? (
+                    <img
+                        src={company.logoUrl}
+                        alt={company.name ?? 'Company'}
+                        style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'contain', background: 'var(--bg-surface)', padding: 4, flexShrink: 0 }}
+                    />
+                ) : (
+                    <div style={{
+                        width: 48, height: 48, borderRadius: 10, flexShrink: 0,
+                        background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: 700, color: '#fff', fontSize: 20,
+                    }}>
+                        {(company?.name ?? 'H')[0].toUpperCase()}
+                    </div>
+                )}
+                <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 2 }}>
+                        {getGreeting()}
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', lineHeight: 1.2 }}>
+                        {company?.name ?? 'HomePulse'}
+                    </div>
+                    {company?.city && (
+                        <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>
+                            {[company.city, company.state].filter(Boolean).join(', ')}
+                        </div>
+                    )}
+                </div>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 20, flexShrink: 0 }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--blue)' }}>{kpi?.activeCustomers.formattedValue ?? '—'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--t4)', fontWeight: 500, marginTop: 1 }}>Customers</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--green)' }}>{kpi?.revenue.formattedValue ?? '—'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--t4)', fontWeight: 500, marginTop: 1 }}>Revenue</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>{kpi?.jobsCompleted.formattedValue ?? '—'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--t4)', fontWeight: 500, marginTop: 1 }}>Jobs Done</div>
+                    </div>
+                </div>
+            </div>
+
             {/* KPI Cards */}
             <div className="kpi-grid mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
                 {statCards.map((stat, index) => {
                     const Icon = stat.icon
                     return (
-                        <div key={index} className={`kpi-card card-hover anim-fade-up delay-${index + 1}`} style={{ padding: '16px 20px', borderRadius: 'var(--r-md)' }}>
+                        <div key={index} className={`kpi-card card-hover anim-fade-up delay-${index + 1}`} style={{ padding: '16px 20px', borderRadius: 'var(--r-md)', cursor: stat.href ? 'pointer' : 'default' }} onClick={() => stat.href && navigate(stat.href)}>
                             <div className="kpi-card-top" style={{ marginBottom: 12, alignItems: 'center', justifyContent: 'space-between' }}>
                                 <div className="kpi-label" style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 500, margin: 0 }}>{stat.title}</div>
                                 <Icon size={16} strokeWidth={1.5} color="var(--t3)" />
@@ -188,6 +257,7 @@ export default function Dashboard() {
                                 ? <Skeleton h={28} w="60%" />
                                 : <div className="kpi-value" style={{ fontSize: 26, fontWeight: 700, color: 'var(--t1)' }}>{stat.value}</div>
                             }
+                            {stat.sub && !stat.loading && <div style={{ fontSize: 11, color: 'var(--t4)', marginTop: 4 }}>{stat.sub}</div>}
                         </div>
                     )
                 })}
@@ -225,7 +295,7 @@ export default function Dashboard() {
                                                 tick={{ fill: 'var(--t4)', fontSize: 11 }}
                                                 axisLine={false}
                                                 tickLine={false}
-                                                tickFormatter={(v) => `$${v / 1000}k`}
+                                                tickFormatter={(v) => formatMoneyCompact(v, 0)}
                                                 domain={[0, 'auto']}
                                             />
                                             <Tooltip content={<ChartTooltip />} />

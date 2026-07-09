@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -7,11 +8,14 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
-import { AuthUser } from '@tscrm/types';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard, CurrentUser, Roles } from '@tscrm/auth-client';
+import { AuthUser, Role } from '@tscrm/types';
 import { UsersService } from './users.service';
 import { RegisterPushTokenDto } from './dto/push-token.dto';
 
@@ -62,6 +66,12 @@ export class UsersController {
   @ApiOperation({ summary: 'Get a single user by ID' })
   findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.usersService.findOne(user.companyId, id);
+  }
+
+  @Get(':id/login-history')
+  @ApiOperation({ summary: 'Get login history for a team member (last 20)' })
+  getLoginHistory(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.usersService.getLoginHistory(user.companyId, id);
   }
 
   @Post()
@@ -121,6 +131,40 @@ export class UsersController {
   @ApiOperation({ summary: 'Clear the current user\'s push token (called on logout)' })
   clearPushToken(@CurrentUser() user: AuthUser) {
     return this.usersService.clearPushToken(user.companyId, user.userId);
+  }
+
+  // ---- Avatar (technician photo shown to customers in en-route emails) ----
+  // NOTE: 'me/avatar' must stay declared before ':id/avatar' or Express
+  // matches 'me' as an :id.
+
+  @Post('me/avatar')
+  @ApiOperation({ summary: 'Upload/replace the current user\'s profile photo' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadMyAvatar(@CurrentUser() user: AuthUser, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No photo uploaded');
+    return this.usersService.setMyAvatar(user.companyId, user.userId, file);
+  }
+
+  @Delete('me/avatar')
+  @ApiOperation({ summary: 'Remove the current user\'s profile photo' })
+  removeMyAvatar(@CurrentUser() user: AuthUser) {
+    return this.usersService.removeMyAvatar(user.companyId, user.userId);
+  }
+
+  @Post(':id/avatar')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Upload/replace a team member\'s profile photo (admin)' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadUserAvatar(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) throw new BadRequestException('No photo uploaded');
+    return this.usersService.setUserAvatar(user.companyId, id, file);
   }
 
   @Patch(':id')

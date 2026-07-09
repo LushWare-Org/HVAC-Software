@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import ReactDOM from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { X, Wrench, Calendar, FileText, DollarSign, User, Clock, MessageSquare, Send, Star } from 'lucide-react'
+import { X, Wrench, Calendar, FileText, DollarSign, User, Clock, MessageSquare, Send, Star, ClipboardCheck, Download } from 'lucide-react'
 import { useJobAssignments, useMyJob, useTechnician, useJobInvoices, useJobQuotes, useCreateMyThread, useMyThread, useSendMyThreadMessage, useMarkMyThreadRead, useJobReview } from '../../hooks/useCustomerPortal'
 import ReviewModal from '../../components/ReviewModal'
+import { printServiceReport } from '../../lib/serviceReportPdf'
 import { useSocket } from '../../hooks/useSocket'
 import { useAuth } from '../../contexts/AuthContext'
 import { queryClient } from '../../lib/queryClient'
 import type { Job } from '../../types/api'
+import { formatMoney } from '../../lib/format'
 
 interface JobDetailModalProps {
   job: Job
@@ -15,7 +17,7 @@ interface JobDetailModalProps {
   onCancel?: () => void
 }
 
-type TabType = 'overview' | 'schedule' | 'documents' | 'notes' | 'chat'
+type TabType = 'overview' | 'schedule' | 'documents' | 'report' | 'notes' | 'chat'
 
 const STATUS_MAP: Record<string, { label: string; css: string }> = {
   COMPLETED: { label: 'Completed', css: 'badge-green' },
@@ -204,10 +206,14 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
   // (avoid showing the customer's own name as "Assigned By")
   const assignedBy = assignment?.assignedByName || (assignment ? 'T&S Team' : 'Pending assignment')
 
+  const workOrders = job.workOrders ?? []
+  const showReport = workOrders.length > 0 && ['COMPLETED', 'INVOICED', 'PAID'].includes(job.status)
+
   const tabs: { id: TabType; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'overview', label: 'Overview', icon: <Wrench size={14} /> },
     { id: 'schedule', label: 'Schedule & Cost', icon: <Calendar size={14} /> },
     { id: 'documents', label: 'Quotes & Invoices', icon: <DollarSign size={14} />, badge: jobInvoices.length + jobQuotes.length || undefined },
+    ...(showReport ? [{ id: 'report' as TabType, label: 'Service Report', icon: <ClipboardCheck size={14} /> }] : []),
     { id: 'notes', label: 'Notes', icon: <FileText size={14} /> },
     { id: 'chat', label: 'Chat Support', icon: <MessageSquare size={14} /> },
   ]
@@ -413,7 +419,7 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
                       <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{q.title}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>${Number(q.total).toFixed(2)}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{formatMoney(q.total)}</span>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: q.status === 'ACCEPTED' ? '#D1FAE5' : q.status === 'DECLINED' ? '#FEE2E2' : '#EFF6FF', color: q.status === 'ACCEPTED' ? '#065F46' : q.status === 'DECLINED' ? '#B91C1C' : '#1D4ED8' }}>
                         {q.status}
                       </span>
@@ -433,7 +439,7 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
                       <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>Due: {inv.dueDate ? fmtDate(inv.dueDate) : '—'}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>${Number(inv.total).toFixed(2)}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{formatMoney(inv.total)}</span>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: inv.status === 'PAID' ? '#D1FAE5' : inv.status === 'OVERDUE' ? '#FEE2E2' : '#EFF6FF', color: inv.status === 'PAID' ? '#065F46' : inv.status === 'OVERDUE' ? '#B91C1C' : '#1D4ED8' }}>
                         {inv.status}
                       </span>
@@ -441,6 +447,128 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'report' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Download button */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => printServiceReport(job, workOrders, technicianName)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Download size={13} /> Download PDF
+                </button>
+              </div>
+              {(() => {
+                const allTasks = workOrders.flatMap(w => w.taskCompletions)
+                const done = allTasks.filter(t => t.isCompleted).length
+                const partsTotal = workOrders
+                  .flatMap(w => w.lineItems)
+                  .reduce((sum, li) => sum + Number(li.lineTotal), 0)
+                const onSiteMs = workOrders.reduce((sum, w) => {
+                  if (!w.checkinAt || !w.checkoutAt) return sum
+                  return sum + (new Date(w.checkoutAt).getTime() - new Date(w.checkinAt).getTime())
+                }, 0)
+                const onSiteLabel = onSiteMs > 0
+                  ? `${Math.floor(onSiteMs / 3600000)}h ${Math.round((onSiteMs % 3600000) / 60000)}m`
+                  : null
+                const stats: { label: string; value: string }[] = [
+                  ...(allTasks.length ? [{ label: 'Tasks completed', value: `${done}/${allTasks.length}` }] : []),
+                  ...(onSiteLabel ? [{ label: 'Time on site', value: onSiteLabel }] : []),
+                  ...(partsTotal > 0 ? [{ label: 'Parts & materials', value: formatMoney(partsTotal) }] : []),
+                ]
+                if (!stats.length) return null
+                return (
+                  <div style={{
+                    display: 'flex', gap: 0, borderRadius: 12, overflow: 'hidden',
+                    background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+                  }}>
+                    {stats.map((s, i) => (
+                      <div key={s.label} style={{
+                        flex: 1, padding: '14px 16px', textAlign: 'center',
+                        borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.18)' : 'none',
+                      }}>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
+                          {s.value}
+                        </div>
+                        <div style={{ fontSize: 10, fontWeight: 600, color: '#BFDBFE', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 2 }}>
+                          {s.label}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
+              {workOrders.map(wo => {
+                const completedTasks = wo.taskCompletions.filter(t => t.isCompleted)
+                return (
+                  <div key={wo.id} style={{ border: '1px solid #E5E7EB', borderRadius: 12, padding: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{wo.workOrderNumber}</span>
+                      <span style={{ fontSize: 13, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <User size={12} /> {wo.technicianName}
+                      </span>
+                    </div>
+                    {(wo.checkinAt || wo.checkoutAt) && (
+                      <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 12 }}>
+                        On site {fmtDateTime(wo.checkinAt)} — {wo.checkoutAt ? fmtDateTime(wo.checkoutAt) : 'in progress'}
+                      </div>
+                    )}
+
+                    {wo.taskCompletions.length > 0 && (
+                      <div style={{ marginBottom: 14 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                          Work performed ({completedTasks.length}/{wo.taskCompletions.length})
+                        </div>
+                        {wo.taskCompletions.map(t => (
+                          <div key={t.id} style={{ fontSize: 13, color: '#374151', padding: '3px 0', display: 'flex', gap: 8 }}>
+                            <span>{t.isCompleted ? '✅' : '⬜'}</span>
+                            <span>
+                              {t.taskName}
+                              {t.notes && <div style={{ color: '#6B7280', fontSize: 12 }}>{t.notes}</div>}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {wo.lineItems.length > 0 && (
+                      <div style={{ marginBottom: 14 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                          Parts &amp; materials
+                        </div>
+                        {wo.lineItems.map(li => (
+                          <div key={li.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#374151', padding: '3px 0' }}>
+                            <span>{li.description} × {Number(li.quantity)}</span>
+                            <span style={{ fontWeight: 600 }}>{formatMoney(li.lineTotal)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {wo.technicianNotes && (
+                      <div style={{ marginBottom: wo.signatureUrl ? 14 : 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                          Technician notes
+                        </div>
+                        <div style={{ ...fieldStyle, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{wo.technicianNotes}</div>
+                      </div>
+                    )}
+
+                    {wo.signatureUrl && (
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                          Customer signature
+                        </div>
+                        <img src={wo.signatureUrl} alt="Customer signature" style={{ maxHeight: 80, border: '1px solid #E5E7EB', borderRadius: 8, padding: 6, background: '#fff' }} />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
 

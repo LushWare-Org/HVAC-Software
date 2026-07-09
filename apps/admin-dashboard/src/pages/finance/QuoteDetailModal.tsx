@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   X, Edit2, Save, FileText, Calendar, Mail, CheckCircle,
-  RefreshCw, AlertCircle, Loader2, Download,
+  RefreshCw, AlertCircle, Loader2, Download, Briefcase, ExternalLink,
 } from "lucide-react";
 import {
   useUpdateQuote, useSendQuote, useApproveQuote, useConvertQuote, useQuote, decimalToNumber,
@@ -9,6 +9,7 @@ import {
 import { useToast } from "../../contexts/ToastContext";
 import api from "../../lib/api";
 import type { Quote } from "../../types/api";
+import { formatMoney } from '../../lib/format'
 
 interface QuoteDetailModalProps {
   isOpen: boolean;
@@ -213,7 +214,17 @@ export default function QuoteDetailModal({
             </h2>
             <p className="text-green-100 text-sm mt-0.5">
               Customer: {q!.customerName ?? "\u2014"}
-              {q!.jobId && ` \u00b7 Job: ${q!.jobId}`}
+              {q!.jobId && (
+                <>
+                  {' \u00b7 '}
+                  <button
+                    onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('open-job-from-finance', { detail: { job: { id: q!.jobId, title: (q as any).jobTitle || q!.jobId, status: 'PENDING', priority: 'NORMAL', tags: [], companyId: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, returnTo: { type: 'quote', doc: q, label: q!.quoteNumber } } })); }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 4, padding: '1px 6px', color: 'inherit', fontSize: 'inherit', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    <Briefcase size={10} /> Job {(q as any).jobTitle ? (q as any).jobTitle.slice(0, 20) : q!.jobId!.slice(0, 8)}
+                  </button>
+                </>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -324,7 +335,7 @@ export default function QuoteDetailModal({
                   </label>
                   <input
                     type="text"
-                    value={`$${decimalToNumber(q!.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    value={formatMoney(decimalToNumber(q!.total))}
                     disabled
                     className={inputView}
                   />
@@ -372,12 +383,18 @@ export default function QuoteDetailModal({
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Job Reference
                     </label>
-                    <input
-                      type="text"
-                      value={q!.jobId}
-                      disabled
-                      className={inputView}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, background: 'var(--bg-card-2, #f8fafc)', border: '1px solid var(--bd, #e2e8f0)' }}>
+                      <Briefcase size={14} style={{ color: 'var(--blue, #3b82f6)', flexShrink: 0 }} />
+                      <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--t1, #1e293b)', fontFamily: 'ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {(q as any).jobTitle || q!.jobId}
+                      </span>
+                      <button
+                        onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('open-job-from-finance', { detail: { job: { id: q!.jobId, title: (q as any).jobTitle || q!.jobId, status: 'PENDING', priority: 'NORMAL', tags: [], companyId: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, returnTo: { type: 'quote', doc: q, label: q!.quoteNumber } } })); }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: 'var(--blue, #3b82f6)', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      >
+                        <ExternalLink size={10} /> View Job →
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

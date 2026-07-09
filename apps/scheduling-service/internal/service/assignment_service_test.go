@@ -42,7 +42,7 @@ func TestScoreTechnician_PerfectCandidate(t *testing.T) {
 	// Expected: 100×0.40 + 100×0.35 + 100×0.25 = 100.0
 	cfg := defaultConfig()
 	candidate := makeTechWithDistance(0.0, 5.0)
-	result := scoreTechnician(candidate, 0, cfg)
+	result := scoreTechnician(candidate, 0, cfg, 0, false)
 
 	if result.Score != 100.0 {
 		t.Errorf("expected score 100.0, got %.2f", result.Score)
@@ -65,7 +65,7 @@ func TestScoreTechnician_MaxDistance(t *testing.T) {
 	// total = 0×0.40 + 100×0.35 + 100×0.25 = 0 + 35 + 25 = 60.0
 	cfg := defaultConfig()
 	candidate := makeTechWithDistance(50.0, 5.0)
-	result := scoreTechnician(candidate, 0, cfg)
+	result := scoreTechnician(candidate, 0, cfg, 0, false)
 
 	if result.DistanceScore != 0.0 {
 		t.Errorf("expected distanceScore 0.0 at max range, got %.2f", result.DistanceScore)
@@ -79,7 +79,7 @@ func TestScoreTechnician_BeyondMaxDistance_ClampedToZero(t *testing.T) {
 	// Technician beyond max distance — distanceScore must clamp to 0 (not go negative)
 	cfg := defaultConfig()
 	candidate := makeTechWithDistance(75.0, 5.0) // 50% beyond max
-	result := scoreTechnician(candidate, 0, cfg)
+	result := scoreTechnician(candidate, 0, cfg, 0, false)
 
 	if result.DistanceScore < 0 {
 		t.Errorf("distanceScore must not be negative, got %.2f", result.DistanceScore)
@@ -93,7 +93,7 @@ func TestScoreTechnician_MaxWorkload_ClampedToZero(t *testing.T) {
 	// Technician at full capacity — workloadScore must be 0 (not negative)
 	cfg := defaultConfig()
 	candidate := makeTechWithDistance(0.0, 5.0)
-	result := scoreTechnician(candidate, cfg.MaxActiveJobs, cfg) // exactly at max
+	result := scoreTechnician(candidate, cfg.MaxActiveJobs, cfg, 0, false) // exactly at max
 
 	if result.WorkloadScore != 0.0 {
 		t.Errorf("expected workloadScore 0.0 at max capacity, got %.2f", result.WorkloadScore)
@@ -104,7 +104,7 @@ func TestScoreTechnician_OverCapacity_ClampedToZero(t *testing.T) {
 	// More jobs than max — workloadScore must still be 0, not negative
 	cfg := defaultConfig()
 	candidate := makeTechWithDistance(0.0, 5.0)
-	result := scoreTechnician(candidate, cfg.MaxActiveJobs+2, cfg)
+	result := scoreTechnician(candidate, cfg.MaxActiveJobs+2, cfg, 0, false)
 
 	if result.WorkloadScore < 0 {
 		t.Errorf("workloadScore must not be negative, got %.2f", result.WorkloadScore)
@@ -115,7 +115,7 @@ func TestScoreTechnician_ZeroRating(t *testing.T) {
 	// A technician with 0.0 star rating
 	cfg := defaultConfig()
 	candidate := makeTechWithDistance(0.0, 0.0)
-	result := scoreTechnician(candidate, 0, cfg)
+	result := scoreTechnician(candidate, 0, cfg, 0, false)
 
 	if result.RatingScore != 0.0 {
 		t.Errorf("expected ratingScore 0.0, got %.2f", result.RatingScore)
@@ -134,7 +134,7 @@ func TestScoreTechnician_MidpointValues(t *testing.T) {
 	// total = 50×0.40 + 60×0.35 + 50×0.25 = 20 + 21 + 12.5 = 53.5
 	cfg := defaultConfig()
 	candidate := makeTechWithDistance(25.0, 2.5)
-	result := scoreTechnician(candidate, 2, cfg)
+	result := scoreTechnician(candidate, 2, cfg, 0, false)
 
 	if !almostEqual(result.DistanceScore, 50.0, 0.01) {
 		t.Errorf("expected distanceScore 50.0, got %.2f", result.DistanceScore)
@@ -167,7 +167,7 @@ func TestScoreTechnician_AutoAssignThreshold(t *testing.T) {
 	// total = 100×0.40 + 80×0.35 + 90×0.25 = 40 + 28 + 22.5 = 90.5
 	cfg := defaultConfig()
 	candidate := makeTechWithDistance(0.0, 4.5)
-	result := scoreTechnician(candidate, 1, cfg)
+	result := scoreTechnician(candidate, 1, cfg, 0, false)
 
 	if result.Score < cfg.AutoAssignThreshold {
 		t.Errorf(
@@ -186,7 +186,7 @@ func TestScoreTechnician_BelowAutoAssignThreshold(t *testing.T) {
 	// total = 80×0.40 + 40×0.35 + 60×0.25 = 32 + 14 + 15 = 61.0
 	cfg := defaultConfig()
 	candidate := makeTechWithDistance(10.0, 3.0)
-	result := scoreTechnician(candidate, 3, cfg)
+	result := scoreTechnician(candidate, 3, cfg, 0, false)
 
 	if result.Score >= cfg.AutoAssignThreshold {
 		t.Errorf(
@@ -273,15 +273,15 @@ func TestScoreTechnician_RankingOrder(t *testing.T) {
 
 	// Technician A: nearby, light workload, high rating → best
 	cA := makeTechWithDistance(2.0, 4.8)
-	sA := scoreTechnician(cA, 0, cfg)
+	sA := scoreTechnician(cA, 0, cfg, 0, false)
 
 	// Technician B: medium distance, medium workload, medium rating → middle
 	cB := makeTechWithDistance(20.0, 3.5)
-	sB := scoreTechnician(cB, 2, cfg)
+	sB := scoreTechnician(cB, 2, cfg, 0, false)
 
 	// Technician C: far, heavily loaded, low rating → worst
 	cC := makeTechWithDistance(45.0, 2.0)
-	sC := scoreTechnician(cC, 4, cfg)
+	sC := scoreTechnician(cC, 4, cfg, 0, false)
 
 	if sA.Score <= sB.Score {
 		t.Errorf("expected score(A) > score(B), got %.2f <= %.2f", sA.Score, sB.Score)

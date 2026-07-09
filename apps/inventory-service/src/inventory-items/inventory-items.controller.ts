@@ -26,6 +26,7 @@ class CreateInventoryItemDto {
   @IsOptional() @IsString() priceBookItemId?: string;
   @IsOptional() @IsInt() @Min(0) reorderPoint?: number;
   @IsOptional() @IsInt() @Min(0) reorderQty?: number;
+  @IsOptional() @IsNumber() @Min(0) unitCost?: number;
 }
 
 class UpdateInventoryItemDto {
@@ -35,6 +36,7 @@ class UpdateInventoryItemDto {
   @IsOptional() @IsInt() @Min(0) reorderPoint?: number;
   @IsOptional() @IsInt() @Min(0) reorderQty?: number;
   @IsOptional() @IsString() priceBookItemId?: string;
+  @IsOptional() @IsNumber() @Min(0) unitCost?: number;
   @IsOptional() isActive?: boolean;
 }
 

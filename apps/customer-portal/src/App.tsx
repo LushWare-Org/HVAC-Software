@@ -18,7 +18,13 @@ const Quotes              = lazy(() => import('./pages/quotes/Quotes'))
 const Messages            = lazy(() => import('./pages/messages/Messages'))
 const Profile             = lazy(() => import('./pages/Profile'))
 const Devices             = lazy(() => import('./pages/Devices'))
+const MyProjects          = lazy(() => import('./pages/MyProjects'))
+const Equipment           = lazy(() => import('./pages/Equipment'))
 const ForceResetPassword  = lazy(() => import('./pages/ForceResetPassword'))
+const Tips                = lazy(() => import('./pages/Tips'))
+const Offers              = lazy(() => import('./pages/Offers'))
+const Agreements          = lazy(() => import('./pages/Agreements'))
+const AgreementConfirm    = lazy(() => import('./pages/AgreementConfirm'))
 
 const MOBILE_BP = 768
 
@@ -101,6 +107,11 @@ function AppShell() {
                 <Route path="/quotes" element={<Quotes />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/devices" element={<Devices />} />
+                <Route path="/equipment" element={<Equipment />} />
+                <Route path="/agreements" element={<Agreements />} />
+                <Route path="/projects" element={<MyProjects />} />
+                <Route path="/tips" element={<Tips />} />
+                <Route path="/offers" element={<Offers />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
@@ -122,6 +133,15 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             {/* Force-reset gate — shown when admin provisioned the account */}
             <Route path="/reset-password" element={<ForceResetPasswordGuard />} />
+            {/* Public: email confirm link — token-gated, no login required */}
+            <Route
+              path="/agreements/confirm/:token"
+              element={
+                <Suspense fallback={null}>
+                  <AgreementConfirm />
+                </Suspense>
+              }
+            />
             <Route path="/*" element={<AppShell />} />
           </Routes>
         </BrowserRouter>

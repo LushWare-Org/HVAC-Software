@@ -8,6 +8,7 @@ import {
 import { useJob, useUpdateJobStatus } from "../../hooks/useJobs";
 import { useTechnicians, useManualAssign } from "../../hooks/useScheduling";
 import type { Job, DispatchAssignment, Technician } from "../../types/api";
+import { formatMoney } from '../../lib/format'
 
 interface JobDetailPanelProps {
   jobId: string;
@@ -212,9 +213,9 @@ export default function JobDetailPanel({
                       : "—"} />
                   <InfoCell icon={DollarSign} label="Amount"
                     value={job.finalAmount != null
-                      ? `$${Number(job.finalAmount).toLocaleString()}`
+                      ? formatMoney(job.finalAmount, { decimals: 0 })
                       : job.estimatedAmount != null
-                        ? `$${Number(job.estimatedAmount).toLocaleString()} est.`
+                        ? `${formatMoney(job.estimatedAmount, { decimals: 0 })} est.`
                         : "—"} />
                 </div>
 

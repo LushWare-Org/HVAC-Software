@@ -38,6 +38,7 @@ type AssignmentService struct {
 	techRepo    *repository.TechnicianRepository
 	assignRepo  *repository.AssignmentRepository
 	hub         *ws.Hub
+	roster      RosterGate // nil-safe: no gate when unset
 }
 
 func NewAssignmentService(
@@ -47,6 +48,36 @@ func NewAssignmentService(
 	hub *ws.Hub,
 ) *AssignmentService {
 	return &AssignmentService{cfg: cfg, techRepo: techRepo, assignRepo: assignRepo, hub: hub}
+}
+
+// WithRosterGate enables project-roster enforcement (reserved crew capacity).
+func (s *AssignmentService) WithRosterGate(gate RosterGate) *AssignmentService {
+	s.roster = gate
+	return s
+}
+
+// rosterState loads the rostered-tech map and the job's own projectId for the
+// assignment date. Fail-open: a roster read error logs and disables the gate
+// for this call rather than blocking dispatch.
+func (s *AssignmentService) rosterState(
+	ctx context.Context,
+	companyID, jobID string,
+	scheduledStart *string,
+) (map[string]models.RosterInfo, string, string) {
+	date := rosterDate(scheduledStart)
+	if s.roster == nil {
+		return nil, "", date
+	}
+	rostered, err := s.roster.RosteredTechUserIDs(ctx, companyID, date)
+	if err != nil {
+		fmt.Printf("[WARN] roster lookup failed (gate disabled for this call): %v\n", err)
+		return nil, "", date
+	}
+	jobProjectID, err := s.roster.JobProjectID(ctx, companyID, jobID)
+	if err != nil {
+		jobProjectID = ""
+	}
+	return rostered, jobProjectID, date
 }
 
 // commsBaseURL returns the base URL for the comms service.
@@ -206,6 +237,11 @@ func (s *AssignmentService) AssignJob(
 	if err != nil {
 		return nil, err
 	}
+
+	// Project roster gate — rostered techs are reserved capacity that day
+	rostered, jobProjectID, _ := s.rosterState(ctx, companyID, req.JobID, req.ScheduledStart)
+	candidates = filterRosteredCandidates(candidates, rostered, jobProjectID)
+
 	if len(candidates) == 0 {
 		return &models.AssignResponse{
 			AutoAssigned: false,
@@ -341,6 +377,16 @@ func (s *AssignmentService) ManualAssign(
 		}
 	}
 
+	// Project roster gate — reject a tech reserved by a project that day
+	// (jobs belonging to the same project are exempt).
+	rostered, jobProjectID, gateDate := s.rosterState(ctx, companyID, req.JobID, req.ScheduledStart)
+	if len(rostered) > 0 {
+		techUserID, _, _ := s.assignRepo.GetTechnicianUserInfo(ctx, req.TechnicianID)
+		if blk := rosterBlock(rostered, techUserID, jobProjectID, gateDate); blk != nil {
+			return nil, blk
+		}
+	}
+
 	// Cancel any existing active assignment for this job before creating the new one.
 	// This ensures that when a dispatcher reassigns a job, the previous tech's
 	// ASSIGNED row is cancelled rather than left as a duplicate active entry.
@@ -405,7 +451,86 @@ func (s *AssignmentService) UpdateAssignmentStatus(
 		Payload:   assignment,
 	})
 
+	// Tech is on the way — tell the customer (email with photo + ETA, plus SMS).
+	// Fire-and-forget: the status transition never blocks or fails on this.
+	if req.Status == models.StatusEnRoute {
+		s.notifyCustomerEnRoute(companyID, assignment)
+	}
+
 	return assignment, nil
+}
+
+// notifyCustomerEnRoute gathers job + technician context, estimates the arrival
+// window, and asks comms-service to email/SMS the customer. Runs in a goroutine;
+// every failure is logged and swallowed.
+func (s *AssignmentService) notifyCustomerEnRoute(companyID string, assignment *models.DispatchAssignment) {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+
+		job, err := s.assignRepo.GetJobEnRouteInfo(ctx, companyID, assignment.JobID)
+		if err != nil {
+			fmt.Printf("[WARN] en-route notify: job lookup failed for %s: %v\n", assignment.JobID, err)
+			return
+		}
+		if job.CustomerEmail == nil && job.CustomerPhone == nil {
+			return // nobody to notify
+		}
+
+		tech, err := s.techRepo.FindByID(ctx, companyID, assignment.TechnicianID)
+		if err != nil {
+			fmt.Printf("[WARN] en-route notify: tech lookup failed for %s: %v\n", assignment.TechnicianID, err)
+			return
+		}
+
+		var techLoc *struct{ Lat, Lng float64 }
+		if tech.CurrentLocation != nil {
+			techLoc = &struct{ Lat, Lng float64 }{tech.CurrentLocation.Lat, tech.CurrentLocation.Lng}
+		}
+		etaStart, etaEnd := estimateETAWindow(
+			ctx, techLoc, job.Latitude, job.Longitude,
+			assignment.ScheduledStart, assignment.ScheduledEnd, time.Now())
+
+		payload := map[string]interface{}{
+			"assignmentId": assignment.ID,
+			"jobId":        assignment.JobID,
+			"jobTitle":     job.Title,
+			"techUserId":   tech.UserID,
+			"techName":     tech.Name,
+		}
+		if job.ServiceAddress != nil {
+			payload["serviceAddress"] = *job.ServiceAddress
+		}
+		if job.CustomerName != nil {
+			payload["customerName"] = *job.CustomerName
+		}
+		if job.CustomerEmail != nil {
+			payload["customerEmail"] = *job.CustomerEmail
+		}
+		if job.CustomerPhone != nil {
+			payload["customerPhone"] = *job.CustomerPhone
+		}
+		if etaStart != nil {
+			payload["etaStart"] = etaStart.UTC().Format(time.RFC3339)
+		}
+		if etaEnd != nil {
+			payload["etaEnd"] = etaEnd.UTC().Format(time.RFC3339)
+		}
+
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequestWithContext(ctx, "POST", commsBaseURL()+"/notifications/en-route", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+systemToken(companyID))
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			fmt.Printf("[WARN] en-route notify: comms call failed for job %s: %v\n", assignment.JobID, err)
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode >= 300 {
+			fmt.Printf("[WARN] en-route notify: comms returned %d for job %s\n", resp.StatusCode, assignment.JobID)
+		}
+	}()
 }
 
 // ============================================================

@@ -6,7 +6,7 @@ import { MarketingPrismaService } from '../prisma/marketing-prisma.service';
 import { SuppressionService } from '../suppression/suppression.service';
 import { SmsService } from '../../sms/sms.service';
 import { EmailService } from '../../email/email.service';
-import { CrmClient, EquipmentWithCustomer } from './crm.client';
+import { CrmClient, EquipmentWithCustomer, CrmEquipmentConsumable } from './crm.client';
 import { signMarketingToken } from '../common/marketing-token.util';
 import { EQUIPMENT_TEMPLATES, AutomationTemplateKey, TemplateVars } from './equipment-templates';
 
@@ -87,23 +87,39 @@ export class EquipmentAutomationService {
       }
     }
 
-    if (!eq.installDate) return null;
-    const installDate = new Date(eq.installDate);
-    const daysSinceInstall = Math.floor((today.getTime() - installDate.getTime()) / 86_400_000);
+    const daysSinceInstall = eq.installDate
+      ? Math.floor((today.getTime() - new Date(eq.installDate).getTime()) / 86_400_000)
+      : null;
 
-    // 7-year replacement pitch (check before 6-month tune-up to avoid redundant tune-up sends)
-    if (daysSinceInstall >= REPLACEMENT_DAYS && daysSinceInstall < REPLACEMENT_DAYS + 30) {
+    // 7-year replacement pitch (outranks filter/tune-up — bigger ticket, time-bound window)
+    if (daysSinceInstall !== null && daysSinceInstall >= REPLACEMENT_DAYS && daysSinceInstall < REPLACEMENT_DAYS + 30) {
       return 'hvac-replacement-7yr';
     }
 
+    // Filter/consumable due — anchors on lastReplacedAt, falling back to installDate
+    if (this.findDueConsumable(eq, today)) {
+      return 'filter-replacement-due';
+    }
+
     // 6-month tune-up — fires at 6mo and then every 6mo thereafter (183, 366, 549 … days)
-    if (daysSinceInstall >= TUNE_UP_DAYS) {
+    if (daysSinceInstall !== null && daysSinceInstall >= TUNE_UP_DAYS) {
       const periodIndex = Math.floor(daysSinceInstall / TUNE_UP_DAYS);
       const periodStart = periodIndex * TUNE_UP_DAYS;
       const inWindow = daysSinceInstall - periodStart < 7; // 7-day trigger window per period
       if (inWindow) return 'hvac-tune-up-6mo';
     }
 
+    return null;
+  }
+
+  /** First consumable whose (lastReplacedAt ?? installDate) + intervalDays is in the past. */
+  private findDueConsumable(eq: EquipmentWithCustomer, today: Date): CrmEquipmentConsumable | null {
+    for (const c of eq.consumables ?? []) {
+      const anchorIso = c.lastReplacedAt ?? eq.installDate;
+      if (!anchorIso) continue;
+      const dueAt = new Date(new Date(anchorIso).getTime() + c.intervalDays * 86_400_000);
+      if (dueAt <= today) return c;
+    }
     return null;
   }
 
@@ -134,7 +150,11 @@ export class EquipmentAutomationService {
     const customerName = `${customer.firstName} ${customer.lastName}`;
     const brand = eq.brand ?? 'your';
     const warrantyEndDate = eq.warrantyEnd
-      ? new Date(eq.warrantyEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      ? new Date(eq.warrantyEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+      : undefined;
+    const dueConsumable = templateKey === 'filter-replacement-due' ? this.findDueConsumable(eq, today) : null;
+    const filterSpec = dueConsumable
+      ? [dueConsumable.partNumber, dueConsumable.sizeSpec, dueConsumable.rating].filter(Boolean).join(' ') || undefined
       : undefined;
 
     const result: ScanResult = {
@@ -154,7 +174,7 @@ export class EquipmentAutomationService {
       if (!smsSuppressed) {
         const smsToken = signMarketingToken({ type: 'review-click', companyId: eq.companyId, customerId: customer.id, jobId: eq.id });
         const trackedLink = `${CLICK_BASE}/m/r/${smsToken}?dest=${encodeURIComponent(CLICK_BASE + '/book')}`;
-        const vars: TemplateVars = { customerName, equipmentType: eq.type, brand, trackedLink, unsubLink: '', warrantyEndDate };
+        const vars: TemplateVars = { customerName, equipmentType: eq.type, brand, trackedLink, unsubLink: '', warrantyEndDate, filterSpec };
         const body = template.smsBody(vars);
 
         try {
@@ -168,7 +188,7 @@ export class EquipmentAutomationService {
               automationTemplate: dedupKey,
             },
           });
-          await this.sms.send(phone, body);
+          await this.sms.send(phone, body, eq.companyId);
           await this.db.sendJob.update({ where: { id: smsJob.id }, data: { status: 'SENT', sentAt: new Date() } });
           result.smsSent = true;
         } catch (err) {
@@ -186,7 +206,7 @@ export class EquipmentAutomationService {
         const unsubToken = signMarketingToken({ type: 'unsub', companyId: eq.companyId, customerId: customer.id, channel: 'EMAIL', address: emailAddr });
         const trackedLink = `${CLICK_BASE}/m/r/${emailToken}?dest=${encodeURIComponent(CLICK_BASE + '/book')}`;
         const unsubLink = `${CLICK_BASE}/m/u/${unsubToken}`;
-        const vars: TemplateVars = { customerName, equipmentType: eq.type, brand, trackedLink, unsubLink, warrantyEndDate };
+        const vars: TemplateVars = { customerName, equipmentType: eq.type, brand, trackedLink, unsubLink, warrantyEndDate, filterSpec };
 
         const emailJob = await this.db.sendJob.create({
           data: {

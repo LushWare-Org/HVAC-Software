@@ -133,6 +133,7 @@ exports.Prisma.InventoryItemScalarFieldEnum = {
   unit: 'unit',
   reorderPoint: 'reorderPoint',
   reorderQty: 'reorderQty',
+  unitCost: 'unitCost',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

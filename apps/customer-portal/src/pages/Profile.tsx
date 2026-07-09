@@ -12,7 +12,10 @@ import {
   Wrench,
   Plus,
   Trash2,
+  Bell,
+  BellOff,
 } from 'lucide-react'
+import { usePushNotifications } from '../hooks/usePushNotifications'
 import {
   useCustomerProfile,
   useUpdateCustomerProfile,
@@ -285,6 +288,42 @@ function EquipmentTab() {
   )
 }
 
+function PushNotificationsSection() {
+  const { supported, state, subscribed, loading, subscribe, unsubscribe } = usePushNotifications()
+
+  if (!supported) return null
+
+  return (
+    <div>
+      <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Bell size={16} /> Push Notifications
+      </h4>
+      <p style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 16 }}>
+        Receive alerts for filter replacement reminders, job updates, and new offers directly on this device.
+      </p>
+
+      {state === 'denied' ? (
+        <p style={{ fontSize: 12, color: 'var(--amber)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <BellOff size={13} /> Notifications blocked in your browser settings. Enable them there first.
+        </p>
+      ) : subscribed ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 12, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <Check size={13} /> Notifications enabled on this device
+          </span>
+          <button className="btn btn-secondary btn-sm" onClick={unsubscribe} disabled={loading}>
+            <BellOff size={13} /> {loading ? 'Disabling…' : 'Disable'}
+          </button>
+        </div>
+      ) : (
+        <button className="btn btn-primary btn-sm" onClick={subscribe} disabled={loading}>
+          <Bell size={13} /> {loading ? 'Enabling…' : 'Enable Notifications'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function Profile() {
   const { updateLocalUser } = useAuth()
   const [tab, setTab] = useState<'personal' | 'security' | 'equipment'>('personal')
@@ -304,6 +343,9 @@ export default function Profile() {
     email: '',
     phone: '',
     address: '',
+    city: '',
+    state: '',
+    zipCode: '',
   })
 
   const [securityData, setSecurityData] = useState({
@@ -319,7 +361,10 @@ export default function Profile() {
         name: fullName,
         email: userProfile?.email || profile?.email || '',
         phone: profile?.phone || userProfile?.phone || '',
-        address: [profile?.address, profile?.city, profile?.state, profile?.zipCode].filter(Boolean).join(', '),
+        address: profile?.address || '',
+        city: profile?.city || '',
+        state: profile?.state || '',
+        zipCode: profile?.zipCode || '',
       })
     }
   }, [profile, userProfile])
@@ -349,7 +394,10 @@ export default function Profile() {
         firstName,
         lastName,
         phone: formData.phone,
-        address: formData.address,
+        address: formData.address || undefined,
+        city: formData.city || undefined,
+        state: formData.state || undefined,
+        zipCode: formData.zipCode || undefined,
       })
       await updateUser({ name: formData.name, phone: formData.phone })
       updateLocalUser({ name: formData.name, phone: formData.phone })
@@ -463,7 +511,7 @@ export default function Profile() {
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label className="form-label">
                   <MapPin size={12} style={{ display: 'inline', marginRight: 4 }} />
-                  Address
+                  Street Address
                 </label>
                 <input
                   type="text"
@@ -471,7 +519,45 @@ export default function Profile() {
                   name="address"
                   value={formData.address}
                   onChange={handleProfileChange}
-                  placeholder="123 Main Street, City, State"
+                  placeholder="123 Main Street"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">City</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleProfileChange}
+                  placeholder="e.g. Austin"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">State</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleProfileChange}
+                  placeholder="e.g. TX"
+                  maxLength={50}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">ZIP / Postal Code</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  name="zipCode"
+                  value={formData.zipCode}
+                  onChange={handleProfileChange}
+                  placeholder="e.g. 78701"
+                  maxLength={20}
                 />
               </div>
 
@@ -558,6 +644,8 @@ export default function Profile() {
                 <Lock size={13} /> {isSavingPassword ? 'Updating…' : 'Update Password'}
               </button>
             </div>
+
+            <PushNotificationsSection />
           </div>
         </div>
       )}

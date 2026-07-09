@@ -17,6 +17,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Channel, DeliveryStatus } from '../prisma/generated';
 import { QueueName } from '@tscrm/queue';
 import { EmailService } from '../email/email.service';
+import { isFeatureEnabled } from '@tscrm/types';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 
 // ── Job payload types (shared with processors) ─────────────────────────────
 
@@ -118,6 +120,7 @@ export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly companySettings: CompanySettingsClient,
     @InjectQueue(QueueName.SEND_SMS) private readonly smsQueue: Queue,
     @InjectQueue(QueueName.SEND_EMAIL) private readonly emailQueue: Queue,
     @InjectQueue(QueueName.SEND_PUSH) private readonly pushQueue: Queue,
@@ -126,6 +129,12 @@ export class NotificationsService {
   // ── SMS ───────────────────────────────────────────────────────────────────
 
   async sendSms(req: SendSmsRequest) {
+    const settings = await this.companySettings.getSettings(req.companyId);
+    if (!isFeatureEnabled(settings.features, 'sms')) {
+      this.logger.log(`[sms-disabled] companyId=${req.companyId} skipped sms to=${req.recipientPhone}`);
+      return null;
+    }
+
     const notification = await this.prisma.notification.create({
       data: {
         companyId: req.companyId,

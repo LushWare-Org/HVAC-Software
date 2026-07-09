@@ -59,7 +59,7 @@ export function useCreateInventoryItem() {
   return useMutation({
     mutationFn: async (data: {
       sku: string; name: string; description?: string; category: ItemCategory;
-      unit?: string; priceBookItemId?: string; reorderPoint?: number; reorderQty?: number;
+      unit?: string; priceBookItemId?: string; reorderPoint?: number; reorderQty?: number; unitCost?: number;
     }) => (await api.post('/inventory/items', data)).data,
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['inventory', 'items'] }) },
   })
@@ -69,7 +69,7 @@ export function useUpdateInventoryItem() {
   return useMutation({
     mutationFn: async ({ id, ...data }: {
       id: string; name?: string; description?: string; unit?: string;
-      reorderPoint?: number; reorderQty?: number; priceBookItemId?: string; isActive?: boolean;
+      reorderPoint?: number; reorderQty?: number; priceBookItemId?: string; unitCost?: number; isActive?: boolean;
     }) => (await api.patch(`/inventory/items/${id}`, data)).data,
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['inventory', 'items'] }) },
   })

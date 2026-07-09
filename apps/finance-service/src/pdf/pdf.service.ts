@@ -14,22 +14,17 @@ import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import type { Quote, QuoteLineItem, Invoice, InvoiceLineItem, Payment } from '../prisma/generated';
 import type { Browser } from 'puppeteer-core';
+import { formatMoneySrv, formatDateSrv } from './format';
 
-// ── Money formatter ──────────────────────────────────────────────────────────
-const usd = (val: number | { toString(): string } | null | undefined): string => {
-  const n = typeof val === 'number' ? val : parseFloat((val ?? 0).toString());
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
-};
+// ── Money/date formatting lives in ./format (currency + timezone aware) ─────
+export interface PdfRenderOpts { currency: string; timezone: string }
+const DEFAULT_RENDER_OPTS: PdfRenderOpts = { currency: 'USD', timezone: 'America/New_York' };
 
 const pct = (val: number | { toString(): string } | null | undefined): string => {
   const n = typeof val === 'number' ? val : parseFloat((val ?? 0).toString());
   return (n * 100).toFixed(2).replace(/\.?0+$/, '');
 };
 
-const dateStr = (d: Date | null | undefined): string => {
-  if (!d) return '—';
-  return new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(d);
-};
 
 // ── Template cache ───────────────────────────────────────────────────────────
 const templateCache = new Map<string, HandlebarsTemplateDelegate>();
@@ -87,8 +82,8 @@ export class PdfService implements OnModuleDestroy {
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
-  async generateQuotePdf(quote: QuoteWithItems, companyName: string, companyAddress: string): Promise<Buffer> {
-    const html = this.renderQuoteHtml(quote, companyName, companyAddress);
+  async generateQuotePdf(quote: QuoteWithItems, companyName: string, companyAddress: string, opts: PdfRenderOpts = DEFAULT_RENDER_OPTS): Promise<Buffer> {
+    const html = this.renderQuoteHtml(quote, companyName, companyAddress, opts);
     return this.htmlToPdf(html);
   }
 
@@ -96,14 +91,17 @@ export class PdfService implements OnModuleDestroy {
     invoice: InvoiceWithRelations,
     companyName: string,
     companyAddress: string,
+    opts: PdfRenderOpts = DEFAULT_RENDER_OPTS,
   ): Promise<Buffer> {
-    const html = this.renderInvoiceHtml(invoice, companyName, companyAddress);
+    const html = this.renderInvoiceHtml(invoice, companyName, companyAddress, opts);
     return this.htmlToPdf(html);
   }
 
   // ── HTML renderers ─────────────────────────────────────────────────────────
 
-  renderQuoteHtml(quote: QuoteWithItems, companyName: string, companyAddress: string): string {
+  renderQuoteHtml(quote: QuoteWithItems, companyName: string, companyAddress: string, opts: PdfRenderOpts = DEFAULT_RENDER_OPTS): string {
+    const usd = (v: number | { toString(): string } | null | undefined) => formatMoneySrv(v, opts.currency);
+    const dateStr = (d: Date | null | undefined) => formatDateSrv(d, opts.timezone);
     const tpl = loadTemplate('quote');
     const context = {
       companyName,
@@ -147,7 +145,9 @@ export class PdfService implements OnModuleDestroy {
     return tpl(context);
   }
 
-  renderInvoiceHtml(invoice: InvoiceWithRelations, companyName: string, companyAddress: string): string {
+  renderInvoiceHtml(invoice: InvoiceWithRelations, companyName: string, companyAddress: string, opts: PdfRenderOpts = DEFAULT_RENDER_OPTS): string {
+    const usd = (v: number | { toString(): string } | null | undefined) => formatMoneySrv(v, opts.currency);
+    const dateStr = (d: Date | null | undefined) => formatDateSrv(d, opts.timezone);
     const tpl = loadTemplate('invoice');
     const balanceDue = parseFloat(invoice.balanceDue.toString());
     const amountPaid = parseFloat(invoice.amountPaid.toString());

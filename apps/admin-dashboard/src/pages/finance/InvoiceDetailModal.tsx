@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   X, Edit2, Save, FileText, Calendar, Mail,
-  DollarSign, Ban, AlertCircle, Loader2, Download,
+  DollarSign, Ban, AlertCircle, Loader2, Download, Briefcase, ExternalLink,
 } from "lucide-react";
 import {
   useUpdateInvoice, useSendInvoice, useRecordPayment, useVoidInvoice, useInvoice, decimalToNumber,
@@ -9,6 +9,7 @@ import {
 import { useToast } from "../../contexts/ToastContext";
 import api from "../../lib/api";
 import type { Invoice } from "../../types/api";
+import { formatMoney } from '../../lib/format'
 
 interface InvoiceDetailModalProps {
   isOpen: boolean;
@@ -241,7 +242,17 @@ export default function InvoiceDetailModal({
             </h2>
             <p className="text-blue-100 text-sm mt-0.5">
               Balance Due: ${decimalToNumber(inv!.balanceDue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              {inv!.jobId && ` · Job: ${inv!.jobId}`}
+              {inv!.jobId && (
+                <>
+                  {' · '}
+                  <button
+                    onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('open-job-from-finance', { detail: { job: { id: inv!.jobId, title: (inv as any).jobTitle || inv!.jobId, status: 'PENDING', priority: 'NORMAL', tags: [], companyId: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, returnTo: { type: 'invoice', doc: inv, label: inv!.invoiceNumber } } })); }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 4, padding: '1px 6px', color: 'inherit', fontSize: 'inherit', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    <Briefcase size={10} /> Job {(inv as any).jobTitle ? (inv as any).jobTitle.slice(0, 20) : inv!.jobId!.slice(0, 8)}
+                  </button>
+                </>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -323,11 +334,11 @@ export default function InvoiceDetailModal({
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Total</label>
-                  <input type="text" value={`$${decimalToNumber(invoice.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} disabled className={inputView} />
+                  <input type="text" value={formatMoney(decimalToNumber(invoice.total))} disabled className={inputView} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Balance Due</label>
-                  <input type="text" value={`$${decimalToNumber(invoice.balanceDue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} disabled className={inputView} />
+                  <input type="text" value={formatMoney(decimalToNumber(invoice.balanceDue))} disabled className={inputView} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</label>
@@ -359,7 +370,18 @@ export default function InvoiceDetailModal({
                 {inv!.jobId && (
                   <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Job Reference</label>
-                    <input type="text" value={inv!.jobId} disabled className={inputView} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, background: 'var(--bg-card-2, #f8fafc)', border: '1px solid var(--bd, #e2e8f0)' }}>
+                      <Briefcase size={14} style={{ color: 'var(--blue, #3b82f6)', flexShrink: 0 }} />
+                      <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--t1, #1e293b)', fontFamily: 'ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {(inv as any).jobTitle || inv!.jobId}
+                      </span>
+                      <button
+                        onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('open-job-from-finance', { detail: { job: { id: inv!.jobId, title: (inv as any).jobTitle || inv!.jobId, status: 'PENDING', priority: 'NORMAL', tags: [], companyId: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, returnTo: { type: 'invoice', doc: inv, label: inv!.invoiceNumber } } })); }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: 'var(--blue, #3b82f6)', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      >
+                        <ExternalLink size={10} /> View Job →
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -383,7 +405,7 @@ export default function InvoiceDetailModal({
                           type="number"
                           value={payAmount}
                           onChange={(e) => setPayAmount(e.target.value)}
-                          placeholder={`Max: $${decimalToNumber(inv!.balanceDue).toFixed(2)}`}
+                          placeholder={`Max: ${formatMoney(decimalToNumber(inv!.balanceDue))}`}
                           min="0.01"
                           step="0.01"
                           disabled={isBusy}
@@ -445,7 +467,7 @@ export default function InvoiceDetailModal({
                   <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-sm text-green-700 flex items-center gap-2">
                       <DollarSign size={14} />
-                      Paid: {new Date(inv!.paidAt).toLocaleString()} · Amount Paid: ${decimalToNumber(inv!.amountPaid).toFixed(2)}
+                      Paid: {new Date(inv!.paidAt).toLocaleString()} · Amount Paid: {formatMoney(decimalToNumber(inv!.amountPaid))}
                     </p>
                   </div>
                 )}

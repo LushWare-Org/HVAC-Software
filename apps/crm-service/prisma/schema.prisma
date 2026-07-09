@@ -28,6 +28,9 @@ model Company {
   country     String   @default("US")
   logoUrl     String?
   website     String?
+  currency    String   @default("USD")
+  timezone    String   @default("America/New_York")
+  features    Json     @default("{}")
   isActive    Boolean  @default(true)
   automaticFollowupEnabled Boolean @default(true)
   trialEndsAt DateTime?
@@ -62,6 +65,7 @@ model CompanyUser {
   skills         String[] @default([])            // technician skills submitted at signup
   latitude       Float?                           // location submitted at signup
   longitude      Float?
+  avatarUrl      String?                          // public object-storage URL (MinIO dev / GCS prod); shown to customers in en-route emails
   lastLoginAt    DateTime?
 
   // Push notifications (FCM / APNs / Expo). Set by the technician app at login
@@ -79,6 +83,21 @@ model CompanyUser {
   @@index([companyId, role])
   @@index([pushToken])
   @@map("company_users")
+}
+
+// ---- User Login Events (audit log) ----
+model UserLoginEvent {
+  id            String   @id @default(uuid())
+  companyId     String
+  userId        String
+  userEmail     String
+  ipAddress     String?
+  userAgent     String?
+  loggedInAt    DateTime @default(now())
+
+  @@index([companyId, userId])
+  @@index([companyId, loggedInAt])
+  @@map("user_login_events")
 }
 
 // ---- Customers (business accounts or residential) ----
@@ -213,23 +232,72 @@ model ServiceAgreement {
   startDate    DateTime
   endDate      DateTime?
   value        Decimal?        @db.Decimal(10, 2)
-  billingCycle String?         // monthly, annual
+  billingCycle String?         // UPFRONT, MONTHLY, QUARTERLY, ANNUAL
   autoRenew    Boolean         @default(false)
   signedAt     DateTime?
   signedByName String?
   documentUrl  String?         // S3 key for signed PDF
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+
+  // Pricing
+  billingAmount   Decimal?  @db.Decimal(10, 2) // per-billing-period amount
+  nextBillingDate DateTime?
+
+  // Service schedule
+  serviceType         String? // e.g. "AC Maintenance", "Filter Replacement"
+  serviceInterval     String? // MONTHLY, BI_MONTHLY, QUARTERLY, BI_ANNUAL, ANNUAL, CUSTOM
+  serviceIntervalDays Int? // for CUSTOM interval
+  visitsIncluded      Int? // null = unlimited
+  visitsUsed          Int       @default(0)
+  lastServiceDate     DateTime?
+  nextServiceDate     DateTime?
+
+  // Auto job creation
+  autoCreateJobs Boolean @default(true)
+  leadDays       Int     @default(7)
+  jobTemplateId  String?
+
+  // Projects link — agreement-generated jobs inherit this
+  projectId String?
+
+  // Customer confirmation & renewal
+  customerConfirmedAt DateTime?
+  confirmToken        String?   @unique // one-time token for email confirm link
+  renewalReminderSent Boolean   @default(false)
+  renewedFromId       String? // previous agreement this one renews
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  amendments AgreementAmendment[]
 
   @@index([companyId])
   @@index([customerId])
+  @@index([companyId, status])
+  @@index([companyId, nextServiceDate])
   @@map("service_agreements")
+}
+
+model AgreementAmendment {
+  id                  String           @id @default(uuid())
+  agreementId         String
+  agreement           ServiceAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  changedFields       Json // { field: { from, to } } snapshot
+  changedBy           String // user id
+  changedByName       String?
+  customerNotifiedAt  DateTime?
+  customerConfirmedAt DateTime?
+  createdAt           DateTime         @default(now())
+
+  @@index([agreementId])
+  @@map("agreement_amendments")
 }
 
 enum AgreementStatus {
   DRAFT
   SENT
   ACTIVE
+  PENDING_RENEWAL
+  RENEWED
   EXPIRED
   CANCELLED
 }
@@ -349,8 +417,68 @@ model Equipment {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  consumables   EquipmentConsumable[]
+  manualUrl     String?   @map("manual_url")
+
   @@index([customerId])
   @@map("equipment")
+}
+
+model EquipmentConsumable {
+  id             String    @id @default(uuid())
+  companyId      String
+  equipmentId    String
+  equipment      Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  kind           String    @default("FILTER") // FILTER | UV_BULB | PAD | OTHER
+  partNumber     String?                      // "X6673"
+  description    String?                      // "Healthy Climate HCF20-11"
+  sizeSpec       String?                      // "20x25x5"
+  rating         String?                      // "MERV 11"
+  intervalDays   Int       @default(90)
+  lastReplacedAt DateTime?
+  purchaseUrl    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([equipmentId])
+  @@index([companyId])
+  @@map("equipment_consumables")
+}
+
+model ContractorPost {
+  id           String    @id @default(uuid())
+  companyId    String
+  type         String    @default("TIP")  // TIP | VIDEO | OFFER
+  title        String
+  body         String?
+  videoUrl     String?
+  heroImageUrl String?
+  isPinned     Boolean   @default(false)
+  isPublished  Boolean   @default(false)
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([companyId, isPublished])
+  @@map("contractor_posts")
+}
+
+model CompanyAnnouncement {
+  id          String    @id @default(uuid())
+  companyId   String
+  title       String
+  body        String?
+  linkUrl     String?
+  linkLabel   String?
+  accentColor String    @default("#1a73e8")
+  isActive    Boolean   @default(true)
+  activeFrom  DateTime?
+  activeTo    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([companyId, isActive])
+  @@map("company_announcements")
 }
 
 model FollowupAttempt {
@@ -502,3 +630,51 @@ model IotDeviceHistory {
   @@map("iot_device_history")
 }
 
+
+// ─── Projects module (spec: docs/superpowers/specs/2026-07-04-projects-module-design.md) ──
+
+model Project {
+  id                String    @id @default(uuid())
+  companyId         String
+  customerId        String
+  name              String
+  description       String?
+  category          String?             // free text, reporting only
+  status            String    @default("PLANNING") // PLANNING | ACTIVE | ON_HOLD | COMPLETED | CANCELLED
+  startDate         DateTime?
+  targetEndDate     DateTime?
+  budget            Decimal?  @db.Decimal(12, 2)
+  requiredHeadcount Int?
+  siteAddress       String?
+  latitude          Float?
+  longitude         Float?
+  workingDays       String[]  @default(["MON", "TUE", "WED", "THU", "FRI", "SAT"])
+  baseTeamUserIds   String[]  @default([])          // crm CompanyUser ids
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  rosterDays ProjectRosterDay[]
+
+  @@index([companyId, status])
+  @@index([companyId, customerId])
+  @@map("projects")
+}
+
+// Stored ONLY for dates that differ from the default roster. techUserIds is the
+// complete effective crew for that date (frozen snapshot). isOff=true → no work.
+model ProjectRosterDay {
+  id          String   @id @default(uuid())
+  companyId   String
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  techUserIds String[] @default([])
+  isOff       Boolean  @default(false)
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, date])
+  @@index([companyId, date])
+  @@map("project_roster_days")
+}

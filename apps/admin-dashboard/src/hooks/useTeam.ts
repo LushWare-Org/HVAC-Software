@@ -135,3 +135,25 @@ export function useRejectTechnician() {
     },
   })
 }
+
+export interface LoginEvent {
+  id: string
+  loggedInAt: string
+  ipAddress?: string
+  userAgent?: string
+}
+
+export function useLoginHistory(userId: string) {
+  return useQuery<LoginEvent[]>({
+    queryKey: ['team', userId, 'login-history'],
+    queryFn: async () => {
+      try {
+        const res = await api.get(`/crm/users/${userId}/login-history`)
+        return res.data as LoginEvent[]
+      } catch {
+        return []
+      }
+    },
+    enabled: !!userId,
+  })
+}

@@ -16,6 +16,9 @@ interface CustomerFilters {
   search?: string
   type?: string
   isActive?: boolean
+  tags?: string[]
+  sortBy?: string
+  sortDir?: 'asc' | 'desc'
 }
 
 export function useCustomers(filters: CustomerFilters = {}) {
@@ -29,6 +32,9 @@ export function useCustomers(filters: CustomerFilters = {}) {
       if (filters.search) params.search = filters.search
       if (filters.type && filters.type !== 'All Types') params.type = filters.type.toUpperCase()
       if (filters.isActive !== undefined) params.isActive = filters.isActive
+      if (filters.tags && filters.tags.length > 0) params.tags = filters.tags.join(',')
+      if (filters.sortBy) params.sortBy = filters.sortBy
+      if (filters.sortDir) params.sortDir = filters.sortDir
       const res = await api.get('/crm/customers', { params })
       const raw = res.data
       // Normalize: backend returns { data, meta: {...} }, frontend expects flat shape
@@ -36,6 +42,19 @@ export function useCustomers(filters: CustomerFilters = {}) {
         return { data: raw.data, ...raw.meta }
       }
       return raw
+    },
+  })
+}
+
+export function useCustomerTags() {
+  return useQuery<string[]>({
+    queryKey: ['customer-tags'],
+    queryFn: async () => {
+      const res = await api.get('/crm/customers/tags')
+      // Filter out system-generated tags (e.g. iot:offline:*, portal-signup)
+      return (res.data as string[]).filter(
+        t => !t.startsWith('iot:') && t !== 'portal-signup'
+      )
     },
   })
 }
@@ -83,6 +102,7 @@ export function useUpdateCustomer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
+      queryClient.invalidateQueries({ queryKey: ['customer-tags'] })
     },
   })
 }

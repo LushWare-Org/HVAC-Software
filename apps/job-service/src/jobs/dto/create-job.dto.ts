@@ -1,6 +1,6 @@
 import {
   IsString, IsOptional, IsEnum, IsArray,
-  IsDateString, IsNumber, MaxLength,
+  IsDateString, IsNumber, MaxLength, IsBoolean,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -40,6 +40,12 @@ export class CreateJobDto {
   @ApiPropertyOptional() @IsOptional() @IsNumber() estimatedDurationMins?: number;
   @ApiPropertyOptional({ description: 'Forecasted dollar value of the job; falls back to invoice total once billed.' })
   @IsOptional() @IsNumber() estimatedValue?: number;
+
+  @ApiPropertyOptional({ description: 'crm.service_agreements id when auto-created from an agreement' })
+  @IsOptional() @IsString() agreementId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() isAgreementJob?: boolean;
+  @ApiPropertyOptional({ description: 'crm.projects id — reserved crew capacity + roll-up filtering' })
+  @IsOptional() @IsString() projectId?: string;
 
   @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() internalNotes?: string;

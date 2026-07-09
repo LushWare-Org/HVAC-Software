@@ -104,10 +104,12 @@ export function useCreateThread() {
 
 export function useSendThreadMessage() {
   return useMutation({
-    mutationFn: async ({ threadId, body }: { threadId: string; body: string }) => {
+    mutationFn: async ({ threadId, body, notifyEmail, emailSubject }: {
+      threadId: string; body: string; notifyEmail?: boolean; emailSubject?: string
+    }) => {
       const res = await api.post<MessageThreadDetail>(
         `/comms/messaging/threads/${threadId}/messages`,
-        { body },
+        { body, ...(notifyEmail ? { notifyEmail, emailSubject } : {}) },
       )
       return res.data
     },

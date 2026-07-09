@@ -87,8 +87,8 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@tscrm/types$": "<rootDir>/../../packages/types/src/index.ts",
-      "^@tscrm/auth-client$": "<rootDir>/../../packages/auth-client/src/index.ts"
+      "^@tscrm/types$": "<rootDir>/../../../packages/types/src/index.ts",
+      "^@tscrm/auth-client$": "<rootDir>/../../../packages/auth-client/src/index.ts"
     }
   }
 }

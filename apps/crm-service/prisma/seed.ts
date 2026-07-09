@@ -25,7 +25,9 @@ async function main() {
 
   const demoCompany = await prisma.company.upsert({
     where: { id: 'co-demo-001' },
-    update: {},
+    update: {
+      logoUrl: 'https://ui-avatars.com/api/?name=T%26S+Brothers&background=1d4ed8&color=ffffff&size=256&bold=true&rounded=true&font-size=0.38',
+    },
     create: {
       id: 'co-demo-001',
       name: 'T&S Brothers Plumbing & HVAC',
@@ -37,6 +39,7 @@ async function main() {
       zipCode: '78701',
       country: 'US',
       website: 'https://tsbrothers.com',
+      logoUrl: 'https://ui-avatars.com/api/?name=T%26S+Brothers&background=1d4ed8&color=ffffff&size=256&bold=true&rounded=true&font-size=0.38',
     },
   });
   console.log(`✓ Company: ${demoCompany.name} (${demoCompany.id})`);

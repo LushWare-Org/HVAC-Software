@@ -329,3 +329,55 @@ export function useDeleteExpense() {
     },
   })
 }
+
+// ─── QuickBooks hooks ─────────────────────────────────────────────────────────
+
+export interface QBStatus {
+  connected: boolean
+  realmId?: string
+  expiresAt?: string
+}
+
+export function useQBStatus() {
+  return useQuery<QBStatus>({
+    queryKey: ['quickbooks', 'status'],
+    queryFn: async () => {
+      const res = await api.get('/finance/quickbooks/status')
+      return res.data
+    },
+    staleTime: 60_000,
+  })
+}
+
+export function useQBAuthUrl() {
+  return useMutation({
+    mutationFn: async (): Promise<{ authUrl: string }> => {
+      const res = await api.get('/finance/quickbooks/auth-url')
+      return res.data
+    },
+  })
+}
+
+export function useQBDisconnect() {
+  return useMutation({
+    mutationFn: async () => {
+      const res = await api.post('/finance/quickbooks/disconnect')
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quickbooks', 'status'] })
+    },
+  })
+}
+
+export function useQBSyncInvoice() {
+  return useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const res = await api.post(`/finance/quickbooks/sync/invoice/${invoiceId}`)
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+    },
+  })
+}

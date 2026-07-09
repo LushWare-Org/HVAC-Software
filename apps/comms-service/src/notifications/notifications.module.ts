@@ -11,10 +11,12 @@ import { EmailModule } from '../email/email.module';
 import { PushModule } from '../push/push.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { FollowupWorker } from '../workers/followup.worker';
+import { CompanySettingsModule } from '../company-settings/company-settings.module';
 
 @Module({
   imports: [
     PrismaModule,
+    CompanySettingsModule,
     SmsModule,
     EmailModule,
     PushModule,

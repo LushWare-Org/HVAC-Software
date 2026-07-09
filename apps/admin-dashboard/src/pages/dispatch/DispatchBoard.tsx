@@ -29,13 +29,15 @@ import { useJobs, useUpdateJobStatus } from "../../hooks/useJobs";
 import type {
   Job, Technician, AssignResponse, ScoredTechnician,
 } from "../../types/api";
-import AddTechnicianModal from "./AddTechnicianModal";
+import AddTechnicianModal from "../../components/AddTechnicianModal";
 import CreateJobModal from "./CreateJobModal";
 import JobDetailPanel from "./JobDetailPanel";
 import TechnicianDetailPanel from "./TechnicianDetailPanel";
 import AddQuoteModal from "../finance/AddQuoteModal";
 import AddInvoiceModal from "../finance/AddInvoiceModal";
 import DispatchCalendar from "./DispatchCalendar";
+import { formatMoney } from '../../lib/format'
+import { techOnProjectMessage } from "../projects/projectsApi";
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
 
@@ -365,7 +367,7 @@ export default function DispatchBoard() {
           showSuccess("Technician assigned successfully!");
           pendingJobsQuery.refetch();
         },
-        onError: (err: any) => setError(err?.response?.data?.error ?? "Manual assign failed."),
+        onError: (err: any) => setError(techOnProjectMessage(err) ?? err?.response?.data?.error ?? "Manual assign failed."),
       },
     );
   };
@@ -384,7 +386,7 @@ export default function DispatchBoard() {
           pendingJobsQuery.refetch();
           allJobsQuery.refetch();
         },
-        onError: (err: any) => setError(err?.response?.data?.error ?? "Assignment failed."),
+        onError: (err: any) => setError(techOnProjectMessage(err) ?? err?.response?.data?.error ?? "Assignment failed."),
       },
     );
   };
@@ -472,10 +474,13 @@ export default function DispatchBoard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--t1)] flex items-center gap-2.5">
+          {/* The page canvas is dark navy in every theme (incl. light), so the
+              on-canvas header must always use light text — var(--t1) is
+              near-black in light theme and disappears. */}
+          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
             <Zap size={24} className="text-amber-500" /> Dispatch Board
           </h1>
-          <p className="text-sm text-[var(--t3)] mt-1">Smart technician assignment with distance, workload & rating scoring</p>
+          <p className="text-sm text-slate-400 mt-1">Smart technician assignment with distance, workload & rating scoring</p>
         </div>
         <div className="flex items-center gap-3">
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${ws.status === "connected" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : ws.status === "connecting" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-red-50 text-red-700 border-red-200"}`}>
@@ -1004,8 +1009,16 @@ export default function DispatchBoard() {
 
                 {/* Name + phone */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
                     {tech.name}
+                    {!tech.currentLocation && (
+                      <span
+                        title="No base location yet — the technician sets it on first sign-in. Excluded from smart auto-assignment until then."
+                        style={{ fontSize: 9, fontWeight: 600, padding: "1px 6px", borderRadius: 20, background: "#f59e0b22", color: "#f59e0b", border: "1px solid #f59e0b44", flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 3 }}
+                      >
+                        <MapPin size={8} /> No location
+                      </span>
+                    )}
                   </div>
                   {tech.phone && (
                     <div style={{ fontSize: 10, color: "var(--t3)", display: "flex", alignItems: "center", gap: 3, marginTop: 1 }}>
@@ -1234,7 +1247,7 @@ export default function DispatchBoard() {
                       {(job.finalAmount ?? job.estimatedAmount) ? (
                         <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--bd)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <span style={{ fontSize: 11, color: "var(--t4)" }}>Amount</span>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--t1)" }}>${Number(job.finalAmount ?? job.estimatedAmount).toLocaleString()}</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--t1)" }}>{formatMoney(job.finalAmount ?? job.estimatedAmount, { decimals: 0 })}</span>
                         </div>
                       ) : null}
                     </div>

@@ -1351,11 +1351,13 @@ export namespace Prisma {
   export type InventoryItemAvgAggregateOutputType = {
     reorderPoint: number | null
     reorderQty: number | null
+    unitCost: Decimal | null
   }
 
   export type InventoryItemSumAggregateOutputType = {
     reorderPoint: number | null
     reorderQty: number | null
+    unitCost: Decimal | null
   }
 
   export type InventoryItemMinAggregateOutputType = {
@@ -1369,6 +1371,7 @@ export namespace Prisma {
     unit: string | null
     reorderPoint: number | null
     reorderQty: number | null
+    unitCost: Decimal | null
     isActive: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -1385,6 +1388,7 @@ export namespace Prisma {
     unit: string | null
     reorderPoint: number | null
     reorderQty: number | null
+    unitCost: Decimal | null
     isActive: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -1401,6 +1405,7 @@ export namespace Prisma {
     unit: number
     reorderPoint: number
     reorderQty: number
+    unitCost: number
     isActive: number
     createdAt: number
     updatedAt: number
@@ -1411,11 +1416,13 @@ export namespace Prisma {
   export type InventoryItemAvgAggregateInputType = {
     reorderPoint?: true
     reorderQty?: true
+    unitCost?: true
   }
 
   export type InventoryItemSumAggregateInputType = {
     reorderPoint?: true
     reorderQty?: true
+    unitCost?: true
   }
 
   export type InventoryItemMinAggregateInputType = {
@@ -1429,6 +1436,7 @@ export namespace Prisma {
     unit?: true
     reorderPoint?: true
     reorderQty?: true
+    unitCost?: true
     isActive?: true
     createdAt?: true
     updatedAt?: true
@@ -1445,6 +1453,7 @@ export namespace Prisma {
     unit?: true
     reorderPoint?: true
     reorderQty?: true
+    unitCost?: true
     isActive?: true
     createdAt?: true
     updatedAt?: true
@@ -1461,6 +1470,7 @@ export namespace Prisma {
     unit?: true
     reorderPoint?: true
     reorderQty?: true
+    unitCost?: true
     isActive?: true
     createdAt?: true
     updatedAt?: true
@@ -1564,6 +1574,7 @@ export namespace Prisma {
     unit: string
     reorderPoint: number
     reorderQty: number
+    unitCost: Decimal | null
     isActive: boolean
     createdAt: Date
     updatedAt: Date
@@ -1599,6 +1610,7 @@ export namespace Prisma {
     unit?: boolean
     reorderPoint?: boolean
     reorderQty?: boolean
+    unitCost?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -1618,6 +1630,7 @@ export namespace Prisma {
     unit?: boolean
     reorderPoint?: boolean
     reorderQty?: boolean
+    unitCost?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -1634,6 +1647,7 @@ export namespace Prisma {
     unit?: boolean
     reorderPoint?: boolean
     reorderQty?: boolean
+    unitCost?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -1663,6 +1677,7 @@ export namespace Prisma {
       unit: string
       reorderPoint: number
       reorderQty: number
+      unitCost: Prisma.Decimal | null
       isActive: boolean
       createdAt: Date
       updatedAt: Date
@@ -2071,6 +2086,7 @@ export namespace Prisma {
     readonly unit: FieldRef<"InventoryItem", 'String'>
     readonly reorderPoint: FieldRef<"InventoryItem", 'Int'>
     readonly reorderQty: FieldRef<"InventoryItem", 'Int'>
+    readonly unitCost: FieldRef<"InventoryItem", 'Decimal'>
     readonly isActive: FieldRef<"InventoryItem", 'Boolean'>
     readonly createdAt: FieldRef<"InventoryItem", 'DateTime'>
     readonly updatedAt: FieldRef<"InventoryItem", 'DateTime'>
@@ -6609,6 +6625,7 @@ export namespace Prisma {
     unit: 'unit',
     reorderPoint: 'reorderPoint',
     reorderQty: 'reorderQty',
+    unitCost: 'unitCost',
     isActive: 'isActive',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -6770,6 +6787,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Decimal'
+   */
+  export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
+    
+
+
+  /**
+   * Reference to a field of type 'Decimal[]'
+   */
+  export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
@@ -6801,20 +6832,6 @@ export namespace Prisma {
    * Reference to a field of type 'LocationType[]'
    */
   export type ListEnumLocationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LocationType[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Decimal'
-   */
-  export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
-    
-
-
-  /**
-   * Reference to a field of type 'Decimal[]'
-   */
-  export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
     
 
 
@@ -6884,6 +6901,7 @@ export namespace Prisma {
     unit?: StringFilter<"InventoryItem"> | string
     reorderPoint?: IntFilter<"InventoryItem"> | number
     reorderQty?: IntFilter<"InventoryItem"> | number
+    unitCost?: DecimalNullableFilter<"InventoryItem"> | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFilter<"InventoryItem"> | boolean
     createdAt?: DateTimeFilter<"InventoryItem"> | Date | string
     updatedAt?: DateTimeFilter<"InventoryItem"> | Date | string
@@ -6902,6 +6920,7 @@ export namespace Prisma {
     unit?: SortOrder
     reorderPoint?: SortOrder
     reorderQty?: SortOrder
+    unitCost?: SortOrderInput | SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -6924,6 +6943,7 @@ export namespace Prisma {
     unit?: StringFilter<"InventoryItem"> | string
     reorderPoint?: IntFilter<"InventoryItem"> | number
     reorderQty?: IntFilter<"InventoryItem"> | number
+    unitCost?: DecimalNullableFilter<"InventoryItem"> | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFilter<"InventoryItem"> | boolean
     createdAt?: DateTimeFilter<"InventoryItem"> | Date | string
     updatedAt?: DateTimeFilter<"InventoryItem"> | Date | string
@@ -6942,6 +6962,7 @@ export namespace Prisma {
     unit?: SortOrder
     reorderPoint?: SortOrder
     reorderQty?: SortOrder
+    unitCost?: SortOrderInput | SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -6966,6 +6987,7 @@ export namespace Prisma {
     unit?: StringWithAggregatesFilter<"InventoryItem"> | string
     reorderPoint?: IntWithAggregatesFilter<"InventoryItem"> | number
     reorderQty?: IntWithAggregatesFilter<"InventoryItem"> | number
+    unitCost?: DecimalNullableWithAggregatesFilter<"InventoryItem"> | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolWithAggregatesFilter<"InventoryItem"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"InventoryItem"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"InventoryItem"> | Date | string
@@ -7328,6 +7350,7 @@ export namespace Prisma {
     unit?: string
     reorderPoint?: number
     reorderQty?: number
+    unitCost?: Decimal | DecimalJsLike | number | string | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7346,6 +7369,7 @@ export namespace Prisma {
     unit?: string
     reorderPoint?: number
     reorderQty?: number
+    unitCost?: Decimal | DecimalJsLike | number | string | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7364,6 +7388,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     reorderPoint?: IntFieldUpdateOperationsInput | number
     reorderQty?: IntFieldUpdateOperationsInput | number
+    unitCost?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7382,6 +7407,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     reorderPoint?: IntFieldUpdateOperationsInput | number
     reorderQty?: IntFieldUpdateOperationsInput | number
+    unitCost?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7400,6 +7426,7 @@ export namespace Prisma {
     unit?: string
     reorderPoint?: number
     reorderQty?: number
+    unitCost?: Decimal | DecimalJsLike | number | string | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7416,6 +7443,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     reorderPoint?: IntFieldUpdateOperationsInput | number
     reorderQty?: IntFieldUpdateOperationsInput | number
+    unitCost?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7432,6 +7460,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     reorderPoint?: IntFieldUpdateOperationsInput | number
     reorderQty?: IntFieldUpdateOperationsInput | number
+    unitCost?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7863,6 +7892,17 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
+  export type DecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
   export type BoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
@@ -7920,6 +7960,7 @@ export namespace Prisma {
     unit?: SortOrder
     reorderPoint?: SortOrder
     reorderQty?: SortOrder
+    unitCost?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7928,6 +7969,7 @@ export namespace Prisma {
   export type InventoryItemAvgOrderByAggregateInput = {
     reorderPoint?: SortOrder
     reorderQty?: SortOrder
+    unitCost?: SortOrder
   }
 
   export type InventoryItemMaxOrderByAggregateInput = {
@@ -7941,6 +7983,7 @@ export namespace Prisma {
     unit?: SortOrder
     reorderPoint?: SortOrder
     reorderQty?: SortOrder
+    unitCost?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7957,6 +8000,7 @@ export namespace Prisma {
     unit?: SortOrder
     reorderPoint?: SortOrder
     reorderQty?: SortOrder
+    unitCost?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7965,6 +8009,7 @@ export namespace Prisma {
   export type InventoryItemSumOrderByAggregateInput = {
     reorderPoint?: SortOrder
     reorderQty?: SortOrder
+    unitCost?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -8027,6 +8072,22 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type BoolWithAggregatesFilter<$PrismaModel = never> = {
@@ -8462,6 +8523,14 @@ export namespace Prisma {
     divide?: number
   }
 
+  export type NullableDecimalFieldUpdateOperationsInput = {
+    set?: Decimal | DecimalJsLike | number | string | null
+    increment?: Decimal | DecimalJsLike | number | string
+    decrement?: Decimal | DecimalJsLike | number | string
+    multiply?: Decimal | DecimalJsLike | number | string
+    divide?: Decimal | DecimalJsLike | number | string
+  }
+
   export type BoolFieldUpdateOperationsInput = {
     set?: boolean
   }
@@ -8796,6 +8865,17 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
+  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
   export type NestedBoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
@@ -8892,6 +8972,22 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
@@ -9335,6 +9431,7 @@ export namespace Prisma {
     unit?: string
     reorderPoint?: number
     reorderQty?: number
+    unitCost?: Decimal | DecimalJsLike | number | string | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9352,6 +9449,7 @@ export namespace Prisma {
     unit?: string
     reorderPoint?: number
     reorderQty?: number
+    unitCost?: Decimal | DecimalJsLike | number | string | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9416,6 +9514,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     reorderPoint?: IntFieldUpdateOperationsInput | number
     reorderQty?: IntFieldUpdateOperationsInput | number
+    unitCost?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9433,6 +9532,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     reorderPoint?: IntFieldUpdateOperationsInput | number
     reorderQty?: IntFieldUpdateOperationsInput | number
+    unitCost?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9487,6 +9587,7 @@ export namespace Prisma {
     unit?: string
     reorderPoint?: number
     reorderQty?: number
+    unitCost?: Decimal | DecimalJsLike | number | string | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9504,6 +9605,7 @@ export namespace Prisma {
     unit?: string
     reorderPoint?: number
     reorderQty?: number
+    unitCost?: Decimal | DecimalJsLike | number | string | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9599,6 +9701,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     reorderPoint?: IntFieldUpdateOperationsInput | number
     reorderQty?: IntFieldUpdateOperationsInput | number
+    unitCost?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9616,6 +9719,7 @@ export namespace Prisma {
     unit?: StringFieldUpdateOperationsInput | string
     reorderPoint?: IntFieldUpdateOperationsInput | number
     reorderQty?: IntFieldUpdateOperationsInput | number
+    unitCost?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

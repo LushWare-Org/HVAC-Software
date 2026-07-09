@@ -155,7 +155,7 @@ describe('EquipmentAutomationService — dispatch', () => {
     expect(result).not.toBeNull();
     expect(result!.smsSent).toBe(true);
     expect(result!.emailQueued).toBe(true);
-    expect(sms.send).toHaveBeenCalledWith('+15551234567', expect.stringContaining('Alice'));
+    expect(sms.send).toHaveBeenCalledWith('+15551234567', expect.stringContaining('Alice'), expect.any(String));
     expect(queue.add).toHaveBeenCalledWith('automation-email', expect.objectContaining({ to: 'alice@example.com' }), expect.any(Object));
   });
 
@@ -205,5 +205,75 @@ describe('EquipmentAutomationService — dispatch', () => {
     await service.evaluateEquipment(eq);
     const createCall = (db.sendJob.create as jest.Mock).mock.calls[0][0];
     expect(createCall.data.automationTemplate).toBe('hvac-tune-up-6mo:eq-1');
+  });
+});
+
+// ── Filter replacement (consumables) ─────────────────────────────────────────
+
+describe('EquipmentAutomationService — filter-replacement-due', () => {
+  let service: EquipmentAutomationService;
+
+  beforeEach(() => {
+    ({ service } = makeService());
+  });
+
+  const resolve = (svc: any, eq: EquipmentWithCustomer, today = new Date()) =>
+    (svc as any).resolveTemplate(eq, today);
+
+  const filter = (over: any = {}) => ({
+    id: 'c-1',
+    kind: 'FILTER',
+    partNumber: 'X6673',
+    sizeSpec: '20x25x5',
+    rating: 'MERV 11',
+    intervalDays: 90,
+    lastReplacedAt: null,
+    ...over,
+  });
+
+  it('triggers when a consumable is past due (lastReplacedAt + intervalDays <= today)', () => {
+    const eq = makeEq({ consumables: [filter({ lastReplacedAt: daysAgo(91) })] });
+    expect(resolve(service, eq)).toBe('filter-replacement-due');
+  });
+
+  it('does not trigger when the filter is not yet due', () => {
+    const eq = makeEq({ consumables: [filter({ lastReplacedAt: daysAgo(30) })] });
+    expect(resolve(service, eq)).toBeNull();
+  });
+
+  it('anchors on equipment installDate when never replaced', () => {
+    const eq = makeEq({ installDate: daysAgo(100), consumables: [filter()] });
+    expect(resolve(service, eq)).toBe('filter-replacement-due');
+  });
+
+  it('returns null when consumable has no anchor at all', () => {
+    const eq = makeEq({ consumables: [filter()] }); // no installDate, no lastReplacedAt
+    expect(resolve(service, eq)).toBeNull();
+  });
+
+  it('warranty template outranks filter when both fire', () => {
+    const eq = makeEq({
+      warrantyEnd: daysFromNow(10),
+      consumables: [filter({ lastReplacedAt: daysAgo(91) })],
+    });
+    expect(resolve(service, eq)).toBe('warranty-expiry-30d');
+  });
+
+  it('filter outranks tune-up when both fire', () => {
+    const eq = makeEq({
+      installDate: daysAgo(183), // tune-up window
+      consumables: [filter({ lastReplacedAt: daysAgo(91) })],
+    });
+    expect(resolve(service, eq)).toBe('filter-replacement-due');
+  });
+
+  it('dispatch includes the filter spec in the SMS body', async () => {
+    const { service: svc, sms } = makeService();
+    const eq = makeEq({ consumables: [filter({ lastReplacedAt: daysAgo(91) })] });
+    const result = await svc.evaluateEquipment(eq);
+    expect(result?.templateKey).toBe('filter-replacement-due');
+    expect(sms.send).toHaveBeenCalled();
+    const body = sms.send.mock.calls[0][1] as string;
+    expect(body).toContain('X6673 20x25x5 MERV 11');
   });
 });

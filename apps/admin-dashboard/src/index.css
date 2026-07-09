@@ -255,16 +255,18 @@ img {
   gap: 16px;
 }
 
+/* On-canvas page headers: the app canvas is dark navy in every theme
+   (including light), so these must always use light text. */
 .page-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--t1);
+  color: #F1F5F9;
   line-height: 1.2;
 }
 
 .page-subtitle {
   font-size: 12px;
-  color: var(--t3);
+  color: #94A3B8;
   margin-top: 3px;
 }
 

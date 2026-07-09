@@ -16,6 +16,7 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { NotificationClientService } from '../notification-client/notification-client.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
@@ -48,15 +49,16 @@ export class QuotesService {
     private readonly config: ConfigService,
     private readonly pdfService: PdfService,
     private readonly notificationClient: NotificationClientService,
+    private readonly companySettings: CompanySettingsClient,
   ) {}
 
   // ── List ─────────────────────────────────────────────────────────────────
 
   async findAll(
     companyId: string,
-    params: { status?: QuoteStatus; customerId?: string; jobId?: string; page?: number; limit?: number },
+    params: { status?: QuoteStatus; customerId?: string; jobId?: string; projectId?: string; page?: number; limit?: number },
   ) {
-    const { status, customerId, jobId } = params;
+    const { status, customerId, jobId, projectId } = params;
     const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
     const limit = Number.isFinite(Number(params.limit)) ? Math.min(100, Math.max(1, Math.trunc(Number(params.limit)))) : 20;
     const skip = (page - 1) * limit;
@@ -65,6 +67,7 @@ export class QuotesService {
       ...(status ? { status } : {}),
       ...(customerId ? { customerId } : {}),
       ...(jobId ? { jobId } : {}),
+      ...(projectId ? { projectId } : {}),
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.quote.findMany({
@@ -267,7 +270,11 @@ export class QuotesService {
         </div>
       `;
 
-      const quotePdf = await this.pdfService.generateQuotePdf(updated as any, companyName, companyAddress);
+      const sendSettings = await this.companySettings.getSettings(companyId);
+      const quotePdf = await this.pdfService.generateQuotePdf(updated as any, companyName, companyAddress, {
+        currency: sendSettings.currency,
+        timezone: sendSettings.timezone,
+      });
       await this.notificationClient.sendEmail({
         companyId,
         recipientId: updated.customerId ?? updated.id,
@@ -416,6 +423,7 @@ export class QuotesService {
           invoiceNumber,
           quoteId: id,
           jobId: quote.jobId,
+          projectId: quote.projectId,
           customerId: quote.customerId,
           customerName: quote.customerName,
           customerEmail: quote.customerEmail,

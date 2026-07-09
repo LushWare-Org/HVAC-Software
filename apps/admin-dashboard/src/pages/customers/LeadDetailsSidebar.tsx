@@ -17,7 +17,10 @@ import {
   Wrench,
   Trash2,
   AlertCircle,
+  Loader2,
+  Check,
 } from "lucide-react";
+import { useToast } from "../../contexts/ToastContext";
 import { useUpdateLead } from "../../hooks/useCustomers";
 import { useLeadAddresses, useSaveLeadAddresses } from "../../hooks/useAddresses";
 import type { Lead } from "../../types/api";
@@ -182,7 +185,9 @@ export default function LeadDetailsSidebar({
   const [convertedCustomerId, setConvertedCustomerId] = useState<string | null>(null);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [contacts, setContacts] = useState(mockContacts);
-    const [_error, setError] = useState("");
+  const [_error, setError] = useState("");
+  const [saveSucceeded, setSaveSucceeded] = useState(false);
+  const { showSuccess, showError } = useToast();
   const updateLead = useUpdateLead();
 
   // Fetch real addresses from API
@@ -292,8 +297,15 @@ export default function LeadDetailsSidebar({
             });
           }
           setIsEditMode(false);
+          setSaveSucceeded(true);
+          setTimeout(() => setSaveSucceeded(false), 2000);
+          showSuccess('Lead details saved.');
         },
-        onError: (err: any) => setError(err?.response?.data?.message ?? "Failed to update lead."),
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message ?? 'Failed to update lead.';
+          setError(msg);
+          showError(msg, 'Save failed');
+        },
       },
     );
   };
@@ -420,9 +432,22 @@ export default function LeadDetailsSidebar({
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex flex-row items-center justify-center gap-2 bg-white text-[var(--blue)] hover:bg-blue-50 px-5 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                  disabled={updateLead.isPending}
+                  className="flex flex-row items-center justify-center gap-2 px-5 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                  style={{
+                    background: saveSucceeded ? '#10b981' : 'white',
+                    color: saveSucceeded ? 'white' : 'var(--blue)',
+                    opacity: updateLead.isPending ? 0.8 : 1,
+                    cursor: updateLead.isPending ? 'not-allowed' : 'pointer',
+                  }}
                 >
-                  <Save size={14} /> Save
+                  {updateLead.isPending ? (
+                    <><Loader2 size={14} className="animate-spin" /> Saving…</>
+                  ) : saveSucceeded ? (
+                    <><Check size={14} /> Saved</>
+                  ) : (
+                    <><Save size={14} /> Save</>
+                  )}
                 </button>
               </>
             ) : (
@@ -649,14 +674,6 @@ export default function LeadDetailsSidebar({
                               label="Phone"
                               name="phone"
                               value={formData.phone || formData.whatsappNo}
-                              isEdit={isEditMode}
-                              onChange={handleChange}
-                              placeholder="+1 7700 000000"
-                            />
-                            <Field
-                              label="WhatsApp"
-                              name="whatsappNo"
-                              value={formData.whatsappNo}
                               isEdit={isEditMode}
                               onChange={handleChange}
                               placeholder="+1 7700 000000"

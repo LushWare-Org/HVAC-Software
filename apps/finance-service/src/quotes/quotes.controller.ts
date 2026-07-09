@@ -11,6 +11,7 @@ import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client
 import { Role, AuthUser } from '@tscrm/types';
 import { QuotesService } from './quotes.service';
 import { PdfService } from '../pdf/pdf.service';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
@@ -42,6 +43,7 @@ export class QuotesController {
     private readonly quotesService: QuotesService,
     private readonly pdfService: PdfService,
     private readonly prisma: PrismaService,
+    private readonly companySettings: CompanySettingsClient,
   ) {}
 
   // ── List ──────────────────────────────────────────────────────────────────
@@ -57,10 +59,11 @@ export class QuotesController {
     @Query('status') status?: QuoteStatus,
     @Query('customerId') customerId?: string,
     @Query('jobId') jobId?: string,
+    @Query('projectId') projectId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    return this.quotesService.findAll(user.companyId, { status, customerId, jobId, page, limit });
+    return this.quotesService.findAll(user.companyId, { status, customerId, jobId, projectId, page, limit });
   }
 
   // ── Single ────────────────────────────────────────────────────────────────
@@ -176,7 +179,11 @@ export class QuotesController {
     // TODO: pull real company info from company service / config
     const companyName = process.env.COMPANY_NAME ?? 'T&S Services';
     const companyAddress = process.env.COMPANY_ADDRESS ?? '';
-    const pdf = await this.pdfService.generateQuotePdf(quote as any, companyName, companyAddress);
+    const settings = await this.companySettings.getSettings(user.companyId);
+    const pdf = await this.pdfService.generateQuotePdf(quote as any, companyName, companyAddress, {
+      currency: settings.currency,
+      timezone: settings.timezone,
+    });
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${quote.quoteNumber}.pdf"`,

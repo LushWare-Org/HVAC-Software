@@ -7,9 +7,11 @@
  *  - Return structured delivery result for the BullMQ processor to log
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { isFeatureEnabled } from '@tscrm/types';
 import twilio from 'twilio';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 
 export interface SmsDeliveryResult {
   success: boolean;
@@ -34,7 +36,10 @@ export class SmsService {
   private readonly fromPhone: string;
   private readonly webhookSecret: string;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    @Optional() private readonly companySettings?: CompanySettingsClient,
+  ) {
     const accountSid = this.config.get<string>('twilio.accountSid') ?? '';
     const authToken = this.config.get<string>('twilio.authToken') ?? '';
     this.fromPhone = this.config.get<string>('twilio.fromPhone') ?? '';
@@ -49,9 +54,17 @@ export class SmsService {
     }
   }
 
-  async send(to: string, body: string): Promise<SmsDeliveryResult> {
+  async send(to: string, body: string, companyId?: string): Promise<SmsDeliveryResult> {
     const start = Date.now();
     try {
+      if (companyId && this.companySettings) {
+        const settings = await this.companySettings.getSettings(companyId);
+        if (!isFeatureEnabled(settings.features, 'sms')) {
+          this.logger.log(`[sms-disabled] companyId=${companyId} skipped sms to=${to}`);
+          return { success: false, error: 'sms-disabled', durationMs: 0 };
+        }
+      }
+
       if (!this.client) {
         this.logger.debug(`[MOCK SMS] To: ${to} | Body: ${body.substring(0, 50)}`);
         return { success: true, externalId: `mock-sid-${Date.now()}`, durationMs: 0 };

@@ -87,7 +87,7 @@ export class WinbackProcessor {
     const trackedLink = `${CLICK_BASE}/m/r/${token}?dest=${encodeURIComponent(CLICK_BASE + '/book')}`;
     const body = step3Sms({ customerName, companyName: 'T&S Services', trackedLink, unsubLink: '', offerText: OFFER_TEXT });
 
-    const result = await this.sms.send(phone, body);
+    const result = await this.sms.send(phone, body, companyId);
     if (!result.success) {
       await this.db.sendJob.update({ where: { id: sendJobId }, data: { status: 'FAILED', error: result.error } });
       throw new Error(`Win-back SMS failed: ${result.error}`);

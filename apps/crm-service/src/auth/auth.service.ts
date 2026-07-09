@@ -63,7 +63,11 @@ export class AuthService {
       throw new UnauthorizedException('Your account has been deactivated. Please contact your administrator.');
     }
 
-    await this.prisma.companyUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+    const now = new Date();
+    await this.prisma.companyUser.update({ where: { id: user.id }, data: { lastLoginAt: now } });
+    await this.prisma.userLoginEvent.create({
+      data: { companyId: user.companyId, userId: user.id, userEmail: user.email },
+    }).catch(() => { /* non-fatal — table may not exist in older envs */ });
 
     // Stamp last_seen_at on the scheduling technician record so dispatch
     // availability reflects actual app logins, not just GPS pings.

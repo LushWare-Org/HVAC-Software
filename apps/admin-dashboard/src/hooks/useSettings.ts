@@ -85,6 +85,8 @@ export function useCompany() {
       const res = await api.get('/crm/company')
       return res.data
     },
+    enabled: !!localStorage.getItem('tscrm_token'),
+    retry: 1,
   })
 }
 

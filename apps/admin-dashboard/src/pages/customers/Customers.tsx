@@ -1,8 +1,7 @@
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
-  Target,
   FileText,
   Plus,
   Search,
@@ -19,33 +18,26 @@ import {
   RefreshCw,
   AlertCircle,
   Sparkles,
+  Tag,
+  ChevronDown,
+  X,
+  Send,
 } from "lucide-react";
 import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
-import LeadDetailsSidebar from "./LeadDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import CustomerRecommendationsModal from "../../components/CustomerRecommendationsModal";
-import LeadRecommendationsModal from "../../components/LeadRecommendationsModal";
-import { useCustomers, useLeads, useAgreements, useDeleteCustomer, useDeleteLead, useUpdateCustomer, useCustomerStatusSummary } from "../../hooks/useCustomers";
-import { customerName, leadName } from "../../types/api";
-import type { Customer, CustomerStatusSummary, Lead } from "../../types/api";
-import api from "../../lib/api";
-import { computeLeadStatusSummary, formatLeadPct, leadConversionColor, leadRiskColor } from "./leadInsights";
+import { useCustomers, useAgreements, useDeleteCustomer, useUpdateCustomer, useCustomerStatusSummary, useCustomerTags } from "../../hooks/useCustomers";
+import { customerName } from "../../types/api";
+import type { Customer, CustomerStatusSummary } from "../../types/api";
+import { formatMoney } from '../../lib/format'
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
-
-const LEAD_STATUS: Record<string, string> = {
-  NEW: "badge-neutral",
-  CONTACTED: "badge-blue",
-  QUALIFIED: "badge-violet",
-  WON: "badge-green",
-  LOST: "badge-red",
-};
 
 
 
 function fmt(n: number) {
-  return `$${n.toLocaleString()}`;
+  return formatMoney(n, { decimals: 0 });
 }
 
 function Skeleton({ h = 14 }: { h?: number }) {
@@ -317,110 +309,25 @@ function CustomerHoverSummary({
   );
 }
 
-function LeadHoverSummary({
-  lead,
-  anchor,
-}: {
-  lead: Lead;
-  anchor: { x: number; y: number };
-}) {
-  const summary = computeLeadStatusSummary(lead);
-  const width = 360;
-  const gap = 16;
-  const left = typeof window === "undefined"
-    ? anchor.x + gap
-    : anchor.x > window.innerWidth - width - 64
-      ? anchor.x - width - gap
-      : Math.min(anchor.x + gap, window.innerWidth - width - 24);
-  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 430));
-  const channel = summary.recommendedAction.channel === "whatsapp" ? "WhatsApp" : summary.recommendedAction.channel === "call" ? "Phone call" : "Email";
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        zIndex: 80,
-        top,
-        left: Math.max(12, left),
-        width,
-        padding: 14,
-        borderRadius: 8,
-        border: "1px solid var(--border)",
-        background: "var(--bg-card)",
-        boxShadow: "0 18px 44px rgba(15, 23, 42, 0.18)",
-        color: "var(--t1)",
-        pointerEvents: "none",
-      }}
-    >
-      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--t3)", marginBottom: 10 }}>
-        Lead risk summary
-      </div>
-      <div style={{ display: "grid", gap: 10 }}>
-        <div>
-          <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Current status</div>
-          <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2 }}>{summary.currentStatus}</div>
-        </div>
-        <div style={{ padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card-2)" }}>
-          <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Recommended action</div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
-            <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 700 }}>{offerLabel(summary.recommendedAction.action)}</div>
-            <div style={{ fontSize: 12, color: summary.recommendedAction.priority === "high" ? "var(--red)" : summary.recommendedAction.priority === "medium" ? "var(--amber)" : "var(--green)", fontWeight: 700 }}>
-              {summary.recommendedAction.priority.toUpperCase()}
-            </div>
-          </div>
-          <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 6, lineHeight: 1.35 }}>
-            {summary.recommendedAction.reason} Channel: {channel}.
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div>
-            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Conversion prediction</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: leadConversionColor(summary.conversionPrediction.level), marginTop: 2 }}>
-              {summary.conversionPrediction.level} ({formatLeadPct(summary.conversionPrediction.probability)})
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Risk prediction</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: leadRiskColor(summary.riskPrediction.level), marginTop: 2 }}>
-              {summary.riskPrediction.level} ({formatLeadPct(summary.riskPrediction.probability)})
-            </div>
-          </div>
-        </div>
-        <div>
-          <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Proposed next step</div>
-          <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2, lineHeight: 1.4 }}>{summary.proposedNextStep}</div>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, paddingTop: 8, borderTop: "1px solid var(--border)", fontSize: 12, color: "var(--t3)" }}>
-          <span>{summary.signals.ageDays} days open</span>
-          <span>{summary.signals.sourceQuality} source</span>
-          <span>{summary.predictionSource === "model" ? "AI model" : "Fallback"}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function Customers() {
-  const [tab, setTab] = useState<"customers" | "leads">("customers");
   const [search, setSearch] = useState("");
   const [customerTypeFilter, setCustomerTypeFilter] = useState("All Types");
   const [customerStatusFilter, setCustomerStatusFilter] = useState("All Status");
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [tagPopoverOpen, setTagPopoverOpen] = useState(false);
+  const tagPopoverRef = useRef<HTMLDivElement>(null);
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [isExpanded, setIsExpanded] = useState(false);
-  const [leadsSearch, setLeadsSearch] = useState("");
-  const [leadStatusFilter, setLeadStatusFilter] = useState("All Status");
   const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isLeadDetailsOpen, setIsLeadDetailsOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [addType, setAddType] = useState<"customer" | "lead">("customer");
+  const [isPortalInviteOpen, setIsPortalInviteOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<any>("contact");
-  const [deleteConfirm, setDeleteConfirm] = useState<{ type: "customer" | "lead"; id: string; name: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const [hoveredCustomer, setHoveredCustomer] = useState<{ id: string; x: number; y: number } | null>(null);
-  const [hoveredLead, setHoveredLead] = useState<{ lead: Lead; x: number; y: number } | null>(null);
   const [recCustomer, setRecCustomer] = useState<Customer | null>(null);
-  const [recLead, setRecLead] = useState<Lead | null>(null);
   const [customerPage, setCustomerPage] = useState(1);
-  const [leadPage, setLeadPage] = useState(1);
   const itemsPerPage = 10;
 
   // ── API queries ─────────────────────────────────────────────────────────────
@@ -430,18 +337,27 @@ export default function Customers() {
     search: search || undefined,
     type: customerTypeFilter !== "All Types" ? customerTypeFilter.toUpperCase() : undefined,
     isActive: customerStatusFilter === "Active" ? true : customerStatusFilter === "Inactive" ? false : undefined,
+    tags: tagFilter.length > 0 ? tagFilter : undefined,
+    sortBy,
+    sortDir,
   });
+  const tagsQuery = useCustomerTags();
 
-  const leadsQuery = useLeads({
-    page: leadPage, limit: itemsPerPage,
-    search: leadsSearch || undefined,
-    status: leadStatusFilter !== "All Status" ? leadStatusFilter.replace(" ", "_").toUpperCase() : undefined,
-  });
-
+  const navigate = useNavigate();
   const agreementsQuery = useAgreements({ page: 1, limit: 1 });
 
+  // Close tag popover on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (tagPopoverRef.current && !tagPopoverRef.current.contains(e.target as Node)) {
+        setTagPopoverOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   const deleteCustomer = useDeleteCustomer();
-  const deleteLead = useDeleteLead();
   const updateCustomer = useUpdateCustomer();
   const hoveredSummaryQuery = useCustomerStatusSummary(hoveredCustomer?.id);
 
@@ -450,34 +366,21 @@ export default function Customers() {
   const customers: Customer[] = customersQuery.data?.data ?? [];
   const totalCustomers = customersQuery.data?.total ?? 0;
   const totalCustomerPages = Math.max(1, customersQuery.data?.totalPages ?? 1);
-  const leads: Lead[] = leadsQuery.data?.data ?? [];
-  const totalLeads = leadsQuery.data?.total ?? 0;
-  const totalLeadPages = Math.max(1, leadsQuery.data?.totalPages ?? 1);
   const totalAgreements = agreementsQuery.data?.total ?? 0;
 
-  const queryClient = useQueryClient();
-
-  const handleViewClick = (person: any, type: "customer" | "lead" | "agreement" = "customer") => {
-    if (type === "lead") {
-      setSelectedPerson(person); setIsLeadDetailsOpen(true);
-    } else {
-      setSelectedPerson(person);
-      setSidebarTab(type === "agreement" ? "agreements" : "contact");
-      setIsDetailsOpen(true);
-    }
+  const handleViewClick = (person: any, type: "customer" | "agreement" = "customer") => {
+    setSelectedPerson(person);
+    setSidebarTab(type === "agreement" ? "agreements" : "contact");
+    setIsDetailsOpen(true);
   };
 
-  const confirmDelete = (type: "customer" | "lead", id: string, name: string) => {
-    setDeleteConfirm({ type, id, name });
+  const confirmDelete = (id: string, name: string) => {
+    setDeleteConfirm({ id, name });
   };
 
   const executeDelete = () => {
     if (!deleteConfirm) return;
-    if (deleteConfirm.type === "customer") {
-      deleteCustomer.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) });
-    } else {
-      deleteLead.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) });
-    }
+    deleteCustomer.mutate(deleteConfirm.id, { onSettled: () => setDeleteConfirm(null) });
   };
 
   const toggleCustomerFollowup = (customer: Customer) => {
@@ -494,18 +397,6 @@ export default function Customers() {
     );
   };
 
-  const handleLeadConverted = async (customerId: string) => {
-    setIsLeadDetailsOpen(false);
-    queryClient.invalidateQueries({ queryKey: ['customers'] });
-    try {
-      const res = await api.get(`/crm/customers/${customerId}`);
-      setSelectedPerson(res.data);
-      setSidebarTab('contact');
-      setIsDetailsOpen(true);
-    } catch {
-      // customers list will refresh via invalidation
-    }
-  };
 
   return (
     <>
@@ -514,12 +405,11 @@ export default function Customers() {
         {!isExpanded && (
           <div className="kpi-grid mb-5">
             {[
-              { icon: Users, v: customersQuery.isLoading ? "—" : totalCustomers.toLocaleString(), l: "Total Customers", loading: customersQuery.isLoading },
-              { icon: Target, v: leadsQuery.isLoading ? "—" : totalLeads.toString(), l: "Active Leads", loading: leadsQuery.isLoading },
-              { icon: FileText, v: agreementsQuery.isLoading ? "—" : totalAgreements.toString(), l: "Service Agreements", loading: agreementsQuery.isLoading },
-              { icon: TrendingUp, v: "—", l: "Avg. Revenue / Customer", loading: false },
+              { icon: Users, v: customersQuery.isLoading ? "—" : totalCustomers.toLocaleString(), l: "Total Customers", loading: customersQuery.isLoading, onClick: undefined },
+              { icon: FileText, v: agreementsQuery.isLoading ? "—" : totalAgreements.toString(), l: "Service Agreements", loading: agreementsQuery.isLoading, onClick: () => navigate("/agreements") },
+              { icon: TrendingUp, v: "—", l: "Avg. Revenue / Customer", loading: false, onClick: undefined },
             ].map((k) => (
-              <div key={k.l} className="kpi-card" style={{ padding: "16px 20px", borderRadius: "var(--r-md)" }}>
+              <div key={k.l} className="kpi-card" style={{ padding: "16px 20px", borderRadius: "var(--r-md)", cursor: k.onClick ? "pointer" : "default" }} onClick={k.onClick}>
                 <div className="kpi-card-top" style={{ marginBottom: 12, alignItems: "center", justifyContent: "space-between" }}>
                   <div className="kpi-label" style={{ fontSize: 13, color: "var(--t3)", fontWeight: 500, margin: 0 }}>{k.l}</div>
                   <k.icon size={16} strokeWidth={1.5} color="var(--t3)" />
@@ -532,18 +422,8 @@ export default function Customers() {
 
         {!isExpanded && <RecommendationsPanel filterActions={['call', 'geo_target_discount']} />}
 
-        <div className="page-tabs">
-          <button className={`tab-btn ${tab === "customers" ? "active" : ""}`} onClick={() => setTab("customers")}>
-            <Users size={14} /> Customers <span className="tab-count">{totalCustomers}</span>
-          </button>
-          <button className={`tab-btn ${tab === "leads" ? "active" : ""}`} onClick={() => setTab("leads")}>
-            <Target size={14} /> Leads <span className="tab-count">{totalLeads}</span>
-          </button>
-        </div>
-
         {/* Customers */}
-        {tab === "customers" && (
-          <div className="card anim-fade-in">
+        <div className="card anim-fade-in">
             {customersQuery.isError && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--red-dim)', borderRadius: 8, color: 'var(--red)', fontSize: 13, margin: '0 0 8px' }}>
                 <AlertCircle size={14} /> Failed to load customers.
@@ -551,18 +431,164 @@ export default function Customers() {
               </div>
             )}
             <div className="card-header">
-              <div className="filter-bar w-full" style={{ margin: 0 }}>
-                <div className="filter-search flex-1">
+              <div className="filter-bar w-full" style={{ margin: 0, flexWrap: 'wrap', rowGap: 6 }}>
+                <div className="filter-search flex-1" style={{ minWidth: 180 }}>
                   <Search size={13} color="var(--t4)" />
                   <input placeholder="Search customers…" value={search} onChange={e => { setSearch(e.target.value); setCustomerPage(1); }} />
                 </div>
-                <select className="select" style={{ width: 160 }} value={customerTypeFilter} onChange={e => { setCustomerTypeFilter(e.target.value); setCustomerPage(1); }}>
+                <select className="select" style={{ width: 148 }} value={customerTypeFilter} onChange={e => { setCustomerTypeFilter(e.target.value); setCustomerPage(1); }}>
                   <option>All Types</option><option>Residential</option><option>Commercial</option>
                 </select>
-                <select className="select" style={{ width: 140 }} value={customerStatusFilter} onChange={e => { setCustomerStatusFilter(e.target.value); setCustomerPage(1); }}>
+                <select className="select" style={{ width: 130 }} value={customerStatusFilter} onChange={e => { setCustomerStatusFilter(e.target.value); setCustomerPage(1); }}>
                   <option>All Status</option><option>Active</option><option>Inactive</option>
                 </select>
-                <button className="btn btn-primary btn-sm ml-auto" onClick={() => { setAddType("customer"); setIsAddOpen(true); }}><Plus size={12} /> Add Customer</button>
+
+                {/* ── Tag filter popover ─────────────────────────────────── */}
+                <div ref={tagPopoverRef} style={{ position: 'relative' }}>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5, padding: '0 10px',
+                      background: tagFilter.length > 0 ? 'color-mix(in srgb, var(--blue) 10%, transparent)' : undefined,
+                      borderColor: tagFilter.length > 0 ? 'color-mix(in srgb, var(--blue) 30%, transparent)' : undefined,
+                      color: tagFilter.length > 0 ? 'var(--blue)' : undefined,
+                    }}
+                    onClick={() => setTagPopoverOpen(o => !o)}
+                  >
+                    <Tag size={13} />
+                    Tags
+                    {tagFilter.length > 0 && (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        minWidth: 18, height: 18, borderRadius: 9, fontSize: 10, fontWeight: 700,
+                        background: 'var(--blue)', color: '#fff', padding: '0 4px',
+                      }}>
+                        {tagFilter.length}
+                      </span>
+                    )}
+                    <ChevronDown size={11} style={{ opacity: 0.6, transform: tagPopoverOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+                  </button>
+
+                  {tagPopoverOpen && (
+                    <div style={{
+                      position: 'absolute', top: 'calc(100% + 6px)', left: 0,
+                      background: 'var(--bg-card)', border: '1px solid var(--bd)',
+                      borderRadius: 12, boxShadow: '0 8px 28px rgba(0,0,0,0.13)',
+                      zIndex: 9999, minWidth: 200, maxWidth: 260, overflow: 'hidden',
+                    }}>
+                      <div style={{ padding: '10px 12px 6px', fontSize: 10, fontWeight: 700, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                        Filter by tag
+                      </div>
+                      {(tagsQuery.data ?? []).length === 0 ? (
+                        <div style={{ padding: '8px 12px 12px', fontSize: 12, color: 'var(--t4)' }}>
+                          No tags yet — add tags to customers first.
+                        </div>
+                      ) : (
+                        <div style={{ padding: '4px 8px 8px', display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 240, overflowY: 'auto' }}>
+                          {(tagsQuery.data ?? []).map(t => {
+                            const active = tagFilter.includes(t);
+                            return (
+                              <div
+                                key={t}
+                                onClick={() => {
+                                  setTagFilter(prev => active ? prev.filter(x => x !== t) : [...prev, t]);
+                                  setCustomerPage(1);
+                                }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: 8,
+                                  padding: '6px 8px', borderRadius: 8, cursor: 'pointer',
+                                  background: active ? 'color-mix(in srgb, var(--blue) 9%, transparent)' : 'transparent',
+                                  transition: 'background 0.1s',
+                                }}
+                                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = 'color-mix(in srgb, var(--t1) 5%, transparent)' }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = active ? 'color-mix(in srgb, var(--blue) 9%, transparent)' : 'transparent' }}
+                              >
+                                <div style={{
+                                  width: 16, height: 16, borderRadius: 4, flexShrink: 0,
+                                  border: `1.5px solid ${active ? 'var(--blue)' : 'var(--bd)'}`,
+                                  background: active ? 'var(--blue)' : 'transparent',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  transition: 'all 0.1s',
+                                }}>
+                                  {active && <X size={9} color="#fff" strokeWidth={3} />}
+                                </div>
+                                <span style={{ fontSize: 13, color: active ? 'var(--blue)' : 'var(--t1)', fontWeight: active ? 600 : 400 }}>{t}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {tagFilter.length > 0 && (
+                        <div style={{ borderTop: '1px solid var(--bd)', padding: '6px 8px' }}>
+                          <button
+                            onClick={() => { setTagFilter([]); setCustomerPage(1); }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--t4)', padding: '2px 4px', borderRadius: 4 }}
+                          >
+                            Clear all tags
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Active tag chips inline */}
+                {tagFilter.map(t => (
+                  <span key={t} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    background: 'color-mix(in srgb, var(--blue) 10%, transparent)',
+                    color: 'var(--blue)', borderRadius: 20,
+                    padding: '0 4px 0 10px', fontSize: 12, fontWeight: 600,
+                    border: '1px solid color-mix(in srgb, var(--blue) 20%, transparent)',
+                    height: 28,
+                  }}>
+                    {t}
+                    <button
+                      onClick={() => { setTagFilter(prev => prev.filter(x => x !== t)); setCustomerPage(1); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                        background: 'color-mix(in srgb, var(--blue) 14%, transparent)',
+                        border: 'none', cursor: 'pointer', color: 'var(--blue)', padding: 0,
+                      }}
+                    >
+                      <X size={10} strokeWidth={2.5} />
+                    </button>
+                  </span>
+                ))}
+
+                {/* Sort control */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+                  <select
+                    className="select"
+                    style={{ fontSize: 12, padding: '0 8px', height: 32, fontWeight: 600 }}
+                    value={`${sortBy}:${sortDir}`}
+                    onChange={e => {
+                      const [by, dir] = e.target.value.split(':');
+                      setSortBy(by);
+                      setSortDir(dir as 'asc' | 'desc');
+                      setCustomerPage(1);
+                    }}
+                  >
+                    <option value="createdAt:desc">Newest first</option>
+                    <option value="createdAt:asc">Oldest first</option>
+                    <option value="name:asc">Name A–Z</option>
+                    <option value="name:desc">Name Z–A</option>
+                    <option value="city:asc">Location A–Z</option>
+                    <option value="city:desc">Location Z–A</option>
+                    <option value="updated:desc">Recently active</option>
+                    <option value="equipment:desc">Most equipment</option>
+                    <option value="type:asc">Type</option>
+                    <option value="installDate:asc">Earliest install date</option>
+                    <option value="installDate:desc">Latest install date</option>
+                    <option value="warranty:asc">Warranty expiring soonest</option>
+                    <option value="warranty:desc">Warranty expiring latest</option>
+                    <option value="tag:asc">Tag A–Z</option>
+                    <option value="tag:desc">Tag Z–A</option>
+                  </select>
+                </div>
+                <button className="btn btn-primary btn-sm" onClick={() => setIsAddOpen(true)}><Plus size={12} /> Add Customer</button>
+                <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ fontWeight: 600 }} onClick={() => setIsPortalInviteOpen(true)} title="Create a customer account and send login credentials by email"><Send size={12} /> Send Portal Invite</button>
                 <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: "0 12px", fontWeight: 600 }} onClick={() => customersQuery.refetch()} title="Refresh"><RefreshCw size={14} /></button>
                 <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ marginLeft: "4px", padding: "0 12px", fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
                   {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
@@ -573,7 +599,7 @@ export default function Customers() {
               <div className="table-container">
                 <table className="data-table">
                   <thead>
-                    <tr><th>Customer</th><th>Contact</th><th>Location</th><th>Status</th><th>Type</th><th>Auto Follow-up</th><th>Jobs</th><th>Revenue</th><th>Since</th><th>Actions</th></tr>
+                    <tr><th>Customer</th><th>Contact</th><th>Location</th><th>Status</th><th>Type</th><th>Auto Follow-up</th><th>Tags</th><th>Revenue</th><th>Since</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
                     {customersQuery.isLoading && Array.from({ length: 5 }).map((_, i) => (
@@ -614,7 +640,41 @@ export default function Customers() {
                             </span>
                           </div>
                         </td>
-                        <td className="font-600">{c.totalJobs ?? '—'}</td>
+                        <td>
+                          {(() => {
+                            const visibleTags = (c.tags ?? []).filter((t: string) => !t.startsWith('iot:') && t !== 'portal-signup');
+                            if (visibleTags.length === 0) return <span style={{ color: 'var(--t4)', fontSize: 12 }}>—</span>;
+                            const shown = visibleTags.slice(0, 2);
+                            const rest = visibleTags.slice(2);
+                            return (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                                {shown.map((t: string) => (
+                                  <span key={t} style={{
+                                    display: 'inline-flex', alignItems: 'center',
+                                    padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600,
+                                    background: 'color-mix(in srgb, var(--blue) 10%, transparent)',
+                                    color: 'var(--blue)',
+                                    border: '1px solid color-mix(in srgb, var(--blue) 18%, transparent)',
+                                    whiteSpace: 'nowrap', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis',
+                                  }} title={t}>{t}</span>
+                                ))}
+                                {rest.length > 0 && (
+                                  <span
+                                    title={rest.join(', ')}
+                                    style={{
+                                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                      padding: '2px 7px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                                      background: 'var(--bg-card-2, var(--bg-card))',
+                                      color: 'var(--t3)',
+                                      border: '1px solid var(--bd)',
+                                      cursor: 'default', whiteSpace: 'nowrap',
+                                    }}
+                                  >+{rest.length}</span>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </td>
                         <td className="font-600">{c.totalRevenue != null ? fmt(c.totalRevenue) : '—'}</td>
                         <td className="text-sm text-[var(--t3)]">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                         <td>
@@ -626,7 +686,7 @@ export default function Customers() {
                             <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecCustomer(c); }} title="AI Recommendations"><Sparkles size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(c, "customer"); }} title="View Details"><Edit size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); window.location.href = `mailto:${c.email}`; }}><Mail size={15} /></button>
-                            <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete" onClick={e => { e.stopPropagation(); confirmDelete("customer", c.id, customerName(c)); }}><Trash2 size={15} /></button>
+                            <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete" onClick={e => { e.stopPropagation(); confirmDelete(c.id, customerName(c)); }}><Trash2 size={15} /></button>
                           </div>
                         </td>
                       </tr>
@@ -647,77 +707,7 @@ export default function Customers() {
               </div>
             </div>
           </div>
-        )}
-
-        {/* Leads */}
-        {tab === "leads" && (
-          <div className="anim-fade-in card">
-            <div className="card-header">
-              <div className="filter-bar w-full" style={{ margin: 0 }}>
-                <div className="filter-search flex-1"><Search size={13} color="var(--t4)" /><input placeholder="Search leads…" value={leadsSearch} onChange={e => { setLeadsSearch(e.target.value); setLeadPage(1); }} /></div>
-                <select className="select" style={{ width: 140 }} value={leadStatusFilter} onChange={e => { setLeadStatusFilter(e.target.value); setLeadPage(1); }}>
-                  <option>All Status</option><option>New</option><option>Contacted</option><option>Qualified</option><option>Won</option><option>Lost</option>
-                </select>
-                <button className="btn btn-primary btn-sm ml-auto" onClick={() => { setAddType("lead"); setIsAddOpen(true); }}><Plus size={12} /> Add Lead</button>
-                <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ marginLeft: "8px", padding: "0 12px", fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
-                  {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
-                </button>
-              </div>
-            </div>
-            <div className="card-body-flush mt-4">
-              <div className="table-container">
-                <table className="data-table">
-                  <thead><tr><th>Lead</th><th>Location</th><th>Service Interest</th><th>Source</th><th>Est. Revenue</th><th>Status</th><th>Assigned To</th><th>Created</th><th>Actions</th></tr></thead>
-                  <tbody>
-                    {leadsQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
-                    {!leadsQuery.isLoading && leads.map(l => (
-                      <tr
-                        key={l.id}
-                        onClick={() => handleViewClick(l, "lead")}
-                        onMouseEnter={(e) => setHoveredLead({ lead: l, x: e.clientX, y: e.clientY })}
-                        onMouseMove={(e) => setHoveredLead(current => current?.lead.id === l.id ? { lead: l, x: e.clientX, y: e.clientY } : current)}
-                        onMouseLeave={() => setHoveredLead(current => current?.lead.id === l.id ? null : current)}
-                        className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
-                      >
-                        <td><div className="cell-user"><div><div className="cell-name">{leadName(l)}</div><div className="cell-email">{l.email}</div></div></div></td>
-                        <td><div className="flex items-center gap-1.5 text-sm text-[var(--t2)]"><MapPin size={12} className="text-[var(--t4)]" />{l.customer?.city ?? '—'}{l.customer?.state ? `, ${l.customer.state}` : ''}</div></td>
-                        <td>{l.serviceInterest ?? '—'}</td>
-                        <td><span className="badge badge-neutral">{l.source ?? '—'}</span></td>
-                        <td className="td-primary font-600">{l.estimatedValue != null ? fmt(l.estimatedValue) : '—'}</td>
-                        <td><span className={`badge ${LEAD_STATUS[l.status] ?? 'badge-neutral'}`}>{l.status.replace(/_/g, ' ')}</span></td>
-                        <td>{l.assignedToName ?? '—'}</td>
-                        <td className="text-sm text-3">{new Date(l.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                        <td>
-                          <div
-                            className="flex items-center gap-1"
-                            onMouseEnter={(e) => { e.stopPropagation(); setHoveredLead(null); }}
-                            onMouseMove={(e) => { e.stopPropagation(); setHoveredLead(null); }}
-                          >
-                            <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecLead(l); }} title="AI Recommendations"><Sparkles size={15} /></button>
-                            <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(l, "lead"); }} title="View"><Edit size={15} /></button>
-                            <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); if (l.email) window.location.href = `mailto:${l.email}`; }}><Mail size={15} /></button>
-                            <button className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Delete" onClick={e => { e.stopPropagation(); confirmDelete("lead", l.id, leadName(l)); }}><Trash2 size={15} /></button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {!leadsQuery.isLoading && leads.length === 0 && <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No leads found</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div className="card-footer" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderTop: "1px solid var(--border)" }}>
-              <span className="text-[13px] text-[var(--t3)]">Showing {totalLeads > 0 ? (leadPage - 1) * itemsPerPage + 1 : 0} to {Math.min(leadPage * itemsPerPage, totalLeads)} of {totalLeads} leads</span>
-              <div className="flex items-center gap-2">
-                <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setLeadPage(p => Math.max(1, p - 1))} disabled={leadPage === 1}><ChevronLeft size={18} /></button>
-                <span className="text-[13px] text-[var(--t2)] mx-2">Page {leadPage} of {totalLeadPages}</span>
-                <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setLeadPage(p => Math.min(totalLeadPages, p + 1))} disabled={leadPage === totalLeadPages}><ChevronRight size={18} /></button>
-              </div>
-            </div>
-          </div>
-        )}
-
-      </div>
+        </div>
 
       {hoveredCustomer && (
         <CustomerHoverSummary
@@ -728,23 +718,12 @@ export default function Customers() {
         />
       )}
 
-      {hoveredLead && (
-        <LeadHoverSummary
-          anchor={{ x: hoveredLead.x, y: hoveredLead.y }}
-          lead={hoveredLead.lead}
-        />
-      )}
-
       <CustomerDetailsSidebar isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} person={selectedPerson} initialTab={sidebarTab} />
-      <LeadDetailsSidebar isOpen={isLeadDetailsOpen} onClose={() => setIsLeadDetailsOpen(false)} person={selectedPerson} onConverted={handleLeadConverted} />
-      <AddPersonModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} type={addType} />
+      <AddPersonModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} type="customer" />
+      <AddPersonModal isOpen={isPortalInviteOpen} onClose={() => setIsPortalInviteOpen(false)} type="lead" />
 
       {recCustomer && (
         <CustomerRecommendationsModal customer={recCustomer} onClose={() => setRecCustomer(null)} />
-      )}
-
-      {recLead && (
-        <LeadRecommendationsModal lead={recLead} onClose={() => setRecLead(null)} />
       )}
 
       {/* Delete confirmation dialog */}
@@ -756,7 +735,7 @@ export default function Customers() {
                 <Trash2 size={18} className="text-red-600" />
               </div>
               <div>
-                <h3 className="text-sm font-700 text-gray-900">Delete {deleteConfirm.type === "customer" ? "Customer" : "Lead"}</h3>
+                <h3 className="text-sm font-700 text-gray-900">Delete Customer</h3>
                 <p className="text-xs text-gray-500 mt-0.5">This action cannot be undone.</p>
               </div>
             </div>
@@ -769,10 +748,10 @@ export default function Customers() {
               </button>
               <button
                 className="flex-1 px-4 py-2 text-sm font-600 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60"
-                disabled={deleteCustomer.isPending || deleteLead.isPending}
+                disabled={deleteCustomer.isPending}
                 onClick={executeDelete}
               >
-                {(deleteCustomer.isPending || deleteLead.isPending) ? "Deleting…" : "Delete"}
+                {deleteCustomer.isPending ? "Deleting…" : "Delete"}
               </button>
             </div>
           </div>

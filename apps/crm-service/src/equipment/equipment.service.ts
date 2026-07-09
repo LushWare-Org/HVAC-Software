@@ -23,6 +23,7 @@ export class EquipmentService {
       installDate?: string;
       warrantyEnd?: string;
       notes?: string;
+      manualUrl?: string;
     },
   ) {
     return this.prisma.equipment.create({
@@ -36,6 +37,7 @@ export class EquipmentService {
         installDate: data.installDate ? new Date(data.installDate) : undefined,
         warrantyEnd: data.warrantyEnd ? new Date(data.warrantyEnd) : undefined,
         notes: data.notes,
+        manualUrl: data.manualUrl,
       },
     });
   }
@@ -51,6 +53,7 @@ export class EquipmentService {
       installDate?: string;
       warrantyEnd?: string;
       notes?: string;
+      manualUrl?: string;
     },
   ) {
     const eq = await this.prisma.equipment.findFirst({ where: { id, companyId } });
@@ -84,9 +87,11 @@ export class EquipmentService {
         OR: [
           { installDate: { not: null } },
           { warrantyEnd: { not: null } },
+          { consumables: { some: {} } },
         ],
       },
       include: {
+        consumables: true,
         customer: {
           select: {
             id: true,
@@ -118,6 +123,7 @@ export class EquipmentService {
       installDate?: string;
       warrantyEnd?: string;
       notes?: string;
+      manualUrl?: string;
     }>,
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -134,6 +140,7 @@ export class EquipmentService {
           installDate: eq.installDate ? new Date(eq.installDate) : null,
           warrantyEnd: eq.warrantyEnd ? new Date(eq.warrantyEnd) : null,
           notes: eq.notes,
+          manualUrl: eq.manualUrl,
         })),
       });
       return tx.equipment.findMany({

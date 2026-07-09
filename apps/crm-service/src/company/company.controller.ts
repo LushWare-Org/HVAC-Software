@@ -17,6 +17,12 @@ import { CompanyService } from './company.service';
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
+  @Get('settings')
+  @ApiOperation({ summary: 'Get tenant settings (currency, timezone, features, branding)' })
+  getSettings(@CurrentUser() user: AuthUser): Promise<unknown> {
+    return this.companyService.getSettings(user.companyId);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get current company details' })
   findOne(@CurrentUser() user: AuthUser): Promise<unknown> {

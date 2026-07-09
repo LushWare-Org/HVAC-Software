@@ -75,6 +75,8 @@ const mockPrisma = {
   jobCustomFieldValue: {
     upsert: jest.fn(),
   },
+  // generateJobNumber reads MAX(jobNumber) via $queryRaw inside the tx
+  $queryRaw: jest.fn().mockResolvedValue([{ maxNumber: 0 }]),
   $transaction: jest.fn((fnOrArray: any): any => {
     if (typeof fnOrArray === 'function') return fnOrArray(mockPrisma);
     return Promise.all(fnOrArray);
@@ -286,7 +288,7 @@ describe('JobsService — create', () => {
   });
 
   it('generates a sequential job number', async () => {
-    mockPrisma.job.count.mockResolvedValue(4);
+    mockPrisma.$queryRaw.mockResolvedValueOnce([{ maxNumber: 4 }]);
     mockPrisma.job.create.mockImplementation(({ data }: any) =>
       Promise.resolve({ ...makeJob(JobStatusDto.PENDING), ...data }),
     );

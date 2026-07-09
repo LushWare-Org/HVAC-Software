@@ -76,7 +76,7 @@ export class ReviewRequestService {
         const body = `Hi ${dto.customerName}, thanks for choosing us! We'd love your review: ${trackedLink} Reply STOP to opt out.`;
 
         try {
-          await this.sms.send(dto.customerPhone, body);
+          await this.sms.send(dto.customerPhone, body, dto.companyId);
           await this.db.reviewRequest.update({ where: { id: record.id }, data: { smsAt: new Date() } });
           smsSent = true;
         } catch (err) {

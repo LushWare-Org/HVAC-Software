@@ -9,6 +9,7 @@ import { InvoicesModule } from './invoices/invoices.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { QuickBooksModule } from './quickbooks/quickbooks.module';
+import { CompanySettingsModule } from './company-settings/company-settings.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -21,6 +22,7 @@ import appConfig from './config/app.config';
     AuthModule,
     PrismaModule,
     HealthModule,
+    CompanySettingsModule,
     PdfModule,
     QuotesModule,
     InvoicesModule,

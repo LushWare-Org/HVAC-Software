@@ -13,6 +13,9 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { QuotesService } from './quotes.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { PdfService } from '../pdf/pdf.service';
+import { NotificationClientService } from '../notification-client/notification-client.service';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { QuoteStatus } from '../prisma/generated';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -50,7 +53,7 @@ function makeQuote(overrides: Partial<any> = {}): any {
 
 // ── Mock PrismaService ────────────────────────────────────────────────────
 
-const mockPrisma = {
+const mockPrisma: any = {
   quote: {
     count: jest.fn(),
     findMany: jest.fn(),
@@ -69,7 +72,10 @@ const mockPrisma = {
     findFirst: jest.fn(),
     create: jest.fn(),
   },
-  $transaction: jest.fn((args: any[]) => Promise.all(args)),
+  $transaction: jest.fn((args: any) => {
+    if (Array.isArray(args)) return Promise.all(args);
+    return args(mockPrisma); // callback form
+  }),
 };
 
 // ── Test Suite ────────────────────────────────────────────────────────────
@@ -85,6 +91,9 @@ describe('QuotesService', () => {
         QuotesService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('') } },
+        { provide: PdfService, useValue: { generateQuotePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')), generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')) } },
+        { provide: NotificationClientService, useValue: { sendEmail: jest.fn().mockResolvedValue(undefined), sendSms: jest.fn().mockResolvedValue(undefined) } },
+        { provide: CompanySettingsClient, useValue: { getSettings: jest.fn().mockResolvedValue({ id: 'company-001', name: 'Demo', logoUrl: null, currency: 'USD', timezone: 'America/New_York', features: {} }) } },
       ],
     }).compile();
 
@@ -189,17 +198,17 @@ describe('QuotesService', () => {
       expect(updateCall.data.approvalToken).toHaveLength(36); // UUID v4
     });
 
-    it('throws BadRequestException if quote is not DRAFT', async () => {
-      mockPrisma.quote.findFirst.mockResolvedValue(makeQuote({ status: QuoteStatus.ACCEPTED }));
+    it('throws BadRequestException if quote is DECLINED/EXPIRED/CONVERTED', async () => {
+      mockPrisma.quote.findFirst.mockResolvedValue(makeQuote({ status: QuoteStatus.CONVERTED }));
       await expect(service.send(COMPANY_ID, QUOTE_ID)).rejects.toThrow(BadRequestException);
     });
 
-    it('is idempotent if already SENT', async () => {
-      const q = makeQuote({ status: QuoteStatus.SENT });
-      mockPrisma.quote.findFirst.mockResolvedValue(q);
+    it('re-sends an already SENT quote (resend support)', async () => {
+      mockPrisma.quote.findFirst.mockResolvedValue(makeQuote({ status: QuoteStatus.SENT, approvalToken: 'tok-1' }));
+      mockPrisma.quote.update.mockResolvedValue(makeQuote({ status: QuoteStatus.SENT, approvalToken: 'tok-1', sentAt: new Date() }));
       const result = await service.send(COMPANY_ID, QUOTE_ID);
-      expect(mockPrisma.quote.update).not.toHaveBeenCalled();
-      expect(result).toEqual(q);
+      expect(result.status).toBe(QuoteStatus.SENT);
+      expect(mockPrisma.quote.update).toHaveBeenCalled();
     });
   });
 

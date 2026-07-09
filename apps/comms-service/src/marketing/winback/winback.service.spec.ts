@@ -61,7 +61,7 @@ describe('WinbackService', () => {
     expect(result!.step1SmsSent).toBe(true);
     expect(result!.step2Queued).toBe(true);
     expect(result!.step3Queued).toBe(true);
-    expect(sms.send).toHaveBeenCalledWith('+15559876543', expect.stringContaining('Bob'));
+    expect(sms.send).toHaveBeenCalledWith('+15559876543', expect.stringContaining('Bob'), expect.any(String));
     expect(queue.add).toHaveBeenCalledWith('winback-email', expect.objectContaining({ to: 'bob@example.com' }), expect.any(Object));
     expect(queue.add).toHaveBeenCalledWith('winback-sms', expect.objectContaining({ phone: '+15559876543' }), expect.any(Object));
   });

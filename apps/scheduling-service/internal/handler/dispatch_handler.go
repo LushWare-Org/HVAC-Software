@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -57,6 +58,18 @@ func (h *DispatchHandler) ManualAssign(c *gin.Context) {
 
 	assignment, err := h.svc.ManualAssign(c.Request.Context(), claims.CompanyID, claims.UserID, req)
 	if err != nil {
+		var onProject *models.TechOnProjectError
+		if errors.As(err, &onProject) {
+			// Guided conflict — the tech is reserved by a project roster that day
+			c.JSON(http.StatusConflict, gin.H{
+				"code":        "TECH_ON_PROJECT",
+				"projectId":   onProject.ProjectID,
+				"projectName": onProject.ProjectName,
+				"date":        onProject.Date,
+				"error":       onProject.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -1,5 +1,9 @@
-import { Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { CompanySettings } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
+
+/** Seed-only tenant settings — never editable through PATCH /company. */
+const SETTINGS_KEYS = ['currency', 'timezone', 'features'] as const;
 
 interface CompanyRow {
   id: string;
@@ -86,6 +90,22 @@ export class CompanyService {
     return company;
   }
 
+  async getSettings(companyId: string): Promise<CompanySettings> {
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+      select: { id: true, name: true, logoUrl: true, currency: true, timezone: true, features: true },
+    });
+    if (!company) throw new NotFoundException('Company not found');
+    return {
+      id: company.id,
+      name: company.name,
+      logoUrl: company.logoUrl,
+      currency: company.currency,
+      timezone: company.timezone,
+      features: (company.features ?? {}) as Record<string, unknown>,
+    };
+  }
+
   async update(companyId: string, data: {
     name?: string;
     email?: string;
@@ -99,6 +119,13 @@ export class CompanyService {
     logoUrl?: string;
     automaticFollowupEnabled?: boolean;
   }) {
+    const blocked = SETTINGS_KEYS.filter((k) => k in (data as Record<string, unknown>));
+    if (blocked.length > 0) {
+      throw new BadRequestException(
+        `Settings keys [${blocked.join(', ')}] are managed by the platform and cannot be updated here`,
+      );
+    }
+
     const existing = await this.findCompanyRow(companyId);
     if (!existing) throw new NotFoundException('Company not found');
 

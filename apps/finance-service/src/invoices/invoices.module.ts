@@ -4,9 +4,10 @@ import { InvoicesService } from './invoices.service';
 import { PdfModule } from '../pdf/pdf.module';
 import { NotificationClientModule } from '../notification-client/notification-client.module';
 import { QuickBooksModule } from '../quickbooks/quickbooks.module';
+import { CompanySettingsModule } from '../company-settings/company-settings.module';
 
 @Module({
-  imports: [PdfModule, NotificationClientModule, QuickBooksModule],
+  imports: [PdfModule, NotificationClientModule, QuickBooksModule, CompanySettingsModule],
   controllers: [InvoicesController, StripeWebhookController],
   providers: [InvoicesService],
   exports: [InvoicesService],

@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom'
 import { useCreatePaymentIntent } from '../../hooks/useCustomerPortal'
 import api from '../../lib/api'
 import type { Invoice } from '../../types/api'
+import { formatMoney } from '../../lib/format'
 
 interface PayInvoiceModalProps {
   onClose: () => void
@@ -14,7 +15,7 @@ type PayMethod = 'card' | 'bank'
 type PayState = 'idle' | 'opening' | 'polling' | 'success' | 'cancelled' | 'bankConfirm'
 
 function fmtMoney(value?: string | number) {
-  return `$${Number(value ?? 0).toLocaleString()}`
+  return formatMoney(value)
 }
 
 const POLL_INTERVAL_MS = 3000
@@ -328,7 +329,7 @@ export default function PayInvoiceModal({ onClose, invoice }: PayInvoiceModalPro
                 Transfer the exact amount to the following account:
               </p>
               {[
-                { label: 'Account Name', value: 'T&S Field Services Ltd' },
+                { label: 'Account Name', value: 'HomePulse Services Ltd' },
                 { label: 'Account Number', value: '**** **** 1234' },
                 { label: 'Sort Code', value: '12-34-56' },
                 { label: 'Reference', value: invoice.invoiceNumber },

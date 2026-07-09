@@ -25,6 +25,7 @@ export interface TechUser {
   role: UserRole
   companyId: string
   phone?: string
+  avatarUrl?: string | null
   mustResetPassword?: boolean // set by backend on admin-provisioned accounts
 }
 

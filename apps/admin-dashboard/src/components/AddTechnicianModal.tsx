@@ -1,25 +1,27 @@
 /**
- * AddTechnicianModal — Register a new field technician.
+ * AddTechnicianModal — Register a new field technician (shared by Team page + Dispatch board).
  *
  * Flow:
- *  1. Admin fills in name, email (required), phone, skills, location.
+ *  1. Admin fills in name, email (required), phone, skills — no location: the
+ *     technician sets their own base location on first sign-in in the mobile app.
  *  2. On submit → GET /crm/auth/check-email
  *       • exists  → show error "An account already exists for this email"
  *       • doesn't → POST /crm/auth/provision-technician (CRM user, welcome email)
- *                   POST /scheduling/technicians (dispatch profile)
+ *                   POST /scheduling/technicians (dispatch profile, no location)
  *  3. Success banner shown; modal closes after 1.8 s.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   X, UserPlus, AlertCircle, Loader2, MapPin, Plus, Trash2,
-  CheckCircle2, Mail,
+  CheckCircle2, Mail, Camera,
 } from "lucide-react";
-import { useCheckEmail } from "../../hooks/useCustomers";
-import { useProvisionTechnicianAccount } from "../../hooks/useScheduling";
-import { useEnsureVan } from "../../hooks/useInventory";
-import { useAuth } from "../../contexts/AuthContext";
-import MapPicker from "../../components/MapPickerLazy";
+import api from "../lib/api";
+import { useCheckEmail } from "../hooks/useCustomers";
+import { useProvisionTechnicianAccount } from "../hooks/useScheduling";
+import { useEnsureVan } from "../hooks/useInventory";
+import { useAuth } from "../contexts/AuthContext";
 
 // Common trade skills for quick-add chips
 const COMMON_SKILLS = [
@@ -30,9 +32,13 @@ const COMMON_SKILLS = [
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  /** Overrides the header subtitle — used when opened from a specific context (e.g. a project's crew roster). */
+  subtitle?: string;
+  /** Fired right after the account + scheduling profile are created (before the modal auto-closes). */
+  onCreated?: (info: { userId: string; name: string }) => void;
 }
 
-export default function AddTechnicianModal({ isOpen, onClose }: Props) {
+export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreated }: Props) {
   const { user }   = useAuth();
   const checkEmail = useCheckEmail();
   const provision  = useProvisionTechnicianAccount();
@@ -45,11 +51,21 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
     email:        "",
     phone:        "",
     maxDailyJobs: 5,
-    lat:          6.9271,   // Default: Colombo, Sri Lanka
-    lng:          79.8612,
   });
   const [skills,      setSkills]      = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState("");
+  const [photoFile,    setPhotoFile]    = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  // Lock the dashboard behind the modal — without this, wheel/trackpad input
+  // over the backdrop scrolls the page underneath instead of staying put.
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prevOverflow; };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -70,11 +86,28 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
   };
 
   const resetForm = () => {
-    setForm({ name: "", email: "", phone: "", maxDailyJobs: 5, lat: 6.9271, lng: 79.8612 });
+    setForm({ name: "", email: "", phone: "", maxDailyJobs: 5 });
     setSkills([]);
     setCustomSkill("");
+    setPhotoFile(null);
+    setPhotoPreview(null);
     setError("");
     setSuccess("");
+  };
+
+  const handlePickPhoto = (file: File | null) => {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Photo must be a JPEG, PNG or WebP image.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Photo is too large — maximum size is 2 MB.");
+      return;
+    }
+    setError("");
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
   const handleClose = () => {
@@ -92,10 +125,6 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
     if (!email) { setError("Email address is required."); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Please enter a valid email address.");
-      return;
-    }
-    if (form.lat === 0 && form.lng === 0) {
-      setError("Please set the technician's base location on the map.");
       return;
     }
 
@@ -117,7 +146,8 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
       return;
     }
 
-    // Step 2: provision CRM account + scheduling profile
+    // Step 2: provision CRM account + scheduling profile (no location — the
+    // technician sets their base location on first sign-in in the app)
     try {
       const result = await provision.mutateAsync({
         companyId:   user!.companyId,
@@ -126,8 +156,6 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
         phone:       form.phone || undefined,
         skills:      skills.length > 0 ? skills : undefined,
         maxDailyJobs: form.maxDailyJobs,
-        latitude:    form.lat,
-        longitude:   form.lng,
       });
 
       // Auto-create van inventory for the new technician
@@ -138,7 +166,24 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
         });
       }
 
-      setSuccess(`Technician account created! Welcome email with login details sent to ${email}.`);
+      // Upload the optional profile photo (best-effort — the account exists either way)
+      let photoNote = "";
+      if (photoFile && result.crm?.userId4Scheduling) {
+        try {
+          const fd = new FormData();
+          fd.append("file", photoFile);
+          await api.post(`/crm/users/${result.crm.userId4Scheduling}/avatar`, fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        } catch {
+          photoNote = " (photo upload failed — the technician can add it from the app)";
+        }
+      }
+
+      setSuccess(`Technician account created! Welcome email with login details sent to ${email}.${photoNote}`);
+      if (result.crm?.userId4Scheduling) {
+        onCreated?.({ userId: result.crm.userId4Scheduling, name: form.name.trim() });
+      }
       setTimeout(handleClose, 1800);
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? "Failed to create technician.";
@@ -149,14 +194,17 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
   const inputCls =
     "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white disabled:bg-gray-50";
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-start justify-center pt-[72px] px-4 pb-4 admin-modal-backdrop"
+      className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4 py-6 admin-modal-backdrop"
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col admin-modal-box"
-        style={{ maxHeight: "calc(100vh - 80px)" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add Technician"
+        className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col admin-modal-box overflow-hidden"
+        style={{ height: "min(680px, calc(100vh - 48px))" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -164,7 +212,7 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
           <div className="text-white">
             <h3 className="text-lg font-bold">Add Technician</h3>
             <p className="text-blue-200 text-xs mt-0.5">
-              Register a new field technician — creates a login account automatically
+              {subtitle ?? 'Register a new field technician — creates a login account automatically'}
             </p>
           </div>
           <button onClick={handleClose} className="text-blue-200 hover:text-white p-1 rounded bg-transparent border-0 cursor-pointer">
@@ -173,7 +221,9 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        {/* min-h-0 is required so this flex child actually shrinks and
+            scrolls instead of growing past the dialog's fixed height */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
 
           {/* Error */}
           {error && (
@@ -251,6 +301,47 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
             </div>
           </div>
 
+          {/* Profile photo (optional) — customers see it in en-route emails */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-gray-500 uppercase">Profile Photo (optional)</label>
+            <div className="flex items-center gap-3">
+              {photoPreview ? (
+                <img src={photoPreview} alt="Preview" className="w-14 h-14 rounded-full object-cover border-2 border-blue-400" />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
+                  <Camera size={20} />
+                </div>
+              )}
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => handlePickPhoto(e.target.files?.[0] ?? null)}
+              />
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={isLoading}
+                className="px-3 py-2 rounded-lg bg-blue-100 text-blue-700 text-xs font-medium cursor-pointer border border-blue-200 hover:bg-blue-200"
+              >
+                {photoFile ? "Change photo" : "Choose photo"}
+              </button>
+              {photoFile && (
+                <button
+                  type="button"
+                  onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                  className="text-xs text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-gray-400">
+              Customers see this photo in "your technician is on the way" emails. Max 2 MB.
+            </p>
+          </div>
+
           {/* Skills */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-gray-500 uppercase">Skills & Specializations</label>
@@ -304,18 +395,14 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
             )}
           </div>
 
-          {/* Map Location */}
-          <div className="space-y-2">
-            <MapPicker
-              label="Base Location (for dispatch) *"
-              lat={form.lat}
-              lng={form.lng}
-              onChange={(lat, lng) => setForm((p) => ({ ...p, lat, lng }))}
-              height="280px"
-            />
-            <p className="text-[10px] text-gray-400 flex items-center gap-1">
-              <MapPin size={10} /> GPS location is used by the smart dispatch scoring algorithm.
-            </p>
+          {/* Base location — set by the technician, not the admin */}
+          <div className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 text-xs">
+            <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
+            <span>
+              <strong className="text-gray-600">Base location:</strong> the technician sets their own
+              base location (map or GPS) when they first sign in to the app. Until then they won't be
+              considered by smart dispatch auto-assignment.
+            </span>
           </div>
         </div>
 
@@ -347,6 +434,7 @@ export default function AddTechnicianModal({ isOpen, onClose }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

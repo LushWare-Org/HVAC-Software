@@ -6,10 +6,13 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InvoicesService } from './invoices.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { PdfService } from '../pdf/pdf.service';
+import { NotificationClientService } from '../notification-client/notification-client.service';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { InvoiceStatus, PaymentStatus } from '../prisma/generated';
 
 // ── Mock Stripe ───────────────────────────────────────────────────────────
@@ -90,16 +93,32 @@ const mockPrisma = {
 
 // ── Suite ─────────────────────────────────────────────────────────────────
 
+const mockPdfService = { generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')), generateQuotePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')) };
+const mockNotificationClient = { sendEmail: jest.fn().mockResolvedValue(undefined), sendSms: jest.fn().mockResolvedValue(undefined) };
+const mockSettingsClient = {
+  getSettings: jest.fn().mockResolvedValue({
+    id: 'company-001', name: 'Demo', logoUrl: null,
+    currency: 'USD', timezone: 'America/New_York', features: {},
+  }),
+};
+
 describe('InvoicesService', () => {
   let service: InvoicesService;
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockSettingsClient.getSettings.mockResolvedValue({
+      id: 'company-001', name: 'Demo', logoUrl: null,
+      currency: 'USD', timezone: 'America/New_York', features: {},
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InvoicesService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: PdfService, useValue: mockPdfService },
+        { provide: NotificationClientService, useValue: mockNotificationClient },
+        { provide: CompanySettingsClient, useValue: mockSettingsClient },
         {
           provide: ConfigService,
           useValue: {
@@ -117,6 +136,31 @@ describe('InvoicesService', () => {
   });
 
   // ── findOne ─────────────────────────────────────────────────────────────
+
+  describe('createPaymentIntent feature gate', () => {
+    it('is forbidden when onlinePayments is off', async () => {
+      mockSettingsClient.getSettings.mockResolvedValue({
+        id: COMPANY_ID, name: 'KASE', logoUrl: null,
+        currency: 'LKR', timezone: 'Asia/Colombo',
+        features: { onlinePayments: false },
+      });
+      await expect(service.createPaymentIntent(COMPANY_ID, INV_ID))
+        .rejects.toThrow(ForbiddenException);
+      expect(mockPrisma.invoice.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('proceeds past the gate when features empty', async () => {
+      mockSettingsClient.getSettings.mockResolvedValue({
+        id: COMPANY_ID, name: 'Demo', logoUrl: null,
+        currency: 'USD', timezone: 'America/New_York', features: {},
+      });
+      // Invoice is PAID so the method throws BadRequest AFTER the gate —
+      // proving the gate let it through without needing full Stripe mocks.
+      mockPrisma.invoice.findFirst.mockResolvedValue(makeInvoice({ status: InvoiceStatus.PAID }));
+      await expect(service.createPaymentIntent(COMPANY_ID, INV_ID))
+        .rejects.toThrow(BadRequestException);
+    });
+  });
 
   describe('findOne', () => {
     it('returns invoice when found', async () => {
@@ -175,8 +219,14 @@ describe('InvoicesService', () => {
       expect(updateCall.data.sentAt).toBeInstanceOf(Date);
     });
 
-    it('throws if invoice is not DRAFT', async () => {
+    it('allows re-sending a SENT invoice (resend support)', async () => {
       mockPrisma.invoice.findFirst.mockResolvedValue(makeInvoice({ status: InvoiceStatus.SENT }));
+      mockPrisma.invoice.update.mockResolvedValue(makeInvoice({ status: InvoiceStatus.SENT, sentAt: new Date() }));
+      await expect(service.send(COMPANY_ID, INV_ID)).resolves.toBeDefined();
+    });
+
+    it('throws if invoice is VOID', async () => {
+      mockPrisma.invoice.findFirst.mockResolvedValue(makeInvoice({ status: InvoiceStatus.VOID }));
       await expect(service.send(COMPANY_ID, INV_ID)).rejects.toThrow(BadRequestException);
     });
   });

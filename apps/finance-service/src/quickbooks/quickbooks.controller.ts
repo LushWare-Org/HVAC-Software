@@ -49,6 +49,17 @@ export class QuickBooksController {
     return res.redirect(authUri);
   }
 
+  // ── Auth URL as JSON — for SPA OAuth initiation via JS redirect ──────────
+
+  @Get('auth-url')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Get QuickBooks OAuth URL as JSON for client-side redirect' })
+  getAuthUrl(@CurrentUser() user: AuthUser): { authUrl: string } {
+    return { authUrl: this.qbService.getAuthUri(user.companyId) };
+  }
+
   // ── Dev-mode connect — open this URL directly in a browser ───────────────
   // Only works when BYPASS_AUTH=true and NODE_ENV !== production
 

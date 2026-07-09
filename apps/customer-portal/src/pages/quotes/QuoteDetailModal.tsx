@@ -5,6 +5,7 @@ import { useMyQuote } from '../../hooks/useCustomerPortal'
 import { useToast } from '../../contexts/ToastContext'
 import { downloadPdf, viewPdf } from '../../lib/pdf'
 import type { Quote } from '../../types/api'
+import { formatMoney } from '../../lib/format'
 
 interface QuoteDetailModalProps {
   quote: Quote
@@ -37,7 +38,7 @@ const fieldStyle: React.CSSProperties = {
 }
 
 function fmtMoney(value?: string | number) {
-  return `$${Number(value ?? 0).toLocaleString()}`
+  return formatMoney(value)
 }
 
 function fmtDate(iso?: string) {

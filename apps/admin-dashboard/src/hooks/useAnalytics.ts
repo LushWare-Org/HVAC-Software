@@ -281,12 +281,13 @@ export function useRevenueAgentLogs(limit = 10) {
 
 // ─── AI Revenue Recommendations ───────────────────────────────────────────────
 
-export function useRecommendations() {
+export function useRecommendations(forecastDays?: number) {
   return useQuery<Recommendation[]>({
-    queryKey: ['analytics', 'recommendations'],
+    queryKey: ['analytics', 'recommendations', forecastDays],
     queryFn: async () => {
       try {
-        const res = await api.get('/analytics/recommendations')
+        const params = forecastDays ? `?forecastDays=${forecastDays}` : ''
+        const res = await api.get(`/analytics/recommendations${params}`)
         console.log('[Analytics] Recommendations loaded:', res.data)
         return asArray<Recommendation>(res.data, [])
       } catch (error) {
@@ -294,7 +295,7 @@ export function useRecommendations() {
         return []
       }
     },
-    refetchInterval: 5 * 60 * 1000, // auto-refresh every 5 minutes
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   })
 }

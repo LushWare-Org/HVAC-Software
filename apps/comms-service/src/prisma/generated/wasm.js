@@ -215,6 +215,18 @@ exports.Prisma.AutomationRuleScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.WebPushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.DeliveryLogScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
@@ -297,6 +309,7 @@ exports.Prisma.ModelName = {
   Message: 'Message',
   NotificationTemplate: 'NotificationTemplate',
   AutomationRule: 'AutomationRule',
+  WebPushSubscription: 'WebPushSubscription',
   DeliveryLog: 'DeliveryLog'
 };
 

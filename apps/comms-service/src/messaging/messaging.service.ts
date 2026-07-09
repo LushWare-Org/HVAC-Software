@@ -20,6 +20,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { SmsService } from '../sms/sms.service';
+import { EmailService } from '../email/email.service';
 import { CreateThreadDto, SendMessageDto, TwilioInboundWebhookDto } from './dto/messaging.dto';
 import { MessageDirection, ThreadStatus, Channel } from '../prisma/generated';
 
@@ -34,6 +35,7 @@ export class MessagingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly smsService: SmsService,
+    private readonly emailService: EmailService,
   ) {}
 
   // ── Threads ───────────────────────────────────────────────────────────────
@@ -299,6 +301,32 @@ export class MessagingService {
         },
       }),
     ]);
+
+    // Optional email copy: customers don't sit in the portal all day, so
+    // outbound messages flagged with notifyEmail also land in their inbox.
+    // Fire-and-forget — an email failure never fails the message itself.
+    if (dto.notifyEmail && direction === MessageDirection.OUTBOUND && thread.customerEmail) {
+      const subject = dto.emailSubject?.trim() || thread.subject || `New message from ${senderName}`;
+      const safeBody = dto.body.trim()
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br/>');
+      this.emailService
+        .send({
+          to: thread.customerEmail,
+          toName: thread.customerName ?? undefined,
+          subject,
+          htmlBody: `<div style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a">
+            <p>${safeBody}</p>
+            <hr style="border:none;border-top:1px solid #e5e5e5;margin:20px 0"/>
+            <p style="font-size:12px;color:#888">Sent by ${senderName}. Reply to this email or through your customer portal.</p>
+          </div>`,
+          textBody: dto.body.trim(),
+        })
+        .then(r => {
+          if (!r.success) this.logger.warn(`Email copy to ${thread.customerEmail} failed: ${r.error}`);
+        })
+        .catch(e => this.logger.warn(`Email copy to ${thread.customerEmail} failed: ${e?.message}`));
+    }
 
     // Return thread with all messages included (for controller broadcast)
     return this.findThread(companyId, threadId);

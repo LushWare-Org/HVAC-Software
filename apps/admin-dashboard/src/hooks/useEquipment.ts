@@ -109,3 +109,76 @@ export function useSaveCustomerEquipment() {
     },
   })
 }
+
+// ── Consumables (filters etc.) ────────────────────────────────────────────────
+
+export interface ConsumableRecord {
+  id: string
+  kind: string
+  partNumber?: string
+  description?: string
+  sizeSpec?: string
+  rating?: string
+  intervalDays: number
+  lastReplacedAt?: string
+  purchaseUrl?: string
+  nextDueAt?: string
+  dueInDays?: number | null
+}
+
+export interface ConsumableInput {
+  kind?: string
+  partNumber?: string
+  description?: string
+  sizeSpec?: string
+  rating?: string
+  intervalDays?: number
+  lastReplacedAt?: string
+  purchaseUrl?: string
+}
+
+export function useEquipmentConsumables(customerId: string | undefined, equipmentId: string | undefined) {
+  return useQuery<ConsumableRecord[]>({
+    queryKey: ['consumables', equipmentId],
+    queryFn: async () => {
+      const res = await api.get(`/crm/customers/${customerId}/equipment/${equipmentId}/consumables`)
+      return res.data
+    },
+    enabled: !!customerId && !!equipmentId,
+  })
+}
+
+export function useAddConsumable() {
+  return useMutation({
+    mutationFn: async ({ customerId, equipmentId, item }: { customerId: string; equipmentId: string; item: ConsumableInput }) => {
+      const res = await api.post(`/crm/customers/${customerId}/equipment/${equipmentId}/consumables`, item)
+      return res.data
+    },
+    onSuccess: (_, { equipmentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['consumables', equipmentId] })
+    },
+  })
+}
+
+export function useUpdateConsumable() {
+  return useMutation({
+    mutationFn: async ({ customerId, equipmentId, id, item }: { customerId: string; equipmentId: string; id: string; item: ConsumableInput }) => {
+      const res = await api.patch(`/crm/customers/${customerId}/equipment/${equipmentId}/consumables/${id}`, item)
+      return res.data
+    },
+    onSuccess: (_, { equipmentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['consumables', equipmentId] })
+    },
+  })
+}
+
+export function useDeleteConsumable() {
+  return useMutation({
+    mutationFn: async ({ customerId, equipmentId, id }: { customerId: string; equipmentId: string; id: string }) => {
+      await api.delete(`/crm/customers/${customerId}/equipment/${equipmentId}/consumables/${id}`)
+    },
+    onSuccess: (_, { equipmentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['consumables', equipmentId] })
+    },
+  })
+}

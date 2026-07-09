@@ -23,6 +23,8 @@ class UpdateJobDto {
   @IsOptional() @IsString() internalNotes?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
   @IsOptional() @IsNumber() estimatedValue?: number;
+  @IsOptional() @IsString() cancellationReason?: string;
+  @IsOptional() @IsString() projectId?: string;
 }
 
 // Combined PATCH DTO — allows updating fields AND status in one request
@@ -31,6 +33,8 @@ class PatchJobDto extends UpdateJobDto {
   @IsOptional() @IsString() statusNote?: string;
   @IsOptional() @IsBoolean() gpsTrackingEnabled?: boolean;
   @IsOptional() @IsString() completedAt?: string;
+  @IsOptional() @IsBoolean() hasPartShortage?: boolean;
+  @IsOptional() @IsString() partShortageNote?: string;
 }
 
 class UpdateCustomFieldsDto {
@@ -74,6 +78,9 @@ export class JobsController {
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
     @Query('customerId') customerId?: string,
+    @Query('agreementId') agreementId?: string,
+    @Query('projectId') projectId?: string,
+    @Query('isAgreementJob') isAgreementJob?: string,
   ) {
     // CUSTOMER role: force-filter to their own customerId for security
     const effectiveCustomerId = user.role === Role.CUSTOMER
@@ -83,6 +90,9 @@ export class JobsController {
     return this.jobsService.findAll(user.companyId, page, limit, {
       status, assignedToId, jobTypeId, search, dateFrom, dateTo,
       customerId: effectiveCustomerId,
+      agreementId,
+      projectId,
+      isAgreementJob: isAgreementJob === undefined ? undefined : isAgreementJob === 'true',
     });
   }
 

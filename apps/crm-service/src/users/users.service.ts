@@ -1,7 +1,9 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '../prisma/generated';
+import { StorageService } from '../storage/storage.service';
 import { clampPagination } from '@tscrm/types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
@@ -16,7 +18,10 @@ function isUniqueConstraintError(error: unknown): error is Prisma.PrismaClientKn
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
 
   async findAll(companyId: string, params: { role?: string; search?: string; isActive?: boolean; page?: number; limit?: number }) {
     const { role, search, isActive } = params;
@@ -52,6 +57,59 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException('User profile not found');
     return user;
+  }
+
+  // ---- Avatar (technician photo shown to customers in en-route emails) ----
+
+  private static readonly AVATAR_MIMES: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  };
+  private static readonly AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+
+  /** Upload/replace the avatar for the current user (by auth identity). */
+  async setMyAvatar(companyId: string, userId: string, file: { buffer: Buffer; mimetype: string; size: number }) {
+    const user = await this.findMe(companyId, userId);
+    return this.storeAvatar(companyId, user.id, user.avatarUrl, file);
+  }
+
+  /** Admin variant: upload/replace the avatar for a specific company user. */
+  async setUserAvatar(companyId: string, targetUserId: string, file: { buffer: Buffer; mimetype: string; size: number }) {
+    const user = await this.findOne(companyId, targetUserId);
+    return this.storeAvatar(companyId, user.id, user.avatarUrl, file);
+  }
+
+  async removeMyAvatar(companyId: string, userId: string) {
+    const user = await this.findMe(companyId, userId);
+    if (user.avatarUrl) {
+      const oldKey = this.storage.keyFromUrl(user.avatarUrl);
+      if (oldKey) await this.storage.deleteObject(oldKey);
+    }
+    return this.prisma.companyUser.update({ where: { id: user.id }, data: { avatarUrl: null } });
+  }
+
+  private async storeAvatar(
+    companyId: string,
+    userRecordId: string,
+    previousUrl: string | null,
+    file: { buffer: Buffer; mimetype: string; size: number },
+  ) {
+    const ext = UsersService.AVATAR_MIMES[file.mimetype];
+    if (!ext) throw new BadRequestException('Photo must be a JPEG, PNG or WebP image');
+    if (file.size > UsersService.AVATAR_MAX_BYTES) {
+      throw new BadRequestException('Photo is too large — maximum size is 2 MB');
+    }
+
+    const key = `avatars/${companyId}/${userRecordId}-${randomUUID()}.${ext}`;
+    const avatarUrl = await this.storage.putPublicObject(key, file.buffer, file.mimetype);
+
+    if (previousUrl) {
+      const oldKey = this.storage.keyFromUrl(previousUrl);
+      if (oldKey) await this.storage.deleteObject(oldKey);
+    }
+
+    return this.prisma.companyUser.update({ where: { id: userRecordId }, data: { avatarUrl } });
   }
 
   async getPendingTechnicians(companyId: string) {
@@ -314,5 +372,18 @@ export class UsersService {
   async remove(companyId: string, id: string) {
     await this.findOne(companyId, id);
     return this.prisma.companyUser.delete({ where: { id } });
+  }
+
+  async getLoginHistory(companyId: string, userId: string) {
+    try {
+      return await this.prisma.userLoginEvent.findMany({
+        where: { companyId, userId },
+        orderBy: { loggedInAt: 'desc' },
+        take: 20,
+        select: { id: true, loggedInAt: true, ipAddress: true, userAgent: true },
+      });
+    } catch {
+      return [];
+    }
   }
 }

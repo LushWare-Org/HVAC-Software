@@ -1,13 +1,9 @@
 /**
  * api.ts — Axios instance for T&S CRM Admin Dashboard
  *
- * Authenticated requests carry a Bearer token (JWT) obtained from
- * POST /crm/auth/login.  The token is stored in localStorage and
- * injected by AuthContext.
- *
- * The base URL is '/api' which Vite's dev proxy (vite.config.ts) forwards to
- * nginx :80 → upstream services.  In production this path is handled directly
- * by Kong Gateway.
+ * Any 401 response (except on the login endpoint itself) fires a global
+ * "auth:expired" CustomEvent that AuthContext listens to and calls logout().
+ * This covers expired JWTs, revoked sessions, and any service returning 401.
  */
 
 import axios from 'axios'
@@ -18,12 +14,9 @@ function normalizeApiBaseUrl(baseUrl: string): string {
   return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`
 }
 
-// ─── Axios instance ─────────────────────────────────────────────────────────
 const api = axios.create({
   baseURL: normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL ?? '/api'),
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 })
 
 // Restore token from localStorage on startup
@@ -32,14 +25,18 @@ if (storedToken) {
   api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
 }
 
-// ─── Request interceptor — inject auth token ─────────────────────────────────
+// Attach the token per-request from localStorage. This closes the race where
+// requests fired right after login (cache warming, mounting queries) went out
+// before AuthContext's useEffect set the default header — the resulting 401
+// triggered auth:expired and logged the user straight back out.
 api.interceptors.request.use((config) => {
-  // Token is already set by AuthContext via api.defaults.headers.common['Authorization']
-  // Nothing extra needed here
+  if (!config.headers.Authorization) {
+    const token = localStorage.getItem('tscrm_token')
+    if (token) config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 })
 
-// ─── Response interceptor — normalise errors ─────────────────────────────────
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -48,23 +45,15 @@ api.interceptors.response.use(
       error.response?.data?.error ??
       error.message ??
       'Unknown API error'
-    console.error(`[API] ${error.config?.method?.toUpperCase()} ${error.config?.url} → ${error.response?.status}: ${msg}`)
+    console.error(
+      `[API] ${error.config?.method?.toUpperCase()} ${error.config?.url} → ${error.response?.status}: ${msg}`,
+    )
 
-    // If 401, only force logout for critical CRM auth identity calls.
-    // Other service 401s should not bounce users back to login page.
     if (error.response?.status === 401) {
       const url = String(error.config?.url ?? '')
-      const isLoginRequest = url.includes('/auth/login')
-      const shouldForceLogout =
-        !isLoginRequest &&
-        (url.includes('/crm/users/me') || url.includes('/crm/company') || url.includes('/crm/auth/me'))
-
-      if (shouldForceLogout) {
-        localStorage.removeItem('tscrm_token')
-        localStorage.removeItem('tscrm_user')
-        delete api.defaults.headers.common['Authorization']
-        // Reload to show login page
-        window.location.reload()
+      // Don't log out on a failed login attempt — that's just wrong credentials.
+      if (!url.includes('/auth/login')) {
+        window.dispatchEvent(new CustomEvent('auth:expired'))
       }
     }
 

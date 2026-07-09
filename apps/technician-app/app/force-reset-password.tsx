@@ -67,7 +67,9 @@ export default function ForceResetPassword() {
       const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
       await api.post('/crm/auth/force-reset-password', { newPassword: newPwd }, { headers: authHeader })
       clearMustResetPassword()
-      router.replace('/(tabs)')
+      // Next onboarding step — the screen itself skips ahead to the tabs
+      // when a base location is already set on the scheduling profile.
+      router.replace('/setup-location')
     } catch (err: any) {
       const status = err?.response?.status
       if (status === 401) {

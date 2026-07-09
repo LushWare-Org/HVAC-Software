@@ -9,7 +9,7 @@ export default () => ({
   sendgrid: {
     apiKey: process.env.SENDGRID_API_KEY ?? '',
     fromEmail: process.env.SENDGRID_FROM_EMAIL ?? 'no-reply@tscrm.com',
-    fromName: process.env.SENDGRID_FROM_NAME ?? 'T&S Services',
+    fromName: process.env.SENDGRID_FROM_NAME ?? 'HomePulse',
   },
   email: {
     provider: (process.env.EMAIL_PROVIDER ?? 'auto').toLowerCase(), // auto | smtp | sendgrid
@@ -21,7 +21,7 @@ export default () => ({
     user: process.env.SMTP_USER ?? '',
     pass: process.env.SMTP_PASS ?? '',
     fromEmail: process.env.SMTP_FROM_EMAIL ?? process.env.SENDGRID_FROM_EMAIL ?? 'no-reply@tscrm.com',
-    fromName: process.env.SMTP_FROM_NAME ?? process.env.SENDGRID_FROM_NAME ?? 'T&S Services',
+    fromName: process.env.SMTP_FROM_NAME ?? process.env.SENDGRID_FROM_NAME ?? 'HomePulse',
   },
   firebase: {
     projectId: process.env.FIREBASE_PROJECT_ID ?? '',
@@ -31,6 +31,11 @@ export default () => ({
   redis: {
     host: process.env.REDIS_HOST ?? 'localhost',
     port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
+  },
+  vapid: {
+    publicKey: process.env.VAPID_PUBLIC_KEY ?? '',
+    privateKey: process.env.VAPID_PRIVATE_KEY ?? '',
+    subject: process.env.VAPID_SUBJECT ?? 'mailto:admin@tscrm.com',
   },
   mongodb: {
     uri: process.env.MONGODB_URI ?? 'mongodb://localhost:27017/tscrm',

@@ -343,3 +343,63 @@ ALTER TABLE "crm"."equipment" ADD COLUMN IF NOT EXISTS "importBatchId" TEXT;
 --   WHERE table_schema IN ('crm','marketing')
 --   ORDER BY table_schema, table_name;
 -- ─────────────────────────────────────────────────────────────
+
+-- ─────────────────────────────────────────────────────────────
+-- 2026-06-12 Portal engagement phase 1 (idempotent)
+-- ─────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS "crm"."equipment_consumables" (
+  "id" TEXT NOT NULL,
+  "companyId" TEXT NOT NULL,
+  "equipmentId" TEXT NOT NULL,
+  "kind" TEXT NOT NULL DEFAULT 'FILTER',
+  "partNumber" TEXT,
+  "description" TEXT,
+  "sizeSpec" TEXT,
+  "rating" TEXT,
+  "intervalDays" INTEGER NOT NULL DEFAULT 90,
+  "lastReplacedAt" TIMESTAMP(3),
+  "purchaseUrl" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "equipment_consumables_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "equipment_consumables_equipmentId_fkey" FOREIGN KEY ("equipmentId")
+    REFERENCES "crm"."equipment"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "equipment_consumables_equipmentId_idx" ON "crm"."equipment_consumables"("equipmentId");
+CREATE INDEX IF NOT EXISTS "equipment_consumables_companyId_idx" ON "crm"."equipment_consumables"("companyId");
+
+CREATE TABLE IF NOT EXISTS "crm"."company_announcements" (
+  "id" TEXT NOT NULL,
+  "companyId" TEXT NOT NULL,
+  "title" TEXT NOT NULL,
+  "body" TEXT,
+  "linkUrl" TEXT,
+  "linkLabel" TEXT,
+  "accentColor" TEXT NOT NULL DEFAULT '#1a73e8',
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  "activeFrom" TIMESTAMP(3),
+  "activeTo" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "company_announcements_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX IF NOT EXISTS "company_announcements_companyId_isActive_idx"
+  ON "crm"."company_announcements"("companyId", "isActive");
+
+-- ── WebPushSubscription (comms schema) ────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "comms"."web_push_subscriptions" (
+  "id" TEXT NOT NULL,
+  "companyId" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "endpoint" TEXT NOT NULL,
+  "p256dh" TEXT NOT NULL,
+  "auth" TEXT NOT NULL,
+  "userAgent" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "web_push_subscriptions_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "web_push_subscriptions_endpoint_key" UNIQUE ("endpoint")
+);
+CREATE INDEX IF NOT EXISTS "web_push_subscriptions_companyId_userId_idx"
+  ON "comms"."web_push_subscriptions"("companyId", "userId");

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsEmail, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateThreadDto {
@@ -19,6 +19,10 @@ export class SendMessageDto {
   @ApiProperty({ description: 'Message body' }) @IsString() body!: string;
   @ApiPropertyOptional({ description: 'Media attachment URLs' })
   @IsOptional() mediaUrls?: string[];
+  @ApiPropertyOptional({ description: 'Also email the message to the thread customer' })
+  @IsOptional() @IsBoolean() notifyEmail?: boolean;
+  @ApiPropertyOptional({ description: 'Subject for the notification email (falls back to thread subject)' })
+  @IsOptional() @IsString() emailSubject?: string;
 }
 
 export class UpdateThreadStatusDto {

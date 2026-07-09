@@ -134,6 +134,9 @@ exports.Prisma.CompanyScalarFieldEnum = {
   country: 'country',
   logoUrl: 'logoUrl',
   website: 'website',
+  currency: 'currency',
+  timezone: 'timezone',
+  features: 'features',
   isActive: 'isActive',
   automaticFollowupEnabled: 'automaticFollowupEnabled',
   trialEndsAt: 'trialEndsAt',
@@ -157,12 +160,23 @@ exports.Prisma.CompanyUserScalarFieldEnum = {
   skills: 'skills',
   latitude: 'latitude',
   longitude: 'longitude',
+  avatarUrl: 'avatarUrl',
   lastLoginAt: 'lastLoginAt',
   pushToken: 'pushToken',
   pushPlatform: 'pushPlatform',
   pushTokenUpdatedAt: 'pushTokenUpdatedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UserLoginEventScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  userId: 'userId',
+  userEmail: 'userEmail',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  loggedInAt: 'loggedInAt'
 };
 
 exports.Prisma.CustomerScalarFieldEnum = {
@@ -243,8 +257,36 @@ exports.Prisma.ServiceAgreementScalarFieldEnum = {
   signedAt: 'signedAt',
   signedByName: 'signedByName',
   documentUrl: 'documentUrl',
+  billingAmount: 'billingAmount',
+  nextBillingDate: 'nextBillingDate',
+  serviceType: 'serviceType',
+  serviceInterval: 'serviceInterval',
+  serviceIntervalDays: 'serviceIntervalDays',
+  visitsIncluded: 'visitsIncluded',
+  visitsUsed: 'visitsUsed',
+  lastServiceDate: 'lastServiceDate',
+  nextServiceDate: 'nextServiceDate',
+  autoCreateJobs: 'autoCreateJobs',
+  leadDays: 'leadDays',
+  jobTemplateId: 'jobTemplateId',
+  projectId: 'projectId',
+  customerConfirmedAt: 'customerConfirmedAt',
+  confirmToken: 'confirmToken',
+  renewalReminderSent: 'renewalReminderSent',
+  renewedFromId: 'renewedFromId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AgreementAmendmentScalarFieldEnum = {
+  id: 'id',
+  agreementId: 'agreementId',
+  changedFields: 'changedFields',
+  changedBy: 'changedBy',
+  changedByName: 'changedByName',
+  customerNotifiedAt: 'customerNotifiedAt',
+  customerConfirmedAt: 'customerConfirmedAt',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.BookingScalarFieldEnum = {
@@ -312,6 +354,53 @@ exports.Prisma.EquipmentScalarFieldEnum = {
   warrantyEnd: 'warrantyEnd',
   notes: 'notes',
   importBatchId: 'importBatchId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  manualUrl: 'manualUrl'
+};
+
+exports.Prisma.EquipmentConsumableScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  equipmentId: 'equipmentId',
+  kind: 'kind',
+  partNumber: 'partNumber',
+  description: 'description',
+  sizeSpec: 'sizeSpec',
+  rating: 'rating',
+  intervalDays: 'intervalDays',
+  lastReplacedAt: 'lastReplacedAt',
+  purchaseUrl: 'purchaseUrl',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ContractorPostScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  type: 'type',
+  title: 'title',
+  body: 'body',
+  videoUrl: 'videoUrl',
+  heroImageUrl: 'heroImageUrl',
+  isPinned: 'isPinned',
+  isPublished: 'isPublished',
+  publishedAt: 'publishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CompanyAnnouncementScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  title: 'title',
+  body: 'body',
+  linkUrl: 'linkUrl',
+  linkLabel: 'linkLabel',
+  accentColor: 'accentColor',
+  isActive: 'isActive',
+  activeFrom: 'activeFrom',
+  activeTo: 'activeTo',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -414,17 +503,50 @@ exports.Prisma.IotDeviceHistoryScalarFieldEnum = {
   recordedAt: 'recordedAt'
 };
 
+exports.Prisma.ProjectScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  customerId: 'customerId',
+  name: 'name',
+  description: 'description',
+  category: 'category',
+  status: 'status',
+  startDate: 'startDate',
+  targetEndDate: 'targetEndDate',
+  budget: 'budget',
+  requiredHeadcount: 'requiredHeadcount',
+  siteAddress: 'siteAddress',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  workingDays: 'workingDays',
+  baseTeamUserIds: 'baseTeamUserIds',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProjectRosterDayScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  projectId: 'projectId',
+  date: 'date',
+  techUserIds: 'techUserIds',
+  isOff: 'isOff',
+  updatedBy: 'updatedBy',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
 };
 
-exports.Prisma.NullableJsonNullValueInput = {
-  DbNull: Prisma.DbNull,
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
-exports.Prisma.JsonNullValueInput = {
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull
 };
 
@@ -433,15 +555,15 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
-};
-
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
+};
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
 };
 exports.CustomerType = exports.$Enums.CustomerType = {
   RESIDENTIAL: 'RESIDENTIAL',
@@ -469,6 +591,8 @@ exports.AgreementStatus = exports.$Enums.AgreementStatus = {
   DRAFT: 'DRAFT',
   SENT: 'SENT',
   ACTIVE: 'ACTIVE',
+  PENDING_RENEWAL: 'PENDING_RENEWAL',
+  RENEWED: 'RENEWED',
   EXPIRED: 'EXPIRED',
   CANCELLED: 'CANCELLED'
 };
@@ -497,21 +621,28 @@ exports.ImportStatus = exports.$Enums.ImportStatus = {
 exports.Prisma.ModelName = {
   Company: 'Company',
   CompanyUser: 'CompanyUser',
+  UserLoginEvent: 'UserLoginEvent',
   Customer: 'Customer',
   Contact: 'Contact',
   Lead: 'Lead',
   ServiceAgreement: 'ServiceAgreement',
+  AgreementAmendment: 'AgreementAmendment',
   Booking: 'Booking',
   Review: 'Review',
   Address: 'Address',
   Equipment: 'Equipment',
+  EquipmentConsumable: 'EquipmentConsumable',
+  ContractorPost: 'ContractorPost',
+  CompanyAnnouncement: 'CompanyAnnouncement',
   FollowupAttempt: 'FollowupAttempt',
   UpsellRecommendation: 'UpsellRecommendation',
   ImportBatch: 'ImportBatch',
   ImportError: 'ImportError',
   CustomerIotConnection: 'CustomerIotConnection',
   CustomerIotDevice: 'CustomerIotDevice',
-  IotDeviceHistory: 'IotDeviceHistory'
+  IotDeviceHistory: 'IotDeviceHistory',
+  Project: 'Project',
+  ProjectRosterDay: 'ProjectRosterDay'
 };
 
 /**

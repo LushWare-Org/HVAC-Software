@@ -56,7 +56,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps) {
   const notifications = notificationsQuery.data?.data ?? []
   const unreadCount = notifications.filter(n => !n.isRead).length
 
-  const pageTitle = PAGE_TITLES[window.location.pathname] ?? 'Customer Portal'
+  const pageTitle = PAGE_TITLES[window.location.pathname] ?? 'HomePulse'
   const dateStr = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',

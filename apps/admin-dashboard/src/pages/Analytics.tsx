@@ -1,8 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
     BarChart3, DollarSign, Wrench, TrendingUp,
     ChevronLeft, ChevronRight, Search, Maximize2, Minimize2,
-    Filter, AlertCircle, RefreshCw, Bot, Target, Activity,
+    AlertCircle, RefreshCw, Bot, Target, Activity,
     CheckCircle2, Percent, Database,
 } from 'lucide-react'
 import {
@@ -21,6 +22,7 @@ import {
     useRevenueAgentLogs,
 } from '../hooks/useAnalytics'
 import RecommendationsPanel from '../components/RecommendationsPanel'
+import { formatMoney as formatMoneyBase, formatMoneyCompact } from '../lib/format'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -96,7 +98,7 @@ const ChartTip = ({ active, payload, label }: ChartTipProps) => {
             <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 4, fontWeight: 600 }}>{label}</div>
             {payload.map(p => (
                 <div key={p.dataKey || p.name} style={{ fontSize: 12, color: p.color ?? 'var(--t1)', fontWeight: 600, marginBottom: 2 }}>
-                    {p.name}: {p.name === 'Revenue ($k)' ? `$${p.value}k` : p.value}
+                    {p.name}: {p.name === 'Revenue ($k)' ? formatMoneyCompact(Number(p.value) * 1000, 0) : p.value}
                 </div>
             ))}
         </div>
@@ -123,8 +125,8 @@ function formatPercent(value?: number) {
 }
 
 function formatMoney(value?: number | string) {
-    if (value == null || Number.isNaN(value)) return '$0'
-    return `$${Math.round(Number(value)).toLocaleString()}`
+    if (value == null || Number.isNaN(value)) return formatMoneyBase(0, { decimals: 0 })
+    return formatMoneyBase(value, { decimals: 0 })
 }
 
 function formatNumber(value?: number) {
@@ -147,6 +149,7 @@ function actionLabel(value?: string) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Analytics() {
+    const navigate = useNavigate()
     const [page, setPage]         = useState(1)
     const [search, setSearch]     = useState('')
     const [isExpanded, setIsExpanded] = useState(false)
@@ -241,7 +244,7 @@ export default function Analytics() {
 
     // KPI: avg revenue per job
     const avgRevPerJob = kpis && kpis.jobsCompleted.value > 0
-        ? `$${Math.round(kpis.revenue.value / kpis.jobsCompleted.value).toLocaleString()}`
+        ? formatMoneyBase(kpis.revenue.value / kpis.jobsCompleted.value, { decimals: 0 })
         : '—'
 
     return (
@@ -255,12 +258,12 @@ export default function Analytics() {
                     {/* ── KPI cards ───────────────────────────────────────────────── */}
                     <div className="kpi-grid mb-5">
                         {[
-                            { icon: DollarSign,  v: kpis?.revenue.formattedValue ?? '—',                                                      l: 'Total Revenue',  loading: kpiQuery.isLoading },
-                            { icon: Wrench,      v: kpis?.jobsCompleted.formattedValue ?? '—',                                                 l: 'Jobs Completed', loading: kpiQuery.isLoading },
-                            { icon: TrendingUp,  v: kpis?.revenue.trend != null ? `${kpis.revenue.trend > 0 ? '+' : ''}${kpis.revenue.trend}%` : '—', l: 'Revenue Growth',  loading: kpiQuery.isLoading },
-                            { icon: BarChart3,   v: avgRevPerJob,                                                                              l: 'Avg Rev / Job',  loading: kpiQuery.isLoading },
+                            { icon: DollarSign,  v: kpis?.revenue.formattedValue ?? '—',                                                      l: 'Total Revenue',  loading: kpiQuery.isLoading, href: '/finance' },
+                            { icon: Wrench,      v: kpis?.jobsCompleted.formattedValue ?? '—',                                                 l: 'Jobs Completed', loading: kpiQuery.isLoading, href: '/jobs' },
+                            { icon: TrendingUp,  v: kpis?.revenue.trend != null ? `${kpis.revenue.trend > 0 ? '+' : ''}${kpis.revenue.trend}%` : '—', l: 'Revenue Growth',  loading: kpiQuery.isLoading, href: '/analytics' },
+                            { icon: BarChart3,   v: avgRevPerJob,                                                                              l: 'Avg Rev / Job',  loading: kpiQuery.isLoading, href: '/analytics' },
                         ].map(k => (
-                            <div key={k.l} className="kpi-card" style={{ padding: '16px 20px', borderRadius: 'var(--r-md)' }}>
+                            <div key={k.l} className="kpi-card" style={{ padding: '16px 20px', borderRadius: 'var(--r-md)', cursor: 'pointer' }} onClick={() => navigate(k.href)}>
                                 <div className="kpi-card-top" style={{ marginBottom: 12, alignItems: 'center', justifyContent: 'space-between' }}>
                                     <div className="kpi-label" style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 500, margin: 0 }}>{k.l}</div>
                                     <k.icon size={16} strokeWidth={1.5} color="var(--t3)" />
@@ -436,7 +439,7 @@ export default function Analytics() {
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                                             <XAxis dataKey="m" tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <YAxis tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}k`} />
+                                            <YAxis tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => formatMoneyCompact(Number(v) * 1000, 0)} />
                                             <Tooltip content={<ChartTip />} />
                                                     <Area type="monotone" dataKey="rev" name="Revenue ($k)" stroke="#3B82F6" strokeWidth={2} fill="url(#gRev)" dot={false} activeDot={{ r: 4 }} />
                                         </AreaChart>
@@ -616,6 +619,61 @@ export default function Analytics() {
                 </>
             )}
 
+            {/* ── Revenue by Technician ───────────────────────────────────────── */}
+            {!isExpanded && (
+                <div className="card card-hover anim-fade-up delay-3 mb-5">
+                    <div className="card-header pb-2 border-b-0 flex justify-between items-center">
+                        <div className="card-title text-[15px]">Revenue by Technician</div>
+                        {!leaderboardQuery.isLoading && allTechs.length > 0 && (
+                            <span className="text-[12px] text-[var(--t3)]">Top {Math.min(allTechs.length, 8)} earners</span>
+                        )}
+                    </div>
+                    <div className="card-body">
+                        {leaderboardQuery.isLoading ? <Skeleton h={240} /> : allTechs.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-10 text-[var(--t4)] gap-2">
+                                <BarChart3 size={28} />
+                                <span className="text-sm">No technician data for this period</span>
+                            </div>
+                        ) : (() => {
+                            const BAR_COLORS = ['#3B82F6','#6366F1','#8B5CF6','#EC4899','#F59E0B','#10B981','#14B8A6','#F97316']
+                            const chartData = [...allTechs]
+                                .sort((a, b) => (b.totalRevenue ?? 0) - (a.totalRevenue ?? 0))
+                                .slice(0, 8)
+                                .map((t, idx) => ({
+                                    name: (t.technicianName ?? '').split(' ')[0],
+                                    revenue: t.totalRevenue ?? 0,
+                                    fill: BAR_COLORS[idx % BAR_COLORS.length],
+                                }))
+                            return (
+                                <div style={{ height: 240, minWidth: 0 }}>
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                        <BarChart data={chartData} margin={{ top: 18, right: 10, left: -10, bottom: 0 }}>
+                                            <defs>
+                                                {BAR_COLORS.map((c, i) => (
+                                                    <linearGradient key={i} id={`techBar${i}`} x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor={c} stopOpacity={0.95} />
+                                                        <stop offset="100%" stopColor={c} stopOpacity={0.55} />
+                                                    </linearGradient>
+                                                ))}
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                                            <XAxis dataKey="name" tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                            <YAxis tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => formatMoneyCompact(Number(v), 0)} />
+                                            <Tooltip content={<ChartTip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                                            <Bar dataKey="revenue" name="Revenue" radius={[5,5,0,0]} barSize={32}>
+                                                {chartData.map((_entry, index) => (
+                                                    <Cell key={index} fill={`url(#techBar${index})`} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )
+                        })()}
+                    </div>
+                </div>
+            )}
+
             {/* ── Technician Leaderboard ───────────────────────────────────────── */}
             <div className="card card-hover anim-fade-up delay-3">
                 {leaderboardQuery.isError && (
@@ -632,82 +690,130 @@ export default function Analytics() {
                             <Search size={13} color="var(--t4)" />
                             <input placeholder="Search technicians..." value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
                         </div>
-                        <select className="select" style={{ width: 140 }} value={sortBy} onChange={e => { setSortBy(e.target.value); setPage(1) }}>
+                        <select className="select" style={{ width: 150 }} value={sortBy} onChange={e => { setSortBy(e.target.value); setPage(1) }}>
                             <option value="revenue">Sort: Revenue</option>
                             <option value="jobs">Sort: Jobs</option>
                             <option value="rating">Sort: Rating</option>
                             <option value="completion">Sort: Completion</option>
                         </select>
-                        <button className="btn btn-secondary btn-sm"><Filter size={12} /> More Filters</button>
                         <button className="btn btn-secondary btn-sm flex items-center gap-1.5 ml-auto" style={{ padding: '0 12px', fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
                             {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
                         </button>
                     </div>
                 </div>
 
-                <div className="card-body-flush mt-2">
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Rank</th><th>Technician</th><th>Jobs</th>
-                                    <th>Revenue</th><th>Rating</th><th>Completion</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {leaderboardQuery.isLoading && Array.from({ length: 5 }).map((_, i) => (
-                                    <tr key={i}>{Array.from({ length: 6 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
-                                ))}
-                                {!leaderboardQuery.isLoading && paginatedTechs.map((t, i) => {
-                                    const rank = (page - 1) * itemsPerPage + i
-                                    return (
-                                        <tr
-                                            key={t.technicianId}
-                                            onClick={() => window.dispatchEvent(new CustomEvent('open-technician-detail', { detail: t }))}
-                                            className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
-                                        >
-                                            <td><span style={{ fontSize: 16 }}>{rank + 1}</span></td>
-                                            <td>
-                                                <div className="cell-user">
-                                                    <span className="cell-name">{t.technicianName}</span>
-                                                </div>
-                                            </td>
-                                            <td className="td-primary">{t.jobsCompleted}</td>
-                                            <td className="td-primary font-600">${(t.totalRevenue ?? 0).toLocaleString()}</td>
-                                            <td>
-                                                <span style={{ color: 'var(--amber)', fontWeight: 700 }}>
-                                                    ★ {t.avgRating?.toFixed(1) ?? '—'}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="progress flex-1" style={{ maxWidth: 100 }}>
-                                                        <div className="progress-fill" style={{ width: `${Math.round((t.completionRate ?? 0) * 100)}%`, background: '#3B82F6' }} />
-                                                    </div>
-                                                    <span className="text-xs text-3">{Math.round((t.completionRate ?? 0) * 100)}%</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
-                                {!leaderboardQuery.isLoading && filteredTechs.length === 0 && (
-                                    <tr>
-                                        <td colSpan={6}>
-                                            <div className="empty-state">
-                                                <div className="empty-icon"><BarChart3 size={22} /></div>
-                                                <div className="empty-title">No technicians found</div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                {/* ── Leaderboard table ── */}
+                {(() => {
+                    const maxRevenue = Math.max(...filteredTechs.map(t => t.totalRevenue ?? 0), 1)
+                    const RANK_STYLES = [
+                        { bg: 'linear-gradient(135deg,#F59E0B,#FBBF24)', color: '#78350F', label: '1st' },
+                        { bg: 'linear-gradient(135deg,#94A3B8,#CBD5E1)', color: '#1E293B', label: '2nd' },
+                        { bg: 'linear-gradient(135deg,#CD7C2F,#E09352)', color: '#431407', label: '3rd' },
+                    ]
+                    const scoreColor = (s?: number) => !s ? 'var(--t3)' : s >= 70 ? 'var(--green)' : s >= 40 ? 'var(--amber)' : 'var(--red)'
 
-                <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
+                    return (
+                        <div className="card-body-flush mt-2">
+                            <div className="table-container">
+                                <table className="data-table" style={{ tableLayout: 'fixed' }}>
+                                    <thead>
+                                        <tr>
+                                            <th style={{ width: 52 }}>Rank</th>
+                                            <th>Technician</th>
+                                            <th style={{ width: 60 }}>Jobs</th>
+                                            <th style={{ width: 180 }}>Revenue</th>
+                                            <th style={{ width: 80 }}>Rating</th>
+                                            <th style={{ width: 120 }}>Completion</th>
+                                            <th style={{ width: 72 }}>Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {leaderboardQuery.isLoading && Array.from({ length: 5 }).map((_, i) => (
+                                            <tr key={i}>{Array.from({ length: 7 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
+                                        ))}
+                                        {!leaderboardQuery.isLoading && paginatedTechs.map((t, i) => {
+                                            const globalRank = (page - 1) * itemsPerPage + i
+                                            const rs = RANK_STYLES[globalRank]
+                                            const revPct = Math.max(2, Math.round(((t.totalRevenue ?? 0) / maxRevenue) * 100))
+                                            const score = t.performanceScore
+                                            return (
+                                                <tr
+                                                    key={t.technicianId}
+                                                    onClick={() => window.dispatchEvent(new CustomEvent('open-technician-detail', { detail: t }))}
+                                                    className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+                                                    style={{ borderLeft: globalRank < 3 ? `3px solid ${globalRank === 0 ? '#F59E0B' : globalRank === 1 ? '#94A3B8' : '#CD7C2F'}` : '3px solid transparent' }}
+                                                >
+                                                    <td>
+                                                        {rs ? (
+                                                            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 20, borderRadius: 5, background: rs.bg, color: rs.color, fontSize: 10, fontWeight: 800, letterSpacing: '0.02em' }}>
+                                                                {rs.label}
+                                                            </span>
+                                                        ) : (
+                                                            <span style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 600, paddingLeft: 6 }}>#{globalRank + 1}</span>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <span className="cell-name">{t.technicianName}</span>
+                                                            {t.avgJobDurationMins ? <span style={{ fontSize: 11, color: 'var(--t4)' }}>avg {Math.round(t.avgJobDurationMins)}m/job</span> : null}
+                                                        </div>
+                                                    </td>
+                                                    <td className="td-primary" style={{ fontWeight: 700 }}>{t.jobsCompleted}</td>
+                                                    <td>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>{formatMoneyBase(t.totalRevenue ?? 0, { decimals: 0 })}</span>
+                                                            <div style={{ height: 4, borderRadius: 3, background: 'var(--bg-card-2)', overflow: 'hidden', width: '100%' }}>
+                                                                <div style={{ height: '100%', width: `${revPct}%`, borderRadius: 3, background: 'linear-gradient(90deg, #3B82F6, #6366F1)', transition: 'width 0.5s ease' }} />
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        {(t.avgRating ?? 0) > 0 ? (
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                                <span style={{ color: '#F59E0B', fontSize: 13 }}>★</span>
+                                                                <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--t1)' }}>{t.avgRating?.toFixed(1)}</span>
+                                                            </div>
+                                                        ) : <span style={{ color: 'var(--t4)', fontSize: 12 }}>—</span>}
+                                                    </td>
+                                                    <td>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'var(--bg-card-2)', overflow: 'hidden', maxWidth: 60 }}>
+                                                                <div style={{ height: '100%', borderRadius: 3, width: `${Math.round((t.completionRate ?? 0) * 100)}%`, background: 'var(--green)' }} />
+                                                            </div>
+                                                            <span style={{ fontSize: 12, color: 'var(--t2)', fontWeight: 600, minWidth: 32 }}>{Math.round((t.completionRate ?? 0) * 100)}%</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800, background: `${scoreColor(score)}18`, color: scoreColor(score), letterSpacing: '0.02em' }}>
+                                                            {score ?? '—'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
+                                        {!leaderboardQuery.isLoading && filteredTechs.length === 0 && (
+                                            <tr>
+                                                <td colSpan={7}>
+                                                    <div className="empty-state" style={{ padding: '32px 0' }}>
+                                                        <div className="empty-icon"><BarChart3 size={22} /></div>
+                                                        <div className="empty-title">No technician data for this period</div>
+                                                        <div className="empty-subtitle">Jobs need to be marked Complete with an assigned technician</div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )
+                })()}
+
+                <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderTop: '1px solid var(--border)' }}>
                     <span className="text-[13px] text-[var(--t3)]">
-                        Showing {filteredTechs.length > 0 ? (page - 1) * itemsPerPage + 1 : 0} to {Math.min(page * itemsPerPage, filteredTechs.length)} of {filteredTechs.length} technicians
+                        {filteredTechs.length > 0
+                            ? `Showing ${(page - 1) * itemsPerPage + 1}–${Math.min(page * itemsPerPage, filteredTechs.length)} of ${filteredTechs.length} technicians`
+                            : 'No technicians'}
                     </span>
                     <div className="flex items-center gap-2">
                         <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>

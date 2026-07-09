@@ -108,6 +108,7 @@ model Quote {
   companyId        String
   quoteNumber      String      // e.g. QUOTE-2024-0001 (auto-generated)
   jobId            String?     // optional link to a job in the jobs schema
+  projectId        String?     // cross-schema ref to crm.projects
   customerId       String      // cross-schema ref to crm.customers
   customerName     String
   customerEmail    String
@@ -180,6 +181,7 @@ model Invoice {
   quoteId               String?       // set when converted from a quote
   quote                 Quote?        @relation("QuoteInvoices", fields: [quoteId], references: [id])
   jobId                 String?       // cross-schema ref to jobs.job
+  projectId             String?       // cross-schema ref to crm.projects
   workOrderId           String?       // cross-schema ref to jobs.work_order
   customerId            String
   customerName          String

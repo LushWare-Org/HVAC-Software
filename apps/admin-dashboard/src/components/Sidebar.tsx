@@ -16,11 +16,12 @@ function prefetchRoute(path: string) {
 import {
     LayoutDashboard, Users, Wrench, /* CalendarDays, */ Zap,
     DollarSign, MessageSquare, BarChart3, Settings,
-    Menu, X, LogOut, Shield, Package, Megaphone, Upload,
+    Menu, X, LogOut, Shield, Package, Megaphone, Upload, FileSignature, Route, FolderKanban,
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { usePendingTechnicians } from '../hooks/useTeam'
 import { useUnreadThreadsCount } from '../hooks/useComms'
+import { useCompany } from '../hooks/useSettings'
 
 interface Props { collapsed: boolean; onToggle: () => void; mobileOpen?: boolean }
 
@@ -30,6 +31,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     const pendingQuery = usePendingTechnicians()
     const pendingCount = pendingQuery.data?.total ?? 0
     const unreadMessages = useUnreadThreadsCount()
+    const companyQuery = useCompany()
+    const company = companyQuery.data
 
     const isLight = theme === 'light'
     const isMobileMode = mobileOpen !== undefined
@@ -71,9 +74,12 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
             items: [
                 { icon: Users, label: 'Customers & CRM', path: '/customers' },
                 { icon: Wrench, label: 'Jobs', path: '/jobs', badge: 0 },
+                { icon: FolderKanban, label: 'Projects', path: '/projects' },
                 /* Scheduling page is temporarily disabled — re-enable when Go scheduling service is verified */
                 // { icon: CalendarDays, label: 'Scheduling', path: '/scheduling' },
                 { icon: Zap, label: 'Dispatch Board', path: '/dispatch' },
+                { icon: Route, label: 'Day Planner', path: '/planner' },
+                { icon: FileSignature, label: 'Agreements', path: '/agreements' },
             ],
         },
         {
@@ -88,7 +94,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
         },
         {
             items: [
-                { icon: Upload, label: 'Data Import', path: '/import' },
+                { icon: Upload, label: 'Integrations', path: '/import' },
                 { icon: Shield, label: 'Team', path: '/team', pendingDot: pendingCount > 0 },
                 { icon: Settings, label: 'Settings', path: '/settings' },
             ],
@@ -98,13 +104,23 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     return (
         <aside className={sidebarClasses}>
             <div className={`flex items-center flex-shrink-0 h-20 border-b ${headerBorder} ${collapsed ? 'justify-center px-0' : 'justify-start px-5 gap-3.5'}`}>
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0 font-bold text-white text-xl overflow-hidden shadow-lg">
-                    H
-                </div>
+                {/* Company logo or initial avatar */}
+                {company?.logoUrl ? (
+                    <img
+                        src={company.logoUrl}
+                        alt={company.name ?? 'Company'}
+                        className="w-11 h-11 rounded-xl object-contain flex-shrink-0 shadow-lg"
+                        style={{ background: 'var(--bg-card-2)', padding: 2 }}
+                    />
+                ) : (
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0 font-bold text-white text-xl overflow-hidden shadow-lg">
+                        {(company?.name ?? 'H')[0].toUpperCase()}
+                    </div>
+                )}
                 {!collapsed && (
                     <div className="min-w-0">
                         <h2 className={`text-lg font-bold leading-tight truncate ${isLight ? 'text-white' : 'text-[var(--t1)]'}`}>
-                            HVAC System
+                            {company?.name ?? 'HomePulse'}
                         </h2>
                         <p className={`text-[11px] leading-tight mt-0.5 truncate ${isLight ? 'text-slate-400' : 'text-[var(--t3)]'}`}>
                             Management Dashboard

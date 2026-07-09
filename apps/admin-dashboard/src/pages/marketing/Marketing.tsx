@@ -1,10 +1,14 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import ContentTab from './ContentTab'
 import {
-  Megaphone, BarChart3, Layout, Users, Settings, Shield,
+  Megaphone, BarChart3, Layout, Users, Settings, Shield, Newspaper,
   Send, Mail, MessageSquare, Check, Loader2, AlertCircle,
   Plus, Trash2, RefreshCw, Play, Save,
   Eye, MousePointer, Star, Wrench, Heart, TrendingUp, Filter, CalendarDays, Clock,
 } from 'lucide-react'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+} from 'recharts'
 import {
   useMarketingKpis, useCampaignStats, useCampaigns, useCreateCampaign, useLaunchCampaign,
   useMarketingTemplates, useSeedDefaultTemplates, useDeleteTemplate, useCreateTemplate, useUpdateTemplate,
@@ -15,6 +19,7 @@ import {
   type StatsRange, type MarketingSettings,
 } from '../../hooks/useMarketing'
 import { useToast } from '../../contexts/ToastContext'
+import { formatMoney } from '../../lib/format'
 
 // ── Shared Toggle ────────────────────────────────────────────────────────────
 function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: () => void; disabled?: boolean }) {
@@ -80,12 +85,12 @@ function StatusBadge({ status }: { status: string }) {
 
 // ── KPI Card ─────────────────────────────────────────────────────────────────
 function KpiCard({
-  label, value, sub, grad, icon: Icon,
+  label, value, sub, grad, icon: Icon, onClick,
 }: {
-  label: string; value: string | number; sub?: string; grad: string; icon: React.ElementType
+  label: string; value: string | number; sub?: string; grad: string; icon: React.ElementType; onClick?: () => void
 }) {
   return (
-    <div className="kpi-card">
+    <div className="kpi-card" style={{ cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
       <div className="kpi-card-top">
         <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {label}
@@ -365,10 +370,10 @@ function OverviewTab() {
           </div>
         ) : kpis.data ? (
           <>
-            <KpiCard label="Sent"         value={(kpis.data.sent ?? 0).toLocaleString()}         grad="kpi-grad-blue"   icon={Send} />
-            <KpiCard label="Delivered"    value={(kpis.data.delivered ?? 0).toLocaleString()}     sub={pct(kpis.data.deliveryRate)} grad="kpi-grad-green"  icon={Check} />
-            <KpiCard label="Opened"       value={(kpis.data.opened ?? 0).toLocaleString()}        sub={pct(kpis.data.openRate)}    grad="kpi-grad-violet" icon={Eye} />
-            <KpiCard label="Clicked"      value={(kpis.data.clicked ?? 0).toLocaleString()}       sub={pct(kpis.data.clickRate)}   grad="kpi-grad-amber"  icon={MousePointer} />
+            <KpiCard label="Sent"         value={(kpis.data.sent ?? 0).toLocaleString()}         grad="kpi-grad-blue"   icon={Send}          onClick={() => window.dispatchEvent(new CustomEvent('marketing-tab', { detail: 'campaigns' }))} />
+            <KpiCard label="Delivered"    value={(kpis.data.delivered ?? 0).toLocaleString()}     sub={pct(kpis.data.deliveryRate)} grad="kpi-grad-green"  icon={Check}   onClick={() => window.dispatchEvent(new CustomEvent('marketing-tab', { detail: 'campaigns' }))} />
+            <KpiCard label="Opened"       value={(kpis.data.opened ?? 0).toLocaleString()}        sub={pct(kpis.data.openRate)}    grad="kpi-grad-violet" icon={Eye}     onClick={() => window.dispatchEvent(new CustomEvent('marketing-tab', { detail: 'campaigns' }))} />
+            <KpiCard label="Clicked"      value={(kpis.data.clicked ?? 0).toLocaleString()}       sub={pct(kpis.data.clickRate)}   grad="kpi-grad-amber"  icon={MousePointer} onClick={() => window.dispatchEvent(new CustomEvent('marketing-tab', { detail: 'campaigns' }))} />
             <KpiCard label="Reviews Sent" value={(kpis.data.reviewsSent ?? 0).toLocaleString()}   grad="kpi-grad-cyan"   icon={Star} />
           </>
         ) : null}
@@ -404,40 +409,114 @@ function OverviewTab() {
         </div>
       )}
 
-      {/* Campaign stats table */}
+      {/* Campaign performance charts */}
       <div className="card">
         <div className="card-header">
           <div>
             <div className="card-title">Campaign Performance</div>
-            <div className="card-subtitle">All campaigns in the selected period</div>
+            <div className="card-subtitle">Engagement funnel per campaign — open & click rates</div>
           </div>
         </div>
         <div className="card-body-flush">
           {stats.isLoading ? <Spinner /> : !stats.data?.length ? (
             <Empty icon={BarChart3} message="No campaigns in this period" />
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--bd)' }}>
-                  {['Campaign', 'Channel', 'Status', 'Sent', 'Delivered', 'Opened', 'Clicked'].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {stats.data.map((c, i) => (
-                  <tr key={c.id} style={{ borderBottom: i < stats.data!.length - 1 ? '1px solid var(--bd)' : 'none' }}>
-                    <td style={{ padding: '10px 16px', fontWeight: 500, color: 'var(--t1)' }}>{c.name}</td>
-                    <td style={{ padding: '10px 16px' }}><ChannelBadge channel={c.channel} /></td>
-                    <td style={{ padding: '10px 16px' }}><StatusBadge status={c.status} /></td>
-                    <td style={{ padding: '10px 16px', color: 'var(--t2)' }}>{c.sent}</td>
-                    <td style={{ padding: '10px 16px', color: 'var(--t2)' }}>{c.delivered}</td>
-                    <td style={{ padding: '10px 16px', color: 'var(--t2)' }}>{c.opened}</td>
-                    <td style={{ padding: '10px 16px', color: 'var(--t2)' }}>{c.clicked}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {/* MK6: engagement bar chart */}
+              <div style={{ padding: '20px 20px 8px' }}>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart
+                    data={stats.data.map(c => ({
+                      name: c.name.length > 18 ? c.name.slice(0, 16) + '…' : c.name,
+                      Sent: c.sent,
+                      Delivered: c.delivered,
+                      Opened: c.opened,
+                      Clicked: c.clicked,
+                    }))}
+                    margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+                    barCategoryGap="30%"
+                    barGap={2}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--t3)' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: 'var(--t4)' }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: 'var(--t1)', fontWeight: 600, marginBottom: 4 }}
+                      itemStyle={{ color: 'var(--t2)' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 11, color: 'var(--t3)', paddingTop: 4 }} />
+                    <Bar dataKey="Sent"      fill="#6366f1" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="Delivered" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="Opened"    fill="#8b5cf6" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="Clicked"   fill="#10b981" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Column headers */}
+              <div style={{
+                display: 'grid', gridTemplateColumns: '2fr 90px 90px 60px 80px 80px 80px',
+                padding: '8px 20px', borderBottom: '1px solid var(--bd)', borderTop: '1px solid var(--bd)',
+                fontSize: 11, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.04em', gap: 8,
+              }}>
+                <span>Campaign</span>
+                <span>Channel</span>
+                <span>Status</span>
+                <span style={{ textAlign: 'right' }}>Sent</span>
+                <span>Open rate</span>
+                <span>Click rate</span>
+                <span style={{ textAlign: 'right' }} title="Estimated based on Twilio ($0.0079/SMS) and SendGrid ($0.001/email) standard rates">Est. Cost</span>
+              </div>
+              {stats.data.map((c, i) => {
+                const openRate = c.sent > 0 ? Math.round((c.opened / c.sent) * 100) : 0
+                const clickRate = c.sent > 0 ? Math.round((c.clicked / c.sent) * 100) : 0
+                const estCost = c.channel === 'SMS' ? c.sent * 0.0079 : c.sent * 0.001
+                return (
+                  <div key={c.id} style={{
+                    display: 'grid', gridTemplateColumns: '2fr 90px 90px 60px 80px 80px 80px',
+                    padding: '12px 20px', alignItems: 'center', gap: 8,
+                    borderBottom: i < stats.data!.length - 1 ? '1px solid var(--bd)' : 'none',
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 500, color: 'var(--t1)', fontSize: 13 }}>{c.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--t4)', marginTop: 2 }}>
+                        {c.delivered} delivered · {c.opened} opened · {c.clicked} clicked
+                      </div>
+                    </div>
+                    <div><ChannelBadge channel={c.channel} /></div>
+                    <div><StatusBadge status={c.status} /></div>
+                    <div style={{ textAlign: 'right', fontWeight: 600, color: 'var(--t2)', fontSize: 13 }}>{c.sent.toLocaleString()}</div>
+                    {/* Open rate bar */}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'var(--bg-hover)', overflow: 'hidden' }}>
+                          <div style={{ width: `${openRate}%`, height: '100%', background: 'var(--violet)', borderRadius: 3, transition: 'width 0.4s ease' }} />
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--violet)', minWidth: 28, textAlign: 'right' }}>{openRate}%</span>
+                      </div>
+                    </div>
+                    {/* Click rate bar */}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'var(--bg-hover)', overflow: 'hidden' }}>
+                          <div style={{ width: `${clickRate}%`, height: '100%', background: 'var(--blue)', borderRadius: 3, transition: 'width 0.4s ease' }} />
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--blue)', minWidth: 28, textAlign: 'right' }}>{clickRate}%</span>
+                      </div>
+                    </div>
+                    {/* Est. cost */}
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: estCost > 0 ? 'var(--t1)' : 'var(--t4)' }}>
+                        {estCost > 0 ? formatMoney(estCost) : '—'}
+                      </span>
+                      {estCost > 0 && (
+                        <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 1 }}>est.</div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
       </div>
@@ -458,33 +537,24 @@ function CampaignsTab() {
   const [form, setForm] = useState({ name: '', channel: 'EMAIL' as 'EMAIL' | 'SMS', audienceId: '', templateId: '', scheduleAt: '' })
   const [launchTarget, setLaunchTarget] = useState<{ id: string; name: string; channel: string } | null>(null)
 
-  const handleCreate = async () => {
+  const handleCreate = () => {
     if (!form.name.trim()) return
-    try {
-      await create.mutateAsync({
-        ...form,
-        audienceId: form.audienceId || undefined,
-        templateId: form.templateId || undefined,
-        scheduleAt: form.scheduleAt || undefined,
-      })
-      showSuccess(form.scheduleAt ? 'Campaign scheduled' : 'Campaign created')
-      setShowCreate(false)
-      setForm({ name: '', channel: 'EMAIL', audienceId: '', templateId: '', scheduleAt: '' })
-    } catch {
-      showError('Failed to create campaign')
-    }
+    const msg = form.scheduleAt ? 'Campaign scheduled' : 'Campaign created'
+    showSuccess(msg)
+    setShowCreate(false)
+    setForm({ name: '', channel: 'EMAIL', audienceId: '', templateId: '', scheduleAt: '' })
+    create.mutate(
+      { ...form, audienceId: form.audienceId || undefined, templateId: form.templateId || undefined, scheduleAt: form.scheduleAt || undefined },
+      { onError: () => showError('Failed to create campaign') },
+    )
   }
 
-  const handleLaunch = async () => {
+  const handleLaunch = () => {
     if (!launchTarget) return
-    try {
-      await launch.mutateAsync(launchTarget.id)
-      showSuccess(`Campaign "${launchTarget.name}" launched`)
-      setLaunchTarget(null)
-    } catch {
-      showError('Failed to launch campaign')
-      setLaunchTarget(null)
-    }
+    const name = launchTarget.name
+    showSuccess(`Campaign "${name}" launched`)
+    setLaunchTarget(null)
+    launch.mutate(launchTarget.id, { onError: () => showError('Failed to launch campaign') })
   }
 
   return (
@@ -1060,31 +1130,33 @@ function TemplatesTab() {
     setIsDirty(true)
   }
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.name.trim()) return showError('Name is required')
     if (form.channel === 'SMS' && !form.smsBody.trim()) return showError('SMS body is required')
-    try {
-      const htmlBody = form.channel === 'EMAIL' ? buildHtml(blocks, themeId) : undefined
-      const payload = {
-        name: form.name, channel: form.channel,
-        subject: form.channel === 'EMAIL' ? form.subject : undefined,
-        htmlBody,
-        smsBody: form.channel === 'SMS' ? form.smsBody : undefined,
-      }
-      if (isCreating) {
-        const created = await createTemplate.mutateAsync(payload)
-        showSuccess('Template created')
-        setIsCreating(false)
-        setSelectedId(created.id)
-        setIsDirty(false)
-        setLegacyHtml(null)
-      } else if (selectedId) {
-        await updateTemplate.mutateAsync({ id: selectedId, data: payload })
-        showSuccess('Changes saved')
-        setIsDirty(false)
-        setLegacyHtml(null)
-      }
-    } catch { showError('Failed to save template') }
+    const htmlBody = form.channel === 'EMAIL' ? buildHtml(blocks, themeId) : undefined
+    const payload = {
+      name: form.name, channel: form.channel,
+      subject: form.channel === 'EMAIL' ? form.subject : undefined,
+      htmlBody,
+      smsBody: form.channel === 'SMS' ? form.smsBody : undefined,
+    }
+    if (isCreating) {
+      showSuccess('Template created')
+      setIsCreating(false)
+      setIsDirty(false)
+      setLegacyHtml(null)
+      createTemplate.mutate(payload, {
+        onSuccess: (created) => setSelectedId(created.id),
+        onError: () => showError('Failed to save template'),
+      })
+    } else if (selectedId) {
+      showSuccess('Changes saved')
+      setIsDirty(false)
+      setLegacyHtml(null)
+      updateTemplate.mutate({ id: selectedId, data: payload }, {
+        onError: () => showError('Failed to save template'),
+      })
+    }
   }
 
   const handleSeed = async () => {
@@ -1094,15 +1166,13 @@ function TemplatesTab() {
     } catch { showError('Failed to seed templates') }
   }
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!deleteTarget) return
-    try {
-      await deleteTemplate.mutateAsync(deleteTarget.id)
-      showSuccess('Template deleted')
-      setDeleteTarget(null)
-      setSelectedId(null)
-      setIsCreating(false)
-    } catch { showError('Failed to delete template'); setDeleteTarget(null) }
+    showSuccess('Template deleted')
+    setDeleteTarget(null)
+    setSelectedId(null)
+    setIsCreating(false)
+    deleteTemplate.mutate(deleteTarget.id, { onError: () => showError('Failed to delete template') })
   }
 
   const currentTheme = EMAIL_THEMES.find(t => t.id === themeId) ?? EMAIL_THEMES[0]
@@ -1318,6 +1388,7 @@ function TemplatesTab() {
 // ── Audience filter types ─────────────────────────────────────────────────────
 type AudienceFilterField = 'state' | 'zipCode' | 'city' | 'lifecycleStage'
   | 'equipmentType' | 'equipmentBrand' | 'hasEquipment' | 'warrantyEndBefore' | 'warrantyEndAfter' | 'installDateBefore' | 'installDateAfter'
+  | 'hasTag' | 'hasAnyTag'
 type AudienceFilterOp = 'eq' | 'neq' | 'in' | 'contains' | 'has_any'
 
 interface AudienceFilterRow {
@@ -1342,10 +1413,14 @@ const FIELD_META: Record<AudienceFilterField, FieldMeta> = {
   warrantyEndAfter: { label: 'Warranty Ends After', ops: [{ value: 'eq', label: 'date' }], placeholder: '', isDate: true },
   installDateBefore:{ label: 'Installed Before', ops: [{ value: 'eq', label: 'date' }], placeholder: '', isDate: true },
   installDateAfter: { label: 'Installed After', ops: [{ value: 'eq', label: 'date' }], placeholder: '', isDate: true },
+  // ── Tag fields ───────────────────────────────────────────────────────────────
+  hasTag:           { label: 'Has Tag (exact)', ops: [{ value: 'eq', label: 'is' }], placeholder: 'e.g. VIP' },
+  hasAnyTag:        { label: 'Has Any Tag', ops: [{ value: 'in', label: 'is any of' }], placeholder: 'e.g. VIP, Priority' },
 }
 
 const FIELD_GROUPS = [
   { label: 'Customer', fields: ['state', 'zipCode', 'city', 'lifecycleStage'] as AudienceFilterField[] },
+  { label: 'Tags', fields: ['hasTag', 'hasAnyTag'] as AudienceFilterField[] },
   { label: 'Equipment', fields: ['hasEquipment', 'equipmentType', 'equipmentBrand', 'warrantyEndBefore', 'warrantyEndAfter', 'installDateBefore', 'installDateAfter'] as AudienceFilterField[] },
 ]
 
@@ -1475,30 +1550,24 @@ function AudiencesTab() {
 
   const filtersJson = useMemo(() => buildFiltersJson(filterRows), [filterRows])
 
-  const handleCreate = async () => {
+  const handleCreate = () => {
     if (!name.trim()) return
-    try {
-      await create.mutateAsync({ name: name.trim(), type, filtersJson })
-      showSuccess('Audience created')
-      setShowCreate(false)
-      setName('')
-      setType('DYNAMIC')
-      setFilterRows([])
-    } catch {
-      showError('Failed to create audience')
-    }
+    showSuccess('Audience created')
+    setShowCreate(false)
+    setName('')
+    setType('DYNAMIC')
+    setFilterRows([])
+    create.mutate(
+      { name: name.trim(), type, filtersJson },
+      { onError: () => showError('Failed to create audience') },
+    )
   }
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!deleteTarget) return
-    try {
-      await deleteAudience.mutateAsync(deleteTarget.id)
-      showSuccess('Audience deleted')
-      setDeleteTarget(null)
-    } catch {
-      showError('Failed to delete audience')
-      setDeleteTarget(null)
-    }
+    showSuccess('Audience deleted')
+    setDeleteTarget(null)
+    deleteAudience.mutate(deleteTarget.id, { onError: () => showError('Failed to delete audience') })
   }
 
   return (
@@ -1651,15 +1720,11 @@ function SettingsTab() {
     setDirty(true)
   }
 
-  const handleSave = async () => {
-    try {
-      await update.mutateAsync(form)
-      setDirty(false)
-      setForm({})
-      showSuccess('Marketing settings saved')
-    } catch {
-      showError('Failed to save settings')
-    }
+  const handleSave = () => {
+    showSuccess('Marketing settings saved')
+    setDirty(false)
+    setForm({})
+    update.mutate(form, { onError: () => showError('Failed to save settings') })
   }
 
   if (settingsQuery.isLoading) return <Spinner />
@@ -1918,10 +1983,17 @@ function ComplianceTab() {
 }
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
-type Tab = 'overview' | 'campaigns' | 'templates' | 'audiences' | 'settings' | 'compliance'
+type Tab = 'overview' | 'campaigns' | 'templates' | 'audiences' | 'settings' | 'compliance' | 'content'
 
 export default function Marketing() {
   const [tab, setTab] = useState<Tab>('overview')
+
+  // KPI cards inside OverviewTab dispatch this event to switch tabs
+  useEffect(() => {
+    const handler = (e: Event) => setTab((e as CustomEvent).detail as Tab)
+    window.addEventListener('marketing-tab', handler)
+    return () => window.removeEventListener('marketing-tab', handler)
+  }, [])
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: 'overview',    label: 'Overview',    icon: BarChart3 },
@@ -1930,6 +2002,7 @@ export default function Marketing() {
     { id: 'audiences',  label: 'Audiences',   icon: Users },
     { id: 'settings',   label: 'Settings',    icon: Settings },
     { id: 'compliance', label: 'Compliance',  icon: Shield },
+    { id: 'content',    label: 'Content',     icon: Newspaper },
   ]
 
   return (
@@ -1956,6 +2029,7 @@ export default function Marketing() {
         {tab === 'audiences'   && <AudiencesTab />}
         {tab === 'settings'    && <SettingsTab />}
         {tab === 'compliance'  && <ComplianceTab />}
+        {tab === 'content'     && <ContentTab />}
       </div>
     </div>
   )

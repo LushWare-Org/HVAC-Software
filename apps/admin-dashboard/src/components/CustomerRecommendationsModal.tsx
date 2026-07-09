@@ -7,6 +7,7 @@ import { useCustomerStatusSummary } from '../hooks/useCustomers'
 import { useExecuteFollowup, useExecuteRetention, useExecuteUpsell } from '../hooks/useCustomers'
 import { customerName } from '../types/api'
 import type { Customer, CustomerStatusSummary } from '../types/api'
+import { formatMoney } from '../lib/format'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -217,7 +218,7 @@ function RetentionSection({ summary, customerId }: { summary: CustomerStatusSumm
         <Detail label="Offer type"         value={ret.offer.type} />
         {ret.offer.discount > 0 && <Detail label="Discount" value={`${ret.offer.discount}%`} />}
         <Detail label="Churn probability"  value={pct(ret.churnProbability)} />
-        <Detail label="Predicted LTV"      value={`$${ret.ltv.toLocaleString()}`} />
+        <Detail label="Predicted LTV"      value={formatMoney(ret.ltv, { decimals: 0 })} />
         <Detail label="Score"              value={ret.score.toFixed(0)} />
         <Detail label="Recommended channel" value={CHANNEL_LABELS[ret.recommendedChannel] ?? ret.recommendedChannel} />
         {ret.triggerImmediately && (

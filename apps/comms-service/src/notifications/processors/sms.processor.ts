@@ -37,7 +37,7 @@ export class SmsProcessor extends WorkerHost {
       data: { status: DeliveryStatus.SENT, sentAt: new Date() },
     });
 
-    const result = await this.smsService.send(to, body);
+    const result = await this.smsService.send(to, body, companyId);
 
     if (result.success) {
       await this.prisma.notification.update({

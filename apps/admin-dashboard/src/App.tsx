@@ -17,11 +17,16 @@ import ChatWidget from './components/ChatWidget'
 // it ready before the login animation finishes.
 import Dashboard from './pages/Dashboard'
 import BanditDashboard from './pages/BanditDashboard'
+import { useCompanySettings } from './hooks/useCompanySettings'
 
 const Customers       = lazy(() => import('./pages/customers/Customers'))
 const Jobs            = lazy(() => import('./pages/jobs/Jobs'))
 const DispatchBoard   = lazy(() => import('./pages/dispatch/DispatchBoard'))
 const Finance         = lazy(() => import('./pages/finance/Finance'))
+const Agreements      = lazy(() => import('./pages/agreements/Agreements'))
+const DayPlanner      = lazy(() => import('./pages/planner/DayPlanner'))
+const Projects        = lazy(() => import('./pages/projects/ProjectsLayoutGate').then(m => ({ default: m.ProjectsPage })))
+const ProjectDetail   = lazy(() => import('./pages/projects/ProjectsLayoutGate').then(m => ({ default: m.ProjectDetailPage })))
 const Communications  = lazy(() => import('./pages/Communications'))
 const Marketing       = lazy(() => import('./pages/marketing/Marketing'))
 const Analytics       = lazy(() => import('./pages/Analytics'))
@@ -39,6 +44,9 @@ export const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   '/jobs':           () => import('./pages/jobs/Jobs'),
   '/dispatch':       () => import('./pages/dispatch/DispatchBoard'),
   '/finance':        () => import('./pages/finance/Finance'),
+  '/agreements':     () => import('./pages/agreements/Agreements'),
+  '/planner':        () => import('./pages/planner/DayPlanner'),
+  '/projects':       () => import('./pages/projects/Projects'),
   '/communications': () => import('./pages/Communications'),
   '/marketing':      () => import('./pages/marketing/Marketing'),
   '/analytics':      () => import('./pages/Analytics'),
@@ -108,6 +116,9 @@ function AuthenticatedApp() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
 
+  // Prime tenant currency/timezone for the format helpers (once per session).
+  useCompanySettings()
+
   // Warm the most-used route chunks once, when the browser is idle.
   useEffect(() => {
     warmLikelyRoutes()
@@ -152,6 +163,10 @@ function AuthenticatedApp() {
               <Route path="/jobs" element={<Jobs />} />
               {/* <Route path="/scheduling" element={<Scheduling />} /> */}
               <Route path="/dispatch" element={<DispatchBoard />} />
+              <Route path="/agreements" element={<Agreements />} />
+              <Route path="/planner" element={<DayPlanner />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:id" element={<ProjectDetail />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/communications" element={<Communications />} />
               <Route path="/marketing" element={<Marketing />} />
@@ -182,7 +197,19 @@ function AuthenticatedApp() {
 }
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: '100vh', background: 'var(--bg-app)',
+      }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--bd)', borderTopColor: 'var(--blue)', animation: 'spin 0.7s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) return <Login />
 

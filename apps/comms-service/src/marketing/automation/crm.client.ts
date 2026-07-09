@@ -10,6 +10,17 @@ export interface CrmEquipment {
   serialNo: string | null;
   installDate: string | null;   // ISO date string
   warrantyEnd: string | null;   // ISO date string
+  consumables?: CrmEquipmentConsumable[];
+}
+
+export interface CrmEquipmentConsumable {
+  id: string;
+  kind: string;                 // FILTER | UV_BULB | PAD | OTHER
+  partNumber: string | null;
+  sizeSpec: string | null;
+  rating: string | null;
+  intervalDays: number;
+  lastReplacedAt: string | null; // ISO date string
 }
 
 export interface CrmCustomer {

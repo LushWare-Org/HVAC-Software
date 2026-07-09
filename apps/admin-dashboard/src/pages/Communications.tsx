@@ -4,7 +4,7 @@ import {
     MessageSquare, Send, Bell, Plus, Search,
     Paperclip, Smile, Check, CheckCheck, AlertCircle, RefreshCw, Archive,
     Loader2, Megaphone, Info, CheckCircle2, AlertTriangle, XCircle, Wifi, WifiOff,
-    Trash2,
+    Trash2, Activity,
 } from 'lucide-react'
 import {
     useThreads,
@@ -371,8 +371,32 @@ export default function Communications() {
         )
     }
 
+    const activeThreads   = allThreads.filter(t => (t as any).status === 'ACTIVE').length
+    const resolvedThreads = allThreads.filter(t => (t as any).status === 'RESOLVED').length
+    const unreadThreads   = allThreads.filter(t => (t as any).unreadCount > 0).length
+
     return (
         <div className="anim-fade-up">
+            {/* ── KPI strip — CM1 ──────────────────────────────────────────────── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+                {[
+                    { label: 'Total Threads',   value: threadsQuery.isLoading ? '—' : allThreads.length,   icon: MessageSquare, grad: 'kpi-grad-blue',   onClick: () => setActiveTab('messages') },
+                    { label: 'Unread',          value: threadsQuery.isLoading ? '—' : unreadThreads,       icon: Bell,          grad: 'kpi-grad-amber',  onClick: () => setActiveTab('messages') },
+                    { label: 'Active',          value: threadsQuery.isLoading ? '—' : activeThreads,       icon: Activity,      grad: 'kpi-grad-green',  onClick: () => setActiveTab('messages') },
+                    { label: 'Resolved',        value: threadsQuery.isLoading ? '—' : resolvedThreads,     icon: CheckCircle2,  grad: 'kpi-grad-violet', onClick: () => setActiveTab('messages') },
+                ].map(k => (
+                    <div key={k.label} className="kpi-card" style={{ cursor: 'pointer' }} onClick={k.onClick}>
+                        <div className="kpi-card-top">
+                            <span className="kpi-label">{k.label}</span>
+                            <div className={`kpi-icon-box ${k.grad}`} style={{ color: 'white' }}>
+                                <k.icon size={16} />
+                            </div>
+                        </div>
+                        <div className="kpi-value">{k.value}</div>
+                    </div>
+                ))}
+            </div>
+
             {/* ── Tabs ─────────────────────────────────────────────────────────── */}
             <div className="page-tabs">
                 <button className={`tab-btn ${activeTab === 'messages' ? 'active' : ''}`} onClick={() => setActiveTab('messages')}>

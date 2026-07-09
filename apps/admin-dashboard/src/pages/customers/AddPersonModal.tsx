@@ -16,6 +16,7 @@ import React, { useState } from "react";
 import { X, Loader2, AlertCircle, CheckCircle2, Mail } from "lucide-react";
 import { useCreateCustomer, useCheckEmail, useProvisionLeadAccount } from "../../hooks/useCustomers";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 
 interface AddPersonModalProps {
     isOpen: boolean;
@@ -45,6 +46,7 @@ export default function AddPersonModal({
     const createCustomer    = useCreateCustomer();
     const checkEmail        = useCheckEmail();
     const provisionLead     = useProvisionLeadAccount();
+    const { showSuccess, showError } = useToast();
 
     const isLoading = type === 'lead'
         ? (checkEmail.isPending || provisionLead.isPending)
@@ -117,12 +119,14 @@ export default function AddPersonModal({
                     serviceInterest: formData.serviceInterest.trim() || undefined,
                 });
                 setSuccess(`Account created! Welcome email with login instructions sent to ${email}.`);
+                showSuccess(`Lead account created. Welcome email sent to ${email}.`, 'Lead created');
                 onCreated?.(result);
                 // Don't immediately close — show success banner for 1.5 s then close
                 setTimeout(resetAndClose, 1800);
             } catch (err: any) {
                 const msg = err?.response?.data?.message ?? 'Failed to create account. Please try again.';
                 setError(msg);
+                showError(msg, 'Creation failed');
             }
 
         } else {
@@ -143,11 +147,14 @@ export default function AddPersonModal({
                 },
                 {
                     onSuccess: (record) => {
+                        showSuccess(`${firstName} ${lastName} added as a customer.`, 'Customer created');
                         onCreated?.(record);
                         resetAndClose();
                     },
                     onError: (err: any) => {
-                        setError(err?.response?.data?.message ?? 'Failed to create customer. Please try again.');
+                        const msg = err?.response?.data?.message ?? 'Failed to create customer. Please try again.';
+                        setError(msg);
+                        showError(msg, 'Creation failed');
                     },
                 }
             );

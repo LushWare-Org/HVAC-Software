@@ -4,9 +4,10 @@ import { MessagingController, TwilioWebhookController } from './messaging.contro
 import { MessagingGateway } from './messaging.gateway';
 import { PrismaModule } from '../prisma/prisma.module';
 import { SmsModule } from '../sms/sms.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [PrismaModule, SmsModule],
+  imports: [PrismaModule, SmsModule, EmailModule],
   controllers: [MessagingController, TwilioWebhookController],
   providers: [MessagingService, MessagingGateway],
   exports: [MessagingService, MessagingGateway],

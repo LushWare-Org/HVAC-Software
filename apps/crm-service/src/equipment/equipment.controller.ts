@@ -6,7 +6,8 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { EquipmentService } from './equipment.service';
-import { IsString, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { ConsumablesService } from './consumables.service';
+import { IsString, IsOptional, IsArray, ValidateNested, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class CreateEquipmentDto {
@@ -35,16 +36,34 @@ class BulkEquipmentBody {
   equipment!: BulkEquipmentDto[];
 }
 
+class ConsumableBodyDto {
+  @IsOptional() @IsString() kind?: string;
+  @IsOptional() @IsString() partNumber?: string;
+  @IsOptional() @IsString() description?: string;
+  @IsOptional() @IsString() sizeSpec?: string;
+  @IsOptional() @IsString() rating?: string;
+  @IsOptional() @IsInt() @Min(1) @Max(3650) intervalDays?: number;
+  @IsOptional() @IsString() lastReplacedAt?: string;
+  @IsOptional() @IsString() purchaseUrl?: string;
+}
+
 @ApiTags('Customer Equipment')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('customers/:customerId/equipment')
 export class EquipmentController {
-  constructor(private readonly equipmentService: EquipmentService) {}
+  constructor(
+    private readonly equipmentService: EquipmentService,
+    private readonly consumablesService: ConsumablesService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List equipment for a customer' })
   findAll(@CurrentUser() user: AuthUser, @Param('customerId') customerId: string) {
+    // Customers may only view their own equipment
+    if (user.role === Role.CUSTOMER && user.customerId !== customerId) {
+      throw new ForbiddenException('You can only view your own equipment');
+    }
     return this.equipmentService.findByCustomer(user.companyId, customerId);
   }
 
@@ -108,5 +127,65 @@ export class EquipmentController {
       }
     }
     return this.equipmentService.remove(user.companyId, id);
+  }
+
+  // ── Consumables (filters etc.) ──────────────────────────────────────────────
+
+  @Get(':equipmentId/consumables')
+  @ApiOperation({ summary: 'List consumables (filters) for an equipment item' })
+  listConsumables(
+    @CurrentUser() user: AuthUser,
+    @Param('customerId') customerId: string,
+    @Param('equipmentId') equipmentId: string,
+  ) {
+    if (user.role === Role.CUSTOMER && user.customerId !== customerId) {
+      throw new ForbiddenException('You can only view your own equipment');
+    }
+    return this.consumablesService.listForEquipment(user.companyId, equipmentId);
+  }
+
+  @Post(':equipmentId/consumables')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Add a consumable to an equipment item (staff only)' })
+  createConsumable(
+    @CurrentUser() user: AuthUser,
+    @Param('equipmentId') equipmentId: string,
+    @Body() dto: ConsumableBodyDto,
+  ) {
+    return this.consumablesService.create(user.companyId, equipmentId, dto);
+  }
+
+  @Patch(':equipmentId/consumables/:id')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Update a consumable (staff only)' })
+  updateConsumable(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: ConsumableBodyDto,
+  ) {
+    return this.consumablesService.update(user.companyId, id, dto);
+  }
+
+  @Post(':equipmentId/consumables/:id/replaced')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Mark a consumable replaced today (customer-allowed)' })
+  markConsumableReplaced(
+    @CurrentUser() user: AuthUser,
+    @Param('customerId') customerId: string,
+    @Param('id') id: string,
+  ) {
+    if (user.role === Role.CUSTOMER && user.customerId !== customerId) {
+      throw new ForbiddenException('You can only manage your own equipment');
+    }
+    return this.consumablesService.markReplaced(user.companyId, id);
+  }
+
+  @Delete(':equipmentId/consumables/:id')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove a consumable (staff only)' })
+  removeConsumable(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.consumablesService.remove(user.companyId, id);
   }
 }

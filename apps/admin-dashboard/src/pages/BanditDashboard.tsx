@@ -19,6 +19,7 @@ import {
     useBanditRegret,
 } from '../hooks/useBanditDashboard'
 import type { BanditAgent } from '../types/api'
+import { formatMoney } from '../lib/format'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ function fmt(v?: number | null, decimals = 2) {
 }
 function fmtMoney(v?: number | null) {
     if (v == null) return '—'
-    return `$${Math.round(v).toLocaleString()}`
+    return formatMoney(v, { decimals: 0 })
 }
 function fmtPct(v?: number | null) {
     if (v == null) return '—'
@@ -461,7 +462,7 @@ export default function BanditDashboard() {
                                 <BarChart data={upliftTrendData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                                     <XAxis dataKey="date" tick={{ fill: 'var(--t4)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                    <YAxis tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+                                    <YAxis tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => formatMoney(v, { decimals: 0 })} />
                                     <Tooltip
                                         content={({ active, payload, label }) => {
                                             if (!active || !payload?.length) return null

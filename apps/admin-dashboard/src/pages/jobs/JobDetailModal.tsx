@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../contexts/ToastContext";
 import {
   X, Edit2, Save, Wrench, MapPin, User, Calendar,
   DollarSign, FileText, Clock, AlertCircle, Loader2, ArrowRight,
   Send, Receipt, Truck, Package, CheckSquare, ClipboardList,
   Plus, Trash2, MessageSquare, Phone, Mail, Home,
+  FolderKanban,
 } from "lucide-react";
 import {
-  useUpdateJobStatus, useJob, useWorkOrdersByJob,
+  useUpdateJobStatus, useUpdateJobFields, useJob, useWorkOrdersByJob,
   useCreateWorkOrder, useUpdateWorkOrderTask, useAddWorkOrderTask,
   useUpdateJobTags,
 } from "../../hooks/useJobs";
 import { useInvoices, useQuotes, useSendInvoice, useSendQuote, decimalToNumber } from "../../hooks/useFinance";
 import { useCustomer } from "../../hooks/useCustomers";
+import { useProjectName } from "../projects/projectsApi";
 import {
   useCustomerEquipment,
   useAddEquipmentItem,
@@ -25,6 +28,7 @@ import {
 } from "../../hooks/useInventory";
 import type { Job, EquipmentRecord } from "../../types/api";
 import JobActivityTab from "./JobActivityTab";
+import { formatMoney } from '../../lib/format'
 
 interface JobDetailModalProps {
   isOpen: boolean;
@@ -33,6 +37,7 @@ interface JobDetailModalProps {
   onCreateQuote?: (job: Job) => void;
   onCreateInvoice?: (job: Job) => void;
   onBack?: () => void;
+  backLabel?: string;
 }
 
 type TabType = "overview" | "checklist" | "equipment" | "inventory" | "details" | "notes" | "finance" | "activity" | "customer";
@@ -54,12 +59,12 @@ const PRIORITY_CSS: Record<string, string> = {
   LOW: "badge-neutral", NORMAL: "badge-neutral", HIGH: "badge-amber", URGENT: "badge-red", EMERGENCY: "badge-red",
 };
 
-const inputView = "w-full px-3 py-2.5 rounded-lg border bg-gray-100 border-transparent text-gray-600 text-sm font-medium";
+const inputView = "w-full px-3 py-2.5 rounded-lg border border-transparent text-sm font-medium bg-[var(--bg-hover)] text-[var(--t2)]";
 
 
 type EqDraft = Partial<EquipmentRecord> & { _tempId?: string };
 
-export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, onCreateInvoice, onBack }: JobDetailModalProps) {
+export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreateQuote, onCreateInvoice, onBack, backLabel }: JobDetailModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [error, setError] = useState("");
   const [notes, setNotes] = useState("");
@@ -74,13 +79,24 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskRequired, setNewTaskRequired] = useState(false);
 
+  // J4: Cancellation reason
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelReasonOther, setCancelReasonOther] = useState("");
+
+  // J5: Parts shortage
+  const [savingShortage, setSavingShortage] = useState(false);
+  const [hasShortage, setHasShortage] = useState<boolean>(propJob?.hasPartShortage ?? false);
+
   // Customer data for the Customer tab
-  const customerQuery = useCustomer(job?.customerId ?? "");
+  const customerQuery = useCustomer(propJob?.customerId ?? "");
   const customer = customerQuery.data;
 
   // Mutations
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   const updateStatus = useUpdateJobStatus();
+  const updateFields = useUpdateJobFields();
   const addEqItem = useAddEquipmentItem();
   const updateEqItem = useUpdateEquipmentItem();
   const deleteEqItem = useDeleteEquipmentItem();
@@ -92,30 +108,42 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
 
   const isBusy = updateStatus.isPending;
 
-  const jobDetailQuery = useJob(job?.id ?? "");
+  // useJob keeps a live, auto-refreshing copy of this job. After any mutation
+  // invalidates ['jobs'], this refetches and the modal re-renders with fresh data
+  // without the user needing to close and reopen.
+  const jobDetailQuery = useJob(propJob?.id ?? "");
   const jobDetail = jobDetailQuery.data;
+  // Prefer the server-fresh copy; fall back to the list-page prop for first render.
+  const job = (jobDetail ?? propJob)!;
   const statusHistory = jobDetail?.statusHistory ?? [];
 
   const invoicesQuery = useInvoices({ limit: 50 });
   const quotesQuery = useQuotes({ limit: 50 });
-  const jobInvoices = (invoicesQuery.data?.data ?? []).filter(inv => inv.jobId === job?.id);
-  const jobQuotes = (quotesQuery.data?.data ?? []).filter(q => q.jobId === job?.id);
+  const jobInvoices = (invoicesQuery.data?.data ?? []).filter(inv => inv.jobId === propJob?.id);
+  const jobQuotes = (quotesQuery.data?.data ?? []).filter(q => q.jobId === propJob?.id);
 
-  const equipmentQuery = useCustomerEquipment(job?.customerId);
-  const workOrdersQuery = useWorkOrdersByJob(job?.id);
+  const equipmentQuery = useCustomerEquipment(propJob?.customerId);
+  const workOrdersQuery = useWorkOrdersByJob(propJob?.id);
   const workOrder = workOrdersQuery.data?.[0];
 
+  // Sync optimistic shortage state only when a different job is opened — not on
+  // every background refetch (which would fight the optimistic toggle).
   useEffect(() => {
-    if (job) {
-      setNotes(job.description ?? "");
+    setHasShortage(propJob?.hasPartShortage ?? false)
+  }, [propJob?.id, propJob?.hasPartShortage])
+
+  // Reset UI state when a new job is opened.
+  useEffect(() => {
+    if (propJob) {
+      setNotes(propJob.description ?? "");
       setActiveTab("overview");
       setError("");
       setEditingEquipment(false);
       setShowAddTask(false);
     }
-  }, [job]);
+  }, [propJob]);
 
-  if (!isOpen || !job) return null;
+  if (!isOpen || !propJob) return null;
 
   const handleChatWithTech = () => {
     onClose()
@@ -124,9 +152,17 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
 
   const quickTransition = (newStatus: string) => {
     setError("");
+    const label = newStatus.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
     updateStatus.mutate(
       { id: job.id, status: newStatus },
-      { onError: (err: any) => setError(err?.response?.data?.message ?? "Status change failed.") },
+      {
+        onSuccess: () => showSuccess(`Status changed to ${label}.`),
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message ?? "Status change failed.";
+          setError(msg);
+          showError(msg, 'Status update failed');
+        },
+      },
     );
   };
 
@@ -174,6 +210,9 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
       }
 
       setEditingEquipment(false);
+      showSuccess('Equipment details saved.');
+    } catch (err: any) {
+      showError(err?.response?.data?.message ?? 'Failed to save equipment.', 'Save failed');
     } finally {
       setSavingEq(false);
     }
@@ -210,6 +249,47 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
           setNewTaskName("");
           setNewTaskRequired(false);
           setShowAddTask(false);
+        },
+      },
+    );
+  };
+
+  const handleCancelWithReason = () => {
+    const reason = cancelReason === "Other" ? cancelReasonOther.trim() : cancelReason;
+    if (!reason) return;
+    setError("");
+    // Close and toast immediately — don't make the user wait for the server.
+    setShowCancelModal(false);
+    setCancelReason("");
+    setCancelReasonOther("");
+    showSuccess("Job cancelled.");
+    updateStatus.mutate(
+      { id: job.id, status: "CANCELLED", cancellationReason: reason },
+      {
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message ?? "Cancel failed.";
+          setError(msg);
+          showError(msg, "Cancel failed");
+        },
+      },
+    );
+  };
+
+  const handleToggleShortage = () => {
+    if (savingShortage) return;
+    const next = !hasShortage;
+    setHasShortage(next);
+    // Toast fires immediately — the toggle is already visually flipped.
+    showSuccess(next ? "Parts shortage flagged." : "Parts shortage cleared.");
+    setSavingShortage(true);
+    updateFields.mutate(
+      { id: job.id, hasPartShortage: next, partShortageNote: job.partShortageNote ?? "" },
+      {
+        onSuccess: () => setSavingShortage(false),
+        onError: () => {
+          setHasShortage(!next);
+          setSavingShortage(false);
+          showError("Failed to update parts shortage.");
         },
       },
     );
@@ -257,7 +337,7 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                 onClick={() => { onClose(); onBack(); }}
                 className="flex items-center gap-1 text-blue-200 hover:text-white text-xs font-semibold mb-1 bg-transparent border-0 cursor-pointer p-0 transition-colors"
               >
-                ← Back
+                ← {backLabel ?? 'Back'}
               </button>
             )}
             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -266,12 +346,18 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
               {job.priority && (
                 <span className={`badge ${PRIORITY_CSS[job.priority] ?? "badge-neutral"} text-xs`} style={{ fontSize: 11 }}>{job.priority}</span>
               )}
+              {hasShortage && (
+                <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 5, background: 'rgba(245,158,11,0.25)', color: '#fbbf24', fontWeight: 800, letterSpacing: '0.03em', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  <Package size={9} /> PARTS SHORT
+                </span>
+              )}
             </div>
             <h2 className="text-lg font-bold leading-tight truncate">{job.title}</h2>
             <p className="text-blue-100 text-xs mt-0.5 truncate">
               {job.customerName ?? "No customer"}
               {job.assignedToName && ` · Tech: ${job.assignedToName}`}
             </p>
+            {job.projectId && <JobProjectChip projectId={job.projectId} />}
           </div>
           <div className="flex items-center gap-2 ml-3 shrink-0">
             <button onClick={onClose} className="text-blue-100 hover:text-white transition-colors p-1.5 hover:bg-blue-500 rounded-lg cursor-pointer bg-transparent border-0">
@@ -305,6 +391,56 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
             {error && (
               <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                 <AlertCircle size={14} /> {error}
+              </div>
+            )}
+
+            {/* ── Cancellation Reason Modal ───────────────────────────────── */}
+            {showCancelModal && (
+              <div className="fixed inset-0 z-[999999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowCancelModal(false)}>
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                      <AlertCircle size={18} className="text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-900">Cancel this job?</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">Select a reason — it's saved to the job record.</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2 mb-4">
+                    {["Customer request", "Parts unavailable", "Technician unavailable", "Scheduling conflict", "Weather / emergency", "Duplicate booking", "Other"].map(r => (
+                      <button
+                        key={r}
+                        onClick={() => setCancelReason(r)}
+                        className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium border transition-all cursor-pointer ${cancelReason === r ? "border-red-400 bg-red-50 text-red-700" : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"}`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                  {cancelReason === "Other" && (
+                    <input
+                      autoFocus
+                      className="w-full px-3 py-2 mb-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-red-400"
+                      placeholder="Describe the reason…"
+                      value={cancelReasonOther}
+                      onChange={e => setCancelReasonOther(e.target.value)}
+                    />
+                  )}
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => { setShowCancelModal(false); setCancelReason(""); setCancelReasonOther(""); }} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+                      Go back
+                    </button>
+                    <button
+                      onClick={handleCancelWithReason}
+                      disabled={!cancelReason || (cancelReason === "Other" && !cancelReasonOther.trim()) || updateStatus.isPending}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                    >
+                      {updateStatus.isPending ? <Loader2 size={13} className="animate-spin" /> : null}
+                      Confirm Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -351,6 +487,49 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                   </div>
                 </div>
 
+                {/* J4: Cancellation reason (shown only when cancelled) */}
+                {job.status === "CANCELLED" && (job as any).cancellationReason && (
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100">
+                    <AlertCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-red-600 uppercase tracking-wider mb-0.5">Cancellation Reason</p>
+                      <p className="text-sm text-red-700 font-medium">{(job as any).cancellationReason}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* J5: Parts shortage flag (shown for active/on-hold jobs) */}
+                {!["PAID", "CANCELLED"].includes(job.status) && (
+                  <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${hasShortage ? "bg-amber-50 border-amber-200" : "bg-gray-50 border-gray-200"}`}>
+                    <div className="flex items-center gap-3">
+                      <Package size={16} className={hasShortage ? "text-amber-600" : "text-gray-400"} />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Parts on backorder</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Flag if this job is stalled waiting for a part</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleToggleShortage}
+                      disabled={savingShortage}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer border-0 focus:outline-none disabled:opacity-60 ${hasShortage ? "bg-amber-500" : "bg-gray-300"}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${hasShortage ? "translate-x-[18px]" : "translate-x-[2px]"}`} />
+                    </button>
+                  </div>
+                )}
+                {hasShortage && !["PAID", "CANCELLED"].includes(job.status) && (
+                  <input
+                    className={`${inputView} !bg-amber-50 !border-amber-200`}
+                    placeholder="Which part? (PO#, supplier, etc.) — optional"
+                    defaultValue={(job as any).partShortageNote ?? ""}
+                    onBlur={e => {
+                      if (e.target.value !== ((job as any).partShortageNote ?? "")) {
+                        updateFields.mutate({ id: job.id, partShortageNote: e.target.value });
+                      }
+                    }}
+                  />
+                )}
+
               </div>
             )}
 
@@ -371,30 +550,31 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                 {customer && (
                   <>
                     {/* Customer header card */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5 flex items-start gap-4">
+                    <div className="rounded-xl p-5 flex items-start gap-4" style={{ background: 'var(--blue-glow)', border: '1px solid var(--bd)' }}>
                       <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
                         {customer.firstName?.[0] ?? "?"}{customer.lastName?.[0] ?? ""}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-base font-bold text-gray-900">
+                          <h3 className="text-base font-bold" style={{ color: 'var(--t1)' }}>
                             {customer.firstName} {customer.lastName}
                           </h3>
                           {customer.type && (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 uppercase">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase" style={{ background: 'var(--blue-glow)', color: 'var(--blue)', border: '1px solid var(--bd)' }}>
                               {customer.type}
                             </span>
                           )}
                         </div>
                         {(customer as any).companyName && (
-                          <p className="text-sm text-gray-500 mt-0.5">{(customer as any).companyName}</p>
+                          <p className="text-sm mt-0.5" style={{ color: 'var(--t3)' }}>{(customer as any).companyName}</p>
                         )}
                         <button
                           onClick={() => {
                             onClose();
                             window.dispatchEvent(new CustomEvent("open-customer-detail", { detail: { customer, returnToJob: job } }));
                           }}
-                          className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-transparent border-0 cursor-pointer underline p-0"
+                          className="mt-2 text-xs font-semibold bg-transparent border-0 cursor-pointer underline p-0"
+                          style={{ color: 'var(--blue)' }}
                         >
                           View Full Profile →
                         </button>
@@ -404,33 +584,33 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                     {/* Contact details */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                        <label className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1" style={{ color: 'var(--t4)' }}>
                           <Mail size={11} /> Email
                         </label>
                         <div className="flex items-center gap-2">
                           <input value={customer.email ?? "—"} disabled className={inputView} />
                           {customer.email && (
-                            <a href={`mailto:${customer.email}`} className="shrink-0 p-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors">
+                            <a href={`mailto:${customer.email}`} className="shrink-0 p-2 rounded-lg transition-colors" style={{ background: 'var(--blue-glow)', border: '1px solid var(--bd)', color: 'var(--blue)' }}>
                               <Mail size={14} />
                             </a>
                           )}
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                        <label className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1" style={{ color: 'var(--t4)' }}>
                           <Phone size={11} /> Phone
                         </label>
                         <div className="flex items-center gap-2">
                           <input value={customer.phone ?? "—"} disabled className={inputView} />
                           {customer.phone && (
-                            <a href={`tel:${customer.phone}`} className="shrink-0 p-2 rounded-lg bg-green-50 border border-green-200 text-green-600 hover:bg-green-100 transition-colors">
+                            <a href={`tel:${customer.phone}`} className="shrink-0 p-2 rounded-lg transition-colors" style={{ background: 'var(--green-dim)', border: '1px solid var(--bd)', color: 'var(--green)' }}>
                               <Phone size={14} />
                             </a>
                           )}
                         </div>
                       </div>
                       <div className="space-y-1.5 md:col-span-2">
-                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                        <label className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1" style={{ color: 'var(--t4)' }}>
                           <Home size={11} /> Address
                         </label>
                         <input
@@ -448,9 +628,9 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                         { label: "Last Service", value: customer.lastServiceDate ? new Date(customer.lastServiceDate).toLocaleDateString() : "—" },
                         { label: "Customer Since", value: customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : "—" },
                       ].map(stat => (
-                        <div key={stat.label} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                          <div className="text-lg font-bold text-gray-900">{stat.value}</div>
-                          <div className="text-[11px] text-gray-500 mt-0.5">{stat.label}</div>
+                        <div key={stat.label} className="rounded-lg p-3 text-center" style={{ background: 'var(--bg-hover)', border: '1px solid var(--bd)' }}>
+                          <div className="text-lg font-bold" style={{ color: 'var(--t1)' }}>{stat.value}</div>
+                          <div className="text-[11px] mt-0.5" style={{ color: 'var(--t4)' }}>{stat.label}</div>
                         </div>
                       ))}
                     </div>
@@ -458,10 +638,10 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                     {/* Notes */}
                     {customer.notes && (
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                        <label className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1" style={{ color: 'var(--t4)' }}>
                           <FileText size={11} /> Notes
                         </label>
-                        <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 text-sm text-gray-700">
+                        <div className="rounded-lg p-3 text-sm" style={{ background: 'var(--amber-dim)', border: '1px solid var(--bd)', color: 'var(--t2)' }}>
                           {customer.notes}
                         </div>
                       </div>
@@ -642,7 +822,7 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                               <span className="text-xs text-gray-400 ml-2">{item.category}</span>
                             </div>
                             <span className="font-semibold text-gray-700">
-                              {item.quantity} × ${Number(item.unitPrice).toFixed(2)} = ${Number(item.total).toFixed(2)}
+                              {item.quantity} × {formatMoney(item.unitPrice)} = {formatMoney(item.total)}
                             </span>
                           </div>
                         ))}
@@ -873,13 +1053,13 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
                       <DollarSign size={11} /> Estimated Amount
                     </label>
-                    <input value={job.estimatedAmount != null ? `$${Number(job.estimatedAmount).toLocaleString()}` : "—"} disabled className={inputView} />
+                    <input value={job.estimatedAmount != null ? formatMoney(job.estimatedAmount, { decimals: 0 }) : "—"} disabled className={inputView} />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
                       <DollarSign size={11} /> Final Amount
                     </label>
-                    <input value={job.finalAmount != null ? `$${Number(job.finalAmount).toLocaleString()}` : "—"} disabled className={inputView} />
+                    <input value={job.finalAmount != null ? formatMoney(job.finalAmount, { decimals: 0 }) : "—"} disabled className={inputView} />
                   </div>
                 </div>
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
@@ -1024,6 +1204,16 @@ export default function JobDetailModal({ isOpen, onClose, job, onCreateQuote, on
                 {action.label}
               </button>
             ))}
+            {/* J4: Cancel with reason — available when job is in a cancellable state */}
+            {["PENDING","SCHEDULED","EN_ROUTE","ON_SITE","COMPLETED","INVOICED","ON_HOLD"].includes(job.status) && (
+              <button
+                onClick={() => setShowCancelModal(true)}
+                disabled={isBusy}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-60"
+              >
+                <X size={14} /> Cancel Job
+              </button>
+            )}
           </div>
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
             Close
@@ -1314,5 +1504,26 @@ function InventoryTab({ job }: { job: Job }) {
         </div>
       )}
     </div>
+  )
+}
+
+
+// ── Project chip — shown when the job belongs to a project ────────────────────
+function JobProjectChip({ projectId }: { projectId: string }) {
+  const { data: name } = useProjectName(projectId)
+  const navigate = useNavigate()
+  return (
+    <button
+      onClick={() => navigate(`/projects/${projectId}`)}
+      title="Open project"
+      style={{
+        marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 5,
+        fontSize: 10.5, fontWeight: 700, padding: '2px 9px', borderRadius: 999,
+        background: 'rgba(255,255,255,0.16)', color: '#fff', border: '1px solid rgba(255,255,255,0.28)',
+        cursor: 'pointer',
+      }}
+    >
+      <FolderKanban size={10} /> {name ?? 'Project'}
+    </button>
   )
 }

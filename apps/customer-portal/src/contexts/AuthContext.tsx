@@ -2,6 +2,16 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import type { ReactNode } from 'react'
 import api from '../lib/api'
 
+// ─── JWT expiry check (no library needed) ────────────────────────────────────
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+    return typeof payload.exp === 'number' && payload.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
+}
+
 export interface PortalUser {
   id: string
   email: string
@@ -9,8 +19,8 @@ export interface PortalUser {
   role: string
   companyId: string
   phone?: string
-  customerId?: string        // links to CRM customers table
-  mustResetPassword?: boolean // true on first login when admin provisioned the account
+  customerId?: string
+  mustResetPassword?: boolean
 }
 
 interface AuthContextType {
@@ -43,14 +53,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const TOKEN_KEY = 'cp_token'
 const USER_KEY  = 'cp_user'
 
+// ─── Session restore — synchronous, runs before first render ─────────────────
+function initToken(): string | null {
+  const stored = localStorage.getItem(TOKEN_KEY)
+  if (!stored || isTokenExpired(stored)) {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(USER_KEY)
+    return null
+  }
+  return stored
+}
+
+function initUser(): PortalUser | null {
+  const token = localStorage.getItem(TOKEN_KEY)
+  if (!token) return null
+  try {
+    const saved = localStorage.getItem(USER_KEY)
+    return saved ? JSON.parse(saved) : null
+  } catch { return null }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<PortalUser | null>(() => {
-    try {
-      const saved = localStorage.getItem(USER_KEY)
-      return saved ? JSON.parse(saved) : null
-    } catch { return null }
-  })
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY))
+  const [token, setToken] = useState<string | null>(initToken)
+  const [user,  setUser]  = useState<PortalUser | null>(initUser)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -61,13 +86,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token])
 
-  const _setSession = (access_token: string, userData: PortalUser) => {
+  const logout = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(USER_KEY)
+    setToken(null)
+    setUser(null)
+    delete api.defaults.headers.common['Authorization']
+    window.location.href = '/login'
+  }, [])
+
+  // ── Global 401 listener ───────────────────────────────────────────────────
+  useEffect(() => {
+    const handle = () => logout()
+    window.addEventListener('auth:expired', handle)
+    return () => window.removeEventListener('auth:expired', handle)
+  }, [logout])
+
+  // ── Tab visibility check ──────────────────────────────────────────────────
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && token && isTokenExpired(token)) {
+        logout()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [token, logout])
+
+  const _setSession = useCallback((access_token: string, userData: PortalUser) => {
     localStorage.setItem(TOKEN_KEY, access_token)
     localStorage.setItem(USER_KEY, JSON.stringify(userData))
     setToken(access_token)
     setUser(userData)
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
-  }
+  }, [])
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true)
@@ -78,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [_setSession])
 
   const register = useCallback(async (data: RegisterData) => {
     setIsLoading(true)
@@ -89,15 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
-
-  const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
-    setToken(null)
-    setUser(null)
-    delete api.defaults.headers.common['Authorization']
-  }, [])
+  }, [_setSession])
 
   const updateLocalUser = useCallback((patch: Partial<PortalUser>) => {
     setUser(prev => {
@@ -108,7 +152,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  /** Called after successful force-reset so the gate clears immediately. */
   const clearMustResetPassword = useCallback(() => {
     updateLocalUser({ mustResetPassword: false })
   }, [updateLocalUser])

@@ -5,6 +5,9 @@ import { useMyInvoice } from '../../hooks/useCustomerPortal'
 import { useToast } from '../../contexts/ToastContext'
 import { downloadPdf, viewPdf } from '../../lib/pdf'
 import type { Invoice } from '../../types/api'
+import { formatMoney } from '../../lib/format'
+import { useCompany } from '../../contexts/CompanyContext'
+import { featureEnabled } from '../../lib/format'
 
 interface InvoiceDetailModalProps {
   invoice: Invoice
@@ -39,7 +42,7 @@ const fieldStyle: React.CSSProperties = {
 }
 
 function fmtMoney(value?: string | number) {
-  return `$${Number(value ?? 0).toLocaleString()}`
+  return formatMoney(value)
 }
 
 function fmtDate(iso?: string) {
@@ -68,7 +71,10 @@ export default function InvoiceDetailModal({ invoice: initialInvoice, onClose, o
 
   const status = STATUS_MAP[invoice.status] ?? { label: invoice.status, css: 'badge-neutral' }
   const outstanding = Number(invoice.total) - Number(invoice.amountPaid)
-  const canPay = ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
+  const { settings: companySettings } = useCompany()
+  const canPayOnline = featureEnabled(companySettings?.features, 'onlinePayments')
+  const isPayableStatus = ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
+  const canPay = canPayOnline && isPayableStatus
 
   const handleViewPdf = async () => {
     try {
@@ -327,6 +333,12 @@ export default function InvoiceDetailModal({ invoice: initialInvoice, onClose, o
           >
             <Download size={14} /> Download PDF
           </button>
+          {!canPayOnline && isPayableStatus && (
+            <p style={{ margin: 0, fontSize: 12.5, color: 'var(--t3, #64748b)', maxWidth: 340, lineHeight: 1.55 }}>
+              Online payment isn't available. Please pay by bank transfer or contact us — your
+              invoice reference is #{invoice.invoiceNumber}.
+            </p>
+          )}
           {canPay && onPay && (
             <button
               style={{

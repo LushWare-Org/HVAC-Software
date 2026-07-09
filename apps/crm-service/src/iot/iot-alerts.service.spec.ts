@@ -129,15 +129,14 @@ describe('IotAlertsService', () => {
   })
 
   describe('upsertIotFlag dedup (Feature 1 trigger)', () => {
-    it('returns true the first time, false when tag already present', async () => {
+    // Dedup is now in-memory per service instance (no customer-tag pollution):
+    // the same instance must return true once, then false for the same flag.
+    it('returns true the first time, false when the flag is already active', () => {
       const prisma = buildPrismaMock({ customerTags: [] })
       const svc = new IotAlertsService(prisma, jobs)
-      const first = await (svc as any).upsertIotFlag('co-1', 'cust-1', 'dev-row-1', 'EMERGENCY_HEAT', 'note')
+      const first = (svc as any).upsertIotFlag('co-1', 'cust-1', 'dev-row-1', 'EMERGENCY_HEAT', 'note')
       expect(first).toBe(true)
-
-      const prisma2 = buildPrismaMock({ customerTags: ['iot:emergency_heat:dev-row-1'] })
-      const svc2 = new IotAlertsService(prisma2, jobs)
-      const second = await (svc2 as any).upsertIotFlag('co-1', 'cust-1', 'dev-row-1', 'EMERGENCY_HEAT', 'note')
+      const second = (svc as any).upsertIotFlag('co-1', 'cust-1', 'dev-row-1', 'EMERGENCY_HEAT', 'note')
       expect(second).toBe(false)
     })
   })
@@ -155,17 +154,15 @@ describe('IotAlertsService', () => {
       expect(createJobSpy.mock.calls[0][0].tags).toContain('iot:emergency_heat')
     })
 
-    it('does NOT create a duplicate job when emergency_heat tag already exists', async () => {
+    it('does NOT create a duplicate job on a second cron tick for the same alert', async () => {
       const device = makeDevice({ lastSnapshot: makeSnap({ emergencyHeat: true }) })
-      const prisma = buildPrismaMock({
-        devices: [device],
-        customerTags: [`iot:emergency_heat:${device.id}`],
-      })
+      const prisma = buildPrismaMock({ devices: [device], customerTags: [] })
       const svc = new IotAlertsService(prisma, jobs)
 
       await svc.checkAlerts()
+      await svc.checkAlerts()
 
-      expect(createJobSpy).not.toHaveBeenCalled()
+      expect(createJobSpy).toHaveBeenCalledTimes(1)
     })
 
     it('creates a HIGH-priority job on first detection of UNDERPERFORMING', async () => {

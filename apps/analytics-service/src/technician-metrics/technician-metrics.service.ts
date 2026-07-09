@@ -16,10 +16,11 @@ export interface TechnicianLeaderboardEntry {
   technicianId: string;
   technicianName: string;
   jobsCompleted: number;
-  revenue: number;
+  totalRevenue: number;
   avgRating: number;
   avgJobDurationMins: number;
-  onTimeRate: number;          // % of jobs started within 15 min of scheduledStart
+  onTimeRate: number;
+  completionRate: number;      // completed / total assigned
   performanceScore: number;    // composite 0–100
 }
 
@@ -54,6 +55,7 @@ export class TechnicianMetricsService {
         technicianId: string;
         technicianName: string;
         jobs: bigint;
+        totalAssigned: bigint;
         revenue: string;
         avgRating: string | null;
         avgDuration: string | null;
@@ -64,9 +66,21 @@ export class TechnicianMetricsService {
       Prisma.sql`
         SELECT
           j."assignedToId"                                                    AS "technicianId",
-          j."assignedToName"                                                  AS "technicianName",
+          MAX(j."assignedToName")                                             AS "technicianName",
           COUNT(j.id)::BIGINT                                                 AS jobs,
-          COALESCE(SUM(p.amount), 0)::TEXT                                    AS revenue,
+          -- total jobs ever assigned (for completion rate)
+          (
+            SELECT COUNT(*)::BIGINT FROM jobs.jobs a
+            WHERE a."assignedToId" = j."assignedToId"
+              AND a."companyId" = ${companyId}
+              AND COALESCE(a."completedAt", a."updatedAt") BETWEEN ${from} AND ${to}
+          )                                                                   AS "totalAssigned",
+          -- revenue: actual payments → invoice total → estimated value (fallback chain)
+          GREATEST(
+            COALESCE(SUM(p.amount), 0),
+            COALESCE(SUM(i.total),  0),
+            COALESCE(SUM(j."estimatedValue"), 0)
+          )::TEXT                                                             AS revenue,
           ROUND(AVG(r.rating)::NUMERIC, 1)::TEXT                             AS "avgRating",
           ROUND(AVG(
             EXTRACT(EPOCH FROM (j."actualEnd" - j."actualStart")) / 60.0
@@ -81,14 +95,18 @@ export class TechnicianMetricsService {
           )::BIGINT                                                            AS "totalWithSchedule"
         FROM   jobs.jobs j
         LEFT   JOIN finance."Invoice" i   ON i."jobId" = j.id
-        LEFT   JOIN finance."Payment"  p  ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
-        LEFT   JOIN crm.reviews       r  ON r."jobId" = j.id
+        LEFT   JOIN finance."Payment" p   ON p."invoiceId" = i.id AND p.status = 'SUCCEEDED'
+        LEFT   JOIN crm.reviews       r   ON r."jobId" = j.id
         WHERE  j."companyId" = ${companyId}
           AND  j."assignedToId" IS NOT NULL
           AND  j.status IN ('COMPLETED', 'INVOICED', 'PAID')
-          AND  j."completedAt" BETWEEN ${from} AND ${to}
-        GROUP  BY j."assignedToId", j."assignedToName"
-        ORDER  BY SUM(COALESCE(p.amount, 0)) DESC
+          AND  COALESCE(j."completedAt", j."updatedAt") BETWEEN ${from} AND ${to}
+        GROUP  BY j."assignedToId"
+        ORDER  BY GREATEST(
+          COALESCE(SUM(p.amount), 0),
+          COALESCE(SUM(i.total),  0),
+          COALESCE(SUM(j."estimatedValue"), 0)
+        ) DESC
         LIMIT  ${limit}
       `,
     );
@@ -98,13 +116,15 @@ export class TechnicianMetricsService {
         Number(r.totalWithSchedule) > 0
           ? Math.round((Number(r.onTimeCount) / Number(r.totalWithSchedule)) * 100)
           : 0;
+      const completionRate =
+        Number(r.totalAssigned) > 0
+          ? Math.round((Number(r.jobs) / Number(r.totalAssigned)) * 100) / 100
+          : 1;
       const avgRating = parseFloat(r.avgRating ?? '0');
-      const revenue = parseFloat(r.revenue);
+      const totalRevenue = parseFloat(r.revenue);
       const jobs = Number(r.jobs);
 
-      // Composite score: 40% revenue/job, 30% rating, 30% on-time
-      // Normalised to 0-100 (simple heuristic)
-      const revenueScore = Math.min(revenue / 1000, 40);
+      const revenueScore = Math.min(totalRevenue / 1000, 40);
       const ratingScore = avgRating > 0 ? (avgRating / 5) * 30 : 0;
       const onTimeScore = (onTimeRate / 100) * 30;
       const performanceScore = Math.round(revenueScore + ratingScore + onTimeScore);
@@ -113,10 +133,11 @@ export class TechnicianMetricsService {
         technicianId: r.technicianId,
         technicianName: r.technicianName,
         jobsCompleted: jobs,
-        revenue,
+        totalRevenue,
         avgRating,
         avgJobDurationMins: parseFloat(r.avgDuration ?? '0'),
         onTimeRate,
+        completionRate,
         performanceScore,
       };
     });

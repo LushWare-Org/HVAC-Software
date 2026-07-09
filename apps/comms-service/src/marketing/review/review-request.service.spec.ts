@@ -89,7 +89,7 @@ describe('ReviewRequestService', () => {
 
     expect(result.smsSent).toBe(true);
     expect(result.emailQueued).toBe(true);
-    expect(sms.send).toHaveBeenCalledWith('+15551234567', expect.stringContaining('Alice'));
+    expect(sms.send).toHaveBeenCalledWith('+15551234567', expect.stringContaining('Alice'), expect.any(String));
     expect(queue.add).toHaveBeenCalledWith('review-email', expect.objectContaining({ reviewRequestId: 'rr-2' }), expect.any(Object));
   });
 

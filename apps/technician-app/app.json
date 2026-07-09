@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "T&S Technician",
+    "name": "HomePulse Field",
     "slug": "ts-technician",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -48,14 +48,14 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow T&S Technician to use your location for route tracking and job dispatch.",
+          "locationAlwaysAndWhenInUsePermission": "Allow HomePulse Field to use your location for route tracking and job dispatch.",
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow T&S Technician to take photos for job documentation."
+          "cameraPermission": "Allow HomePulse Field to take photos for job documentation."
         }
       ],
       [

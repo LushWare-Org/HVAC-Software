@@ -215,3 +215,24 @@ type GPSUpdatePayload struct {
 	BatteryPct   *int16    `json:"batteryPct,omitempty"`
 	CapturedAt   time.Time `json:"capturedAt"`
 }
+
+// ── Projects roster enforcement ──────────────────────────────────────────────
+
+// RosterInfo identifies the project reserving a technician on a date.
+type RosterInfo struct {
+	ProjectID   string `json:"projectId"`
+	ProjectName string `json:"projectName"`
+}
+
+// TechOnProjectError — returned when a manual assignment targets a technician
+// who is rostered on a project that day. Handlers map it to HTTP 409 with
+// code TECH_ON_PROJECT so clients can render the guided unblock message.
+type TechOnProjectError struct {
+	ProjectID   string `json:"projectId"`
+	ProjectName string `json:"projectName"`
+	Date        string `json:"date"`
+}
+
+func (e *TechOnProjectError) Error() string {
+	return "technician is rostered on project " + e.ProjectName + " on " + e.Date
+}

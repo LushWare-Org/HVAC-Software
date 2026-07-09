@@ -39,6 +39,11 @@ export type NotificationTemplate = $Result.DefaultSelection<Prisma.$Notification
  */
 export type AutomationRule = $Result.DefaultSelection<Prisma.$AutomationRulePayload>
 /**
+ * Model WebPushSubscription
+ * 
+ */
+export type WebPushSubscription = $Result.DefaultSelection<Prisma.$WebPushSubscriptionPayload>
+/**
  * Model DeliveryLog
  * 
  */
@@ -309,6 +314,16 @@ export class PrismaClient<
     * ```
     */
   get automationRule(): Prisma.AutomationRuleDelegate<ExtArgs>;
+
+  /**
+   * `prisma.webPushSubscription`: Exposes CRUD operations for the **WebPushSubscription** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more WebPushSubscriptions
+    * const webPushSubscriptions = await prisma.webPushSubscription.findMany()
+    * ```
+    */
+  get webPushSubscription(): Prisma.WebPushSubscriptionDelegate<ExtArgs>;
 
   /**
    * `prisma.deliveryLog`: Exposes CRUD operations for the **DeliveryLog** model.
@@ -765,6 +780,7 @@ export namespace Prisma {
     Message: 'Message',
     NotificationTemplate: 'NotificationTemplate',
     AutomationRule: 'AutomationRule',
+    WebPushSubscription: 'WebPushSubscription',
     DeliveryLog: 'DeliveryLog'
   };
 
@@ -781,7 +797,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "notification" | "messageThread" | "message" | "notificationTemplate" | "automationRule" | "deliveryLog"
+      modelProps: "notification" | "messageThread" | "message" | "notificationTemplate" | "automationRule" | "webPushSubscription" | "deliveryLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1132,6 +1148,76 @@ export namespace Prisma {
           count: {
             args: Prisma.AutomationRuleCountArgs<ExtArgs>
             result: $Utils.Optional<AutomationRuleCountAggregateOutputType> | number
+          }
+        }
+      }
+      WebPushSubscription: {
+        payload: Prisma.$WebPushSubscriptionPayload<ExtArgs>
+        fields: Prisma.WebPushSubscriptionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.WebPushSubscriptionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.WebPushSubscriptionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload>
+          }
+          findFirst: {
+            args: Prisma.WebPushSubscriptionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.WebPushSubscriptionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload>
+          }
+          findMany: {
+            args: Prisma.WebPushSubscriptionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload>[]
+          }
+          create: {
+            args: Prisma.WebPushSubscriptionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload>
+          }
+          createMany: {
+            args: Prisma.WebPushSubscriptionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.WebPushSubscriptionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload>[]
+          }
+          delete: {
+            args: Prisma.WebPushSubscriptionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload>
+          }
+          update: {
+            args: Prisma.WebPushSubscriptionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload>
+          }
+          deleteMany: {
+            args: Prisma.WebPushSubscriptionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.WebPushSubscriptionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.WebPushSubscriptionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebPushSubscriptionPayload>
+          }
+          aggregate: {
+            args: Prisma.WebPushSubscriptionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateWebPushSubscription>
+          }
+          groupBy: {
+            args: Prisma.WebPushSubscriptionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<WebPushSubscriptionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.WebPushSubscriptionCountArgs<ExtArgs>
+            result: $Utils.Optional<WebPushSubscriptionCountAggregateOutputType> | number
           }
         }
       }
@@ -6600,6 +6686,932 @@ export namespace Prisma {
 
 
   /**
+   * Model WebPushSubscription
+   */
+
+  export type AggregateWebPushSubscription = {
+    _count: WebPushSubscriptionCountAggregateOutputType | null
+    _min: WebPushSubscriptionMinAggregateOutputType | null
+    _max: WebPushSubscriptionMaxAggregateOutputType | null
+  }
+
+  export type WebPushSubscriptionMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    userId: string | null
+    endpoint: string | null
+    p256dh: string | null
+    auth: string | null
+    userAgent: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WebPushSubscriptionMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    userId: string | null
+    endpoint: string | null
+    p256dh: string | null
+    auth: string | null
+    userAgent: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WebPushSubscriptionCountAggregateOutputType = {
+    id: number
+    companyId: number
+    userId: number
+    endpoint: number
+    p256dh: number
+    auth: number
+    userAgent: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type WebPushSubscriptionMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    userId?: true
+    endpoint?: true
+    p256dh?: true
+    auth?: true
+    userAgent?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WebPushSubscriptionMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    userId?: true
+    endpoint?: true
+    p256dh?: true
+    auth?: true
+    userAgent?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WebPushSubscriptionCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    userId?: true
+    endpoint?: true
+    p256dh?: true
+    auth?: true
+    userAgent?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type WebPushSubscriptionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WebPushSubscription to aggregate.
+     */
+    where?: WebPushSubscriptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WebPushSubscriptions to fetch.
+     */
+    orderBy?: WebPushSubscriptionOrderByWithRelationInput | WebPushSubscriptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: WebPushSubscriptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WebPushSubscriptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WebPushSubscriptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned WebPushSubscriptions
+    **/
+    _count?: true | WebPushSubscriptionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: WebPushSubscriptionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: WebPushSubscriptionMaxAggregateInputType
+  }
+
+  export type GetWebPushSubscriptionAggregateType<T extends WebPushSubscriptionAggregateArgs> = {
+        [P in keyof T & keyof AggregateWebPushSubscription]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateWebPushSubscription[P]>
+      : GetScalarType<T[P], AggregateWebPushSubscription[P]>
+  }
+
+
+
+
+  export type WebPushSubscriptionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WebPushSubscriptionWhereInput
+    orderBy?: WebPushSubscriptionOrderByWithAggregationInput | WebPushSubscriptionOrderByWithAggregationInput[]
+    by: WebPushSubscriptionScalarFieldEnum[] | WebPushSubscriptionScalarFieldEnum
+    having?: WebPushSubscriptionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: WebPushSubscriptionCountAggregateInputType | true
+    _min?: WebPushSubscriptionMinAggregateInputType
+    _max?: WebPushSubscriptionMaxAggregateInputType
+  }
+
+  export type WebPushSubscriptionGroupByOutputType = {
+    id: string
+    companyId: string
+    userId: string
+    endpoint: string
+    p256dh: string
+    auth: string
+    userAgent: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: WebPushSubscriptionCountAggregateOutputType | null
+    _min: WebPushSubscriptionMinAggregateOutputType | null
+    _max: WebPushSubscriptionMaxAggregateOutputType | null
+  }
+
+  type GetWebPushSubscriptionGroupByPayload<T extends WebPushSubscriptionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<WebPushSubscriptionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof WebPushSubscriptionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], WebPushSubscriptionGroupByOutputType[P]>
+            : GetScalarType<T[P], WebPushSubscriptionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type WebPushSubscriptionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    userId?: boolean
+    endpoint?: boolean
+    p256dh?: boolean
+    auth?: boolean
+    userAgent?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["webPushSubscription"]>
+
+  export type WebPushSubscriptionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    userId?: boolean
+    endpoint?: boolean
+    p256dh?: boolean
+    auth?: boolean
+    userAgent?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["webPushSubscription"]>
+
+  export type WebPushSubscriptionSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    userId?: boolean
+    endpoint?: boolean
+    p256dh?: boolean
+    auth?: boolean
+    userAgent?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $WebPushSubscriptionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "WebPushSubscription"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      userId: string
+      endpoint: string
+      p256dh: string
+      auth: string
+      userAgent: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["webPushSubscription"]>
+    composites: {}
+  }
+
+  type WebPushSubscriptionGetPayload<S extends boolean | null | undefined | WebPushSubscriptionDefaultArgs> = $Result.GetResult<Prisma.$WebPushSubscriptionPayload, S>
+
+  type WebPushSubscriptionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<WebPushSubscriptionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: WebPushSubscriptionCountAggregateInputType | true
+    }
+
+  export interface WebPushSubscriptionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['WebPushSubscription'], meta: { name: 'WebPushSubscription' } }
+    /**
+     * Find zero or one WebPushSubscription that matches the filter.
+     * @param {WebPushSubscriptionFindUniqueArgs} args - Arguments to find a WebPushSubscription
+     * @example
+     * // Get one WebPushSubscription
+     * const webPushSubscription = await prisma.webPushSubscription.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends WebPushSubscriptionFindUniqueArgs>(args: SelectSubset<T, WebPushSubscriptionFindUniqueArgs<ExtArgs>>): Prisma__WebPushSubscriptionClient<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one WebPushSubscription that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {WebPushSubscriptionFindUniqueOrThrowArgs} args - Arguments to find a WebPushSubscription
+     * @example
+     * // Get one WebPushSubscription
+     * const webPushSubscription = await prisma.webPushSubscription.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends WebPushSubscriptionFindUniqueOrThrowArgs>(args: SelectSubset<T, WebPushSubscriptionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__WebPushSubscriptionClient<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first WebPushSubscription that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebPushSubscriptionFindFirstArgs} args - Arguments to find a WebPushSubscription
+     * @example
+     * // Get one WebPushSubscription
+     * const webPushSubscription = await prisma.webPushSubscription.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends WebPushSubscriptionFindFirstArgs>(args?: SelectSubset<T, WebPushSubscriptionFindFirstArgs<ExtArgs>>): Prisma__WebPushSubscriptionClient<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first WebPushSubscription that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebPushSubscriptionFindFirstOrThrowArgs} args - Arguments to find a WebPushSubscription
+     * @example
+     * // Get one WebPushSubscription
+     * const webPushSubscription = await prisma.webPushSubscription.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends WebPushSubscriptionFindFirstOrThrowArgs>(args?: SelectSubset<T, WebPushSubscriptionFindFirstOrThrowArgs<ExtArgs>>): Prisma__WebPushSubscriptionClient<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more WebPushSubscriptions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebPushSubscriptionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all WebPushSubscriptions
+     * const webPushSubscriptions = await prisma.webPushSubscription.findMany()
+     * 
+     * // Get first 10 WebPushSubscriptions
+     * const webPushSubscriptions = await prisma.webPushSubscription.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const webPushSubscriptionWithIdOnly = await prisma.webPushSubscription.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends WebPushSubscriptionFindManyArgs>(args?: SelectSubset<T, WebPushSubscriptionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a WebPushSubscription.
+     * @param {WebPushSubscriptionCreateArgs} args - Arguments to create a WebPushSubscription.
+     * @example
+     * // Create one WebPushSubscription
+     * const WebPushSubscription = await prisma.webPushSubscription.create({
+     *   data: {
+     *     // ... data to create a WebPushSubscription
+     *   }
+     * })
+     * 
+     */
+    create<T extends WebPushSubscriptionCreateArgs>(args: SelectSubset<T, WebPushSubscriptionCreateArgs<ExtArgs>>): Prisma__WebPushSubscriptionClient<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many WebPushSubscriptions.
+     * @param {WebPushSubscriptionCreateManyArgs} args - Arguments to create many WebPushSubscriptions.
+     * @example
+     * // Create many WebPushSubscriptions
+     * const webPushSubscription = await prisma.webPushSubscription.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends WebPushSubscriptionCreateManyArgs>(args?: SelectSubset<T, WebPushSubscriptionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many WebPushSubscriptions and returns the data saved in the database.
+     * @param {WebPushSubscriptionCreateManyAndReturnArgs} args - Arguments to create many WebPushSubscriptions.
+     * @example
+     * // Create many WebPushSubscriptions
+     * const webPushSubscription = await prisma.webPushSubscription.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many WebPushSubscriptions and only return the `id`
+     * const webPushSubscriptionWithIdOnly = await prisma.webPushSubscription.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends WebPushSubscriptionCreateManyAndReturnArgs>(args?: SelectSubset<T, WebPushSubscriptionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a WebPushSubscription.
+     * @param {WebPushSubscriptionDeleteArgs} args - Arguments to delete one WebPushSubscription.
+     * @example
+     * // Delete one WebPushSubscription
+     * const WebPushSubscription = await prisma.webPushSubscription.delete({
+     *   where: {
+     *     // ... filter to delete one WebPushSubscription
+     *   }
+     * })
+     * 
+     */
+    delete<T extends WebPushSubscriptionDeleteArgs>(args: SelectSubset<T, WebPushSubscriptionDeleteArgs<ExtArgs>>): Prisma__WebPushSubscriptionClient<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one WebPushSubscription.
+     * @param {WebPushSubscriptionUpdateArgs} args - Arguments to update one WebPushSubscription.
+     * @example
+     * // Update one WebPushSubscription
+     * const webPushSubscription = await prisma.webPushSubscription.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends WebPushSubscriptionUpdateArgs>(args: SelectSubset<T, WebPushSubscriptionUpdateArgs<ExtArgs>>): Prisma__WebPushSubscriptionClient<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more WebPushSubscriptions.
+     * @param {WebPushSubscriptionDeleteManyArgs} args - Arguments to filter WebPushSubscriptions to delete.
+     * @example
+     * // Delete a few WebPushSubscriptions
+     * const { count } = await prisma.webPushSubscription.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends WebPushSubscriptionDeleteManyArgs>(args?: SelectSubset<T, WebPushSubscriptionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WebPushSubscriptions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebPushSubscriptionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many WebPushSubscriptions
+     * const webPushSubscription = await prisma.webPushSubscription.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends WebPushSubscriptionUpdateManyArgs>(args: SelectSubset<T, WebPushSubscriptionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one WebPushSubscription.
+     * @param {WebPushSubscriptionUpsertArgs} args - Arguments to update or create a WebPushSubscription.
+     * @example
+     * // Update or create a WebPushSubscription
+     * const webPushSubscription = await prisma.webPushSubscription.upsert({
+     *   create: {
+     *     // ... data to create a WebPushSubscription
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the WebPushSubscription we want to update
+     *   }
+     * })
+     */
+    upsert<T extends WebPushSubscriptionUpsertArgs>(args: SelectSubset<T, WebPushSubscriptionUpsertArgs<ExtArgs>>): Prisma__WebPushSubscriptionClient<$Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of WebPushSubscriptions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebPushSubscriptionCountArgs} args - Arguments to filter WebPushSubscriptions to count.
+     * @example
+     * // Count the number of WebPushSubscriptions
+     * const count = await prisma.webPushSubscription.count({
+     *   where: {
+     *     // ... the filter for the WebPushSubscriptions we want to count
+     *   }
+     * })
+    **/
+    count<T extends WebPushSubscriptionCountArgs>(
+      args?: Subset<T, WebPushSubscriptionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], WebPushSubscriptionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a WebPushSubscription.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebPushSubscriptionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends WebPushSubscriptionAggregateArgs>(args: Subset<T, WebPushSubscriptionAggregateArgs>): Prisma.PrismaPromise<GetWebPushSubscriptionAggregateType<T>>
+
+    /**
+     * Group by WebPushSubscription.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebPushSubscriptionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends WebPushSubscriptionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: WebPushSubscriptionGroupByArgs['orderBy'] }
+        : { orderBy?: WebPushSubscriptionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, WebPushSubscriptionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetWebPushSubscriptionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the WebPushSubscription model
+   */
+  readonly fields: WebPushSubscriptionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for WebPushSubscription.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__WebPushSubscriptionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the WebPushSubscription model
+   */ 
+  interface WebPushSubscriptionFieldRefs {
+    readonly id: FieldRef<"WebPushSubscription", 'String'>
+    readonly companyId: FieldRef<"WebPushSubscription", 'String'>
+    readonly userId: FieldRef<"WebPushSubscription", 'String'>
+    readonly endpoint: FieldRef<"WebPushSubscription", 'String'>
+    readonly p256dh: FieldRef<"WebPushSubscription", 'String'>
+    readonly auth: FieldRef<"WebPushSubscription", 'String'>
+    readonly userAgent: FieldRef<"WebPushSubscription", 'String'>
+    readonly createdAt: FieldRef<"WebPushSubscription", 'DateTime'>
+    readonly updatedAt: FieldRef<"WebPushSubscription", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * WebPushSubscription findUnique
+   */
+  export type WebPushSubscriptionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+    /**
+     * Filter, which WebPushSubscription to fetch.
+     */
+    where: WebPushSubscriptionWhereUniqueInput
+  }
+
+  /**
+   * WebPushSubscription findUniqueOrThrow
+   */
+  export type WebPushSubscriptionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+    /**
+     * Filter, which WebPushSubscription to fetch.
+     */
+    where: WebPushSubscriptionWhereUniqueInput
+  }
+
+  /**
+   * WebPushSubscription findFirst
+   */
+  export type WebPushSubscriptionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+    /**
+     * Filter, which WebPushSubscription to fetch.
+     */
+    where?: WebPushSubscriptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WebPushSubscriptions to fetch.
+     */
+    orderBy?: WebPushSubscriptionOrderByWithRelationInput | WebPushSubscriptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WebPushSubscriptions.
+     */
+    cursor?: WebPushSubscriptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WebPushSubscriptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WebPushSubscriptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WebPushSubscriptions.
+     */
+    distinct?: WebPushSubscriptionScalarFieldEnum | WebPushSubscriptionScalarFieldEnum[]
+  }
+
+  /**
+   * WebPushSubscription findFirstOrThrow
+   */
+  export type WebPushSubscriptionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+    /**
+     * Filter, which WebPushSubscription to fetch.
+     */
+    where?: WebPushSubscriptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WebPushSubscriptions to fetch.
+     */
+    orderBy?: WebPushSubscriptionOrderByWithRelationInput | WebPushSubscriptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WebPushSubscriptions.
+     */
+    cursor?: WebPushSubscriptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WebPushSubscriptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WebPushSubscriptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WebPushSubscriptions.
+     */
+    distinct?: WebPushSubscriptionScalarFieldEnum | WebPushSubscriptionScalarFieldEnum[]
+  }
+
+  /**
+   * WebPushSubscription findMany
+   */
+  export type WebPushSubscriptionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+    /**
+     * Filter, which WebPushSubscriptions to fetch.
+     */
+    where?: WebPushSubscriptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WebPushSubscriptions to fetch.
+     */
+    orderBy?: WebPushSubscriptionOrderByWithRelationInput | WebPushSubscriptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing WebPushSubscriptions.
+     */
+    cursor?: WebPushSubscriptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WebPushSubscriptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WebPushSubscriptions.
+     */
+    skip?: number
+    distinct?: WebPushSubscriptionScalarFieldEnum | WebPushSubscriptionScalarFieldEnum[]
+  }
+
+  /**
+   * WebPushSubscription create
+   */
+  export type WebPushSubscriptionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+    /**
+     * The data needed to create a WebPushSubscription.
+     */
+    data: XOR<WebPushSubscriptionCreateInput, WebPushSubscriptionUncheckedCreateInput>
+  }
+
+  /**
+   * WebPushSubscription createMany
+   */
+  export type WebPushSubscriptionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many WebPushSubscriptions.
+     */
+    data: WebPushSubscriptionCreateManyInput | WebPushSubscriptionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * WebPushSubscription createManyAndReturn
+   */
+  export type WebPushSubscriptionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many WebPushSubscriptions.
+     */
+    data: WebPushSubscriptionCreateManyInput | WebPushSubscriptionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * WebPushSubscription update
+   */
+  export type WebPushSubscriptionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+    /**
+     * The data needed to update a WebPushSubscription.
+     */
+    data: XOR<WebPushSubscriptionUpdateInput, WebPushSubscriptionUncheckedUpdateInput>
+    /**
+     * Choose, which WebPushSubscription to update.
+     */
+    where: WebPushSubscriptionWhereUniqueInput
+  }
+
+  /**
+   * WebPushSubscription updateMany
+   */
+  export type WebPushSubscriptionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update WebPushSubscriptions.
+     */
+    data: XOR<WebPushSubscriptionUpdateManyMutationInput, WebPushSubscriptionUncheckedUpdateManyInput>
+    /**
+     * Filter which WebPushSubscriptions to update
+     */
+    where?: WebPushSubscriptionWhereInput
+  }
+
+  /**
+   * WebPushSubscription upsert
+   */
+  export type WebPushSubscriptionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+    /**
+     * The filter to search for the WebPushSubscription to update in case it exists.
+     */
+    where: WebPushSubscriptionWhereUniqueInput
+    /**
+     * In case the WebPushSubscription found by the `where` argument doesn't exist, create a new WebPushSubscription with this data.
+     */
+    create: XOR<WebPushSubscriptionCreateInput, WebPushSubscriptionUncheckedCreateInput>
+    /**
+     * In case the WebPushSubscription was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<WebPushSubscriptionUpdateInput, WebPushSubscriptionUncheckedUpdateInput>
+  }
+
+  /**
+   * WebPushSubscription delete
+   */
+  export type WebPushSubscriptionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+    /**
+     * Filter which WebPushSubscription to delete.
+     */
+    where: WebPushSubscriptionWhereUniqueInput
+  }
+
+  /**
+   * WebPushSubscription deleteMany
+   */
+  export type WebPushSubscriptionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WebPushSubscriptions to delete
+     */
+    where?: WebPushSubscriptionWhereInput
+  }
+
+  /**
+   * WebPushSubscription without action
+   */
+  export type WebPushSubscriptionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebPushSubscription
+     */
+    select?: WebPushSubscriptionSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Model DeliveryLog
    */
 
@@ -7729,6 +8741,21 @@ export namespace Prisma {
   export type AutomationRuleScalarFieldEnum = (typeof AutomationRuleScalarFieldEnum)[keyof typeof AutomationRuleScalarFieldEnum]
 
 
+  export const WebPushSubscriptionScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    userId: 'userId',
+    endpoint: 'endpoint',
+    p256dh: 'p256dh',
+    auth: 'auth',
+    userAgent: 'userAgent',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type WebPushSubscriptionScalarFieldEnum = (typeof WebPushSubscriptionScalarFieldEnum)[keyof typeof WebPushSubscriptionScalarFieldEnum]
+
+
   export const DeliveryLogScalarFieldEnum: {
     id: 'id',
     companyId: 'companyId',
@@ -8460,6 +9487,78 @@ export namespace Prisma {
     delayMinutes?: IntWithAggregatesFilter<"AutomationRule"> | number
     createdAt?: DateTimeWithAggregatesFilter<"AutomationRule"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"AutomationRule"> | Date | string
+  }
+
+  export type WebPushSubscriptionWhereInput = {
+    AND?: WebPushSubscriptionWhereInput | WebPushSubscriptionWhereInput[]
+    OR?: WebPushSubscriptionWhereInput[]
+    NOT?: WebPushSubscriptionWhereInput | WebPushSubscriptionWhereInput[]
+    id?: StringFilter<"WebPushSubscription"> | string
+    companyId?: StringFilter<"WebPushSubscription"> | string
+    userId?: StringFilter<"WebPushSubscription"> | string
+    endpoint?: StringFilter<"WebPushSubscription"> | string
+    p256dh?: StringFilter<"WebPushSubscription"> | string
+    auth?: StringFilter<"WebPushSubscription"> | string
+    userAgent?: StringNullableFilter<"WebPushSubscription"> | string | null
+    createdAt?: DateTimeFilter<"WebPushSubscription"> | Date | string
+    updatedAt?: DateTimeFilter<"WebPushSubscription"> | Date | string
+  }
+
+  export type WebPushSubscriptionOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrder
+    p256dh?: SortOrder
+    auth?: SortOrder
+    userAgent?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WebPushSubscriptionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    endpoint?: string
+    AND?: WebPushSubscriptionWhereInput | WebPushSubscriptionWhereInput[]
+    OR?: WebPushSubscriptionWhereInput[]
+    NOT?: WebPushSubscriptionWhereInput | WebPushSubscriptionWhereInput[]
+    companyId?: StringFilter<"WebPushSubscription"> | string
+    userId?: StringFilter<"WebPushSubscription"> | string
+    p256dh?: StringFilter<"WebPushSubscription"> | string
+    auth?: StringFilter<"WebPushSubscription"> | string
+    userAgent?: StringNullableFilter<"WebPushSubscription"> | string | null
+    createdAt?: DateTimeFilter<"WebPushSubscription"> | Date | string
+    updatedAt?: DateTimeFilter<"WebPushSubscription"> | Date | string
+  }, "id" | "endpoint">
+
+  export type WebPushSubscriptionOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrder
+    p256dh?: SortOrder
+    auth?: SortOrder
+    userAgent?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: WebPushSubscriptionCountOrderByAggregateInput
+    _max?: WebPushSubscriptionMaxOrderByAggregateInput
+    _min?: WebPushSubscriptionMinOrderByAggregateInput
+  }
+
+  export type WebPushSubscriptionScalarWhereWithAggregatesInput = {
+    AND?: WebPushSubscriptionScalarWhereWithAggregatesInput | WebPushSubscriptionScalarWhereWithAggregatesInput[]
+    OR?: WebPushSubscriptionScalarWhereWithAggregatesInput[]
+    NOT?: WebPushSubscriptionScalarWhereWithAggregatesInput | WebPushSubscriptionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"WebPushSubscription"> | string
+    companyId?: StringWithAggregatesFilter<"WebPushSubscription"> | string
+    userId?: StringWithAggregatesFilter<"WebPushSubscription"> | string
+    endpoint?: StringWithAggregatesFilter<"WebPushSubscription"> | string
+    p256dh?: StringWithAggregatesFilter<"WebPushSubscription"> | string
+    auth?: StringWithAggregatesFilter<"WebPushSubscription"> | string
+    userAgent?: StringNullableWithAggregatesFilter<"WebPushSubscription"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"WebPushSubscription"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"WebPushSubscription"> | Date | string
   }
 
   export type DeliveryLogWhereInput = {
@@ -9210,6 +10309,90 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type WebPushSubscriptionCreateInput = {
+    id?: string
+    companyId: string
+    userId: string
+    endpoint: string
+    p256dh: string
+    auth: string
+    userAgent?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WebPushSubscriptionUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    userId: string
+    endpoint: string
+    p256dh: string
+    auth: string
+    userAgent?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WebPushSubscriptionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    endpoint?: StringFieldUpdateOperationsInput | string
+    p256dh?: StringFieldUpdateOperationsInput | string
+    auth?: StringFieldUpdateOperationsInput | string
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WebPushSubscriptionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    endpoint?: StringFieldUpdateOperationsInput | string
+    p256dh?: StringFieldUpdateOperationsInput | string
+    auth?: StringFieldUpdateOperationsInput | string
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WebPushSubscriptionCreateManyInput = {
+    id?: string
+    companyId: string
+    userId: string
+    endpoint: string
+    p256dh: string
+    auth: string
+    userAgent?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WebPushSubscriptionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    endpoint?: StringFieldUpdateOperationsInput | string
+    p256dh?: StringFieldUpdateOperationsInput | string
+    auth?: StringFieldUpdateOperationsInput | string
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WebPushSubscriptionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    endpoint?: StringFieldUpdateOperationsInput | string
+    p256dh?: StringFieldUpdateOperationsInput | string
+    auth?: StringFieldUpdateOperationsInput | string
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type DeliveryLogCreateInput = {
     id?: string
     companyId: string
@@ -9893,6 +11076,42 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumAutomationTriggerFilter<$PrismaModel>
     _max?: NestedEnumAutomationTriggerFilter<$PrismaModel>
+  }
+
+  export type WebPushSubscriptionCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrder
+    p256dh?: SortOrder
+    auth?: SortOrder
+    userAgent?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WebPushSubscriptionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrder
+    p256dh?: SortOrder
+    auth?: SortOrder
+    userAgent?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WebPushSubscriptionMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrder
+    p256dh?: SortOrder
+    auth?: SortOrder
+    userAgent?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type IntNullableFilter<$PrismaModel = never> = {
@@ -10689,6 +11908,10 @@ export namespace Prisma {
      * @deprecated Use AutomationRuleDefaultArgs instead
      */
     export type AutomationRuleArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AutomationRuleDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use WebPushSubscriptionDefaultArgs instead
+     */
+    export type WebPushSubscriptionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = WebPushSubscriptionDefaultArgs<ExtArgs>
     /**
      * @deprecated Use DeliveryLogDefaultArgs instead
      */

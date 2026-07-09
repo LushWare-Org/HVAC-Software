@@ -1,9 +1,8 @@
 /**
  * api.ts — Axios instance for T&S CRM Customer Portal
  *
- * Auth: JWT Bearer token from POST /crm/auth/login (or /register)
- * The token is stored in localStorage and injected by AuthContext.
- * Base URL is '/api' — Vite dev proxy routes it to nginx:80 → upstream services.
+ * Any 401 response (except on the login endpoint itself) fires a global
+ * "auth:expired" CustomEvent that AuthContext listens to and calls logout().
  */
 
 import axios from 'axios'
@@ -15,7 +14,6 @@ function normalizeApiBaseUrl(baseUrl: string): string {
   const resolved = trimmed && trimmed !== '/api'
     ? trimmed
     : (import.meta.env.PROD ? DEFAULT_API_BASE_URL : '/api')
-
   return resolved.endsWith('/api') ? resolved : `${resolved}/api`
 }
 
@@ -31,7 +29,16 @@ if (storedToken) {
 }
 
 api.interceptors.request.use((config) => {
-  if (import.meta.env.DEV && import.meta.env.VITE_COMPANY_ID) {
+  // Attach the token per-request — closes the race where requests fired right
+  // after login go out before the default header is set (401 → auto-logout).
+  if (!config.headers.Authorization) {
+    const token = localStorage.getItem('cp_token')
+    if (token) config.headers.Authorization = `Bearer ${token}`
+  }
+  // Dev bypass identity headers — only when there's NO real session. Sending
+  // them alongside a real JWT made the backend guard impersonate the demo
+  // tenant, 401-ing every request for users of other companies.
+  if (import.meta.env.DEV && import.meta.env.VITE_COMPANY_ID && !config.headers.Authorization) {
     config.headers['x-test-company-id'] = import.meta.env.VITE_COMPANY_ID
     config.headers['x-test-user-role'] = 'CUSTOMER'
     try {
@@ -48,7 +55,6 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Response interceptor — normalise errors + auto-logout on 401
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -61,14 +67,9 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401) {
       const url = String(error.config?.url ?? '')
-      // A failed payment-intent call should show an error, not log the user out.
-      const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register')
-      const isPaymentEndpoint = url.includes('/finance/') || url.includes('/payment')
-      if (!isAuthEndpoint && !isPaymentEndpoint) {
-        localStorage.removeItem('cp_token')
-        localStorage.removeItem('cp_user')
-        delete api.defaults.headers.common['Authorization']
-        window.location.href = '/login'
+      // Don't log out on a failed login attempt — that's just wrong credentials.
+      if (!url.includes('/auth/login')) {
+        window.dispatchEvent(new CustomEvent('auth:expired'))
       }
     }
 

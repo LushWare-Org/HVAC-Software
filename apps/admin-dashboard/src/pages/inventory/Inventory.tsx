@@ -8,6 +8,7 @@ import StockDetailModal from './StockDetailModal'
 import IntakeStockModal from './IntakeStockModal'
 import TransferStockModal from './TransferStockModal'
 import CreatePurchaseOrderModal from './CreatePurchaseOrderModal'
+import { formatMoney } from '../../lib/format'
 
 // ─── Status CSS maps ──────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ function Skeleton({ h = 14 }: { h?: number }) {
 
 function fmtDecimal(val: string | number | undefined | null): string {
   const n = decimalToNumber(val)
-  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return formatMoney(n)
 }
 
 export default function Inventory() {
@@ -40,6 +41,7 @@ export default function Inventory() {
   const [itemsPage, setItemsPage] = useState(1)
   const [itemsSearch, setItemsSearch] = useState('')
   const [itemsCategory, setItemsCategory] = useState('all')
+  const [locationFilter, setLocationFilter] = useState<'all' | 'WAREHOUSE' | 'VAN'>('all')
 
   // Movements state
   const [movPage, setMovPage] = useState(1)
@@ -103,18 +105,26 @@ export default function Inventory() {
     return { warehouseQty, vanQty, total, isLow }
   }
 
+  // IN4: client-side location type filter
+  const filteredItems = locationFilter === 'all'
+    ? items
+    : items.filter(item => {
+        const { warehouseQty, vanQty } = getStockSummary(item)
+        return locationFilter === 'WAREHOUSE' ? warehouseQty > 0 : vanQty > 0
+      })
+
   return (
     <div className="anim-fade-up">
 
       {/* KPIs */}
       <div className="kpi-grid mb-5">
         {[
-          { icon: Package, v: String(totalItems), l: 'Total Items', loading: itemsQuery.isLoading },
-          { icon: Warehouse, v: `${warehouseCount} warehouse, ${vanCount} van`, l: 'Locations', loading: locationsQuery.isLoading },
-          { icon: AlertTriangle, v: String(alerts.length), l: 'Low Stock', loading: alertsQuery.isLoading, highlight: alerts.length > 0 },
-          { icon: ShoppingCart, v: String(pendingPOCount), l: 'Pending POs', loading: posQuery.isLoading },
+          { icon: Package, v: String(totalItems), l: 'Total Items', loading: itemsQuery.isLoading, onClick: () => setTab('items') },
+          { icon: Warehouse, v: `${warehouseCount} warehouse, ${vanCount} van`, l: 'Locations', loading: locationsQuery.isLoading, onClick: undefined },
+          { icon: AlertTriangle, v: String(alerts.length), l: 'Low Stock', loading: alertsQuery.isLoading, highlight: alerts.length > 0, onClick: () => setTab('low-stock') },
+          { icon: ShoppingCart, v: String(pendingPOCount), l: 'Pending POs', loading: posQuery.isLoading, onClick: () => setTab('purchase-orders') },
         ].map(k => (
-          <div key={k.l} className="kpi-card" style={{ padding: '16px 20px', borderRadius: 'var(--r-md)' }}>
+          <div key={k.l} className="kpi-card" style={{ padding: '16px 20px', borderRadius: 'var(--r-md)', cursor: k.onClick ? 'pointer' : 'default' }} onClick={k.onClick}>
             <div className="kpi-card-top" style={{ marginBottom: 12, alignItems: 'center', justifyContent: 'space-between' }}>
               <div className="kpi-label" style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 500, margin: 0 }}>{k.l}</div>
               <k.icon size={16} strokeWidth={1.5} color={k.highlight ? 'var(--red)' : 'var(--t3)'} />
@@ -161,6 +171,11 @@ export default function Inventory() {
                 <option value="TOOL">Tool</option>
                 <option value="CONSUMABLE">Consumable</option>
               </select>
+              <select className="select" style={{ width: 160 }} value={locationFilter} onChange={e => setLocationFilter(e.target.value as 'all' | 'WAREHOUSE' | 'VAN')}>
+                <option value="all">All Locations</option>
+                <option value="WAREHOUSE">Warehouse only</option>
+                <option value="VAN">Tech Vans only</option>
+              </select>
               <div className="flex items-center gap-2 ml-auto">
                 <button className="btn btn-secondary btn-sm" onClick={() => setIsIntakeOpen(true)}><ArrowDown size={12} /> Receive Stock</button>
                 <button className="btn btn-secondary btn-sm" onClick={() => setIsTransferOpen(true)}><ArrowRightLeft size={12} /> Transfer</button>
@@ -179,22 +194,33 @@ export default function Inventory() {
                     <th style={{ textAlign: 'left' }}>Unit</th>
                     <th style={{ textAlign: 'left' }}>Warehouse Qty</th>
                     <th style={{ textAlign: 'left' }}>Van Qty</th>
+                    <th style={{ textAlign: 'left' }}>Unit Cost</th>
+                    <th style={{ textAlign: 'left' }}>Stock Value</th>
                     <th style={{ textAlign: 'left' }}>Reorder Pt</th>
                     <th style={{ textAlign: 'left' }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {itemsQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 8 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
-                  {!itemsQuery.isLoading && items.map(item => {
+                  {itemsQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 10 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
+                  {!itemsQuery.isLoading && filteredItems.map(item => {
                     const stock = getStockSummary(item)
+                    const totalQty = stock.warehouseQty + stock.vanQty
+                    const unitCost = item.unitCost != null ? Number(item.unitCost) : null
+                    const stockValue = unitCost != null ? unitCost * totalQty : null
                     return (
                       <tr key={item.id} onClick={() => setDetailItem(item)} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
                         <td><span className="td-mono td-primary">{item.sku}</span></td>
                         <td><span className="cell-name">{item.name}</span></td>
                         <td><span className={`badge ${CAT_CSS[item.category] ?? 'badge-neutral'}`}>{item.category.toLowerCase()}</span></td>
                         <td className="text-sm text-3">{item.unit}</td>
-                        <td className="td-primary font-600">{stock.warehouseQty}</td>
-                        <td className="td-primary font-600">{stock.vanQty}</td>
+                        <td className="td-primary font-600" style={{ color: locationFilter === 'WAREHOUSE' ? 'var(--blue)' : undefined }}>{stock.warehouseQty}</td>
+                        <td className="td-primary font-600" style={{ color: locationFilter === 'VAN' ? 'var(--blue)' : undefined }}>{stock.vanQty}</td>
+                        <td className="text-sm" style={{ color: 'var(--t2)' }}>
+                          {unitCost != null ? formatMoney(unitCost) : <span style={{ color: 'var(--t4)' }}>—</span>}
+                        </td>
+                        <td className="td-primary font-600" style={{ color: stockValue != null ? 'var(--green)' : undefined }}>
+                          {stockValue != null ? formatMoney(stockValue) : <span style={{ color: 'var(--t4)', fontWeight: 400 }}>—</span>}
+                        </td>
                         <td className="text-sm text-3">{item.reorderPoint}</td>
                         <td>
                           {stock.isLow
@@ -205,7 +231,7 @@ export default function Inventory() {
                       </tr>
                     )
                   })}
-                  {!itemsQuery.isLoading && items.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No inventory items found</td></tr>}
+                  {!itemsQuery.isLoading && filteredItems.length === 0 && <tr><td colSpan={10} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No inventory items found</td></tr>}
                 </tbody>
               </table>
             </div>

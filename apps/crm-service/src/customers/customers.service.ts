@@ -4,6 +4,7 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
+import { Prisma } from '../prisma/generated';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput, type RevenuePredictionResult } from '../ai/churn.client';
 import { UpsellAgentService } from '../upsell/upsell-agent.service';
@@ -59,14 +60,19 @@ export class CustomersService {
     search?: string,
     type?: string,
     isActive?: boolean,
+    tags?: string[],
+    sortBy?: string,
+    sortDir?: 'asc' | 'desc',
   ): Promise<PaginatedResponse<unknown>> {
     const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput });
+    const dir = sortDir ?? 'desc';
 
     const where: any = {
       companyId,
       isActive: isActive !== undefined ? isActive : true,
       NOT: this.provisionalPortalSignupFilter,
       ...(type && { type: type as any }),
+      ...(tags && tags.length > 0 && { tags: { hasSome: tags } }),
       ...(search && {
         OR: [
           { firstName: { contains: search, mode: 'insensitive' as const } },
@@ -77,14 +83,90 @@ export class CustomersService {
       }),
     };
 
+    // Complex sorts require raw SQL (relation field aggregates / array element)
+    if (sortBy === 'installDate' || sortBy === 'warranty' || sortBy === 'tag') {
+      return this.findAllRawSorted(companyId, pageInput, limitInput, search, type, isActive, tags, sortBy, dir);
+    }
+
+    const orderBy: any[] = (() => {
+      switch (sortBy) {
+        case 'name':    return [{ lastName: dir }, { firstName: dir }];
+        case 'city':    return [{ city: dir }, { state: dir }];
+        case 'type':    return [{ type: dir }, { createdAt: 'desc' as const }];
+        case 'updated': return [{ updatedAt: dir }];
+        case 'equipment': return [{ equipment: { _count: dir } }];
+        default:        return [{ createdAt: dir }];
+      }
+    })();
+
     const data = await this.prisma.customer.findMany({
       where,
       skip,
       take: limit,
-      orderBy: [{ createdAt: 'desc' }],
-      include: { _count: { select: { contacts: true } } },
+      orderBy,
+      include: { _count: { select: { contacts: true, equipment: true } } },
     });
     const total = await this.prisma.customer.count({ where });
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  private async findAllRawSorted(
+    companyId: string,
+    pageInput: number | string,
+    limitInput: number | string,
+    search?: string,
+    type?: string,
+    isActive?: boolean,
+    tags?: string[],
+    sortBy: 'installDate' | 'warranty' | 'tag' = 'installDate',
+    dir: 'asc' | 'desc' = 'asc',
+  ): Promise<PaginatedResponse<unknown>> {
+    const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput });
+    const active = isActive !== undefined ? isActive : true;
+    const dirSql = dir === 'asc' ? Prisma.sql`ASC` : Prisma.sql`DESC`;
+
+    const conditions: Prisma.Sql[] = [
+      Prisma.sql`c.company_id = ${companyId}`,
+      Prisma.sql`c.is_active = ${active}`,
+      Prisma.sql`NOT (c.source = 'portal' AND c.engagement_status = 'INACTIVE' AND 'portal-signup' = ANY(c.tags))`,
+    ];
+    if (type) conditions.push(Prisma.sql`c.type = ${type}`);
+    if (tags?.length) conditions.push(Prisma.sql`c.tags && ${tags}::text[]`);
+    if (search) {
+      const like = `%${search}%`;
+      conditions.push(Prisma.sql`(c.first_name ILIKE ${like} OR c.last_name ILIKE ${like} OR c.email ILIKE ${like} OR c.phone LIKE ${like})`);
+    }
+    const whereClause = Prisma.join(conditions, ' AND ');
+
+    const sortExpr = sortBy === 'installDate'
+      ? Prisma.sql`(SELECT MIN(e.install_date) FROM crm.equipment e WHERE e.customer_id = c.id)`
+      : sortBy === 'warranty'
+        ? Prisma.sql`(SELECT MIN(e.warranty_end) FROM crm.equipment e WHERE e.customer_id = c.id)`
+        : Prisma.sql`COALESCE(c.tags[1], '')`;
+
+    const [idRows, countRows] = await Promise.all([
+      this.prisma.$queryRaw<{ id: string }[]>(
+        Prisma.sql`SELECT c.id FROM crm.customers c WHERE ${whereClause} ORDER BY ${sortExpr} ${dirSql} NULLS LAST, c.created_at DESC LIMIT ${limit} OFFSET ${skip}`,
+      ),
+      this.prisma.$queryRaw<{ count: bigint }[]>(
+        Prisma.sql`SELECT COUNT(*) AS count FROM crm.customers c WHERE ${whereClause}`,
+      ),
+    ]);
+
+    const total = Number(countRows[0]?.count ?? 0);
+    const ids = idRows.map(r => r.id);
+
+    const data = ids.length === 0 ? [] : await this.prisma.customer.findMany({
+      where: { id: { in: ids } },
+      include: { _count: { select: { contacts: true, equipment: true } } },
+    });
+
+    const idOrder = new Map(ids.map((id, i) => [id, i]));
+    data.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
 
     return {
       data,
@@ -439,6 +521,12 @@ export class CustomersService {
           if (f.value === 'true' || f.value === true) andClauses.push({ equipment: { some: {} } });
           else andClauses.push({ equipment: { none: {} } });
           break;
+        case 'hasTag':
+          if (f.op === 'eq') andClauses.push({ tags: { has: f.value as string } });
+          break;
+        case 'hasAnyTag':
+          if (f.op === 'in') andClauses.push({ tags: { hasSome: f.value as string[] } });
+          break;
       }
     }
 
@@ -458,6 +546,15 @@ export class CustomersService {
       },
       take: limit,
     });
+  }
+
+  async getUniqueTags(companyId: string): Promise<string[]> {
+    const rows = await this.prisma.customer.findMany({
+      where: { companyId, isActive: true },
+      select: { tags: true },
+    });
+    const all = rows.flatMap(r => r.tags);
+    return [...new Set(all)].sort();
   }
 
   async findMe(companyId: string, userId: string, customerId?: string) {

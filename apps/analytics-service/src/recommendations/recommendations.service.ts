@@ -109,8 +109,24 @@ export class RecommendationsService {
     private readonly execLog: ExecutionLoggerService,
   ) {}
 
-  getRecommendations(_companyId: string): Recommendation[] {
-    const scored = RAW_RECOMMENDATIONS.map((r) => ({
+  getRecommendations(_companyId: string, forecastDays?: number): Recommendation[] {
+    const days = forecastDays ?? 1;
+    const windowLabel = days === 1 ? 'tomorrow' : `the next ${days} days`;
+    const revenueAtRisk = days === 7 ? 12_400 : days === 14 ? 22_100 : days === 30 ? 41_600 : 3_800;
+    const utilization   = days === 7 ? 51 : days === 14 ? 48 : days === 30 ? 45 : 42;
+
+    const recs = RAW_RECOMMENDATIONS.map((r) => {
+      if (r.id === 'rec_001') {
+        return {
+          ...r,
+          description: `Expected demand is 30% below capacity over ${windowLabel}. Technician utilization at ${utilization}%. Revenue at risk: ~$${revenueAtRisk.toLocaleString()}.`,
+          impact: Math.round(revenueAtRisk * 1.1),
+        };
+      }
+      return r;
+    });
+
+    const scored = recs.map((r) => ({
       ...r,
       priorityScore: Math.round(r.impact * r.confidence),
     }));

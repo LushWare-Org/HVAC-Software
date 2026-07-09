@@ -22,17 +22,27 @@ import {
   Trash2,
   ExternalLink,
   Wifi,
+  Loader2,
+  Check,
+  FolderKanban,
+  CalendarRange,
 } from "lucide-react";
+import { useToast } from "../../contexts/ToastContext";
 import { IotDevicesTab } from "./IotDevicesTab";
-import AddAgreementModal from "./AddAgreementModal";
+import CustomerAgreementsTab from "../agreements/CustomerAgreementsTab";
+import { useNavigate } from "react-router-dom";
+import { useCustomerProjects, STATUS_META } from "../projects/projectsApi";
 import AddJobModal from "../jobs/AddJobModal";
-import { useCustomerStatusSummary, useUpdateCustomer } from "../../hooks/useCustomers";
+import { TagInput } from "../../components/TagInput";
+import { useCustomerStatusSummary, useUpdateCustomer, useCustomerTags } from "../../hooks/useCustomers";
 import { useCustomerAddresses, useSaveCustomerAddresses } from "../../hooks/useAddresses";
 import { useCustomerEquipment, useSaveCustomerEquipment } from "../../hooks/useEquipment";
+import EquipmentConsumables from "./EquipmentConsumables";
 import { useJobs } from "../../hooks/useJobs";
 import { useQuotes, useInvoices } from "../../hooks/useFinance";
 import { decimalToNumber } from "../../hooks/useFinance";
 import type { CustomerStatusSummary } from "../../types/api";
+import { formatMoney as formatMoneyBase } from '../../lib/format'
 
 type TabType =
   | "contact"
@@ -40,6 +50,7 @@ type TabType =
   | "equipment"
   | "jobs"
   | "agreements"
+  | "projects"
   | "reviews"
   | "activity"
   | "reasoning"
@@ -140,7 +151,6 @@ function SectionHeader({
 }
 
 const mockContacts = [{ id: 1, name: "", role: "Owner", email: "", phone: "" }];
-const mockAgreements: any[] = [];
 const mockReviews: any[] = [];
 
 
@@ -183,8 +193,8 @@ function formatPct(value: number) {
 }
 
 function formatMoney(value: number) {
-  if (!Number.isFinite(value)) return "$0";
-  return `$${Math.round(value).toLocaleString()}`;
+  if (!Number.isFinite(value)) return formatMoneyBase(0, { decimals: 0 });
+  return formatMoneyBase(value, { decimals: 0 });
 }
 
 function offerLabel(value?: string) {
@@ -295,9 +305,8 @@ export default function CustomerDetailsSidebar({
   const [addresses, setAddresses] = useState<any[]>([]);
   const [contacts, setContacts] = useState(mockContacts);
   const [equipment, setEquipment] = useState<any[]>([]);
-  const [agreements, setAgreements] = useState(mockAgreements);
-  const [isAddAgreementModalOpen, setIsAddAgreementModalOpen] = useState(false);
   const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
   const [reviews, setReviews] = useState(mockReviews);
   const [showRequestPanel, setShowRequestPanel] = useState(false);
   const [requestForm, setRequestForm] = useState({
@@ -333,6 +342,9 @@ export default function CustomerDetailsSidebar({
 
   // Fetch real addresses and equipment from API
   const addressesQuery = useCustomerAddresses(customerId || undefined);
+  const customerProjectsQuery = useCustomerProjects(customerId || undefined);
+  const customerProjects = customerProjectsQuery.data;
+  const navigateToProject = useNavigate();
   const equipmentQuery = useCustomerEquipment(customerId || undefined);
   const saveAddresses = useSaveCustomerAddresses();
   const saveEquipment = useSaveCustomerEquipment();
@@ -348,6 +360,7 @@ export default function CustomerDetailsSidebar({
         customerSince: person.createdAt ? person.createdAt.split('T')[0] : '',
         lastService: person.lastServiceDate ? person.lastServiceDate.split('T')[0] : '',
       });
+      setTags(person.tags ?? []);
       setContacts([
         {
           id: 1,
@@ -357,7 +370,6 @@ export default function CustomerDetailsSidebar({
           phone: person.phone || person.mobile || "",
         },
       ]);
-      setAgreements(mockAgreements);
       setReviews(mockReviews);
       setActiveTab(initialTab);
       setIsEditMode(false);
@@ -396,12 +408,17 @@ export default function CustomerDetailsSidebar({
         serial: e.serialNo || "",
         install: e.installDate ? e.installDate.split("T")[0] : "",
         warranty: e.warrantyEnd ? e.warrantyEnd.split("T")[0] : "",
+        manualUrl: e.manualUrl || "",
       })));
     }
   }, [equipmentQuery.data]);
 
   // Hook must be called unconditionally — before any early returns
   const updateCustomer = useUpdateCustomer();
+  const allTagsQuery = useCustomerTags();
+  const allTags = allTagsQuery.data ?? [];
+  const { showSuccess, showError } = useToast();
+  const [saveSucceeded, setSaveSucceeded] = useState(false);
 
   if (!isOpen || !person) return null;
 
@@ -429,6 +446,7 @@ export default function CustomerDetailsSidebar({
           type:   (formData.type as 'RESIDENTIAL' | 'COMMERCIAL') || undefined,
           notes:  formData.notes || undefined,
           engagementStatus: formData.engagementStatus || undefined,
+          tags,
       }},
       {
         onSuccess: () => {
@@ -462,12 +480,19 @@ export default function CustomerDetailsSidebar({
                   serialNo: e.serial || undefined,
                   installDate: e.install || undefined,
                   warrantyEnd: e.warranty || undefined,
+                  manualUrl: e.manualUrl || undefined,
                 })),
             });
           }
           setIsEditMode(false);
+          setSaveSucceeded(true);
+          setTimeout(() => setSaveSucceeded(false), 2000);
+          showSuccess('Customer details saved.');
         },
-        onError:   (err: any) => console.error('Update customer failed:', err?.response?.data?.message ?? err.message),
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message ?? err.message ?? 'Something went wrong.';
+          showError(msg, 'Save failed');
+        },
       }
     );
   };
@@ -488,6 +513,10 @@ export default function CustomerDetailsSidebar({
     { id: "equipment", label: "Equipment", icon: <Wrench size={14} /> },
     { id: "jobs", label: "Jobs", icon: <ClipboardList size={14} /> },
     { id: "agreements", label: "Agreements", icon: <ShieldCheck size={14} /> },
+    // Projects tab appears only when the customer has at least one project
+    ...((customerProjects?.length ?? 0) > 0
+      ? [{ id: "projects" as TabType, label: "Projects", icon: <FolderKanban size={14} /> }]
+      : []),
     { id: "reviews", label: "Reviews", icon: <Star size={14} /> },
     { id: "activity", label: "Activity", icon: <Activity size={14} /> },
     { id: "reasoning", label: "Reasoning", icon: <FileText size={14} /> },
@@ -596,9 +625,22 @@ export default function CustomerDetailsSidebar({
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex flex-row items-center justify-center gap-2 bg-white text-[var(--blue)] hover:bg-blue-50 px-5 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                  disabled={updateCustomer.isPending}
+                  className="flex flex-row items-center justify-center gap-2 px-5 py-1.5 rounded-lg text-sm font-semibold transition-all"
+                  style={{
+                    background: saveSucceeded ? '#10b981' : 'white',
+                    color: saveSucceeded ? 'white' : 'var(--blue)',
+                    opacity: updateCustomer.isPending ? 0.8 : 1,
+                    cursor: updateCustomer.isPending ? 'not-allowed' : 'pointer',
+                  }}
                 >
-                  <Save size={14} /> Save
+                  {updateCustomer.isPending ? (
+                    <><Loader2 size={14} className="animate-spin" /> Saving…</>
+                  ) : saveSucceeded ? (
+                    <><Check size={14} /> Saved</>
+                  ) : (
+                    <><Save size={14} /> Save</>
+                  )}
                 </button>
               </>
             ) : (
@@ -663,7 +705,7 @@ export default function CustomerDetailsSidebar({
                     <div className="flex items-center gap-3">
                       <Phone size={14} className="text-[var(--t4)] shrink-0" />
                       <span className="text-sm text-[var(--t2)]">
-                        {formData.phone || formData.whatsappNo || "—"}
+                        {formData.phone || "—"}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -820,20 +862,24 @@ export default function CustomerDetailsSidebar({
                           >
                             <span style={{ opacity: isActive ? 1 : 0.7 }}>{tab.icon}</span>
                             {tab.label}
-                            {tab.id === "jobs" && customerJobs.length > 0 && (
-                              <span
-                                className="ml-0.5 text-[10px] font-700 px-1 rounded-full"
-                                style={{
-                                  background: isActive ? 'rgba(255,255,255,0.25)' : '#EF4444',
-                                  color: isActive ? '#fff' : '#fff',
-                                  lineHeight: '16px',
-                                  minWidth: 16,
-                                  textAlign: 'center',
-                                  display: 'inline-block',
-                                }}
-                              >
-                                {customerJobs.length}
-                              </span>
+                            {tab.id === "jobs" && (
+                              customerJobsQuery.isFetching
+                                ? <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: isActive ? 'rgba(255,255,255,0.4)' : 'var(--t4)', marginLeft: 4, opacity: 0.7 }} />
+                                : customerJobs.length > 0 && (
+                                    <span
+                                      className="ml-0.5 text-[10px] font-700 px-1 rounded-full"
+                                      style={{
+                                        background: isActive ? 'rgba(255,255,255,0.25)' : '#EF4444',
+                                        color: '#fff',
+                                        lineHeight: '16px',
+                                        minWidth: 16,
+                                        textAlign: 'center',
+                                        display: 'inline-block',
+                                      }}
+                                    >
+                                      {customerJobs.length}
+                                    </span>
+                                  )
                             )}
                           </button>
                         );
@@ -868,15 +914,7 @@ export default function CustomerDetailsSidebar({
                             <Field
                               label="Phone"
                               name="phone"
-                              value={formData.phone || formData.whatsappNo}
-                              isEdit={isEditMode}
-                              onChange={handleChange}
-                              placeholder="+1 7700 000000"
-                            />
-                            <Field
-                              label="WhatsApp"
-                              name="whatsappNo"
-                              value={formData.whatsappNo}
+                              value={formData.phone}
                               isEdit={isEditMode}
                               onChange={handleChange}
                               placeholder="+1 7700 000000"
@@ -920,6 +958,23 @@ export default function CustomerDetailsSidebar({
                               as="textarea"
                               full
                             />
+
+                            {/* Tags */}
+                            <div style={{ gridColumn: '1 / -1' }}>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+                                Tags
+                              </div>
+                              <div style={{ fontSize: 11, color: 'var(--t4)', marginBottom: 8 }}>
+                                Used for filtering, campaign segmentation and reporting. Press Enter or comma to add.
+                              </div>
+                              <TagInput
+                                tags={tags}
+                                onChange={setTags}
+                                suggestions={allTags}
+                                placeholder="Type a tag and press Enter…"
+                                readOnly={!isEditMode}
+                              />
+                            </div>
                           </div>
                         </div>
 
@@ -1216,6 +1271,7 @@ export default function CustomerDetailsSidebar({
                                       serial: "",
                                       install: "",
                                       warranty: "",
+                                      manualUrl: "",
                                     },
                                   ])
                                 }
@@ -1341,6 +1397,25 @@ export default function CustomerDetailsSidebar({
                                   </div>
                                 ))}
                               </div>
+                              <div className="mt-3 space-y-1">
+                                <label className="text-[11px] font-600 text-[var(--t4)] uppercase">Manual URL</label>
+                                <input
+                                  value={eq.manualUrl ?? ''}
+                                  disabled={!isEditMode}
+                                  placeholder="https://…/manual.pdf"
+                                  onChange={(e) =>
+                                    setEquipment((prev) =>
+                                      prev.map((x) =>
+                                        x.id === eq.id ? { ...x, manualUrl: e.target.value } : x,
+                                      ),
+                                    )
+                                  }
+                                  className={isEditMode ? inputEdit : inputView}
+                                />
+                              </div>
+                              {customerId && equipmentQuery.data?.some((d: any) => d.id === eq.id) && (
+                                <EquipmentConsumables customerId={customerId} equipmentId={eq.id} />
+                              )}
                             </div>
                           ))}
                           {equipment.length === 0 && (
@@ -1388,7 +1463,7 @@ export default function CustomerDetailsSidebar({
                                     <div className="text-xs text-gray-500 mt-0.5">{q.quoteNumber} · {new Date(q.createdAt).toLocaleDateString()}</div>
                                   </div>
                                   <div className="flex items-center gap-2 ml-3">
-                                    <span className="text-sm font-700 text-gray-900">${decimalToNumber(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="text-sm font-700 text-gray-900">{formatMoneyBase(decimalToNumber(q.total))}</span>
                                     <span className={`badge ${QUO_CSS[q.status] ?? "badge-neutral"}`}>{q.status}</span>
                                   </div>
                                 </div>
@@ -1419,7 +1494,7 @@ export default function CustomerDetailsSidebar({
                                   </div>
                                   <div className="flex items-center gap-2 ml-3">
                                     <div className="text-right">
-                                      <span className="text-sm font-700 text-gray-900">${decimalToNumber(inv.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                      <span className="text-sm font-700 text-gray-900">{formatMoneyBase(decimalToNumber(inv.total))}</span>
                                       {decimalToNumber(inv.balanceDue) > 0 && (
                                         <div className="text-[10px] text-amber-600">Due: ${decimalToNumber(inv.balanceDue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                                       )}
@@ -1434,9 +1509,9 @@ export default function CustomerDetailsSidebar({
 
                         {/* Jobs for this customer */}
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-xs font-700 text-gray-500 uppercase flex items-center gap-2">
-                            <ClipboardList size={14} className="text-blue-500" />
-                            Jobs ({customerJobs.length})
+                          <h4 className="text-xs font-semibold uppercase flex items-center gap-2" style={{ color: 'var(--t4)' }}>
+                            <ClipboardList size={14} style={{ color: 'var(--blue)' }} />
+                            {customerJobsQuery.isFetching ? 'Jobs' : `Jobs (${customerJobs.length})`}
                           </h4>
                           <button
                             onClick={() => setIsAddJobModalOpen(true)}
@@ -1445,7 +1520,6 @@ export default function CustomerDetailsSidebar({
                             <Plus size={12} /> New Job
                           </button>
                         </div>
-                        {customerJobsQuery.isLoading && <div className="text-sm text-gray-400 py-4 text-center">Loading jobs...</div>}
                         <div className="table-container">
                           <table className="data-table">
                             <thead>
@@ -1457,34 +1531,46 @@ export default function CustomerDetailsSidebar({
                               </tr>
                             </thead>
                             <tbody>
-                              {customerJobs.map((j) => (
-                                <tr key={j.id}>
-                                  <td>
-                                    <div className="text-sm font-600 text-gray-900">{j.title}</div>
-                                    <div className="text-xs text-gray-500">{j.serviceAddress ?? j.customerAddress ?? ""}</div>
-                                  </td>
-                                  <td className="text-sm text-3">{new Date(j.createdAt).toLocaleDateString()}</td>
-                                  <td>
-                                    <span
-                                      className={`badge ${JOB_CSS[j.status] ?? "badge-neutral"}`}
-                                    >
-                                      {j.status.replace(/_/g, " ")}
-                                    </span>
-                                  </td>
-                                  <td style={{ textAlign: "center" }}>
-                                    <button
-                                      className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
-                                      title="Open Job"
-                                      onClick={() => window.dispatchEvent(new CustomEvent("open-job-detail", { detail: j }))}
-                                    >
-                                      <ExternalLink size={13} />
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                              {!customerJobsQuery.isLoading && customerJobs.length === 0 && (
+                              {customerJobsQuery.isFetching
+                                ? Array.from({ length: 4 }).map((_, i) => (
+                                    <tr key={i} style={{ opacity: 1 - i * 0.15 }}>
+                                      <td>
+                                        <div style={{ height: 11, borderRadius: 4, background: 'var(--bg-hover)', marginBottom: 5, width: '72%' }} />
+                                        <div style={{ height: 9, borderRadius: 3, background: 'var(--bg-hover)', width: '44%', opacity: 0.5 }} />
+                                      </td>
+                                      <td><div style={{ height: 11, borderRadius: 4, background: 'var(--bg-hover)', width: '62%' }} /></td>
+                                      <td><div style={{ height: 20, borderRadius: 6, background: 'var(--bg-hover)', width: 72 }} /></td>
+                                      <td style={{ textAlign: 'center' }}><div style={{ height: 28, width: 28, borderRadius: 6, background: 'var(--bg-hover)', margin: '0 auto' }} /></td>
+                                    </tr>
+                                  ))
+                                : customerJobs.map((j) => (
+                                    <tr key={j.id}>
+                                      <td>
+                                        <div className="text-sm font-600" style={{ color: 'var(--t1)' }}>{j.title}</div>
+                                        <div className="text-xs" style={{ color: 'var(--t3)' }}>{j.serviceAddress ?? j.customerAddress ?? ""}</div>
+                                      </td>
+                                      <td className="text-sm" style={{ color: 'var(--t3)' }}>{new Date(j.createdAt).toLocaleDateString()}</td>
+                                      <td>
+                                        <span className={`badge ${JOB_CSS[j.status] ?? "badge-neutral"}`}>
+                                          {j.status.replace(/_/g, " ")}
+                                        </span>
+                                      </td>
+                                      <td style={{ textAlign: "center" }}>
+                                        <button
+                                          className="p-2 rounded-lg transition-colors"
+                                          style={{ color: 'var(--blue)' }}
+                                          title="Open Job"
+                                          onClick={() => window.dispatchEvent(new CustomEvent("open-job-detail", { detail: j }))}
+                                        >
+                                          <ExternalLink size={13} />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))
+                              }
+                              {!customerJobsQuery.isFetching && customerJobs.length === 0 && (
                                 <tr>
-                                  <td colSpan={4} className="text-center text-gray-400 py-6 text-sm">No jobs found for this customer</td>
+                                  <td colSpan={4} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0', fontSize: 13 }}>No jobs found for this customer</td>
                                 </tr>
                               )}
                             </tbody>
@@ -1493,339 +1579,53 @@ export default function CustomerDetailsSidebar({
                       </div>
                     )}
 
-                    {/* AGREEMENTS */}
-                    {activeTab === "agreements" && (
-                      <div>
-                        <SectionHeader
-                          icon={ShieldCheck}
-                          title="Service Agreements & Contracts"
-                          action={
-                            isEditMode && (
-                              <button
-                                className="btn btn-secondary border-dashed btn-sm flex items-center gap-1.5"
-                                onClick={() => setIsAddAgreementModalOpen(true)}
-                              >
-                                <Plus size={13} /> New Agreement
-                              </button>
-                            )
-                          }
-                        />
-                        {agreements.map((agr) => (
-                          <div
-                            key={agr.id}
-                            className="p-5 rounded-xl border border-gray-100 bg-gray-50 mb-4"
-                          >
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex-1 mr-3">
-                                <div className="space-y-1 mb-1">
-                                  <label className="text-[11px] font-600 text-[var(--t4)] uppercase">
-                                    Agreement Name
-                                  </label>
-                                  <input
-                                    value={agr.name}
-                                    disabled={!isEditMode}
-                                    placeholder={
-                                      isEditMode
-                                        ? "e.g. Annual Maintenance Plan"
-                                        : ""
-                                    }
-                                    onChange={(e) =>
-                                      setAgreements((prev) =>
-                                        prev.map((x) =>
-                                          x.id === agr.id
-                                            ? { ...x, name: e.target.value }
-                                            : x,
-                                        ),
-                                      )
-                                    }
-                                    className={
-                                      isEditMode ? inputEdit : inputView
-                                    }
-                                  />
-                                </div>
-                                <div className="text-[11px] text-[var(--t3)]">
-                                  {agr.id}
-                                </div>
+                    {/* PROJECTS — only reachable when the customer has some */}
+                    {activeTab === "projects" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {(customerProjects ?? []).map((pr) => {
+                          const meta = STATUS_META[pr.status] ?? STATUS_META.PLANNING;
+                          return (
+                            <button
+                              key={pr.id}
+                              onClick={() => navigateToProject(`/projects/${pr.id}`)}
+                              style={{
+                                display: "flex", alignItems: "center", gap: 12, textAlign: "left",
+                                padding: "12px 14px", borderRadius: 12, cursor: "pointer", fontFamily: "inherit",
+                                background: "var(--bg-card-2, #f8fafc)", border: "1px solid var(--bd, #e2e8f0)",
+                              }}
+                            >
+                              <div style={{
+                                width: 34, height: 34, borderRadius: 9, background: meta.dim, flexShrink: 0,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                              }}>
+                                <FolderKanban size={14} style={{ color: meta.color }} />
                               </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <select
-                                  value={agr.status}
-                                  disabled={!isEditMode}
-                                  onChange={(e) =>
-                                    setAgreements((prev) =>
-                                      prev.map((x) =>
-                                        x.id === agr.id
-                                          ? { ...x, status: e.target.value }
-                                          : x,
-                                      ),
-                                    )
-                                  }
-                                  className={`text-[11px] font-600 rounded px-2 py-1 ${isEditMode ? "border border-gray-300 bg-white" : "border-0 bg-transparent"}`}
-                                  style={{
-                                    color:
-                                      agr.status === "active"
-                                        ? "var(--green)"
-                                        : agr.status === "pending"
-                                          ? "#d97706"
-                                          : "#ef4444",
-                                  }}
-                                >
-                                  <option value="active">Active</option>
-                                  <option value="pending">Pending</option>
-                                  <option value="expired">Expired</option>
-                                </select>
-                                {isEditMode && (
-                                  <button
-                                    onClick={() =>
-                                      setAgreements((prev) =>
-                                        prev.filter((x) => x.id !== agr.id),
-                                      )
-                                    }
-                                    className="text-red-400 hover:text-red-600 p-1"
-                                  >
-                                    <Trash2 size={13} />
-                                  </button>
-                                )}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>{pr.name}</p>
+                                <p style={{ fontSize: 11, color: "var(--t3, #64748b)", margin: "2px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
+                                  <CalendarRange size={10} />
+                                  {pr.startDate ?? "—"} → {pr.targetEndDate ?? "—"}
+                                </p>
                               </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-3 mb-4">
-                              {[
-                                {
-                                  lbl: "Next Service",
-                                  key: "nextService",
-                                  placeholder: "YYYY-MM-DD",
-                                },
-                                {
-                                  lbl: "Renewal Date",
-                                  key: "renewal",
-                                  placeholder: "YYYY-MM-DD",
-                                },
-                                {
-                                  lbl: "Annual Value ($)",
-                                  key: "value",
-                                  placeholder: "0",
-                                },
-                              ].map((f) => (
-                                <div key={f.key} className="space-y-1">
-                                  <label className="text-[11px] font-600 text-[var(--t4)] uppercase">
-                                    {f.lbl}
-                                  </label>
-                                  <input
-                                    value={(agr as any)[f.key]}
-                                    disabled={!isEditMode}
-                                    placeholder={
-                                      isEditMode ? f.placeholder : ""
-                                    }
-                                    onChange={(e) =>
-                                      setAgreements((prev) =>
-                                        prev.map((x) =>
-                                          x.id === agr.id
-                                            ? { ...x, [f.key]: e.target.value }
-                                            : x,
-                                        ),
-                                      )
-                                    }
-                                    className={
-                                      isEditMode ? inputEdit : inputView
-                                    }
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                            <div className="mt-4 pt-3 border-t border-gray-200 space-y-3">
-                              {/* Upload zone */}
-                              {isEditMode && (
-                                <div>
-                                  <label className="text-[11px] font-600 text-[var(--t4)] uppercase block mb-1.5">
-                                    Agreement Document (PDF)
-                                  </label>
-                                  <label className="flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors">
-                                    <FileText
-                                      size={18}
-                                      className="text-blue-500 shrink-0"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                      {agr.pdfName ? (
-                                        <span className="text-sm font-600 text-blue-600 truncate block">
-                                          {agr.pdfName}
-                                        </span>
-                                      ) : (
-                                        <span className="text-sm text-[var(--t3)]">
-                                          Click to upload PDF document
-                                        </span>
-                                      )}
-                                      <span className="text-[10px] text-[var(--t4)]">
-                                        PDF, max 10MB
-                                      </span>
-                                    </div>
-                                    {agr.pdfName && (
-                                      <CheckCircle2
-                                        size={16}
-                                        className="text-green-500 shrink-0"
-                                      />
-                                    )}
-                                    <input
-                                      type="file"
-                                      accept=".pdf"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (!file) return;
-                                        const url = URL.createObjectURL(file);
-                                        setAgreements((prev) =>
-                                          prev.map((x) =>
-                                            x.id === agr.id
-                                              ? {
-                                                ...x,
-                                                pdfUrl: url,
-                                                pdfName: file.name,
-                                              }
-                                              : x,
-                                          ),
-                                        );
-                                      }}
-                                    />
-                                  </label>
-                                </div>
-                              )}
-
-                              <div className="flex flex-wrap gap-2">
-                                {agr.pdfUrl ? (
-                                  <a
-                                    href={agr.pdfUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="btn btn-secondary btn-sm flex items-center gap-1.5"
-                                  >
-                                    <FileText size={12} /> View PDF
-                                  </a>
-                                ) : (
-                                  <span
-                                    className="btn btn-secondary btn-sm flex items-center gap-1.5 opacity-40 cursor-not-allowed"
-                                    title="Upload a PDF first"
-                                  >
-                                    <FileText size={12} /> View PDF
-                                  </span>
-                                )}
-                                <button
-                                  className="btn btn-primary btn-sm flex items-center gap-1.5"
-                                  onClick={() =>
-                                    setAgreements((prev) =>
-                                      prev.map((x) =>
-                                        x.id === agr.id
-                                          ? {
-                                            ...x,
-                                            showSignPanel: !x.showSignPanel,
-                                          }
-                                          : x,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  <ShieldCheck size={12} />
-                                  {(agr as any).showSignPanel
-                                    ? "Cancel"
-                                    : "Send for Signature"}
-                                </button>
-                              </div>
-
-                              {/* Signature send panel */}
-                              {(agr as any).showSignPanel && (
-                                <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 space-y-3">
-                                  <p className="text-[11px] font-700 text-blue-700 uppercase tracking-wider">
-                                    Send Agreement for e-Signature
-                                  </p>
-                                  <div className="space-y-1">
-                                    <label className="text-[11px] font-600 text-[var(--t4)] uppercase">
-                                      Recipient Email
-                                    </label>
-                                    <input
-                                      type="email"
-                                      value={(agr as any).signatureEmail || ""}
-                                      placeholder="customer@email.com"
-                                      onChange={(e) =>
-                                        setAgreements((prev) =>
-                                          prev.map((x) =>
-                                            x.id === agr.id
-                                              ? {
-                                                ...x,
-                                                signatureEmail:
-                                                  e.target.value,
-                                              }
-                                              : x,
-                                          ),
-                                        )
-                                      }
-                                      className={inputEdit}
-                                    />
-                                  </div>
-                                  {!agr.pdfUrl && (
-                                    <p className="text-[11px] text-amber-600 flex items-center gap-1">
-                                      ⚠️ Please upload a PDF document before
-                                      sending.
-                                    </p>
-                                  )}
-                                  <div className="flex gap-2">
-                                    <button
-                                      disabled={
-                                        !(agr as any).signatureEmail ||
-                                        !agr.pdfUrl
-                                      }
-                                      className="btn btn-primary btn-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                                      onClick={() => {
-                                        alert(
-                                          `Signature request sent to ${(agr as any).signatureEmail}`,
-                                        );
-                                        setAgreements((prev) =>
-                                          prev.map((x) =>
-                                            x.id === agr.id
-                                              ? {
-                                                ...x,
-                                                showSignPanel: false,
-                                                status: "pending",
-                                              }
-                                              : x,
-                                          ),
-                                        );
-                                      }}
-                                    >
-                                      <Mail size={12} /> Send Now
-                                    </button>
-                                    <button
-                                      className="btn btn-secondary btn-sm"
-                                      onClick={() =>
-                                        setAgreements((prev) =>
-                                          prev.map((x) =>
-                                            x.id === agr.id
-                                              ? { ...x, showSignPanel: false }
-                                              : x,
-                                          ),
-                                        )
-                                      }
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                        {agreements.length === 0 && (
-                          <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <ShieldCheck
-                              size={40}
-                              className="text-gray-300 mb-3"
-                            />
-                            <p className="text-sm font-600 text-[var(--t2)]">
-                              No agreements yet
-                            </p>
-                            <p className="text-xs text-[var(--t4)] mt-1">
-                              Create a maintenance contract or service plan.
-                            </p>
-                          </div>
-                        )}
+                              <span style={{
+                                fontSize: 10.5, fontWeight: 700, padding: "2px 9px", borderRadius: 999,
+                                background: meta.dim, color: meta.color, whiteSpace: "nowrap",
+                              }}>
+                                {meta.label}
+                              </span>
+                              <ExternalLink size={12} style={{ color: "var(--t4, #94a3b8)", flexShrink: 0 }} />
+                            </button>
+                          );
+                        })}
                       </div>
+                    )}
+
+                    {/* AGREEMENTS */}
+                    {activeTab === "agreements" && customerId && (
+                      <CustomerAgreementsTab
+                        customerId={customerId}
+                        customerName={`${person.firstName ?? ""} ${person.lastName ?? ""}`.trim()}
+                      />
                     )}
 
                     {/* REVIEWS */}
@@ -2343,14 +2143,6 @@ export default function CustomerDetailsSidebar({
           </div>
         </div>
       </div>
-
-      <AddAgreementModal
-        isOpen={isAddAgreementModalOpen}
-        onClose={() => setIsAddAgreementModalOpen(false)}
-        onCreated={(newAgr) => {
-          setAgreements((prev) => [newAgr, ...prev]);
-        }}
-      />
 
       <AddJobModal
         isOpen={isAddJobModalOpen}

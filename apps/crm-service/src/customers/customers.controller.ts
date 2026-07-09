@@ -75,6 +75,9 @@ export class CustomersController {
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'type', required: false, type: String })
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiQuery({ name: 'tags', required: false, type: String })
+  @ApiQuery({ name: 'sortBy', required: false, type: String })
+  @ApiQuery({ name: 'sortDir', required: false, type: String })
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -82,9 +85,21 @@ export class CustomersController {
     @Query('search') search?: string,
     @Query('type') type?: string,
     @Query('isActive') isActive?: string,
+    @Query('tags') tagsParam?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortDir') sortDir?: string,
   ) {
     const active = isActive === 'false' ? false : isActive === 'true' ? true : undefined;
-    return this.customersService.findAll(user.companyId, page, limit, search, type, active);
+    const tags = tagsParam ? tagsParam.split(',').map(t => t.trim()).filter(Boolean) : undefined;
+    const dir = sortDir === 'asc' ? 'asc' : 'desc';
+    return this.customersService.findAll(user.companyId, page, limit, search, type, active, tags, sortBy, dir);
+  }
+
+  // ---- Unique tags for autocomplete ----
+  @Get('tags')
+  @ApiOperation({ summary: 'List all unique customer tags for this company' })
+  getUniqueTags(@CurrentUser() user: AuthUser) {
+    return this.customersService.getUniqueTags(user.companyId);
   }
 
   // ---- Stats ----

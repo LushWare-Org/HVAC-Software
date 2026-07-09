@@ -1,4 +1,4 @@
-import { Edit2, Trash2, Lock, Users, Shield, Briefcase, Maximize2, Minimize2, Search, ChevronLeft, ChevronRight, Mail, Plus, X, Loader2, AlertCircle, RefreshCw, UserPlus, MapPin, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Edit2, Trash2, Lock, Users, Shield, Briefcase, Maximize2, Minimize2, Search, ChevronLeft, ChevronRight, Mail, X, Loader2, AlertCircle, RefreshCw, UserPlus, MapPin, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import {
     useTeamMembers,
@@ -8,11 +8,12 @@ import {
     usePendingTechnicians,
     useApproveTechnician,
     useRejectTechnician,
+    useLoginHistory,
     type TeamMember,
 } from '../hooks/useTeam'
-import { useCreateTechnician } from '../hooks/useScheduling'
+import { useTechnicians } from '../hooks/useScheduling'
 import { useEnsureVan } from '../hooks/useInventory'
-import MapPicker from '../components/MapPickerLazy'
+import AddTechnicianModal from '../components/AddTechnicianModal'
 import RecommendationsPanel from '../components/RecommendationsPanel'
 
 const ROLE_MAP: Record<string, string> = {
@@ -34,6 +35,7 @@ export default function Team() {
     const [isExpanded, setIsExpanded] = useState(false)
     const [page, setPage] = useState(1)
     const [isAddOpen, setIsAddOpen] = useState(false)
+    const [isAddTechOpen, setIsAddTechOpen] = useState(false)
     const [editMember, setEditMember] = useState<TeamMember | null>(null)
     const itemsPerPage = 10
 
@@ -60,6 +62,17 @@ export default function Team() {
     const pendingTechs: TeamMember[] = pendingQuery.data?.data ?? []
 
     const allMembers: TeamMember[] = membersQuery.data?.data ?? []
+
+    // Scheduling profiles — used to flag technicians who haven't set their base
+    // location yet (they set it themselves on first sign-in in the app)
+    const techniciansQuery = useTechnicians()
+    const locatedTechUserIds = useMemo(() => {
+        const set = new Set<string>()
+        for (const t of techniciansQuery.data ?? []) {
+            if (t.currentLocation) set.add(t.userId)
+        }
+        return set
+    }, [techniciansQuery.data])
 
     // ── Filter client-side ────────────────────────────────────────────────────
     const filteredMembers = useMemo(() => {
@@ -257,7 +270,10 @@ export default function Team() {
                             <option value="dispatcher">Dispatcher</option>
                             <option value="technician">Technician</option>
                         </select>
-                        <button className="btn btn-primary btn-sm" onClick={() => setIsAddOpen(true)}>
+                        <button className="btn btn-primary btn-sm" onClick={() => setIsAddTechOpen(true)}>
+                            <Briefcase size={14} className="mr-1.5" /> Add Technician
+                        </button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => setIsAddOpen(true)}>
                             <UserPlus size={14} className="mr-1.5" /> Add Member
                         </button>
                         <button className="btn btn-secondary btn-sm flex items-center gap-1.5 ml-auto" style={{ padding: '0 12px', fontWeight: 600 }} onClick={() => setIsExpanded(!isExpanded)}>
@@ -313,6 +329,15 @@ export default function Team() {
                                             <span className={`badge ${['super_admin', 'company_admin'].includes(member.role) ? 'badge-violet' : member.role === 'technician' ? 'badge-green' : 'badge-blue'}`}>
                                                 {ROLE_MAP[member.role] || member.role}
                                             </span>
+                                            {member.role === 'technician' && techniciansQuery.isSuccess && !locatedTechUserIds.has(member.id) && (
+                                                <span
+                                                    className="badge"
+                                                    title="The technician sets their base location on first sign-in — excluded from smart dispatch until then"
+                                                    style={{ marginLeft: 6, background: '#f59e0b22', color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: 3 }}
+                                                >
+                                                    <MapPin size={10} /> No location
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="text-sm">{member.phone || '—'}</td>
                                         <td>
@@ -373,7 +398,10 @@ export default function Team() {
                 </div>
             </div>
 
-            {/* ── Add Member Modal ──────────────────────────────────────── */}
+            {/* ── Add Technician Modal (shared with Dispatch board) ─────── */}
+            <AddTechnicianModal isOpen={isAddTechOpen} onClose={() => setIsAddTechOpen(false)} />
+
+            {/* ── Add Member Modal (office roles) ───────────────────────── */}
             {isAddOpen && <AddMemberModal onClose={() => setIsAddOpen(false)} />}
 
             {/* ── Edit Member Modal ─────────────────────────────────────── */}
@@ -401,26 +429,11 @@ export default function Team() {
 // ─── Add Member Modal ─────────────────────────────────────────────────────────
 
 function AddMemberModal({ onClose }: { onClose: () => void }) {
+    // Office roles only — technicians are added via the shared AddTechnicianModal,
+    // which provisions a login account + emails a temp password.
     const create = useCreateTeamMember()
-    const createTechnician = useCreateTechnician()
-    const ensureVan = useEnsureVan()
-    const [form, setForm] = useState({ name: '', email: '', phone: '', role: 'technician' })
-    const [skills, setSkills] = useState<string[]>([])
-    const [customSkill, setCustomSkill] = useState('')
-    const [lat, setLat] = useState(6.9271)
-    const [lng, setLng] = useState(79.8612)
+    const [form, setForm] = useState({ name: '', email: '', phone: '', role: 'office_manager' })
     const [error, setError] = useState('')
-
-    const isTechnician = form.role === 'technician'
-
-    const COMMON_SKILLS = ['HVAC', 'Plumbing', 'Electrical', 'Carpentry', 'Painting', 'Roofing', 'Landscaping', 'Appliance Repair', 'General Maintenance']
-
-    const toggleSkill = (s: string) => setSkills(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
-
-    const addCustomSkill = () => {
-        const s = customSkill.trim()
-        if (s && !skills.includes(s)) { setSkills(prev => [...prev, s]); setCustomSkill('') }
-    }
 
     const handleSubmit = () => {
         setError('')
@@ -430,31 +443,7 @@ function AddMemberModal({ onClose }: { onClose: () => void }) {
         create.mutate(
             { name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim() || undefined, role: form.role },
             {
-                onSuccess: (newUser) => {
-                    // If technician, also register in scheduling service with GPS
-                    if (isTechnician) {
-                        createTechnician.mutate({
-                            userId: newUser.id,
-                            name: form.name.trim(),
-                            phone: form.phone.trim() || undefined,
-                            skills: skills.length > 0 ? skills : undefined,
-                            maxDailyJobs: 5,
-                            latitude: lat,
-                            longitude: lng,
-                        }, {
-                            onSuccess: () => {
-                                // Auto-create van for the new technician
-                                ensureVan.mutate(
-                                    { technicianId: newUser.id, technicianName: form.name.trim() },
-                                    { onSettled: () => onClose() },
-                                )
-                            },
-                            onError: () => onClose(), // still close even if scheduling fails
-                        })
-                    } else {
-                        onClose()
-                    }
-                },
+                onSuccess: () => onClose(),
                 onError: (err: any) => {
                     const apiMessage = err?.response?.data?.message
                     const text = Array.isArray(apiMessage)
@@ -495,70 +484,17 @@ function AddMemberModal({ onClose }: { onClose: () => void }) {
                             <option value="company_admin">Company Admin</option>
                             <option value="office_manager">Office Manager</option>
                             <option value="dispatcher">Dispatcher</option>
-                            <option value="technician">Technician</option>
                         </select>
+                        <p className="text-xs text-[var(--t4)] mt-1.5">
+                            Adding a field technician? Use the <strong>Add Technician</strong> button — it creates
+                            an app login and emails a temporary password.
+                        </p>
                     </div>
-
-                    {/* Technician-specific fields */}
-                    {isTechnician && (
-                        <>
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--t2)] mb-2 flex items-center gap-1.5">
-                                    <Briefcase size={13} /> Skills
-                                </label>
-                                <div className="flex flex-wrap gap-1.5 mb-2">
-                                    {COMMON_SKILLS.map(s => (
-                                        <button
-                                            key={s}
-                                            onClick={() => toggleSkill(s)}
-                                            className={`px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer transition-colors ${skills.includes(s) ? 'bg-blue-600 text-white border-blue-600' : 'bg-transparent border-[var(--bd)] text-[var(--t2)] hover:border-blue-400'}`}
-                                        >
-                                            {s}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="flex gap-2">
-                                    <input
-                                        value={customSkill}
-                                        onChange={e => setCustomSkill(e.target.value)}
-                                        onKeyDown={e => e.key === 'Enter' && addCustomSkill()}
-                                        placeholder="Custom skill…"
-                                        className={`flex-1 ${inputCls}`}
-                                    />
-                                    <button onClick={addCustomSkill} className="px-3 py-1.5 bg-blue-600 text-white rounded-[var(--r)] text-xs font-medium cursor-pointer border-0">
-                                        <Plus size={12} />
-                                    </button>
-                                </div>
-                                {skills.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                        {skills.map(s => (
-                                            <span key={s} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
-                                                {s}
-                                                <button onClick={() => toggleSkill(s)} className="text-blue-500 bg-transparent border-0 cursor-pointer p-0 ml-0.5"><X size={10} /></button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--t2)] mb-2 flex items-center gap-1.5">
-                                    <MapPin size={13} /> Home / Base Location
-                                </label>
-                                <MapPicker
-                                    label=""
-                                    lat={lat}
-                                    lng={lng}
-                                    onChange={(la, ln) => { setLat(la); setLng(ln) }}
-                                    height="220px"
-                                />
-                            </div>
-                        </>
-                    )}
                 </div>
                 <div className="flex items-center justify-end gap-3 p-5 border-t border-[var(--bd)] shrink-0">
                     <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-primary" onClick={handleSubmit} disabled={create.isPending || createTechnician.isPending}>
-                        {(create.isPending || createTechnician.isPending) ? <Loader2 size={14} className="animate-spin mr-2" /> : <UserPlus size={14} className="mr-2" />}
+                    <button className="btn btn-primary" onClick={handleSubmit} disabled={create.isPending}>
+                        {create.isPending ? <Loader2 size={14} className="animate-spin mr-2" /> : <UserPlus size={14} className="mr-2" />}
                         Add Member
                     </button>
                 </div>
@@ -683,8 +619,10 @@ function PendingTechModal({
 
 function EditMemberModal({ member, onClose }: { member: TeamMember; onClose: () => void }) {
     const update = useUpdateTeamMember()
+    const loginHistory = useLoginHistory(member.id)
     const [form, setForm] = useState({ name: member.name, email: member.email, phone: member.phone || '', role: member.role })
     const [error, setError] = useState('')
+    const [showHistory, setShowHistory] = useState(false)
 
     const handleSubmit = () => {
         setError('')
@@ -734,6 +672,36 @@ function EditMemberModal({ member, onClose }: { member: TeamMember; onClose: () 
                             <option value="dispatcher">Dispatcher</option>
                             <option value="technician">Technician</option>
                         </select>
+                    </div>
+                    <div>
+                        <button
+                            type="button"
+                            className="flex items-center gap-1.5 text-sm font-medium text-[var(--blue)] hover:underline mt-2"
+                            onClick={() => setShowHistory(v => !v)}
+                        >
+                            <Clock size={13} /> {showHistory ? 'Hide' : 'Show'} Login History
+                        </button>
+                        {showHistory && (
+                            <div className="mt-2 border border-[var(--bd)] rounded-[var(--r)] overflow-hidden">
+                                {loginHistory.isLoading ? (
+                                    <div className="p-3 text-xs text-[var(--t3)]">Loading...</div>
+                                ) : !loginHistory.data?.length ? (
+                                    <div className="p-3 text-xs text-[var(--t3)]">No login events recorded yet.</div>
+                                ) : (
+                                    <div className="max-h-44 overflow-y-auto">
+                                        {loginHistory.data.map(ev => (
+                                            <div key={ev.id} className="flex items-center justify-between px-3 py-2 border-b border-[var(--bd)] last:border-0">
+                                                <div className="text-xs text-[var(--t1)]">
+                                                    {new Date(ev.loggedInAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                    {' '}<span className="text-[var(--t3)]">{new Date(ev.loggedInAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                                {ev.ipAddress && <span className="text-xs text-[var(--t4)]">{ev.ipAddress}</span>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="flex items-center justify-end gap-3 p-5 border-t border-[var(--bd)]">
