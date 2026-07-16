@@ -99,6 +99,11 @@ export type FollowupAttempt = $Result.DefaultSelection<Prisma.$FollowupAttemptPa
  */
 export type UpsellRecommendation = $Result.DefaultSelection<Prisma.$UpsellRecommendationPayload>
 /**
+ * Model RetentionRecommendation
+ * 
+ */
+export type RetentionRecommendation = $Result.DefaultSelection<Prisma.$RetentionRecommendationPayload>
+/**
  * Model ImportBatch
  * 
  */
@@ -533,6 +538,16 @@ export class PrismaClient<
     * ```
     */
   get upsellRecommendation(): Prisma.UpsellRecommendationDelegate<ExtArgs>;
+
+  /**
+   * `prisma.retentionRecommendation`: Exposes CRUD operations for the **RetentionRecommendation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RetentionRecommendations
+    * const retentionRecommendations = await prisma.retentionRecommendation.findMany()
+    * ```
+    */
+  get retentionRecommendation(): Prisma.RetentionRecommendationDelegate<ExtArgs>;
 
   /**
    * `prisma.importBatch`: Exposes CRUD operations for the **ImportBatch** model.
@@ -1061,6 +1076,7 @@ export namespace Prisma {
     CompanyAnnouncement: 'CompanyAnnouncement',
     FollowupAttempt: 'FollowupAttempt',
     UpsellRecommendation: 'UpsellRecommendation',
+    RetentionRecommendation: 'RetentionRecommendation',
     ImportBatch: 'ImportBatch',
     ImportError: 'ImportError',
     CustomerIotConnection: 'CustomerIotConnection',
@@ -1083,7 +1099,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "company" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay"
+      modelProps: "company" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "retentionRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2277,6 +2293,76 @@ export namespace Prisma {
           }
         }
       }
+      RetentionRecommendation: {
+        payload: Prisma.$RetentionRecommendationPayload<ExtArgs>
+        fields: Prisma.RetentionRecommendationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RetentionRecommendationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RetentionRecommendationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload>
+          }
+          findFirst: {
+            args: Prisma.RetentionRecommendationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RetentionRecommendationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload>
+          }
+          findMany: {
+            args: Prisma.RetentionRecommendationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload>[]
+          }
+          create: {
+            args: Prisma.RetentionRecommendationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload>
+          }
+          createMany: {
+            args: Prisma.RetentionRecommendationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.RetentionRecommendationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload>[]
+          }
+          delete: {
+            args: Prisma.RetentionRecommendationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload>
+          }
+          update: {
+            args: Prisma.RetentionRecommendationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload>
+          }
+          deleteMany: {
+            args: Prisma.RetentionRecommendationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RetentionRecommendationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.RetentionRecommendationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetentionRecommendationPayload>
+          }
+          aggregate: {
+            args: Prisma.RetentionRecommendationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRetentionRecommendation>
+          }
+          groupBy: {
+            args: Prisma.RetentionRecommendationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RetentionRecommendationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RetentionRecommendationCountArgs<ExtArgs>
+            result: $Utils.Optional<RetentionRecommendationCountAggregateOutputType> | number
+          }
+        }
+      }
       ImportBatch: {
         payload: Prisma.$ImportBatchPayload<ExtArgs>
         fields: Prisma.ImportBatchFieldRefs
@@ -3012,6 +3098,7 @@ export namespace Prisma {
     addresses: number
     equipment: number
     upsellRecommendations: number
+    retentionRecommendations: number
     iotConnections: number
   }
 
@@ -3024,6 +3111,7 @@ export namespace Prisma {
     addresses?: boolean | CustomerCountOutputTypeCountAddressesArgs
     equipment?: boolean | CustomerCountOutputTypeCountEquipmentArgs
     upsellRecommendations?: boolean | CustomerCountOutputTypeCountUpsellRecommendationsArgs
+    retentionRecommendations?: boolean | CustomerCountOutputTypeCountRetentionRecommendationsArgs
     iotConnections?: boolean | CustomerCountOutputTypeCountIotConnectionsArgs
   }
 
@@ -3092,6 +3180,13 @@ export namespace Prisma {
    */
   export type CustomerCountOutputTypeCountUpsellRecommendationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: UpsellRecommendationWhereInput
+  }
+
+  /**
+   * CustomerCountOutputType without action
+   */
+  export type CustomerCountOutputTypeCountRetentionRecommendationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RetentionRecommendationWhereInput
   }
 
   /**
@@ -6933,6 +7028,7 @@ export namespace Prisma {
     addresses?: boolean | Customer$addressesArgs<ExtArgs>
     equipment?: boolean | Customer$equipmentArgs<ExtArgs>
     upsellRecommendations?: boolean | Customer$upsellRecommendationsArgs<ExtArgs>
+    retentionRecommendations?: boolean | Customer$retentionRecommendationsArgs<ExtArgs>
     iotConnections?: boolean | Customer$iotConnectionsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["customer"]>
@@ -6998,6 +7094,7 @@ export namespace Prisma {
     addresses?: boolean | Customer$addressesArgs<ExtArgs>
     equipment?: boolean | Customer$equipmentArgs<ExtArgs>
     upsellRecommendations?: boolean | Customer$upsellRecommendationsArgs<ExtArgs>
+    retentionRecommendations?: boolean | Customer$retentionRecommendationsArgs<ExtArgs>
     iotConnections?: boolean | Customer$iotConnectionsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -7017,6 +7114,7 @@ export namespace Prisma {
       addresses: Prisma.$AddressPayload<ExtArgs>[]
       equipment: Prisma.$EquipmentPayload<ExtArgs>[]
       upsellRecommendations: Prisma.$UpsellRecommendationPayload<ExtArgs>[]
+      retentionRecommendations: Prisma.$RetentionRecommendationPayload<ExtArgs>[]
       iotConnections: Prisma.$CustomerIotConnectionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -7415,6 +7513,7 @@ export namespace Prisma {
     addresses<T extends Customer$addressesArgs<ExtArgs> = {}>(args?: Subset<T, Customer$addressesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AddressPayload<ExtArgs>, T, "findMany"> | Null>
     equipment<T extends Customer$equipmentArgs<ExtArgs> = {}>(args?: Subset<T, Customer$equipmentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentPayload<ExtArgs>, T, "findMany"> | Null>
     upsellRecommendations<T extends Customer$upsellRecommendationsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$upsellRecommendationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "findMany"> | Null>
+    retentionRecommendations<T extends Customer$retentionRecommendationsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$retentionRecommendationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "findMany"> | Null>
     iotConnections<T extends Customer$iotConnectionsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$iotConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -7942,6 +8041,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: UpsellRecommendationScalarFieldEnum | UpsellRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * Customer.retentionRecommendations
+   */
+  export type Customer$retentionRecommendationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    where?: RetentionRecommendationWhereInput
+    orderBy?: RetentionRecommendationOrderByWithRelationInput | RetentionRecommendationOrderByWithRelationInput[]
+    cursor?: RetentionRecommendationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: RetentionRecommendationScalarFieldEnum | RetentionRecommendationScalarFieldEnum[]
   }
 
   /**
@@ -21959,6 +22078,1161 @@ export namespace Prisma {
 
 
   /**
+   * Model RetentionRecommendation
+   */
+
+  export type AggregateRetentionRecommendation = {
+    _count: RetentionRecommendationCountAggregateOutputType | null
+    _avg: RetentionRecommendationAvgAggregateOutputType | null
+    _sum: RetentionRecommendationSumAggregateOutputType | null
+    _min: RetentionRecommendationMinAggregateOutputType | null
+    _max: RetentionRecommendationMaxAggregateOutputType | null
+  }
+
+  export type RetentionRecommendationAvgAggregateOutputType = {
+    confidence: number | null
+    revenueGenerated: Decimal | null
+  }
+
+  export type RetentionRecommendationSumAggregateOutputType = {
+    confidence: number | null
+    revenueGenerated: Decimal | null
+  }
+
+  export type RetentionRecommendationMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    customerId: string | null
+    finalAction: string | null
+    finalPriority: string | null
+    finalChannel: string | null
+    finalMessage: string | null
+    reason: string | null
+    confidence: number | null
+    status: string | null
+    customerAccepted: boolean | null
+    customerDeclined: boolean | null
+    retentionSuccess: boolean | null
+    revenueGenerated: Decimal | null
+    respondedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RetentionRecommendationMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    customerId: string | null
+    finalAction: string | null
+    finalPriority: string | null
+    finalChannel: string | null
+    finalMessage: string | null
+    reason: string | null
+    confidence: number | null
+    status: string | null
+    customerAccepted: boolean | null
+    customerDeclined: boolean | null
+    retentionSuccess: boolean | null
+    revenueGenerated: Decimal | null
+    respondedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RetentionRecommendationCountAggregateOutputType = {
+    id: number
+    companyId: number
+    customerId: number
+    ruleResult: number
+    llmRecommendation: number
+    validationResult: number
+    finalAction: number
+    finalOffer: number
+    finalPriority: number
+    finalChannel: number
+    finalMessage: number
+    reason: number
+    confidence: number
+    status: number
+    managerOverride: number
+    customerAccepted: number
+    customerDeclined: number
+    retentionSuccess: number
+    revenueGenerated: number
+    respondedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type RetentionRecommendationAvgAggregateInputType = {
+    confidence?: true
+    revenueGenerated?: true
+  }
+
+  export type RetentionRecommendationSumAggregateInputType = {
+    confidence?: true
+    revenueGenerated?: true
+  }
+
+  export type RetentionRecommendationMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    finalAction?: true
+    finalPriority?: true
+    finalChannel?: true
+    finalMessage?: true
+    reason?: true
+    confidence?: true
+    status?: true
+    customerAccepted?: true
+    customerDeclined?: true
+    retentionSuccess?: true
+    revenueGenerated?: true
+    respondedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RetentionRecommendationMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    finalAction?: true
+    finalPriority?: true
+    finalChannel?: true
+    finalMessage?: true
+    reason?: true
+    confidence?: true
+    status?: true
+    customerAccepted?: true
+    customerDeclined?: true
+    retentionSuccess?: true
+    revenueGenerated?: true
+    respondedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RetentionRecommendationCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    customerId?: true
+    ruleResult?: true
+    llmRecommendation?: true
+    validationResult?: true
+    finalAction?: true
+    finalOffer?: true
+    finalPriority?: true
+    finalChannel?: true
+    finalMessage?: true
+    reason?: true
+    confidence?: true
+    status?: true
+    managerOverride?: true
+    customerAccepted?: true
+    customerDeclined?: true
+    retentionSuccess?: true
+    revenueGenerated?: true
+    respondedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type RetentionRecommendationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RetentionRecommendation to aggregate.
+     */
+    where?: RetentionRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RetentionRecommendations to fetch.
+     */
+    orderBy?: RetentionRecommendationOrderByWithRelationInput | RetentionRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RetentionRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RetentionRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RetentionRecommendations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned RetentionRecommendations
+    **/
+    _count?: true | RetentionRecommendationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: RetentionRecommendationAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: RetentionRecommendationSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RetentionRecommendationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RetentionRecommendationMaxAggregateInputType
+  }
+
+  export type GetRetentionRecommendationAggregateType<T extends RetentionRecommendationAggregateArgs> = {
+        [P in keyof T & keyof AggregateRetentionRecommendation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRetentionRecommendation[P]>
+      : GetScalarType<T[P], AggregateRetentionRecommendation[P]>
+  }
+
+
+
+
+  export type RetentionRecommendationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RetentionRecommendationWhereInput
+    orderBy?: RetentionRecommendationOrderByWithAggregationInput | RetentionRecommendationOrderByWithAggregationInput[]
+    by: RetentionRecommendationScalarFieldEnum[] | RetentionRecommendationScalarFieldEnum
+    having?: RetentionRecommendationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RetentionRecommendationCountAggregateInputType | true
+    _avg?: RetentionRecommendationAvgAggregateInputType
+    _sum?: RetentionRecommendationSumAggregateInputType
+    _min?: RetentionRecommendationMinAggregateInputType
+    _max?: RetentionRecommendationMaxAggregateInputType
+  }
+
+  export type RetentionRecommendationGroupByOutputType = {
+    id: string
+    companyId: string
+    customerId: string
+    ruleResult: JsonValue
+    llmRecommendation: JsonValue | null
+    validationResult: JsonValue
+    finalAction: string
+    finalOffer: JsonValue
+    finalPriority: string
+    finalChannel: string | null
+    finalMessage: string | null
+    reason: string
+    confidence: number | null
+    status: string
+    managerOverride: JsonValue | null
+    customerAccepted: boolean | null
+    customerDeclined: boolean | null
+    retentionSuccess: boolean | null
+    revenueGenerated: Decimal | null
+    respondedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: RetentionRecommendationCountAggregateOutputType | null
+    _avg: RetentionRecommendationAvgAggregateOutputType | null
+    _sum: RetentionRecommendationSumAggregateOutputType | null
+    _min: RetentionRecommendationMinAggregateOutputType | null
+    _max: RetentionRecommendationMaxAggregateOutputType | null
+  }
+
+  type GetRetentionRecommendationGroupByPayload<T extends RetentionRecommendationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RetentionRecommendationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RetentionRecommendationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RetentionRecommendationGroupByOutputType[P]>
+            : GetScalarType<T[P], RetentionRecommendationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RetentionRecommendationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    ruleResult?: boolean
+    llmRecommendation?: boolean
+    validationResult?: boolean
+    finalAction?: boolean
+    finalOffer?: boolean
+    finalPriority?: boolean
+    finalChannel?: boolean
+    finalMessage?: boolean
+    reason?: boolean
+    confidence?: boolean
+    status?: boolean
+    managerOverride?: boolean
+    customerAccepted?: boolean
+    customerDeclined?: boolean
+    retentionSuccess?: boolean
+    revenueGenerated?: boolean
+    respondedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["retentionRecommendation"]>
+
+  export type RetentionRecommendationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    ruleResult?: boolean
+    llmRecommendation?: boolean
+    validationResult?: boolean
+    finalAction?: boolean
+    finalOffer?: boolean
+    finalPriority?: boolean
+    finalChannel?: boolean
+    finalMessage?: boolean
+    reason?: boolean
+    confidence?: boolean
+    status?: boolean
+    managerOverride?: boolean
+    customerAccepted?: boolean
+    customerDeclined?: boolean
+    retentionSuccess?: boolean
+    revenueGenerated?: boolean
+    respondedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["retentionRecommendation"]>
+
+  export type RetentionRecommendationSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    customerId?: boolean
+    ruleResult?: boolean
+    llmRecommendation?: boolean
+    validationResult?: boolean
+    finalAction?: boolean
+    finalOffer?: boolean
+    finalPriority?: boolean
+    finalChannel?: boolean
+    finalMessage?: boolean
+    reason?: boolean
+    confidence?: boolean
+    status?: boolean
+    managerOverride?: boolean
+    customerAccepted?: boolean
+    customerDeclined?: boolean
+    retentionSuccess?: boolean
+    revenueGenerated?: boolean
+    respondedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type RetentionRecommendationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }
+  export type RetentionRecommendationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+  }
+
+  export type $RetentionRecommendationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "RetentionRecommendation"
+    objects: {
+      customer: Prisma.$CustomerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      customerId: string
+      ruleResult: Prisma.JsonValue
+      llmRecommendation: Prisma.JsonValue | null
+      validationResult: Prisma.JsonValue
+      finalAction: string
+      finalOffer: Prisma.JsonValue
+      finalPriority: string
+      finalChannel: string | null
+      finalMessage: string | null
+      reason: string
+      confidence: number | null
+      status: string
+      managerOverride: Prisma.JsonValue | null
+      customerAccepted: boolean | null
+      customerDeclined: boolean | null
+      retentionSuccess: boolean | null
+      revenueGenerated: Prisma.Decimal | null
+      respondedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["retentionRecommendation"]>
+    composites: {}
+  }
+
+  type RetentionRecommendationGetPayload<S extends boolean | null | undefined | RetentionRecommendationDefaultArgs> = $Result.GetResult<Prisma.$RetentionRecommendationPayload, S>
+
+  type RetentionRecommendationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<RetentionRecommendationFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: RetentionRecommendationCountAggregateInputType | true
+    }
+
+  export interface RetentionRecommendationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['RetentionRecommendation'], meta: { name: 'RetentionRecommendation' } }
+    /**
+     * Find zero or one RetentionRecommendation that matches the filter.
+     * @param {RetentionRecommendationFindUniqueArgs} args - Arguments to find a RetentionRecommendation
+     * @example
+     * // Get one RetentionRecommendation
+     * const retentionRecommendation = await prisma.retentionRecommendation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RetentionRecommendationFindUniqueArgs>(args: SelectSubset<T, RetentionRecommendationFindUniqueArgs<ExtArgs>>): Prisma__RetentionRecommendationClient<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one RetentionRecommendation that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {RetentionRecommendationFindUniqueOrThrowArgs} args - Arguments to find a RetentionRecommendation
+     * @example
+     * // Get one RetentionRecommendation
+     * const retentionRecommendation = await prisma.retentionRecommendation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RetentionRecommendationFindUniqueOrThrowArgs>(args: SelectSubset<T, RetentionRecommendationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RetentionRecommendationClient<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first RetentionRecommendation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetentionRecommendationFindFirstArgs} args - Arguments to find a RetentionRecommendation
+     * @example
+     * // Get one RetentionRecommendation
+     * const retentionRecommendation = await prisma.retentionRecommendation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RetentionRecommendationFindFirstArgs>(args?: SelectSubset<T, RetentionRecommendationFindFirstArgs<ExtArgs>>): Prisma__RetentionRecommendationClient<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first RetentionRecommendation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetentionRecommendationFindFirstOrThrowArgs} args - Arguments to find a RetentionRecommendation
+     * @example
+     * // Get one RetentionRecommendation
+     * const retentionRecommendation = await prisma.retentionRecommendation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RetentionRecommendationFindFirstOrThrowArgs>(args?: SelectSubset<T, RetentionRecommendationFindFirstOrThrowArgs<ExtArgs>>): Prisma__RetentionRecommendationClient<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more RetentionRecommendations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetentionRecommendationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all RetentionRecommendations
+     * const retentionRecommendations = await prisma.retentionRecommendation.findMany()
+     * 
+     * // Get first 10 RetentionRecommendations
+     * const retentionRecommendations = await prisma.retentionRecommendation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const retentionRecommendationWithIdOnly = await prisma.retentionRecommendation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RetentionRecommendationFindManyArgs>(args?: SelectSubset<T, RetentionRecommendationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a RetentionRecommendation.
+     * @param {RetentionRecommendationCreateArgs} args - Arguments to create a RetentionRecommendation.
+     * @example
+     * // Create one RetentionRecommendation
+     * const RetentionRecommendation = await prisma.retentionRecommendation.create({
+     *   data: {
+     *     // ... data to create a RetentionRecommendation
+     *   }
+     * })
+     * 
+     */
+    create<T extends RetentionRecommendationCreateArgs>(args: SelectSubset<T, RetentionRecommendationCreateArgs<ExtArgs>>): Prisma__RetentionRecommendationClient<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many RetentionRecommendations.
+     * @param {RetentionRecommendationCreateManyArgs} args - Arguments to create many RetentionRecommendations.
+     * @example
+     * // Create many RetentionRecommendations
+     * const retentionRecommendation = await prisma.retentionRecommendation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RetentionRecommendationCreateManyArgs>(args?: SelectSubset<T, RetentionRecommendationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many RetentionRecommendations and returns the data saved in the database.
+     * @param {RetentionRecommendationCreateManyAndReturnArgs} args - Arguments to create many RetentionRecommendations.
+     * @example
+     * // Create many RetentionRecommendations
+     * const retentionRecommendation = await prisma.retentionRecommendation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many RetentionRecommendations and only return the `id`
+     * const retentionRecommendationWithIdOnly = await prisma.retentionRecommendation.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends RetentionRecommendationCreateManyAndReturnArgs>(args?: SelectSubset<T, RetentionRecommendationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a RetentionRecommendation.
+     * @param {RetentionRecommendationDeleteArgs} args - Arguments to delete one RetentionRecommendation.
+     * @example
+     * // Delete one RetentionRecommendation
+     * const RetentionRecommendation = await prisma.retentionRecommendation.delete({
+     *   where: {
+     *     // ... filter to delete one RetentionRecommendation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RetentionRecommendationDeleteArgs>(args: SelectSubset<T, RetentionRecommendationDeleteArgs<ExtArgs>>): Prisma__RetentionRecommendationClient<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one RetentionRecommendation.
+     * @param {RetentionRecommendationUpdateArgs} args - Arguments to update one RetentionRecommendation.
+     * @example
+     * // Update one RetentionRecommendation
+     * const retentionRecommendation = await prisma.retentionRecommendation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RetentionRecommendationUpdateArgs>(args: SelectSubset<T, RetentionRecommendationUpdateArgs<ExtArgs>>): Prisma__RetentionRecommendationClient<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more RetentionRecommendations.
+     * @param {RetentionRecommendationDeleteManyArgs} args - Arguments to filter RetentionRecommendations to delete.
+     * @example
+     * // Delete a few RetentionRecommendations
+     * const { count } = await prisma.retentionRecommendation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RetentionRecommendationDeleteManyArgs>(args?: SelectSubset<T, RetentionRecommendationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RetentionRecommendations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetentionRecommendationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many RetentionRecommendations
+     * const retentionRecommendation = await prisma.retentionRecommendation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RetentionRecommendationUpdateManyArgs>(args: SelectSubset<T, RetentionRecommendationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one RetentionRecommendation.
+     * @param {RetentionRecommendationUpsertArgs} args - Arguments to update or create a RetentionRecommendation.
+     * @example
+     * // Update or create a RetentionRecommendation
+     * const retentionRecommendation = await prisma.retentionRecommendation.upsert({
+     *   create: {
+     *     // ... data to create a RetentionRecommendation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the RetentionRecommendation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RetentionRecommendationUpsertArgs>(args: SelectSubset<T, RetentionRecommendationUpsertArgs<ExtArgs>>): Prisma__RetentionRecommendationClient<$Result.GetResult<Prisma.$RetentionRecommendationPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of RetentionRecommendations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetentionRecommendationCountArgs} args - Arguments to filter RetentionRecommendations to count.
+     * @example
+     * // Count the number of RetentionRecommendations
+     * const count = await prisma.retentionRecommendation.count({
+     *   where: {
+     *     // ... the filter for the RetentionRecommendations we want to count
+     *   }
+     * })
+    **/
+    count<T extends RetentionRecommendationCountArgs>(
+      args?: Subset<T, RetentionRecommendationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RetentionRecommendationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a RetentionRecommendation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetentionRecommendationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RetentionRecommendationAggregateArgs>(args: Subset<T, RetentionRecommendationAggregateArgs>): Prisma.PrismaPromise<GetRetentionRecommendationAggregateType<T>>
+
+    /**
+     * Group by RetentionRecommendation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetentionRecommendationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RetentionRecommendationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RetentionRecommendationGroupByArgs['orderBy'] }
+        : { orderBy?: RetentionRecommendationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RetentionRecommendationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRetentionRecommendationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the RetentionRecommendation model
+   */
+  readonly fields: RetentionRecommendationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for RetentionRecommendation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RetentionRecommendationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the RetentionRecommendation model
+   */ 
+  interface RetentionRecommendationFieldRefs {
+    readonly id: FieldRef<"RetentionRecommendation", 'String'>
+    readonly companyId: FieldRef<"RetentionRecommendation", 'String'>
+    readonly customerId: FieldRef<"RetentionRecommendation", 'String'>
+    readonly ruleResult: FieldRef<"RetentionRecommendation", 'Json'>
+    readonly llmRecommendation: FieldRef<"RetentionRecommendation", 'Json'>
+    readonly validationResult: FieldRef<"RetentionRecommendation", 'Json'>
+    readonly finalAction: FieldRef<"RetentionRecommendation", 'String'>
+    readonly finalOffer: FieldRef<"RetentionRecommendation", 'Json'>
+    readonly finalPriority: FieldRef<"RetentionRecommendation", 'String'>
+    readonly finalChannel: FieldRef<"RetentionRecommendation", 'String'>
+    readonly finalMessage: FieldRef<"RetentionRecommendation", 'String'>
+    readonly reason: FieldRef<"RetentionRecommendation", 'String'>
+    readonly confidence: FieldRef<"RetentionRecommendation", 'Float'>
+    readonly status: FieldRef<"RetentionRecommendation", 'String'>
+    readonly managerOverride: FieldRef<"RetentionRecommendation", 'Json'>
+    readonly customerAccepted: FieldRef<"RetentionRecommendation", 'Boolean'>
+    readonly customerDeclined: FieldRef<"RetentionRecommendation", 'Boolean'>
+    readonly retentionSuccess: FieldRef<"RetentionRecommendation", 'Boolean'>
+    readonly revenueGenerated: FieldRef<"RetentionRecommendation", 'Decimal'>
+    readonly respondedAt: FieldRef<"RetentionRecommendation", 'DateTime'>
+    readonly createdAt: FieldRef<"RetentionRecommendation", 'DateTime'>
+    readonly updatedAt: FieldRef<"RetentionRecommendation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * RetentionRecommendation findUnique
+   */
+  export type RetentionRecommendationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which RetentionRecommendation to fetch.
+     */
+    where: RetentionRecommendationWhereUniqueInput
+  }
+
+  /**
+   * RetentionRecommendation findUniqueOrThrow
+   */
+  export type RetentionRecommendationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which RetentionRecommendation to fetch.
+     */
+    where: RetentionRecommendationWhereUniqueInput
+  }
+
+  /**
+   * RetentionRecommendation findFirst
+   */
+  export type RetentionRecommendationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which RetentionRecommendation to fetch.
+     */
+    where?: RetentionRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RetentionRecommendations to fetch.
+     */
+    orderBy?: RetentionRecommendationOrderByWithRelationInput | RetentionRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RetentionRecommendations.
+     */
+    cursor?: RetentionRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RetentionRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RetentionRecommendations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RetentionRecommendations.
+     */
+    distinct?: RetentionRecommendationScalarFieldEnum | RetentionRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * RetentionRecommendation findFirstOrThrow
+   */
+  export type RetentionRecommendationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which RetentionRecommendation to fetch.
+     */
+    where?: RetentionRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RetentionRecommendations to fetch.
+     */
+    orderBy?: RetentionRecommendationOrderByWithRelationInput | RetentionRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RetentionRecommendations.
+     */
+    cursor?: RetentionRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RetentionRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RetentionRecommendations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RetentionRecommendations.
+     */
+    distinct?: RetentionRecommendationScalarFieldEnum | RetentionRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * RetentionRecommendation findMany
+   */
+  export type RetentionRecommendationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which RetentionRecommendations to fetch.
+     */
+    where?: RetentionRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RetentionRecommendations to fetch.
+     */
+    orderBy?: RetentionRecommendationOrderByWithRelationInput | RetentionRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing RetentionRecommendations.
+     */
+    cursor?: RetentionRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RetentionRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RetentionRecommendations.
+     */
+    skip?: number
+    distinct?: RetentionRecommendationScalarFieldEnum | RetentionRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * RetentionRecommendation create
+   */
+  export type RetentionRecommendationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a RetentionRecommendation.
+     */
+    data: XOR<RetentionRecommendationCreateInput, RetentionRecommendationUncheckedCreateInput>
+  }
+
+  /**
+   * RetentionRecommendation createMany
+   */
+  export type RetentionRecommendationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many RetentionRecommendations.
+     */
+    data: RetentionRecommendationCreateManyInput | RetentionRecommendationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * RetentionRecommendation createManyAndReturn
+   */
+  export type RetentionRecommendationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many RetentionRecommendations.
+     */
+    data: RetentionRecommendationCreateManyInput | RetentionRecommendationCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * RetentionRecommendation update
+   */
+  export type RetentionRecommendationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a RetentionRecommendation.
+     */
+    data: XOR<RetentionRecommendationUpdateInput, RetentionRecommendationUncheckedUpdateInput>
+    /**
+     * Choose, which RetentionRecommendation to update.
+     */
+    where: RetentionRecommendationWhereUniqueInput
+  }
+
+  /**
+   * RetentionRecommendation updateMany
+   */
+  export type RetentionRecommendationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update RetentionRecommendations.
+     */
+    data: XOR<RetentionRecommendationUpdateManyMutationInput, RetentionRecommendationUncheckedUpdateManyInput>
+    /**
+     * Filter which RetentionRecommendations to update
+     */
+    where?: RetentionRecommendationWhereInput
+  }
+
+  /**
+   * RetentionRecommendation upsert
+   */
+  export type RetentionRecommendationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the RetentionRecommendation to update in case it exists.
+     */
+    where: RetentionRecommendationWhereUniqueInput
+    /**
+     * In case the RetentionRecommendation found by the `where` argument doesn't exist, create a new RetentionRecommendation with this data.
+     */
+    create: XOR<RetentionRecommendationCreateInput, RetentionRecommendationUncheckedCreateInput>
+    /**
+     * In case the RetentionRecommendation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RetentionRecommendationUpdateInput, RetentionRecommendationUncheckedUpdateInput>
+  }
+
+  /**
+   * RetentionRecommendation delete
+   */
+  export type RetentionRecommendationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter which RetentionRecommendation to delete.
+     */
+    where: RetentionRecommendationWhereUniqueInput
+  }
+
+  /**
+   * RetentionRecommendation deleteMany
+   */
+  export type RetentionRecommendationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RetentionRecommendations to delete
+     */
+    where?: RetentionRecommendationWhereInput
+  }
+
+  /**
+   * RetentionRecommendation without action
+   */
+  export type RetentionRecommendationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetentionRecommendation
+     */
+    select?: RetentionRecommendationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RetentionRecommendationInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model ImportBatch
    */
 
@@ -29499,6 +30773,34 @@ export namespace Prisma {
   export type UpsellRecommendationScalarFieldEnum = (typeof UpsellRecommendationScalarFieldEnum)[keyof typeof UpsellRecommendationScalarFieldEnum]
 
 
+  export const RetentionRecommendationScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    customerId: 'customerId',
+    ruleResult: 'ruleResult',
+    llmRecommendation: 'llmRecommendation',
+    validationResult: 'validationResult',
+    finalAction: 'finalAction',
+    finalOffer: 'finalOffer',
+    finalPriority: 'finalPriority',
+    finalChannel: 'finalChannel',
+    finalMessage: 'finalMessage',
+    reason: 'reason',
+    confidence: 'confidence',
+    status: 'status',
+    managerOverride: 'managerOverride',
+    customerAccepted: 'customerAccepted',
+    customerDeclined: 'customerDeclined',
+    retentionSuccess: 'retentionSuccess',
+    revenueGenerated: 'revenueGenerated',
+    respondedAt: 'respondedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type RetentionRecommendationScalarFieldEnum = (typeof RetentionRecommendationScalarFieldEnum)[keyof typeof RetentionRecommendationScalarFieldEnum]
+
+
   export const ImportBatchScalarFieldEnum: {
     id: 'id',
     companyId: 'companyId',
@@ -30231,6 +31533,7 @@ export namespace Prisma {
     addresses?: AddressListRelationFilter
     equipment?: EquipmentListRelationFilter
     upsellRecommendations?: UpsellRecommendationListRelationFilter
+    retentionRecommendations?: RetentionRecommendationListRelationFilter
     iotConnections?: CustomerIotConnectionListRelationFilter
   }
 
@@ -30266,6 +31569,7 @@ export namespace Prisma {
     addresses?: AddressOrderByRelationAggregateInput
     equipment?: EquipmentOrderByRelationAggregateInput
     upsellRecommendations?: UpsellRecommendationOrderByRelationAggregateInput
+    retentionRecommendations?: RetentionRecommendationOrderByRelationAggregateInput
     iotConnections?: CustomerIotConnectionOrderByRelationAggregateInput
   }
 
@@ -30304,6 +31608,7 @@ export namespace Prisma {
     addresses?: AddressListRelationFilter
     equipment?: EquipmentListRelationFilter
     upsellRecommendations?: UpsellRecommendationListRelationFilter
+    retentionRecommendations?: RetentionRecommendationListRelationFilter
     iotConnections?: CustomerIotConnectionListRelationFilter
   }, "id">
 
@@ -31780,6 +33085,148 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"UpsellRecommendation"> | Date | string
   }
 
+  export type RetentionRecommendationWhereInput = {
+    AND?: RetentionRecommendationWhereInput | RetentionRecommendationWhereInput[]
+    OR?: RetentionRecommendationWhereInput[]
+    NOT?: RetentionRecommendationWhereInput | RetentionRecommendationWhereInput[]
+    id?: StringFilter<"RetentionRecommendation"> | string
+    companyId?: StringFilter<"RetentionRecommendation"> | string
+    customerId?: StringFilter<"RetentionRecommendation"> | string
+    ruleResult?: JsonFilter<"RetentionRecommendation">
+    llmRecommendation?: JsonNullableFilter<"RetentionRecommendation">
+    validationResult?: JsonFilter<"RetentionRecommendation">
+    finalAction?: StringFilter<"RetentionRecommendation"> | string
+    finalOffer?: JsonFilter<"RetentionRecommendation">
+    finalPriority?: StringFilter<"RetentionRecommendation"> | string
+    finalChannel?: StringNullableFilter<"RetentionRecommendation"> | string | null
+    finalMessage?: StringNullableFilter<"RetentionRecommendation"> | string | null
+    reason?: StringFilter<"RetentionRecommendation"> | string
+    confidence?: FloatNullableFilter<"RetentionRecommendation"> | number | null
+    status?: StringFilter<"RetentionRecommendation"> | string
+    managerOverride?: JsonNullableFilter<"RetentionRecommendation">
+    customerAccepted?: BoolNullableFilter<"RetentionRecommendation"> | boolean | null
+    customerDeclined?: BoolNullableFilter<"RetentionRecommendation"> | boolean | null
+    retentionSuccess?: BoolNullableFilter<"RetentionRecommendation"> | boolean | null
+    revenueGenerated?: DecimalNullableFilter<"RetentionRecommendation"> | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: DateTimeNullableFilter<"RetentionRecommendation"> | Date | string | null
+    createdAt?: DateTimeFilter<"RetentionRecommendation"> | Date | string
+    updatedAt?: DateTimeFilter<"RetentionRecommendation"> | Date | string
+    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+  }
+
+  export type RetentionRecommendationOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    ruleResult?: SortOrder
+    llmRecommendation?: SortOrderInput | SortOrder
+    validationResult?: SortOrder
+    finalAction?: SortOrder
+    finalOffer?: SortOrder
+    finalPriority?: SortOrder
+    finalChannel?: SortOrderInput | SortOrder
+    finalMessage?: SortOrderInput | SortOrder
+    reason?: SortOrder
+    confidence?: SortOrderInput | SortOrder
+    status?: SortOrder
+    managerOverride?: SortOrderInput | SortOrder
+    customerAccepted?: SortOrderInput | SortOrder
+    customerDeclined?: SortOrderInput | SortOrder
+    retentionSuccess?: SortOrderInput | SortOrder
+    revenueGenerated?: SortOrderInput | SortOrder
+    respondedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    customer?: CustomerOrderByWithRelationInput
+  }
+
+  export type RetentionRecommendationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: RetentionRecommendationWhereInput | RetentionRecommendationWhereInput[]
+    OR?: RetentionRecommendationWhereInput[]
+    NOT?: RetentionRecommendationWhereInput | RetentionRecommendationWhereInput[]
+    companyId?: StringFilter<"RetentionRecommendation"> | string
+    customerId?: StringFilter<"RetentionRecommendation"> | string
+    ruleResult?: JsonFilter<"RetentionRecommendation">
+    llmRecommendation?: JsonNullableFilter<"RetentionRecommendation">
+    validationResult?: JsonFilter<"RetentionRecommendation">
+    finalAction?: StringFilter<"RetentionRecommendation"> | string
+    finalOffer?: JsonFilter<"RetentionRecommendation">
+    finalPriority?: StringFilter<"RetentionRecommendation"> | string
+    finalChannel?: StringNullableFilter<"RetentionRecommendation"> | string | null
+    finalMessage?: StringNullableFilter<"RetentionRecommendation"> | string | null
+    reason?: StringFilter<"RetentionRecommendation"> | string
+    confidence?: FloatNullableFilter<"RetentionRecommendation"> | number | null
+    status?: StringFilter<"RetentionRecommendation"> | string
+    managerOverride?: JsonNullableFilter<"RetentionRecommendation">
+    customerAccepted?: BoolNullableFilter<"RetentionRecommendation"> | boolean | null
+    customerDeclined?: BoolNullableFilter<"RetentionRecommendation"> | boolean | null
+    retentionSuccess?: BoolNullableFilter<"RetentionRecommendation"> | boolean | null
+    revenueGenerated?: DecimalNullableFilter<"RetentionRecommendation"> | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: DateTimeNullableFilter<"RetentionRecommendation"> | Date | string | null
+    createdAt?: DateTimeFilter<"RetentionRecommendation"> | Date | string
+    updatedAt?: DateTimeFilter<"RetentionRecommendation"> | Date | string
+    customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+  }, "id">
+
+  export type RetentionRecommendationOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    ruleResult?: SortOrder
+    llmRecommendation?: SortOrderInput | SortOrder
+    validationResult?: SortOrder
+    finalAction?: SortOrder
+    finalOffer?: SortOrder
+    finalPriority?: SortOrder
+    finalChannel?: SortOrderInput | SortOrder
+    finalMessage?: SortOrderInput | SortOrder
+    reason?: SortOrder
+    confidence?: SortOrderInput | SortOrder
+    status?: SortOrder
+    managerOverride?: SortOrderInput | SortOrder
+    customerAccepted?: SortOrderInput | SortOrder
+    customerDeclined?: SortOrderInput | SortOrder
+    retentionSuccess?: SortOrderInput | SortOrder
+    revenueGenerated?: SortOrderInput | SortOrder
+    respondedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: RetentionRecommendationCountOrderByAggregateInput
+    _avg?: RetentionRecommendationAvgOrderByAggregateInput
+    _max?: RetentionRecommendationMaxOrderByAggregateInput
+    _min?: RetentionRecommendationMinOrderByAggregateInput
+    _sum?: RetentionRecommendationSumOrderByAggregateInput
+  }
+
+  export type RetentionRecommendationScalarWhereWithAggregatesInput = {
+    AND?: RetentionRecommendationScalarWhereWithAggregatesInput | RetentionRecommendationScalarWhereWithAggregatesInput[]
+    OR?: RetentionRecommendationScalarWhereWithAggregatesInput[]
+    NOT?: RetentionRecommendationScalarWhereWithAggregatesInput | RetentionRecommendationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"RetentionRecommendation"> | string
+    companyId?: StringWithAggregatesFilter<"RetentionRecommendation"> | string
+    customerId?: StringWithAggregatesFilter<"RetentionRecommendation"> | string
+    ruleResult?: JsonWithAggregatesFilter<"RetentionRecommendation">
+    llmRecommendation?: JsonNullableWithAggregatesFilter<"RetentionRecommendation">
+    validationResult?: JsonWithAggregatesFilter<"RetentionRecommendation">
+    finalAction?: StringWithAggregatesFilter<"RetentionRecommendation"> | string
+    finalOffer?: JsonWithAggregatesFilter<"RetentionRecommendation">
+    finalPriority?: StringWithAggregatesFilter<"RetentionRecommendation"> | string
+    finalChannel?: StringNullableWithAggregatesFilter<"RetentionRecommendation"> | string | null
+    finalMessage?: StringNullableWithAggregatesFilter<"RetentionRecommendation"> | string | null
+    reason?: StringWithAggregatesFilter<"RetentionRecommendation"> | string
+    confidence?: FloatNullableWithAggregatesFilter<"RetentionRecommendation"> | number | null
+    status?: StringWithAggregatesFilter<"RetentionRecommendation"> | string
+    managerOverride?: JsonNullableWithAggregatesFilter<"RetentionRecommendation">
+    customerAccepted?: BoolNullableWithAggregatesFilter<"RetentionRecommendation"> | boolean | null
+    customerDeclined?: BoolNullableWithAggregatesFilter<"RetentionRecommendation"> | boolean | null
+    retentionSuccess?: BoolNullableWithAggregatesFilter<"RetentionRecommendation"> | boolean | null
+    revenueGenerated?: DecimalNullableWithAggregatesFilter<"RetentionRecommendation"> | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: DateTimeNullableWithAggregatesFilter<"RetentionRecommendation"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"RetentionRecommendation"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"RetentionRecommendation"> | Date | string
+  }
+
   export type ImportBatchWhereInput = {
     AND?: ImportBatchWhereInput | ImportBatchWhereInput[]
     OR?: ImportBatchWhereInput[]
@@ -32818,6 +34265,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -32852,6 +34300,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -32886,6 +34335,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -32920,6 +34370,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -34667,6 +36118,180 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type RetentionRecommendationCreateInput = {
+    id?: string
+    companyId: string
+    ruleResult: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult: JsonNullValueInput | InputJsonValue
+    finalAction: string
+    finalOffer: JsonNullValueInput | InputJsonValue
+    finalPriority: string
+    finalChannel?: string | null
+    finalMessage?: string | null
+    reason: string
+    confidence?: number | null
+    status?: string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: boolean | null
+    customerDeclined?: boolean | null
+    retentionSuccess?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customer: CustomerCreateNestedOneWithoutRetentionRecommendationsInput
+  }
+
+  export type RetentionRecommendationUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    ruleResult: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult: JsonNullValueInput | InputJsonValue
+    finalAction: string
+    finalOffer: JsonNullValueInput | InputJsonValue
+    finalPriority: string
+    finalChannel?: string | null
+    finalMessage?: string | null
+    reason: string
+    confidence?: number | null
+    status?: string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: boolean | null
+    customerDeclined?: boolean | null
+    retentionSuccess?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RetentionRecommendationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    ruleResult?: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: JsonNullValueInput | InputJsonValue
+    finalAction?: StringFieldUpdateOperationsInput | string
+    finalOffer?: JsonNullValueInput | InputJsonValue
+    finalPriority?: StringFieldUpdateOperationsInput | string
+    finalChannel?: NullableStringFieldUpdateOperationsInput | string | null
+    finalMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    confidence?: NullableFloatFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    customerDeclined?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    retentionSuccess?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customer?: CustomerUpdateOneRequiredWithoutRetentionRecommendationsNestedInput
+  }
+
+  export type RetentionRecommendationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    ruleResult?: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: JsonNullValueInput | InputJsonValue
+    finalAction?: StringFieldUpdateOperationsInput | string
+    finalOffer?: JsonNullValueInput | InputJsonValue
+    finalPriority?: StringFieldUpdateOperationsInput | string
+    finalChannel?: NullableStringFieldUpdateOperationsInput | string | null
+    finalMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    confidence?: NullableFloatFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    customerDeclined?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    retentionSuccess?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RetentionRecommendationCreateManyInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    ruleResult: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult: JsonNullValueInput | InputJsonValue
+    finalAction: string
+    finalOffer: JsonNullValueInput | InputJsonValue
+    finalPriority: string
+    finalChannel?: string | null
+    finalMessage?: string | null
+    reason: string
+    confidence?: number | null
+    status?: string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: boolean | null
+    customerDeclined?: boolean | null
+    retentionSuccess?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RetentionRecommendationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    ruleResult?: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: JsonNullValueInput | InputJsonValue
+    finalAction?: StringFieldUpdateOperationsInput | string
+    finalOffer?: JsonNullValueInput | InputJsonValue
+    finalPriority?: StringFieldUpdateOperationsInput | string
+    finalChannel?: NullableStringFieldUpdateOperationsInput | string | null
+    finalMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    confidence?: NullableFloatFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    customerDeclined?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    retentionSuccess?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RetentionRecommendationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    ruleResult?: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: JsonNullValueInput | InputJsonValue
+    finalAction?: StringFieldUpdateOperationsInput | string
+    finalOffer?: JsonNullValueInput | InputJsonValue
+    finalPriority?: StringFieldUpdateOperationsInput | string
+    finalChannel?: NullableStringFieldUpdateOperationsInput | string | null
+    finalMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    confidence?: NullableFloatFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    customerDeclined?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    retentionSuccess?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ImportBatchCreateInput = {
     id?: string
     companyId: string
@@ -35827,6 +37452,12 @@ export namespace Prisma {
     none?: UpsellRecommendationWhereInput
   }
 
+  export type RetentionRecommendationListRelationFilter = {
+    every?: RetentionRecommendationWhereInput
+    some?: RetentionRecommendationWhereInput
+    none?: RetentionRecommendationWhereInput
+  }
+
   export type CustomerIotConnectionListRelationFilter = {
     every?: CustomerIotConnectionWhereInput
     some?: CustomerIotConnectionWhereInput
@@ -35846,6 +37477,10 @@ export namespace Prisma {
   }
 
   export type UpsellRecommendationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type RetentionRecommendationOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -36983,6 +38618,94 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type RetentionRecommendationCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    ruleResult?: SortOrder
+    llmRecommendation?: SortOrder
+    validationResult?: SortOrder
+    finalAction?: SortOrder
+    finalOffer?: SortOrder
+    finalPriority?: SortOrder
+    finalChannel?: SortOrder
+    finalMessage?: SortOrder
+    reason?: SortOrder
+    confidence?: SortOrder
+    status?: SortOrder
+    managerOverride?: SortOrder
+    customerAccepted?: SortOrder
+    customerDeclined?: SortOrder
+    retentionSuccess?: SortOrder
+    revenueGenerated?: SortOrder
+    respondedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RetentionRecommendationAvgOrderByAggregateInput = {
+    confidence?: SortOrder
+    revenueGenerated?: SortOrder
+  }
+
+  export type RetentionRecommendationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    finalAction?: SortOrder
+    finalPriority?: SortOrder
+    finalChannel?: SortOrder
+    finalMessage?: SortOrder
+    reason?: SortOrder
+    confidence?: SortOrder
+    status?: SortOrder
+    customerAccepted?: SortOrder
+    customerDeclined?: SortOrder
+    retentionSuccess?: SortOrder
+    revenueGenerated?: SortOrder
+    respondedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RetentionRecommendationMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    customerId?: SortOrder
+    finalAction?: SortOrder
+    finalPriority?: SortOrder
+    finalChannel?: SortOrder
+    finalMessage?: SortOrder
+    reason?: SortOrder
+    confidence?: SortOrder
+    status?: SortOrder
+    customerAccepted?: SortOrder
+    customerDeclined?: SortOrder
+    retentionSuccess?: SortOrder
+    revenueGenerated?: SortOrder
+    respondedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RetentionRecommendationSumOrderByAggregateInput = {
+    confidence?: SortOrder
+    revenueGenerated?: SortOrder
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type EnumImportStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
     in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
@@ -37745,6 +39468,13 @@ export namespace Prisma {
     connect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
   }
 
+  export type RetentionRecommendationCreateNestedManyWithoutCustomerInput = {
+    create?: XOR<RetentionRecommendationCreateWithoutCustomerInput, RetentionRecommendationUncheckedCreateWithoutCustomerInput> | RetentionRecommendationCreateWithoutCustomerInput[] | RetentionRecommendationUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: RetentionRecommendationCreateOrConnectWithoutCustomerInput | RetentionRecommendationCreateOrConnectWithoutCustomerInput[]
+    createMany?: RetentionRecommendationCreateManyCustomerInputEnvelope
+    connect?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
+  }
+
   export type CustomerIotConnectionCreateNestedManyWithoutCustomerInput = {
     create?: XOR<CustomerIotConnectionCreateWithoutCustomerInput, CustomerIotConnectionUncheckedCreateWithoutCustomerInput> | CustomerIotConnectionCreateWithoutCustomerInput[] | CustomerIotConnectionUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: CustomerIotConnectionCreateOrConnectWithoutCustomerInput | CustomerIotConnectionCreateOrConnectWithoutCustomerInput[]
@@ -37806,6 +39536,13 @@ export namespace Prisma {
     connectOrCreate?: UpsellRecommendationCreateOrConnectWithoutCustomerInput | UpsellRecommendationCreateOrConnectWithoutCustomerInput[]
     createMany?: UpsellRecommendationCreateManyCustomerInputEnvelope
     connect?: UpsellRecommendationWhereUniqueInput | UpsellRecommendationWhereUniqueInput[]
+  }
+
+  export type RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput = {
+    create?: XOR<RetentionRecommendationCreateWithoutCustomerInput, RetentionRecommendationUncheckedCreateWithoutCustomerInput> | RetentionRecommendationCreateWithoutCustomerInput[] | RetentionRecommendationUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: RetentionRecommendationCreateOrConnectWithoutCustomerInput | RetentionRecommendationCreateOrConnectWithoutCustomerInput[]
+    createMany?: RetentionRecommendationCreateManyCustomerInputEnvelope
+    connect?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
   }
 
   export type CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput = {
@@ -37948,6 +39685,20 @@ export namespace Prisma {
     deleteMany?: UpsellRecommendationScalarWhereInput | UpsellRecommendationScalarWhereInput[]
   }
 
+  export type RetentionRecommendationUpdateManyWithoutCustomerNestedInput = {
+    create?: XOR<RetentionRecommendationCreateWithoutCustomerInput, RetentionRecommendationUncheckedCreateWithoutCustomerInput> | RetentionRecommendationCreateWithoutCustomerInput[] | RetentionRecommendationUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: RetentionRecommendationCreateOrConnectWithoutCustomerInput | RetentionRecommendationCreateOrConnectWithoutCustomerInput[]
+    upsert?: RetentionRecommendationUpsertWithWhereUniqueWithoutCustomerInput | RetentionRecommendationUpsertWithWhereUniqueWithoutCustomerInput[]
+    createMany?: RetentionRecommendationCreateManyCustomerInputEnvelope
+    set?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
+    disconnect?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
+    delete?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
+    connect?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
+    update?: RetentionRecommendationUpdateWithWhereUniqueWithoutCustomerInput | RetentionRecommendationUpdateWithWhereUniqueWithoutCustomerInput[]
+    updateMany?: RetentionRecommendationUpdateManyWithWhereWithoutCustomerInput | RetentionRecommendationUpdateManyWithWhereWithoutCustomerInput[]
+    deleteMany?: RetentionRecommendationScalarWhereInput | RetentionRecommendationScalarWhereInput[]
+  }
+
   export type CustomerIotConnectionUpdateManyWithoutCustomerNestedInput = {
     create?: XOR<CustomerIotConnectionCreateWithoutCustomerInput, CustomerIotConnectionUncheckedCreateWithoutCustomerInput> | CustomerIotConnectionCreateWithoutCustomerInput[] | CustomerIotConnectionUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: CustomerIotConnectionCreateOrConnectWithoutCustomerInput | CustomerIotConnectionCreateOrConnectWithoutCustomerInput[]
@@ -38072,6 +39823,20 @@ export namespace Prisma {
     update?: UpsellRecommendationUpdateWithWhereUniqueWithoutCustomerInput | UpsellRecommendationUpdateWithWhereUniqueWithoutCustomerInput[]
     updateMany?: UpsellRecommendationUpdateManyWithWhereWithoutCustomerInput | UpsellRecommendationUpdateManyWithWhereWithoutCustomerInput[]
     deleteMany?: UpsellRecommendationScalarWhereInput | UpsellRecommendationScalarWhereInput[]
+  }
+
+  export type RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput = {
+    create?: XOR<RetentionRecommendationCreateWithoutCustomerInput, RetentionRecommendationUncheckedCreateWithoutCustomerInput> | RetentionRecommendationCreateWithoutCustomerInput[] | RetentionRecommendationUncheckedCreateWithoutCustomerInput[]
+    connectOrCreate?: RetentionRecommendationCreateOrConnectWithoutCustomerInput | RetentionRecommendationCreateOrConnectWithoutCustomerInput[]
+    upsert?: RetentionRecommendationUpsertWithWhereUniqueWithoutCustomerInput | RetentionRecommendationUpsertWithWhereUniqueWithoutCustomerInput[]
+    createMany?: RetentionRecommendationCreateManyCustomerInputEnvelope
+    set?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
+    disconnect?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
+    delete?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
+    connect?: RetentionRecommendationWhereUniqueInput | RetentionRecommendationWhereUniqueInput[]
+    update?: RetentionRecommendationUpdateWithWhereUniqueWithoutCustomerInput | RetentionRecommendationUpdateWithWhereUniqueWithoutCustomerInput[]
+    updateMany?: RetentionRecommendationUpdateManyWithWhereWithoutCustomerInput | RetentionRecommendationUpdateManyWithWhereWithoutCustomerInput[]
+    deleteMany?: RetentionRecommendationScalarWhereInput | RetentionRecommendationScalarWhereInput[]
   }
 
   export type CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput = {
@@ -38480,6 +40245,24 @@ export namespace Prisma {
     upsert?: CustomerUpsertWithoutUpsellRecommendationsInput
     connect?: CustomerWhereUniqueInput
     update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutUpsellRecommendationsInput, CustomerUpdateWithoutUpsellRecommendationsInput>, CustomerUncheckedUpdateWithoutUpsellRecommendationsInput>
+  }
+
+  export type CustomerCreateNestedOneWithoutRetentionRecommendationsInput = {
+    create?: XOR<CustomerCreateWithoutRetentionRecommendationsInput, CustomerUncheckedCreateWithoutRetentionRecommendationsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutRetentionRecommendationsInput
+    connect?: CustomerWhereUniqueInput
+  }
+
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
+  export type CustomerUpdateOneRequiredWithoutRetentionRecommendationsNestedInput = {
+    create?: XOR<CustomerCreateWithoutRetentionRecommendationsInput, CustomerUncheckedCreateWithoutRetentionRecommendationsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutRetentionRecommendationsInput
+    upsert?: CustomerUpsertWithoutRetentionRecommendationsInput
+    connect?: CustomerWhereUniqueInput
+    update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutRetentionRecommendationsInput, CustomerUpdateWithoutRetentionRecommendationsInput>, CustomerUncheckedUpdateWithoutRetentionRecommendationsInput>
   }
 
   export type ImportErrorCreateNestedManyWithoutBatchInput = {
@@ -39157,6 +40940,19 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type NestedEnumImportStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
     in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
@@ -39204,6 +41000,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -39237,6 +41034,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -40359,6 +42157,64 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type RetentionRecommendationCreateWithoutCustomerInput = {
+    id?: string
+    companyId: string
+    ruleResult: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult: JsonNullValueInput | InputJsonValue
+    finalAction: string
+    finalOffer: JsonNullValueInput | InputJsonValue
+    finalPriority: string
+    finalChannel?: string | null
+    finalMessage?: string | null
+    reason: string
+    confidence?: number | null
+    status?: string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: boolean | null
+    customerDeclined?: boolean | null
+    retentionSuccess?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RetentionRecommendationUncheckedCreateWithoutCustomerInput = {
+    id?: string
+    companyId: string
+    ruleResult: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult: JsonNullValueInput | InputJsonValue
+    finalAction: string
+    finalOffer: JsonNullValueInput | InputJsonValue
+    finalPriority: string
+    finalChannel?: string | null
+    finalMessage?: string | null
+    reason: string
+    confidence?: number | null
+    status?: string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: boolean | null
+    customerDeclined?: boolean | null
+    retentionSuccess?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RetentionRecommendationCreateOrConnectWithoutCustomerInput = {
+    where: RetentionRecommendationWhereUniqueInput
+    create: XOR<RetentionRecommendationCreateWithoutCustomerInput, RetentionRecommendationUncheckedCreateWithoutCustomerInput>
+  }
+
+  export type RetentionRecommendationCreateManyCustomerInputEnvelope = {
+    data: RetentionRecommendationCreateManyCustomerInput | RetentionRecommendationCreateManyCustomerInput[]
+    skipDuplicates?: boolean
+  }
+
   export type CustomerIotConnectionCreateWithoutCustomerInput = {
     id?: string
     companyId: string
@@ -40667,6 +42523,50 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
   }
 
+  export type RetentionRecommendationUpsertWithWhereUniqueWithoutCustomerInput = {
+    where: RetentionRecommendationWhereUniqueInput
+    update: XOR<RetentionRecommendationUpdateWithoutCustomerInput, RetentionRecommendationUncheckedUpdateWithoutCustomerInput>
+    create: XOR<RetentionRecommendationCreateWithoutCustomerInput, RetentionRecommendationUncheckedCreateWithoutCustomerInput>
+  }
+
+  export type RetentionRecommendationUpdateWithWhereUniqueWithoutCustomerInput = {
+    where: RetentionRecommendationWhereUniqueInput
+    data: XOR<RetentionRecommendationUpdateWithoutCustomerInput, RetentionRecommendationUncheckedUpdateWithoutCustomerInput>
+  }
+
+  export type RetentionRecommendationUpdateManyWithWhereWithoutCustomerInput = {
+    where: RetentionRecommendationScalarWhereInput
+    data: XOR<RetentionRecommendationUpdateManyMutationInput, RetentionRecommendationUncheckedUpdateManyWithoutCustomerInput>
+  }
+
+  export type RetentionRecommendationScalarWhereInput = {
+    AND?: RetentionRecommendationScalarWhereInput | RetentionRecommendationScalarWhereInput[]
+    OR?: RetentionRecommendationScalarWhereInput[]
+    NOT?: RetentionRecommendationScalarWhereInput | RetentionRecommendationScalarWhereInput[]
+    id?: StringFilter<"RetentionRecommendation"> | string
+    companyId?: StringFilter<"RetentionRecommendation"> | string
+    customerId?: StringFilter<"RetentionRecommendation"> | string
+    ruleResult?: JsonFilter<"RetentionRecommendation">
+    llmRecommendation?: JsonNullableFilter<"RetentionRecommendation">
+    validationResult?: JsonFilter<"RetentionRecommendation">
+    finalAction?: StringFilter<"RetentionRecommendation"> | string
+    finalOffer?: JsonFilter<"RetentionRecommendation">
+    finalPriority?: StringFilter<"RetentionRecommendation"> | string
+    finalChannel?: StringNullableFilter<"RetentionRecommendation"> | string | null
+    finalMessage?: StringNullableFilter<"RetentionRecommendation"> | string | null
+    reason?: StringFilter<"RetentionRecommendation"> | string
+    confidence?: FloatNullableFilter<"RetentionRecommendation"> | number | null
+    status?: StringFilter<"RetentionRecommendation"> | string
+    managerOverride?: JsonNullableFilter<"RetentionRecommendation">
+    customerAccepted?: BoolNullableFilter<"RetentionRecommendation"> | boolean | null
+    customerDeclined?: BoolNullableFilter<"RetentionRecommendation"> | boolean | null
+    retentionSuccess?: BoolNullableFilter<"RetentionRecommendation"> | boolean | null
+    revenueGenerated?: DecimalNullableFilter<"RetentionRecommendation"> | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: DateTimeNullableFilter<"RetentionRecommendation"> | Date | string | null
+    createdAt?: DateTimeFilter<"RetentionRecommendation"> | Date | string
+    updatedAt?: DateTimeFilter<"RetentionRecommendation"> | Date | string
+  }
+
   export type CustomerIotConnectionUpsertWithWhereUniqueWithoutCustomerInput = {
     where: CustomerIotConnectionWhereUniqueInput
     update: XOR<CustomerIotConnectionUpdateWithoutCustomerInput, CustomerIotConnectionUncheckedUpdateWithoutCustomerInput>
@@ -40787,6 +42687,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -40820,6 +42721,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -40934,6 +42836,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -40967,6 +42870,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -41059,6 +42963,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -41092,6 +42997,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -41246,6 +43152,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -41279,6 +43186,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -41387,6 +43295,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -41420,6 +43329,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -41564,6 +43474,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -41597,6 +43508,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -41879,6 +43791,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -41912,6 +43825,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -42026,6 +43940,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -42059,6 +43974,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -42092,6 +44008,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -42125,6 +44042,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -42174,6 +44092,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -42207,6 +44126,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -42240,6 +44160,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -42273,6 +44194,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -42375,6 +44297,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -42408,6 +44331,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -42500,6 +44424,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -42533,6 +44458,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -42622,6 +44548,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -42655,6 +44582,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -42807,6 +44735,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutCustomerInput
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
   }
 
@@ -42840,6 +44769,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
   }
 
@@ -42889,6 +44819,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -42922,6 +44853,159 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type CustomerCreateWithoutRetentionRecommendationsInput = {
+    id?: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutCustomersInput
+    contacts?: ContactCreateNestedManyWithoutCustomerInput
+    leads?: LeadCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementCreateNestedManyWithoutCustomerInput
+    bookings?: BookingCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewCreateNestedManyWithoutCustomerInput
+    addresses?: AddressCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerUncheckedCreateWithoutRetentionRecommendationsInput = {
+    id?: string
+    companyId: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
+    leads?: LeadUncheckedCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCustomerInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
+    addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+  }
+
+  export type CustomerCreateOrConnectWithoutRetentionRecommendationsInput = {
+    where: CustomerWhereUniqueInput
+    create: XOR<CustomerCreateWithoutRetentionRecommendationsInput, CustomerUncheckedCreateWithoutRetentionRecommendationsInput>
+  }
+
+  export type CustomerUpsertWithoutRetentionRecommendationsInput = {
+    update: XOR<CustomerUpdateWithoutRetentionRecommendationsInput, CustomerUncheckedUpdateWithoutRetentionRecommendationsInput>
+    create: XOR<CustomerCreateWithoutRetentionRecommendationsInput, CustomerUncheckedCreateWithoutRetentionRecommendationsInput>
+    where?: CustomerWhereInput
+  }
+
+  export type CustomerUpdateToOneWithWhereWithoutRetentionRecommendationsInput = {
+    where?: CustomerWhereInput
+    data: XOR<CustomerUpdateWithoutRetentionRecommendationsInput, CustomerUncheckedUpdateWithoutRetentionRecommendationsInput>
+  }
+
+  export type CustomerUpdateWithoutRetentionRecommendationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
+    contacts?: ContactUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type CustomerUncheckedUpdateWithoutRetentionRecommendationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUncheckedUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUncheckedUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -43092,6 +45176,7 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerUncheckedCreateWithoutIotConnectionsInput = {
@@ -43125,6 +45210,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
   }
 
   export type CustomerCreateOrConnectWithoutIotConnectionsInput = {
@@ -43210,6 +45296,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutIotConnectionsInput = {
@@ -43243,6 +45330,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
   export type CustomerIotDeviceUpsertWithWhereUniqueWithoutConnectionInput = {
@@ -43793,6 +45881,7 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
   }
 
@@ -43826,6 +45915,7 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
   }
 
@@ -44346,6 +46436,30 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type RetentionRecommendationCreateManyCustomerInput = {
+    id?: string
+    companyId: string
+    ruleResult: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult: JsonNullValueInput | InputJsonValue
+    finalAction: string
+    finalOffer: JsonNullValueInput | InputJsonValue
+    finalPriority: string
+    finalChannel?: string | null
+    finalMessage?: string | null
+    reason: string
+    confidence?: number | null
+    status?: string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: boolean | null
+    customerDeclined?: boolean | null
+    retentionSuccess?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type CustomerIotConnectionCreateManyCustomerInput = {
     id?: string
     companyId: string
@@ -44822,6 +46936,78 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type RetentionRecommendationUpdateWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    ruleResult?: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: JsonNullValueInput | InputJsonValue
+    finalAction?: StringFieldUpdateOperationsInput | string
+    finalOffer?: JsonNullValueInput | InputJsonValue
+    finalPriority?: StringFieldUpdateOperationsInput | string
+    finalChannel?: NullableStringFieldUpdateOperationsInput | string | null
+    finalMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    confidence?: NullableFloatFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    customerDeclined?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    retentionSuccess?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RetentionRecommendationUncheckedUpdateWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    ruleResult?: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: JsonNullValueInput | InputJsonValue
+    finalAction?: StringFieldUpdateOperationsInput | string
+    finalOffer?: JsonNullValueInput | InputJsonValue
+    finalPriority?: StringFieldUpdateOperationsInput | string
+    finalChannel?: NullableStringFieldUpdateOperationsInput | string | null
+    finalMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    confidence?: NullableFloatFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    customerDeclined?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    retentionSuccess?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RetentionRecommendationUncheckedUpdateManyWithoutCustomerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    ruleResult?: JsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: JsonNullValueInput | InputJsonValue
+    finalAction?: StringFieldUpdateOperationsInput | string
+    finalOffer?: JsonNullValueInput | InputJsonValue
+    finalPriority?: StringFieldUpdateOperationsInput | string
+    finalChannel?: NullableStringFieldUpdateOperationsInput | string | null
+    finalMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    confidence?: NullableFloatFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    customerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    customerDeclined?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    retentionSuccess?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type CustomerIotConnectionUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
@@ -45283,6 +47469,10 @@ export namespace Prisma {
      * @deprecated Use UpsellRecommendationDefaultArgs instead
      */
     export type UpsellRecommendationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = UpsellRecommendationDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use RetentionRecommendationDefaultArgs instead
+     */
+    export type RetentionRecommendationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = RetentionRecommendationDefaultArgs<ExtArgs>
     /**
      * @deprecated Use ImportBatchDefaultArgs instead
      */

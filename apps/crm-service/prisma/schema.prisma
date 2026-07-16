@@ -134,6 +134,7 @@ model Customer {
   addresses   Address[]
   equipment   Equipment[]
   upsellRecommendations UpsellRecommendation[]
+  retentionRecommendations RetentionRecommendation[]
   iotConnections CustomerIotConnection[]
 
   @@index([companyId])
@@ -526,6 +527,44 @@ model UpsellRecommendation {
   @@index([companyId, customerId, createdAt])
   @@index([companyId, status, priorityScore])
   @@map("upsell_recommendations")
+}
+
+// Feedback log for the rule-based + LLM retention decision engine (see
+// apps/crm-service/src/retention/). One row per generated recommendation;
+// the outcome columns are filled in later as the offer plays out and become
+// the training dataset for a future ML-backed replacement of the rule engine.
+model RetentionRecommendation {
+  id                String   @id @default(uuid())
+  companyId         String   @map("company_id")
+  customerId        String   @map("customer_id")
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  ruleResult        Json     @map("rule_result")
+  llmRecommendation Json?    @map("llm_recommendation")
+  validationResult  Json     @map("validation_result")
+
+  finalAction       String   @map("final_action")
+  finalOffer        Json     @map("final_offer")
+  finalPriority     String   @map("final_priority")
+  finalChannel      String?  @map("final_channel")
+  finalMessage      String?  @map("final_message")
+  reason            String
+  confidence        Float?
+  status            String   @default("generated") // generated | actioned | superseded
+
+  managerOverride     Json?     @map("manager_override")
+  customerAccepted    Boolean?  @map("customer_accepted")
+  customerDeclined    Boolean?  @map("customer_declined")
+  retentionSuccess    Boolean?  @map("retention_success")
+  revenueGenerated    Decimal?  @map("revenue_generated") @db.Decimal(10, 2)
+  respondedAt         DateTime? @map("responded_at")
+
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId, customerId, createdAt])
+  @@index([companyId, status, finalAction])
+  @@map("retention_recommendations")
 }
 
 // ---- Data Import ----

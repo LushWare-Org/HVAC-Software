@@ -261,3 +261,99 @@ export interface FollowupDecisionAudit {
   finalChannel: FollowupChannel | null;
   decidedAt: string;
 }
+
+// ---- Rule-based + LLM retention decision engine ----
+// Replaces the ML-model-backed retention pipeline (conversion/LTV/churn model
+// artifacts) with: business rules decide WHETHER retention is required, an LLM
+// decides the HOW (strategy/offer/priority/channel/message), and a validation
+// layer has final say before anything is surfaced to the CRM. Kept as a
+// separate type family from Followup* because retention offers have a
+// distinct output contract (offer/discount, commercial priority/score) that
+// the admin dashboard already renders — see apps/admin-dashboard/src/types/api.ts.
+
+export type RetentionAction =
+  | 'premium_contract_offer'
+  | 'discount_retention_offer'
+  | 'maintenance_plan_offer'
+  | 'no_action';
+
+export type RetentionChannel = 'whatsapp' | 'email' | 'call';
+
+export type RetentionPriority = 'low' | 'medium' | 'high';
+
+export type RetentionCustomerSegment = 'premium' | 'standard' | 'budget';
+
+export type RetentionRuleReasonCode =
+  | 'AGREEMENT_EXPIRED'
+  | 'CUSTOMER_INACTIVE'
+  | 'FREQUENT_REPAIRS'
+  | 'CUSTOMER_COMPLAINTS'
+  | 'HIGH_VALUE_CUSTOMER'
+  | 'NONE';
+
+/** Raw facts the rule engine evaluates. Never passed to the LLM directly. */
+export interface RetentionRuleFacts {
+  customerId: string;
+  companyId: string;
+  customerSegment: RetentionCustomerSegment;
+  agreementStatus?: string;             // ServiceAgreement.status
+  agreementEndDate?: string | null;
+  daysSinceLastService: number;
+  repairCount12Months: number;          // service visits in the trailing 12 months
+  complaintCount: number;                // reviews with rating <= 2 ("low ratings or complaints")
+  averageAnnualSpend: number;
+  engagementTrend: 'increasing' | 'stable' | 'decreasing';
+  automaticFollowupEnabled: boolean;     // false = customer opted out
+  previousRetentionAttempts: number;
+  hasContactChannel: boolean;
+}
+
+/**
+ * The rule engine ONLY determines whether retention action is required, and why.
+ * It never picks the offer, channel, or message — that's the LLM's job.
+ */
+export interface RetentionRuleResult {
+  retentionRequired: boolean;
+  highPriority: boolean;                 // e.g. complaint-driven dissatisfaction
+  reasonCode: RetentionRuleReasonCode;
+  reason: string | null;
+  matchedRule: string | null;            // for audit trail
+}
+
+/** Structured profile handed to the LLM. No raw Prisma rows ever cross this boundary. */
+export interface RetentionCustomerProfile {
+  customerName: string;
+  customerSegment: RetentionCustomerSegment;
+  annualSpend: number;
+  equipmentAge?: number;                 // years, if known
+  maintenanceAgreementStatus?: string;
+  daysSinceLastService: number;
+  repairCount: number;
+  complaintCount: number;
+  preferredCommunication: RetentionChannel;
+  previousRetentionAttempts: number;
+  activeContracts: number;
+  notes?: string;
+  reasonCode: RetentionRuleReasonCode;
+  reason: string;
+}
+
+export interface RetentionLlmRecommendation {
+  strategy: string;               // free-text label, e.g. "Premium contract upgrade"
+  action: RetentionAction;        // constrained to the company's allowed offer catalog
+  priority: 'Low' | 'Medium' | 'High';
+  channel: RetentionChannel;
+  reason: string;
+  message: string;
+  confidence: number;
+}
+
+export interface RetentionDecisionAudit {
+  ruleResult: RetentionRuleResult;
+  llmRecommendation: RetentionLlmRecommendation | null;
+  llmModel: string | null;
+  validation: { passed: boolean; failedChecks: string[] };
+  finalAction: RetentionAction;
+  finalChannel: RetentionChannel | null;
+  decidedAt: string;
+}

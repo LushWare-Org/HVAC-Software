@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput, type RevenuePredictionResult } from '../ai/churn.client';
 import { UpsellAgentService } from '../upsell/upsell-agent.service';
 import { FollowupAgent } from '../agents/followup.agent';
+import { RetentionAgent, type RetentionRecommendationRecord } from '../agents/retention.agent';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomersEquipmentService, type EquipmentInput } from './customers-equipment.service';
@@ -23,6 +24,7 @@ export class CustomersService {
     private churnClient: ChurnClient,
     private upsellAgent: UpsellAgentService,
     private followupAgent: FollowupAgent,
+    private retentionAgent: RetentionAgent,
     private equipment: CustomersEquipmentService,
   ) {}
 
@@ -359,6 +361,7 @@ export class CustomersService {
         churnProbability: prediction.churn_probability,
         failureProbability: prediction.failure_probability,
       });
+    const retentionAgentResult = await this.retentionAgent.ensureRecommendation(companyId, id);
     const retentionPrediction = this.computeRetentionPrediction({
       customerId: customer.id,
       avgMonthlySpend,
@@ -369,6 +372,7 @@ export class CustomersService {
       hasMobile: Boolean(customer.mobile),
       hasPhone: Boolean(customer.phone),
       hasEmail: Boolean(customer.email),
+      agentResult: retentionAgentResult,
     });
     const reasoning = this.buildStatusReasoning({
       upsellRecommendation,
@@ -822,6 +826,16 @@ export class CustomersService {
     };
   }
 
+  /**
+   * pConvert/ltv/churnProbability/score remain informational signals shown on
+   * the "Retention Suggestion" reasoning card — they are no longer what picks
+   * the action. The action/offer/channel/priority/reason now come from the
+   * rule-based + LLM RetentionAgent (see apps/crm-service/src/agents/retention.agent.ts);
+   * agentResult is null only when the customer lookup failed or the
+   * retention_recommendations migration hasn't been applied yet, in which
+   * case we fall back to the same threshold rules this method used to own,
+   * now expressed purely as a rule-only, no-LLM decision.
+   */
   private computeRetentionPrediction(signals: {
     customerId: string;
     avgMonthlySpend: number;
@@ -832,20 +846,41 @@ export class CustomersService {
     hasMobile: boolean;
     hasPhone: boolean;
     hasEmail: boolean;
+    agentResult: RetentionRecommendationRecord | null;
   }) {
     const pConvert = this.clampProbability(signals.upsellConfidence);
     const ltv = Number((signals.avgMonthlySpend * 12).toFixed(2));
     const churnProbability = this.clampProbability(signals.churnProbability);
     const score = Number((pConvert * ltv * (1 - churnProbability)).toFixed(2));
-    const recommendedChannel = this.recommendedRetentionChannel(signals);
 
+    if (signals.agentResult) {
+      const { agentResult } = signals;
+      return {
+        customerId: signals.customerId,
+        pConvert: Number(pConvert.toFixed(4)),
+        ltv,
+        churnProbability: Number(churnProbability.toFixed(4)),
+        score,
+        action: agentResult.action,
+        offer: agentResult.offer,
+        recommendedChannel: agentResult.channel ?? this.recommendedRetentionChannel(signals),
+        priority: agentResult.priority,
+        triggerImmediately: signals.failureHistory >= 3,
+        reason: agentResult.reason,
+      };
+    }
+
+    // Rule-only fallback (no LLM): same safety-gated thresholds as the rule
+    // engine, used only when a stored recommendation isn't available yet.
     let action = 'no_action';
-    if (pConvert > 0.75 && ltv > 1500) {
-      action = 'premium_contract_offer';
+    if (!signals.automaticFollowupEnabled) {
+      action = 'no_action';
     } else if (churnProbability > 0.7) {
       action = 'discount_retention_offer';
     } else if (signals.failureHistory >= 3) {
       action = 'maintenance_plan_offer';
+    } else if (pConvert > 0.75 && ltv > 1500) {
+      action = 'premium_contract_offer';
     }
 
     return {
@@ -856,7 +891,7 @@ export class CustomersService {
       score,
       action,
       offer: this.retentionOffer(action),
-      recommendedChannel,
+      recommendedChannel: this.recommendedRetentionChannel(signals),
       priority: score > 1500 ? 'high' : score >= 500 ? 'medium' : 'low',
       triggerImmediately: signals.failureHistory >= 3,
       reason: this.describeRetentionReason(action, signals.failureHistory, pConvert, signals.automaticFollowupEnabled),
