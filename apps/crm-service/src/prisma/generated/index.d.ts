@@ -133,6 +133,16 @@ export type Project = $Result.DefaultSelection<Prisma.$ProjectPayload>
  * 
  */
 export type ProjectRosterDay = $Result.DefaultSelection<Prisma.$ProjectRosterDayPayload>
+/**
+ * Model House
+ * 
+ */
+export type House = $Result.DefaultSelection<Prisma.$HousePayload>
+/**
+ * Model HouseIssueReport
+ * 
+ */
+export type HouseIssueReport = $Result.DefaultSelection<Prisma.$HouseIssueReportPayload>
 
 /**
  * Enums
@@ -603,6 +613,26 @@ export class PrismaClient<
     * ```
     */
   get projectRosterDay(): Prisma.ProjectRosterDayDelegate<ExtArgs>;
+
+  /**
+   * `prisma.house`: Exposes CRUD operations for the **House** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Houses
+    * const houses = await prisma.house.findMany()
+    * ```
+    */
+  get house(): Prisma.HouseDelegate<ExtArgs>;
+
+  /**
+   * `prisma.houseIssueReport`: Exposes CRUD operations for the **HouseIssueReport** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more HouseIssueReports
+    * const houseIssueReports = await prisma.houseIssueReport.findMany()
+    * ```
+    */
+  get houseIssueReport(): Prisma.HouseIssueReportDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -1067,7 +1097,9 @@ export namespace Prisma {
     CustomerIotDevice: 'CustomerIotDevice',
     IotDeviceHistory: 'IotDeviceHistory',
     Project: 'Project',
-    ProjectRosterDay: 'ProjectRosterDay'
+    ProjectRosterDay: 'ProjectRosterDay',
+    House: 'House',
+    HouseIssueReport: 'HouseIssueReport'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1083,7 +1115,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "company" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay"
+      modelProps: "company" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay" | "house" | "houseIssueReport"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2767,6 +2799,146 @@ export namespace Prisma {
           }
         }
       }
+      House: {
+        payload: Prisma.$HousePayload<ExtArgs>
+        fields: Prisma.HouseFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.HouseFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.HouseFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload>
+          }
+          findFirst: {
+            args: Prisma.HouseFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.HouseFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload>
+          }
+          findMany: {
+            args: Prisma.HouseFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload>[]
+          }
+          create: {
+            args: Prisma.HouseCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload>
+          }
+          createMany: {
+            args: Prisma.HouseCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.HouseCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload>[]
+          }
+          delete: {
+            args: Prisma.HouseDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload>
+          }
+          update: {
+            args: Prisma.HouseUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload>
+          }
+          deleteMany: {
+            args: Prisma.HouseDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.HouseUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.HouseUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HousePayload>
+          }
+          aggregate: {
+            args: Prisma.HouseAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateHouse>
+          }
+          groupBy: {
+            args: Prisma.HouseGroupByArgs<ExtArgs>
+            result: $Utils.Optional<HouseGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.HouseCountArgs<ExtArgs>
+            result: $Utils.Optional<HouseCountAggregateOutputType> | number
+          }
+        }
+      }
+      HouseIssueReport: {
+        payload: Prisma.$HouseIssueReportPayload<ExtArgs>
+        fields: Prisma.HouseIssueReportFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.HouseIssueReportFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.HouseIssueReportFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload>
+          }
+          findFirst: {
+            args: Prisma.HouseIssueReportFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.HouseIssueReportFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload>
+          }
+          findMany: {
+            args: Prisma.HouseIssueReportFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload>[]
+          }
+          create: {
+            args: Prisma.HouseIssueReportCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload>
+          }
+          createMany: {
+            args: Prisma.HouseIssueReportCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.HouseIssueReportCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload>[]
+          }
+          delete: {
+            args: Prisma.HouseIssueReportDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload>
+          }
+          update: {
+            args: Prisma.HouseIssueReportUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload>
+          }
+          deleteMany: {
+            args: Prisma.HouseIssueReportDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.HouseIssueReportUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.HouseIssueReportUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HouseIssueReportPayload>
+          }
+          aggregate: {
+            args: Prisma.HouseIssueReportAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateHouseIssueReport>
+          }
+          groupBy: {
+            args: Prisma.HouseIssueReportGroupByArgs<ExtArgs>
+            result: $Utils.Optional<HouseIssueReportGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.HouseIssueReportCountArgs<ExtArgs>
+            result: $Utils.Optional<HouseIssueReportCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -3013,6 +3185,8 @@ export namespace Prisma {
     equipment: number
     upsellRecommendations: number
     iotConnections: number
+    ownedHouses: number
+    issueReports: number
   }
 
   export type CustomerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3025,6 +3199,8 @@ export namespace Prisma {
     equipment?: boolean | CustomerCountOutputTypeCountEquipmentArgs
     upsellRecommendations?: boolean | CustomerCountOutputTypeCountUpsellRecommendationsArgs
     iotConnections?: boolean | CustomerCountOutputTypeCountIotConnectionsArgs
+    ownedHouses?: boolean | CustomerCountOutputTypeCountOwnedHousesArgs
+    issueReports?: boolean | CustomerCountOutputTypeCountIssueReportsArgs
   }
 
   // Custom InputTypes
@@ -3101,6 +3277,20 @@ export namespace Prisma {
     where?: CustomerIotConnectionWhereInput
   }
 
+  /**
+   * CustomerCountOutputType without action
+   */
+  export type CustomerCountOutputTypeCountOwnedHousesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HouseWhereInput
+  }
+
+  /**
+   * CustomerCountOutputType without action
+   */
+  export type CustomerCountOutputTypeCountIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HouseIssueReportWhereInput
+  }
+
 
   /**
    * Count Type LeadCountOutputType
@@ -3170,10 +3360,12 @@ export namespace Prisma {
 
   export type EquipmentCountOutputType = {
     consumables: number
+    issueReports: number
   }
 
   export type EquipmentCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     consumables?: boolean | EquipmentCountOutputTypeCountConsumablesArgs
+    issueReports?: boolean | EquipmentCountOutputTypeCountIssueReportsArgs
   }
 
   // Custom InputTypes
@@ -3192,6 +3384,13 @@ export namespace Prisma {
    */
   export type EquipmentCountOutputTypeCountConsumablesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: EquipmentConsumableWhereInput
+  }
+
+  /**
+   * EquipmentCountOutputType without action
+   */
+  export type EquipmentCountOutputTypeCountIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HouseIssueReportWhereInput
   }
 
 
@@ -3294,10 +3493,12 @@ export namespace Prisma {
 
   export type ProjectCountOutputType = {
     rosterDays: number
+    houses: number
   }
 
   export type ProjectCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     rosterDays?: boolean | ProjectCountOutputTypeCountRosterDaysArgs
+    houses?: boolean | ProjectCountOutputTypeCountHousesArgs
   }
 
   // Custom InputTypes
@@ -3316,6 +3517,53 @@ export namespace Prisma {
    */
   export type ProjectCountOutputTypeCountRosterDaysArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProjectRosterDayWhereInput
+  }
+
+  /**
+   * ProjectCountOutputType without action
+   */
+  export type ProjectCountOutputTypeCountHousesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HouseWhereInput
+  }
+
+
+  /**
+   * Count Type HouseCountOutputType
+   */
+
+  export type HouseCountOutputType = {
+    equipment: number
+    issueReports: number
+  }
+
+  export type HouseCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    equipment?: boolean | HouseCountOutputTypeCountEquipmentArgs
+    issueReports?: boolean | HouseCountOutputTypeCountIssueReportsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * HouseCountOutputType without action
+   */
+  export type HouseCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseCountOutputType
+     */
+    select?: HouseCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * HouseCountOutputType without action
+   */
+  export type HouseCountOutputTypeCountEquipmentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EquipmentWhereInput
+  }
+
+  /**
+   * HouseCountOutputType without action
+   */
+  export type HouseCountOutputTypeCountIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HouseIssueReportWhereInput
   }
 
 
@@ -6934,6 +7182,8 @@ export namespace Prisma {
     equipment?: boolean | Customer$equipmentArgs<ExtArgs>
     upsellRecommendations?: boolean | Customer$upsellRecommendationsArgs<ExtArgs>
     iotConnections?: boolean | Customer$iotConnectionsArgs<ExtArgs>
+    ownedHouses?: boolean | Customer$ownedHousesArgs<ExtArgs>
+    issueReports?: boolean | Customer$issueReportsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["customer"]>
 
@@ -6999,6 +7249,8 @@ export namespace Prisma {
     equipment?: boolean | Customer$equipmentArgs<ExtArgs>
     upsellRecommendations?: boolean | Customer$upsellRecommendationsArgs<ExtArgs>
     iotConnections?: boolean | Customer$iotConnectionsArgs<ExtArgs>
+    ownedHouses?: boolean | Customer$ownedHousesArgs<ExtArgs>
+    issueReports?: boolean | Customer$issueReportsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CustomerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7018,6 +7270,8 @@ export namespace Prisma {
       equipment: Prisma.$EquipmentPayload<ExtArgs>[]
       upsellRecommendations: Prisma.$UpsellRecommendationPayload<ExtArgs>[]
       iotConnections: Prisma.$CustomerIotConnectionPayload<ExtArgs>[]
+      ownedHouses: Prisma.$HousePayload<ExtArgs>[]
+      issueReports: Prisma.$HouseIssueReportPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -7416,6 +7670,8 @@ export namespace Prisma {
     equipment<T extends Customer$equipmentArgs<ExtArgs> = {}>(args?: Subset<T, Customer$equipmentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentPayload<ExtArgs>, T, "findMany"> | Null>
     upsellRecommendations<T extends Customer$upsellRecommendationsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$upsellRecommendationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UpsellRecommendationPayload<ExtArgs>, T, "findMany"> | Null>
     iotConnections<T extends Customer$iotConnectionsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$iotConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findMany"> | Null>
+    ownedHouses<T extends Customer$ownedHousesArgs<ExtArgs> = {}>(args?: Subset<T, Customer$ownedHousesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findMany"> | Null>
+    issueReports<T extends Customer$issueReportsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$issueReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7962,6 +8218,46 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CustomerIotConnectionScalarFieldEnum | CustomerIotConnectionScalarFieldEnum[]
+  }
+
+  /**
+   * Customer.ownedHouses
+   */
+  export type Customer$ownedHousesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    where?: HouseWhereInput
+    orderBy?: HouseOrderByWithRelationInput | HouseOrderByWithRelationInput[]
+    cursor?: HouseWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: HouseScalarFieldEnum | HouseScalarFieldEnum[]
+  }
+
+  /**
+   * Customer.issueReports
+   */
+  export type Customer$issueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    where?: HouseIssueReportWhereInput
+    orderBy?: HouseIssueReportOrderByWithRelationInput | HouseIssueReportOrderByWithRelationInput[]
+    cursor?: HouseIssueReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: HouseIssueReportScalarFieldEnum | HouseIssueReportScalarFieldEnum[]
   }
 
   /**
@@ -15783,6 +16079,7 @@ export namespace Prisma {
     id: string | null
     companyId: string | null
     customerId: string | null
+    houseId: string | null
     type: string | null
     brand: string | null
     model: string | null
@@ -15800,6 +16097,7 @@ export namespace Prisma {
     id: string | null
     companyId: string | null
     customerId: string | null
+    houseId: string | null
     type: string | null
     brand: string | null
     model: string | null
@@ -15817,6 +16115,7 @@ export namespace Prisma {
     id: number
     companyId: number
     customerId: number
+    houseId: number
     type: number
     brand: number
     model: number
@@ -15836,6 +16135,7 @@ export namespace Prisma {
     id?: true
     companyId?: true
     customerId?: true
+    houseId?: true
     type?: true
     brand?: true
     model?: true
@@ -15853,6 +16153,7 @@ export namespace Prisma {
     id?: true
     companyId?: true
     customerId?: true
+    houseId?: true
     type?: true
     brand?: true
     model?: true
@@ -15870,6 +16171,7 @@ export namespace Prisma {
     id?: true
     companyId?: true
     customerId?: true
+    houseId?: true
     type?: true
     brand?: true
     model?: true
@@ -15960,6 +16262,7 @@ export namespace Prisma {
     id: string
     companyId: string
     customerId: string
+    houseId: string | null
     type: string
     brand: string | null
     model: string | null
@@ -15994,6 +16297,7 @@ export namespace Prisma {
     id?: boolean
     companyId?: boolean
     customerId?: boolean
+    houseId?: boolean
     type?: boolean
     brand?: boolean
     model?: boolean
@@ -16006,7 +16310,9 @@ export namespace Prisma {
     updatedAt?: boolean
     manualUrl?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    house?: boolean | Equipment$houseArgs<ExtArgs>
     consumables?: boolean | Equipment$consumablesArgs<ExtArgs>
+    issueReports?: boolean | Equipment$issueReportsArgs<ExtArgs>
     _count?: boolean | EquipmentCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["equipment"]>
 
@@ -16014,6 +16320,7 @@ export namespace Prisma {
     id?: boolean
     companyId?: boolean
     customerId?: boolean
+    houseId?: boolean
     type?: boolean
     brand?: boolean
     model?: boolean
@@ -16026,12 +16333,14 @@ export namespace Prisma {
     updatedAt?: boolean
     manualUrl?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    house?: boolean | Equipment$houseArgs<ExtArgs>
   }, ExtArgs["result"]["equipment"]>
 
   export type EquipmentSelectScalar = {
     id?: boolean
     companyId?: boolean
     customerId?: boolean
+    houseId?: boolean
     type?: boolean
     brand?: boolean
     model?: boolean
@@ -16047,23 +16356,29 @@ export namespace Prisma {
 
   export type EquipmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    house?: boolean | Equipment$houseArgs<ExtArgs>
     consumables?: boolean | Equipment$consumablesArgs<ExtArgs>
+    issueReports?: boolean | Equipment$issueReportsArgs<ExtArgs>
     _count?: boolean | EquipmentCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type EquipmentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    house?: boolean | Equipment$houseArgs<ExtArgs>
   }
 
   export type $EquipmentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Equipment"
     objects: {
       customer: Prisma.$CustomerPayload<ExtArgs>
+      house: Prisma.$HousePayload<ExtArgs> | null
       consumables: Prisma.$EquipmentConsumablePayload<ExtArgs>[]
+      issueReports: Prisma.$HouseIssueReportPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       companyId: string
       customerId: string
+      houseId: string | null
       type: string
       brand: string | null
       model: string | null
@@ -16440,7 +16755,9 @@ export namespace Prisma {
   export interface Prisma__EquipmentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    house<T extends Equipment$houseArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$houseArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     consumables<T extends Equipment$consumablesArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$consumablesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentConsumablePayload<ExtArgs>, T, "findMany"> | Null>
+    issueReports<T extends Equipment$issueReportsArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$issueReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -16473,6 +16790,7 @@ export namespace Prisma {
     readonly id: FieldRef<"Equipment", 'String'>
     readonly companyId: FieldRef<"Equipment", 'String'>
     readonly customerId: FieldRef<"Equipment", 'String'>
+    readonly houseId: FieldRef<"Equipment", 'String'>
     readonly type: FieldRef<"Equipment", 'String'>
     readonly brand: FieldRef<"Equipment", 'String'>
     readonly model: FieldRef<"Equipment", 'String'>
@@ -16802,6 +17120,21 @@ export namespace Prisma {
   }
 
   /**
+   * Equipment.house
+   */
+  export type Equipment$houseArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    where?: HouseWhereInput
+  }
+
+  /**
    * Equipment.consumables
    */
   export type Equipment$consumablesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -16819,6 +17152,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: EquipmentConsumableScalarFieldEnum | EquipmentConsumableScalarFieldEnum[]
+  }
+
+  /**
+   * Equipment.issueReports
+   */
+  export type Equipment$issueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    where?: HouseIssueReportWhereInput
+    orderBy?: HouseIssueReportOrderByWithRelationInput | HouseIssueReportOrderByWithRelationInput[]
+    cursor?: HouseIssueReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: HouseIssueReportScalarFieldEnum | HouseIssueReportScalarFieldEnum[]
   }
 
   /**
@@ -27028,6 +27381,7 @@ export namespace Prisma {
     description: string | null
     category: string | null
     status: string | null
+    templateType: string | null
     startDate: Date | null
     targetEndDate: Date | null
     budget: Decimal | null
@@ -27048,6 +27402,7 @@ export namespace Prisma {
     description: string | null
     category: string | null
     status: string | null
+    templateType: string | null
     startDate: Date | null
     targetEndDate: Date | null
     budget: Decimal | null
@@ -27068,6 +27423,7 @@ export namespace Prisma {
     description: number
     category: number
     status: number
+    templateType: number
     startDate: number
     targetEndDate: number
     budget: number
@@ -27106,6 +27462,7 @@ export namespace Prisma {
     description?: true
     category?: true
     status?: true
+    templateType?: true
     startDate?: true
     targetEndDate?: true
     budget?: true
@@ -27126,6 +27483,7 @@ export namespace Prisma {
     description?: true
     category?: true
     status?: true
+    templateType?: true
     startDate?: true
     targetEndDate?: true
     budget?: true
@@ -27146,6 +27504,7 @@ export namespace Prisma {
     description?: true
     category?: true
     status?: true
+    templateType?: true
     startDate?: true
     targetEndDate?: true
     budget?: true
@@ -27255,6 +27614,7 @@ export namespace Prisma {
     description: string | null
     category: string | null
     status: string
+    templateType: string
     startDate: Date | null
     targetEndDate: Date | null
     budget: Decimal | null
@@ -27296,6 +27656,7 @@ export namespace Prisma {
     description?: boolean
     category?: boolean
     status?: boolean
+    templateType?: boolean
     startDate?: boolean
     targetEndDate?: boolean
     budget?: boolean
@@ -27309,6 +27670,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     rosterDays?: boolean | Project$rosterDaysArgs<ExtArgs>
+    houses?: boolean | Project$housesArgs<ExtArgs>
     _count?: boolean | ProjectCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["project"]>
 
@@ -27320,6 +27682,7 @@ export namespace Prisma {
     description?: boolean
     category?: boolean
     status?: boolean
+    templateType?: boolean
     startDate?: boolean
     targetEndDate?: boolean
     budget?: boolean
@@ -27342,6 +27705,7 @@ export namespace Prisma {
     description?: boolean
     category?: boolean
     status?: boolean
+    templateType?: boolean
     startDate?: boolean
     targetEndDate?: boolean
     budget?: boolean
@@ -27358,6 +27722,7 @@ export namespace Prisma {
 
   export type ProjectInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     rosterDays?: boolean | Project$rosterDaysArgs<ExtArgs>
+    houses?: boolean | Project$housesArgs<ExtArgs>
     _count?: boolean | ProjectCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProjectIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -27366,6 +27731,7 @@ export namespace Prisma {
     name: "Project"
     objects: {
       rosterDays: Prisma.$ProjectRosterDayPayload<ExtArgs>[]
+      houses: Prisma.$HousePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -27375,6 +27741,7 @@ export namespace Prisma {
       description: string | null
       category: string | null
       status: string
+      templateType: string
       startDate: Date | null
       targetEndDate: Date | null
       budget: Prisma.Decimal | null
@@ -27752,6 +28119,7 @@ export namespace Prisma {
   export interface Prisma__ProjectClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     rosterDays<T extends Project$rosterDaysArgs<ExtArgs> = {}>(args?: Subset<T, Project$rosterDaysArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectRosterDayPayload<ExtArgs>, T, "findMany"> | Null>
+    houses<T extends Project$housesArgs<ExtArgs> = {}>(args?: Subset<T, Project$housesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -27788,6 +28156,7 @@ export namespace Prisma {
     readonly description: FieldRef<"Project", 'String'>
     readonly category: FieldRef<"Project", 'String'>
     readonly status: FieldRef<"Project", 'String'>
+    readonly templateType: FieldRef<"Project", 'String'>
     readonly startDate: FieldRef<"Project", 'DateTime'>
     readonly targetEndDate: FieldRef<"Project", 'DateTime'>
     readonly budget: FieldRef<"Project", 'Decimal'>
@@ -28131,6 +28500,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ProjectRosterDayScalarFieldEnum | ProjectRosterDayScalarFieldEnum[]
+  }
+
+  /**
+   * Project.houses
+   */
+  export type Project$housesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    where?: HouseWhereInput
+    orderBy?: HouseOrderByWithRelationInput | HouseOrderByWithRelationInput[]
+    cursor?: HouseWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: HouseScalarFieldEnum | HouseScalarFieldEnum[]
   }
 
   /**
@@ -29114,6 +29503,2098 @@ export namespace Prisma {
 
 
   /**
+   * Model House
+   */
+
+  export type AggregateHouse = {
+    _count: HouseCountAggregateOutputType | null
+    _min: HouseMinAggregateOutputType | null
+    _max: HouseMaxAggregateOutputType | null
+  }
+
+  export type HouseMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    projectId: string | null
+    label: string | null
+    address: string | null
+    ownerCustomerId: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type HouseMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    projectId: string | null
+    label: string | null
+    address: string | null
+    ownerCustomerId: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type HouseCountAggregateOutputType = {
+    id: number
+    companyId: number
+    projectId: number
+    label: number
+    address: number
+    ownerCustomerId: number
+    tags: number
+    notes: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type HouseMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    projectId?: true
+    label?: true
+    address?: true
+    ownerCustomerId?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type HouseMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    projectId?: true
+    label?: true
+    address?: true
+    ownerCustomerId?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type HouseCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    projectId?: true
+    label?: true
+    address?: true
+    ownerCustomerId?: true
+    tags?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type HouseAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which House to aggregate.
+     */
+    where?: HouseWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Houses to fetch.
+     */
+    orderBy?: HouseOrderByWithRelationInput | HouseOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: HouseWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Houses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Houses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Houses
+    **/
+    _count?: true | HouseCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: HouseMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: HouseMaxAggregateInputType
+  }
+
+  export type GetHouseAggregateType<T extends HouseAggregateArgs> = {
+        [P in keyof T & keyof AggregateHouse]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateHouse[P]>
+      : GetScalarType<T[P], AggregateHouse[P]>
+  }
+
+
+
+
+  export type HouseGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HouseWhereInput
+    orderBy?: HouseOrderByWithAggregationInput | HouseOrderByWithAggregationInput[]
+    by: HouseScalarFieldEnum[] | HouseScalarFieldEnum
+    having?: HouseScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: HouseCountAggregateInputType | true
+    _min?: HouseMinAggregateInputType
+    _max?: HouseMaxAggregateInputType
+  }
+
+  export type HouseGroupByOutputType = {
+    id: string
+    companyId: string
+    projectId: string
+    label: string
+    address: string | null
+    ownerCustomerId: string | null
+    tags: string[]
+    notes: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: HouseCountAggregateOutputType | null
+    _min: HouseMinAggregateOutputType | null
+    _max: HouseMaxAggregateOutputType | null
+  }
+
+  type GetHouseGroupByPayload<T extends HouseGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<HouseGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof HouseGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], HouseGroupByOutputType[P]>
+            : GetScalarType<T[P], HouseGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type HouseSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    projectId?: boolean
+    label?: boolean
+    address?: boolean
+    ownerCustomerId?: boolean
+    tags?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    owner?: boolean | House$ownerArgs<ExtArgs>
+    equipment?: boolean | House$equipmentArgs<ExtArgs>
+    issueReports?: boolean | House$issueReportsArgs<ExtArgs>
+    _count?: boolean | HouseCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["house"]>
+
+  export type HouseSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    projectId?: boolean
+    label?: boolean
+    address?: boolean
+    ownerCustomerId?: boolean
+    tags?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    owner?: boolean | House$ownerArgs<ExtArgs>
+  }, ExtArgs["result"]["house"]>
+
+  export type HouseSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    projectId?: boolean
+    label?: boolean
+    address?: boolean
+    ownerCustomerId?: boolean
+    tags?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type HouseInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    owner?: boolean | House$ownerArgs<ExtArgs>
+    equipment?: boolean | House$equipmentArgs<ExtArgs>
+    issueReports?: boolean | House$issueReportsArgs<ExtArgs>
+    _count?: boolean | HouseCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type HouseIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    owner?: boolean | House$ownerArgs<ExtArgs>
+  }
+
+  export type $HousePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "House"
+    objects: {
+      project: Prisma.$ProjectPayload<ExtArgs>
+      owner: Prisma.$CustomerPayload<ExtArgs> | null
+      equipment: Prisma.$EquipmentPayload<ExtArgs>[]
+      issueReports: Prisma.$HouseIssueReportPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      projectId: string
+      label: string
+      address: string | null
+      ownerCustomerId: string | null
+      tags: string[]
+      notes: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["house"]>
+    composites: {}
+  }
+
+  type HouseGetPayload<S extends boolean | null | undefined | HouseDefaultArgs> = $Result.GetResult<Prisma.$HousePayload, S>
+
+  type HouseCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<HouseFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: HouseCountAggregateInputType | true
+    }
+
+  export interface HouseDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['House'], meta: { name: 'House' } }
+    /**
+     * Find zero or one House that matches the filter.
+     * @param {HouseFindUniqueArgs} args - Arguments to find a House
+     * @example
+     * // Get one House
+     * const house = await prisma.house.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends HouseFindUniqueArgs>(args: SelectSubset<T, HouseFindUniqueArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one House that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {HouseFindUniqueOrThrowArgs} args - Arguments to find a House
+     * @example
+     * // Get one House
+     * const house = await prisma.house.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends HouseFindUniqueOrThrowArgs>(args: SelectSubset<T, HouseFindUniqueOrThrowArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first House that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseFindFirstArgs} args - Arguments to find a House
+     * @example
+     * // Get one House
+     * const house = await prisma.house.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends HouseFindFirstArgs>(args?: SelectSubset<T, HouseFindFirstArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first House that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseFindFirstOrThrowArgs} args - Arguments to find a House
+     * @example
+     * // Get one House
+     * const house = await prisma.house.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends HouseFindFirstOrThrowArgs>(args?: SelectSubset<T, HouseFindFirstOrThrowArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Houses that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Houses
+     * const houses = await prisma.house.findMany()
+     * 
+     * // Get first 10 Houses
+     * const houses = await prisma.house.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const houseWithIdOnly = await prisma.house.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends HouseFindManyArgs>(args?: SelectSubset<T, HouseFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a House.
+     * @param {HouseCreateArgs} args - Arguments to create a House.
+     * @example
+     * // Create one House
+     * const House = await prisma.house.create({
+     *   data: {
+     *     // ... data to create a House
+     *   }
+     * })
+     * 
+     */
+    create<T extends HouseCreateArgs>(args: SelectSubset<T, HouseCreateArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Houses.
+     * @param {HouseCreateManyArgs} args - Arguments to create many Houses.
+     * @example
+     * // Create many Houses
+     * const house = await prisma.house.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends HouseCreateManyArgs>(args?: SelectSubset<T, HouseCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Houses and returns the data saved in the database.
+     * @param {HouseCreateManyAndReturnArgs} args - Arguments to create many Houses.
+     * @example
+     * // Create many Houses
+     * const house = await prisma.house.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Houses and only return the `id`
+     * const houseWithIdOnly = await prisma.house.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends HouseCreateManyAndReturnArgs>(args?: SelectSubset<T, HouseCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a House.
+     * @param {HouseDeleteArgs} args - Arguments to delete one House.
+     * @example
+     * // Delete one House
+     * const House = await prisma.house.delete({
+     *   where: {
+     *     // ... filter to delete one House
+     *   }
+     * })
+     * 
+     */
+    delete<T extends HouseDeleteArgs>(args: SelectSubset<T, HouseDeleteArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one House.
+     * @param {HouseUpdateArgs} args - Arguments to update one House.
+     * @example
+     * // Update one House
+     * const house = await prisma.house.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends HouseUpdateArgs>(args: SelectSubset<T, HouseUpdateArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Houses.
+     * @param {HouseDeleteManyArgs} args - Arguments to filter Houses to delete.
+     * @example
+     * // Delete a few Houses
+     * const { count } = await prisma.house.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends HouseDeleteManyArgs>(args?: SelectSubset<T, HouseDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Houses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Houses
+     * const house = await prisma.house.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends HouseUpdateManyArgs>(args: SelectSubset<T, HouseUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one House.
+     * @param {HouseUpsertArgs} args - Arguments to update or create a House.
+     * @example
+     * // Update or create a House
+     * const house = await prisma.house.upsert({
+     *   create: {
+     *     // ... data to create a House
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the House we want to update
+     *   }
+     * })
+     */
+    upsert<T extends HouseUpsertArgs>(args: SelectSubset<T, HouseUpsertArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Houses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseCountArgs} args - Arguments to filter Houses to count.
+     * @example
+     * // Count the number of Houses
+     * const count = await prisma.house.count({
+     *   where: {
+     *     // ... the filter for the Houses we want to count
+     *   }
+     * })
+    **/
+    count<T extends HouseCountArgs>(
+      args?: Subset<T, HouseCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], HouseCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a House.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends HouseAggregateArgs>(args: Subset<T, HouseAggregateArgs>): Prisma.PrismaPromise<GetHouseAggregateType<T>>
+
+    /**
+     * Group by House.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends HouseGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: HouseGroupByArgs['orderBy'] }
+        : { orderBy?: HouseGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, HouseGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetHouseGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the House model
+   */
+  readonly fields: HouseFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for House.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__HouseClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    project<T extends ProjectDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProjectDefaultArgs<ExtArgs>>): Prisma__ProjectClient<$Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    owner<T extends House$ownerArgs<ExtArgs> = {}>(args?: Subset<T, House$ownerArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    equipment<T extends House$equipmentArgs<ExtArgs> = {}>(args?: Subset<T, House$equipmentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentPayload<ExtArgs>, T, "findMany"> | Null>
+    issueReports<T extends House$issueReportsArgs<ExtArgs> = {}>(args?: Subset<T, House$issueReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the House model
+   */ 
+  interface HouseFieldRefs {
+    readonly id: FieldRef<"House", 'String'>
+    readonly companyId: FieldRef<"House", 'String'>
+    readonly projectId: FieldRef<"House", 'String'>
+    readonly label: FieldRef<"House", 'String'>
+    readonly address: FieldRef<"House", 'String'>
+    readonly ownerCustomerId: FieldRef<"House", 'String'>
+    readonly tags: FieldRef<"House", 'String[]'>
+    readonly notes: FieldRef<"House", 'String'>
+    readonly createdAt: FieldRef<"House", 'DateTime'>
+    readonly updatedAt: FieldRef<"House", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * House findUnique
+   */
+  export type HouseFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    /**
+     * Filter, which House to fetch.
+     */
+    where: HouseWhereUniqueInput
+  }
+
+  /**
+   * House findUniqueOrThrow
+   */
+  export type HouseFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    /**
+     * Filter, which House to fetch.
+     */
+    where: HouseWhereUniqueInput
+  }
+
+  /**
+   * House findFirst
+   */
+  export type HouseFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    /**
+     * Filter, which House to fetch.
+     */
+    where?: HouseWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Houses to fetch.
+     */
+    orderBy?: HouseOrderByWithRelationInput | HouseOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Houses.
+     */
+    cursor?: HouseWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Houses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Houses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Houses.
+     */
+    distinct?: HouseScalarFieldEnum | HouseScalarFieldEnum[]
+  }
+
+  /**
+   * House findFirstOrThrow
+   */
+  export type HouseFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    /**
+     * Filter, which House to fetch.
+     */
+    where?: HouseWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Houses to fetch.
+     */
+    orderBy?: HouseOrderByWithRelationInput | HouseOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Houses.
+     */
+    cursor?: HouseWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Houses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Houses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Houses.
+     */
+    distinct?: HouseScalarFieldEnum | HouseScalarFieldEnum[]
+  }
+
+  /**
+   * House findMany
+   */
+  export type HouseFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    /**
+     * Filter, which Houses to fetch.
+     */
+    where?: HouseWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Houses to fetch.
+     */
+    orderBy?: HouseOrderByWithRelationInput | HouseOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Houses.
+     */
+    cursor?: HouseWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Houses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Houses.
+     */
+    skip?: number
+    distinct?: HouseScalarFieldEnum | HouseScalarFieldEnum[]
+  }
+
+  /**
+   * House create
+   */
+  export type HouseCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    /**
+     * The data needed to create a House.
+     */
+    data: XOR<HouseCreateInput, HouseUncheckedCreateInput>
+  }
+
+  /**
+   * House createMany
+   */
+  export type HouseCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Houses.
+     */
+    data: HouseCreateManyInput | HouseCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * House createManyAndReturn
+   */
+  export type HouseCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many Houses.
+     */
+    data: HouseCreateManyInput | HouseCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * House update
+   */
+  export type HouseUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    /**
+     * The data needed to update a House.
+     */
+    data: XOR<HouseUpdateInput, HouseUncheckedUpdateInput>
+    /**
+     * Choose, which House to update.
+     */
+    where: HouseWhereUniqueInput
+  }
+
+  /**
+   * House updateMany
+   */
+  export type HouseUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Houses.
+     */
+    data: XOR<HouseUpdateManyMutationInput, HouseUncheckedUpdateManyInput>
+    /**
+     * Filter which Houses to update
+     */
+    where?: HouseWhereInput
+  }
+
+  /**
+   * House upsert
+   */
+  export type HouseUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    /**
+     * The filter to search for the House to update in case it exists.
+     */
+    where: HouseWhereUniqueInput
+    /**
+     * In case the House found by the `where` argument doesn't exist, create a new House with this data.
+     */
+    create: XOR<HouseCreateInput, HouseUncheckedCreateInput>
+    /**
+     * In case the House was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<HouseUpdateInput, HouseUncheckedUpdateInput>
+  }
+
+  /**
+   * House delete
+   */
+  export type HouseDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+    /**
+     * Filter which House to delete.
+     */
+    where: HouseWhereUniqueInput
+  }
+
+  /**
+   * House deleteMany
+   */
+  export type HouseDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Houses to delete
+     */
+    where?: HouseWhereInput
+  }
+
+  /**
+   * House.owner
+   */
+  export type House$ownerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Customer
+     */
+    select?: CustomerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerInclude<ExtArgs> | null
+    where?: CustomerWhereInput
+  }
+
+  /**
+   * House.equipment
+   */
+  export type House$equipmentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Equipment
+     */
+    select?: EquipmentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentInclude<ExtArgs> | null
+    where?: EquipmentWhereInput
+    orderBy?: EquipmentOrderByWithRelationInput | EquipmentOrderByWithRelationInput[]
+    cursor?: EquipmentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: EquipmentScalarFieldEnum | EquipmentScalarFieldEnum[]
+  }
+
+  /**
+   * House.issueReports
+   */
+  export type House$issueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    where?: HouseIssueReportWhereInput
+    orderBy?: HouseIssueReportOrderByWithRelationInput | HouseIssueReportOrderByWithRelationInput[]
+    cursor?: HouseIssueReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: HouseIssueReportScalarFieldEnum | HouseIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * House without action
+   */
+  export type HouseDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the House
+     */
+    select?: HouseSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model HouseIssueReport
+   */
+
+  export type AggregateHouseIssueReport = {
+    _count: HouseIssueReportCountAggregateOutputType | null
+    _min: HouseIssueReportMinAggregateOutputType | null
+    _max: HouseIssueReportMaxAggregateOutputType | null
+  }
+
+  export type HouseIssueReportMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    houseId: string | null
+    equipmentId: string | null
+    reportedByCustomerId: string | null
+    errorCode: string | null
+    description: string | null
+    status: string | null
+    resolvedNote: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type HouseIssueReportMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    houseId: string | null
+    equipmentId: string | null
+    reportedByCustomerId: string | null
+    errorCode: string | null
+    description: string | null
+    status: string | null
+    resolvedNote: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type HouseIssueReportCountAggregateOutputType = {
+    id: number
+    companyId: number
+    houseId: number
+    equipmentId: number
+    reportedByCustomerId: number
+    errorCode: number
+    description: number
+    status: number
+    resolvedNote: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type HouseIssueReportMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    houseId?: true
+    equipmentId?: true
+    reportedByCustomerId?: true
+    errorCode?: true
+    description?: true
+    status?: true
+    resolvedNote?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type HouseIssueReportMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    houseId?: true
+    equipmentId?: true
+    reportedByCustomerId?: true
+    errorCode?: true
+    description?: true
+    status?: true
+    resolvedNote?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type HouseIssueReportCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    houseId?: true
+    equipmentId?: true
+    reportedByCustomerId?: true
+    errorCode?: true
+    description?: true
+    status?: true
+    resolvedNote?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type HouseIssueReportAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HouseIssueReport to aggregate.
+     */
+    where?: HouseIssueReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HouseIssueReports to fetch.
+     */
+    orderBy?: HouseIssueReportOrderByWithRelationInput | HouseIssueReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: HouseIssueReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HouseIssueReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HouseIssueReports.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned HouseIssueReports
+    **/
+    _count?: true | HouseIssueReportCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: HouseIssueReportMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: HouseIssueReportMaxAggregateInputType
+  }
+
+  export type GetHouseIssueReportAggregateType<T extends HouseIssueReportAggregateArgs> = {
+        [P in keyof T & keyof AggregateHouseIssueReport]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateHouseIssueReport[P]>
+      : GetScalarType<T[P], AggregateHouseIssueReport[P]>
+  }
+
+
+
+
+  export type HouseIssueReportGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HouseIssueReportWhereInput
+    orderBy?: HouseIssueReportOrderByWithAggregationInput | HouseIssueReportOrderByWithAggregationInput[]
+    by: HouseIssueReportScalarFieldEnum[] | HouseIssueReportScalarFieldEnum
+    having?: HouseIssueReportScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: HouseIssueReportCountAggregateInputType | true
+    _min?: HouseIssueReportMinAggregateInputType
+    _max?: HouseIssueReportMaxAggregateInputType
+  }
+
+  export type HouseIssueReportGroupByOutputType = {
+    id: string
+    companyId: string
+    houseId: string
+    equipmentId: string | null
+    reportedByCustomerId: string
+    errorCode: string | null
+    description: string | null
+    status: string
+    resolvedNote: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: HouseIssueReportCountAggregateOutputType | null
+    _min: HouseIssueReportMinAggregateOutputType | null
+    _max: HouseIssueReportMaxAggregateOutputType | null
+  }
+
+  type GetHouseIssueReportGroupByPayload<T extends HouseIssueReportGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<HouseIssueReportGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof HouseIssueReportGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], HouseIssueReportGroupByOutputType[P]>
+            : GetScalarType<T[P], HouseIssueReportGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type HouseIssueReportSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    houseId?: boolean
+    equipmentId?: boolean
+    reportedByCustomerId?: boolean
+    errorCode?: boolean
+    description?: boolean
+    status?: boolean
+    resolvedNote?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    house?: boolean | HouseDefaultArgs<ExtArgs>
+    equipment?: boolean | HouseIssueReport$equipmentArgs<ExtArgs>
+    reportedBy?: boolean | CustomerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["houseIssueReport"]>
+
+  export type HouseIssueReportSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    houseId?: boolean
+    equipmentId?: boolean
+    reportedByCustomerId?: boolean
+    errorCode?: boolean
+    description?: boolean
+    status?: boolean
+    resolvedNote?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    house?: boolean | HouseDefaultArgs<ExtArgs>
+    equipment?: boolean | HouseIssueReport$equipmentArgs<ExtArgs>
+    reportedBy?: boolean | CustomerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["houseIssueReport"]>
+
+  export type HouseIssueReportSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    houseId?: boolean
+    equipmentId?: boolean
+    reportedByCustomerId?: boolean
+    errorCode?: boolean
+    description?: boolean
+    status?: boolean
+    resolvedNote?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type HouseIssueReportInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    house?: boolean | HouseDefaultArgs<ExtArgs>
+    equipment?: boolean | HouseIssueReport$equipmentArgs<ExtArgs>
+    reportedBy?: boolean | CustomerDefaultArgs<ExtArgs>
+  }
+  export type HouseIssueReportIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    house?: boolean | HouseDefaultArgs<ExtArgs>
+    equipment?: boolean | HouseIssueReport$equipmentArgs<ExtArgs>
+    reportedBy?: boolean | CustomerDefaultArgs<ExtArgs>
+  }
+
+  export type $HouseIssueReportPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "HouseIssueReport"
+    objects: {
+      house: Prisma.$HousePayload<ExtArgs>
+      equipment: Prisma.$EquipmentPayload<ExtArgs> | null
+      reportedBy: Prisma.$CustomerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      houseId: string
+      equipmentId: string | null
+      reportedByCustomerId: string
+      errorCode: string | null
+      description: string | null
+      status: string
+      resolvedNote: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["houseIssueReport"]>
+    composites: {}
+  }
+
+  type HouseIssueReportGetPayload<S extends boolean | null | undefined | HouseIssueReportDefaultArgs> = $Result.GetResult<Prisma.$HouseIssueReportPayload, S>
+
+  type HouseIssueReportCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<HouseIssueReportFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: HouseIssueReportCountAggregateInputType | true
+    }
+
+  export interface HouseIssueReportDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['HouseIssueReport'], meta: { name: 'HouseIssueReport' } }
+    /**
+     * Find zero or one HouseIssueReport that matches the filter.
+     * @param {HouseIssueReportFindUniqueArgs} args - Arguments to find a HouseIssueReport
+     * @example
+     * // Get one HouseIssueReport
+     * const houseIssueReport = await prisma.houseIssueReport.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends HouseIssueReportFindUniqueArgs>(args: SelectSubset<T, HouseIssueReportFindUniqueArgs<ExtArgs>>): Prisma__HouseIssueReportClient<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one HouseIssueReport that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {HouseIssueReportFindUniqueOrThrowArgs} args - Arguments to find a HouseIssueReport
+     * @example
+     * // Get one HouseIssueReport
+     * const houseIssueReport = await prisma.houseIssueReport.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends HouseIssueReportFindUniqueOrThrowArgs>(args: SelectSubset<T, HouseIssueReportFindUniqueOrThrowArgs<ExtArgs>>): Prisma__HouseIssueReportClient<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first HouseIssueReport that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseIssueReportFindFirstArgs} args - Arguments to find a HouseIssueReport
+     * @example
+     * // Get one HouseIssueReport
+     * const houseIssueReport = await prisma.houseIssueReport.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends HouseIssueReportFindFirstArgs>(args?: SelectSubset<T, HouseIssueReportFindFirstArgs<ExtArgs>>): Prisma__HouseIssueReportClient<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first HouseIssueReport that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseIssueReportFindFirstOrThrowArgs} args - Arguments to find a HouseIssueReport
+     * @example
+     * // Get one HouseIssueReport
+     * const houseIssueReport = await prisma.houseIssueReport.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends HouseIssueReportFindFirstOrThrowArgs>(args?: SelectSubset<T, HouseIssueReportFindFirstOrThrowArgs<ExtArgs>>): Prisma__HouseIssueReportClient<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more HouseIssueReports that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseIssueReportFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all HouseIssueReports
+     * const houseIssueReports = await prisma.houseIssueReport.findMany()
+     * 
+     * // Get first 10 HouseIssueReports
+     * const houseIssueReports = await prisma.houseIssueReport.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const houseIssueReportWithIdOnly = await prisma.houseIssueReport.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends HouseIssueReportFindManyArgs>(args?: SelectSubset<T, HouseIssueReportFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a HouseIssueReport.
+     * @param {HouseIssueReportCreateArgs} args - Arguments to create a HouseIssueReport.
+     * @example
+     * // Create one HouseIssueReport
+     * const HouseIssueReport = await prisma.houseIssueReport.create({
+     *   data: {
+     *     // ... data to create a HouseIssueReport
+     *   }
+     * })
+     * 
+     */
+    create<T extends HouseIssueReportCreateArgs>(args: SelectSubset<T, HouseIssueReportCreateArgs<ExtArgs>>): Prisma__HouseIssueReportClient<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many HouseIssueReports.
+     * @param {HouseIssueReportCreateManyArgs} args - Arguments to create many HouseIssueReports.
+     * @example
+     * // Create many HouseIssueReports
+     * const houseIssueReport = await prisma.houseIssueReport.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends HouseIssueReportCreateManyArgs>(args?: SelectSubset<T, HouseIssueReportCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many HouseIssueReports and returns the data saved in the database.
+     * @param {HouseIssueReportCreateManyAndReturnArgs} args - Arguments to create many HouseIssueReports.
+     * @example
+     * // Create many HouseIssueReports
+     * const houseIssueReport = await prisma.houseIssueReport.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many HouseIssueReports and only return the `id`
+     * const houseIssueReportWithIdOnly = await prisma.houseIssueReport.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends HouseIssueReportCreateManyAndReturnArgs>(args?: SelectSubset<T, HouseIssueReportCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a HouseIssueReport.
+     * @param {HouseIssueReportDeleteArgs} args - Arguments to delete one HouseIssueReport.
+     * @example
+     * // Delete one HouseIssueReport
+     * const HouseIssueReport = await prisma.houseIssueReport.delete({
+     *   where: {
+     *     // ... filter to delete one HouseIssueReport
+     *   }
+     * })
+     * 
+     */
+    delete<T extends HouseIssueReportDeleteArgs>(args: SelectSubset<T, HouseIssueReportDeleteArgs<ExtArgs>>): Prisma__HouseIssueReportClient<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one HouseIssueReport.
+     * @param {HouseIssueReportUpdateArgs} args - Arguments to update one HouseIssueReport.
+     * @example
+     * // Update one HouseIssueReport
+     * const houseIssueReport = await prisma.houseIssueReport.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends HouseIssueReportUpdateArgs>(args: SelectSubset<T, HouseIssueReportUpdateArgs<ExtArgs>>): Prisma__HouseIssueReportClient<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more HouseIssueReports.
+     * @param {HouseIssueReportDeleteManyArgs} args - Arguments to filter HouseIssueReports to delete.
+     * @example
+     * // Delete a few HouseIssueReports
+     * const { count } = await prisma.houseIssueReport.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends HouseIssueReportDeleteManyArgs>(args?: SelectSubset<T, HouseIssueReportDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more HouseIssueReports.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseIssueReportUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many HouseIssueReports
+     * const houseIssueReport = await prisma.houseIssueReport.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends HouseIssueReportUpdateManyArgs>(args: SelectSubset<T, HouseIssueReportUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one HouseIssueReport.
+     * @param {HouseIssueReportUpsertArgs} args - Arguments to update or create a HouseIssueReport.
+     * @example
+     * // Update or create a HouseIssueReport
+     * const houseIssueReport = await prisma.houseIssueReport.upsert({
+     *   create: {
+     *     // ... data to create a HouseIssueReport
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the HouseIssueReport we want to update
+     *   }
+     * })
+     */
+    upsert<T extends HouseIssueReportUpsertArgs>(args: SelectSubset<T, HouseIssueReportUpsertArgs<ExtArgs>>): Prisma__HouseIssueReportClient<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of HouseIssueReports.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseIssueReportCountArgs} args - Arguments to filter HouseIssueReports to count.
+     * @example
+     * // Count the number of HouseIssueReports
+     * const count = await prisma.houseIssueReport.count({
+     *   where: {
+     *     // ... the filter for the HouseIssueReports we want to count
+     *   }
+     * })
+    **/
+    count<T extends HouseIssueReportCountArgs>(
+      args?: Subset<T, HouseIssueReportCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], HouseIssueReportCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a HouseIssueReport.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseIssueReportAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends HouseIssueReportAggregateArgs>(args: Subset<T, HouseIssueReportAggregateArgs>): Prisma.PrismaPromise<GetHouseIssueReportAggregateType<T>>
+
+    /**
+     * Group by HouseIssueReport.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HouseIssueReportGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends HouseIssueReportGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: HouseIssueReportGroupByArgs['orderBy'] }
+        : { orderBy?: HouseIssueReportGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, HouseIssueReportGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetHouseIssueReportGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the HouseIssueReport model
+   */
+  readonly fields: HouseIssueReportFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for HouseIssueReport.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__HouseIssueReportClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    house<T extends HouseDefaultArgs<ExtArgs> = {}>(args?: Subset<T, HouseDefaultArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    equipment<T extends HouseIssueReport$equipmentArgs<ExtArgs> = {}>(args?: Subset<T, HouseIssueReport$equipmentArgs<ExtArgs>>): Prisma__EquipmentClient<$Result.GetResult<Prisma.$EquipmentPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    reportedBy<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the HouseIssueReport model
+   */ 
+  interface HouseIssueReportFieldRefs {
+    readonly id: FieldRef<"HouseIssueReport", 'String'>
+    readonly companyId: FieldRef<"HouseIssueReport", 'String'>
+    readonly houseId: FieldRef<"HouseIssueReport", 'String'>
+    readonly equipmentId: FieldRef<"HouseIssueReport", 'String'>
+    readonly reportedByCustomerId: FieldRef<"HouseIssueReport", 'String'>
+    readonly errorCode: FieldRef<"HouseIssueReport", 'String'>
+    readonly description: FieldRef<"HouseIssueReport", 'String'>
+    readonly status: FieldRef<"HouseIssueReport", 'String'>
+    readonly resolvedNote: FieldRef<"HouseIssueReport", 'String'>
+    readonly createdAt: FieldRef<"HouseIssueReport", 'DateTime'>
+    readonly updatedAt: FieldRef<"HouseIssueReport", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * HouseIssueReport findUnique
+   */
+  export type HouseIssueReportFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which HouseIssueReport to fetch.
+     */
+    where: HouseIssueReportWhereUniqueInput
+  }
+
+  /**
+   * HouseIssueReport findUniqueOrThrow
+   */
+  export type HouseIssueReportFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which HouseIssueReport to fetch.
+     */
+    where: HouseIssueReportWhereUniqueInput
+  }
+
+  /**
+   * HouseIssueReport findFirst
+   */
+  export type HouseIssueReportFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which HouseIssueReport to fetch.
+     */
+    where?: HouseIssueReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HouseIssueReports to fetch.
+     */
+    orderBy?: HouseIssueReportOrderByWithRelationInput | HouseIssueReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HouseIssueReports.
+     */
+    cursor?: HouseIssueReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HouseIssueReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HouseIssueReports.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HouseIssueReports.
+     */
+    distinct?: HouseIssueReportScalarFieldEnum | HouseIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * HouseIssueReport findFirstOrThrow
+   */
+  export type HouseIssueReportFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which HouseIssueReport to fetch.
+     */
+    where?: HouseIssueReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HouseIssueReports to fetch.
+     */
+    orderBy?: HouseIssueReportOrderByWithRelationInput | HouseIssueReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HouseIssueReports.
+     */
+    cursor?: HouseIssueReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HouseIssueReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HouseIssueReports.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HouseIssueReports.
+     */
+    distinct?: HouseIssueReportScalarFieldEnum | HouseIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * HouseIssueReport findMany
+   */
+  export type HouseIssueReportFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which HouseIssueReports to fetch.
+     */
+    where?: HouseIssueReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HouseIssueReports to fetch.
+     */
+    orderBy?: HouseIssueReportOrderByWithRelationInput | HouseIssueReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing HouseIssueReports.
+     */
+    cursor?: HouseIssueReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HouseIssueReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HouseIssueReports.
+     */
+    skip?: number
+    distinct?: HouseIssueReportScalarFieldEnum | HouseIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * HouseIssueReport create
+   */
+  export type HouseIssueReportCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    /**
+     * The data needed to create a HouseIssueReport.
+     */
+    data: XOR<HouseIssueReportCreateInput, HouseIssueReportUncheckedCreateInput>
+  }
+
+  /**
+   * HouseIssueReport createMany
+   */
+  export type HouseIssueReportCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many HouseIssueReports.
+     */
+    data: HouseIssueReportCreateManyInput | HouseIssueReportCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * HouseIssueReport createManyAndReturn
+   */
+  export type HouseIssueReportCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many HouseIssueReports.
+     */
+    data: HouseIssueReportCreateManyInput | HouseIssueReportCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * HouseIssueReport update
+   */
+  export type HouseIssueReportUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    /**
+     * The data needed to update a HouseIssueReport.
+     */
+    data: XOR<HouseIssueReportUpdateInput, HouseIssueReportUncheckedUpdateInput>
+    /**
+     * Choose, which HouseIssueReport to update.
+     */
+    where: HouseIssueReportWhereUniqueInput
+  }
+
+  /**
+   * HouseIssueReport updateMany
+   */
+  export type HouseIssueReportUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update HouseIssueReports.
+     */
+    data: XOR<HouseIssueReportUpdateManyMutationInput, HouseIssueReportUncheckedUpdateManyInput>
+    /**
+     * Filter which HouseIssueReports to update
+     */
+    where?: HouseIssueReportWhereInput
+  }
+
+  /**
+   * HouseIssueReport upsert
+   */
+  export type HouseIssueReportUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    /**
+     * The filter to search for the HouseIssueReport to update in case it exists.
+     */
+    where: HouseIssueReportWhereUniqueInput
+    /**
+     * In case the HouseIssueReport found by the `where` argument doesn't exist, create a new HouseIssueReport with this data.
+     */
+    create: XOR<HouseIssueReportCreateInput, HouseIssueReportUncheckedCreateInput>
+    /**
+     * In case the HouseIssueReport was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<HouseIssueReportUpdateInput, HouseIssueReportUncheckedUpdateInput>
+  }
+
+  /**
+   * HouseIssueReport delete
+   */
+  export type HouseIssueReportDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter which HouseIssueReport to delete.
+     */
+    where: HouseIssueReportWhereUniqueInput
+  }
+
+  /**
+   * HouseIssueReport deleteMany
+   */
+  export type HouseIssueReportDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HouseIssueReports to delete
+     */
+    where?: HouseIssueReportWhereInput
+  }
+
+  /**
+   * HouseIssueReport.equipment
+   */
+  export type HouseIssueReport$equipmentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Equipment
+     */
+    select?: EquipmentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentInclude<ExtArgs> | null
+    where?: EquipmentWhereInput
+  }
+
+  /**
+   * HouseIssueReport without action
+   */
+  export type HouseIssueReportDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HouseIssueReport
+     */
+    select?: HouseIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HouseIssueReportInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -29384,6 +31865,7 @@ export namespace Prisma {
     id: 'id',
     companyId: 'companyId',
     customerId: 'customerId',
+    houseId: 'houseId',
     type: 'type',
     brand: 'brand',
     model: 'model',
@@ -29582,6 +32064,7 @@ export namespace Prisma {
     description: 'description',
     category: 'category',
     status: 'status',
+    templateType: 'templateType',
     startDate: 'startDate',
     targetEndDate: 'targetEndDate',
     budget: 'budget',
@@ -29611,6 +32094,39 @@ export namespace Prisma {
   };
 
   export type ProjectRosterDayScalarFieldEnum = (typeof ProjectRosterDayScalarFieldEnum)[keyof typeof ProjectRosterDayScalarFieldEnum]
+
+
+  export const HouseScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    projectId: 'projectId',
+    label: 'label',
+    address: 'address',
+    ownerCustomerId: 'ownerCustomerId',
+    tags: 'tags',
+    notes: 'notes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type HouseScalarFieldEnum = (typeof HouseScalarFieldEnum)[keyof typeof HouseScalarFieldEnum]
+
+
+  export const HouseIssueReportScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    houseId: 'houseId',
+    equipmentId: 'equipmentId',
+    reportedByCustomerId: 'reportedByCustomerId',
+    errorCode: 'errorCode',
+    description: 'description',
+    status: 'status',
+    resolvedNote: 'resolvedNote',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type HouseIssueReportScalarFieldEnum = (typeof HouseIssueReportScalarFieldEnum)[keyof typeof HouseIssueReportScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -30232,6 +32748,8 @@ export namespace Prisma {
     equipment?: EquipmentListRelationFilter
     upsellRecommendations?: UpsellRecommendationListRelationFilter
     iotConnections?: CustomerIotConnectionListRelationFilter
+    ownedHouses?: HouseListRelationFilter
+    issueReports?: HouseIssueReportListRelationFilter
   }
 
   export type CustomerOrderByWithRelationInput = {
@@ -30267,6 +32785,8 @@ export namespace Prisma {
     equipment?: EquipmentOrderByRelationAggregateInput
     upsellRecommendations?: UpsellRecommendationOrderByRelationAggregateInput
     iotConnections?: CustomerIotConnectionOrderByRelationAggregateInput
+    ownedHouses?: HouseOrderByRelationAggregateInput
+    issueReports?: HouseIssueReportOrderByRelationAggregateInput
   }
 
   export type CustomerWhereUniqueInput = Prisma.AtLeast<{
@@ -30305,6 +32825,8 @@ export namespace Prisma {
     equipment?: EquipmentListRelationFilter
     upsellRecommendations?: UpsellRecommendationListRelationFilter
     iotConnections?: CustomerIotConnectionListRelationFilter
+    ownedHouses?: HouseListRelationFilter
+    issueReports?: HouseIssueReportListRelationFilter
   }, "id">
 
   export type CustomerOrderByWithAggregationInput = {
@@ -31192,6 +33714,7 @@ export namespace Prisma {
     id?: StringFilter<"Equipment"> | string
     companyId?: StringFilter<"Equipment"> | string
     customerId?: StringFilter<"Equipment"> | string
+    houseId?: StringNullableFilter<"Equipment"> | string | null
     type?: StringFilter<"Equipment"> | string
     brand?: StringNullableFilter<"Equipment"> | string | null
     model?: StringNullableFilter<"Equipment"> | string | null
@@ -31204,13 +33727,16 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Equipment"> | Date | string
     manualUrl?: StringNullableFilter<"Equipment"> | string | null
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+    house?: XOR<HouseNullableRelationFilter, HouseWhereInput> | null
     consumables?: EquipmentConsumableListRelationFilter
+    issueReports?: HouseIssueReportListRelationFilter
   }
 
   export type EquipmentOrderByWithRelationInput = {
     id?: SortOrder
     companyId?: SortOrder
     customerId?: SortOrder
+    houseId?: SortOrderInput | SortOrder
     type?: SortOrder
     brand?: SortOrderInput | SortOrder
     model?: SortOrderInput | SortOrder
@@ -31223,7 +33749,9 @@ export namespace Prisma {
     updatedAt?: SortOrder
     manualUrl?: SortOrderInput | SortOrder
     customer?: CustomerOrderByWithRelationInput
+    house?: HouseOrderByWithRelationInput
     consumables?: EquipmentConsumableOrderByRelationAggregateInput
+    issueReports?: HouseIssueReportOrderByRelationAggregateInput
   }
 
   export type EquipmentWhereUniqueInput = Prisma.AtLeast<{
@@ -31233,6 +33761,7 @@ export namespace Prisma {
     NOT?: EquipmentWhereInput | EquipmentWhereInput[]
     companyId?: StringFilter<"Equipment"> | string
     customerId?: StringFilter<"Equipment"> | string
+    houseId?: StringNullableFilter<"Equipment"> | string | null
     type?: StringFilter<"Equipment"> | string
     brand?: StringNullableFilter<"Equipment"> | string | null
     model?: StringNullableFilter<"Equipment"> | string | null
@@ -31245,13 +33774,16 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Equipment"> | Date | string
     manualUrl?: StringNullableFilter<"Equipment"> | string | null
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
+    house?: XOR<HouseNullableRelationFilter, HouseWhereInput> | null
     consumables?: EquipmentConsumableListRelationFilter
+    issueReports?: HouseIssueReportListRelationFilter
   }, "id">
 
   export type EquipmentOrderByWithAggregationInput = {
     id?: SortOrder
     companyId?: SortOrder
     customerId?: SortOrder
+    houseId?: SortOrderInput | SortOrder
     type?: SortOrder
     brand?: SortOrderInput | SortOrder
     model?: SortOrderInput | SortOrder
@@ -31275,6 +33807,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Equipment"> | string
     companyId?: StringWithAggregatesFilter<"Equipment"> | string
     customerId?: StringWithAggregatesFilter<"Equipment"> | string
+    houseId?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
     type?: StringWithAggregatesFilter<"Equipment"> | string
     brand?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
     model?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
@@ -32178,6 +34711,7 @@ export namespace Prisma {
     description?: StringNullableFilter<"Project"> | string | null
     category?: StringNullableFilter<"Project"> | string | null
     status?: StringFilter<"Project"> | string
+    templateType?: StringFilter<"Project"> | string
     startDate?: DateTimeNullableFilter<"Project"> | Date | string | null
     targetEndDate?: DateTimeNullableFilter<"Project"> | Date | string | null
     budget?: DecimalNullableFilter<"Project"> | Decimal | DecimalJsLike | number | string | null
@@ -32191,6 +34725,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Project"> | Date | string
     updatedAt?: DateTimeFilter<"Project"> | Date | string
     rosterDays?: ProjectRosterDayListRelationFilter
+    houses?: HouseListRelationFilter
   }
 
   export type ProjectOrderByWithRelationInput = {
@@ -32201,6 +34736,7 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     category?: SortOrderInput | SortOrder
     status?: SortOrder
+    templateType?: SortOrder
     startDate?: SortOrderInput | SortOrder
     targetEndDate?: SortOrderInput | SortOrder
     budget?: SortOrderInput | SortOrder
@@ -32214,6 +34750,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     rosterDays?: ProjectRosterDayOrderByRelationAggregateInput
+    houses?: HouseOrderByRelationAggregateInput
   }
 
   export type ProjectWhereUniqueInput = Prisma.AtLeast<{
@@ -32227,6 +34764,7 @@ export namespace Prisma {
     description?: StringNullableFilter<"Project"> | string | null
     category?: StringNullableFilter<"Project"> | string | null
     status?: StringFilter<"Project"> | string
+    templateType?: StringFilter<"Project"> | string
     startDate?: DateTimeNullableFilter<"Project"> | Date | string | null
     targetEndDate?: DateTimeNullableFilter<"Project"> | Date | string | null
     budget?: DecimalNullableFilter<"Project"> | Decimal | DecimalJsLike | number | string | null
@@ -32240,6 +34778,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Project"> | Date | string
     updatedAt?: DateTimeFilter<"Project"> | Date | string
     rosterDays?: ProjectRosterDayListRelationFilter
+    houses?: HouseListRelationFilter
   }, "id">
 
   export type ProjectOrderByWithAggregationInput = {
@@ -32250,6 +34789,7 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     category?: SortOrderInput | SortOrder
     status?: SortOrder
+    templateType?: SortOrder
     startDate?: SortOrderInput | SortOrder
     targetEndDate?: SortOrderInput | SortOrder
     budget?: SortOrderInput | SortOrder
@@ -32280,6 +34820,7 @@ export namespace Prisma {
     description?: StringNullableWithAggregatesFilter<"Project"> | string | null
     category?: StringNullableWithAggregatesFilter<"Project"> | string | null
     status?: StringWithAggregatesFilter<"Project"> | string
+    templateType?: StringWithAggregatesFilter<"Project"> | string
     startDate?: DateTimeNullableWithAggregatesFilter<"Project"> | Date | string | null
     targetEndDate?: DateTimeNullableWithAggregatesFilter<"Project"> | Date | string | null
     budget?: DecimalNullableWithAggregatesFilter<"Project"> | Decimal | DecimalJsLike | number | string | null
@@ -32363,6 +34904,186 @@ export namespace Prisma {
     isOff?: BoolWithAggregatesFilter<"ProjectRosterDay"> | boolean
     updatedBy?: StringNullableWithAggregatesFilter<"ProjectRosterDay"> | string | null
     updatedAt?: DateTimeWithAggregatesFilter<"ProjectRosterDay"> | Date | string
+  }
+
+  export type HouseWhereInput = {
+    AND?: HouseWhereInput | HouseWhereInput[]
+    OR?: HouseWhereInput[]
+    NOT?: HouseWhereInput | HouseWhereInput[]
+    id?: StringFilter<"House"> | string
+    companyId?: StringFilter<"House"> | string
+    projectId?: UuidFilter<"House"> | string
+    label?: StringFilter<"House"> | string
+    address?: StringNullableFilter<"House"> | string | null
+    ownerCustomerId?: StringNullableFilter<"House"> | string | null
+    tags?: StringNullableListFilter<"House">
+    notes?: StringNullableFilter<"House"> | string | null
+    createdAt?: DateTimeFilter<"House"> | Date | string
+    updatedAt?: DateTimeFilter<"House"> | Date | string
+    project?: XOR<ProjectRelationFilter, ProjectWhereInput>
+    owner?: XOR<CustomerNullableRelationFilter, CustomerWhereInput> | null
+    equipment?: EquipmentListRelationFilter
+    issueReports?: HouseIssueReportListRelationFilter
+  }
+
+  export type HouseOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    label?: SortOrder
+    address?: SortOrderInput | SortOrder
+    ownerCustomerId?: SortOrderInput | SortOrder
+    tags?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    project?: ProjectOrderByWithRelationInput
+    owner?: CustomerOrderByWithRelationInput
+    equipment?: EquipmentOrderByRelationAggregateInput
+    issueReports?: HouseIssueReportOrderByRelationAggregateInput
+  }
+
+  export type HouseWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: HouseWhereInput | HouseWhereInput[]
+    OR?: HouseWhereInput[]
+    NOT?: HouseWhereInput | HouseWhereInput[]
+    companyId?: StringFilter<"House"> | string
+    projectId?: UuidFilter<"House"> | string
+    label?: StringFilter<"House"> | string
+    address?: StringNullableFilter<"House"> | string | null
+    ownerCustomerId?: StringNullableFilter<"House"> | string | null
+    tags?: StringNullableListFilter<"House">
+    notes?: StringNullableFilter<"House"> | string | null
+    createdAt?: DateTimeFilter<"House"> | Date | string
+    updatedAt?: DateTimeFilter<"House"> | Date | string
+    project?: XOR<ProjectRelationFilter, ProjectWhereInput>
+    owner?: XOR<CustomerNullableRelationFilter, CustomerWhereInput> | null
+    equipment?: EquipmentListRelationFilter
+    issueReports?: HouseIssueReportListRelationFilter
+  }, "id">
+
+  export type HouseOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    label?: SortOrder
+    address?: SortOrderInput | SortOrder
+    ownerCustomerId?: SortOrderInput | SortOrder
+    tags?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: HouseCountOrderByAggregateInput
+    _max?: HouseMaxOrderByAggregateInput
+    _min?: HouseMinOrderByAggregateInput
+  }
+
+  export type HouseScalarWhereWithAggregatesInput = {
+    AND?: HouseScalarWhereWithAggregatesInput | HouseScalarWhereWithAggregatesInput[]
+    OR?: HouseScalarWhereWithAggregatesInput[]
+    NOT?: HouseScalarWhereWithAggregatesInput | HouseScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"House"> | string
+    companyId?: StringWithAggregatesFilter<"House"> | string
+    projectId?: UuidWithAggregatesFilter<"House"> | string
+    label?: StringWithAggregatesFilter<"House"> | string
+    address?: StringNullableWithAggregatesFilter<"House"> | string | null
+    ownerCustomerId?: StringNullableWithAggregatesFilter<"House"> | string | null
+    tags?: StringNullableListFilter<"House">
+    notes?: StringNullableWithAggregatesFilter<"House"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"House"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"House"> | Date | string
+  }
+
+  export type HouseIssueReportWhereInput = {
+    AND?: HouseIssueReportWhereInput | HouseIssueReportWhereInput[]
+    OR?: HouseIssueReportWhereInput[]
+    NOT?: HouseIssueReportWhereInput | HouseIssueReportWhereInput[]
+    id?: StringFilter<"HouseIssueReport"> | string
+    companyId?: StringFilter<"HouseIssueReport"> | string
+    houseId?: StringFilter<"HouseIssueReport"> | string
+    equipmentId?: StringNullableFilter<"HouseIssueReport"> | string | null
+    reportedByCustomerId?: StringFilter<"HouseIssueReport"> | string
+    errorCode?: StringNullableFilter<"HouseIssueReport"> | string | null
+    description?: StringNullableFilter<"HouseIssueReport"> | string | null
+    status?: StringFilter<"HouseIssueReport"> | string
+    resolvedNote?: StringNullableFilter<"HouseIssueReport"> | string | null
+    createdAt?: DateTimeFilter<"HouseIssueReport"> | Date | string
+    updatedAt?: DateTimeFilter<"HouseIssueReport"> | Date | string
+    house?: XOR<HouseRelationFilter, HouseWhereInput>
+    equipment?: XOR<EquipmentNullableRelationFilter, EquipmentWhereInput> | null
+    reportedBy?: XOR<CustomerRelationFilter, CustomerWhereInput>
+  }
+
+  export type HouseIssueReportOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    houseId?: SortOrder
+    equipmentId?: SortOrderInput | SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrderInput | SortOrder
+    description?: SortOrderInput | SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    house?: HouseOrderByWithRelationInput
+    equipment?: EquipmentOrderByWithRelationInput
+    reportedBy?: CustomerOrderByWithRelationInput
+  }
+
+  export type HouseIssueReportWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: HouseIssueReportWhereInput | HouseIssueReportWhereInput[]
+    OR?: HouseIssueReportWhereInput[]
+    NOT?: HouseIssueReportWhereInput | HouseIssueReportWhereInput[]
+    companyId?: StringFilter<"HouseIssueReport"> | string
+    houseId?: StringFilter<"HouseIssueReport"> | string
+    equipmentId?: StringNullableFilter<"HouseIssueReport"> | string | null
+    reportedByCustomerId?: StringFilter<"HouseIssueReport"> | string
+    errorCode?: StringNullableFilter<"HouseIssueReport"> | string | null
+    description?: StringNullableFilter<"HouseIssueReport"> | string | null
+    status?: StringFilter<"HouseIssueReport"> | string
+    resolvedNote?: StringNullableFilter<"HouseIssueReport"> | string | null
+    createdAt?: DateTimeFilter<"HouseIssueReport"> | Date | string
+    updatedAt?: DateTimeFilter<"HouseIssueReport"> | Date | string
+    house?: XOR<HouseRelationFilter, HouseWhereInput>
+    equipment?: XOR<EquipmentNullableRelationFilter, EquipmentWhereInput> | null
+    reportedBy?: XOR<CustomerRelationFilter, CustomerWhereInput>
+  }, "id">
+
+  export type HouseIssueReportOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    houseId?: SortOrder
+    equipmentId?: SortOrderInput | SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrderInput | SortOrder
+    description?: SortOrderInput | SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: HouseIssueReportCountOrderByAggregateInput
+    _max?: HouseIssueReportMaxOrderByAggregateInput
+    _min?: HouseIssueReportMinOrderByAggregateInput
+  }
+
+  export type HouseIssueReportScalarWhereWithAggregatesInput = {
+    AND?: HouseIssueReportScalarWhereWithAggregatesInput | HouseIssueReportScalarWhereWithAggregatesInput[]
+    OR?: HouseIssueReportScalarWhereWithAggregatesInput[]
+    NOT?: HouseIssueReportScalarWhereWithAggregatesInput | HouseIssueReportScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"HouseIssueReport"> | string
+    companyId?: StringWithAggregatesFilter<"HouseIssueReport"> | string
+    houseId?: StringWithAggregatesFilter<"HouseIssueReport"> | string
+    equipmentId?: StringNullableWithAggregatesFilter<"HouseIssueReport"> | string | null
+    reportedByCustomerId?: StringWithAggregatesFilter<"HouseIssueReport"> | string
+    errorCode?: StringNullableWithAggregatesFilter<"HouseIssueReport"> | string | null
+    description?: StringNullableWithAggregatesFilter<"HouseIssueReport"> | string | null
+    status?: StringWithAggregatesFilter<"HouseIssueReport"> | string
+    resolvedNote?: StringNullableWithAggregatesFilter<"HouseIssueReport"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"HouseIssueReport"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"HouseIssueReport"> | Date | string
   }
 
   export type CompanyCreateInput = {
@@ -32819,6 +35540,8 @@ export namespace Prisma {
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateInput = {
@@ -32853,6 +35576,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUpdateInput = {
@@ -32887,6 +35612,8 @@ export namespace Prisma {
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateInput = {
@@ -32921,6 +35648,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerCreateManyInput = {
@@ -33974,13 +36703,16 @@ export namespace Prisma {
     updatedAt?: Date | string
     manualUrl?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
+    house?: HouseCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUncheckedCreateInput = {
     id?: string
     companyId: string
     customerId: string
+    houseId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -33993,6 +36725,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     manualUrl?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUpdateInput = {
@@ -34010,13 +36743,16 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
+    house?: HouseUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34029,12 +36765,14 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentCreateManyInput = {
     id?: string
     companyId: string
     customerId: string
+    houseId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -34068,6 +36806,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -35100,6 +37839,7 @@ export namespace Prisma {
     description?: string | null
     category?: string | null
     status?: string
+    templateType?: string
     startDate?: Date | string | null
     targetEndDate?: Date | string | null
     budget?: Decimal | DecimalJsLike | number | string | null
@@ -35113,6 +37853,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     rosterDays?: ProjectRosterDayCreateNestedManyWithoutProjectInput
+    houses?: HouseCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateInput = {
@@ -35123,6 +37864,7 @@ export namespace Prisma {
     description?: string | null
     category?: string | null
     status?: string
+    templateType?: string
     startDate?: Date | string | null
     targetEndDate?: Date | string | null
     budget?: Decimal | DecimalJsLike | number | string | null
@@ -35136,6 +37878,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     rosterDays?: ProjectRosterDayUncheckedCreateNestedManyWithoutProjectInput
+    houses?: HouseUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUpdateInput = {
@@ -35146,6 +37889,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -35159,6 +37903,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rosterDays?: ProjectRosterDayUpdateManyWithoutProjectNestedInput
+    houses?: HouseUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateInput = {
@@ -35169,6 +37914,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -35182,6 +37928,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rosterDays?: ProjectRosterDayUncheckedUpdateManyWithoutProjectNestedInput
+    houses?: HouseUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectCreateManyInput = {
@@ -35192,6 +37939,7 @@ export namespace Prisma {
     description?: string | null
     category?: string | null
     status?: string
+    templateType?: string
     startDate?: Date | string | null
     targetEndDate?: Date | string | null
     budget?: Decimal | DecimalJsLike | number | string | null
@@ -35214,6 +37962,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -35236,6 +37985,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -35323,6 +38073,198 @@ export namespace Prisma {
     techUserIds?: ProjectRosterDayUpdatetechUserIdsInput | string[]
     isOff?: BoolFieldUpdateOperationsInput | boolean
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseCreateInput = {
+    id?: string
+    companyId: string
+    label: string
+    address?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    project: ProjectCreateNestedOneWithoutHousesInput
+    owner?: CustomerCreateNestedOneWithoutOwnedHousesInput
+    equipment?: EquipmentCreateNestedManyWithoutHouseInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    label: string
+    address?: string | null
+    ownerCustomerId?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutHouseInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    project?: ProjectUpdateOneRequiredWithoutHousesNestedInput
+    owner?: CustomerUpdateOneWithoutOwnedHousesNestedInput
+    equipment?: EquipmentUpdateManyWithoutHouseNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutHouseNestedInput
+  }
+
+  export type HouseUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUncheckedUpdateManyWithoutHouseNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutHouseNestedInput
+  }
+
+  export type HouseCreateManyInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    label: string
+    address?: string | null
+    ownerCustomerId?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HouseUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseIssueReportCreateInput = {
+    id?: string
+    companyId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    house: HouseCreateNestedOneWithoutIssueReportsInput
+    equipment?: EquipmentCreateNestedOneWithoutIssueReportsInput
+    reportedBy: CustomerCreateNestedOneWithoutIssueReportsInput
+  }
+
+  export type HouseIssueReportUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    houseId: string
+    equipmentId?: string | null
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HouseIssueReportUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    house?: HouseUpdateOneRequiredWithoutIssueReportsNestedInput
+    equipment?: EquipmentUpdateOneWithoutIssueReportsNestedInput
+    reportedBy?: CustomerUpdateOneRequiredWithoutIssueReportsNestedInput
+  }
+
+  export type HouseIssueReportUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    houseId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseIssueReportCreateManyInput = {
+    id?: string
+    companyId: string
+    houseId: string
+    equipmentId?: string | null
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HouseIssueReportUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseIssueReportUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    houseId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -35833,6 +38775,18 @@ export namespace Prisma {
     none?: CustomerIotConnectionWhereInput
   }
 
+  export type HouseListRelationFilter = {
+    every?: HouseWhereInput
+    some?: HouseWhereInput
+    none?: HouseWhereInput
+  }
+
+  export type HouseIssueReportListRelationFilter = {
+    every?: HouseIssueReportWhereInput
+    some?: HouseIssueReportWhereInput
+    none?: HouseIssueReportWhereInput
+  }
+
   export type ReviewOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -35850,6 +38804,14 @@ export namespace Prisma {
   }
 
   export type CustomerIotConnectionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type HouseOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type HouseIssueReportOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -36571,6 +39533,11 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type HouseNullableRelationFilter = {
+    is?: HouseWhereInput | null
+    isNot?: HouseWhereInput | null
+  }
+
   export type EquipmentConsumableListRelationFilter = {
     every?: EquipmentConsumableWhereInput
     some?: EquipmentConsumableWhereInput
@@ -36585,6 +39552,7 @@ export namespace Prisma {
     id?: SortOrder
     companyId?: SortOrder
     customerId?: SortOrder
+    houseId?: SortOrder
     type?: SortOrder
     brand?: SortOrder
     model?: SortOrder
@@ -36602,6 +39570,7 @@ export namespace Prisma {
     id?: SortOrder
     companyId?: SortOrder
     customerId?: SortOrder
+    houseId?: SortOrder
     type?: SortOrder
     brand?: SortOrder
     model?: SortOrder
@@ -36619,6 +39588,7 @@ export namespace Prisma {
     id?: SortOrder
     companyId?: SortOrder
     customerId?: SortOrder
+    houseId?: SortOrder
     type?: SortOrder
     brand?: SortOrder
     model?: SortOrder
@@ -37267,6 +40237,7 @@ export namespace Prisma {
     description?: SortOrder
     category?: SortOrder
     status?: SortOrder
+    templateType?: SortOrder
     startDate?: SortOrder
     targetEndDate?: SortOrder
     budget?: SortOrder
@@ -37296,6 +40267,7 @@ export namespace Prisma {
     description?: SortOrder
     category?: SortOrder
     status?: SortOrder
+    templateType?: SortOrder
     startDate?: SortOrder
     targetEndDate?: SortOrder
     budget?: SortOrder
@@ -37316,6 +40288,7 @@ export namespace Prisma {
     description?: SortOrder
     category?: SortOrder
     status?: SortOrder
+    templateType?: SortOrder
     startDate?: SortOrder
     targetEndDate?: SortOrder
     budget?: SortOrder
@@ -37373,6 +40346,122 @@ export namespace Prisma {
     date?: SortOrder
     isOff?: SortOrder
     updatedBy?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UuidFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedUuidFilter<$PrismaModel> | string
+  }
+
+  export type HouseCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    label?: SortOrder
+    address?: SortOrder
+    ownerCustomerId?: SortOrder
+    tags?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type HouseMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    label?: SortOrder
+    address?: SortOrder
+    ownerCustomerId?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type HouseMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    label?: SortOrder
+    address?: SortOrder
+    ownerCustomerId?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type UuidWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedUuidWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type HouseRelationFilter = {
+    is?: HouseWhereInput
+    isNot?: HouseWhereInput
+  }
+
+  export type EquipmentNullableRelationFilter = {
+    is?: EquipmentWhereInput | null
+    isNot?: EquipmentWhereInput | null
+  }
+
+  export type HouseIssueReportCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    houseId?: SortOrder
+    equipmentId?: SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrder
+    description?: SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type HouseIssueReportMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    houseId?: SortOrder
+    equipmentId?: SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrder
+    description?: SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type HouseIssueReportMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    houseId?: SortOrder
+    equipmentId?: SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrder
+    description?: SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrder
+    createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
@@ -37752,6 +40841,20 @@ export namespace Prisma {
     connect?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
   }
 
+  export type HouseCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<HouseCreateWithoutOwnerInput, HouseUncheckedCreateWithoutOwnerInput> | HouseCreateWithoutOwnerInput[] | HouseUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: HouseCreateOrConnectWithoutOwnerInput | HouseCreateOrConnectWithoutOwnerInput[]
+    createMany?: HouseCreateManyOwnerInputEnvelope
+    connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+  }
+
+  export type HouseIssueReportCreateNestedManyWithoutReportedByInput = {
+    create?: XOR<HouseIssueReportCreateWithoutReportedByInput, HouseIssueReportUncheckedCreateWithoutReportedByInput> | HouseIssueReportCreateWithoutReportedByInput[] | HouseIssueReportUncheckedCreateWithoutReportedByInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutReportedByInput | HouseIssueReportCreateOrConnectWithoutReportedByInput[]
+    createMany?: HouseIssueReportCreateManyReportedByInputEnvelope
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+  }
+
   export type ContactUncheckedCreateNestedManyWithoutCustomerInput = {
     create?: XOR<ContactCreateWithoutCustomerInput, ContactUncheckedCreateWithoutCustomerInput> | ContactCreateWithoutCustomerInput[] | ContactUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: ContactCreateOrConnectWithoutCustomerInput | ContactCreateOrConnectWithoutCustomerInput[]
@@ -37813,6 +40916,20 @@ export namespace Prisma {
     connectOrCreate?: CustomerIotConnectionCreateOrConnectWithoutCustomerInput | CustomerIotConnectionCreateOrConnectWithoutCustomerInput[]
     createMany?: CustomerIotConnectionCreateManyCustomerInputEnvelope
     connect?: CustomerIotConnectionWhereUniqueInput | CustomerIotConnectionWhereUniqueInput[]
+  }
+
+  export type HouseUncheckedCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<HouseCreateWithoutOwnerInput, HouseUncheckedCreateWithoutOwnerInput> | HouseCreateWithoutOwnerInput[] | HouseUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: HouseCreateOrConnectWithoutOwnerInput | HouseCreateOrConnectWithoutOwnerInput[]
+    createMany?: HouseCreateManyOwnerInputEnvelope
+    connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+  }
+
+  export type HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput = {
+    create?: XOR<HouseIssueReportCreateWithoutReportedByInput, HouseIssueReportUncheckedCreateWithoutReportedByInput> | HouseIssueReportCreateWithoutReportedByInput[] | HouseIssueReportUncheckedCreateWithoutReportedByInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutReportedByInput | HouseIssueReportCreateOrConnectWithoutReportedByInput[]
+    createMany?: HouseIssueReportCreateManyReportedByInputEnvelope
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
   }
 
   export type EnumCustomerTypeFieldUpdateOperationsInput = {
@@ -37962,6 +41079,34 @@ export namespace Prisma {
     deleteMany?: CustomerIotConnectionScalarWhereInput | CustomerIotConnectionScalarWhereInput[]
   }
 
+  export type HouseUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<HouseCreateWithoutOwnerInput, HouseUncheckedCreateWithoutOwnerInput> | HouseCreateWithoutOwnerInput[] | HouseUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: HouseCreateOrConnectWithoutOwnerInput | HouseCreateOrConnectWithoutOwnerInput[]
+    upsert?: HouseUpsertWithWhereUniqueWithoutOwnerInput | HouseUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: HouseCreateManyOwnerInputEnvelope
+    set?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    disconnect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    delete?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    update?: HouseUpdateWithWhereUniqueWithoutOwnerInput | HouseUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: HouseUpdateManyWithWhereWithoutOwnerInput | HouseUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: HouseScalarWhereInput | HouseScalarWhereInput[]
+  }
+
+  export type HouseIssueReportUpdateManyWithoutReportedByNestedInput = {
+    create?: XOR<HouseIssueReportCreateWithoutReportedByInput, HouseIssueReportUncheckedCreateWithoutReportedByInput> | HouseIssueReportCreateWithoutReportedByInput[] | HouseIssueReportUncheckedCreateWithoutReportedByInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutReportedByInput | HouseIssueReportCreateOrConnectWithoutReportedByInput[]
+    upsert?: HouseIssueReportUpsertWithWhereUniqueWithoutReportedByInput | HouseIssueReportUpsertWithWhereUniqueWithoutReportedByInput[]
+    createMany?: HouseIssueReportCreateManyReportedByInputEnvelope
+    set?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    disconnect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    delete?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    update?: HouseIssueReportUpdateWithWhereUniqueWithoutReportedByInput | HouseIssueReportUpdateWithWhereUniqueWithoutReportedByInput[]
+    updateMany?: HouseIssueReportUpdateManyWithWhereWithoutReportedByInput | HouseIssueReportUpdateManyWithWhereWithoutReportedByInput[]
+    deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+  }
+
   export type ContactUncheckedUpdateManyWithoutCustomerNestedInput = {
     create?: XOR<ContactCreateWithoutCustomerInput, ContactUncheckedCreateWithoutCustomerInput> | ContactCreateWithoutCustomerInput[] | ContactUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: ContactCreateOrConnectWithoutCustomerInput | ContactCreateOrConnectWithoutCustomerInput[]
@@ -38086,6 +41231,34 @@ export namespace Prisma {
     update?: CustomerIotConnectionUpdateWithWhereUniqueWithoutCustomerInput | CustomerIotConnectionUpdateWithWhereUniqueWithoutCustomerInput[]
     updateMany?: CustomerIotConnectionUpdateManyWithWhereWithoutCustomerInput | CustomerIotConnectionUpdateManyWithWhereWithoutCustomerInput[]
     deleteMany?: CustomerIotConnectionScalarWhereInput | CustomerIotConnectionScalarWhereInput[]
+  }
+
+  export type HouseUncheckedUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<HouseCreateWithoutOwnerInput, HouseUncheckedCreateWithoutOwnerInput> | HouseCreateWithoutOwnerInput[] | HouseUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: HouseCreateOrConnectWithoutOwnerInput | HouseCreateOrConnectWithoutOwnerInput[]
+    upsert?: HouseUpsertWithWhereUniqueWithoutOwnerInput | HouseUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: HouseCreateManyOwnerInputEnvelope
+    set?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    disconnect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    delete?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    update?: HouseUpdateWithWhereUniqueWithoutOwnerInput | HouseUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: HouseUpdateManyWithWhereWithoutOwnerInput | HouseUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: HouseScalarWhereInput | HouseScalarWhereInput[]
+  }
+
+  export type HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput = {
+    create?: XOR<HouseIssueReportCreateWithoutReportedByInput, HouseIssueReportUncheckedCreateWithoutReportedByInput> | HouseIssueReportCreateWithoutReportedByInput[] | HouseIssueReportUncheckedCreateWithoutReportedByInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutReportedByInput | HouseIssueReportCreateOrConnectWithoutReportedByInput[]
+    upsert?: HouseIssueReportUpsertWithWhereUniqueWithoutReportedByInput | HouseIssueReportUpsertWithWhereUniqueWithoutReportedByInput[]
+    createMany?: HouseIssueReportCreateManyReportedByInputEnvelope
+    set?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    disconnect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    delete?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    update?: HouseIssueReportUpdateWithWhereUniqueWithoutReportedByInput | HouseIssueReportUpdateWithWhereUniqueWithoutReportedByInput[]
+    updateMany?: HouseIssueReportUpdateManyWithWhereWithoutReportedByInput | HouseIssueReportUpdateManyWithWhereWithoutReportedByInput[]
+    deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
   }
 
   export type CompanyCreateNestedOneWithoutContactsInput = {
@@ -38396,11 +41569,24 @@ export namespace Prisma {
     connect?: CustomerWhereUniqueInput
   }
 
+  export type HouseCreateNestedOneWithoutEquipmentInput = {
+    create?: XOR<HouseCreateWithoutEquipmentInput, HouseUncheckedCreateWithoutEquipmentInput>
+    connectOrCreate?: HouseCreateOrConnectWithoutEquipmentInput
+    connect?: HouseWhereUniqueInput
+  }
+
   export type EquipmentConsumableCreateNestedManyWithoutEquipmentInput = {
     create?: XOR<EquipmentConsumableCreateWithoutEquipmentInput, EquipmentConsumableUncheckedCreateWithoutEquipmentInput> | EquipmentConsumableCreateWithoutEquipmentInput[] | EquipmentConsumableUncheckedCreateWithoutEquipmentInput[]
     connectOrCreate?: EquipmentConsumableCreateOrConnectWithoutEquipmentInput | EquipmentConsumableCreateOrConnectWithoutEquipmentInput[]
     createMany?: EquipmentConsumableCreateManyEquipmentInputEnvelope
     connect?: EquipmentConsumableWhereUniqueInput | EquipmentConsumableWhereUniqueInput[]
+  }
+
+  export type HouseIssueReportCreateNestedManyWithoutEquipmentInput = {
+    create?: XOR<HouseIssueReportCreateWithoutEquipmentInput, HouseIssueReportUncheckedCreateWithoutEquipmentInput> | HouseIssueReportCreateWithoutEquipmentInput[] | HouseIssueReportUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutEquipmentInput | HouseIssueReportCreateOrConnectWithoutEquipmentInput[]
+    createMany?: HouseIssueReportCreateManyEquipmentInputEnvelope
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
   }
 
   export type EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput = {
@@ -38410,12 +41596,29 @@ export namespace Prisma {
     connect?: EquipmentConsumableWhereUniqueInput | EquipmentConsumableWhereUniqueInput[]
   }
 
+  export type HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput = {
+    create?: XOR<HouseIssueReportCreateWithoutEquipmentInput, HouseIssueReportUncheckedCreateWithoutEquipmentInput> | HouseIssueReportCreateWithoutEquipmentInput[] | HouseIssueReportUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutEquipmentInput | HouseIssueReportCreateOrConnectWithoutEquipmentInput[]
+    createMany?: HouseIssueReportCreateManyEquipmentInputEnvelope
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+  }
+
   export type CustomerUpdateOneRequiredWithoutEquipmentNestedInput = {
     create?: XOR<CustomerCreateWithoutEquipmentInput, CustomerUncheckedCreateWithoutEquipmentInput>
     connectOrCreate?: CustomerCreateOrConnectWithoutEquipmentInput
     upsert?: CustomerUpsertWithoutEquipmentInput
     connect?: CustomerWhereUniqueInput
     update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutEquipmentInput, CustomerUpdateWithoutEquipmentInput>, CustomerUncheckedUpdateWithoutEquipmentInput>
+  }
+
+  export type HouseUpdateOneWithoutEquipmentNestedInput = {
+    create?: XOR<HouseCreateWithoutEquipmentInput, HouseUncheckedCreateWithoutEquipmentInput>
+    connectOrCreate?: HouseCreateOrConnectWithoutEquipmentInput
+    upsert?: HouseUpsertWithoutEquipmentInput
+    disconnect?: HouseWhereInput | boolean
+    delete?: HouseWhereInput | boolean
+    connect?: HouseWhereUniqueInput
+    update?: XOR<XOR<HouseUpdateToOneWithWhereWithoutEquipmentInput, HouseUpdateWithoutEquipmentInput>, HouseUncheckedUpdateWithoutEquipmentInput>
   }
 
   export type EquipmentConsumableUpdateManyWithoutEquipmentNestedInput = {
@@ -38432,6 +41635,20 @@ export namespace Prisma {
     deleteMany?: EquipmentConsumableScalarWhereInput | EquipmentConsumableScalarWhereInput[]
   }
 
+  export type HouseIssueReportUpdateManyWithoutEquipmentNestedInput = {
+    create?: XOR<HouseIssueReportCreateWithoutEquipmentInput, HouseIssueReportUncheckedCreateWithoutEquipmentInput> | HouseIssueReportCreateWithoutEquipmentInput[] | HouseIssueReportUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutEquipmentInput | HouseIssueReportCreateOrConnectWithoutEquipmentInput[]
+    upsert?: HouseIssueReportUpsertWithWhereUniqueWithoutEquipmentInput | HouseIssueReportUpsertWithWhereUniqueWithoutEquipmentInput[]
+    createMany?: HouseIssueReportCreateManyEquipmentInputEnvelope
+    set?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    disconnect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    delete?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    update?: HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput | HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput[]
+    updateMany?: HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput | HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput[]
+    deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+  }
+
   export type EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput = {
     create?: XOR<EquipmentConsumableCreateWithoutEquipmentInput, EquipmentConsumableUncheckedCreateWithoutEquipmentInput> | EquipmentConsumableCreateWithoutEquipmentInput[] | EquipmentConsumableUncheckedCreateWithoutEquipmentInput[]
     connectOrCreate?: EquipmentConsumableCreateOrConnectWithoutEquipmentInput | EquipmentConsumableCreateOrConnectWithoutEquipmentInput[]
@@ -38444,6 +41661,20 @@ export namespace Prisma {
     update?: EquipmentConsumableUpdateWithWhereUniqueWithoutEquipmentInput | EquipmentConsumableUpdateWithWhereUniqueWithoutEquipmentInput[]
     updateMany?: EquipmentConsumableUpdateManyWithWhereWithoutEquipmentInput | EquipmentConsumableUpdateManyWithWhereWithoutEquipmentInput[]
     deleteMany?: EquipmentConsumableScalarWhereInput | EquipmentConsumableScalarWhereInput[]
+  }
+
+  export type HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput = {
+    create?: XOR<HouseIssueReportCreateWithoutEquipmentInput, HouseIssueReportUncheckedCreateWithoutEquipmentInput> | HouseIssueReportCreateWithoutEquipmentInput[] | HouseIssueReportUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutEquipmentInput | HouseIssueReportCreateOrConnectWithoutEquipmentInput[]
+    upsert?: HouseIssueReportUpsertWithWhereUniqueWithoutEquipmentInput | HouseIssueReportUpsertWithWhereUniqueWithoutEquipmentInput[]
+    createMany?: HouseIssueReportCreateManyEquipmentInputEnvelope
+    set?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    disconnect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    delete?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    update?: HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput | HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput[]
+    updateMany?: HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput | HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput[]
+    deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
   }
 
   export type EquipmentCreateNestedOneWithoutConsumablesInput = {
@@ -38683,11 +41914,25 @@ export namespace Prisma {
     connect?: ProjectRosterDayWhereUniqueInput | ProjectRosterDayWhereUniqueInput[]
   }
 
+  export type HouseCreateNestedManyWithoutProjectInput = {
+    create?: XOR<HouseCreateWithoutProjectInput, HouseUncheckedCreateWithoutProjectInput> | HouseCreateWithoutProjectInput[] | HouseUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: HouseCreateOrConnectWithoutProjectInput | HouseCreateOrConnectWithoutProjectInput[]
+    createMany?: HouseCreateManyProjectInputEnvelope
+    connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+  }
+
   export type ProjectRosterDayUncheckedCreateNestedManyWithoutProjectInput = {
     create?: XOR<ProjectRosterDayCreateWithoutProjectInput, ProjectRosterDayUncheckedCreateWithoutProjectInput> | ProjectRosterDayCreateWithoutProjectInput[] | ProjectRosterDayUncheckedCreateWithoutProjectInput[]
     connectOrCreate?: ProjectRosterDayCreateOrConnectWithoutProjectInput | ProjectRosterDayCreateOrConnectWithoutProjectInput[]
     createMany?: ProjectRosterDayCreateManyProjectInputEnvelope
     connect?: ProjectRosterDayWhereUniqueInput | ProjectRosterDayWhereUniqueInput[]
+  }
+
+  export type HouseUncheckedCreateNestedManyWithoutProjectInput = {
+    create?: XOR<HouseCreateWithoutProjectInput, HouseUncheckedCreateWithoutProjectInput> | HouseCreateWithoutProjectInput[] | HouseUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: HouseCreateOrConnectWithoutProjectInput | HouseCreateOrConnectWithoutProjectInput[]
+    createMany?: HouseCreateManyProjectInputEnvelope
+    connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
   }
 
   export type ProjectUpdateworkingDaysInput = {
@@ -38714,6 +41959,20 @@ export namespace Prisma {
     deleteMany?: ProjectRosterDayScalarWhereInput | ProjectRosterDayScalarWhereInput[]
   }
 
+  export type HouseUpdateManyWithoutProjectNestedInput = {
+    create?: XOR<HouseCreateWithoutProjectInput, HouseUncheckedCreateWithoutProjectInput> | HouseCreateWithoutProjectInput[] | HouseUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: HouseCreateOrConnectWithoutProjectInput | HouseCreateOrConnectWithoutProjectInput[]
+    upsert?: HouseUpsertWithWhereUniqueWithoutProjectInput | HouseUpsertWithWhereUniqueWithoutProjectInput[]
+    createMany?: HouseCreateManyProjectInputEnvelope
+    set?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    disconnect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    delete?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    update?: HouseUpdateWithWhereUniqueWithoutProjectInput | HouseUpdateWithWhereUniqueWithoutProjectInput[]
+    updateMany?: HouseUpdateManyWithWhereWithoutProjectInput | HouseUpdateManyWithWhereWithoutProjectInput[]
+    deleteMany?: HouseScalarWhereInput | HouseScalarWhereInput[]
+  }
+
   export type ProjectRosterDayUncheckedUpdateManyWithoutProjectNestedInput = {
     create?: XOR<ProjectRosterDayCreateWithoutProjectInput, ProjectRosterDayUncheckedCreateWithoutProjectInput> | ProjectRosterDayCreateWithoutProjectInput[] | ProjectRosterDayUncheckedCreateWithoutProjectInput[]
     connectOrCreate?: ProjectRosterDayCreateOrConnectWithoutProjectInput | ProjectRosterDayCreateOrConnectWithoutProjectInput[]
@@ -38726,6 +41985,20 @@ export namespace Prisma {
     update?: ProjectRosterDayUpdateWithWhereUniqueWithoutProjectInput | ProjectRosterDayUpdateWithWhereUniqueWithoutProjectInput[]
     updateMany?: ProjectRosterDayUpdateManyWithWhereWithoutProjectInput | ProjectRosterDayUpdateManyWithWhereWithoutProjectInput[]
     deleteMany?: ProjectRosterDayScalarWhereInput | ProjectRosterDayScalarWhereInput[]
+  }
+
+  export type HouseUncheckedUpdateManyWithoutProjectNestedInput = {
+    create?: XOR<HouseCreateWithoutProjectInput, HouseUncheckedCreateWithoutProjectInput> | HouseCreateWithoutProjectInput[] | HouseUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: HouseCreateOrConnectWithoutProjectInput | HouseCreateOrConnectWithoutProjectInput[]
+    upsert?: HouseUpsertWithWhereUniqueWithoutProjectInput | HouseUpsertWithWhereUniqueWithoutProjectInput[]
+    createMany?: HouseCreateManyProjectInputEnvelope
+    set?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    disconnect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    delete?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+    update?: HouseUpdateWithWhereUniqueWithoutProjectInput | HouseUpdateWithWhereUniqueWithoutProjectInput[]
+    updateMany?: HouseUpdateManyWithWhereWithoutProjectInput | HouseUpdateManyWithWhereWithoutProjectInput[]
+    deleteMany?: HouseScalarWhereInput | HouseScalarWhereInput[]
   }
 
   export type ProjectRosterDayCreatetechUserIdsInput = {
@@ -38749,6 +42022,173 @@ export namespace Prisma {
     upsert?: ProjectUpsertWithoutRosterDaysInput
     connect?: ProjectWhereUniqueInput
     update?: XOR<XOR<ProjectUpdateToOneWithWhereWithoutRosterDaysInput, ProjectUpdateWithoutRosterDaysInput>, ProjectUncheckedUpdateWithoutRosterDaysInput>
+  }
+
+  export type HouseCreatetagsInput = {
+    set: string[]
+  }
+
+  export type ProjectCreateNestedOneWithoutHousesInput = {
+    create?: XOR<ProjectCreateWithoutHousesInput, ProjectUncheckedCreateWithoutHousesInput>
+    connectOrCreate?: ProjectCreateOrConnectWithoutHousesInput
+    connect?: ProjectWhereUniqueInput
+  }
+
+  export type CustomerCreateNestedOneWithoutOwnedHousesInput = {
+    create?: XOR<CustomerCreateWithoutOwnedHousesInput, CustomerUncheckedCreateWithoutOwnedHousesInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutOwnedHousesInput
+    connect?: CustomerWhereUniqueInput
+  }
+
+  export type EquipmentCreateNestedManyWithoutHouseInput = {
+    create?: XOR<EquipmentCreateWithoutHouseInput, EquipmentUncheckedCreateWithoutHouseInput> | EquipmentCreateWithoutHouseInput[] | EquipmentUncheckedCreateWithoutHouseInput[]
+    connectOrCreate?: EquipmentCreateOrConnectWithoutHouseInput | EquipmentCreateOrConnectWithoutHouseInput[]
+    createMany?: EquipmentCreateManyHouseInputEnvelope
+    connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+  }
+
+  export type HouseIssueReportCreateNestedManyWithoutHouseInput = {
+    create?: XOR<HouseIssueReportCreateWithoutHouseInput, HouseIssueReportUncheckedCreateWithoutHouseInput> | HouseIssueReportCreateWithoutHouseInput[] | HouseIssueReportUncheckedCreateWithoutHouseInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutHouseInput | HouseIssueReportCreateOrConnectWithoutHouseInput[]
+    createMany?: HouseIssueReportCreateManyHouseInputEnvelope
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+  }
+
+  export type EquipmentUncheckedCreateNestedManyWithoutHouseInput = {
+    create?: XOR<EquipmentCreateWithoutHouseInput, EquipmentUncheckedCreateWithoutHouseInput> | EquipmentCreateWithoutHouseInput[] | EquipmentUncheckedCreateWithoutHouseInput[]
+    connectOrCreate?: EquipmentCreateOrConnectWithoutHouseInput | EquipmentCreateOrConnectWithoutHouseInput[]
+    createMany?: EquipmentCreateManyHouseInputEnvelope
+    connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+  }
+
+  export type HouseIssueReportUncheckedCreateNestedManyWithoutHouseInput = {
+    create?: XOR<HouseIssueReportCreateWithoutHouseInput, HouseIssueReportUncheckedCreateWithoutHouseInput> | HouseIssueReportCreateWithoutHouseInput[] | HouseIssueReportUncheckedCreateWithoutHouseInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutHouseInput | HouseIssueReportCreateOrConnectWithoutHouseInput[]
+    createMany?: HouseIssueReportCreateManyHouseInputEnvelope
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+  }
+
+  export type HouseUpdatetagsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type ProjectUpdateOneRequiredWithoutHousesNestedInput = {
+    create?: XOR<ProjectCreateWithoutHousesInput, ProjectUncheckedCreateWithoutHousesInput>
+    connectOrCreate?: ProjectCreateOrConnectWithoutHousesInput
+    upsert?: ProjectUpsertWithoutHousesInput
+    connect?: ProjectWhereUniqueInput
+    update?: XOR<XOR<ProjectUpdateToOneWithWhereWithoutHousesInput, ProjectUpdateWithoutHousesInput>, ProjectUncheckedUpdateWithoutHousesInput>
+  }
+
+  export type CustomerUpdateOneWithoutOwnedHousesNestedInput = {
+    create?: XOR<CustomerCreateWithoutOwnedHousesInput, CustomerUncheckedCreateWithoutOwnedHousesInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutOwnedHousesInput
+    upsert?: CustomerUpsertWithoutOwnedHousesInput
+    disconnect?: CustomerWhereInput | boolean
+    delete?: CustomerWhereInput | boolean
+    connect?: CustomerWhereUniqueInput
+    update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutOwnedHousesInput, CustomerUpdateWithoutOwnedHousesInput>, CustomerUncheckedUpdateWithoutOwnedHousesInput>
+  }
+
+  export type EquipmentUpdateManyWithoutHouseNestedInput = {
+    create?: XOR<EquipmentCreateWithoutHouseInput, EquipmentUncheckedCreateWithoutHouseInput> | EquipmentCreateWithoutHouseInput[] | EquipmentUncheckedCreateWithoutHouseInput[]
+    connectOrCreate?: EquipmentCreateOrConnectWithoutHouseInput | EquipmentCreateOrConnectWithoutHouseInput[]
+    upsert?: EquipmentUpsertWithWhereUniqueWithoutHouseInput | EquipmentUpsertWithWhereUniqueWithoutHouseInput[]
+    createMany?: EquipmentCreateManyHouseInputEnvelope
+    set?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    disconnect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    delete?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    update?: EquipmentUpdateWithWhereUniqueWithoutHouseInput | EquipmentUpdateWithWhereUniqueWithoutHouseInput[]
+    updateMany?: EquipmentUpdateManyWithWhereWithoutHouseInput | EquipmentUpdateManyWithWhereWithoutHouseInput[]
+    deleteMany?: EquipmentScalarWhereInput | EquipmentScalarWhereInput[]
+  }
+
+  export type HouseIssueReportUpdateManyWithoutHouseNestedInput = {
+    create?: XOR<HouseIssueReportCreateWithoutHouseInput, HouseIssueReportUncheckedCreateWithoutHouseInput> | HouseIssueReportCreateWithoutHouseInput[] | HouseIssueReportUncheckedCreateWithoutHouseInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutHouseInput | HouseIssueReportCreateOrConnectWithoutHouseInput[]
+    upsert?: HouseIssueReportUpsertWithWhereUniqueWithoutHouseInput | HouseIssueReportUpsertWithWhereUniqueWithoutHouseInput[]
+    createMany?: HouseIssueReportCreateManyHouseInputEnvelope
+    set?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    disconnect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    delete?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    update?: HouseIssueReportUpdateWithWhereUniqueWithoutHouseInput | HouseIssueReportUpdateWithWhereUniqueWithoutHouseInput[]
+    updateMany?: HouseIssueReportUpdateManyWithWhereWithoutHouseInput | HouseIssueReportUpdateManyWithWhereWithoutHouseInput[]
+    deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+  }
+
+  export type EquipmentUncheckedUpdateManyWithoutHouseNestedInput = {
+    create?: XOR<EquipmentCreateWithoutHouseInput, EquipmentUncheckedCreateWithoutHouseInput> | EquipmentCreateWithoutHouseInput[] | EquipmentUncheckedCreateWithoutHouseInput[]
+    connectOrCreate?: EquipmentCreateOrConnectWithoutHouseInput | EquipmentCreateOrConnectWithoutHouseInput[]
+    upsert?: EquipmentUpsertWithWhereUniqueWithoutHouseInput | EquipmentUpsertWithWhereUniqueWithoutHouseInput[]
+    createMany?: EquipmentCreateManyHouseInputEnvelope
+    set?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    disconnect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    delete?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    update?: EquipmentUpdateWithWhereUniqueWithoutHouseInput | EquipmentUpdateWithWhereUniqueWithoutHouseInput[]
+    updateMany?: EquipmentUpdateManyWithWhereWithoutHouseInput | EquipmentUpdateManyWithWhereWithoutHouseInput[]
+    deleteMany?: EquipmentScalarWhereInput | EquipmentScalarWhereInput[]
+  }
+
+  export type HouseIssueReportUncheckedUpdateManyWithoutHouseNestedInput = {
+    create?: XOR<HouseIssueReportCreateWithoutHouseInput, HouseIssueReportUncheckedCreateWithoutHouseInput> | HouseIssueReportCreateWithoutHouseInput[] | HouseIssueReportUncheckedCreateWithoutHouseInput[]
+    connectOrCreate?: HouseIssueReportCreateOrConnectWithoutHouseInput | HouseIssueReportCreateOrConnectWithoutHouseInput[]
+    upsert?: HouseIssueReportUpsertWithWhereUniqueWithoutHouseInput | HouseIssueReportUpsertWithWhereUniqueWithoutHouseInput[]
+    createMany?: HouseIssueReportCreateManyHouseInputEnvelope
+    set?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    disconnect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    delete?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+    update?: HouseIssueReportUpdateWithWhereUniqueWithoutHouseInput | HouseIssueReportUpdateWithWhereUniqueWithoutHouseInput[]
+    updateMany?: HouseIssueReportUpdateManyWithWhereWithoutHouseInput | HouseIssueReportUpdateManyWithWhereWithoutHouseInput[]
+    deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+  }
+
+  export type HouseCreateNestedOneWithoutIssueReportsInput = {
+    create?: XOR<HouseCreateWithoutIssueReportsInput, HouseUncheckedCreateWithoutIssueReportsInput>
+    connectOrCreate?: HouseCreateOrConnectWithoutIssueReportsInput
+    connect?: HouseWhereUniqueInput
+  }
+
+  export type EquipmentCreateNestedOneWithoutIssueReportsInput = {
+    create?: XOR<EquipmentCreateWithoutIssueReportsInput, EquipmentUncheckedCreateWithoutIssueReportsInput>
+    connectOrCreate?: EquipmentCreateOrConnectWithoutIssueReportsInput
+    connect?: EquipmentWhereUniqueInput
+  }
+
+  export type CustomerCreateNestedOneWithoutIssueReportsInput = {
+    create?: XOR<CustomerCreateWithoutIssueReportsInput, CustomerUncheckedCreateWithoutIssueReportsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutIssueReportsInput
+    connect?: CustomerWhereUniqueInput
+  }
+
+  export type HouseUpdateOneRequiredWithoutIssueReportsNestedInput = {
+    create?: XOR<HouseCreateWithoutIssueReportsInput, HouseUncheckedCreateWithoutIssueReportsInput>
+    connectOrCreate?: HouseCreateOrConnectWithoutIssueReportsInput
+    upsert?: HouseUpsertWithoutIssueReportsInput
+    connect?: HouseWhereUniqueInput
+    update?: XOR<XOR<HouseUpdateToOneWithWhereWithoutIssueReportsInput, HouseUpdateWithoutIssueReportsInput>, HouseUncheckedUpdateWithoutIssueReportsInput>
+  }
+
+  export type EquipmentUpdateOneWithoutIssueReportsNestedInput = {
+    create?: XOR<EquipmentCreateWithoutIssueReportsInput, EquipmentUncheckedCreateWithoutIssueReportsInput>
+    connectOrCreate?: EquipmentCreateOrConnectWithoutIssueReportsInput
+    upsert?: EquipmentUpsertWithoutIssueReportsInput
+    disconnect?: EquipmentWhereInput | boolean
+    delete?: EquipmentWhereInput | boolean
+    connect?: EquipmentWhereUniqueInput
+    update?: XOR<XOR<EquipmentUpdateToOneWithWhereWithoutIssueReportsInput, EquipmentUpdateWithoutIssueReportsInput>, EquipmentUncheckedUpdateWithoutIssueReportsInput>
+  }
+
+  export type CustomerUpdateOneRequiredWithoutIssueReportsNestedInput = {
+    create?: XOR<CustomerCreateWithoutIssueReportsInput, CustomerUncheckedCreateWithoutIssueReportsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutIssueReportsInput
+    upsert?: CustomerUpsertWithoutIssueReportsInput
+    connect?: CustomerWhereUniqueInput
+    update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutIssueReportsInput, CustomerUpdateWithoutIssueReportsInput>, CustomerUncheckedUpdateWithoutIssueReportsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -39174,6 +42614,31 @@ export namespace Prisma {
     _max?: NestedEnumImportStatusFilter<$PrismaModel>
   }
 
+  export type NestedUuidFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedUuidFilter<$PrismaModel> | string
+  }
+
+  export type NestedUuidWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedUuidWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
+
   export type CustomerCreateWithoutCompanyInput = {
     id?: string
     type?: $Enums.CustomerType
@@ -39205,6 +42670,8 @@ export namespace Prisma {
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutCompanyInput = {
@@ -39238,6 +42705,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutCompanyInput = {
@@ -40287,12 +43756,15 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    house?: HouseCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUncheckedCreateWithoutCustomerInput = {
     id?: string
     companyId: string
+    houseId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -40305,6 +43777,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     manualUrl?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentCreateOrConnectWithoutCustomerInput = {
@@ -40390,6 +43863,80 @@ export namespace Prisma {
 
   export type CustomerIotConnectionCreateManyCustomerInputEnvelope = {
     data: CustomerIotConnectionCreateManyCustomerInput | CustomerIotConnectionCreateManyCustomerInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type HouseCreateWithoutOwnerInput = {
+    id?: string
+    companyId: string
+    label: string
+    address?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    project: ProjectCreateNestedOneWithoutHousesInput
+    equipment?: EquipmentCreateNestedManyWithoutHouseInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseUncheckedCreateWithoutOwnerInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    label: string
+    address?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutHouseInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseCreateOrConnectWithoutOwnerInput = {
+    where: HouseWhereUniqueInput
+    create: XOR<HouseCreateWithoutOwnerInput, HouseUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type HouseCreateManyOwnerInputEnvelope = {
+    data: HouseCreateManyOwnerInput | HouseCreateManyOwnerInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type HouseIssueReportCreateWithoutReportedByInput = {
+    id?: string
+    companyId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    house: HouseCreateNestedOneWithoutIssueReportsInput
+    equipment?: EquipmentCreateNestedOneWithoutIssueReportsInput
+  }
+
+  export type HouseIssueReportUncheckedCreateWithoutReportedByInput = {
+    id?: string
+    companyId: string
+    houseId: string
+    equipmentId?: string | null
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HouseIssueReportCreateOrConnectWithoutReportedByInput = {
+    where: HouseIssueReportWhereUniqueInput
+    create: XOR<HouseIssueReportCreateWithoutReportedByInput, HouseIssueReportUncheckedCreateWithoutReportedByInput>
+  }
+
+  export type HouseIssueReportCreateManyReportedByInputEnvelope = {
+    data: HouseIssueReportCreateManyReportedByInput | HouseIssueReportCreateManyReportedByInput[]
     skipDuplicates?: boolean
   }
 
@@ -40618,6 +44165,7 @@ export namespace Prisma {
     id?: StringFilter<"Equipment"> | string
     companyId?: StringFilter<"Equipment"> | string
     customerId?: StringFilter<"Equipment"> | string
+    houseId?: StringNullableFilter<"Equipment"> | string | null
     type?: StringFilter<"Equipment"> | string
     brand?: StringNullableFilter<"Equipment"> | string | null
     model?: StringNullableFilter<"Equipment"> | string | null
@@ -40696,6 +44244,71 @@ export namespace Prisma {
     tokenExpiresAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
     createdAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
     updatedAt?: DateTimeFilter<"CustomerIotConnection"> | Date | string
+  }
+
+  export type HouseUpsertWithWhereUniqueWithoutOwnerInput = {
+    where: HouseWhereUniqueInput
+    update: XOR<HouseUpdateWithoutOwnerInput, HouseUncheckedUpdateWithoutOwnerInput>
+    create: XOR<HouseCreateWithoutOwnerInput, HouseUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type HouseUpdateWithWhereUniqueWithoutOwnerInput = {
+    where: HouseWhereUniqueInput
+    data: XOR<HouseUpdateWithoutOwnerInput, HouseUncheckedUpdateWithoutOwnerInput>
+  }
+
+  export type HouseUpdateManyWithWhereWithoutOwnerInput = {
+    where: HouseScalarWhereInput
+    data: XOR<HouseUpdateManyMutationInput, HouseUncheckedUpdateManyWithoutOwnerInput>
+  }
+
+  export type HouseScalarWhereInput = {
+    AND?: HouseScalarWhereInput | HouseScalarWhereInput[]
+    OR?: HouseScalarWhereInput[]
+    NOT?: HouseScalarWhereInput | HouseScalarWhereInput[]
+    id?: StringFilter<"House"> | string
+    companyId?: StringFilter<"House"> | string
+    projectId?: UuidFilter<"House"> | string
+    label?: StringFilter<"House"> | string
+    address?: StringNullableFilter<"House"> | string | null
+    ownerCustomerId?: StringNullableFilter<"House"> | string | null
+    tags?: StringNullableListFilter<"House">
+    notes?: StringNullableFilter<"House"> | string | null
+    createdAt?: DateTimeFilter<"House"> | Date | string
+    updatedAt?: DateTimeFilter<"House"> | Date | string
+  }
+
+  export type HouseIssueReportUpsertWithWhereUniqueWithoutReportedByInput = {
+    where: HouseIssueReportWhereUniqueInput
+    update: XOR<HouseIssueReportUpdateWithoutReportedByInput, HouseIssueReportUncheckedUpdateWithoutReportedByInput>
+    create: XOR<HouseIssueReportCreateWithoutReportedByInput, HouseIssueReportUncheckedCreateWithoutReportedByInput>
+  }
+
+  export type HouseIssueReportUpdateWithWhereUniqueWithoutReportedByInput = {
+    where: HouseIssueReportWhereUniqueInput
+    data: XOR<HouseIssueReportUpdateWithoutReportedByInput, HouseIssueReportUncheckedUpdateWithoutReportedByInput>
+  }
+
+  export type HouseIssueReportUpdateManyWithWhereWithoutReportedByInput = {
+    where: HouseIssueReportScalarWhereInput
+    data: XOR<HouseIssueReportUpdateManyMutationInput, HouseIssueReportUncheckedUpdateManyWithoutReportedByInput>
+  }
+
+  export type HouseIssueReportScalarWhereInput = {
+    AND?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+    OR?: HouseIssueReportScalarWhereInput[]
+    NOT?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+    id?: StringFilter<"HouseIssueReport"> | string
+    companyId?: StringFilter<"HouseIssueReport"> | string
+    houseId?: StringFilter<"HouseIssueReport"> | string
+    equipmentId?: StringNullableFilter<"HouseIssueReport"> | string | null
+    reportedByCustomerId?: StringFilter<"HouseIssueReport"> | string
+    errorCode?: StringNullableFilter<"HouseIssueReport"> | string | null
+    description?: StringNullableFilter<"HouseIssueReport"> | string | null
+    status?: StringFilter<"HouseIssueReport"> | string
+    resolvedNote?: StringNullableFilter<"HouseIssueReport"> | string | null
+    createdAt?: DateTimeFilter<"HouseIssueReport"> | Date | string
+    updatedAt?: DateTimeFilter<"HouseIssueReport"> | Date | string
   }
 
   export type CompanyCreateWithoutContactsInput = {
@@ -40788,6 +44401,8 @@ export namespace Prisma {
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutContactsInput = {
@@ -40821,6 +44436,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutContactsInput = {
@@ -40935,6 +44552,8 @@ export namespace Prisma {
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutContactsInput = {
@@ -40968,6 +44587,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CompanyCreateWithoutLeadsInput = {
@@ -41060,6 +44681,8 @@ export namespace Prisma {
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutLeadsInput = {
@@ -41093,6 +44716,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutLeadsInput = {
@@ -41247,6 +44872,8 @@ export namespace Prisma {
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutLeadsInput = {
@@ -41280,6 +44907,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type AddressUpsertWithWhereUniqueWithoutLeadInput = {
@@ -41388,6 +45017,8 @@ export namespace Prisma {
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutAgreementsInput = {
@@ -41421,6 +45052,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutAgreementsInput = {
@@ -41565,6 +45198,8 @@ export namespace Prisma {
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutAgreementsInput = {
@@ -41598,6 +45233,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type AgreementAmendmentUpsertWithWhereUniqueWithoutAgreementInput = {
@@ -41880,6 +45517,8 @@ export namespace Prisma {
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutBookingsInput = {
@@ -41913,6 +45552,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutBookingsInput = {
@@ -42027,6 +45668,8 @@ export namespace Prisma {
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutBookingsInput = {
@@ -42060,6 +45703,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerCreateWithoutReviewsInput = {
@@ -42093,6 +45738,8 @@ export namespace Prisma {
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutReviewsInput = {
@@ -42126,6 +45773,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutReviewsInput = {
@@ -42175,6 +45824,8 @@ export namespace Prisma {
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutReviewsInput = {
@@ -42208,6 +45859,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerCreateWithoutAddressesInput = {
@@ -42241,6 +45894,8 @@ export namespace Prisma {
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutAddressesInput = {
@@ -42274,6 +45929,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutAddressesInput = {
@@ -42376,6 +46033,8 @@ export namespace Prisma {
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutAddressesInput = {
@@ -42409,6 +46068,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type LeadUpsertWithoutAddressesInput = {
@@ -42501,6 +46162,8 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutEquipmentInput = {
@@ -42534,11 +46197,46 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutEquipmentInput = {
     where: CustomerWhereUniqueInput
     create: XOR<CustomerCreateWithoutEquipmentInput, CustomerUncheckedCreateWithoutEquipmentInput>
+  }
+
+  export type HouseCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    label: string
+    address?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    project: ProjectCreateNestedOneWithoutHousesInput
+    owner?: CustomerCreateNestedOneWithoutOwnedHousesInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseUncheckedCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    label: string
+    address?: string | null
+    ownerCustomerId?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseCreateOrConnectWithoutEquipmentInput = {
+    where: HouseWhereUniqueInput
+    create: XOR<HouseCreateWithoutEquipmentInput, HouseUncheckedCreateWithoutEquipmentInput>
   }
 
   export type EquipmentConsumableCreateWithoutEquipmentInput = {
@@ -42578,6 +46276,42 @@ export namespace Prisma {
 
   export type EquipmentConsumableCreateManyEquipmentInputEnvelope = {
     data: EquipmentConsumableCreateManyEquipmentInput | EquipmentConsumableCreateManyEquipmentInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type HouseIssueReportCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    house: HouseCreateNestedOneWithoutIssueReportsInput
+    reportedBy: CustomerCreateNestedOneWithoutIssueReportsInput
+  }
+
+  export type HouseIssueReportUncheckedCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    houseId: string
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HouseIssueReportCreateOrConnectWithoutEquipmentInput = {
+    where: HouseIssueReportWhereUniqueInput
+    create: XOR<HouseIssueReportCreateWithoutEquipmentInput, HouseIssueReportUncheckedCreateWithoutEquipmentInput>
+  }
+
+  export type HouseIssueReportCreateManyEquipmentInputEnvelope = {
+    data: HouseIssueReportCreateManyEquipmentInput | HouseIssueReportCreateManyEquipmentInput[]
     skipDuplicates?: boolean
   }
 
@@ -42623,6 +46357,8 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutEquipmentInput = {
@@ -42656,6 +46392,47 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+  }
+
+  export type HouseUpsertWithoutEquipmentInput = {
+    update: XOR<HouseUpdateWithoutEquipmentInput, HouseUncheckedUpdateWithoutEquipmentInput>
+    create: XOR<HouseCreateWithoutEquipmentInput, HouseUncheckedCreateWithoutEquipmentInput>
+    where?: HouseWhereInput
+  }
+
+  export type HouseUpdateToOneWithWhereWithoutEquipmentInput = {
+    where?: HouseWhereInput
+    data: XOR<HouseUpdateWithoutEquipmentInput, HouseUncheckedUpdateWithoutEquipmentInput>
+  }
+
+  export type HouseUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    project?: ProjectUpdateOneRequiredWithoutHousesNestedInput
+    owner?: CustomerUpdateOneWithoutOwnedHousesNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutHouseNestedInput
+  }
+
+  export type HouseUncheckedUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutHouseNestedInput
   }
 
   export type EquipmentConsumableUpsertWithWhereUniqueWithoutEquipmentInput = {
@@ -42693,6 +46470,22 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"EquipmentConsumable"> | Date | string
   }
 
+  export type HouseIssueReportUpsertWithWhereUniqueWithoutEquipmentInput = {
+    where: HouseIssueReportWhereUniqueInput
+    update: XOR<HouseIssueReportUpdateWithoutEquipmentInput, HouseIssueReportUncheckedUpdateWithoutEquipmentInput>
+    create: XOR<HouseIssueReportCreateWithoutEquipmentInput, HouseIssueReportUncheckedCreateWithoutEquipmentInput>
+  }
+
+  export type HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput = {
+    where: HouseIssueReportWhereUniqueInput
+    data: XOR<HouseIssueReportUpdateWithoutEquipmentInput, HouseIssueReportUncheckedUpdateWithoutEquipmentInput>
+  }
+
+  export type HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput = {
+    where: HouseIssueReportScalarWhereInput
+    data: XOR<HouseIssueReportUpdateManyMutationInput, HouseIssueReportUncheckedUpdateManyWithoutEquipmentInput>
+  }
+
   export type EquipmentCreateWithoutConsumablesInput = {
     id?: string
     companyId: string
@@ -42708,12 +46501,15 @@ export namespace Prisma {
     updatedAt?: Date | string
     manualUrl?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
+    house?: HouseCreateNestedOneWithoutEquipmentInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUncheckedCreateWithoutConsumablesInput = {
     id?: string
     companyId: string
     customerId: string
+    houseId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -42725,6 +46521,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentCreateOrConnectWithoutConsumablesInput = {
@@ -42758,12 +46555,15 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
+    house?: HouseUpdateOneWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateWithoutConsumablesInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42775,6 +46575,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
   export type CustomerCreateWithoutUpsellRecommendationsInput = {
@@ -42808,6 +46609,8 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutUpsellRecommendationsInput = {
@@ -42841,6 +46644,8 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutUpsellRecommendationsInput = {
@@ -42890,6 +46695,8 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutUpsellRecommendationsInput = {
@@ -42923,6 +46730,8 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type ImportErrorCreateWithoutBatchInput = {
@@ -43092,6 +46901,8 @@ export namespace Prisma {
     addresses?: AddressCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutIotConnectionsInput = {
@@ -43125,6 +46936,8 @@ export namespace Prisma {
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
     equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
     upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutIotConnectionsInput = {
@@ -43210,6 +47023,8 @@ export namespace Prisma {
     addresses?: AddressUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutIotConnectionsInput = {
@@ -43243,6 +47058,8 @@ export namespace Prisma {
     addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerIotDeviceUpsertWithWhereUniqueWithoutConnectionInput = {
@@ -43493,6 +47310,44 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type HouseCreateWithoutProjectInput = {
+    id?: string
+    companyId: string
+    label: string
+    address?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner?: CustomerCreateNestedOneWithoutOwnedHousesInput
+    equipment?: EquipmentCreateNestedManyWithoutHouseInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseUncheckedCreateWithoutProjectInput = {
+    id?: string
+    companyId: string
+    label: string
+    address?: string | null
+    ownerCustomerId?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutHouseInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseCreateOrConnectWithoutProjectInput = {
+    where: HouseWhereUniqueInput
+    create: XOR<HouseCreateWithoutProjectInput, HouseUncheckedCreateWithoutProjectInput>
+  }
+
+  export type HouseCreateManyProjectInputEnvelope = {
+    data: HouseCreateManyProjectInput | HouseCreateManyProjectInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ProjectRosterDayUpsertWithWhereUniqueWithoutProjectInput = {
     where: ProjectRosterDayWhereUniqueInput
     update: XOR<ProjectRosterDayUpdateWithoutProjectInput, ProjectRosterDayUncheckedUpdateWithoutProjectInput>
@@ -43523,6 +47378,22 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ProjectRosterDay"> | Date | string
   }
 
+  export type HouseUpsertWithWhereUniqueWithoutProjectInput = {
+    where: HouseWhereUniqueInput
+    update: XOR<HouseUpdateWithoutProjectInput, HouseUncheckedUpdateWithoutProjectInput>
+    create: XOR<HouseCreateWithoutProjectInput, HouseUncheckedCreateWithoutProjectInput>
+  }
+
+  export type HouseUpdateWithWhereUniqueWithoutProjectInput = {
+    where: HouseWhereUniqueInput
+    data: XOR<HouseUpdateWithoutProjectInput, HouseUncheckedUpdateWithoutProjectInput>
+  }
+
+  export type HouseUpdateManyWithWhereWithoutProjectInput = {
+    where: HouseScalarWhereInput
+    data: XOR<HouseUpdateManyMutationInput, HouseUncheckedUpdateManyWithoutProjectInput>
+  }
+
   export type ProjectCreateWithoutRosterDaysInput = {
     id?: string
     companyId: string
@@ -43531,6 +47402,7 @@ export namespace Prisma {
     description?: string | null
     category?: string | null
     status?: string
+    templateType?: string
     startDate?: Date | string | null
     targetEndDate?: Date | string | null
     budget?: Decimal | DecimalJsLike | number | string | null
@@ -43543,6 +47415,7 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    houses?: HouseCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutRosterDaysInput = {
@@ -43553,6 +47426,7 @@ export namespace Prisma {
     description?: string | null
     category?: string | null
     status?: string
+    templateType?: string
     startDate?: Date | string | null
     targetEndDate?: Date | string | null
     budget?: Decimal | DecimalJsLike | number | string | null
@@ -43565,6 +47439,7 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    houses?: HouseUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutRosterDaysInput = {
@@ -43591,6 +47466,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -43603,6 +47479,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    houses?: HouseUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutRosterDaysInput = {
@@ -43613,6 +47490,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -43625,6 +47503,711 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    houses?: HouseUncheckedUpdateManyWithoutProjectNestedInput
+  }
+
+  export type ProjectCreateWithoutHousesInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    name: string
+    description?: string | null
+    category?: string | null
+    status?: string
+    templateType?: string
+    startDate?: Date | string | null
+    targetEndDate?: Date | string | null
+    budget?: Decimal | DecimalJsLike | number | string | null
+    requiredHeadcount?: number | null
+    siteAddress?: string | null
+    latitude?: number | null
+    longitude?: number | null
+    workingDays?: ProjectCreateworkingDaysInput | string[]
+    baseTeamUserIds?: ProjectCreatebaseTeamUserIdsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    rosterDays?: ProjectRosterDayCreateNestedManyWithoutProjectInput
+  }
+
+  export type ProjectUncheckedCreateWithoutHousesInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    name: string
+    description?: string | null
+    category?: string | null
+    status?: string
+    templateType?: string
+    startDate?: Date | string | null
+    targetEndDate?: Date | string | null
+    budget?: Decimal | DecimalJsLike | number | string | null
+    requiredHeadcount?: number | null
+    siteAddress?: string | null
+    latitude?: number | null
+    longitude?: number | null
+    workingDays?: ProjectCreateworkingDaysInput | string[]
+    baseTeamUserIds?: ProjectCreatebaseTeamUserIdsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    rosterDays?: ProjectRosterDayUncheckedCreateNestedManyWithoutProjectInput
+  }
+
+  export type ProjectCreateOrConnectWithoutHousesInput = {
+    where: ProjectWhereUniqueInput
+    create: XOR<ProjectCreateWithoutHousesInput, ProjectUncheckedCreateWithoutHousesInput>
+  }
+
+  export type CustomerCreateWithoutOwnedHousesInput = {
+    id?: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutCustomersInput
+    contacts?: ContactCreateNestedManyWithoutCustomerInput
+    leads?: LeadCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementCreateNestedManyWithoutCustomerInput
+    bookings?: BookingCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewCreateNestedManyWithoutCustomerInput
+    addresses?: AddressCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+  }
+
+  export type CustomerUncheckedCreateWithoutOwnedHousesInput = {
+    id?: string
+    companyId: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
+    leads?: LeadUncheckedCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCustomerInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
+    addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+  }
+
+  export type CustomerCreateOrConnectWithoutOwnedHousesInput = {
+    where: CustomerWhereUniqueInput
+    create: XOR<CustomerCreateWithoutOwnedHousesInput, CustomerUncheckedCreateWithoutOwnedHousesInput>
+  }
+
+  export type EquipmentCreateWithoutHouseInput = {
+    id?: string
+    companyId: string
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    customer: CustomerCreateNestedOneWithoutEquipmentInput
+    consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentUncheckedCreateWithoutHouseInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentCreateOrConnectWithoutHouseInput = {
+    where: EquipmentWhereUniqueInput
+    create: XOR<EquipmentCreateWithoutHouseInput, EquipmentUncheckedCreateWithoutHouseInput>
+  }
+
+  export type EquipmentCreateManyHouseInputEnvelope = {
+    data: EquipmentCreateManyHouseInput | EquipmentCreateManyHouseInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type HouseIssueReportCreateWithoutHouseInput = {
+    id?: string
+    companyId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentCreateNestedOneWithoutIssueReportsInput
+    reportedBy: CustomerCreateNestedOneWithoutIssueReportsInput
+  }
+
+  export type HouseIssueReportUncheckedCreateWithoutHouseInput = {
+    id?: string
+    companyId: string
+    equipmentId?: string | null
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HouseIssueReportCreateOrConnectWithoutHouseInput = {
+    where: HouseIssueReportWhereUniqueInput
+    create: XOR<HouseIssueReportCreateWithoutHouseInput, HouseIssueReportUncheckedCreateWithoutHouseInput>
+  }
+
+  export type HouseIssueReportCreateManyHouseInputEnvelope = {
+    data: HouseIssueReportCreateManyHouseInput | HouseIssueReportCreateManyHouseInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ProjectUpsertWithoutHousesInput = {
+    update: XOR<ProjectUpdateWithoutHousesInput, ProjectUncheckedUpdateWithoutHousesInput>
+    create: XOR<ProjectCreateWithoutHousesInput, ProjectUncheckedCreateWithoutHousesInput>
+    where?: ProjectWhereInput
+  }
+
+  export type ProjectUpdateToOneWithWhereWithoutHousesInput = {
+    where?: ProjectWhereInput
+    data: XOR<ProjectUpdateWithoutHousesInput, ProjectUncheckedUpdateWithoutHousesInput>
+  }
+
+  export type ProjectUpdateWithoutHousesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    requiredHeadcount?: NullableIntFieldUpdateOperationsInput | number | null
+    siteAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    workingDays?: ProjectUpdateworkingDaysInput | string[]
+    baseTeamUserIds?: ProjectUpdatebaseTeamUserIdsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rosterDays?: ProjectRosterDayUpdateManyWithoutProjectNestedInput
+  }
+
+  export type ProjectUncheckedUpdateWithoutHousesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    requiredHeadcount?: NullableIntFieldUpdateOperationsInput | number | null
+    siteAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    workingDays?: ProjectUpdateworkingDaysInput | string[]
+    baseTeamUserIds?: ProjectUpdatebaseTeamUserIdsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rosterDays?: ProjectRosterDayUncheckedUpdateManyWithoutProjectNestedInput
+  }
+
+  export type CustomerUpsertWithoutOwnedHousesInput = {
+    update: XOR<CustomerUpdateWithoutOwnedHousesInput, CustomerUncheckedUpdateWithoutOwnedHousesInput>
+    create: XOR<CustomerCreateWithoutOwnedHousesInput, CustomerUncheckedCreateWithoutOwnedHousesInput>
+    where?: CustomerWhereInput
+  }
+
+  export type CustomerUpdateToOneWithWhereWithoutOwnedHousesInput = {
+    where?: CustomerWhereInput
+    data: XOR<CustomerUpdateWithoutOwnedHousesInput, CustomerUncheckedUpdateWithoutOwnedHousesInput>
+  }
+
+  export type CustomerUpdateWithoutOwnedHousesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
+    contacts?: ContactUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+  }
+
+  export type CustomerUncheckedUpdateWithoutOwnedHousesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUncheckedUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUncheckedUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+  }
+
+  export type EquipmentUpsertWithWhereUniqueWithoutHouseInput = {
+    where: EquipmentWhereUniqueInput
+    update: XOR<EquipmentUpdateWithoutHouseInput, EquipmentUncheckedUpdateWithoutHouseInput>
+    create: XOR<EquipmentCreateWithoutHouseInput, EquipmentUncheckedCreateWithoutHouseInput>
+  }
+
+  export type EquipmentUpdateWithWhereUniqueWithoutHouseInput = {
+    where: EquipmentWhereUniqueInput
+    data: XOR<EquipmentUpdateWithoutHouseInput, EquipmentUncheckedUpdateWithoutHouseInput>
+  }
+
+  export type EquipmentUpdateManyWithWhereWithoutHouseInput = {
+    where: EquipmentScalarWhereInput
+    data: XOR<EquipmentUpdateManyMutationInput, EquipmentUncheckedUpdateManyWithoutHouseInput>
+  }
+
+  export type HouseIssueReportUpsertWithWhereUniqueWithoutHouseInput = {
+    where: HouseIssueReportWhereUniqueInput
+    update: XOR<HouseIssueReportUpdateWithoutHouseInput, HouseIssueReportUncheckedUpdateWithoutHouseInput>
+    create: XOR<HouseIssueReportCreateWithoutHouseInput, HouseIssueReportUncheckedCreateWithoutHouseInput>
+  }
+
+  export type HouseIssueReportUpdateWithWhereUniqueWithoutHouseInput = {
+    where: HouseIssueReportWhereUniqueInput
+    data: XOR<HouseIssueReportUpdateWithoutHouseInput, HouseIssueReportUncheckedUpdateWithoutHouseInput>
+  }
+
+  export type HouseIssueReportUpdateManyWithWhereWithoutHouseInput = {
+    where: HouseIssueReportScalarWhereInput
+    data: XOR<HouseIssueReportUpdateManyMutationInput, HouseIssueReportUncheckedUpdateManyWithoutHouseInput>
+  }
+
+  export type HouseCreateWithoutIssueReportsInput = {
+    id?: string
+    companyId: string
+    label: string
+    address?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    project: ProjectCreateNestedOneWithoutHousesInput
+    owner?: CustomerCreateNestedOneWithoutOwnedHousesInput
+    equipment?: EquipmentCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseUncheckedCreateWithoutIssueReportsInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    label: string
+    address?: string | null
+    ownerCustomerId?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutHouseInput
+  }
+
+  export type HouseCreateOrConnectWithoutIssueReportsInput = {
+    where: HouseWhereUniqueInput
+    create: XOR<HouseCreateWithoutIssueReportsInput, HouseUncheckedCreateWithoutIssueReportsInput>
+  }
+
+  export type EquipmentCreateWithoutIssueReportsInput = {
+    id?: string
+    companyId: string
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    customer: CustomerCreateNestedOneWithoutEquipmentInput
+    house?: HouseCreateNestedOneWithoutEquipmentInput
+    consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentUncheckedCreateWithoutIssueReportsInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    houseId?: string | null
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentCreateOrConnectWithoutIssueReportsInput = {
+    where: EquipmentWhereUniqueInput
+    create: XOR<EquipmentCreateWithoutIssueReportsInput, EquipmentUncheckedCreateWithoutIssueReportsInput>
+  }
+
+  export type CustomerCreateWithoutIssueReportsInput = {
+    id?: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutCustomersInput
+    contacts?: ContactCreateNestedManyWithoutCustomerInput
+    leads?: LeadCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementCreateNestedManyWithoutCustomerInput
+    bookings?: BookingCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewCreateNestedManyWithoutCustomerInput
+    addresses?: AddressCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+  }
+
+  export type CustomerUncheckedCreateWithoutIssueReportsInput = {
+    id?: string
+    companyId: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
+    leads?: LeadUncheckedCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCustomerInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
+    addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+  }
+
+  export type CustomerCreateOrConnectWithoutIssueReportsInput = {
+    where: CustomerWhereUniqueInput
+    create: XOR<CustomerCreateWithoutIssueReportsInput, CustomerUncheckedCreateWithoutIssueReportsInput>
+  }
+
+  export type HouseUpsertWithoutIssueReportsInput = {
+    update: XOR<HouseUpdateWithoutIssueReportsInput, HouseUncheckedUpdateWithoutIssueReportsInput>
+    create: XOR<HouseCreateWithoutIssueReportsInput, HouseUncheckedCreateWithoutIssueReportsInput>
+    where?: HouseWhereInput
+  }
+
+  export type HouseUpdateToOneWithWhereWithoutIssueReportsInput = {
+    where?: HouseWhereInput
+    data: XOR<HouseUpdateWithoutIssueReportsInput, HouseUncheckedUpdateWithoutIssueReportsInput>
+  }
+
+  export type HouseUpdateWithoutIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    project?: ProjectUpdateOneRequiredWithoutHousesNestedInput
+    owner?: CustomerUpdateOneWithoutOwnedHousesNestedInput
+    equipment?: EquipmentUpdateManyWithoutHouseNestedInput
+  }
+
+  export type HouseUncheckedUpdateWithoutIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUncheckedUpdateManyWithoutHouseNestedInput
+  }
+
+  export type EquipmentUpsertWithoutIssueReportsInput = {
+    update: XOR<EquipmentUpdateWithoutIssueReportsInput, EquipmentUncheckedUpdateWithoutIssueReportsInput>
+    create: XOR<EquipmentCreateWithoutIssueReportsInput, EquipmentUncheckedCreateWithoutIssueReportsInput>
+    where?: EquipmentWhereInput
+  }
+
+  export type EquipmentUpdateToOneWithWhereWithoutIssueReportsInput = {
+    where?: EquipmentWhereInput
+    data: XOR<EquipmentUpdateWithoutIssueReportsInput, EquipmentUncheckedUpdateWithoutIssueReportsInput>
+  }
+
+  export type EquipmentUpdateWithoutIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
+    house?: HouseUpdateOneWithoutEquipmentNestedInput
+    consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
+  }
+
+  export type EquipmentUncheckedUpdateWithoutIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
+  }
+
+  export type CustomerUpsertWithoutIssueReportsInput = {
+    update: XOR<CustomerUpdateWithoutIssueReportsInput, CustomerUncheckedUpdateWithoutIssueReportsInput>
+    create: XOR<CustomerCreateWithoutIssueReportsInput, CustomerUncheckedCreateWithoutIssueReportsInput>
+    where?: CustomerWhereInput
+  }
+
+  export type CustomerUpdateToOneWithWhereWithoutIssueReportsInput = {
+    where?: CustomerWhereInput
+    data: XOR<CustomerUpdateWithoutIssueReportsInput, CustomerUncheckedUpdateWithoutIssueReportsInput>
+  }
+
+  export type CustomerUpdateWithoutIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
+    contacts?: ContactUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+  }
+
+  export type CustomerUncheckedUpdateWithoutIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUncheckedUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUncheckedUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
   export type CustomerCreateManyCompanyInput = {
@@ -43794,6 +48377,8 @@ export namespace Prisma {
     equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutCompanyInput = {
@@ -43827,6 +48412,8 @@ export namespace Prisma {
     equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
     upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateManyWithoutCompanyInput = {
@@ -44317,6 +48904,7 @@ export namespace Prisma {
   export type EquipmentCreateManyCustomerInput = {
     id?: string
     companyId: string
+    houseId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -44353,6 +48941,31 @@ export namespace Prisma {
     accessToken: string
     refreshToken: string
     tokenExpiresAt: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HouseCreateManyOwnerInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    label: string
+    address?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type HouseIssueReportCreateManyReportedByInput = {
+    id?: string
+    companyId: string
+    houseId: string
+    equipmentId?: string | null
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -44738,12 +49351,15 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    house?: HouseUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -44756,11 +49372,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateManyWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -44853,6 +49471,85 @@ export namespace Prisma {
     accessToken?: StringFieldUpdateOperationsInput | string
     refreshToken?: StringFieldUpdateOperationsInput | string
     tokenExpiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    project?: ProjectUpdateOneRequiredWithoutHousesNestedInput
+    equipment?: EquipmentUpdateManyWithoutHouseNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutHouseNestedInput
+  }
+
+  export type HouseUncheckedUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUncheckedUpdateManyWithoutHouseNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutHouseNestedInput
+  }
+
+  export type HouseUncheckedUpdateManyWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseIssueReportUpdateWithoutReportedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    house?: HouseUpdateOneRequiredWithoutIssueReportsNestedInput
+    equipment?: EquipmentUpdateOneWithoutIssueReportsNestedInput
+  }
+
+  export type HouseIssueReportUncheckedUpdateWithoutReportedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    houseId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseIssueReportUncheckedUpdateManyWithoutReportedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    houseId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -44972,6 +49669,19 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type HouseIssueReportCreateManyEquipmentInput = {
+    id?: string
+    companyId: string
+    houseId: string
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type EquipmentConsumableUpdateWithoutEquipmentInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
@@ -45013,6 +49723,45 @@ export namespace Prisma {
     intervalDays?: IntFieldUpdateOperationsInput | number
     lastReplacedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchaseUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseIssueReportUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    house?: HouseUpdateOneRequiredWithoutIssueReportsNestedInput
+    reportedBy?: CustomerUpdateOneRequiredWithoutIssueReportsNestedInput
+  }
+
+  export type HouseIssueReportUncheckedUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    houseId?: StringFieldUpdateOperationsInput | string
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseIssueReportUncheckedUpdateManyWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    houseId?: StringFieldUpdateOperationsInput | string
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -45144,6 +49893,18 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type HouseCreateManyProjectInput = {
+    id?: string
+    companyId: string
+    label: string
+    address?: string | null
+    ownerCustomerId?: string | null
+    tags?: HouseCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type ProjectRosterDayUpdateWithoutProjectInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
@@ -45171,6 +49932,170 @@ export namespace Prisma {
     techUserIds?: ProjectRosterDayUpdatetechUserIdsInput | string[]
     isOff?: BoolFieldUpdateOperationsInput | boolean
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseUpdateWithoutProjectInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: CustomerUpdateOneWithoutOwnedHousesNestedInput
+    equipment?: EquipmentUpdateManyWithoutHouseNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutHouseNestedInput
+  }
+
+  export type HouseUncheckedUpdateWithoutProjectInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUncheckedUpdateManyWithoutHouseNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutHouseNestedInput
+  }
+
+  export type HouseUncheckedUpdateManyWithoutProjectInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: HouseUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EquipmentCreateManyHouseInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+  }
+
+  export type HouseIssueReportCreateManyHouseInput = {
+    id?: string
+    companyId: string
+    equipmentId?: string | null
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EquipmentUpdateWithoutHouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
+    consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+  }
+
+  export type EquipmentUncheckedUpdateWithoutHouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+  }
+
+  export type EquipmentUncheckedUpdateManyWithoutHouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type HouseIssueReportUpdateWithoutHouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUpdateOneWithoutIssueReportsNestedInput
+    reportedBy?: CustomerUpdateOneRequiredWithoutIssueReportsNestedInput
+  }
+
+  export type HouseIssueReportUncheckedUpdateWithoutHouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HouseIssueReportUncheckedUpdateManyWithoutHouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -45215,6 +50140,10 @@ export namespace Prisma {
      * @deprecated Use ProjectCountOutputTypeDefaultArgs instead
      */
     export type ProjectCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ProjectCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use HouseCountOutputTypeDefaultArgs instead
+     */
+    export type HouseCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = HouseCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use CompanyDefaultArgs instead
      */
@@ -45311,6 +50240,14 @@ export namespace Prisma {
      * @deprecated Use ProjectRosterDayDefaultArgs instead
      */
     export type ProjectRosterDayArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ProjectRosterDayDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use HouseDefaultArgs instead
+     */
+    export type HouseArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = HouseDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use HouseIssueReportDefaultArgs instead
+     */
+    export type HouseIssueReportArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = HouseIssueReportDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

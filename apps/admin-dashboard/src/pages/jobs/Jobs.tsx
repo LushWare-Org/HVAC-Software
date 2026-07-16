@@ -7,8 +7,10 @@ import {
   Zap, CalendarDays, Shield, Trash2,
 } from "lucide-react";
 import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
+import { useTechnicians } from "../../hooks/useScheduling";
 import type { Job } from "../../types/api";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
+import Avatar from "../../components/Avatar";
 
 const STATUS: Record<string, { label: string; css: string }> = {
   PENDING:     { label: "Pending",     css: "badge-amber" },
@@ -54,6 +56,16 @@ function Skeleton({ h = 14 }: { h?: number }) {
   return <div style={{ width: "100%", height: h, background: "var(--bg-hover)", borderRadius: 4 }} />;
 }
 
+function TechAvatar({ name, avatarUrl }: { name?: string | null; avatarUrl?: string | null }) {
+  if (!name) return <span className="text-sm text-4">Unassigned</span>;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+      <Avatar name={name} avatarUrl={avatarUrl} size={24} radius={7} fontSize={9} />
+      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--t2)" }}>{name}</span>
+    </div>
+  );
+}
+
 function SortArrow() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ display: "inline-block", marginLeft: 3, verticalAlign: "middle" }}>
@@ -62,9 +74,9 @@ function SortArrow() {
   );
 }
 
-function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
+function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId }: {
   jobs: Job[]; loading: boolean; onView: (j: Job) => void; onDelete: (j: Job) => void;
-  sortMode?: 'priority' | 'date';
+  sortMode?: 'priority' | 'date'; avatarByUserId: Record<string, string | undefined>;
 }) {
   return (
     <table className="data-table">
@@ -126,7 +138,7 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
                   <div className="text-xs text-4 mt-0.5 truncate" style={{ maxWidth: 160 }}>{j.description}</div>
                 )}
               </td>
-              <td>{j.assignedToName ?? "—"}</td>
+              <td><TechAvatar name={j.assignedToName} avatarUrl={j.assignedToId ? avatarByUserId[j.assignedToId] : undefined} /></td>
               <td>
                 {j.scheduledStart ? (
                   <>
@@ -189,9 +201,15 @@ export default function Jobs() {
   const statsQuery = useJobStats();
   const jobsQuery = useJobs({ limit: 200, search: search || undefined });
   const deleteJob = useDeleteJob();
+  const techniciansQuery = useTechnicians();
 
   const stats = statsQuery.data;
   const allJobs: Job[] = jobsQuery.data?.data ?? [];
+  const avatarByUserId = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const t of techniciansQuery.data ?? []) if (t.userId) map[t.userId] = t.avatarUrl;
+    return map;
+  }, [techniciansQuery.data]);
 
   const { activeJobs, pastJobs, activeStatusCounts, activePriorityCounts } = useMemo(() => {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -299,35 +317,38 @@ export default function Jobs() {
             { icon: FileText, v: stats ? stats.invoiced.toString() : "—", l: "Awaiting Invoice", loading: statsQuery.isLoading, onClick: () => navigate('/finance') },
             { icon: Clock, v: "—", l: "Avg Job Duration", loading: false, onClick: undefined },
           ].map((k) => (
-            <div key={k.l} className="kpi-card" style={{ padding: "16px 20px", borderRadius: "var(--r-md)", cursor: k.onClick ? "pointer" : "default" }} onClick={k.onClick}>
-              <div className="kpi-card-top" style={{ marginBottom: 12, alignItems: "center", justifyContent: "space-between" }}>
-                <div className="kpi-label" style={{ fontSize: 13, color: "var(--t3)", fontWeight: 500, margin: 0 }}>{k.l}</div>
-                <k.icon size={16} strokeWidth={1.5} color="var(--t3)" />
+            <div key={k.l} className="kpi-card" style={{ padding: "14px 16px", borderRadius: "var(--r-lg)", cursor: k.onClick ? "pointer" : "default" }} onClick={k.onClick}>
+              <div className="kpi-card-top" style={{ marginBottom: 10, alignItems: "center", justifyContent: "space-between" }}>
+                <div className="kpi-label" style={{ fontSize: 11.5, color: "var(--t3)", fontWeight: 500, margin: 0 }}>{k.l}</div>
+                <k.icon size={15} strokeWidth={1.7} color="var(--t4)" />
               </div>
-              {k.loading ? <Skeleton h={28} /> : <div className="kpi-value" style={{ fontSize: 26, fontWeight: 700, color: "var(--t1)" }}>{k.v}</div>}
+              {k.loading ? <Skeleton h={26} /> : <div className="kpi-value" style={{ fontSize: 24, fontWeight: 700, color: "var(--t1)" }}>{k.v}</div>}
             </div>
           ))}
         </div>
       )}
 
       {!isExpanded && (
-        <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 500 }}>Forecast window:</span>
-            {[7, 14, 30].map(d => (
-              <button
-                key={d}
-                onClick={() => setForecastDays(d)}
-                style={{
-                  padding: '3px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)',
-                  background: forecastDays === d ? 'var(--blue)' : 'var(--bg-card)',
-                  color: forecastDays === d ? '#fff' : 'var(--t2)',
-                }}
-              >{d}d</button>
-            ))}
-          </div>
-          <RecommendationsPanel filterActions={['discount_20', 'same_day_offer', 'increase_price']} forecastDays={forecastDays} />
-        </>
+        <RecommendationsPanel
+          filterActions={['discount_20', 'same_day_offer', 'increase_price']}
+          forecastDays={forecastDays}
+          headerExtra={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 11, color: 'var(--t3)', fontWeight: 500 }}>Forecast:</span>
+              {[7, 14, 30].map(d => (
+                <button
+                  key={d}
+                  onClick={() => setForecastDays(d)}
+                  style={{
+                    padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)',
+                    background: forecastDays === d ? 'var(--blue)' : 'var(--bg-card)',
+                    color: forecastDays === d ? '#fff' : 'var(--t2)',
+                  }}
+                >{d}d</button>
+              ))}
+            </div>
+          }
+        />
       )}
 
       {/* Urgent banner */}
@@ -495,7 +516,7 @@ export default function Jobs() {
 
         <div className="card-body-flush">
           <div className="table-container jobs-table-container">
-            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} />
+            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} avatarByUserId={avatarByUserId} />
           </div>
         </div>
       </div>
@@ -564,7 +585,7 @@ export default function Jobs() {
             </div>
           ) : (
             <div className="table-container jobs-table-container">
-              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} />
+              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} avatarByUserId={avatarByUserId} />
             </div>
           )}
         </div>

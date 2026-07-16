@@ -30,6 +30,8 @@ import {
 import type { Job, EquipmentRecord } from "../../types/api";
 import JobActivityTab from "./JobActivityTab";
 import { formatMoney } from '../../lib/format'
+import { useTechnicians } from "../../hooks/useScheduling";
+import Avatar from "../../components/Avatar";
 
 interface JobDetailModalProps {
   isOpen: boolean;
@@ -92,6 +94,7 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
   // Customer data for the Customer tab
   const customerQuery = useCustomer(propJob?.customerId ?? "");
   const customer = customerQuery.data;
+  const techniciansQuery = useTechnicians();
 
   // Mutations
   const navigate = useNavigate();
@@ -459,7 +462,16 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
                       <User size={11} /> Technician
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
+                      {job.assignedToId && job.assignedToName && (
+                        <Avatar
+                          name={job.assignedToName}
+                          avatarUrl={techniciansQuery.data?.find(t => t.userId === job.assignedToId)?.avatarUrl}
+                          size={34}
+                          radius={17}
+                          fontSize={13}
+                        />
+                      )}
                       <input value={job.assignedToName ?? "Unassigned"} disabled className={`${inputView} flex-1`} />
                       {job.assignedToId && job.assignedToName && (
                         <button

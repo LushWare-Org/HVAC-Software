@@ -85,6 +85,12 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     }, [])
 
     useEffect(() => {
+        const handler = () => setIsAddJobOpen(true)
+        window.addEventListener('open-add-job', handler)
+        return () => window.removeEventListener('open-add-job', handler)
+    }, [])
+
+    useEffect(() => {
         const handler = (e: Event) => {
             const { job, returnTo } = (e as CustomEvent).detail
             setIsInvoiceDetailOpen(false)

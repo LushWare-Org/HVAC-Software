@@ -21,6 +21,8 @@ import {
 import { fmtDate } from './shared'
 import CreateJobModal from '../dispatch/CreateJobModal'
 import type { Job } from '../../types/api'
+import { useTechnicians } from '../../hooks/useScheduling'
+import Avatar from '../../components/Avatar'
 
 // Consistent with every other consumer of this modal app-wide (ProjectDetail,
 // DayPlanner, Finance, AgreementDrawer, Topbar).
@@ -684,6 +686,7 @@ const JOB_BADGE: Record<string, string> = {
 function ServiceLogSection({ house, equipment }: { house: House; equipment: HouseEquipment[] }) {
   const { jobs, isLoading } = useHouseServiceLog(house.id, equipment.map(e => e.id))
   const [viewJob, setViewJob] = useState<Job | null>(null)
+  const techniciansQuery = useTechnicians()
 
   if (isLoading) {
     return <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}><Loader2 size={18} className="animate-spin" style={{ color: 'var(--t3)' }} /></div>
@@ -699,9 +702,19 @@ function ServiceLogSection({ house, equipment }: { house: House; equipment: Hous
           background: 'var(--bg-card-2)', border: '1px solid var(--bd)', cursor: 'pointer',
           textAlign: 'left', width: '100%', fontFamily: 'inherit',
         }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Wrench size={14} style={{ color: 'var(--t3)' }} />
-          </div>
+          {j.assignedToName ? (
+            <Avatar
+              name={j.assignedToName}
+              avatarUrl={techniciansQuery.data?.find(t => t.userId === j.assignedToId)?.avatarUrl}
+              size={32}
+              radius={8}
+              fontSize={12}
+            />
+          ) : (
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Wrench size={14} style={{ color: 'var(--t3)' }} />
+            </div>
+          )}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{j.title}</p>
             <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0' }}>

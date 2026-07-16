@@ -5,6 +5,7 @@
  */
 import { X, Phone, Star, Wrench, Clock, MapPin, CircleDot } from 'lucide-react'
 import type { Job, Technician } from '../../types/api'
+import Avatar from '../../components/Avatar'
 
 const fmtTime = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : ''
@@ -16,7 +17,6 @@ export default function TechnicianModal({ tech, jobs, dayLabel, onClose, onSelec
   onClose: () => void
   onSelectJob: (j: Job) => void
 }) {
-  const initials = tech.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   const ordered = [...jobs].sort((a, b) =>
     new Date(a.scheduledStart ?? 0).getTime() - new Date(b.scheduledStart ?? 0).getTime())
 
@@ -25,12 +25,8 @@ export default function TechnicianModal({ tech, jobs, dayLabel, onClose, onSelec
       <div className="card anim-fade-up" style={{ width: 480, maxWidth: '95vw', maxHeight: '85vh', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
         <div className="card-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: '50%', background: 'var(--bg-card-2)',
-              border: '2px solid var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, fontWeight: 700, color: 'var(--t1)', flexShrink: 0,
-            }}>
-              {initials}
+            <div style={{ border: '2px solid var(--blue)', borderRadius: '50%', flexShrink: 0 }}>
+              <Avatar name={tech.name} avatarUrl={tech.avatarUrl} size={40} radius={20} fontSize={14} />
             </div>
             <div>
               <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

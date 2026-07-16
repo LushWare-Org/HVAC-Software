@@ -17,6 +17,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Job, Technician } from '../../types/api'
 import type { Agreement } from '../../hooks/useAgreements'
+import { avatarHtml } from '../../components/Avatar'
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -98,16 +99,15 @@ function pinIcon(kind: PlannerJobPin['kind']) {
   }
 }
 
-function techIcon(name: string) {
-  const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+function techIcon(name: string, avatarUrl?: string | null) {
   return L.divIcon({
     className: '',
     html: `<div style="
       width:28px;height:28px;border-radius:50%;
-      background:#1e293b;color:white;border:2px solid #3b82f6;
+      background:#1e293b;border:2px solid #3b82f6;
       display:flex;align-items:center;justify-content:center;
-      font:700 10px sans-serif;box-shadow:0 1px 4px rgba(0,0,0,0.4);
-    ">${initials}</div>`,
+      box-shadow:0 1px 4px rgba(0,0,0,0.4); overflow:hidden;
+    ">${avatarHtml(name, avatarUrl, 24)}</div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   })
@@ -337,7 +337,7 @@ export default function PlannerMap({
         <Marker
           key={t.id}
           position={[t.currentLocation!.lat, t.currentLocation!.lng]}
-          icon={techIcon(t.name)}
+          icon={techIcon(t.name, t.avatarUrl)}
         >
           <Popup>
             <div style={{ fontSize: 13 }}>

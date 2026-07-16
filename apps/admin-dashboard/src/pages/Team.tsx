@@ -15,6 +15,7 @@ import { useTechnicians } from '../hooks/useScheduling'
 import { useEnsureVan } from '../hooks/useInventory'
 import AddTechnicianModal from '../components/AddTechnicianModal'
 import RecommendationsPanel from '../components/RecommendationsPanel'
+import Avatar from '../components/Avatar'
 
 const ROLE_MAP: Record<string, string> = {
     super_admin: 'Super Admin',
@@ -178,9 +179,7 @@ export default function Team() {
                                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
                                     onMouseLeave={e => (e.currentTarget.style.background = 'var(--bg-active)')}
                                 >
-                                    <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 17, fontWeight: 700, color: 'var(--blue)' }}>
-                                        {tech.name.charAt(0).toUpperCase()}
-                                    </div>
+                                    <Avatar name={tech.name} avatarUrl={tech.avatarUrl} size={42} radius={21} fontSize={17} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontWeight: 600, color: 'var(--t1)', fontSize: 14 }}>{tech.name}</div>
                                         <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>{tech.email}{tech.phone ? ` · ${tech.phone}` : ''}</div>
@@ -524,9 +523,7 @@ function PendingTechModal({
             <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-2xl w-full max-w-xl mx-4 flex flex-col max-h-[92vh] admin-modal-box" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex items-center gap-3 p-5 border-b border-[var(--bd)] shrink-0">
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--blue-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--blue)', flexShrink: 0 }}>
-                        {tech.name.charAt(0).toUpperCase()}
-                    </div>
+                    <Avatar name={tech.name} avatarUrl={tech.avatarUrl} size={44} radius={22} fontSize={18} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{tech.name}</h2>
                         <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>Technician Application</div>

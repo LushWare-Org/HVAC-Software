@@ -8491,6 +8491,8 @@ export namespace Prisma {
     jobTypeId: string | null
     templateId: string | null
     projectId: string | null
+    houseId: string | null
+    equipmentId: string | null
     title: string | null
     description: string | null
     status: $Enums.JobStatus | null
@@ -8536,6 +8538,8 @@ export namespace Prisma {
     jobTypeId: string | null
     templateId: string | null
     projectId: string | null
+    houseId: string | null
+    equipmentId: string | null
     title: string | null
     description: string | null
     status: $Enums.JobStatus | null
@@ -8581,6 +8585,8 @@ export namespace Prisma {
     jobTypeId: number
     templateId: number
     projectId: number
+    houseId: number
+    equipmentId: number
     title: number
     description: number
     status: number
@@ -8645,6 +8651,8 @@ export namespace Prisma {
     jobTypeId?: true
     templateId?: true
     projectId?: true
+    houseId?: true
+    equipmentId?: true
     title?: true
     description?: true
     status?: true
@@ -8690,6 +8698,8 @@ export namespace Prisma {
     jobTypeId?: true
     templateId?: true
     projectId?: true
+    houseId?: true
+    equipmentId?: true
     title?: true
     description?: true
     status?: true
@@ -8735,6 +8745,8 @@ export namespace Prisma {
     jobTypeId?: true
     templateId?: true
     projectId?: true
+    houseId?: true
+    equipmentId?: true
     title?: true
     description?: true
     status?: true
@@ -8868,6 +8880,8 @@ export namespace Prisma {
     jobTypeId: string | null
     templateId: string | null
     projectId: string | null
+    houseId: string | null
+    equipmentId: string | null
     title: string
     description: string | null
     status: $Enums.JobStatus
@@ -8933,6 +8947,8 @@ export namespace Prisma {
     jobTypeId?: boolean
     templateId?: boolean
     projectId?: boolean
+    houseId?: boolean
+    equipmentId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -8986,6 +9002,8 @@ export namespace Prisma {
     jobTypeId?: boolean
     templateId?: boolean
     projectId?: boolean
+    houseId?: boolean
+    equipmentId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -9034,6 +9052,8 @@ export namespace Prisma {
     jobTypeId?: boolean
     templateId?: boolean
     projectId?: boolean
+    houseId?: boolean
+    equipmentId?: boolean
     title?: boolean
     description?: boolean
     status?: boolean
@@ -9104,6 +9124,8 @@ export namespace Prisma {
       jobTypeId: string | null
       templateId: string | null
       projectId: string | null
+      houseId: string | null
+      equipmentId: string | null
       title: string
       description: string | null
       status: $Enums.JobStatus
@@ -9546,6 +9568,8 @@ export namespace Prisma {
     readonly jobTypeId: FieldRef<"Job", 'String'>
     readonly templateId: FieldRef<"Job", 'String'>
     readonly projectId: FieldRef<"Job", 'String'>
+    readonly houseId: FieldRef<"Job", 'String'>
+    readonly equipmentId: FieldRef<"Job", 'String'>
     readonly title: FieldRef<"Job", 'String'>
     readonly description: FieldRef<"Job", 'String'>
     readonly status: FieldRef<"Job", 'JobStatus'>
@@ -15234,6 +15258,8 @@ export namespace Prisma {
     jobTypeId: 'jobTypeId',
     templateId: 'templateId',
     projectId: 'projectId',
+    houseId: 'houseId',
+    equipmentId: 'equipmentId',
     title: 'title',
     description: 'description',
     status: 'status',
@@ -16112,6 +16138,8 @@ export namespace Prisma {
     jobTypeId?: StringNullableFilter<"Job"> | string | null
     templateId?: StringNullableFilter<"Job"> | string | null
     projectId?: StringNullableFilter<"Job"> | string | null
+    houseId?: StringNullableFilter<"Job"> | string | null
+    equipmentId?: StringNullableFilter<"Job"> | string | null
     title?: StringFilter<"Job"> | string
     description?: StringNullableFilter<"Job"> | string | null
     status?: EnumJobStatusFilter<"Job"> | $Enums.JobStatus
@@ -16164,6 +16192,8 @@ export namespace Prisma {
     jobTypeId?: SortOrderInput | SortOrder
     templateId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
+    houseId?: SortOrderInput | SortOrder
+    equipmentId?: SortOrderInput | SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -16220,6 +16250,8 @@ export namespace Prisma {
     jobTypeId?: StringNullableFilter<"Job"> | string | null
     templateId?: StringNullableFilter<"Job"> | string | null
     projectId?: StringNullableFilter<"Job"> | string | null
+    houseId?: StringNullableFilter<"Job"> | string | null
+    equipmentId?: StringNullableFilter<"Job"> | string | null
     title?: StringFilter<"Job"> | string
     description?: StringNullableFilter<"Job"> | string | null
     status?: EnumJobStatusFilter<"Job"> | $Enums.JobStatus
@@ -16272,6 +16304,8 @@ export namespace Prisma {
     jobTypeId?: SortOrderInput | SortOrder
     templateId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
+    houseId?: SortOrderInput | SortOrder
+    equipmentId?: SortOrderInput | SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -16326,6 +16360,8 @@ export namespace Prisma {
     jobTypeId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     templateId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     projectId?: StringNullableWithAggregatesFilter<"Job"> | string | null
+    houseId?: StringNullableWithAggregatesFilter<"Job"> | string | null
+    equipmentId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     title?: StringWithAggregatesFilter<"Job"> | string
     description?: StringNullableWithAggregatesFilter<"Job"> | string | null
     status?: EnumJobStatusWithAggregatesFilter<"Job"> | $Enums.JobStatus
@@ -17370,6 +17406,8 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -17422,6 +17460,8 @@ export namespace Prisma {
     jobTypeId?: string | null
     templateId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -17470,6 +17510,8 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -17522,6 +17564,8 @@ export namespace Prisma {
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -17572,6 +17616,8 @@ export namespace Prisma {
     jobTypeId?: string | null
     templateId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -17616,6 +17662,8 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -17662,6 +17710,8 @@ export namespace Prisma {
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -18952,6 +19002,8 @@ export namespace Prisma {
     jobTypeId?: SortOrder
     templateId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
+    equipmentId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     status?: SortOrder
@@ -19006,6 +19058,8 @@ export namespace Prisma {
     jobTypeId?: SortOrder
     templateId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
+    equipmentId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     status?: SortOrder
@@ -19051,6 +19105,8 @@ export namespace Prisma {
     jobTypeId?: SortOrder
     templateId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
+    equipmentId?: SortOrder
     title?: SortOrder
     description?: SortOrder
     status?: SortOrder
@@ -20759,6 +20815,8 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -20809,6 +20867,8 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     templateId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -20955,6 +21015,8 @@ export namespace Prisma {
     jobTypeId?: StringNullableFilter<"Job"> | string | null
     templateId?: StringNullableFilter<"Job"> | string | null
     projectId?: StringNullableFilter<"Job"> | string | null
+    houseId?: StringNullableFilter<"Job"> | string | null
+    equipmentId?: StringNullableFilter<"Job"> | string | null
     title?: StringFilter<"Job"> | string
     description?: StringNullableFilter<"Job"> | string | null
     status?: EnumJobStatusFilter<"Job"> | $Enums.JobStatus
@@ -21070,6 +21132,8 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -21120,6 +21184,8 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -21476,6 +21542,8 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -21527,6 +21595,8 @@ export namespace Prisma {
     jobTypeId?: string | null
     templateId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -21625,6 +21695,8 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -21676,6 +21748,8 @@ export namespace Prisma {
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22231,6 +22305,8 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22282,6 +22358,8 @@ export namespace Prisma {
     jobTypeId?: string | null
     templateId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22345,6 +22423,8 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22396,6 +22476,8 @@ export namespace Prisma {
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22443,6 +22525,8 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22494,6 +22578,8 @@ export namespace Prisma {
     jobTypeId?: string | null
     templateId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22557,6 +22643,8 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22608,6 +22696,8 @@ export namespace Prisma {
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22655,6 +22745,8 @@ export namespace Prisma {
     serviceLatitude?: Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22706,6 +22798,8 @@ export namespace Prisma {
     jobTypeId?: string | null
     templateId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -22837,6 +22931,8 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -22888,6 +22984,8 @@ export namespace Prisma {
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23275,6 +23373,8 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     templateId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -23406,6 +23506,8 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23456,6 +23558,8 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23505,6 +23609,8 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23562,6 +23668,8 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     jobTypeId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
     title: string
     description?: string | null
     status?: $Enums.JobStatus
@@ -23642,6 +23750,8 @@ export namespace Prisma {
     serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23692,6 +23802,8 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
@@ -23741,6 +23853,8 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus

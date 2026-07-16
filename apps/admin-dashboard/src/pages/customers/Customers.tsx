@@ -323,7 +323,7 @@ export default function Customers() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isPortalInviteOpen, setIsPortalInviteOpen] = useState(false);
-  const [sidebarTab, setSidebarTab] = useState<any>("contact");
+  const [sidebarTab, setSidebarTab] = useState<any>("overview");
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const [hoveredCustomer, setHoveredCustomer] = useState<{ id: string; x: number; y: number } | null>(null);
   const [recCustomer, setRecCustomer] = useState<Customer | null>(null);
@@ -370,7 +370,7 @@ export default function Customers() {
 
   const handleViewClick = (person: any, type: "customer" | "agreement" = "customer") => {
     setSelectedPerson(person);
-    setSidebarTab(type === "agreement" ? "agreements" : "contact");
+    setSidebarTab(type === "agreement" ? "agreements" : "overview");
     setIsDetailsOpen(true);
   };
 

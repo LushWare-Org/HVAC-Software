@@ -346,6 +346,7 @@ exports.Prisma.EquipmentScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
   customerId: 'customerId',
+  houseId: 'houseId',
   type: 'type',
   brand: 'brand',
   model: 'model',
@@ -511,6 +512,7 @@ exports.Prisma.ProjectScalarFieldEnum = {
   description: 'description',
   category: 'category',
   status: 'status',
+  templateType: 'templateType',
   startDate: 'startDate',
   targetEndDate: 'targetEndDate',
   budget: 'budget',
@@ -533,6 +535,33 @@ exports.Prisma.ProjectRosterDayScalarFieldEnum = {
   techUserIds: 'techUserIds',
   isOff: 'isOff',
   updatedBy: 'updatedBy',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.HouseScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  projectId: 'projectId',
+  label: 'label',
+  address: 'address',
+  ownerCustomerId: 'ownerCustomerId',
+  tags: 'tags',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.HouseIssueReportScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  houseId: 'houseId',
+  equipmentId: 'equipmentId',
+  reportedByCustomerId: 'reportedByCustomerId',
+  errorCode: 'errorCode',
+  description: 'description',
+  status: 'status',
+  resolvedNote: 'resolvedNote',
+  createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
@@ -642,7 +671,9 @@ exports.Prisma.ModelName = {
   CustomerIotDevice: 'CustomerIotDevice',
   IotDeviceHistory: 'IotDeviceHistory',
   Project: 'Project',
-  ProjectRosterDay: 'ProjectRosterDay'
+  ProjectRosterDay: 'ProjectRosterDay',
+  House: 'House',
+  HouseIssueReport: 'HouseIssueReport'
 };
 
 /**

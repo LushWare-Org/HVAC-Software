@@ -189,11 +189,13 @@ model Job {
   serviceLatitude  Decimal? @db.Decimal(10, 7)
   serviceLongitude Decimal? @db.Decimal(10, 7)
 
-  jobTypeId  String?
-  jobType    JobType?     @relation(fields: [jobTypeId], references: [id])
-  templateId String?
-  template   JobTemplate? @relation(fields: [templateId], references: [id])
-  projectId  String? // FK to crm.projects (cross-service ref)
+  jobTypeId   String?
+  jobType     JobType?     @relation(fields: [jobTypeId], references: [id])
+  templateId  String?
+  template    JobTemplate? @relation(fields: [templateId], references: [id])
+  projectId   String? // FK to crm.projects (cross-service ref)
+  houseId     String? // FK to crm.houses (cross-service ref) — Housing Scheme template
+  equipmentId String? // FK to crm.equipment (cross-service ref) — optional, which unit was serviced
 
   title       String
   description String?
@@ -250,6 +252,8 @@ model Job {
   @@index([companyId, scheduledStart])
   @@index([customerId])
   @@index([agreementId])
+  @@index([houseId])
+  @@index([equipmentId])
   @@map("jobs")
 }
 

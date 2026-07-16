@@ -38,6 +38,7 @@ import AddInvoiceModal from "../finance/AddInvoiceModal";
 import DispatchCalendar from "./DispatchCalendar";
 import { formatMoney } from '../../lib/format'
 import { techOnProjectMessage } from "../projects/projectsApi";
+import Avatar from "../../components/Avatar";
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
 
@@ -783,14 +784,7 @@ export default function DispatchBoard() {
                       {/* Card top: tech info + status/elapsed */}
                       <div style={{ padding: "13px 14px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                          <div style={{
-                            width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-                            background: `linear-gradient(135deg, ${st.color}bb, ${st.color})`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            color: "#fff", fontSize: 13, fontWeight: 700,
-                          }}>
-                            {(tech?.name ?? "?").charAt(0).toUpperCase()}
-                          </div>
+                          <Avatar name={tech?.name} avatarUrl={tech?.avatarUrl} size={34} radius={17} fontSize={13} />
                           <div>
                             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--t1)", lineHeight: 1.2 }}>
                               {tech?.name ?? "Technician unavailable"}
@@ -989,14 +983,7 @@ export default function DispatchBoard() {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 {/* Avatar with availability dot */}
                 <div style={{ position: "relative", flexShrink: 0 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: "50%",
-                    background: "#2563eb",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "#fff", fontWeight: 700, fontSize: 13,
-                  }}>
-                    {tech.name.charAt(0).toUpperCase()}
-                  </div>
+                  <Avatar name={tech.name} avatarUrl={tech.avatarUrl} size={32} radius={16} fontSize={13} />
                   {/* Availability dot */}
                   <div style={{
                     position: "absolute", bottom: -1, right: -1,

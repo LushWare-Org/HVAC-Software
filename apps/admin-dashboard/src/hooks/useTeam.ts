@@ -19,6 +19,7 @@ export interface TeamMember {
   isActive: boolean
   approvalStatus: string   // APPROVED | PENDING | REJECTED
   approvalNote?: string
+  avatarUrl?: string
   skills: string[]
   latitude?: number
   longitude?: number
