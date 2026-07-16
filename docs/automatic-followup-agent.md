@@ -1,6 +1,6 @@
 # Automatic Follow-up Agent Implementation
 
-This document records how the Automatic Follow-up Agent is implemented in this system, from ML model artifacts through CRM orchestration, queue delivery, and admin UI controls.
+This document records how the Automatic Follow-up Agent is implemented in this system, from decision-making through queue delivery and admin UI controls.
 
 ## Purpose
 
@@ -8,267 +8,148 @@ The Automatic Follow-up Agent identifies customers and leads that need outreach,
 
 Current production actions are:
 
-- `RETENTION`: customer has high churn probability.
-- `REENGAGEMENT`: customer is inactive or has not had a recent confirmed service.
 - `LEAD_FOLLOWUP`: lead has remained cold long enough to need outreach.
+- `QUOTE_FOLLOWUP`: a sent quote has gone unanswered for too long.
+- `RETENTION`: a maintenance agreement has expired.
+- `REENGAGEMENT`: customer is inactive or has not had a recent confirmed service.
 
 The shared payload type also supports `UPSELL`, which is produced by the Upsell Recommendation Agent and consumed by the same follow-up queue worker.
 
 ---
 
-## How the bandit optimizes decisions
+## How the Rule-Based + LLM Decision Engine Works
 
-### What it is
-
-`FollowUpBandit` in `agent/followup_bandit.py` is an **epsilon-greedy contextual multi-armed bandit**. Unlike the revenue agent where the bandit overrides a primary ML policy 20 % of the time, here the bandit **is the policy** — every channel selection decision flows through it directly. It maintains a Q-table of average response rewards per `(state_context, action)` pair and steers future decisions toward the channels that historically produce the most bookings.
-
-### State representation
-
-Continuous and categorical state is reduced to a discrete 4-tuple key:
+**As of this revision, the follow-up decision no longer depends on the churn-prediction ML model.** There wasn't enough historical data yet to trust `churn_probability > 0.7` as a signal, so the decision path was replaced with a hybrid: deterministic business rules decide **whether** a follow-up is needed, and an LLM only refines **how** to deliver it. `churn-service` and `ChurnClient` still exist and are still used elsewhere (the customer status-summary widget) — they're just no longer part of this decision.
 
 ```
-days_bucket      = min(int(days_since_last_contact), 7)   # 8 buckets: 0–7 days
-attempts_bucket  = min(int(num_previous_attempts), 5)     # 6 buckets: 0–5 attempts
-lead_stage       = str(lead_stage).lower()                # new_lead | quote_sent | negotiation | churned
-customer_segment = str(customer_segment).lower()          # premium | standard | budget
+Rule Engine  →  Context Builder  →  LLM recommendation  →  Validation  →  same queue call as before
 ```
 
-Bucketing collapses similar customers so the bandit generalises across them rather than requiring a separate cell per unique profile. Dimensions were chosen because they capture the strongest follow-up signals: urgency (days), fatigue (attempts), pipeline position (stage), and value tier (segment).
+### 1. Rule Engine — `apps/crm-service/src/followup/rules/followup-rule-engine.ts`
 
-### Learnable actions
+Pure, synchronous, no I/O. Decides ONLY whether an entity needs follow-up, and why — never channel, timing, or message. Safety gates run first and short-circuit everything else:
 
-```python
-FOLLOWUP_ACTIONS = ("call", "sms", "whatsapp", "email", "no_followup")
-```
+1. `automaticFollowupEnabled === false` → no follow-up (this is the existing customer/company toggle column — it doubles as the opt-out signal, no new column needed).
+2. `previousFollowupAttempts > 5` → no follow-up (spam prevention).
+3. No contact channel at all → no follow-up.
 
-`no_followup` is included so the bandit can learn when silence is better than contact — for example, customers who have already responded or recently converted.
+Then, first match wins:
 
-### Action selection — epsilon-greedy
+| Rule | Condition | Action | Reason code |
+|---|---|---|---|
+| Cold lead | `leadStatus` in NEW/CONTACTED/QUALIFIED, created > 3 days ago | `LEAD_FOLLOWUP` | `COLD_LEAD` |
+| Quote pending | latest quote status SENT or VIEWED, sent > 3 days ago | `QUOTE_FOLLOWUP` | `QUOTE_PENDING` |
+| Agreement expired | `ServiceAgreement.status = EXPIRED`, or an ACTIVE agreement whose `endDate` has passed | `RETENTION` | `AGREEMENT_EXPIRED` |
+| Re-engagement | `engagementStatus = INACTIVE`, or no service in > 90 days | `REENGAGEMENT` | `CUSTOMER_INACTIVE` |
 
-A hard safety gate fires before any stochastic choice:
+Unit tests: `followup-rule-engine.spec.ts` (17 cases — every rule, both safety gates, priority ordering).
 
-```
-If num_previous_attempts > 5 → return no_followup unconditionally
-```
+### 2. Context Builder — `apps/crm-service/src/followup/context/followup-context-builder.ts`
 
-This prevents the bandit from spamming customers during exploration regardless of what the Q-table has learned.
+Turns raw Prisma rows into the structured `FollowupCustomerProfile` the LLM is allowed to see (the LLM never receives database rows directly). `customerSegment` (premium/standard/budget/lead) is a derived heuristic bucket from average monthly agreement spend — there's no stored segment field.
 
-When the gate does not fire:
+### 3. LLM Decision Layer — `apps/crm-service/src/ai/followup-llm.client.ts` + `followup-llm.prompt.ts`
 
-```
-With probability ε  (0.20) → explore: pick a random channel
-With probability 1−ε (0.80) → exploit: pick argmax Q[state_key]
-```
-
-### Learning — incremental running average
-
-After each run the bandit updates using the Welford incremental mean:
-
-```
-N[state][action] += 1
-Q[state][action] += (reward − Q[state][action]) / N[state][action]
-```
-
-The reward signal is engagement quality, not raw contact volume:
-
-| Outcome | Reward |
-|---------|--------|
-| Customer books a service | 10.0 |
-| Customer responds but does not book | 1.0 |
-| No response | 0.0 |
-
-Booking is weighted 10× higher than a response so the bandit prioritises channels that lead to actual revenue, not just engagement.
-
-### Decision flow in `followup_agent.py`
-
-```
-1. Build state from CRM signals
-2. Load persisted bandit   (models/followup_bandit.pkl)
-3. bandit.select_action(state)           ← safety gate → ε-greedy
-4. execute_followup(action, ...)         ← call / SMS / WhatsApp / email
-5. Observe customer response window      ← responded, booked
-6. reward = 10.0 if booked, 1.0 if responded, 0.0 otherwise
-7. bandit.update(state, action, reward)  ← Welford update
-8. save_bandit()  →  models/followup_bandit.pkl
-```
-
-In batch mode (`run_batch`) the bandit is loaded and saved after each customer so every subsequent customer in the batch benefits from the learning accumulated by all prior ones.
-
-### Persistence
-
-The bandit is serialized to `models/followup_bandit.pkl` via `joblib` after every run. `load_bandit()` restores it at the start of the next run. If the file is missing or corrupt, a fresh `FollowUpBandit` is initialized automatically.
-
-### Observability
-
-`bandit.stats()` returns a compact summary logged after every update:
+The LLM is told the rule engine has already decided a follow-up is needed and must not second-guess that. It returns **only**:
 
 ```json
 {
-  "states_explored": 8,
-  "total_updates": 215,
-  "best_actions_per_state": {
-    "(3, 2, 'quote_sent', 'premium')": "call",
-    "(7, 1, 'new_lead', 'budget')": "sms"
-  }
+  "channel": "SMS" | "EMAIL",
+  "priority": "Low" | "Medium" | "High",
+  "followupWithin": "Today" | "Within 2 days" | "This week",
+  "reason": "...",
+  "message": "...",
+  "confidence": 0.0-1.0
 }
 ```
 
-`bandit.top_actions(n)` returns the most-visited `(state, action)` pairs with Q values and visit counts. Over time the Q-table converges to learned optima such as:
+Uses OpenAI (`OPENAI_API_KEY`, model from `OPENAI_MODEL_FOLLOWUP`, default `gpt-4o-mini`) via the same pattern `apps/chat-service/src/llm/llm.provider.ts` already uses elsewhere in this codebase. `response_format: json_object`, output is shape-validated before being trusted. Any failure — missing API key, timeout, malformed JSON — returns `null`, and the agent falls back to a rule-only decision with the worker's canned copy. The LLM call is skipped entirely when the rule engine found no reason to follow up.
 
-```
-(*, *, *, 'premium') → call      (Q ≈ 2.1 — high-value customers respond to calls)
-(*, *, *, 'budget')  → sms       (Q ≈ 1.8 — SMS converts best for budget segment)
-(7, 5, *, *)         → call      (late follow-ups need a stronger touch)
-```
+### 4. Validation Layer — `apps/crm-service/src/followup/validation/followup-validation.service.ts`
+
+Never trusts the LLM response directly. Re-checks, independent of what the LLM said:
+
+- `NO_CONTACT_CHANNEL` / `NO_DELIVERABLE_CHANNEL`
+- `ATTEMPT_LIMIT_EXCEEDED` (> 5, re-checked as a second gate)
+- `OPTED_OUT`
+- `INTERVAL_NOT_SATISFIED` (48h duplicate-suppression window)
+- `CHANNEL_UNAVAILABLE` — if the LLM recommends a channel with no corresponding contact info, falls back to whichever channel IS available instead of failing outright
+- Message length/safety, `followupWithin` → concrete `scheduledFor` timestamp
+
+If validation fails, the entity is skipped exactly like today's "no contact channel" path — no new failure mode. Unit tests: `followup-validation.service.spec.ts` (10 cases).
+
+### Orchestration — `apps/crm-service/src/followup/decision/followup-decision.service.ts`
+
+`FollowupDecisionService.decide()` runs the four steps above in fixed order and returns either `null` (skip) or a `FollowupDecision` with the final action, channel, message, schedule, and a full audit trail. Unit tests: `followup-decision.service.spec.ts` (5 cases, including "LLM is never called when rules say no follow-up").
 
 ---
 
 ## Production Flow
 
-1. ML models are loaded by `apps/churn-service`.
-2. `crm-service` starts `FollowupCron`.
-3. `FollowupCron` runs every 6 hours.
-4. `FollowupAgent` loads enabled companies, customer candidates, and lead candidates.
-5. Customer candidates are scored using churn prediction.
-6. The agent creates a `followup_attempts` row when a follow-up should be queued.
-7. `FollowupProducer` publishes a BullMQ job to `followup-queue`.
-8. `comms-service` `FollowupWorker` consumes the job.
-9. The worker sends SMS first when a phone number is present, otherwise email.
-10. The admin dashboard exposes company-level and customer-level controls.
+1. `crm-service` starts `FollowupCron`.
+2. `FollowupCron` runs every 6 hours.
+3. `FollowupAgent` loads enabled companies, customer candidates, lead candidates, and the latest non-draft quote per customer (cross-schema read from `finance."Quote"` — same raw-SQL pattern `analytics-service` already uses for `finance."Payment"`; guarded, degrades gracefully if unreachable).
+4. For each candidate, `FollowupDecisionService.decide()` runs Rule Engine → Context Builder → LLM → Validation.
+5. If a decision is returned, the agent creates a `followup_attempts` row and queues the job. If not (rules say no follow-up, or validation blocks it), the candidate is skipped — same as before.
+6. `FollowupProducer` publishes a BullMQ job to `followup-queue` (unchanged).
+7. `comms-service` `FollowupWorker` consumes the job, preferring the LLM-recommended message/channel/timing when present, falling back to canned copy and phone-then-email otherwise.
+8. The admin dashboard exposes company-level and customer-level controls (unchanged).
 
-## Step 1: ML Model Implementation
+## Step 1: Churn Model (no longer part of follow-up decisioning)
 
-The model-backed prediction service lives in:
-
-- `apps/churn-service/src/main.py`
-- `apps/churn-service/src/services/churn.service.py`
-- `apps/churn-service/src/services/failure.service.py`
-- `apps/churn-service/src/services/revenue.service.py`
-- `apps/churn-service/src/utils/model_loader.py`
-- `apps/churn-service/src/models/*.pkl`
-
-Model artifacts currently used by churn/failure scoring:
-
-- `churn_model.pkl`
-- `churn_features.pkl`
-- `failure_model.pkl`
-- `failure_features.pkl`
-
-`ModelRegistry` in `model_loader.py` loads these artifacts with `joblib`. The FastAPI app preloads them during lifespan startup through `preload_models()`.
-
-The model service exposes:
-
-- `GET /health`
-- `POST /predict/churn`
-- `POST /predict/failure`
-- `POST /predict/revenue`
-- `POST /recommend-offer`
-
-For the Automatic Follow-up Agent, the important endpoint is `POST /predict/churn`. It returns:
-
-```json
-{
-  "churn_probability": 0.82
-}
-```
-
-The revenue endpoint is used elsewhere in CRM customer status summaries and upsell enrichment, but the follow-up agent itself only calls churn prediction for customer action selection.
+The model-backed prediction service still lives in `apps/churn-service` (`main.py`, `churn.service.py`, `model_loader.py`, `*.pkl` artifacts) and still exposes `POST /predict/churn`. It is **no longer called by the follow-up agent** — there wasn't enough historical data to trust it yet. It is still used by `CustomersService.getStatusSummary` (`apps/crm-service/src/customers/customers.service.ts`) for the customer detail page's churn widget, via the same `ChurnClient` (`apps/crm-service/src/ai/churn.client.ts`).
 
 ### Standalone Retention Agent
 
-There is also a standalone Python retention decision agent at:
+There is also a standalone Python retention decision agent at `services/ai/agents/retention_agent.py`, and epsilon-greedy bandit prototypes at `agent/followup_bandit.py` / `agent/followup_agent.py`. Neither is in the production follow-up path — the production path is the NestJS `FollowupAgent` described in this document.
 
-- `services/ai/agents/retention_agent.py`
+## Step 2: Database Schema
 
-It loads:
-
-- `conversion_model.pkl`
-- `ltv_model.pkl`
-- `churn_model.pkl`
-
-It produces richer decisions such as `premium_contract_offer`, `discount_retention_offer`, and `maintenance_plan_offer`.
-
-Important distinction: this standalone `RetentionAgent` is not the runtime NestJS follow-up scheduler. The production automatic follow-up path is the NestJS `FollowupAgent` plus `apps/churn-service`.
-
-## Step 2: CRM Churn Client
-
-The CRM service talks to the ML service through:
-
-- `apps/crm-service/src/ai/churn.client.ts`
-
-`ChurnClient.predictChurn()` posts to `/predict/churn`. It resolves candidate base URLs from:
-
-1. `CHURN_SERVICE_URL`
-2. `http://localhost:8000`
-3. `http://churn-service:8000`
-
-The client keeps a `healthyBaseUrl` once a request succeeds and falls back across candidates on failure. If every candidate fails, it throws an error to the caller.
-
-The follow-up agent catches churn service failures and continues without a model score. In that case, it can still choose `REENGAGEMENT` based on engagement status or service recency.
-
-## Step 3: Database Schema
-
-The follow-up implementation depends on these CRM migrations:
+No new migrations were required. The follow-up implementation still depends on:
 
 - `apps/crm-service/prisma/migrations/20260331143000_add_followup_attempts/migration.sql`
 - `apps/crm-service/prisma/migrations/20260402101500_add_company_followup_toggle/migration.sql`
 - `apps/crm-service/prisma/migrations/20260412120000_add_customer_followup_toggle/migration.sql`
 
-### `followup_attempts`
+`followup_attempts.action` is `TEXT` (not a Postgres enum), so the new `QUOTE_FOLLOWUP` action required no migration. `followup_attempts.metadata` is `JSONB`; it now carries a `decision` object alongside the existing `recipientName`/`recipientPhone`/`recipientEmail`:
 
-The `followup_attempts` table stores duplicate suppression and audit history.
-
-Important columns:
-
-- `company_id`
-- `entity_type`
-- `entity_id`
-- `customer_id`
-- `lead_id`
-- `action`
-- `status`
-- `churn_probability`
-- `queue_job_id`
-- `reason`
-- `error_message`
-- `metadata`
-- `triggered_at`
-- `queued_at`
-- `failed_at`
-
-Important indexes:
-
-- `followup_attempts_company_entity_triggered_idx`
-- `followup_attempts_company_status_triggered_idx`
-
-### Toggles
-
-Company-level toggle:
-
-```sql
-ALTER TABLE "companies"
-ADD COLUMN "automaticFollowupEnabled" BOOLEAN NOT NULL DEFAULT true;
+```json
+{
+  "recipientName": "...",
+  "recipientPhone": "...",
+  "recipientEmail": "...",
+  "decision": {
+    "ruleResult": { "needsFollowup": true, "action": "REENGAGEMENT", "reasonCode": "CUSTOMER_INACTIVE", "reason": "...", "matchedRule": "reengagement.inactive" },
+    "llmRecommendation": { "channel": "SMS", "priority": "High", "followupWithin": "Today", "reason": "...", "message": "...", "confidence": 0.82 },
+    "llmModel": "gpt-4o-mini",
+    "validation": { "passed": true, "failedChecks": [] },
+    "finalAction": "REENGAGEMENT",
+    "finalChannel": "SMS",
+    "decidedAt": "2026-07-16T..."
+  }
+}
 ```
 
-Customer-level toggle:
+`churn_probability` on `followup_attempts` is still a valid column but is no longer populated by the automatic path (always `NULL` there now).
+
+**Deferred, not built:** correlating a later customer reply, a booking, or a manager override back to a specific `followup_attempts` row for full closed-loop feedback (manager override / customer response / booking created / revenue generated). That needs hooks in booking/comms flows beyond the follow-up agent itself and is scoped as separate future work — once this decision layer is live and producing `metadata.decision` data to correlate against.
+
+### Company / Customer toggles (unchanged)
 
 ```sql
-ALTER TABLE "customers"
-ADD COLUMN "automaticFollowupEnabled" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "companies" ADD COLUMN "automaticFollowupEnabled" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "customers" ADD COLUMN "automaticFollowupEnabled" BOOLEAN NOT NULL DEFAULT true;
 ```
 
-The implementation checks whether these columns exist before using them, so older local databases do not immediately break. When a column is missing, the service logs a warning and defaults to enabled behavior.
+The customer-level column is what the rule engine's `OPTED_OUT` safety gate reads — there is no separate "opted out" flag.
 
-## Step 4: Shared Types and Queue Name
+## Step 3: Shared Types and Queue Name
 
-Shared follow-up payload types are defined in:
-
-- `packages/types/src/index.ts`
-
-Key types:
+Shared types are defined in `packages/types/src/index.ts`:
 
 ```ts
-export type FollowupAction = 'RETENTION' | 'REENGAGEMENT' | 'LEAD_FOLLOWUP' | 'UPSELL';
+export type FollowupAction = 'RETENTION' | 'REENGAGEMENT' | 'LEAD_FOLLOWUP' | 'QUOTE_FOLLOWUP' | 'UPSELL';
+export type FollowupChannel = 'SMS' | 'EMAIL'; // WhatsApp not wired in comms-service yet
 
 export interface FollowupJobPayload {
   companyId: string;
@@ -284,410 +165,120 @@ export interface FollowupJobPayload {
   churnProb?: number;
   reason: string;
   triggeredAt: string;
+  recommendedMessage?: string;
+  recommendedSubject?: string;
+  recommendedChannel?: FollowupChannel;
+  scheduledFor?: string;
+  llmConfidence?: number;
 }
 ```
 
-The BullMQ queue name is defined in:
+Plus `FollowupRuleFacts`, `FollowupRuleResult`, `FollowupCustomerProfile`, `FollowupLlmRecommendation`, and `FollowupDecisionAudit` for the decision engine internals (see the same file).
 
-- `packages/queue/src/index.ts`
+The BullMQ queue name is unchanged: `packages/queue/src/index.ts` → `FOLLOWUP = 'followup-queue'`.
 
-```ts
-FOLLOWUP = 'followup-queue'
-```
+## Step 4: Follow-up Agent Module Wiring
 
-## Step 5: Follow-up Agent Module Wiring
+`apps/crm-service/src/followup/followup.module.ts` registers:
 
-The NestJS module is:
+- `FollowupRuleEngine`, `FollowupContextBuilder`, `FollowupLlmClient`, `FollowupValidationService`, `FollowupDecisionService`
+- `FollowupProducer` (or `NoopFollowupProducer` when Redis isn't configured)
+- `FollowupAgent`, `FollowupCron`
 
-- `apps/crm-service/src/followup/followup.module.ts`
+`ChurnClient` is no longer provided here — `CustomersModule` provides its own instance independently for the status-summary widget.
 
-It registers:
+## Step 5: Scheduled Agent Execution
 
-- `ChurnClient`
-- `FollowupProducer`
-- `FollowupAgent`
-- `FollowupCron`
+Unchanged. `apps/crm-service/src/cron/followup.cron.ts` starts on module init, runs immediately, then every 6 hours, with an `isRunning` guard.
 
-The CRM app imports the follow-up module from:
+## Step 6: Candidate Selection
 
-- `apps/crm-service/src/app.module.ts`
+Core implementation: `apps/crm-service/src/agents/followup.agent.ts`, entry point `run(): Promise<FollowupRunSummary>` (`{ processed, queued, skipped, failures }`, unchanged shape).
 
-## Step 6: Scheduled Agent Execution
+- **Enabled companies / customer candidates / lead candidates**: same filters as before (`automaticFollowupEnabled`, `isActive`, portal-signup exclusion, lead status + 3-day age cutoff).
+- **Quotes**: `loadLatestQuotesByCustomer()` — one guarded cross-schema query per run against `finance."Quote"`, keyed by customer ID, latest non-DRAFT quote only.
+- Customer candidates now also select `equipment` (for equipment age) and `notes`, and `agreements` are no longer filtered to ACTIVE-only in the query (the rule engine needs to see EXPIRED ones too; the active-only sum for spend is now computed in code).
 
-The scheduler is:
+## Step 7: Duplicate Suppression
 
-- `apps/crm-service/src/cron/followup.cron.ts`
+Unchanged: `hasRecentFollowup()` checks `followup_attempts` for a `PENDING`/`QUEUED` row on the same entity within 48 hours before any decisioning work happens (so the LLM is never called for an entity that's about to be skipped anyway).
 
-Behavior:
+A new `countFollowupAttempts()` counts **all-time** attempts for the entity, feeding the rule engine's `previousFollowupAttempts > 5` safety gate.
 
-- Starts on module initialization.
-- Runs immediately once.
-- Runs again every 6 hours.
-- Uses an `isRunning` guard to avoid overlapping runs.
-- Calls `prisma.ensureRequiredSchemaReady()` before agent execution.
-- Logs summary output after completion.
+## Step 8: Decision
 
-Current interval:
+Replaces the old `determineCustomerAction()`. `processCustomer()` / `processLead()` now:
 
-```ts
-const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
-```
+1. Check `hasRecentFollowup()` (unchanged short-circuit).
+2. Compute days-since-last-service, average monthly spend, equipment age, recent service history, matched quote (customers) or days-since-created (leads).
+3. Call `FollowupDecisionService.decide()`.
+4. `null` → skip. Otherwise build the `FollowupJobPayload` with the decision's action, reason, `recommendedMessage`, `recommendedChannel`, `scheduledFor`, `llmConfidence`.
 
-## Step 7: Candidate Selection
+`runForCustomer()` (manual "run follow-up now" trigger from `CustomersService.executeFollowup`) goes through the same decision path. `triggerRetentionForCustomer()` (explicit manual retention action) is unchanged — it's a deliberate manual override, not automatic decisioning, so it still queues `RETENTION` directly.
 
-The core implementation is:
+## Step 9: Attempt Persistence
 
-- `apps/crm-service/src/agents/followup.agent.ts`
+Unchanged mechanics (`createAttempt` → `PENDING`, `markAttemptQueued` → `QUEUED` + `queue_job_id`, `markAttemptFailed` → `FAILED` + `error_message`). `createAttempt()`'s `metadata` JSON now includes the `decision` audit object described in Step 2.
 
-The public entry point is:
+## Step 10: Queue Publishing
 
-```ts
-async run(): Promise<FollowupRunSummary>
-```
+Unchanged: `apps/crm-service/src/queues/followup.producer.ts`, `followup-queue`, `attempts: 3`, exponential backoff, `REDIS_HOST`/`REDIS_PORT`.
 
-Run summary shape:
+## Step 11: Analytics Event Logging
 
-```ts
-{
-  processed: number;
-  queued: number;
-  skipped: number;
-  failures: number;
-}
-```
+Unchanged: `POST ${ANALYTICS_SERVICE_URL}/events`, event type `FOLLOWUP_TRIGGERED`, non-blocking. `churnProb` is no longer part of the metadata (always absent now).
 
-### Enabled Companies
+## Step 12: Communication Worker
 
-`getEnabledCompanyIds()` loads companies from `companies`.
+`apps/comms-service/src/workers/followup.worker.ts`:
 
-If `companies.automaticFollowupEnabled` exists, only companies where it is `TRUE` are included.
+1. `message = job.data.recommendedMessage ?? buildMessage(action)` (canned copy fallback, now includes a `QUOTE_FOLLOWUP` case).
+2. `subject = job.data.recommendedSubject ?? buildSubject(action)`.
+3. `scheduledAt = job.data.scheduledFor` (passed through to `NotificationsService.sendSms/sendEmail`, which already supported delayed delivery).
+4. Channel selection: if `recommendedChannel` is present, use it (only if the corresponding contact field exists); otherwise fall back to the original phone-then-email default.
+5. No channel available → `{ skipped: true }`, unchanged.
 
-If the column does not exist, all companies are treated as enabled and a warning is logged.
+Unit tests: `followup.worker.spec.ts` (6 cases).
 
-### Customer Candidates
+## Step 13/14: Admin UI Controls
 
-`loadCustomerCandidates()` filters customers by:
-
-- `isActive: true`
-- `companyId` in enabled company IDs
-- `automaticFollowupEnabled: true` when the customer toggle column exists
-- excludes portal-signup inactive customers
-
-It selects:
-
-- contact details
-- engagement status
-- creation/update dates
-- recent confirmed/converted bookings
-- active agreement values
-
-### Lead Candidates
-
-`loadLeadCandidates()` filters leads by:
-
-- company is enabled
-- status is `NEW`, `CONTACTED`, or `QUALIFIED`
-- `createdAt` is at least 3 days old
-
-Lead follow-up does not currently have a lead-level toggle.
-
-## Step 8: Duplicate Suppression
-
-Before processing a customer or lead, the agent calls:
-
-```ts
-hasRecentFollowup(companyId, entityType, entityId)
-```
-
-It checks `followup_attempts` for a matching entity where:
-
-- status is `PENDING` or `QUEUED`
-- `triggered_at >= NOW() - INTERVAL '48 hours'`
-
-If a recent attempt exists, the entity is skipped.
-
-If the `followup_attempts` table is missing, duplicate suppression is disabled and the agent logs a warning.
-
-## Step 9: Customer Decision Logic
-
-Customer processing happens in:
-
-```ts
-processCustomer(customer)
-```
-
-The agent computes:
-
-- days since last service
-- service count in the last year
-- average monthly spend
-- customer tenure in days
-
-It calls:
-
-```ts
-determineCustomerAction(customer, daysSinceLastService)
-```
-
-Decision rules:
-
-1. Try to call `ChurnClient.predictChurn()`.
-2. If `churnProb > 0.7`, return `RETENTION`.
-3. If engagement status is `INACTIVE`, return `REENGAGEMENT`.
-4. If days since last service is greater than `90`, return `REENGAGEMENT`.
-5. Otherwise return `null` and skip the customer.
-
-If churn prediction is unavailable, rules 3 and 4 still apply.
-
-The follow-up reason is stored in the payload and attempt table. Example reasons:
-
-- `High churn probability 0.812`
-- `Customer engagement status is INACTIVE`
-- `No recent service in 123 days`
-
-## Step 10: Lead Decision Logic
-
-Lead processing happens in:
-
-```ts
-processLead(lead)
-```
-
-Every eligible cold lead gets a `LEAD_FOLLOWUP` action unless:
-
-- a recent follow-up already exists
-- no phone, WhatsApp number, or email exists
-- queue publishing fails
-
-The recipient phone is selected as:
-
-1. `whatsappNo`
-2. `phone`
-
-The reason is:
-
-```ts
-Cold lead in status ${lead.status}
-```
-
-## Step 11: Attempt Persistence
-
-Before queue publishing, the agent calls:
-
-```ts
-createAttempt(...)
-```
-
-The attempt starts with status `PENDING`.
-
-After a successful queue publish:
-
-```ts
-markAttemptQueued(attemptId, jobId)
-```
-
-The row is updated to:
-
-- `status = QUEUED`
-- `queue_job_id = jobId`
-- `queued_at = NOW()`
-
-After a queue failure:
-
-```ts
-markAttemptFailed(attemptId, errorMessage)
-```
-
-The row is updated to:
-
-- `status = FAILED`
-- `failed_at = NOW()`
-- `error_message = failure reason`
-
-## Step 12: Queue Publishing
-
-Queue publishing is handled by:
-
-- `apps/crm-service/src/queues/followup.producer.ts`
-
-`enqueueFollowup()` adds a BullMQ job:
-
-```ts
-this.queue.add('followup-job', payload, {
-  attempts: 3,
-  backoff: {
-    type: 'exponential',
-    delay: 5000,
-  },
-  removeOnComplete: {
-    count: 500,
-  },
-  removeOnFail: {
-    count: 1000,
-  },
-});
-```
-
-Redis config comes from:
-
-- `REDIS_HOST`
-- `REDIS_PORT`
-
-Default values are `localhost` and `6379`.
-
-## Step 13: Analytics Event Logging
-
-After a job is queued, `FollowupAgent.logAnalyticsEvent()` posts to:
-
-```txt
-${ANALYTICS_SERVICE_URL}/events
-```
-
-Default analytics service URL:
-
-```txt
-http://analytics-service:3006
-```
-
-Event type:
-
-```txt
-FOLLOWUP_TRIGGERED
-```
-
-Metadata includes:
-
-- action
-- entity type
-- entity ID
-- customer ID
-- lead ID
-- churn probability
-- reason
-- triggered timestamp
-
-Analytics logging failures are non-blocking. The follow-up remains queued even if analytics logging fails.
-
-## Step 14: Communication Worker
-
-The queue consumer is:
-
-- `apps/comms-service/src/workers/followup.worker.ts`
-
-It is registered through:
-
-- `apps/comms-service/src/notifications/notifications.module.ts`
-
-Processing behavior:
-
-1. Build message copy from the action.
-2. If `recipientPhone` exists, send SMS.
-3. Otherwise, if `recipientEmail` exists, send email.
-4. Otherwise, log and return `{ skipped: true }`.
-
-Subjects:
-
-- `RETENTION`: `Let us keep your HVAC system running smoothly`
-- `REENGAGEMENT`: `Time to book your next HVAC service`
-- `LEAD_FOLLOWUP`: `Ready to schedule your first HVAC visit?`
-- `UPSELL`: `A service recommendation is ready for your HVAC system`
-
-Messages:
-
-- `RETENTION`: asks about a maintenance offer.
-- `REENGAGEMENT`: prompts service scheduling after a long gap.
-- `LEAD_FOLLOWUP`: asks the lead to book the first service visit.
-- `UPSELL`: asks the customer to schedule a review based on service history.
-
-Actual sending is delegated to:
-
-- `apps/comms-service/src/notifications/notifications.service.ts`
-
-## Step 15: Company-level UI Control
-
-The admin settings UI lives in:
-
-- `apps/admin-dashboard/src/pages/Settings.tsx`
-- `apps/admin-dashboard/src/hooks/useSettings.ts`
-
-The settings page shows an `Automatic Follow-up Agent` control. It explains that disabling the toggle stops CRM from queuing automatic follow-up messages.
-
-The hook calls:
-
-- `GET /crm/company`
-- `PATCH /crm/company`
-
-The API implementation is:
-
-- `apps/crm-service/src/company/company.controller.ts`
-- `apps/crm-service/src/company/company.service.ts`
-
-`CompanyService.update()` persists `automaticFollowupEnabled` when the column exists. `FollowupAgent.getEnabledCompanyIds()` uses that value during scheduled runs.
-
-## Step 16: Customer-level UI Control
-
-The customer table UI lives in:
-
-- `apps/admin-dashboard/src/pages/customers/Customers.tsx`
-
-Each customer row includes an `Auto Follow-up` toggle.
-
-When toggled, the UI calls the customer update mutation with:
-
-```ts
-{
-  automaticFollowupEnabled: boolean
-}
-```
-
-The CRM implementation updates the customer record through the existing customer update path. `FollowupAgent.loadCustomerCandidates()` excludes customers where this flag is `false`, as long as the column exists.
-
-The customer status summary also uses the same flag to show manual-review messaging when automatic follow-up is paused.
+Unchanged — company-level toggle (`apps/admin-dashboard/src/pages/Settings.tsx`) and customer-level toggle (`apps/admin-dashboard/src/pages/customers/Customers.tsx`) still gate `FollowupAgent`'s candidate queries exactly as before.
 
 ## Operational Configuration
 
-Important environment variables:
-
-- `CHURN_SERVICE_URL`: preferred URL for the churn model service.
-- `ANALYTICS_SERVICE_URL`: analytics event endpoint base URL.
-- `REDIS_HOST`: Redis host for BullMQ.
-- `REDIS_PORT`: Redis port for BullMQ.
-
-There is no feature flag in the current `FollowupCron`; it starts automatically with the CRM service when the module is loaded. Use the company-level UI toggle to disable automatic queuing per company.
+- `OPENAI_API_KEY` — required for LLM recommendations; if unset, the agent still runs on rules alone with canned copy.
+- `OPENAI_MODEL_FOLLOWUP` — default `gpt-4o-mini`.
+- `CHURN_SERVICE_URL` — still used by `ChurnClient` elsewhere in `crm-service`, no longer read by the follow-up path.
+- `ANALYTICS_SERVICE_URL`, `REDIS_HOST`, `REDIS_PORT` — unchanged.
 
 ## Failure Modes and Fallbacks
 
-- Missing `companies` table: agent skips automatic follow-up.
-- Missing `companies.automaticFollowupEnabled`: all companies are treated as enabled.
-- Missing `customers.automaticFollowupEnabled`: customer-level toggles are ignored.
-- Missing `followup_attempts`: duplicate suppression and attempt audit are disabled.
-- Churn service unavailable: customer retention scoring is skipped, but recency and inactive-status re-engagement rules still run.
-- Analytics service unavailable: queueing still succeeds; only analytics logging is skipped.
-- Queue publish failure: attempt is marked `FAILED` when `followup_attempts` exists.
-- No contact channel: entity is skipped and a warning is logged.
+- Missing `companies` table / `automaticFollowupEnabled` columns / `followup_attempts` table: same graceful degradation as before.
+- `finance.Quote` unreachable: Quote Follow-up rule is silently skipped for the run (checked via `information_schema.tables`, logged once, cached).
+- LLM unavailable (no API key, timeout, malformed response): `FollowupLlmClient.recommend()` returns `null`; the rule engine's decision and validation's channel fallback still produce a valid follow-up using the worker's canned copy.
+- Validation blocks the recommendation (e.g. LLM recommends a channel with no matching contact info): falls back to whatever channel IS deliverable rather than failing outright; only fails completely if no channel is deliverable at all.
+- Queue publish failure / no contact channel: unchanged (`FAILED` status / skip + warning log).
 
 ## Verification Checklist
 
-Use this checklist after changing the agent.
-
-1. Run CRM migrations so `followup_attempts`, company toggle, and customer toggle exist.
-2. Confirm `apps/churn-service` starts and `GET /health` returns `ok`.
-3. Confirm model artifacts exist under `apps/churn-service/src/models`.
-4. Confirm Redis is reachable by CRM and comms services.
-5. Start `crm-service` and check logs for `Starting follow-up cycle`.
-6. Confirm `followup_attempts` receives `PENDING`, then `QUEUED`, rows for eligible customers/leads.
-7. Confirm `followup-queue` jobs are consumed by `comms-service`.
-8. Confirm SMS or email notification rows/messages are created.
-9. Toggle the company setting off in Settings and verify new automatic attempts are not created for that company.
-10. Toggle an individual customer off and verify that customer is excluded from future customer candidate scans.
+1. Run CRM migrations so `followup_attempts`, company toggle, and customer toggle exist (no new migrations for this revision).
+2. `pnpm --filter crm-service test -- followup` — rule engine, context builder, LLM client, validation, decision service specs.
+3. `pnpm --filter comms-service test -- followup` — worker specs.
+4. `pnpm --filter crm-service type-check` and `pnpm --filter comms-service type-check`.
+5. Set `OPENAI_API_KEY`, trigger a follow-up for a seeded INACTIVE customer, confirm `followup_attempts.metadata.decision.llmRecommendation` is populated and the sent message isn't the canned copy.
+6. Unset `OPENAI_API_KEY`, confirm the same trigger still queues using canned copy (rule-only fallback).
+7. Seed a customer with 6+ prior `followup_attempts` rows; confirm the safety gate suppresses it.
+8. Seed a `finance.Quote` row (`status=SENT`, `sentAt` 4+ days ago); confirm a `QUOTE_FOLLOWUP` attempt is created.
+9. Toggle company/customer settings off in Settings; confirm exclusion, same as before.
 
 ## Main Files
 
-- `apps/churn-service/src/main.py`
-- `apps/churn-service/src/services/churn.service.py`
-- `apps/churn-service/src/utils/model_loader.py`
-- `services/ai/agents/retention_agent.py`
-- `apps/crm-service/src/ai/churn.client.ts`
+- `apps/crm-service/src/followup/rules/followup-rule-engine.ts`
+- `apps/crm-service/src/followup/context/followup-context-builder.ts`
+- `apps/crm-service/src/followup/validation/followup-validation.service.ts`
+- `apps/crm-service/src/followup/decision/followup-decision.service.ts`
+- `apps/crm-service/src/ai/followup-llm.client.ts`
+- `apps/crm-service/src/ai/followup-llm.prompt.ts`
 - `apps/crm-service/src/agents/followup.agent.ts`
 - `apps/crm-service/src/cron/followup.cron.ts`
 - `apps/crm-service/src/followup/followup.module.ts`
@@ -695,6 +286,7 @@ Use this checklist after changing the agent.
 - `apps/comms-service/src/workers/followup.worker.ts`
 - `packages/types/src/index.ts`
 - `packages/queue/src/index.ts`
+- `apps/crm-service/src/ai/churn.client.ts` (still used by `CustomersService.getStatusSummary`, no longer by follow-up decisioning)
 - `apps/admin-dashboard/src/pages/Settings.tsx`
 - `apps/admin-dashboard/src/hooks/useSettings.ts`
 - `apps/admin-dashboard/src/pages/customers/Customers.tsx`

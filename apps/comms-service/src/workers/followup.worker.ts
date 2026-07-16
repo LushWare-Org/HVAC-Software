@@ -14,9 +14,17 @@ export class FollowupWorker extends WorkerHost {
   }
 
   async process(job: Job<FollowupJobPayload>): Promise<{ channel: 'SMS' | 'EMAIL' } | { skipped: true }> {
-    const message = this.buildMessage(job.data.action);
+    const message = job.data.recommendedMessage ?? this.buildMessage(job.data.action);
+    const scheduledAt = job.data.scheduledFor ? new Date(job.data.scheduledFor) : undefined;
 
-    if (job.data.recipientPhone) {
+    // Prefer the decision layer's validated channel choice; fall back to the
+    // original phone-then-email default when no recommendation is present
+    // (e.g. producer didn't run through the LLM decision layer, or it was unavailable).
+    const useSms = job.data.recommendedChannel
+      ? job.data.recommendedChannel === 'SMS' && Boolean(job.data.recipientPhone)
+      : Boolean(job.data.recipientPhone);
+
+    if (useSms && job.data.recipientPhone) {
       await this.notificationsService.sendSms({
         companyId: job.data.companyId,
         customerId: job.data.customerId,
@@ -24,6 +32,7 @@ export class FollowupWorker extends WorkerHost {
         recipientName: job.data.recipientName,
         recipientPhone: job.data.recipientPhone,
         body: message,
+        scheduledAt,
       });
 
       this.logger.log(`Follow-up SMS queued for ${job.data.entityType}:${job.data.entityId}`);
@@ -37,8 +46,9 @@ export class FollowupWorker extends WorkerHost {
         recipientId: job.data.recipientId,
         recipientName: job.data.recipientName,
         recipientEmail: job.data.recipientEmail,
-        subject: this.buildSubject(job.data.action),
+        subject: job.data.recommendedSubject ?? this.buildSubject(job.data.action),
         htmlBody: `<p>${message}</p>`,
+        scheduledAt,
       });
 
       this.logger.log(`Follow-up email queued for ${job.data.entityType}:${job.data.entityId}`);
@@ -57,6 +67,8 @@ export class FollowupWorker extends WorkerHost {
         return 'Time to book your next HVAC service';
       case 'LEAD_FOLLOWUP':
         return 'Ready to schedule your first HVAC visit?';
+      case 'QUOTE_FOLLOWUP':
+        return 'Any questions about your HVAC quote?';
       case 'UPSELL':
         return 'A service recommendation is ready for your HVAC system';
       default:
@@ -72,6 +84,8 @@ export class FollowupWorker extends WorkerHost {
         return 'It has been a while since your last HVAC service. Schedule maintenance to keep your system efficient.';
       case 'LEAD_FOLLOWUP':
         return 'Need help with your HVAC system? Reply to book your first service visit with our team.';
+      case 'QUOTE_FOLLOWUP':
+        return 'We wanted to check whether you had any questions about the quote we sent over. Reply anytime to move forward.';
       case 'UPSELL':
         return 'Based on your service history, we have a recommendation to help keep your HVAC system reliable. Reply to schedule a quick review.';
       default:

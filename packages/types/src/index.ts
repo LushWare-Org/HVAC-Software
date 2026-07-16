@@ -168,7 +168,9 @@ export interface GeneratePdfPayload {
   entityId: string;    // quote/invoice/contract ID
 }
 
-export type FollowupAction = 'RETENTION' | 'REENGAGEMENT' | 'LEAD_FOLLOWUP' | 'UPSELL';
+export type FollowupAction = 'RETENTION' | 'REENGAGEMENT' | 'LEAD_FOLLOWUP' | 'QUOTE_FOLLOWUP' | 'UPSELL';
+
+export type FollowupChannel = 'SMS' | 'EMAIL'; // WhatsApp not wired in comms-service yet
 
 export interface FollowupJobPayload {
   companyId: string;
@@ -184,4 +186,78 @@ export interface FollowupJobPayload {
   churnProb?: number;
   reason: string;
   triggeredAt: string;
+  // Rule-based + LLM decision layer (all optional — backward compatible with older producers/workers)
+  recommendedMessage?: string;
+  recommendedSubject?: string;
+  recommendedChannel?: FollowupChannel;
+  scheduledFor?: string; // ISO timestamp
+  llmConfidence?: number;
+}
+
+// ---- Rule-based + LLM follow-up decision engine ----
+
+export type FollowupRuleReasonCode = 'COLD_LEAD' | 'QUOTE_PENDING' | 'CUSTOMER_INACTIVE' | 'AGREEMENT_EXPIRED';
+
+export interface FollowupRuleFacts {
+  entityType: 'customer' | 'lead';
+  entityId: string;
+  companyId: string;
+  leadStatus?: string;
+  daysSinceLeadCreated?: number;
+  quoteStatus?: string;              // latest non-DRAFT quote status, if any
+  quoteValue?: number;
+  daysSinceQuoteSent?: number;
+  daysSinceLastService?: number;
+  engagementStatus?: string;
+  agreementStatus?: string;          // ServiceAgreement.status
+  agreementEndDate?: string | null;
+  previousFollowupAttempts: number;  // from followup_attempts, last 90 days
+  automaticFollowupEnabled: boolean;
+  hasContactChannel: boolean;
+  recipientPhone?: string;
+  recipientEmail?: string;
+}
+
+export interface FollowupRuleResult {
+  needsFollowup: boolean;
+  action: Exclude<FollowupAction, 'UPSELL'> | null;
+  reasonCode: FollowupRuleReasonCode | null;
+  reason: string | null;
+  matchedRule: string | null; // for audit trail
+}
+
+export interface FollowupCustomerProfile {
+  customerName: string;
+  customerSegment: 'premium' | 'standard' | 'budget' | 'lead';
+  leadStatus?: string;
+  quoteStatus?: string;
+  quoteValue?: number;
+  equipmentAge?: number;             // years, if known
+  daysSinceLastService?: number;
+  maintenanceAgreementStatus?: string;
+  previousFollowupAttempts: number;
+  preferredCommunication: FollowupChannel;
+  recentServiceHistory: string[];    // short human strings
+  notes?: string;
+  reasonCode: FollowupRuleReasonCode;
+  reason: string;
+}
+
+export interface FollowupLlmRecommendation {
+  channel: FollowupChannel;
+  priority: 'Low' | 'Medium' | 'High';
+  followupWithin: string;
+  reason: string;
+  message: string;
+  confidence: number;
+}
+
+export interface FollowupDecisionAudit {
+  ruleResult: FollowupRuleResult;
+  llmRecommendation: FollowupLlmRecommendation | null;
+  llmModel: string | null;
+  validation: { passed: boolean; failedChecks: string[] };
+  finalAction: FollowupAction;
+  finalChannel: FollowupChannel | null;
+  decidedAt: string;
 }

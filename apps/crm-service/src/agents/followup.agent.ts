@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { FollowupAction, FollowupJobPayload } from '@tscrm/types';
+import type { FollowupDecisionAudit, FollowupJobPayload } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChurnClient, type ChurnPredictionInput } from '../ai/churn.client';
 import { FollowupProducer } from '../queues/followup.producer';
+import { FollowupDecisionService, type FollowupDecisionRequest } from '../followup/decision/followup-decision.service';
 
 type EntityType = 'customer' | 'lead';
 type AttemptStatus = 'PENDING' | 'QUEUED' | 'FAILED';
@@ -16,15 +16,22 @@ interface CustomerCandidate {
   email: string | null;
   phone: string | null;
   mobile: string | null;
+  notes: string | null;
   createdAt: Date;
   updatedAt: Date;
   engagementStatus: string;
   bookings: Array<{
     preferredDate: Date;
     status: string;
+    serviceType: string;
   }>;
   agreements: Array<{
+    status: string;
+    endDate: Date | null;
     value: unknown;
+  }>;
+  equipment: Array<{
+    installDate: Date | null;
   }>;
 }
 
@@ -39,6 +46,12 @@ interface LeadCandidate {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface QuoteFact {
+  status: string;
+  value: number | null;
+  sentAt: Date | null;
 }
 
 interface FollowupRunSummary {
@@ -56,11 +69,12 @@ export class FollowupAgent {
   private automaticFollowupColumnExists?: boolean;
   private customerAutomaticFollowupColumnExists?: boolean;
   private followupAttemptsTableExists?: boolean;
+  private financeQuoteTableExists?: boolean;
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly churnClient: ChurnClient,
     private readonly followupProducer: FollowupProducer,
+    private readonly decisionService: FollowupDecisionService,
   ) {}
 
   async run(): Promise<FollowupRunSummary> {
@@ -74,10 +88,14 @@ export class FollowupAgent {
     const enabledCompanyIds = await this.getEnabledCompanyIds();
     const customers = await this.loadCustomerCandidates(enabledCompanyIds);
     const leads = await this.loadLeadCandidates(enabledCompanyIds);
+    const quotesByCustomerId = await this.loadLatestQuotesByCustomer(
+      enabledCompanyIds,
+      customers.map((customer) => customer.id),
+    );
 
     for (const customer of customers) {
       summary.processed += 1;
-      const result = await this.processCustomer(customer);
+      const result = await this.processCustomer(customer, quotesByCustomerId.get(customer.id));
       summary[result] += 1;
     }
 
@@ -142,6 +160,35 @@ export class FollowupAgent {
     return this.followupAttemptsTableExists;
   }
 
+  private async hasFinanceQuoteTable(): Promise<boolean> {
+    if (this.financeQuoteTableExists !== undefined) {
+      return this.financeQuoteTableExists;
+    }
+
+    try {
+      const rows = await this.prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
+        `
+          SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.tables
+            WHERE table_schema = 'finance'
+              AND table_name = 'Quote'
+          ) AS exists
+        `,
+      );
+      this.financeQuoteTableExists = Boolean(rows[0]?.exists);
+    } catch (error) {
+      this.financeQuoteTableExists = false;
+      this.logger.warn(`Unable to check finance.Quote availability: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    if (!this.financeQuoteTableExists) {
+      this.logger.warn('finance.Quote table is unreachable; Quote Follow-up rule is disabled for this run');
+    }
+
+    return this.financeQuoteTableExists;
+  }
+
   private async getEnabledCompanyIds(): Promise<string[]> {
     if (!(await this.hasCompaniesTable())) {
       return [];
@@ -187,6 +234,7 @@ export class FollowupAgent {
         email: true,
         phone: true,
         mobile: true,
+        notes: true,
         createdAt: true,
         updatedAt: true,
         engagementStatus: true,
@@ -203,14 +251,23 @@ export class FollowupAgent {
           select: {
             preferredDate: true,
             status: true,
+            serviceType: true,
           },
         },
         agreements: {
-          where: {
-            status: 'ACTIVE',
+          orderBy: {
+            updatedAt: 'desc',
           },
+          take: 5,
           select: {
+            status: true,
+            endDate: true,
             value: true,
+          },
+        },
+        equipment: {
+          select: {
+            installDate: true,
           },
         },
       },
@@ -246,19 +303,59 @@ export class FollowupAgent {
     });
   }
 
+  /**
+   * Reads the latest non-draft quote per customer from finance-service's schema.
+   * Same cross-schema raw-SQL pattern analytics-service already uses (finance."Payment").
+   * Guarded: if the finance.Quote table isn't reachable, Quote Follow-up is silently
+   * skipped for this run rather than failing the whole agent.
+   */
+  private async loadLatestQuotesByCustomer(companyIds: string[], customerIds: string[]): Promise<Map<string, QuoteFact>> {
+    const result = new Map<string, QuoteFact>();
+    if (companyIds.length === 0 || customerIds.length === 0) return result;
+    if (!(await this.hasFinanceQuoteTable())) return result;
+
+    try {
+      const rows = await this.prisma.$queryRawUnsafe<Array<{ customerId: string; status: string; total: unknown; sentAt: Date | null }>>(
+        `
+          SELECT DISTINCT ON ("customerId") "customerId", "status"::text AS status, "total", "sentAt"
+          FROM finance."Quote"
+          WHERE "companyId" = ANY($1::text[])
+            AND "customerId" = ANY($2::text[])
+            AND "status" != 'DRAFT'
+          ORDER BY "customerId", "sentAt" DESC NULLS LAST
+        `,
+        companyIds,
+        customerIds,
+      );
+
+      for (const row of rows) {
+        result.set(row.customerId, {
+          status: row.status,
+          value: row.total !== null ? Number(row.total) : null,
+          sentAt: row.sentAt,
+        });
+      }
+    } catch (error) {
+      this.logger.warn(`Failed to load quotes for follow-up decisioning: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    return result;
+  }
+
   async runForCustomer(companyId: string, customerId: string): Promise<{ queued: boolean; action?: string; reason?: string }> {
     const customer = await this.prisma.customer.findFirst({
       where: { id: customerId, companyId, isActive: true },
       select: {
         id: true, companyId: true, firstName: true, lastName: true,
-        email: true, phone: true, mobile: true, createdAt: true, updatedAt: true, engagementStatus: true,
+        email: true, phone: true, mobile: true, notes: true, createdAt: true, updatedAt: true, engagementStatus: true,
         bookings: {
           where: { status: { in: ['CONFIRMED', 'CONVERTED'] } },
           orderBy: { preferredDate: 'desc' },
           take: 24,
-          select: { preferredDate: true, status: true },
+          select: { preferredDate: true, status: true, serviceType: true },
         },
-        agreements: { where: { status: 'ACTIVE' }, select: { value: true } },
+        agreements: { orderBy: { updatedAt: 'desc' }, take: 5, select: { status: true, endDate: true, value: true } },
+        equipment: { select: { installDate: true } },
       },
     });
 
@@ -266,47 +363,16 @@ export class FollowupAgent {
       return { queued: false, reason: 'Customer not found or inactive' };
     }
 
-    const daysSinceLastService = this.computeDaysSinceLastService(customer.bookings, customer.updatedAt);
-    const action = await this.determineCustomerAction(customer, daysSinceLastService);
+    const quotesByCustomerId = await this.loadLatestQuotesByCustomer([companyId], [customer.id]);
+    const result = await this.processCustomer(customer, quotesByCustomerId.get(customer.id));
 
-    if (!action) {
+    if (result === 'skipped') {
       return { queued: false, reason: 'No follow-up action needed at this time' };
     }
-
-    const recipientPhone = customer.mobile ?? customer.phone;
-    const recipientEmail = customer.email;
-
-    if (!recipientPhone && !recipientEmail) {
-      return { queued: false, reason: 'No contact channel available for this customer' };
+    if (result === 'failures') {
+      return { queued: false, reason: 'Failed to queue follow-up' };
     }
-
-    const attemptId = randomUUID();
-    const payload: FollowupJobPayload = {
-      companyId: customer.companyId,
-      entityType: 'customer',
-      entityId: customer.id,
-      customerId: customer.id,
-      recipientId: customer.id,
-      recipientName: `${customer.firstName} ${customer.lastName}`.trim(),
-      recipientPhone: recipientPhone ?? undefined,
-      recipientEmail: recipientEmail ?? undefined,
-      action: action.action,
-      churnProb: action.churnProb,
-      reason: action.reason,
-      triggeredAt: new Date().toISOString(),
-    };
-
-    await this.createAttempt({ attemptId, payload, entityType: 'customer', entityId: customer.id, customerId: customer.id, leadId: null });
-
-    try {
-      const jobId = await this.followupProducer.enqueueFollowup(payload);
-      await this.markAttemptQueued(attemptId, jobId);
-      await this.logAnalyticsEvent(payload);
-      return { queued: true, action: action.action, reason: action.reason };
-    } catch (error) {
-      await this.markAttemptFailed(attemptId, error instanceof Error ? error.message : 'Unknown error');
-      return { queued: false, reason: error instanceof Error ? error.message : 'Failed to queue follow-up' };
-    }
+    return { queued: true };
   }
 
   async triggerRetentionForCustomer(companyId: string, customerId: string, reason: string): Promise<{ queued: boolean; reason?: string }> {
@@ -341,7 +407,7 @@ export class FollowupAgent {
       triggeredAt: new Date().toISOString(),
     };
 
-    await this.createAttempt({ attemptId, payload, entityType: 'customer', entityId: customer.id, customerId: customer.id, leadId: null });
+    await this.createAttempt({ attemptId, payload, entityType: 'customer', entityId: customer.id, customerId: customer.id, leadId: null, decisionAudit: null });
 
     try {
       const jobId = await this.followupProducer.enqueueFollowup(payload);
@@ -354,15 +420,8 @@ export class FollowupAgent {
     }
   }
 
-  private async processCustomer(customer: CustomerCandidate): Promise<keyof FollowupRunSummary> {
+  private async processCustomer(customer: CustomerCandidate, quote: QuoteFact | undefined): Promise<keyof FollowupRunSummary> {
     if (await this.hasRecentFollowup(customer.companyId, 'customer', customer.id)) {
-      return 'skipped';
-    }
-
-    const daysSinceLastService = this.computeDaysSinceLastService(customer.bookings, customer.updatedAt);
-    const action = await this.determineCustomerAction(customer, daysSinceLastService);
-
-    if (!action) {
       return 'skipped';
     }
 
@@ -371,6 +430,37 @@ export class FollowupAgent {
 
     if (!recipientPhone && !recipientEmail) {
       this.logger.warn(`Skipping customer ${customer.id}; no contact channel available`);
+      return 'skipped';
+    }
+
+    const daysSinceLastService = this.computeDaysSinceLastService(customer.bookings, customer.updatedAt);
+    const previousFollowupAttempts = await this.countFollowupAttempts(customer.companyId, 'customer', customer.id);
+    const latestAgreement = customer.agreements[0];
+
+    const decision = await this.decisionService.decide({
+      entityType: 'customer',
+      entityId: customer.id,
+      companyId: customer.companyId,
+      name: `${customer.firstName} ${customer.lastName}`.trim(),
+      automaticFollowupEnabled: true, // candidate query already filtered on this when the column exists
+      previousFollowupAttempts,
+      recentFollowupExists: false, // hasRecentFollowup already gated above
+      recipientPhone: recipientPhone ?? undefined,
+      recipientEmail: recipientEmail ?? undefined,
+      quoteStatus: quote?.status,
+      quoteValue: quote?.value ?? undefined,
+      daysSinceQuoteSent: quote?.sentAt ? this.computeDaysBetween(quote.sentAt, new Date()) : undefined,
+      daysSinceLastService,
+      engagementStatus: customer.engagementStatus,
+      agreementStatus: latestAgreement?.status,
+      agreementEndDate: latestAgreement?.endDate ? latestAgreement.endDate.toISOString() : null,
+      equipmentAge: this.computeOldestEquipmentAgeYears(customer.equipment),
+      recentServiceHistory: this.buildRecentServiceHistory(customer.bookings),
+      averageMonthlySpend: this.computeAverageMonthlySpend(customer.agreements),
+      notes: customer.notes ?? undefined,
+    } satisfies FollowupDecisionRequest);
+
+    if (!decision) {
       return 'skipped';
     }
 
@@ -384,10 +474,13 @@ export class FollowupAgent {
       recipientName: `${customer.firstName} ${customer.lastName}`.trim(),
       recipientPhone: recipientPhone ?? undefined,
       recipientEmail: recipientEmail ?? undefined,
-      action: action.action,
-      churnProb: action.churnProb ?? undefined,
-      reason: action.reason,
+      action: decision.action,
+      reason: decision.reason,
       triggeredAt: new Date().toISOString(),
+      recommendedMessage: decision.finalMessage ?? undefined,
+      recommendedChannel: decision.finalChannel,
+      scheduledFor: decision.scheduledFor ?? undefined,
+      llmConfidence: decision.llmConfidence ?? undefined,
     };
 
     await this.createAttempt({
@@ -397,6 +490,7 @@ export class FollowupAgent {
       entityId: customer.id,
       customerId: customer.id,
       leadId: null,
+      decisionAudit: decision.audit,
     });
 
     try {
@@ -424,6 +518,28 @@ export class FollowupAgent {
       return 'skipped';
     }
 
+    const previousFollowupAttempts = await this.countFollowupAttempts(lead.companyId, 'lead', lead.id);
+
+    const decision = await this.decisionService.decide({
+      entityType: 'lead',
+      entityId: lead.id,
+      companyId: lead.companyId,
+      name: `${lead.firstName} ${lead.lastName}`.trim(),
+      automaticFollowupEnabled: true, // leads have no per-lead toggle today
+      previousFollowupAttempts,
+      recentFollowupExists: false,
+      recipientPhone: recipientPhone ?? undefined,
+      recipientEmail: recipientEmail ?? undefined,
+      leadStatus: lead.status,
+      daysSinceLeadCreated: this.computeDaysBetween(lead.createdAt, new Date()),
+      recentServiceHistory: [],
+      averageMonthlySpend: 0,
+    } satisfies FollowupDecisionRequest);
+
+    if (!decision) {
+      return 'skipped';
+    }
+
     const payload: FollowupJobPayload = {
       companyId: lead.companyId,
       entityType: 'lead',
@@ -433,9 +549,13 @@ export class FollowupAgent {
       recipientName: `${lead.firstName} ${lead.lastName}`.trim(),
       recipientPhone: recipientPhone ?? undefined,
       recipientEmail: recipientEmail ?? undefined,
-      action: 'LEAD_FOLLOWUP',
-      reason: `Cold lead in status ${lead.status}`,
+      action: decision.action,
+      reason: decision.reason,
       triggeredAt: new Date().toISOString(),
+      recommendedMessage: decision.finalMessage ?? undefined,
+      recommendedChannel: decision.finalChannel,
+      scheduledFor: decision.scheduledFor ?? undefined,
+      llmConfidence: decision.llmConfidence ?? undefined,
     };
 
     const attemptId = randomUUID();
@@ -446,6 +566,7 @@ export class FollowupAgent {
       entityId: lead.id,
       customerId: null,
       leadId: lead.id,
+      decisionAudit: decision.audit,
     });
 
     try {
@@ -460,58 +581,29 @@ export class FollowupAgent {
     }
   }
 
-  private async determineCustomerAction(
-    customer: CustomerCandidate,
-    daysSinceLastService: number,
-  ): Promise<{ action: Exclude<FollowupAction, 'LEAD_FOLLOWUP'>; reason: string; churnProb?: number } | null> {
-    const churnInput: ChurnPredictionInput = {
-      days_since_last_service: daysSinceLastService,
-      service_count_last_year: this.computeServiceCountLastYear(customer.bookings),
-      avg_monthly_spend: this.computeAverageMonthlySpend(customer.agreements),
-      customer_tenure_days: this.computeDaysBetween(customer.createdAt, new Date()),
-    };
-
-    let churnProb: number | null = null;
-    try {
-      churnProb = await this.churnClient.predictChurn(churnInput);
-    } catch (error) {
-      this.logger.warn(`Churn prediction unavailable for customer ${customer.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-
-    if (churnProb !== null && churnProb > 0.7) {
-      return {
-        action: 'RETENTION',
-        reason: `High churn probability ${churnProb.toFixed(3)}`,
-        churnProb,
-      };
-    }
-
-    if (customer.engagementStatus === 'INACTIVE' || daysSinceLastService > 90) {
-      return {
-        action: 'REENGAGEMENT',
-        reason: customer.engagementStatus === 'INACTIVE'
-          ? 'Customer engagement status is INACTIVE'
-          : `No recent service in ${daysSinceLastService} days`,
-        ...(churnProb !== null ? { churnProb } : {}),
-      };
-    }
-
-    return null;
-  }
-
   private computeDaysSinceLastService(bookings: Array<{ preferredDate: Date }>, fallbackDate: Date): number {
     const serviceDate = bookings[0]?.preferredDate ?? fallbackDate;
     return this.computeDaysBetween(serviceDate, new Date());
   }
 
-  private computeServiceCountLastYear(bookings: Array<{ preferredDate: Date }>): number {
-    const oneYearAgo = new Date(Date.now() - (365 * 24 * 60 * 60 * 1000));
-    return bookings.filter((booking) => booking.preferredDate >= oneYearAgo).length;
+  private computeAverageMonthlySpend(agreements: Array<{ status: string; value: unknown }>): number {
+    const annualValue = agreements
+      .filter((agreement) => agreement.status === 'ACTIVE')
+      .reduce((sum, agreement) => sum + Number(agreement.value ?? 0), 0);
+    return annualValue > 0 ? Number((annualValue / 12).toFixed(2)) : 0;
   }
 
-  private computeAverageMonthlySpend(agreements: Array<{ value: unknown }>): number {
-    const annualValue = agreements.reduce((sum, agreement) => sum + Number(agreement.value ?? 0), 0);
-    return annualValue > 0 ? Number((annualValue / 12).toFixed(2)) : 0;
+  private computeOldestEquipmentAgeYears(equipment: Array<{ installDate: Date | null }>): number | undefined {
+    const ages = equipment
+      .filter((item) => item.installDate)
+      .map((item) => (Date.now() - item.installDate!.getTime()) / (365 * 24 * 60 * 60 * 1000));
+
+    if (ages.length === 0) return undefined;
+    return Number(Math.max(...ages).toFixed(1));
+  }
+
+  private buildRecentServiceHistory(bookings: Array<{ preferredDate: Date; serviceType: string }>): string[] {
+    return bookings.slice(0, 3).map((booking) => `${booking.serviceType} — ${booking.preferredDate.toISOString().slice(0, 10)}`);
   }
 
   private computeDaysBetween(start: Date, end: Date): number {
@@ -541,6 +633,27 @@ export class FollowupAgent {
     return Number(rows[0]?.count ?? 0) > 0;
   }
 
+  private async countFollowupAttempts(companyId: string, entityType: EntityType, entityId: string): Promise<number> {
+    if (!(await this.hasFollowupAttemptsTable())) {
+      return 0;
+    }
+
+    const rows = await this.prisma.$queryRawUnsafe<Array<{ count: number }>>(
+      `
+        SELECT COUNT(*)::INT AS count
+        FROM ${this.prisma.tableRef('followup_attempts')}
+        WHERE company_id = $1
+          AND entity_type = $2
+          AND entity_id = $3
+      `,
+      companyId,
+      entityType,
+      entityId,
+    );
+
+    return Number(rows[0]?.count ?? 0);
+  }
+
   private async createAttempt(params: {
     attemptId: string;
     payload: FollowupJobPayload;
@@ -548,6 +661,7 @@ export class FollowupAgent {
     entityId: string;
     customerId: string | null;
     leadId: string | null;
+    decisionAudit: FollowupDecisionAudit | null;
   }): Promise<void> {
     if (!(await this.hasFollowupAttemptsTable())) {
       return;
@@ -583,11 +697,11 @@ export class FollowupAgent {
           $6,
           $7,
           $8,
+          NULL,
+          NULL,
           $9,
           NULL,
-          $10,
-          NULL,
-          CAST($11 AS JSONB),
+          CAST($10 AS JSONB),
           NOW(),
           NULL,
           NULL,
@@ -603,12 +717,12 @@ export class FollowupAgent {
       params.leadId,
       params.payload.action,
       'PENDING' satisfies AttemptStatus,
-      params.payload.churnProb ?? null,
       params.payload.reason,
       JSON.stringify({
         recipientName: params.payload.recipientName,
         recipientPhone: params.payload.recipientPhone,
         recipientEmail: params.payload.recipientEmail,
+        decision: params.decisionAudit,
       }),
     );
   }
@@ -669,7 +783,6 @@ export class FollowupAgent {
             entityId: payload.entityId,
             customerId: payload.customerId,
             leadId: payload.leadId,
-            churnProb: payload.churnProb,
             reason: payload.reason,
             triggeredAt: payload.triggeredAt,
           },
