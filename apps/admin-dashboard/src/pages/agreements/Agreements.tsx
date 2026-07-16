@@ -182,7 +182,7 @@ export default function Agreements() {
           </div>
           <select
             className="select"
-            style={{ fontSize: 12, padding: '0 8px', height: 32, fontWeight: 600, marginLeft: 'auto' }}
+            style={{ fontSize: 12, padding: '0 6px', height: 32, width: 130, fontWeight: 600, marginLeft: 'auto', flexShrink: 0 }}
             value={`${sortKey}:${sortDir}`}
             onChange={e => {
               const [key, dir] = e.target.value.split(':')
@@ -190,11 +190,11 @@ export default function Agreements() {
               setSortDir(dir as 'asc' | 'desc')
             }}
           >
-            <option value="createdAt:desc">Recently created</option>
-            <option value="createdAt:asc">Oldest first</option>
-            <option value="nextVisit:asc">Next visit soonest</option>
-            <option value="value:desc">Value high → low</option>
-            <option value="value:asc">Value low → high</option>
+            <option value="createdAt:desc">Newest</option>
+            <option value="createdAt:asc">Oldest</option>
+            <option value="nextVisit:asc">Next visit</option>
+            <option value="value:desc">Value ↓</option>
+            <option value="value:asc">Value ↑</option>
             <option value="name:asc">Name A–Z</option>
             <option value="name:desc">Name Z–A</option>
           </select>
