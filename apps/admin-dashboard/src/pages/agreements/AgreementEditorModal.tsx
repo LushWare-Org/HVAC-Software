@@ -5,13 +5,13 @@
  */
 import { useEffect, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Loader2, Search, AlertCircle, FileSignature } from 'lucide-react'
+import { X, Loader2, Search, AlertCircle, FileSignature, DollarSign, CalendarClock, Settings2 } from 'lucide-react'
 import { useCustomers } from '../../hooks/useCustomers'
 import {
   useCreateAgreement, useUpdateAgreement,
   type Agreement, type AgreementInput,
 } from '../../hooks/useAgreements'
-import { INTERVAL_LABELS } from './shared'
+import { INTERVAL_LABELS, SectionLabel } from './shared'
 
 const BILLING_CYCLES = [
   { value: 'UPFRONT', label: 'Paid upfront' },
@@ -21,17 +21,6 @@ const BILLING_CYCLES = [
 ]
 
 const toDateInput = (d?: string | null) => (d ? d.slice(0, 10) : '')
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{
-      fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase',
-      letterSpacing: '0.06em', margin: '4px 0 0',
-    }}>
-      {children}
-    </p>
-  )
-}
 
 export default function AgreementEditorModal({
   agreement, presetCustomerId, presetCustomerName, onClose, onSaved,
@@ -171,7 +160,7 @@ export default function AgreementEditorModal({
           )}
 
           {/* ── Basics ── */}
-          <SectionLabel>Agreement</SectionLabel>
+          <SectionLabel icon={FileSignature}>Agreement</SectionLabel>
 
           {!isEdit && !presetCustomerId && (
             <div className="form-group" style={{ position: 'relative' }}>
@@ -241,7 +230,7 @@ export default function AgreementEditorModal({
           </div>
 
           {/* ── Pricing ── */}
-          <SectionLabel>Pricing</SectionLabel>
+          <SectionLabel icon={DollarSign}>Pricing</SectionLabel>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div className="form-group">
               <label className="form-label">Total value ($)</label>
@@ -256,7 +245,7 @@ export default function AgreementEditorModal({
             </div>
           </div>
           {form.billingCycle && form.billingCycle !== 'UPFRONT' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 2 }}>
               <div className="form-group">
                 <label className="form-label">Amount per period ($)</label>
                 <input type="number" min="0" step="0.01" className="form-input" placeholder="100.00" value={form.billingAmount} onChange={e => set({ billingAmount: e.target.value })} />
@@ -269,7 +258,7 @@ export default function AgreementEditorModal({
           )}
 
           {/* ── Service schedule ── */}
-          <SectionLabel>Service schedule</SectionLabel>
+          <SectionLabel icon={CalendarClock}>Service schedule</SectionLabel>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div className="form-group">
               <label className="form-label">Service type</label>
@@ -297,13 +286,13 @@ export default function AgreementEditorModal({
           </div>
 
           {/* ── Automation ── */}
-          <SectionLabel>Automation</SectionLabel>
+          <SectionLabel icon={Settings2}>Automation</SectionLabel>
           <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--t2)', cursor: 'pointer' }}>
             <input type="checkbox" checked={form.autoCreateJobs} onChange={e => set({ autoCreateJobs: e.target.checked })} />
             Create service jobs automatically when a visit comes due
           </label>
           {form.autoCreateJobs && (
-            <div className="form-group" style={{ maxWidth: 220 }}>
+            <div className="form-group" style={{ maxWidth: 220, marginTop: 2 }}>
               <label className="form-label">Create job this many days ahead</label>
               <input type="number" min="0" className="form-input" value={form.leadDays} onChange={e => set({ leadDays: e.target.value })} />
             </div>
