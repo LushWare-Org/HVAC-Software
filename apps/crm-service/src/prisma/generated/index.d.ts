@@ -21021,11 +21021,13 @@ export namespace Prisma {
   export type UpsellRecommendationAvgAggregateOutputType = {
     confidence: number | null
     priorityScore: number | null
+    revenueGenerated: Decimal | null
   }
 
   export type UpsellRecommendationSumAggregateOutputType = {
     confidence: number | null
     priorityScore: number | null
+    revenueGenerated: Decimal | null
   }
 
   export type UpsellRecommendationMinAggregateOutputType = {
@@ -21039,6 +21041,17 @@ export namespace Prisma {
     modelOffer: string | null
     triggerSource: string | null
     priorityScore: number | null
+    llmOffer: string | null
+    bundle: string | null
+    channel: string | null
+    message: string | null
+    reasonCode: string | null
+    reason: string | null
+    offerAccepted: boolean | null
+    offerRejected: boolean | null
+    upsellConversion: boolean | null
+    revenueGenerated: Decimal | null
+    respondedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -21054,6 +21067,17 @@ export namespace Prisma {
     modelOffer: string | null
     triggerSource: string | null
     priorityScore: number | null
+    llmOffer: string | null
+    bundle: string | null
+    channel: string | null
+    message: string | null
+    reasonCode: string | null
+    reason: string | null
+    offerAccepted: boolean | null
+    offerRejected: boolean | null
+    upsellConversion: boolean | null
+    revenueGenerated: Decimal | null
+    respondedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -21071,6 +21095,21 @@ export namespace Prisma {
     triggerSource: number
     priorityScore: number
     inputPayload: number
+    ruleResult: number
+    llmRecommendation: number
+    validationResult: number
+    llmOffer: number
+    bundle: number
+    channel: number
+    message: number
+    reasonCode: number
+    reason: number
+    managerOverride: number
+    offerAccepted: number
+    offerRejected: number
+    upsellConversion: number
+    revenueGenerated: number
+    respondedAt: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -21080,11 +21119,13 @@ export namespace Prisma {
   export type UpsellRecommendationAvgAggregateInputType = {
     confidence?: true
     priorityScore?: true
+    revenueGenerated?: true
   }
 
   export type UpsellRecommendationSumAggregateInputType = {
     confidence?: true
     priorityScore?: true
+    revenueGenerated?: true
   }
 
   export type UpsellRecommendationMinAggregateInputType = {
@@ -21098,6 +21139,17 @@ export namespace Prisma {
     modelOffer?: true
     triggerSource?: true
     priorityScore?: true
+    llmOffer?: true
+    bundle?: true
+    channel?: true
+    message?: true
+    reasonCode?: true
+    reason?: true
+    offerAccepted?: true
+    offerRejected?: true
+    upsellConversion?: true
+    revenueGenerated?: true
+    respondedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -21113,6 +21165,17 @@ export namespace Prisma {
     modelOffer?: true
     triggerSource?: true
     priorityScore?: true
+    llmOffer?: true
+    bundle?: true
+    channel?: true
+    message?: true
+    reasonCode?: true
+    reason?: true
+    offerAccepted?: true
+    offerRejected?: true
+    upsellConversion?: true
+    revenueGenerated?: true
+    respondedAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -21130,6 +21193,21 @@ export namespace Prisma {
     triggerSource?: true
     priorityScore?: true
     inputPayload?: true
+    ruleResult?: true
+    llmRecommendation?: true
+    validationResult?: true
+    llmOffer?: true
+    bundle?: true
+    channel?: true
+    message?: true
+    reasonCode?: true
+    reason?: true
+    managerOverride?: true
+    offerAccepted?: true
+    offerRejected?: true
+    upsellConversion?: true
+    revenueGenerated?: true
+    respondedAt?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -21234,6 +21312,21 @@ export namespace Prisma {
     triggerSource: string | null
     priorityScore: number | null
     inputPayload: JsonValue | null
+    ruleResult: JsonValue | null
+    llmRecommendation: JsonValue | null
+    validationResult: JsonValue | null
+    llmOffer: string | null
+    bundle: string | null
+    channel: string | null
+    message: string | null
+    reasonCode: string | null
+    reason: string | null
+    managerOverride: JsonValue | null
+    offerAccepted: boolean | null
+    offerRejected: boolean | null
+    upsellConversion: boolean | null
+    revenueGenerated: Decimal | null
+    respondedAt: Date | null
     createdAt: Date
     updatedAt: Date
     _count: UpsellRecommendationCountAggregateOutputType | null
@@ -21270,6 +21363,21 @@ export namespace Prisma {
     triggerSource?: boolean
     priorityScore?: boolean
     inputPayload?: boolean
+    ruleResult?: boolean
+    llmRecommendation?: boolean
+    validationResult?: boolean
+    llmOffer?: boolean
+    bundle?: boolean
+    channel?: boolean
+    message?: boolean
+    reasonCode?: boolean
+    reason?: boolean
+    managerOverride?: boolean
+    offerAccepted?: boolean
+    offerRejected?: boolean
+    upsellConversion?: boolean
+    revenueGenerated?: boolean
+    respondedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
@@ -21288,6 +21396,21 @@ export namespace Prisma {
     triggerSource?: boolean
     priorityScore?: boolean
     inputPayload?: boolean
+    ruleResult?: boolean
+    llmRecommendation?: boolean
+    validationResult?: boolean
+    llmOffer?: boolean
+    bundle?: boolean
+    channel?: boolean
+    message?: boolean
+    reasonCode?: boolean
+    reason?: boolean
+    managerOverride?: boolean
+    offerAccepted?: boolean
+    offerRejected?: boolean
+    upsellConversion?: boolean
+    revenueGenerated?: boolean
+    respondedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
@@ -21306,6 +21429,21 @@ export namespace Prisma {
     triggerSource?: boolean
     priorityScore?: boolean
     inputPayload?: boolean
+    ruleResult?: boolean
+    llmRecommendation?: boolean
+    validationResult?: boolean
+    llmOffer?: boolean
+    bundle?: boolean
+    channel?: boolean
+    message?: boolean
+    reasonCode?: boolean
+    reason?: boolean
+    managerOverride?: boolean
+    offerAccepted?: boolean
+    offerRejected?: boolean
+    upsellConversion?: boolean
+    revenueGenerated?: boolean
+    respondedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
@@ -21335,6 +21473,21 @@ export namespace Prisma {
       triggerSource: string | null
       priorityScore: number | null
       inputPayload: Prisma.JsonValue | null
+      ruleResult: Prisma.JsonValue | null
+      llmRecommendation: Prisma.JsonValue | null
+      validationResult: Prisma.JsonValue | null
+      llmOffer: string | null
+      bundle: string | null
+      channel: string | null
+      message: string | null
+      reasonCode: string | null
+      reason: string | null
+      managerOverride: Prisma.JsonValue | null
+      offerAccepted: boolean | null
+      offerRejected: boolean | null
+      upsellConversion: boolean | null
+      revenueGenerated: Prisma.Decimal | null
+      respondedAt: Date | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["upsellRecommendation"]>
@@ -21743,6 +21896,21 @@ export namespace Prisma {
     readonly triggerSource: FieldRef<"UpsellRecommendation", 'String'>
     readonly priorityScore: FieldRef<"UpsellRecommendation", 'Float'>
     readonly inputPayload: FieldRef<"UpsellRecommendation", 'Json'>
+    readonly ruleResult: FieldRef<"UpsellRecommendation", 'Json'>
+    readonly llmRecommendation: FieldRef<"UpsellRecommendation", 'Json'>
+    readonly validationResult: FieldRef<"UpsellRecommendation", 'Json'>
+    readonly llmOffer: FieldRef<"UpsellRecommendation", 'String'>
+    readonly bundle: FieldRef<"UpsellRecommendation", 'String'>
+    readonly channel: FieldRef<"UpsellRecommendation", 'String'>
+    readonly message: FieldRef<"UpsellRecommendation", 'String'>
+    readonly reasonCode: FieldRef<"UpsellRecommendation", 'String'>
+    readonly reason: FieldRef<"UpsellRecommendation", 'String'>
+    readonly managerOverride: FieldRef<"UpsellRecommendation", 'Json'>
+    readonly offerAccepted: FieldRef<"UpsellRecommendation", 'Boolean'>
+    readonly offerRejected: FieldRef<"UpsellRecommendation", 'Boolean'>
+    readonly upsellConversion: FieldRef<"UpsellRecommendation", 'Boolean'>
+    readonly revenueGenerated: FieldRef<"UpsellRecommendation", 'Decimal'>
+    readonly respondedAt: FieldRef<"UpsellRecommendation", 'DateTime'>
     readonly createdAt: FieldRef<"UpsellRecommendation", 'DateTime'>
     readonly updatedAt: FieldRef<"UpsellRecommendation", 'DateTime'>
   }
@@ -30766,6 +30934,21 @@ export namespace Prisma {
     triggerSource: 'triggerSource',
     priorityScore: 'priorityScore',
     inputPayload: 'inputPayload',
+    ruleResult: 'ruleResult',
+    llmRecommendation: 'llmRecommendation',
+    validationResult: 'validationResult',
+    llmOffer: 'llmOffer',
+    bundle: 'bundle',
+    channel: 'channel',
+    message: 'message',
+    reasonCode: 'reasonCode',
+    reason: 'reason',
+    managerOverride: 'managerOverride',
+    offerAccepted: 'offerAccepted',
+    offerRejected: 'offerRejected',
+    upsellConversion: 'upsellConversion',
+    revenueGenerated: 'revenueGenerated',
+    respondedAt: 'respondedAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -32999,6 +33182,21 @@ export namespace Prisma {
     triggerSource?: StringNullableFilter<"UpsellRecommendation"> | string | null
     priorityScore?: FloatNullableFilter<"UpsellRecommendation"> | number | null
     inputPayload?: JsonNullableFilter<"UpsellRecommendation">
+    ruleResult?: JsonNullableFilter<"UpsellRecommendation">
+    llmRecommendation?: JsonNullableFilter<"UpsellRecommendation">
+    validationResult?: JsonNullableFilter<"UpsellRecommendation">
+    llmOffer?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    bundle?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    channel?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    message?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    reasonCode?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    reason?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    managerOverride?: JsonNullableFilter<"UpsellRecommendation">
+    offerAccepted?: BoolNullableFilter<"UpsellRecommendation"> | boolean | null
+    offerRejected?: BoolNullableFilter<"UpsellRecommendation"> | boolean | null
+    upsellConversion?: BoolNullableFilter<"UpsellRecommendation"> | boolean | null
+    revenueGenerated?: DecimalNullableFilter<"UpsellRecommendation"> | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: DateTimeNullableFilter<"UpsellRecommendation"> | Date | string | null
     createdAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
     updatedAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
@@ -33017,6 +33215,21 @@ export namespace Prisma {
     triggerSource?: SortOrderInput | SortOrder
     priorityScore?: SortOrderInput | SortOrder
     inputPayload?: SortOrderInput | SortOrder
+    ruleResult?: SortOrderInput | SortOrder
+    llmRecommendation?: SortOrderInput | SortOrder
+    validationResult?: SortOrderInput | SortOrder
+    llmOffer?: SortOrderInput | SortOrder
+    bundle?: SortOrderInput | SortOrder
+    channel?: SortOrderInput | SortOrder
+    message?: SortOrderInput | SortOrder
+    reasonCode?: SortOrderInput | SortOrder
+    reason?: SortOrderInput | SortOrder
+    managerOverride?: SortOrderInput | SortOrder
+    offerAccepted?: SortOrderInput | SortOrder
+    offerRejected?: SortOrderInput | SortOrder
+    upsellConversion?: SortOrderInput | SortOrder
+    revenueGenerated?: SortOrderInput | SortOrder
+    respondedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     customer?: CustomerOrderByWithRelationInput
@@ -33038,6 +33251,21 @@ export namespace Prisma {
     triggerSource?: StringNullableFilter<"UpsellRecommendation"> | string | null
     priorityScore?: FloatNullableFilter<"UpsellRecommendation"> | number | null
     inputPayload?: JsonNullableFilter<"UpsellRecommendation">
+    ruleResult?: JsonNullableFilter<"UpsellRecommendation">
+    llmRecommendation?: JsonNullableFilter<"UpsellRecommendation">
+    validationResult?: JsonNullableFilter<"UpsellRecommendation">
+    llmOffer?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    bundle?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    channel?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    message?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    reasonCode?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    reason?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    managerOverride?: JsonNullableFilter<"UpsellRecommendation">
+    offerAccepted?: BoolNullableFilter<"UpsellRecommendation"> | boolean | null
+    offerRejected?: BoolNullableFilter<"UpsellRecommendation"> | boolean | null
+    upsellConversion?: BoolNullableFilter<"UpsellRecommendation"> | boolean | null
+    revenueGenerated?: DecimalNullableFilter<"UpsellRecommendation"> | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: DateTimeNullableFilter<"UpsellRecommendation"> | Date | string | null
     createdAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
     updatedAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
@@ -33056,6 +33284,21 @@ export namespace Prisma {
     triggerSource?: SortOrderInput | SortOrder
     priorityScore?: SortOrderInput | SortOrder
     inputPayload?: SortOrderInput | SortOrder
+    ruleResult?: SortOrderInput | SortOrder
+    llmRecommendation?: SortOrderInput | SortOrder
+    validationResult?: SortOrderInput | SortOrder
+    llmOffer?: SortOrderInput | SortOrder
+    bundle?: SortOrderInput | SortOrder
+    channel?: SortOrderInput | SortOrder
+    message?: SortOrderInput | SortOrder
+    reasonCode?: SortOrderInput | SortOrder
+    reason?: SortOrderInput | SortOrder
+    managerOverride?: SortOrderInput | SortOrder
+    offerAccepted?: SortOrderInput | SortOrder
+    offerRejected?: SortOrderInput | SortOrder
+    upsellConversion?: SortOrderInput | SortOrder
+    revenueGenerated?: SortOrderInput | SortOrder
+    respondedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UpsellRecommendationCountOrderByAggregateInput
@@ -33081,6 +33324,21 @@ export namespace Prisma {
     triggerSource?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
     priorityScore?: FloatNullableWithAggregatesFilter<"UpsellRecommendation"> | number | null
     inputPayload?: JsonNullableWithAggregatesFilter<"UpsellRecommendation">
+    ruleResult?: JsonNullableWithAggregatesFilter<"UpsellRecommendation">
+    llmRecommendation?: JsonNullableWithAggregatesFilter<"UpsellRecommendation">
+    validationResult?: JsonNullableWithAggregatesFilter<"UpsellRecommendation">
+    llmOffer?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
+    bundle?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
+    channel?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
+    message?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
+    reasonCode?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
+    reason?: StringNullableWithAggregatesFilter<"UpsellRecommendation"> | string | null
+    managerOverride?: JsonNullableWithAggregatesFilter<"UpsellRecommendation">
+    offerAccepted?: BoolNullableWithAggregatesFilter<"UpsellRecommendation"> | boolean | null
+    offerRejected?: BoolNullableWithAggregatesFilter<"UpsellRecommendation"> | boolean | null
+    upsellConversion?: BoolNullableWithAggregatesFilter<"UpsellRecommendation"> | boolean | null
+    revenueGenerated?: DecimalNullableWithAggregatesFilter<"UpsellRecommendation"> | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: DateTimeNullableWithAggregatesFilter<"UpsellRecommendation"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"UpsellRecommendation"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"UpsellRecommendation"> | Date | string
   }
@@ -36012,6 +36270,21 @@ export namespace Prisma {
     triggerSource?: string | null
     priorityScore?: number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: string | null
+    bundle?: string | null
+    channel?: string | null
+    message?: string | null
+    reasonCode?: string | null
+    reason?: string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: boolean | null
+    offerRejected?: boolean | null
+    upsellConversion?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     customer: CustomerCreateNestedOneWithoutUpsellRecommendationsInput
@@ -36030,6 +36303,21 @@ export namespace Prisma {
     triggerSource?: string | null
     priorityScore?: number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: string | null
+    bundle?: string | null
+    channel?: string | null
+    message?: string | null
+    reasonCode?: string | null
+    reason?: string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: boolean | null
+    offerRejected?: boolean | null
+    upsellConversion?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -36046,6 +36334,21 @@ export namespace Prisma {
     triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
     priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    bundle?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    reasonCode?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    offerRejected?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    upsellConversion?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customer?: CustomerUpdateOneRequiredWithoutUpsellRecommendationsNestedInput
@@ -36064,6 +36367,21 @@ export namespace Prisma {
     triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
     priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    bundle?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    reasonCode?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    offerRejected?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    upsellConversion?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -36081,6 +36399,21 @@ export namespace Prisma {
     triggerSource?: string | null
     priorityScore?: number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: string | null
+    bundle?: string | null
+    channel?: string | null
+    message?: string | null
+    reasonCode?: string | null
+    reason?: string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: boolean | null
+    offerRejected?: boolean | null
+    upsellConversion?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -36097,6 +36430,21 @@ export namespace Prisma {
     triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
     priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    bundle?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    reasonCode?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    offerRejected?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    upsellConversion?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -36114,6 +36462,21 @@ export namespace Prisma {
     triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
     priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    bundle?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    reasonCode?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    offerRejected?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    upsellConversion?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -38545,6 +38908,11 @@ export namespace Prisma {
     not?: NestedFloatFilter<$PrismaModel> | number
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type UpsellRecommendationCountOrderByAggregateInput = {
     id?: SortOrder
     companyId?: SortOrder
@@ -38558,6 +38926,21 @@ export namespace Prisma {
     triggerSource?: SortOrder
     priorityScore?: SortOrder
     inputPayload?: SortOrder
+    ruleResult?: SortOrder
+    llmRecommendation?: SortOrder
+    validationResult?: SortOrder
+    llmOffer?: SortOrder
+    bundle?: SortOrder
+    channel?: SortOrder
+    message?: SortOrder
+    reasonCode?: SortOrder
+    reason?: SortOrder
+    managerOverride?: SortOrder
+    offerAccepted?: SortOrder
+    offerRejected?: SortOrder
+    upsellConversion?: SortOrder
+    revenueGenerated?: SortOrder
+    respondedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -38565,6 +38948,7 @@ export namespace Prisma {
   export type UpsellRecommendationAvgOrderByAggregateInput = {
     confidence?: SortOrder
     priorityScore?: SortOrder
+    revenueGenerated?: SortOrder
   }
 
   export type UpsellRecommendationMaxOrderByAggregateInput = {
@@ -38578,6 +38962,17 @@ export namespace Prisma {
     modelOffer?: SortOrder
     triggerSource?: SortOrder
     priorityScore?: SortOrder
+    llmOffer?: SortOrder
+    bundle?: SortOrder
+    channel?: SortOrder
+    message?: SortOrder
+    reasonCode?: SortOrder
+    reason?: SortOrder
+    offerAccepted?: SortOrder
+    offerRejected?: SortOrder
+    upsellConversion?: SortOrder
+    revenueGenerated?: SortOrder
+    respondedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -38593,6 +38988,17 @@ export namespace Prisma {
     modelOffer?: SortOrder
     triggerSource?: SortOrder
     priorityScore?: SortOrder
+    llmOffer?: SortOrder
+    bundle?: SortOrder
+    channel?: SortOrder
+    message?: SortOrder
+    reasonCode?: SortOrder
+    reason?: SortOrder
+    offerAccepted?: SortOrder
+    offerRejected?: SortOrder
+    upsellConversion?: SortOrder
+    revenueGenerated?: SortOrder
+    respondedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -38600,6 +39006,7 @@ export namespace Prisma {
   export type UpsellRecommendationSumOrderByAggregateInput = {
     confidence?: SortOrder
     priorityScore?: SortOrder
+    revenueGenerated?: SortOrder
   }
 
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -38618,9 +39025,12 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
-  export type BoolNullableFilter<$PrismaModel = never> = {
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type RetentionRecommendationCountOrderByAggregateInput = {
@@ -38696,14 +39106,6 @@ export namespace Prisma {
   export type RetentionRecommendationSumOrderByAggregateInput = {
     confidence?: SortOrder
     revenueGenerated?: SortOrder
-  }
-
-  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type EnumImportStatusFilter<$PrismaModel = never> = {
@@ -40239,6 +40641,10 @@ export namespace Prisma {
     divide?: number
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type CustomerUpdateOneRequiredWithoutUpsellRecommendationsNestedInput = {
     create?: XOR<CustomerCreateWithoutUpsellRecommendationsInput, CustomerUncheckedCreateWithoutUpsellRecommendationsInput>
     connectOrCreate?: CustomerCreateOrConnectWithoutUpsellRecommendationsInput
@@ -40251,10 +40657,6 @@ export namespace Prisma {
     create?: XOR<CustomerCreateWithoutRetentionRecommendationsInput, CustomerUncheckedCreateWithoutRetentionRecommendationsInput>
     connectOrCreate?: CustomerCreateOrConnectWithoutRetentionRecommendationsInput
     connect?: CustomerWhereUniqueInput
-  }
-
-  export type NullableBoolFieldUpdateOperationsInput = {
-    set?: boolean | null
   }
 
   export type CustomerUpdateOneRequiredWithoutRetentionRecommendationsNestedInput = {
@@ -40924,6 +41326,11 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
     in?: number[] | ListFloatFieldRefInput<$PrismaModel>
@@ -40938,11 +41345,6 @@ export namespace Prisma {
     _sum?: NestedFloatFilter<$PrismaModel>
     _min?: NestedFloatFilter<$PrismaModel>
     _max?: NestedFloatFilter<$PrismaModel>
-  }
-
-  export type NestedBoolNullableFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
   }
 
   export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -42127,6 +42529,21 @@ export namespace Prisma {
     triggerSource?: string | null
     priorityScore?: number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: string | null
+    bundle?: string | null
+    channel?: string | null
+    message?: string | null
+    reasonCode?: string | null
+    reason?: string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: boolean | null
+    offerRejected?: boolean | null
+    upsellConversion?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -42143,6 +42560,21 @@ export namespace Prisma {
     triggerSource?: string | null
     priorityScore?: number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: string | null
+    bundle?: string | null
+    channel?: string | null
+    message?: string | null
+    reasonCode?: string | null
+    reason?: string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: boolean | null
+    offerRejected?: boolean | null
+    upsellConversion?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -42519,6 +42951,21 @@ export namespace Prisma {
     triggerSource?: StringNullableFilter<"UpsellRecommendation"> | string | null
     priorityScore?: FloatNullableFilter<"UpsellRecommendation"> | number | null
     inputPayload?: JsonNullableFilter<"UpsellRecommendation">
+    ruleResult?: JsonNullableFilter<"UpsellRecommendation">
+    llmRecommendation?: JsonNullableFilter<"UpsellRecommendation">
+    validationResult?: JsonNullableFilter<"UpsellRecommendation">
+    llmOffer?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    bundle?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    channel?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    message?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    reasonCode?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    reason?: StringNullableFilter<"UpsellRecommendation"> | string | null
+    managerOverride?: JsonNullableFilter<"UpsellRecommendation">
+    offerAccepted?: BoolNullableFilter<"UpsellRecommendation"> | boolean | null
+    offerRejected?: BoolNullableFilter<"UpsellRecommendation"> | boolean | null
+    upsellConversion?: BoolNullableFilter<"UpsellRecommendation"> | boolean | null
+    revenueGenerated?: DecimalNullableFilter<"UpsellRecommendation"> | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: DateTimeNullableFilter<"UpsellRecommendation"> | Date | string | null
     createdAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
     updatedAt?: DateTimeFilter<"UpsellRecommendation"> | Date | string
   }
@@ -46432,6 +46879,21 @@ export namespace Prisma {
     triggerSource?: string | null
     priorityScore?: number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: string | null
+    bundle?: string | null
+    channel?: string | null
+    message?: string | null
+    reasonCode?: string | null
+    reason?: string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: boolean | null
+    offerRejected?: boolean | null
+    upsellConversion?: boolean | null
+    revenueGenerated?: Decimal | DecimalJsLike | number | string | null
+    respondedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -46900,6 +47362,21 @@ export namespace Prisma {
     triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
     priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    bundle?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    reasonCode?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    offerRejected?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    upsellConversion?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -46916,6 +47393,21 @@ export namespace Prisma {
     triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
     priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    bundle?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    reasonCode?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    offerRejected?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    upsellConversion?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -46932,6 +47424,21 @@ export namespace Prisma {
     triggerSource?: NullableStringFieldUpdateOperationsInput | string | null
     priorityScore?: NullableFloatFieldUpdateOperationsInput | number | null
     inputPayload?: NullableJsonNullValueInput | InputJsonValue
+    ruleResult?: NullableJsonNullValueInput | InputJsonValue
+    llmRecommendation?: NullableJsonNullValueInput | InputJsonValue
+    validationResult?: NullableJsonNullValueInput | InputJsonValue
+    llmOffer?: NullableStringFieldUpdateOperationsInput | string | null
+    bundle?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: NullableStringFieldUpdateOperationsInput | string | null
+    message?: NullableStringFieldUpdateOperationsInput | string | null
+    reasonCode?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    managerOverride?: NullableJsonNullValueInput | InputJsonValue
+    offerAccepted?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    offerRejected?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    upsellConversion?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    revenueGenerated?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

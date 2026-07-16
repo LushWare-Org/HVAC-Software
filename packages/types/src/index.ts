@@ -357,3 +357,104 @@ export interface RetentionDecisionAudit {
   finalChannel: RetentionChannel | null;
   decidedAt: string;
 }
+
+// ---- Rule-based + LLM upsell decision engine ----
+// Replaces the ML-model-backed upsell recommender (churn-service /recommend-offer,
+// trained offline on historical sales data we don't have enough of yet) with:
+// business rules decide WHETHER an upsell opportunity exists, an LLM decides the
+// HOW (offer/bundle/priority/channel/message), and a validation layer has final
+// say before anything is surfaced to the CRM. Mirrors the Retention* family
+// (see retention-decision.service.ts) so the two agents stay easy to reason
+// about side by side; kept as a separate type family because upsell offers
+// have a distinct output contract (category/bundle, no discount policy) that
+// the admin dashboard already renders — see apps/admin-dashboard/src/types/api.ts.
+
+export type UpsellCategory =
+  | 'replacement'
+  | 'maintenance_plan'
+  | 'preventive_service'
+  | 'premium_upgrade'
+  | 'extended_warranty'
+  | 'no_upsell';
+
+export type UpsellChannel = 'whatsapp' | 'email' | 'call';
+
+export type UpsellPriority = 'low' | 'medium' | 'high';
+
+export type UpsellCustomerSegment = 'premium' | 'standard' | 'budget';
+
+export type UpsellRuleReasonCode =
+  | 'AGING_EQUIPMENT'
+  | 'FREQUENT_REPAIRS'
+  | 'OVERDUE_SERVICE'
+  | 'HIGH_VALUE_CUSTOMER'
+  | 'WARRANTY_EXTENSION'
+  | 'NONE';
+
+/** Raw facts the rule engine evaluates. Never passed to the LLM directly. */
+export interface UpsellRuleFacts {
+  customerId: string;
+  companyId: string;
+  equipmentAgeYears: number;               // age of the oldest installed equipment
+  repairCount12Months: number;             // service visits in the trailing 12 months
+  daysSinceLastService: number;
+  customerSegment: UpsellCustomerSegment;
+  averageAnnualSpend: number;
+  hasNewEquipment: boolean;                // equipment installed within the "new" window
+  warrantyActive: boolean;                 // newest equipment's warranty has not expired
+  automaticFollowupEnabled: boolean;       // false = customer opted out of marketing
+  previousUpsellAttempts: number;
+  hasContactChannel: boolean;
+}
+
+/**
+ * The rule engine ONLY determines whether an upsell opportunity exists, its
+ * category, and why. It never picks the specific offer, bundle, channel, or
+ * message — that's the LLM's job.
+ */
+export interface UpsellRuleResult {
+  upsellRequired: boolean;
+  category: UpsellCategory;
+  highPriority: boolean;
+  reasonCode: UpsellRuleReasonCode;
+  reason: string | null;
+  matchedRule: string | null;              // for audit trail
+}
+
+/** Structured profile handed to the LLM. No raw Prisma rows ever cross this boundary. */
+export interface UpsellCustomerProfile {
+  customerName: string;
+  customerSegment: UpsellCustomerSegment;
+  equipment: Array<{ type: string; ageYears: number | null; warrantyStatus: 'active' | 'expired' | 'unknown' }>;
+  maintenanceAgreementStatus?: string;
+  repairCount: number;
+  daysSinceLastService: number;
+  annualSpend: number;
+  previousUpsellAttempts: number;
+  preferredCommunication: UpsellChannel;
+  recentQuotes?: string;
+  notes?: string;
+  category: UpsellCategory;
+  reasonCode: UpsellRuleReasonCode;
+  reason: string;
+}
+
+export interface UpsellLlmRecommendation {
+  offer: string;                  // free-text product/service label, e.g. "Premium Maintenance Plan"
+  bundle: string | null;          // free-text bundle/promotion label, or null if none
+  priority: 'Low' | 'Medium' | 'High';
+  channel: UpsellChannel;
+  reason: string;
+  message: string;
+  confidence: number;
+}
+
+export interface UpsellDecisionAudit {
+  ruleResult: UpsellRuleResult;
+  llmRecommendation: UpsellLlmRecommendation | null;
+  llmModel: string | null;
+  validation: { passed: boolean; failedChecks: string[] };
+  finalCategory: UpsellCategory;
+  finalChannel: UpsellChannel | null;
+  decidedAt: string;
+}

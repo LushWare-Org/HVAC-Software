@@ -351,16 +351,25 @@ export class CustomersService {
       daysSinceLastService,
       customer.automaticFollowupEnabled,
     );
-    const upsellRecommendation =
-      await this.getLatestUpsellRecommendation(companyId, id) ??
-      this.computeInlineUpsellRecommendation({
-        equipmentAgeDays,
-        failureHistory,
-        daysSinceLastService,
-        avgMonthlySpend,
-        churnProbability: prediction.churn_probability,
-        failureProbability: prediction.failure_probability,
-      });
+    const upsellAgentResult = await this.upsellAgent.ensureRecommendation(companyId, id);
+    const upsellRecommendation = upsellAgentResult
+      ? {
+          id: upsellAgentResult.id,
+          recommendedOffer: upsellAgentResult.category,
+          confidence: upsellAgentResult.confidence,
+          status: upsellAgentResult.status,
+          priorityScore: upsellAgentResult.priorityScore,
+          triggerSource: upsellAgentResult.triggerSource,
+          createdAt: upsellAgentResult.createdAt,
+        }
+      : this.computeInlineUpsellRecommendation({
+          equipmentAgeDays,
+          failureHistory,
+          daysSinceLastService,
+          avgMonthlySpend,
+          churnProbability: prediction.churn_probability,
+          failureProbability: prediction.failure_probability,
+        });
     const retentionAgentResult = await this.retentionAgent.ensureRecommendation(companyId, id);
     const retentionPrediction = this.computeRetentionPrediction({
       customerId: customer.id,
@@ -704,61 +713,12 @@ export class CustomersService {
     return 'No immediate action. Keep standard follow-up cadence.';
   }
 
-  private async getLatestUpsellRecommendation(companyId: string, customerId: string) {
-    if (!(await this.prisma.tableExists('upsell_recommendations'))) {
-      return null;
-    }
-
-    const rows = await this.prisma.$queryRawUnsafe<Array<{
-      id: string;
-      recommendedOffer: string;
-      confidence: number;
-      status: string;
-      priorityScore: number | null;
-      triggerSource: string | null;
-      createdAt: Date;
-    }>>(
-      `
-        SELECT
-          id,
-          recommended_offer AS "recommendedOffer",
-          confidence,
-          status,
-          priority_score AS "priorityScore",
-          trigger_source AS "triggerSource",
-          created_at AS "createdAt"
-        FROM ${this.prisma.tableRef('upsell_recommendations')}
-        WHERE company_id = $1
-          AND customer_id = $2
-        ORDER BY created_at DESC
-        LIMIT 1
-      `,
-      companyId,
-      customerId,
-    );
-
-    const row = rows[0];
-    if (!row) {
-      return null;
-    }
-
-    const confidence = Number(row.confidence);
-    const priorityScore = row.priorityScore === null ? null : Number(row.priorityScore);
-
-    if (confidence >= 0.995 || confidence <= 0.005) {
-      this.logger.warn(
-        `Ignoring saturated stored upsell recommendation ${row.id} for customer ${customerId}; recalculating from status signals`,
-      );
-      return null;
-    }
-
-    return {
-      ...row,
-      confidence,
-      priorityScore,
-    };
-  }
-
+  /**
+   * Last-resort fallback for when UpsellAgentService.ensureRecommendation()
+   * returns null (customer lookup raced/failed). Mirrors computeRetentionPrediction's
+   * own threshold-rule fallback below. Not the primary path — that's the
+   * rule-based + LLM UpsellAgentService (see apps/crm-service/src/upsell/upsell-agent.service.ts).
+   */
   private computeInlineUpsellRecommendation(signals: {
     equipmentAgeDays: number;
     failureHistory: number;
