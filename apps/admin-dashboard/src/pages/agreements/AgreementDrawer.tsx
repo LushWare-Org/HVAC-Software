@@ -101,18 +101,25 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
           </div>
         ) : (
           <>
-            <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--bd)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-              <div>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{agreement.name}</h2>
-                <p style={{ fontSize: 13, color: 'var(--t3)', margin: '4px 0 8px' }}>
-                  {agreement.customer ? `${agreement.customer.firstName} ${agreement.customer.lastName}` : agreement.customerId}
-                </p>
-                <AgreementStatusBadge status={agreement.status} />
+            <div className="card-header" style={{ flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--blue-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FileSignature size={16} style={{ color: 'var(--blue)' }} />
+                </div>
+                <div>
+                  <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {agreement.name}
+                    <AgreementStatusBadge status={agreement.status} />
+                  </div>
+                  <div className="card-subtitle">
+                    {agreement.customer ? `${agreement.customer.firstName} ${agreement.customer.lastName}` : agreement.customerId}
+                  </div>
+                </div>
               </div>
               <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X size={14} /></button>
             </div>
 
-            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1, minHeight: 0, overflowY: 'auto' }}>
               {/* Actions */}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {onEdit && (
@@ -158,18 +165,20 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
               )}
 
               {/* Terms */}
-              <div>
-                <div style={{ marginBottom: 4 }}><SectionLabel icon={FileSignature}>Terms</SectionLabel></div>
-                <DetailRow label="Service">{agreement.serviceType || '—'}</DetailRow>
-                <DetailRow label="Period">{fmtDate(agreement.startDate)} → {fmtDate(agreement.endDate)}</DetailRow>
-                <DetailRow label="Total value">{fmtMoney(agreement.value)}</DetailRow>
-                <DetailRow label="Billing">
-                  {agreement.billingCycle
-                    ? `${agreement.billingCycle.toLowerCase()}${agreement.billingAmount != null ? ` — ${fmtMoney(agreement.billingAmount)}/period` : ''}`
-                    : '—'}
-                </DetailRow>
-                {agreement.nextBillingDate && <DetailRow label="Next billing">{fmtDate(agreement.nextBillingDate)}</DetailRow>}
-                <DetailRow label="Auto-renew">{agreement.autoRenew ? 'Yes' : 'No'}</DetailRow>
+              <div style={{ padding: '12px 14px', background: 'var(--bg-card-2)', borderRadius: 'var(--r-md)', border: '1px solid var(--bd)' }}>
+                <div style={{ marginBottom: 8 }}><SectionLabel icon={FileSignature}>Terms</SectionLabel></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', columnGap: 24 }}>
+                  <DetailRow label="Service">{agreement.serviceType || '—'}</DetailRow>
+                  <DetailRow label="Period">{fmtDate(agreement.startDate)} → {fmtDate(agreement.endDate)}</DetailRow>
+                  <DetailRow label="Total value">{fmtMoney(agreement.value)}</DetailRow>
+                  <DetailRow label="Billing">
+                    {agreement.billingCycle
+                      ? `${agreement.billingCycle.toLowerCase()}${agreement.billingAmount != null ? ` — ${fmtMoney(agreement.billingAmount)}/period` : ''}`
+                      : '—'}
+                  </DetailRow>
+                  {agreement.nextBillingDate && <DetailRow label="Next billing">{fmtDate(agreement.nextBillingDate)}</DetailRow>}
+                  <DetailRow label="Auto-renew">{agreement.autoRenew ? 'Yes' : 'No'}</DetailRow>
+                </div>
                 {agreement.description && (
                   <p style={{ fontSize: 13, color: 'var(--t2)', whiteSpace: 'pre-wrap', borderLeft: '3px solid var(--bd)', paddingLeft: 10, marginTop: 8 }}>
                     {agreement.description}
@@ -230,7 +239,9 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
       >
         <div
           className="card anim-fade-up"
-          style={{ width: 560, maxWidth: '95vw', maxHeight: '90vh', padding: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}
+          role="dialog"
+          aria-modal="true"
+          style={{ width: 700, maxWidth: '95vw', maxHeight: '90vh', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
           onClick={e => e.stopPropagation()}
         >
           {content}

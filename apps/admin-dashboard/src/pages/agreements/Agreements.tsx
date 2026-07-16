@@ -182,7 +182,7 @@ export default function Agreements() {
           </div>
           <select
             className="select"
-            style={{ fontSize: 12, padding: '0 6px', height: 32, width: 130, fontWeight: 600, marginLeft: 'auto', flexShrink: 0 }}
+            style={{ fontSize: 12, padding: '0 6px', height: 32, lineHeight: '30px', width: 130, fontWeight: 600, marginLeft: 'auto', flexShrink: 0 }}
             value={`${sortKey}:${sortDir}`}
             onChange={e => {
               const [key, dir] = e.target.value.split(':')
@@ -343,6 +343,7 @@ export default function Agreements() {
       {detailId && (
         <AgreementDrawer
           id={detailId}
+          variant="modal"
           onClose={() => setDetailId(null)}
           onEdit={a => setEditorTarget(a)}
         />
