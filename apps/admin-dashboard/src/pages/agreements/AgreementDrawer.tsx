@@ -6,22 +6,24 @@
 import { useState } from 'react'
 import {
   Loader2, Send, RefreshCw, XCircle, Pencil, X, CheckCircle2, AlarmClock, History,
+  FileSignature, CalendarClock,
 } from 'lucide-react'
 import {
   useServiceAgreement, useSendAgreement, useRenewAgreement, useCancelAgreement,
   type Agreement,
 } from '../../hooks/useAgreements'
 import { useToast } from '../../contexts/ToastContext'
-import { AgreementStatusBadge, VisitMeter, intervalLabel, fmtDate, fmtMoney, daysUntil } from './shared'
+import { AgreementStatusBadge, VisitMeter, intervalLabel, fmtDate, fmtMoney, daysUntil, SectionLabel } from './shared'
 
-function AmendmentHistory({ agreement }: { agreement: Agreement }) {
+function AmendmentHistory({ agreement, expanded, onExpand }: { agreement: Agreement; expanded: boolean; onExpand: () => void }) {
   const amendments = agreement.amendments ?? []
   if (amendments.length === 0) {
     return <p style={{ fontSize: 12, color: 'var(--t4)' }}>No changes since the agreement was created.</p>
   }
+  const visible = expanded ? amendments : amendments.slice(0, 3)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {amendments.map(a => (
+      {visible.map(a => (
         <div key={a.id} style={{ padding: '10px 12px', background: 'var(--bg-card-2)', borderRadius: 'var(--r-md)', border: '1px solid var(--bd)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t2)' }}>
@@ -42,6 +44,16 @@ function AmendmentHistory({ agreement }: { agreement: Agreement }) {
           </p>
         </div>
       ))}
+      {!expanded && amendments.length > 3 && (
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          style={{ alignSelf: 'flex-start' }}
+          onClick={onExpand}
+        >
+          Show all {amendments.length} changes
+        </button>
+      )}
     </div>
   )
 }
@@ -66,6 +78,7 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
   const cancelMut = useCancelAgreement()
   const toast = useToast()
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [showAllAmendments, setShowAllAmendments] = useState(false)
 
   const act = (mut: any, id: string, success: string) =>
     mut.mutate(id, {
@@ -76,7 +89,16 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
   const content = (
     <>
         {isLoading || !agreement ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Loader2 size={22} className="spin" style={{ color: 'var(--t3)' }} /></div>
+          <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ width: '60%', height: 18, borderRadius: 4, background: 'var(--bg-card-2)' }} />
+              <div style={{ width: '40%', height: 13, borderRadius: 4, background: 'var(--bg-card-2)' }} />
+              <div style={{ width: 90, height: 20, borderRadius: 'var(--r-full)', background: 'var(--bg-card-2)' }} />
+            </div>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} style={{ width: '100%', height: 64, borderRadius: 'var(--r-md)', background: 'var(--bg-card-2)' }} />
+            ))}
+          </div>
         ) : (
           <>
             <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--bd)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
@@ -116,7 +138,7 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
               {/* Visits */}
               {(agreement.serviceInterval || agreement.visitsIncluded != null) && (
                 <div style={{ padding: '12px 14px', background: 'var(--bg-card-2)', borderRadius: 'var(--r-md)', border: '1px solid var(--bd)' }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Service visits</p>
+                  <div style={{ marginBottom: 8 }}><SectionLabel icon={CalendarClock}>Service visits</SectionLabel></div>
                   <VisitMeter agreement={agreement} size={12} />
                   <div style={{ marginTop: 10 }}>
                     <DetailRow label="Frequency">{intervalLabel(agreement)}</DetailRow>
@@ -137,7 +159,7 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
 
               {/* Terms */}
               <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Terms</p>
+                <div style={{ marginBottom: 4 }}><SectionLabel icon={FileSignature}>Terms</SectionLabel></div>
                 <DetailRow label="Service">{agreement.serviceType || '—'}</DetailRow>
                 <DetailRow label="Period">{fmtDate(agreement.startDate)} → {fmtDate(agreement.endDate)}</DetailRow>
                 <DetailRow label="Total value">{fmtMoney(agreement.value)}</DetailRow>
@@ -156,6 +178,7 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
               </div>
 
               {/* Confirmation state */}
+              <div style={{ marginBottom: -6 }}><SectionLabel icon={CheckCircle2}>Confirmation</SectionLabel></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                 {agreement.customerConfirmedAt ? (
                   <><CheckCircle2 size={14} style={{ color: 'var(--green)' }} />
@@ -170,10 +193,8 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
 
               {/* Amendments */}
               <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <History size={12} /> Change history
-                </p>
-                <AmendmentHistory agreement={agreement} />
+                <div style={{ marginBottom: 8 }}><SectionLabel icon={History}>Change history</SectionLabel></div>
+                <AmendmentHistory agreement={agreement} expanded={showAllAmendments} onExpand={() => setShowAllAmendments(true)} />
               </div>
             </div>
 
