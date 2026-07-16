@@ -164,6 +164,22 @@ export default function Agreements() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: 1 }}>
+            {FILTERS.map(f => (
+              <button
+                key={f.value}
+                className="btn btn-sm"
+                style={statusFilter === f.value
+                  ? { background: 'var(--blue)', color: 'white', border: '1px solid var(--blue)' }
+                  : { background: 'var(--bg-card)', color: 'var(--t2)', border: '1px solid var(--bd)' }}
+                onClick={() => setStatusFilter(f.value)}
+              >
+                {f.label} {statusCounts[f.value] != null && <span style={{ opacity: 0.75 }}>({statusCounts[f.value]})</span>}
+              </button>
+            ))}
+          </div>
           <select
             className="select"
             style={{ fontSize: 12, padding: '0 8px', height: 32, fontWeight: 600, marginLeft: 'auto' }}
@@ -182,20 +198,6 @@ export default function Agreements() {
             <option value="name:asc">Name A–Z</option>
             <option value="name:desc">Name Z–A</option>
           </select>
-        </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {FILTERS.map(f => (
-            <button
-              key={f.value}
-              className="btn btn-sm"
-              style={statusFilter === f.value
-                ? { background: 'var(--blue)', color: 'white', border: '1px solid var(--blue)' }
-                : { background: 'var(--bg-card)', color: 'var(--t2)', border: '1px solid var(--bd)' }}
-              onClick={() => setStatusFilter(f.value)}
-            >
-              {f.label} {statusCounts[f.value] != null && <span style={{ opacity: 0.75 }}>({statusCounts[f.value]})</span>}
-            </button>
-          ))}
         </div>
       </div>
 
