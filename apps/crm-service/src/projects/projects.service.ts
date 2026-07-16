@@ -14,6 +14,7 @@ import { clampPagination } from '@tscrm/types';
 import {
   effectiveRoster, toDateStr, isValidDateStr, WEEKDAYS,
 } from './roster.util';
+import { isValidTemplateType, PROJECT_TEMPLATES } from './project-templates';
 
 const PROJECT_STATUSES = ['PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'CANCELLED'];
 
@@ -23,6 +24,7 @@ export interface UpsertProjectInput {
   description?: string | null;
   category?: string | null;
   status?: string;
+  templateType?: string;
   startDate?: string | null;
   targetEndDate?: string | null;
   budget?: number | null;
@@ -78,7 +80,13 @@ export class ProjectsService {
         nextServiceDate: true, status: true,
       },
     });
-    return { ...decorated, agreements };
+    // Housing Scheme: rolled-up open-issue count across all houses (Houses tab badge).
+    const openIssueCount = project.templateType === 'HOUSING_SCHEME'
+      ? await this.prisma.houseIssueReport.count({
+          where: { companyId, status: { not: 'RESOLVED' }, house: { projectId: id } },
+        })
+      : 0;
+    return { ...decorated, agreements, openIssueCount };
   }
 
   async create(companyId: string, input: UpsertProjectInput) {
@@ -86,6 +94,9 @@ export class ProjectsService {
     if (!input.name?.trim()) throw new BadRequestException('name is required');
     this.validateStatus(input.status);
     this.validateWorkingDays(input.workingDays);
+    if (input.templateType !== undefined && !isValidTemplateType(input.templateType)) {
+      throw new BadRequestException(`templateType must be one of ${PROJECT_TEMPLATES.join(', ')}`);
+    }
 
     const customer = await this.prisma.customer.findFirst({
       where: { id: input.customerId, companyId },
@@ -100,6 +111,7 @@ export class ProjectsService {
         name: input.name.trim(),
         description: input.description ?? null,
         category: input.category ?? null,
+        templateType: input.templateType ?? 'STANDARD',
         status: input.status ?? 'PLANNING',
         startDate: input.startDate ? new Date(input.startDate) : null,
         targetEndDate: input.targetEndDate ? new Date(input.targetEndDate) : null,

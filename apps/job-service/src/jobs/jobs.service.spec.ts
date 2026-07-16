@@ -320,3 +320,45 @@ describe('JobsService — create', () => {
     expect(createCall.data.statusHistory.create.toStatus).toBe('PENDING');
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// findAll — houseId/equipmentId filters (Housing Scheme service log)
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('JobsService — findAll filters', () => {
+  let service: JobsService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        JobsService,
+        { provide: PrismaService, useValue: mockPrisma },
+      ],
+    }).compile();
+    service = module.get<JobsService>(JobsService);
+
+    mockPrisma.job.findMany.mockReset().mockResolvedValue([]);
+    mockPrisma.job.count.mockReset().mockResolvedValue(0);
+  });
+
+  it('filters by houseId when provided', async () => {
+    await service.findAll(COMPANY_ID, 1, 20, { houseId: 'house-1' });
+    const findManyCall = mockPrisma.job.findMany.mock.calls[0][0];
+    expect(findManyCall.where.houseId).toBe('house-1');
+    expect(findManyCall.where.equipmentId).toBeUndefined();
+  });
+
+  it('filters by equipmentId when provided', async () => {
+    await service.findAll(COMPANY_ID, 1, 20, { equipmentId: 'eq-1' });
+    const findManyCall = mockPrisma.job.findMany.mock.calls[0][0];
+    expect(findManyCall.where.equipmentId).toBe('eq-1');
+    expect(findManyCall.where.houseId).toBeUndefined();
+  });
+
+  it('omits houseId/equipmentId from the filter when not provided', async () => {
+    await service.findAll(COMPANY_ID, 1, 20, {});
+    const findManyCall = mockPrisma.job.findMany.mock.calls[0][0];
+    expect(findManyCall.where.houseId).toBeUndefined();
+    expect(findManyCall.where.equipmentId).toBeUndefined();
+  });
+});

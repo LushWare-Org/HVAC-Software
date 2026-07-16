@@ -19,6 +19,7 @@ const Messages            = lazy(() => import('./pages/messages/Messages'))
 const Profile             = lazy(() => import('./pages/Profile'))
 const Devices             = lazy(() => import('./pages/Devices'))
 const MyProjects          = lazy(() => import('./pages/MyProjects'))
+const MyHouse             = lazy(() => import('./pages/MyHouse'))
 const Equipment           = lazy(() => import('./pages/Equipment'))
 const ForceResetPassword  = lazy(() => import('./pages/ForceResetPassword'))
 const Tips                = lazy(() => import('./pages/Tips'))
@@ -110,6 +111,7 @@ function AppShell() {
                 <Route path="/equipment" element={<Equipment />} />
                 <Route path="/agreements" element={<Agreements />} />
                 <Route path="/projects" element={<MyProjects />} />
+                <Route path="/my-house" element={<MyHouse />} />
                 <Route path="/tips" element={<Tips />} />
                 <Route path="/offers" element={<Offers />} />
                 <Route path="/profile" element={<Profile />} />

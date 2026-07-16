@@ -379,7 +379,6 @@ export function useDispatchWebSocket() {
 export function useProvisionTechnicianAccount() {
   return useMutation({
     mutationFn: async (data: {
-      companyId: string
       name: string
       email: string
       phone?: string

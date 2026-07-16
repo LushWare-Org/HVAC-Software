@@ -50,6 +50,15 @@
   --t3: #6B7280;
   --t4: #9CA3AF;
 
+  /* Canvas text — for content sitting directly on --bg-app (a dark gradient in
+     EVERY theme, unlike --bg-card which flips light/dark). --t1..t4 are tuned
+     for card backgrounds and go dark-on-dark here in light theme; these two
+     stay legible against the dark canvas regardless of theme, so they're
+     defined once, not overridden per [data-theme]. Use for page titles/eyebrow
+     text that isn't wrapped in a .card. */
+  --canvas-t1: #F1F5F9;
+  --canvas-t2: #94A3B8;
+
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);

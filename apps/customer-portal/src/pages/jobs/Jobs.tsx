@@ -192,8 +192,8 @@ export default function MyJobs() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.01em' }}>My Jobs</h1>
-          <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--t3)' }}>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--canvas-t1)', letterSpacing: '-0.01em' }}>My Jobs</h1>
+          <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--canvas-t2)' }}>
             Every visit — live, scheduled and completed
           </p>
         </div>

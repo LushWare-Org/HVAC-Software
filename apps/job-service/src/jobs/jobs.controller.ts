@@ -25,6 +25,8 @@ class UpdateJobDto {
   @IsOptional() @IsNumber() estimatedValue?: number;
   @IsOptional() @IsString() cancellationReason?: string;
   @IsOptional() @IsString() projectId?: string;
+  @IsOptional() @IsString() houseId?: string;
+  @IsOptional() @IsString() equipmentId?: string;
 }
 
 // Combined PATCH DTO — allows updating fields AND status in one request
@@ -80,6 +82,8 @@ export class JobsController {
     @Query('customerId') customerId?: string,
     @Query('agreementId') agreementId?: string,
     @Query('projectId') projectId?: string,
+    @Query('houseId') houseId?: string,
+    @Query('equipmentId') equipmentId?: string,
     @Query('isAgreementJob') isAgreementJob?: string,
   ) {
     // CUSTOMER role: force-filter to their own customerId for security
@@ -92,6 +96,8 @@ export class JobsController {
       customerId: effectiveCustomerId,
       agreementId,
       projectId,
+      houseId,
+      equipmentId,
       isAgreementJob: isAgreementJob === undefined ? undefined : isAgreementJob === 'true',
     });
   }

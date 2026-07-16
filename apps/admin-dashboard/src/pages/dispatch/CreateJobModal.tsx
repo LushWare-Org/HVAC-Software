@@ -27,12 +27,16 @@ interface Props {
   presetCustomer?: PresetCustomer | null;
   /** Attaches the job to a project on create (job-service accepts an optional projectId). */
   projectId?: string;
+  /** Housing Scheme template: which house this job is for (job-service accepts an optional houseId). */
+  houseId?: string;
+  /** Optional: which specific piece of equipment was serviced (job-service accepts an optional equipmentId). */
+  equipmentId?: string;
   /** Extra label shown next to the header, e.g. the project name. */
   contextLabel?: string;
   onCreated?: (job: any) => void;
 }
 
-export default function CreateJobModal({ isOpen, onClose, presetCustomer, projectId, contextLabel, onCreated }: Props) {
+export default function CreateJobModal({ isOpen, onClose, presetCustomer, projectId, houseId, equipmentId, contextLabel, onCreated }: Props) {
   const createJob = useCreateJob();
   const [error, setError] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
@@ -128,6 +132,8 @@ export default function CreateJobModal({ isOpen, onClose, presetCustomer, projec
         serviceLatitude: form.lat,
         serviceLongitude: form.lng,
         projectId: projectId || undefined,
+        houseId: houseId || undefined,
+        equipmentId: equipmentId || undefined,
       } as any,
       {
         onSuccess: (job) => {

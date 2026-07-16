@@ -21,7 +21,6 @@ import api from "../lib/api";
 import { useCheckEmail } from "../hooks/useCustomers";
 import { useProvisionTechnicianAccount } from "../hooks/useScheduling";
 import { useEnsureVan } from "../hooks/useInventory";
-import { useAuth } from "../contexts/AuthContext";
 
 // Common trade skills for quick-add chips
 const COMMON_SKILLS = [
@@ -39,7 +38,6 @@ interface Props {
 }
 
 export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreated }: Props) {
-  const { user }   = useAuth();
   const checkEmail = useCheckEmail();
   const provision  = useProvisionTechnicianAccount();
   const ensureVan  = useEnsureVan();
@@ -150,7 +148,6 @@ export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreate
     // technician sets their base location on first sign-in in the app)
     try {
       const result = await provision.mutateAsync({
-        companyId:   user!.companyId,
         name:        form.name.trim(),
         email,
         phone:       form.phone || undefined,

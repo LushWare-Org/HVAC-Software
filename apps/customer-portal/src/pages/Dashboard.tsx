@@ -14,11 +14,12 @@ import AnnouncementBanner from '../components/AnnouncementBanner'
 import {
   CheckCircle, Clock, DollarSign, FileText, ChevronRight, Calendar,
   AlertCircle, ArrowRight, Star, Lightbulb, Video, Plus, MapPin,
-  MessageSquare, Send, Wrench, Tag, Settings,
+  MessageSquare, Send, Wrench, Tag, Settings, Home,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCustomerDashboard, useJobTechnicianNames, useCompanyReviewStats } from '../hooks/useCustomerPortal'
 import { useMyEquipment } from '../hooks/useMyEquipment'
+import { useMyHouses, useMyIssueReports } from '../hooks/useMyHouse'
 import ReviewModal from '../components/ReviewModal'
 import { useLatestTip, usePosts } from '../hooks/usePosts'
 import type { Job } from '../types/api'
@@ -246,6 +247,10 @@ export default function Dashboard() {
   const { data: latestTip } = useLatestTip()
   const { data: offers = [] } = usePosts('OFFER')
   const { data: equipment = [] } = useMyEquipment()
+  const { data: myHouses = [] } = useMyHouses()
+  const { data: myIssues = [] } = useMyIssueReports()
+  const myHouse = myHouses[0]
+  const myHouseOpenIssues = myHouse ? myIssues.filter(i => i.houseId === myHouse.id && i.status !== 'RESOLVED').length : 0
 
   const recentJobs = data?.recentJobs ?? []
   const pendingInvoices = data?.pendingInvoiceItems ?? []
@@ -474,6 +479,37 @@ export default function Dashboard() {
               </div>
             </div>
           </button>
+
+          {/* My House — easy access when this customer owns a house on a Housing Scheme project */}
+          {myHouse && (
+            <Link to="/my-house" style={{
+              textDecoration: 'none', background: 'var(--bg-card)',
+              border: `1px solid ${myHouseOpenIssues > 0 ? 'var(--red)' : 'var(--bd)'}`,
+              borderRadius: 14, overflow: 'hidden', display: 'block',
+            }}>
+              <div style={{ height: 3, background: `linear-gradient(90deg, ${myHouseOpenIssues > 0 ? 'var(--red)' : 'var(--cyan)'}, transparent)` }} />
+              <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                  background: 'linear-gradient(135deg, var(--cyan), var(--blue))',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Home size={16} color="#fff" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {myHouse.label}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: myHouseOpenIssues > 0 ? 'var(--red)' : 'var(--t3)', marginTop: 1, fontWeight: myHouseOpenIssues > 0 ? 700 : 500 }}>
+                    {myHouseOpenIssues > 0
+                      ? `${myHouseOpenIssues} report${myHouseOpenIssues === 1 ? '' : 's'} in progress`
+                      : 'Equipment, service history & reports'}
+                  </div>
+                </div>
+                <ChevronRight size={15} style={{ color: 'var(--t4)', flexShrink: 0 }} />
+              </div>
+            </Link>
+          )}
 
           {/* Latest offer */}
           {latestOffer && (

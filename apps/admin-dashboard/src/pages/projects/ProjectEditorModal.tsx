@@ -4,11 +4,11 @@
  */
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Check, MapPin, Loader2 } from 'lucide-react'
+import { X, Check, MapPin, Loader2, Home } from 'lucide-react'
 import MapPicker from '../../components/MapPickerLazy'
 import {
   WEEKDAYS, useTechDirectory, useCreateProject, useUpdateProject,
-  type Project, type ProjectStatus, type Weekday,
+  PROJECT_TEMPLATE_META, type Project, type ProjectStatus, type ProjectTemplateType, type Weekday,
 } from './projectsApi'
 import { useCustomers } from '../../hooks/useCustomers'
 import { TechAvatar } from './shared'
@@ -72,6 +72,7 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
     workingDays: project?.workingDays ?? (['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as Weekday[]),
     baseTeamUserIds: project?.baseTeamUserIds ?? [],
     notes: project?.notes ?? '',
+    templateType: (project?.templateType ?? 'STANDARD') as ProjectTemplateType,
   })
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm(f => ({ ...f, [k]: v }))
@@ -110,7 +111,7 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
     }
     try {
       if (project) await updateProject.mutateAsync({ id: project.id, ...payload })
-      else await createProject.mutateAsync({ ...payload, customerId: form.customerId })
+      else await createProject.mutateAsync({ ...payload, customerId: form.customerId, templateType: form.templateType })
       onClose()
     } catch (e: any) {
       const msg = e?.response?.data?.message
@@ -190,6 +191,39 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
                 onChange={e => set('description', e.target.value)} />
             </div>
           </div>
+
+          {/* Template — only choosable at creation, locked in afterward */}
+          {!project && (
+            <div>
+              <label style={lbl}>Project template</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {(Object.keys(PROJECT_TEMPLATE_META) as ProjectTemplateType[]).map(key => {
+                  const meta = PROJECT_TEMPLATE_META[key]
+                  const on = form.templateType === key
+                  return (
+                    <button key={key} onClick={() => set('templateType', key)} style={{
+                      display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left', cursor: 'pointer',
+                      padding: '12px 14px', borderRadius: 10, fontFamily: 'inherit',
+                      border: `1px solid ${on ? 'var(--blue)' : 'var(--bd)'}`,
+                      background: on ? 'var(--blue-dim)' : 'var(--bg-card)',
+                    }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                        {key === 'HOUSING_SCHEME' && <Home size={13} style={{ color: on ? 'var(--blue)' : 'var(--t3)' }} />}
+                        <span style={{ fontSize: 13, fontWeight: 700, color: on ? 'var(--blue)' : 'var(--t1)' }}>{meta.label}</span>
+                        {on && <Check size={13} style={{ color: 'var(--blue)', marginLeft: 'auto' }} />}
+                      </span>
+                      <span style={{ fontSize: 11.5, color: 'var(--t3)', lineHeight: 1.4 }}>{meta.description}</span>
+                    </button>
+                  )
+                })}
+              </div>
+              {form.templateType === 'HOUSING_SCHEME' && (
+                <p style={{ fontSize: 11, color: 'var(--t4)', margin: '6px 0 0' }}>
+                  Can't be changed after the project is created.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Schedule & sizing */}
           <SectionLabel>Schedule &amp; budget</SectionLabel>

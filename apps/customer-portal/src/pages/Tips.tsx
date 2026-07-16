@@ -419,11 +419,11 @@ export default function Tips() {
             From your service team
           </span>
         </div>
-        <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 900, color: 'var(--t1)',
+        <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 900, color: 'var(--canvas-t1)',
           letterSpacing: '-0.03em', lineHeight: 1.1 }}>
           Tips & Videos
         </h1>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--t3)', lineHeight: 1.5 }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--canvas-t2)', lineHeight: 1.5 }}>
           Expert advice and walkthroughs curated by your technicians.
         </p>
       </div>

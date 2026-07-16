@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../contexts/ToastContext";
 import {
@@ -319,7 +320,7 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
     return actions;
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 admin-modal-backdrop"
       onClick={onClose}
@@ -1220,7 +1221,8 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -12,6 +12,7 @@ import { useDashboardKpis, useRecentJobs, useUpcomingAppointments } from '../hoo
 import { useRevenueSeries, useJobsByStatus } from '../hooks/useAnalytics'
 import { useCompany } from '../hooks/useSettings'
 import RecommendationsPanel from '../components/RecommendationsPanel'
+import HouseIssuesAlert from '../components/HouseIssuesAlert'
 import type { Job, Appointment } from '../types/api'
 import { formatMoneyCompact } from '../lib/format'
 
@@ -242,6 +243,8 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            <HouseIssuesAlert />
 
             {/* KPI Cards */}
             <div className="kpi-grid mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>

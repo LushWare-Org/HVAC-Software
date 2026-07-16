@@ -212,7 +212,6 @@ export function useCheckEmail() {
 export function useProvisionLeadAccount() {
   return useMutation({
     mutationFn: async (data: {
-      companyId: string
       firstName: string
       lastName: string
       email: string

@@ -14,9 +14,11 @@ import {
   X,
   ShieldCheck,
   FolderKanban,
+  Home,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useMyProjects } from '../hooks/useMyProjects'
+import { useMyHouses } from '../hooks/useMyHouse'
 import { useTheme } from '../contexts/ThemeContext'
 import { useUnreadMyThreadsCount } from '../hooks/useCustomerPortal'
 import { useCompany } from '../contexts/CompanyContext'
@@ -36,6 +38,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
   const unreadMessages = useUnreadMyThreadsCount()
   const { data: myProjects } = useMyProjects()
   const hasProjects = (myProjects?.length ?? 0) > 0
+  const { data: myHouses } = useMyHouses()
+  const hasHouse = (myHouses?.length ?? 0) > 0
 
   const NAV = [
     {
@@ -52,6 +56,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
         { icon: ShieldCheck, label: 'My Plans', path: '/agreements', badge: 0 },
         // Only shown when the customer actually has a project
         ...(hasProjects ? [{ icon: FolderKanban, label: 'My Projects', path: '/projects', badge: 0 }] : []),
+        // Only shown when the customer owns a house (Housing Scheme template)
+        ...(hasHouse ? [{ icon: Home, label: 'My House', path: '/my-house', badge: 0 }] : []),
         { icon: User, label: 'Profile', path: '/profile', badge: 0 },
       ],
     },

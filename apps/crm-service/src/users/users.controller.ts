@@ -75,6 +75,8 @@ export class UsersController {
   }
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Create a new company user (invite)' })
   create(
     @CurrentUser() user: AuthUser,

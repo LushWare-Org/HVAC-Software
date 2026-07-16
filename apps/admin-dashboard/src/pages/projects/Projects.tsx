@@ -10,12 +10,13 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FolderKanban, Plus, Search, MapPin, CalendarRange, Users2, HardHat,
-  TrendingUp, Wallet,
+  TrendingUp, Wallet, MessageSquareWarning,
 } from 'lucide-react'
 import {
   useProjectsFull, useTechDirectory, projectProgress, projectFinances,
   toDateKey, STATUS_META, type Project, type ProjectStatus,
 } from './projectsApi'
+import { useOpenHouseIssues } from './housesApi'
 import { AvatarStack, ProjectStatusBadge, ProgressBar, fmtMoney, fmtDate } from './shared'
 import ProjectEditorModal from './ProjectEditorModal'
 
@@ -32,6 +33,12 @@ export default function Projects() {
   const navigate = useNavigate()
   const { projects, isLoading } = useProjectsFull()
   useTechDirectory() // primes avatar names/colors
+  const { data: openIssues } = useOpenHouseIssues()
+  const openIssueCountByProject = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const issue of openIssues ?? []) map.set(issue.projectId, (map.get(issue.projectId) ?? 0) + 1)
+    return map
+  }, [openIssues])
   const [filter, setFilter] = useState<ProjectStatus | 'ALL'>('ALL')
   const [search, setSearch] = useState('')
   const [showEditor, setShowEditor] = useState(false)
@@ -146,7 +153,7 @@ export default function Projects() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: 14 }}>
           {filtered.map(p => (
-            <ProjectCard key={p.id} project={p} onOpen={() => navigate(`/projects/${p.id}`)} />
+            <ProjectCard key={p.id} project={p} openIssueCount={openIssueCountByProject.get(p.id) ?? 0} onOpen={() => navigate(`/projects/${p.id}`)} />
           ))}
         </div>
       )}
@@ -156,12 +163,13 @@ export default function Projects() {
   )
 }
 
-function ProjectCard({ project: p, onOpen }: { project: Project; onOpen: () => void }) {
+function ProjectCard({ project: p, openIssueCount, onOpen }: { project: Project; openIssueCount: number; onOpen: () => void }) {
   const prog = projectProgress(p)
   const fin = projectFinances(p)
   const roster = p.rosterToday
   const short = p.requiredHeadcount != null && roster.techUserIds.length > 0 && roster.techUserIds.length < p.requiredHeadcount
-  const statusColor = STATUS_META[p.status].color
+  const hasOpenIssue = openIssueCount > 0
+  const statusColor = hasOpenIssue ? 'var(--red)' : STATUS_META[p.status].color
 
   return (
     <div
@@ -170,7 +178,11 @@ function ProjectCard({ project: p, onOpen }: { project: Project; onOpen: () => v
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={e => { if (e.key === 'Enter') onOpen() }}
-      style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }}
+      style={{
+        padding: 0, overflow: 'hidden', cursor: 'pointer',
+        border: hasOpenIssue ? '1px solid var(--red)' : undefined,
+        boxShadow: hasOpenIssue ? '0 0 0 1px var(--red-dim)' : undefined,
+      }}
     >
       <div style={{ height: 3, background: `linear-gradient(90deg, ${statusColor}, transparent)` }} />
       <div style={{ padding: '16px 18px' }}>
@@ -179,7 +191,17 @@ function ProjectCard({ project: p, onOpen }: { project: Project; onOpen: () => v
             <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--t1)', margin: 0, lineHeight: 1.3 }}>{p.name}</p>
             <p style={{ fontSize: 12.5, color: 'var(--t3)', margin: '3px 0 0' }}>{p.customerName}</p>
           </div>
-          <ProjectStatusBadge status={p.status} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            {hasOpenIssue && (
+              <span title={`${openIssueCount} open issue${openIssueCount === 1 ? '' : 's'} reported`} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10.5, fontWeight: 700,
+                color: 'var(--red)', background: 'var(--red-dim)', padding: '2px 7px', borderRadius: 999,
+              }}>
+                <MessageSquareWarning size={11} /> {openIssueCount}
+              </span>
+            )}
+            <ProjectStatusBadge status={p.status} />
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '12px 0' }}>

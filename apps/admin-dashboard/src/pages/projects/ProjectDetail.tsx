@@ -5,13 +5,13 @@
  *
  * DEMO: reads/writes the mock store; roster edits update live.
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useState, Suspense, lazy } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft, Pencil, MapPin, CalendarRange, Users2, FileSignature,
   Wrench, Wallet, LayoutList, HardHat, Plus, RotateCcw, X, Moon,
-  AlertTriangle, StickyNote, CalendarClock, Loader2, Link2, Unlink, UserPlus,
+  AlertTriangle, StickyNote, CalendarClock, Loader2, Link2, Unlink, UserPlus, Home, ChevronRight,
 } from 'lucide-react'
 import api from '../../lib/api'
 import { useToast } from '../../contexts/ToastContext'
@@ -20,7 +20,7 @@ import {
   useProjectFull, useProjectRoster, useSetRosterDay, useTechDirectory,
   useLinkJobToProject, useLinkAgreement, useUpdateProject, projectProgress, projectFinances,
   invalidateProjectLinks, toDateKey, addDays, techById,
-  STATUS_META, WEEKDAYS, type Project, type RosterDay,
+  STATUS_META, WEEKDAYS, type Project, type ProjectJob, type RosterDay,
 } from './projectsApi'
 import { AvatarStack, TechAvatar, ProjectStatusBadge, ProgressBar, fmtMoney, fmtDate } from './shared'
 import ProjectEditorModal from './ProjectEditorModal'
@@ -30,8 +30,15 @@ import AddQuoteModal from '../finance/AddQuoteModal'
 import AddInvoiceModal from '../finance/AddInvoiceModal'
 import AgreementEditorModal from '../agreements/AgreementEditorModal'
 import type { Agreement } from '../../hooks/useAgreements'
+import type { Job } from '../../types/api'
+import HousesTab from './HousesTab'
+import HouseIssuesAlert from '../../components/HouseIssuesAlert'
 
-type Tab = 'overview' | 'roster' | 'jobs' | 'agreements' | 'finances'
+// Consistent with every other consumer of this modal (DayPlanner, Finance,
+// AgreementDrawer, Topbar) — lazy-loaded, same component app-wide.
+const JobDetailModal = lazy(() => import('../jobs/JobDetailModal'))
+
+type Tab = 'overview' | 'roster' | 'jobs' | 'agreements' | 'finances' | 'houses'
 
 const JOB_BADGE: Record<string, string> = {
   PENDING: 'badge-amber', SCHEDULED: 'badge-violet', EN_ROUTE: 'badge-blue',
@@ -42,9 +49,14 @@ const JOB_BADGE: Record<string, string> = {
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { project, isLoading } = useProjectFull(id)
   useTechDirectory() // primes avatar names/colors
-  const [tab, setTab] = useState<Tab>('overview')
+  // Deep link from the alert banners: ?house=<id> opens the Houses tab with
+  // that house's detail modal already open, instead of dropping you on the
+  // project and making you find it yourself.
+  const deepLinkHouseId = searchParams.get('house')
+  const [tab, setTab] = useState<Tab>(deepLinkHouseId ? 'houses' : 'overview')
   const [showEditor, setShowEditor] = useState(false)
 
   if (isLoading) {
@@ -72,6 +84,9 @@ export default function ProjectDetail() {
 
   const tabs: { key: Tab; label: string; icon: React.ElementType; count?: number }[] = [
     { key: 'overview', label: 'Overview', icon: LayoutList },
+    ...(project.templateType === 'HOUSING_SCHEME'
+      ? [{ key: 'houses' as Tab, label: 'Houses', icon: Home }]
+      : []),
     { key: 'roster', label: 'Crew roster', icon: Users2 },
     { key: 'jobs', label: 'Jobs', icon: Wrench, count: project.jobs.length },
     { key: 'agreements', label: 'Agreements', icon: FileSignature, count: project.agreements.length },
@@ -107,6 +122,8 @@ export default function ProjectDetail() {
         </button>
       </div>
 
+      {project.templateType === 'HOUSING_SCHEME' && <HouseIssuesAlert projectId={project.id} />}
+
       {/* Progress + money strip */}
       <div className="card" style={{ padding: '14px 18px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr repeat(3, 1fr)', gap: 18, alignItems: 'center' }}>
@@ -137,18 +154,30 @@ export default function ProjectDetail() {
         {tabs.map(t => {
           const Icon = t.icon
           const active = tab === t.key
+          const showAlert = t.key === 'houses' && (project.openIssueCount ?? 0) > 0
           return (
             <button key={t.key} className="btn btn-sm" onClick={() => setTab(t.key)}
               style={active
                 ? { background: 'var(--blue)', color: '#fff', border: '1px solid var(--blue)', display: 'inline-flex', alignItems: 'center', gap: 6 }
                 : { background: 'var(--bg-card)', color: 'var(--t2)', border: '1px solid var(--bd)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <Icon size={13} /> {t.label}{t.count != null ? ` · ${t.count}` : ''}
+              {showAlert && (
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: active ? '#fff' : 'var(--red)' }} />
+              )}
             </button>
           )
         })}
       </div>
 
       {tab === 'overview' && <OverviewTab project={project} />}
+      {tab === 'houses' && (
+        <HousesTab
+          projectId={project.id}
+          projectName={project.name}
+          initialOpenHouseId={deepLinkHouseId}
+          onInitialHouseConsumed={() => setSearchParams(prev => { prev.delete('house'); return prev }, { replace: true })}
+        />
+      )}
       {tab === 'roster' && <RosterTab project={project} />}
       {tab === 'jobs' && <JobsTab project={project} />}
       {tab === 'agreements' && <AgreementsTab project={project} />}
@@ -513,6 +542,7 @@ function RosterDayEditor({ project: p, dateKey, day: r, onClose }: { project: Pr
 function JobsTab({ project: p }: { project: Project }) {
   const [showLinker, setShowLinker] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
+  const [viewJob, setViewJob] = useState<ProjectJob | null>(null)
   const linkJob = useLinkJobToProject()
 
   // Customer's jobs not yet in any project — candidates for linking
@@ -574,7 +604,10 @@ function JobsTab({ project: p }: { project: Project }) {
       ) : (
         <div>
           {p.jobs.map(j => (
-            <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderTop: '1px solid var(--bd)' }}>
+            <button key={j.id} onClick={() => setViewJob(j)} style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderTop: '1px solid var(--bd)',
+              width: '100%', textAlign: 'left', background: 'none', cursor: 'pointer', fontFamily: 'inherit',
+            }}>
               <div style={{
                 width: 34, height: 34, borderRadius: 9, background: 'var(--bg-card-2)', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -588,14 +621,20 @@ function JobsTab({ project: p }: { project: Project }) {
                 </p>
               </div>
               <span className={`badge ${JOB_BADGE[j.status] ?? 'badge-neutral'}`}>{j.status.replace('_', ' ')}</span>
-              <button className="btn btn-ghost btn-sm" title="Unlink from project"
-                disabled={linkJob.isPending}
-                onClick={() => linkJob.mutate({ jobId: j.id, projectId: null })}>
+              <span title="Unlink from project" onClick={e => { e.stopPropagation(); linkJob.mutate({ jobId: j.id, projectId: null }) }}
+                style={{ padding: 6, borderRadius: 8, display: 'flex', opacity: linkJob.isPending ? 0.5 : 1 }}>
                 <Unlink size={12} style={{ color: 'var(--t4)' }} />
-              </button>
-            </div>
+              </span>
+              <ChevronRight size={13} style={{ color: 'var(--t4)', flexShrink: 0 }} />
+            </button>
           ))}
         </div>
+      )}
+
+      {viewJob && (
+        <Suspense fallback={null}>
+          <JobDetailModal isOpen={!!viewJob} onClose={() => setViewJob(null)} job={viewJob as unknown as Job} />
+        </Suspense>
       )}
 
       <CreateJobModal

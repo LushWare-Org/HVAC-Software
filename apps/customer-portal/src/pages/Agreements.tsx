@@ -166,10 +166,10 @@ export default function Agreements() {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--canvas-t1)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
           <ShieldCheck size={20} style={{ color: 'var(--blue)' }} /> My Service Plans
         </h1>
-        <p style={{ fontSize: 13, color: 'var(--t3)', margin: '4px 0 0' }}>
+        <p style={{ fontSize: 13, color: 'var(--canvas-t2)', margin: '4px 0 0' }}>
           Your maintenance agreements — coverage, visits, and upcoming service
         </p>
       </div>

@@ -22,6 +22,7 @@ import { MetaModule } from './meta/meta.module';
 import { ImportModule } from './import/import.module';
 import { IotModule } from './iot/iot.module';
 import { ProjectsModule } from './projects/projects.module';
+import { HousesModule } from './houses/houses.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -53,6 +54,7 @@ import appConfig from './config/app.config';
     ImportModule,
     IotModule,
     ProjectsModule,
+    HousesModule,
   ],
 })
 export class AppModule {}

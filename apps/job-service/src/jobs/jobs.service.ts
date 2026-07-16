@@ -100,6 +100,8 @@ export class JobsService {
       customerId?: string;
       agreementId?: string;
       projectId?: string;
+      houseId?: string;
+      equipmentId?: string;
       isAgreementJob?: boolean;
     } = {},
   ): Promise<PaginatedResponse<unknown>> {
@@ -112,6 +114,8 @@ export class JobsService {
     if (filters.customerId) where.customerId = filters.customerId;
     if (filters.agreementId) where.agreementId = filters.agreementId;
     if (filters.projectId) where.projectId = filters.projectId;
+    if (filters.houseId) where.houseId = filters.houseId;
+    if (filters.equipmentId) where.equipmentId = filters.equipmentId;
     if (filters.isAgreementJob !== undefined) where.isAgreementJob = filters.isAgreementJob;
     if (filters.dateFrom || filters.dateTo) {
       where.scheduledStart = {};
@@ -363,6 +367,8 @@ export class JobsService {
       internalNotes: string;
       tags: string[];
       projectId: string | null;
+      houseId: string | null;
+      equipmentId: string | null;
     }>,
   ) {
     await this.findOne(companyId, id);

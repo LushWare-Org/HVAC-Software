@@ -15,7 +15,6 @@
 import React, { useState } from "react";
 import { X, Loader2, AlertCircle, CheckCircle2, Mail } from "lucide-react";
 import { useCreateCustomer, useCheckEmail, useProvisionLeadAccount } from "../../hooks/useCustomers";
-import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 
 interface AddPersonModalProps {
@@ -31,7 +30,6 @@ export default function AddPersonModal({
     type,
     onCreated,
 }: AddPersonModalProps) {
-    const { user } = useAuth();
     const [error, setError]     = useState<string>('');
     const [success, setSuccess] = useState<string>('');
     const [formData, setFormData] = useState({
@@ -110,7 +108,6 @@ export default function AddPersonModal({
 
             try {
                 const result = await provisionLead.mutateAsync({
-                    companyId:       user!.companyId,
                     firstName,
                     lastName,
                     email,

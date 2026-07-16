@@ -1,9 +1,11 @@
 import { Body, Controller, Post, Get, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength, IsOptional, IsArray, IsNumber } from 'class-validator';
-import { CurrentUser, JwtAuthGuard } from '@tscrm/auth-client';
-import { AuthUser } from '@tscrm/types';
+import { CurrentUser, JwtAuthGuard, RolesGuard, Roles } from '@tscrm/auth-client';
+import { AuthUser, Role } from '@tscrm/types';
 import { AuthService } from './auth.service';
+
+const STAFF_WRITE = [Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER];
 
 // ─── DTOs ──────────────────────────────────────────────────────────────────────
 
@@ -46,7 +48,6 @@ class ForceResetPasswordDto {
 }
 
 class ProvisionLeadDto {
-  @IsString() companyId!: string;
   @IsString() firstName!: string;
   @IsString() lastName!: string;
   @IsEmail() email!: string;
@@ -56,7 +57,6 @@ class ProvisionLeadDto {
 }
 
 class ProvisionTechnicianDto {
-  @IsString() companyId!: string;
   @IsString() @MinLength(2) name!: string;
   @IsEmail() email!: string;
   @IsOptional() @IsString() phone?: string;
@@ -133,11 +133,12 @@ export class AuthController {
    * Creates CompanyUser + Customer + Lead, sends welcome email with temp password.
    */
   @Post('provision-lead')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_WRITE)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Admin: create lead + customer portal account with temp password' })
-  provisionLead(@Body() dto: ProvisionLeadDto) {
-    return this.authService.provisionLeadAccount(dto);
+  provisionLead(@CurrentUser() user: AuthUser, @Body() dto: ProvisionLeadDto) {
+    return this.authService.provisionLeadAccount(user.companyId, dto);
   }
 
   /**
@@ -145,10 +146,11 @@ export class AuthController {
    * Creates CompanyUser (approved), sends welcome email with temp password.
    */
   @Post('provision-technician')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_WRITE)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Admin: create approved technician account with temp password' })
-  provisionTechnician(@Body() dto: ProvisionTechnicianDto) {
-    return this.authService.provisionTechnicianAccount(dto);
+  provisionTechnician(@CurrentUser() user: AuthUser, @Body() dto: ProvisionTechnicianDto) {
+    return this.authService.provisionTechnicianAccount(user.companyId, dto);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -9,6 +9,61 @@ export class EquipmentService {
     return this.prisma.equipment.findMany({
       where: { companyId, customerId },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findByHouse(companyId: string, houseId: string) {
+    return this.prisma.equipment.findMany({
+      where: { companyId, houseId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Add equipment to a House (Housing Scheme template). Requires the house to
+   * already have an owner assigned — customerId is derived from house.ownerCustomerId
+   * and kept required/non-null, avoiding a nullable-customerId migration. See
+   * docs/superpowers/specs/2026-07-13-project-templates-housing-scheme-design.md.
+   */
+  async createForHouse(
+    companyId: string,
+    houseId: string,
+    data: {
+      type?: string; brand?: string; model?: string; serialNo?: string;
+      installDate?: string; warrantyEnd?: string; notes?: string;
+    },
+  ) {
+    const house = await this.prisma.house.findFirst({ where: { id: houseId, companyId } });
+    if (!house) throw new NotFoundException('House not found');
+    if (!house.ownerCustomerId) {
+      throw new BadRequestException('Assign an owner to this house before adding equipment');
+    }
+    return this.prisma.equipment.create({
+      data: {
+        companyId,
+        customerId: house.ownerCustomerId,
+        houseId,
+        type: data.type ?? 'Thermostat',
+        brand: data.brand,
+        model: data.model,
+        serialNo: data.serialNo,
+        installDate: data.installDate ? new Date(data.installDate) : undefined,
+        warrantyEnd: data.warrantyEnd ? new Date(data.warrantyEnd) : undefined,
+        notes: data.notes,
+      },
+    });
+  }
+
+  /**
+   * Re-point customerId on all of a house's equipment when its owner changes.
+   * House.ownerCustomerId is authoritative; Equipment.customerId is a denormalized
+   * mirror kept in sync here so the portal's "My Equipment" (queried by customerId)
+   * never shows a house's equipment to the wrong owner.
+   */
+  async resyncHouseEquipmentOwner(companyId: string, houseId: string, customerId: string) {
+    await this.prisma.equipment.updateMany({
+      where: { companyId, houseId },
+      data: { customerId },
     });
   }
 

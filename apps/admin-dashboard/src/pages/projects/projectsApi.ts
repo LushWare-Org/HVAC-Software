@@ -16,12 +16,27 @@ export type ProjectStatus = 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'C
 export type Weekday = 'SUN' | 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT'
 export const WEEKDAYS: Weekday[] = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
+// Project templates — extensible registry, mirrors crm-service's project-templates.ts.
+// Immutable after creation.
+export type ProjectTemplateType = 'STANDARD' | 'HOUSING_SCHEME'
+export const PROJECT_TEMPLATE_META: Record<ProjectTemplateType, { label: string; description: string }> = {
+  STANDARD: { label: 'Standard', description: 'A single client with jobs, agreements, and finances.' },
+  HOUSING_SCHEME: {
+    label: 'Housing Scheme',
+    description: 'A development with many houses, each with its own owner, equipment, and portal access.',
+  },
+}
+
 export interface ProjectJob {
   id: string
   title: string
   status: string
   scheduledStart?: string
   assignedToName?: string
+  // Carried through so JobDetailModal's first render (before its own useJob
+  // refetch resolves) has what it reads directly off the passed-in job.
+  customerId?: string
+  description?: string
 }
 
 export interface ProjectAgreement {
@@ -58,6 +73,7 @@ export interface Project {
   description?: string
   category?: string
   status: ProjectStatus
+  templateType: ProjectTemplateType
   startDate?: string
   targetEndDate?: string
   budget?: number // dollars
@@ -76,6 +92,8 @@ export interface Project {
   invoices: FinanceDoc[]
   /** Effective roster for today (list page / cards). */
   rosterToday: { techUserIds: string[]; isOverride: boolean; isOff: boolean }
+  /** Housing Scheme only: rolled-up open issue-report count across all houses. */
+  openIssueCount?: number
 }
 
 export interface ProjectRosterBandRow {
@@ -171,6 +189,7 @@ function mapApiProject(raw: any): ProjectBase {
     description: raw.description ?? undefined,
     category: raw.category ?? undefined,
     status: raw.status as ProjectStatus,
+    templateType: (raw.templateType as ProjectTemplateType) ?? 'STANDARD',
     startDate: raw.startDate ? String(raw.startDate).slice(0, 10) : undefined,
     targetEndDate: raw.targetEndDate ? String(raw.targetEndDate).slice(0, 10) : undefined,
     budget: raw.budget != null ? Number(raw.budget) : undefined,
@@ -182,6 +201,7 @@ function mapApiProject(raw: any): ProjectBase {
     baseTeamUserIds: raw.baseTeamUserIds ?? [],
     notes: raw.notes ?? undefined,
     createdAt: raw.createdAt,
+    openIssueCount: raw.openIssueCount ?? undefined,
   }
 }
 
@@ -192,6 +212,8 @@ function mapJob(j: any): ProjectJob {
     status: j.status,
     scheduledStart: j.scheduledStart ?? undefined,
     assignedToName: j.assignedToName ?? undefined,
+    customerId: j.customerId ?? undefined,
+    description: j.description ?? undefined,
   }
 }
 
@@ -372,6 +394,8 @@ export interface UpsertProjectInput {
   name?: string
   description?: string
   category?: string
+  /** Only meaningful on create — immutable server-side afterward. */
+  templateType?: ProjectTemplateType
   status?: ProjectStatus
   startDate?: string
   targetEndDate?: string
