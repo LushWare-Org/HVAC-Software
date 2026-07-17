@@ -292,7 +292,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/ravishan/Desktop/Lush/T&SBCRM/apps/comms-service/src/marketing/prisma/generated",
+      "value": "D:\\Web Development\\LushWare Org\\HVAC Software\\HVAC-Software\\apps\\comms-service\\src\\marketing\\prisma\\generated",
       "fromEnvVar": null
     },
     "config": {
@@ -301,12 +301,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin-arm64",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/ravishan/Desktop/Lush/T&SBCRM/apps/comms-service/prisma/marketing.prisma",
+    "sourceFilePath": "D:\\Web Development\\LushWare Org\\HVAC Software\\HVAC-Software\\apps\\comms-service\\prisma\\marketing.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

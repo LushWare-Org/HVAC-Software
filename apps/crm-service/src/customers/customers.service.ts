@@ -10,6 +10,7 @@ import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput, ty
 import { UpsellAgentService } from '../upsell/upsell-agent.service';
 import { FollowupAgent } from '../agents/followup.agent';
 import { RetentionAgent, type RetentionRecommendationRecord } from '../agents/retention.agent';
+import { RevenueAgent } from '../agents/revenue.agent';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomersEquipmentService, type EquipmentInput } from './customers-equipment.service';
@@ -25,6 +26,7 @@ export class CustomersService {
     private upsellAgent: UpsellAgentService,
     private followupAgent: FollowupAgent,
     private retentionAgent: RetentionAgent,
+    private revenueAgent: RevenueAgent,
     private equipment: CustomersEquipmentService,
   ) {}
 
@@ -371,6 +373,7 @@ export class CustomersService {
           failureProbability: prediction.failure_probability,
         });
     const retentionAgentResult = await this.retentionAgent.ensureRecommendation(companyId, id);
+    const revenueRecommendation = await this.revenueAgent.ensureRecommendation(companyId, id);
     const retentionPrediction = this.computeRetentionPrediction({
       customerId: customer.id,
       avgMonthlySpend,
@@ -409,6 +412,7 @@ export class CustomersService {
       currentStatus,
       upsellRecommendation,
       retentionPrediction,
+      revenueRecommendation,
       churnPrediction: {
         probability: prediction.churn_probability,
         level: churnLevel,
@@ -441,6 +445,10 @@ export class CustomersService {
     const summary = await this.getStatusSummary(companyId, customerId);
     const reason = summary.retentionPrediction?.reason ?? 'Manual retention action triggered';
     return this.followupAgent.triggerRetentionForCustomer(companyId, customerId, reason);
+  }
+
+  async executeRevenue(companyId: string, customerId: string) {
+    return this.revenueAgent.generateRecommendation(companyId, customerId);
   }
 
   // Called by customer portal: find Customer linked to the portal user's account

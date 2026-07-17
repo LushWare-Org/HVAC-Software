@@ -483,6 +483,31 @@ exports.Prisma.RetentionRecommendationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.RevenueRecommendationScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  customerId: 'customerId',
+  ruleResult: 'ruleResult',
+  llmRecommendation: 'llmRecommendation',
+  validationResult: 'validationResult',
+  finalCategory: 'finalCategory',
+  finalAction: 'finalAction',
+  finalPriority: 'finalPriority',
+  finalChannel: 'finalChannel',
+  finalMessage: 'finalMessage',
+  reason: 'reason',
+  expectedRevenueImpact: 'expectedRevenueImpact',
+  confidence: 'confidence',
+  status: 'status',
+  managerOverride: 'managerOverride',
+  customerAccepted: 'customerAccepted',
+  customerDeclined: 'customerDeclined',
+  revenueRealized: 'revenueRealized',
+  respondedAt: 'respondedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ImportBatchScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
@@ -677,6 +702,7 @@ exports.Prisma.ModelName = {
   FollowupAttempt: 'FollowupAttempt',
   UpsellRecommendation: 'UpsellRecommendation',
   RetentionRecommendation: 'RetentionRecommendation',
+  RevenueRecommendation: 'RevenueRecommendation',
   ImportBatch: 'ImportBatch',
   ImportError: 'ImportError',
   CustomerIotConnection: 'CustomerIotConnection',

@@ -135,6 +135,7 @@ model Customer {
   equipment   Equipment[]
   upsellRecommendations UpsellRecommendation[]
   retentionRecommendations RetentionRecommendation[]
+  revenueRecommendations RevenueRecommendation[]
   iotConnections CustomerIotConnection[]
 
   @@index([companyId])
@@ -591,6 +592,40 @@ model RetentionRecommendation {
   @@index([companyId, customerId, createdAt])
   @@index([companyId, status, finalAction])
   @@map("retention_recommendations")
+}
+
+model RevenueRecommendation {
+  id                String   @id @default(uuid())
+  companyId         String   @map("company_id")
+  customerId        String   @map("customer_id")
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  ruleResult        Json     @map("rule_result")
+  llmRecommendation Json?    @map("llm_recommendation")
+  validationResult  Json     @map("validation_result")
+
+  finalCategory     String   @map("final_category")
+  finalAction       String?  @map("final_action")
+  finalPriority     String   @map("final_priority")
+  finalChannel      String?  @map("final_channel")
+  finalMessage      String?  @map("final_message")
+  reason            String
+  expectedRevenueImpact Decimal? @map("expected_revenue_impact") @db.Decimal(10, 2)
+  confidence        Float?
+  status            String   @default("generated") // generated | actioned | superseded
+
+  managerOverride     Json?     @map("manager_override")
+  customerAccepted    Boolean?  @map("customer_accepted")
+  customerDeclined    Boolean?  @map("customer_declined")
+  revenueRealized     Decimal?  @map("revenue_realized") @db.Decimal(10, 2)
+  respondedAt         DateTime? @map("responded_at")
+
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId, customerId, createdAt])
+  @@index([companyId, status, finalCategory])
+  @@map("revenue_recommendations")
 }
 
 // ---- Data Import ----

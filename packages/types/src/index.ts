@@ -458,3 +458,105 @@ export interface UpsellDecisionAudit {
   finalChannel: UpsellChannel | null;
   decidedAt: string;
 }
+
+// ---- Rule-based + LLM revenue optimization decision engine ----
+// Business rules decide WHETHER a revenue opportunity exists (overdue invoice,
+// pending quote, expiring agreement, aging equipment with no maintenance plan,
+// or an inactive customer) and its category; an LLM decides the HOW (strategy/
+// recommended action/impact framing/channel/message); a validation layer has
+// final say before anything is surfaced to the CRM. Mirrors the Retention*/
+// Upsell* families structurally, but combines Retention's "always return a
+// decision" contract with Upsell's category dimension, since revenue
+// opportunities span five distinct categories rather than one action axis.
+
+export type RevenueCategory =
+  | 'payment_collection'
+  | 'quote_recovery'
+  | 'agreement_renewal'
+  | 'maintenance_plan'
+  | 're_engagement'
+  | 'no_opportunity';
+
+export type RevenueChannel = 'whatsapp' | 'email' | 'call';
+
+export type RevenuePriority = 'low' | 'medium' | 'high';
+
+export type RevenueRuleReasonCode =
+  | 'OVERDUE_INVOICE'
+  | 'PENDING_QUOTE'
+  | 'AGREEMENT_EXPIRING'
+  | 'UPSELL_EQUIPMENT_AGE'
+  | 'CUSTOMER_INACTIVE'
+  | 'NONE';
+
+/** Raw facts the rule engine evaluates. Never passed to the LLM directly. */
+export interface RevenueRuleFacts {
+  customerId: string;
+  companyId: string;
+  openQuotes: Array<{ id: string; daysSincePending: number; amount: number }>;
+  overdueInvoices: Array<{ id: string; daysOverdue: number; amount: number }>;
+  agreementStatus?: string;
+  agreementDaysUntilExpiry?: number | null;
+  hasActiveAgreement: boolean;
+  daysSinceLastService: number;
+  oldestEquipmentAgeYears?: number;
+  automaticFollowupEnabled: boolean;      // false = customer opted out
+  previousRevenueAttempts: number;
+  hasContactChannel: boolean;
+}
+
+/**
+ * The rule engine ONLY determines whether a revenue opportunity exists, its
+ * category, and why. It never picks the specific action, channel, or message
+ * — that's the LLM's job. expectedRevenueImpact is grounded in the triggering
+ * fact (quote amount / invoice balance / agreement value), never invented.
+ */
+export interface RevenueRuleResult {
+  opportunityExists: boolean;
+  category: RevenueCategory;
+  highPriority: boolean;
+  reasonCode: RevenueRuleReasonCode;
+  reason: string | null;
+  matchedRule: string | null;             // for audit trail
+  expectedRevenueImpact: number | null;
+}
+
+/** Structured profile handed to the LLM. No raw Prisma rows ever cross this boundary. */
+export interface RevenueCustomerProfile {
+  customerName: string;
+  customerSegment: 'premium' | 'standard' | 'budget';
+  lifetimeSpend: number;
+  equipment: Array<{ type: string; ageYears: number | null }>;
+  maintenanceAgreementStatus?: string;
+  openQuotes: Array<{ amount: number; daysSincePending: number }>;
+  overdueInvoices: Array<{ amount: number; daysOverdue: number }>;
+  lastServiceDays: number;
+  previousRevenueActions: number;
+  preferredCommunication: RevenueChannel;
+  notes?: string;
+  category: RevenueCategory;
+  reasonCode: RevenueRuleReasonCode;
+  reason: string;
+  expectedRevenueImpact: number | null;
+}
+
+export interface RevenueLlmRecommendation {
+  strategy: string;
+  recommendedAction: string;
+  priority: 'Low' | 'Medium' | 'High';
+  expectedImpact: string;          // free-text business framing, e.g. "Recover pending quote value"
+  channel: RevenueChannel;
+  reason: string;
+  message: string;
+  confidence: number;
+}
+
+export interface RevenueDecisionAudit {
+  ruleResult: RevenueRuleResult;
+  llmRecommendation: RevenueLlmRecommendation | null;
+  llmModel: string | null;
+  validation: { passed: boolean; failedChecks: string[] };
+  finalCategory: RevenueCategory;
+  finalChannel: RevenueChannel | null;
+  decidedAt: string;
+}

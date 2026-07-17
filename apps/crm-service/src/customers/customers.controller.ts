@@ -218,6 +218,17 @@ export class CustomersController {
     return this.customersService.executeRetention(user.companyId, id);
   }
 
+  @Post(':id/revenue')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Trigger a revenue-opportunity action for a customer' })
+  @ApiParam({ name: 'id', type: String })
+  triggerRevenue(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.customersService.executeRevenue(user.companyId, id);
+  }
+
   // Equipment endpoints live in EquipmentController under customers/:customerId/equipment
   // to avoid route-registration collisions in this controller.
 }

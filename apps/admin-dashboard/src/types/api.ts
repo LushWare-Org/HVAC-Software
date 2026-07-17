@@ -88,6 +88,24 @@ export interface CustomerStatusSummary {
     triggerImmediately: boolean
     reason: string
   } | null
+  revenueRecommendation?: {
+    id: string
+    category:
+      | 'payment_collection'
+      | 'quote_recovery'
+      | 'agreement_renewal'
+      | 'maintenance_plan'
+      | 're_engagement'
+      | 'no_opportunity'
+    action: string | null
+    priority: 'low' | 'medium' | 'high'
+    channel: 'whatsapp' | 'email' | 'call' | null
+    reason: string
+    message: string | null
+    expectedRevenueImpact: number | null
+    confidence: number | null
+    createdAt: string
+  } | null
   churnPrediction: {
     probability: number
     level: 'Low' | 'Medium' | 'High'

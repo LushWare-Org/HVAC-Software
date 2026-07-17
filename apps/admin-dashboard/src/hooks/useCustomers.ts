@@ -148,6 +148,18 @@ export function useExecuteUpsell() {
   })
 }
 
+export function useExecuteRevenueAgent() {
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await api.post(`/crm/customers/${customerId}/revenue`)
+      return res.data
+    },
+    onSuccess: (_data, customerId) => {
+      queryClient.invalidateQueries({ queryKey: ['customers', customerId, 'status-summary'] })
+    },
+  })
+}
+
 // ─── Leads ────────────────────────────────────────────────────────────────────
 
 interface LeadFilters {
