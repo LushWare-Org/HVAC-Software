@@ -185,7 +185,7 @@ The BullMQ queue name is unchanged: `packages/queue/src/index.ts` → `FOLLOWUP 
 - `FollowupProducer` (or `NoopFollowupProducer` when Redis isn't configured)
 - `FollowupAgent`, `FollowupCron`
 
-`ChurnClient` is no longer provided here — `CustomersModule` provides its own instance independently for the status-summary widget.
+`ChurnClient` has been removed entirely — the status-summary widget's churn/failure risk is now a rule-based classification computed directly in `CustomersService` (no ML service call).
 
 ## Step 5: Scheduled Agent Execution
 
@@ -248,7 +248,7 @@ Unchanged — company-level toggle (`apps/admin-dashboard/src/pages/Settings.tsx
 
 - `OPENAI_API_KEY` — required for LLM recommendations; if unset, the agent still runs on rules alone with canned copy.
 - `OPENAI_MODEL_FOLLOWUP` — default `gpt-4o-mini`.
-- `CHURN_SERVICE_URL` — still used by `ChurnClient` elsewhere in `crm-service`, no longer read by the follow-up path.
+- `CHURN_SERVICE_URL` — no longer used in `crm-service` (churn/failure risk is rule-based); still read by `comms-service`'s review churn-gate.
 - `ANALYTICS_SERVICE_URL`, `REDIS_HOST`, `REDIS_PORT` — unchanged.
 
 ## Failure Modes and Fallbacks
@@ -286,7 +286,7 @@ Unchanged — company-level toggle (`apps/admin-dashboard/src/pages/Settings.tsx
 - `apps/comms-service/src/workers/followup.worker.ts`
 - `packages/types/src/index.ts`
 - `packages/queue/src/index.ts`
-- `apps/crm-service/src/ai/churn.client.ts` (still used by `CustomersService.getStatusSummary`, no longer by follow-up decisioning)
+- `apps/crm-service/src/ai/churn.client.ts` (removed — `CustomersService.getStatusSummary` now classifies churn/failure risk with rule-based thresholds instead)
 - `apps/admin-dashboard/src/pages/Settings.tsx`
 - `apps/admin-dashboard/src/hooks/useSettings.ts`
 - `apps/admin-dashboard/src/pages/customers/Customers.tsx`

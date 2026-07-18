@@ -100,9 +100,9 @@ describe('WinbackService', () => {
     expect(result!.reason).toBe('all_channels_suppressed');
   });
 
-  it('defaults high churn score when churn-service is down (score = -1)', async () => {
+  it('defaults to a high churn score when the gate returns no score (score = -1)', async () => {
     const { service, churnGate, sms } = makeService();
-    // score = -1 means churn-service was unreachable; service defaults to 0.8 > threshold
+    // score = -1 is the "unknown score" sentinel; service defaults to 0.8 > threshold
     (churnGate.scoreAndGate as jest.Mock).mockResolvedValueOnce({ score: -1, passed: true });
 
     const result = await service.evaluateCandidate(makeCandidate());

@@ -214,7 +214,7 @@ function riskColor(level: CustomerStatusSummary["churnPrediction"]["level"]) {
 function fallbackReasoning(summary: CustomerStatusSummary) {
   const upsell = summary.upsellRecommendation;
   const retention = summary.retentionPrediction;
-  const source = summary.predictionSource === "model" ? "ML service" : "fallback rule model";
+  const source = "rule-based classification";
 
   return {
     upsellRecommendation: {
@@ -2035,7 +2035,7 @@ export default function CustomerDetailsSidebar({
                               <div className="grid grid-cols-4 gap-3">
                                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
                                   <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider">Prediction source</div>
-                                  <div className="text-sm font-700 text-[var(--t1)] mt-1">{summary.predictionSource === "model" ? "ML model" : "Rule fallback"}</div>
+                                  <div className="text-sm font-700 text-[var(--t1)] mt-1">Rule-based</div>
                                 </div>
                                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
                                   <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider">Churn risk</div>

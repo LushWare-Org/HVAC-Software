@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ChurnClient } from '../ai/churn.client';
 import { UpsellModule } from '../upsell/upsell.module';
 import { FollowupModule } from '../followup/followup.module';
 import { RetentionModule } from '../retention/retention.module';
@@ -11,7 +10,7 @@ import { CustomersEquipmentService } from './customers-equipment.service';
 @Module({
   imports: [UpsellModule, FollowupModule, RetentionModule, RevenueModule],
   controllers: [CustomersController],
-  providers: [ChurnClient, CustomersService, CustomersEquipmentService],
+  providers: [CustomersService, CustomersEquipmentService],
   exports: [CustomersService, CustomersEquipmentService],
 })
 export class CustomersModule {}

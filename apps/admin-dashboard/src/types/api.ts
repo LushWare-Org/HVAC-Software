@@ -118,7 +118,6 @@ export interface CustomerStatusSummary {
   }
   revenueRisk: number
   proposedNextStep: string
-  predictionSource: 'model' | 'fallback'
   reasoning?: {
     upsellRecommendation: {
       ruleBased: string

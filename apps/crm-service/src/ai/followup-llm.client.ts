@@ -10,8 +10,8 @@ const REQUEST_TIMEOUT_MS = 8000;
 /**
  * Recommends channel/timing/message for a follow-up the rule engine has
  * already decided is needed. Never decides whether to follow up.
- * Mirrors ChurnClient's fallback posture: any failure returns null so the
- * caller can fall back to the rule-only, canned-copy path.
+ * Mirrors UpsellLlmClient/RetentionLlmClient's fallback posture: any failure
+ * returns null so the caller can fall back to the rule-only, canned-copy path.
  */
 @Injectable()
 export class FollowupLlmClient {

@@ -141,7 +141,7 @@ The bandit is serialized to `models/upsell_bandit.pkl` via `joblib` after every 
 3. `UpsellCron` runs immediately on boot and then once per day.
 4. `UpsellAgentService` loads active customer candidates.
 5. The agent builds an upsell feature payload from CRM data.
-6. The agent enriches the payload with churn/failure risk from `ChurnClient.predictRevenue()`.
+6. The agent enriches the payload with churn/failure risk from `CustomersService`'s rule-based classification (no ML service call; `ChurnClient` has been removed).
 7. The agent calls `UpsellClient.recommendOffer()`.
 8. If the model service is unavailable, the agent falls back to local rules.
 9. The recommendation is saved to `upsell_recommendations`.

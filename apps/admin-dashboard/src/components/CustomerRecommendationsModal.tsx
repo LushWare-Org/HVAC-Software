@@ -172,7 +172,7 @@ function FollowupSection({ summary, customerId }: { summary: CustomerStatusSumma
         <Detail label="Churn risk"         value={`${churn.level} (${pct(churn.probability)})`} />
         <Detail label="Recommended channel" value={CHANNEL_LABELS[channel] ?? channel} />
         <Detail label="Current status"     value={summary.currentStatus} />
-        <Detail label="Data source"        value={summary.predictionSource === 'model' ? 'AI model' : 'Rule-based'} />
+        <Detail label="Data source"        value="Rule-based" />
       </div>
       {result && <ResultBanner success={result.success} message={result.message} />}
       <button

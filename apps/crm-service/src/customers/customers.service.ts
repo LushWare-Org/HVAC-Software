@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '../prisma/generated';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput, type RevenuePredictionResult } from '../ai/churn.client';
 import { UpsellAgentService } from '../upsell/upsell-agent.service';
 import { FollowupAgent } from '../agents/followup.agent';
 import { RetentionAgent, type RetentionRecommendationRecord } from '../agents/retention.agent';
@@ -16,13 +15,34 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomersEquipmentService, type EquipmentInput } from './customers-equipment.service';
 import { PaginatedResponse, clampPagination } from '@tscrm/types';
 
+interface ChurnPredictionInput {
+  days_since_last_service: number;
+  service_count_last_year: number;
+  avg_monthly_spend: number;
+  customer_tenure_days: number;
+}
+
+interface FailurePredictionInput {
+  equipment_age_days: number;
+  days_since_last_service: number;
+  service_count_last_year: number;
+  usage_intensity: number;
+  failure_history: number;
+}
+
+interface RevenuePredictionResult {
+  churn_probability: number;
+  failure_probability: number;
+  revenue_risk: number;
+  recommended_action: string;
+}
+
 @Injectable()
 export class CustomersService {
   private readonly logger = new Logger(CustomersService.name);
 
   constructor(
     private prisma: PrismaService,
-    private churnClient: ChurnClient,
     private upsellAgent: UpsellAgentService,
     private followupAgent: FollowupAgent,
     private retentionAgent: RetentionAgent,
@@ -326,22 +346,7 @@ export class CustomersService {
       failure_history: failureHistory,
     };
 
-    const fallbackPrediction = this.computeFallbackPrediction(churnInput, failureInput);
-    let prediction = fallbackPrediction;
-    let predictionSource: 'model' | 'fallback' = 'fallback';
-
-    try {
-      const modelPrediction = await this.churnClient.predictRevenue({ churn: churnInput, failure: failureInput });
-      const reconciledPrediction = this.reconcileModelPrediction(modelPrediction, fallbackPrediction, churnInput);
-      prediction = reconciledPrediction.prediction;
-      predictionSource = reconciledPrediction.usedFallback ? 'fallback' : 'model';
-
-      if (reconciledPrediction.usedFallback) {
-        this.logger.warn(`Status summary model returned saturated low risk for customer ${customer.id}; using calibrated fallback scores`);
-      }
-    } catch (error) {
-      this.logger.warn(`Status summary model unavailable for customer ${customer.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    const prediction = this.classifyChurnAndFailureRisk(churnInput, failureInput);
 
     const currentStatus = this.describeCurrentStatus(customer, daysSinceLastService);
     const churnLevel = this.riskLevel(prediction.churn_probability);
@@ -394,7 +399,6 @@ export class CustomersService {
       failureProbability: prediction.failure_probability,
       failureLevel,
       proposedNextStep,
-      predictionSource,
       recommendedAction: prediction.recommended_action,
       signals: {
         daysSinceLastService,
@@ -425,7 +429,6 @@ export class CustomersService {
       },
       revenueRisk: prediction.revenue_risk,
       proposedNextStep,
-      predictionSource,
       reasoning,
       signals: {
         daysSinceLastService,
@@ -624,7 +627,12 @@ export class CustomersService {
     return Math.max(0, Math.floor((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)));
   }
 
-  private computeFallbackPrediction(churn: ChurnPredictionInput, failure: FailurePredictionInput) {
+  /**
+   * Rule-based churn/failure classification. Replaces the previous ML
+   * (churn-service) call — churn & failure risk are now decided purely from
+   * CRM signals, with no external model dependency.
+   */
+  private classifyChurnAndFailureRisk(churn: ChurnPredictionInput, failure: FailurePredictionInput): RevenuePredictionResult {
     const churnProbability = Math.min(
       0.95,
       (churn.days_since_last_service > 180 ? 0.45 : churn.days_since_last_service > 90 ? 0.25 : 0.08) +
@@ -642,53 +650,11 @@ export class CustomersService {
       churn_probability: Number(churnProbability.toFixed(3)),
       failure_probability: Number(failureProbability.toFixed(3)),
       revenue_risk: Number(((churnProbability * churn.avg_monthly_spend * 12) + (failureProbability * 200)).toFixed(2)),
-      recommended_action: this.recommendFallbackAction(churnProbability, failureProbability),
+      recommended_action: this.classifyRecommendedAction(churnProbability, failureProbability),
     };
   }
 
-  private reconcileModelPrediction(
-    modelPrediction: RevenuePredictionResult,
-    fallbackPrediction: RevenuePredictionResult,
-    churnInput: ChurnPredictionInput,
-  ): { prediction: RevenuePredictionResult; usedFallback: boolean } {
-    const churnProbability = this.reconcileProbability(
-      modelPrediction.churn_probability,
-      fallbackPrediction.churn_probability,
-    );
-    const failureProbability = this.reconcileProbability(
-      modelPrediction.failure_probability,
-      fallbackPrediction.failure_probability,
-    );
-    const usedFallback =
-      churnProbability !== modelPrediction.churn_probability ||
-      failureProbability !== modelPrediction.failure_probability;
-
-    if (!usedFallback) {
-      return { prediction: modelPrediction, usedFallback: false };
-    }
-
-    return {
-      prediction: {
-        churn_probability: churnProbability,
-        failure_probability: failureProbability,
-        revenue_risk: Number(((churnProbability * churnInput.avg_monthly_spend * 12) + (failureProbability * 200)).toFixed(2)),
-        recommended_action: this.recommendFallbackAction(churnProbability, failureProbability),
-      },
-      usedFallback: true,
-    };
-  }
-
-  private reconcileProbability(modelProbability: number, fallbackProbability: number): number {
-    if (!Number.isFinite(modelProbability)) {
-      return fallbackProbability;
-    }
-
-    return modelProbability < 0.01 && fallbackProbability >= 0.05
-      ? fallbackProbability
-      : modelProbability;
-  }
-
-  private recommendFallbackAction(churnProbability: number, failureProbability: number): string {
+  private classifyRecommendedAction(churnProbability: number, failureProbability: number): string {
     if (churnProbability > 0.7 && failureProbability > 0.7) return 'URGENT_INTERVENTION';
     if (churnProbability > 0.7) return 'RETENTION';
     if (failureProbability > 0.7) return 'MAINTENANCE';
@@ -913,7 +879,6 @@ export class CustomersService {
     failureProbability: number;
     failureLevel: 'Low' | 'Medium' | 'High';
     proposedNextStep: string;
-    predictionSource: 'model' | 'fallback';
     recommendedAction: string;
     signals: {
       daysSinceLastService: number;
@@ -925,7 +890,6 @@ export class CustomersService {
       failureHistory: number;
     };
   }) {
-    const sourceLabel = input.predictionSource === 'model' ? 'ML service' : 'fallback rule model';
     const priorityScore = input.upsellRecommendation.priorityScore ?? input.upsellRecommendation.confidence;
     const equipmentAgeYears = Number((input.signals.equipmentAgeDays / 365).toFixed(1));
 
@@ -940,17 +904,17 @@ export class CustomersService {
       },
       retentionSuggestion: {
         ruleBased: `Retention action follows thresholds: premium contract when conversion is above 75% and annual value is above $1,500, retention discount when churn is above 70%, and maintenance plan when repeat failure history is high.`,
-        mlResult: `${sourceLabel} inputs produced ${this.formatProbability(input.retentionPrediction.pConvert)} conversion probability, $${input.retentionPrediction.ltv.toLocaleString()} predicted annual value, ${this.formatProbability(input.retentionPrediction.churnProbability)} churn probability, and score ${input.retentionPrediction.score}.`,
+        mlResult: `Rule-based classification inputs produced ${this.formatProbability(input.retentionPrediction.pConvert)} conversion probability, $${input.retentionPrediction.ltv.toLocaleString()} predicted annual value, ${this.formatProbability(input.retentionPrediction.churnProbability)} churn probability, and score ${input.retentionPrediction.score}.`,
         aiExplanation: `${input.retentionPrediction.reason}. The suggested action is ${input.retentionPrediction.action} at ${input.retentionPrediction.priority} priority via ${input.retentionPrediction.recommendedChannel}${input.retentionPrediction.triggerImmediately ? ', so it should be triggered immediately' : ''}.`,
       },
       failureAndChurnPrediction: {
-        ruleBased: `Fallback rules increase churn for long inactivity, no service in the last year, and new-customer uncertainty; failure risk rises with older equipment, long gaps since service, and poor review history.`,
-        mlResult: `${sourceLabel} returned ${input.churnLevel} churn risk (${this.formatProbability(input.churnProbability)}) and ${input.failureLevel} failure risk (${this.formatProbability(input.failureProbability)}). Equipment age is ${equipmentAgeYears} years across ${input.signals.equipmentCount} record(s).`,
+        ruleBased: `Rule-based classification increases churn for long inactivity, no service in the last year, and new-customer uncertainty; failure risk rises with older equipment, long gaps since service, and poor review history.`,
+        mlResult: `Rule-based classification returned ${input.churnLevel} churn risk (${this.formatProbability(input.churnProbability)}) and ${input.failureLevel} failure risk (${this.formatProbability(input.failureProbability)}). Equipment age is ${equipmentAgeYears} years across ${input.signals.equipmentCount} record(s).`,
         aiExplanation: `The combined risk view means this customer is ${input.churnLevel.toLowerCase()} for churn and ${input.failureLevel.toLowerCase()} for equipment failure, so the system balances relationship recovery with preventive service timing.`,
       },
       proposedNextStep: {
         ruleBased: `Next-step rules prioritize paused follow-up review, urgent intervention, retention offer, maintenance scheduling, re-engagement after 90 days, then monitoring or normal cadence.`,
-        mlResult: `${sourceLabel} recommended action ${input.recommendedAction}; the selected next step is: ${input.proposedNextStep}`,
+        mlResult: `Rule-based classification recommended action ${input.recommendedAction}; the selected next step is: ${input.proposedNextStep}`,
         aiExplanation: `This step is the operational translation of the prediction results, chosen to reduce revenue loss, prevent avoidable equipment issues, and keep outreach aligned with the customer's current risk level.`,
       },
     };
