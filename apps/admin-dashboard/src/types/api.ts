@@ -71,6 +71,7 @@ export interface CustomerStatusSummary {
     priorityScore?: number | null
     triggerSource?: string | null
     createdAt: string
+    reason: string
   } | null
   retentionPrediction?: {
     customerId: string
@@ -121,23 +122,23 @@ export interface CustomerStatusSummary {
   reasoning?: {
     upsellRecommendation: {
       ruleBased: string
-      mlResult: string
-      aiExplanation: string
+      calculation: string
+      interpretation: string
     }
     retentionSuggestion: {
       ruleBased: string
-      mlResult: string
-      aiExplanation: string
+      calculation: string
+      interpretation: string
     }
     failureAndChurnPrediction: {
       ruleBased: string
-      mlResult: string
-      aiExplanation: string
+      calculation: string
+      interpretation: string
     }
     proposedNextStep: {
       ruleBased: string
-      mlResult: string
-      aiExplanation: string
+      calculation: string
+      interpretation: string
     }
   }
   signals: {

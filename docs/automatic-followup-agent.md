@@ -19,7 +19,7 @@ The shared payload type also supports `UPSELL`, which is produced by the Upsell 
 
 ## How the Rule-Based + LLM Decision Engine Works
 
-**As of this revision, the follow-up decision no longer depends on the churn-prediction ML model.** There wasn't enough historical data yet to trust `churn_probability > 0.7` as a signal, so the decision path was replaced with a hybrid: deterministic business rules decide **whether** a follow-up is needed, and an LLM only refines **how** to deliver it. `churn-service` and `ChurnClient` still exist and are still used elsewhere (the customer status-summary widget) — they're just no longer part of this decision.
+**As of this revision, the follow-up decision no longer depends on the churn-prediction ML model.** There wasn't enough historical data yet to trust `churn_probability > 0.7` as a signal, so the decision path was replaced with a hybrid: deterministic business rules decide **whether** a follow-up is needed, and an LLM only refines **how** to deliver it. `ChurnClient` has since been removed entirely (see below) — the customer status-summary widget's churn/failure risk is now also rule-based, computed directly in `CustomersService`.
 
 ```
 Rule Engine  →  Context Builder  →  LLM recommendation  →  Validation  →  same queue call as before
@@ -63,7 +63,7 @@ The LLM is told the rule engine has already decided a follow-up is needed and mu
 }
 ```
 
-Uses OpenAI (`OPENAI_API_KEY`, model from `OPENAI_MODEL_FOLLOWUP`, default `gpt-4o-mini`) via the same pattern `apps/chat-service/src/llm/llm.provider.ts` already uses elsewhere in this codebase. `response_format: json_object`, output is shape-validated before being trusted. Any failure — missing API key, timeout, malformed JSON — returns `null`, and the agent falls back to a rule-only decision with the worker's canned copy. The LLM call is skipped entirely when the rule engine found no reason to follow up.
+Uses Gemini via `@google/genai` (`GEMINI_API_KEY`, model from `GEMINI_MODEL_FOLLOWUP`, default `gemini-2.5-flash`). `responseMimeType: application/json`, output is shape-validated before being trusted. Any failure — missing API key, timeout, malformed JSON — returns `null`, and the agent falls back to a rule-only decision with the worker's canned copy. The LLM call is skipped entirely when the rule engine found no reason to follow up.
 
 ### 4. Validation Layer — `apps/crm-service/src/followup/validation/followup-validation.service.ts`
 
@@ -97,7 +97,7 @@ If validation fails, the entity is skipped exactly like today's "no contact chan
 
 ## Step 1: Churn Model (no longer part of follow-up decisioning)
 
-The model-backed prediction service still lives in `apps/churn-service` (`main.py`, `churn.service.py`, `model_loader.py`, `*.pkl` artifacts) and still exposes `POST /predict/churn`. It is **no longer called by the follow-up agent** — there wasn't enough historical data to trust it yet. It is still used by `CustomersService.getStatusSummary` (`apps/crm-service/src/customers/customers.service.ts`) for the customer detail page's churn widget, via the same `ChurnClient` (`apps/crm-service/src/ai/churn.client.ts`).
+The model-backed prediction service still lives in `apps/churn-service` (`main.py`, `churn.service.py`, `model_loader.py`, `*.pkl` artifacts) and still exposes `POST /predict/churn`, but nothing in `apps/crm-service` calls it anymore. It was dropped from the follow-up agent first (not enough historical data to trust it), and has since also been removed from `CustomersService.getStatusSummary` (`apps/crm-service/src/customers/customers.service.ts`) — the customer detail page's churn widget now runs the same kind of rule-based classification instead of calling the ML service. `comms-service`'s review churn-gate was migrated the same way, so `churn-service` currently has no live callers anywhere in the platform.
 
 ### Standalone Retention Agent
 
@@ -246,9 +246,9 @@ Unchanged — company-level toggle (`apps/admin-dashboard/src/pages/Settings.tsx
 
 ## Operational Configuration
 
-- `OPENAI_API_KEY` — required for LLM recommendations; if unset, the agent still runs on rules alone with canned copy.
-- `OPENAI_MODEL_FOLLOWUP` — default `gpt-4o-mini`.
-- `CHURN_SERVICE_URL` — no longer used in `crm-service` (churn/failure risk is rule-based); still read by `comms-service`'s review churn-gate.
+- `GEMINI_API_KEY` — required for LLM recommendations; if unset, the agent still runs on rules alone with canned copy.
+- `GEMINI_MODEL_FOLLOWUP` — default `gemini-2.5-flash`.
+- `CHURN_SERVICE_URL` — no longer used anywhere in the platform; churn/failure risk is rule-based in both `crm-service` and `comms-service`'s review churn-gate.
 - `ANALYTICS_SERVICE_URL`, `REDIS_HOST`, `REDIS_PORT` — unchanged.
 
 ## Failure Modes and Fallbacks
@@ -265,8 +265,8 @@ Unchanged — company-level toggle (`apps/admin-dashboard/src/pages/Settings.tsx
 2. `pnpm --filter crm-service test -- followup` — rule engine, context builder, LLM client, validation, decision service specs.
 3. `pnpm --filter comms-service test -- followup` — worker specs.
 4. `pnpm --filter crm-service type-check` and `pnpm --filter comms-service type-check`.
-5. Set `OPENAI_API_KEY`, trigger a follow-up for a seeded INACTIVE customer, confirm `followup_attempts.metadata.decision.llmRecommendation` is populated and the sent message isn't the canned copy.
-6. Unset `OPENAI_API_KEY`, confirm the same trigger still queues using canned copy (rule-only fallback).
+5. Set `GEMINI_API_KEY`, trigger a follow-up for a seeded INACTIVE customer, confirm `followup_attempts.metadata.decision.llmRecommendation` is populated and the sent message isn't the canned copy.
+6. Unset `GEMINI_API_KEY`, confirm the same trigger still queues using canned copy (rule-only fallback).
 7. Seed a customer with 6+ prior `followup_attempts` rows; confirm the safety gate suppresses it.
 8. Seed a `finance.Quote` row (`status=SENT`, `sentAt` 4+ days ago); confirm a `QUOTE_FOLLOWUP` attempt is created.
 9. Toggle company/customer settings off in Settings; confirm exclusion, same as before.

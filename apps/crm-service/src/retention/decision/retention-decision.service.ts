@@ -127,7 +127,7 @@ export class RetentionDecisionService {
     const audit: RetentionDecisionAudit = {
       ruleResult,
       llmRecommendation,
-      llmModel: llmRecommendation ? (process.env.OPENAI_MODEL_RETENTION ?? 'gpt-4o-mini') : null,
+      llmModel: llmRecommendation ? (process.env.GEMINI_MODEL_RETENTION ?? 'gemini-2.5-flash') : null,
       validation: { passed: validation.passed, failedChecks: validation.failedChecks },
       finalAction: validation.finalAction,
       finalChannel: validation.finalChannel,

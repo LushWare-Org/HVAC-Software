@@ -31,7 +31,7 @@ export class RecommendationsController {
   @Get()
   @ApiOperation({ summary: 'Get AI revenue recommendations sorted by priority score' })
   @ApiQuery({ name: 'forecastDays', required: false, type: Number, description: 'Forecast window in days for low-demand analysis (1, 7, 14, 30)' })
-  getRecommendations(
+  async getRecommendations(
     @CompanyId() companyId: string,
     @Query('forecastDays') forecastDays?: string,
   ) {

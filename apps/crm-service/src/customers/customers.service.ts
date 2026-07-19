@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  Logger,
 } from '@nestjs/common';
 import { Prisma } from '../prisma/generated';
 import { PrismaService } from '../prisma/prisma.service';
@@ -39,8 +38,6 @@ interface RevenuePredictionResult {
 
 @Injectable()
 export class CustomersService {
-  private readonly logger = new Logger(CustomersService.name);
-
   constructor(
     private prisma: PrismaService,
     private upsellAgent: UpsellAgentService,
@@ -368,6 +365,7 @@ export class CustomersService {
           priorityScore: upsellAgentResult.priorityScore,
           triggerSource: upsellAgentResult.triggerSource,
           createdAt: upsellAgentResult.createdAt,
+          reason: upsellAgentResult.reason,
         }
       : this.computeInlineUpsellRecommendation({
           equipmentAgeDays,
@@ -392,19 +390,24 @@ export class CustomersService {
       agentResult: retentionAgentResult,
     });
     const reasoning = this.buildStatusReasoning({
+      customerName: `${customer.firstName} ${customer.lastName}`.trim(),
       upsellRecommendation,
       retentionPrediction,
+      churnInput,
+      failureInput,
       churnProbability: prediction.churn_probability,
       churnLevel,
       failureProbability: prediction.failure_probability,
       failureLevel,
-      proposedNextStep,
       recommendedAction: prediction.recommended_action,
+      proposedNextStep,
+      automaticFollowupEnabled: customer.automaticFollowupEnabled,
       signals: {
         daysSinceLastService,
         serviceCountLastYear,
         avgMonthlySpend,
         equipmentAgeDays,
+        customerTenureDays,
         equipmentCount: customer._count.equipment,
         activeAgreementCount: customer.agreements.length,
         failureHistory,
@@ -749,6 +752,18 @@ export class CustomersService {
         + (signals.failureProbability * 0.15),
     );
 
+    const appliedBoosts: string[] = [];
+    if (equipmentAgeYears > 8) appliedBoosts.push(`equipment is ${equipmentAgeYears.toFixed(1)} years old (>8y, +0.45 to replacement)`);
+    if (signals.failureHistory > 2) appliedBoosts.push(`${signals.failureHistory} failure(s) on file (>2, +0.45 to maintenance plan)`);
+    if (signals.daysSinceLastService > 180) appliedBoosts.push(`${signals.daysSinceLastService} days since last service (>180, +0.4 to service)`);
+    if (signals.failureProbability >= 0.5) appliedBoosts.push(`failure risk ${Math.round(signals.failureProbability * 100)}% (>=50%, +0.15 to maintenance plan)`);
+    if (signals.churnProbability >= 0.5) appliedBoosts.push(`churn risk ${Math.round(signals.churnProbability * 100)}% (>=50%, +0.1 to maintenance plan and service)`);
+    if (signals.avgMonthlySpend >= 250) appliedBoosts.push(`average monthly spend $${Math.round(signals.avgMonthlySpend)} (>=$250, +0.08 to maintenance plan)`);
+
+    const reason = appliedBoosts.length > 0
+      ? `${appliedBoosts.join('; ')} — after normalizing, "${recommendedOffer}" scored highest at ${Math.round(confidence * 100)}%.`
+      : `No scoring boosts applied for this customer; base weights alone put "${recommendedOffer}" highest at ${Math.round(confidence * 100)}%.`;
+
     return {
       id: 'inline',
       recommendedOffer,
@@ -757,6 +772,7 @@ export class CustomersService {
       priorityScore: Number(priorityScore.toFixed(4)),
       triggerSource: 'status_summary',
       createdAt: new Date(),
+      reason,
     };
   }
 
@@ -856,12 +872,14 @@ export class CustomersService {
   }
 
   private buildStatusReasoning(input: {
+    customerName: string;
     upsellRecommendation: {
       recommendedOffer: string;
       confidence: number;
       priorityScore?: number | null;
       status: string;
       triggerSource?: string | null;
+      reason: string;
     };
     retentionPrediction: {
       pConvert: number;
@@ -874,17 +892,21 @@ export class CustomersService {
       triggerImmediately: boolean;
       reason: string;
     };
+    churnInput: ChurnPredictionInput;
+    failureInput: FailurePredictionInput;
     churnProbability: number;
     churnLevel: 'Low' | 'Medium' | 'High';
     failureProbability: number;
     failureLevel: 'Low' | 'Medium' | 'High';
-    proposedNextStep: string;
     recommendedAction: string;
+    proposedNextStep: string;
+    automaticFollowupEnabled: boolean;
     signals: {
       daysSinceLastService: number;
       serviceCountLastYear: number;
       avgMonthlySpend: number;
       equipmentAgeDays: number;
+      customerTenureDays: number;
       equipmentCount: number;
       activeAgreementCount: number;
       failureHistory: number;
@@ -895,29 +917,89 @@ export class CustomersService {
 
     return {
       upsellRecommendation: {
-        ruleBased: [
-          `Scores consider service recency (${input.signals.daysSinceLastService} days), equipment risk (${input.failureLevel}), churn risk (${input.churnLevel}), and monthly spend (${input.signals.avgMonthlySpend}).`,
-          `Stored recommendations are used first; otherwise the inline rule engine weights maintenance plan, replacement, and service options.`,
-        ].join(' '),
-        mlResult: `Recommended ${input.upsellRecommendation.recommendedOffer} with ${this.formatProbability(input.upsellRecommendation.confidence)} confidence and ${this.formatProbability(priorityScore)} priority from ${input.upsellRecommendation.status}.`,
-        aiExplanation: `The recommendation favors ${input.upsellRecommendation.recommendedOffer} because the customer's recent service pattern, failure risk, churn risk, and value signals make that offer the most relevant next commercial action.`,
+        ruleBased: `Rule engine checks, in order, the first match wins: equipment >8yr old -> replacement; >=3 repairs in 12mo -> maintenance plan; new equipment still under warranty -> extended warranty; no service in >180 days -> preventive service; premium segment with >$3,600/yr spend -> premium upgrade. If none match, or the customer opted out of follow-up, or the contact-attempt limit was hit, no upsell is offered.`,
+        calculation: `For ${input.customerName}: ${input.upsellRecommendation.reason} This selected category "${input.upsellRecommendation.recommendedOffer}", which the LLM/validation layer scored at ${this.formatProbability(input.upsellRecommendation.confidence)} confidence and ${this.formatProbability(priorityScore)} priority (status: ${input.upsellRecommendation.status}).`,
+        interpretation: `"${input.upsellRecommendation.recommendedOffer}" is recommended specifically because of the condition above — not a generic guess. Priority blends confidence (70% weight) with this customer's churn risk (${this.formatProbability(input.churnProbability)}, 15% weight) and failure risk (${this.formatProbability(input.failureProbability)}, 15% weight).`,
       },
       retentionSuggestion: {
-        ruleBased: `Retention action follows thresholds: premium contract when conversion is above 75% and annual value is above $1,500, retention discount when churn is above 70%, and maintenance plan when repeat failure history is high.`,
-        mlResult: `Rule-based classification inputs produced ${this.formatProbability(input.retentionPrediction.pConvert)} conversion probability, $${input.retentionPrediction.ltv.toLocaleString()} predicted annual value, ${this.formatProbability(input.retentionPrediction.churnProbability)} churn probability, and score ${input.retentionPrediction.score}.`,
-        aiExplanation: `${input.retentionPrediction.reason}. The suggested action is ${input.retentionPrediction.action} at ${input.retentionPrediction.priority} priority via ${input.retentionPrediction.recommendedChannel}${input.retentionPrediction.triggerImmediately ? ', so it should be triggered immediately' : ''}.`,
+        ruleBased: `Rule engine checks, in order, the first match wins: >=2 complaints/low ratings -> discount retention offer (high priority); maintenance agreement expired -> discount retention offer; >=3 repairs in 12mo -> maintenance plan offer; premium segment with >$2,400/yr spend and declining engagement -> premium contract offer; no service in >180 days -> discount retention offer. Blocked entirely if follow-up is paused, the customer already had 3+ retention attempts, or there's no phone/email on file.`,
+        calculation: `For ${input.customerName}: ${input.retentionPrediction.reason} Conversion probability ${this.formatProbability(input.retentionPrediction.pConvert)} x predicted annual value $${input.retentionPrediction.ltv.toLocaleString()} x (1 - churn ${this.formatProbability(input.retentionPrediction.churnProbability)}) = score ${Math.round(input.retentionPrediction.score).toLocaleString()}. Final action: "${input.retentionPrediction.action}" at ${input.retentionPrediction.priority} priority via ${input.retentionPrediction.recommendedChannel}${input.retentionPrediction.triggerImmediately ? ', flagged to trigger immediately because this customer has 3 or more complaints on file' : ''}.`,
+        interpretation: `The pConvert/LTV/score numbers are informational context, not what picked the action — the matched rule condition above is what decided it for ${input.customerName} specifically.`,
       },
       failureAndChurnPrediction: {
-        ruleBased: `Rule-based classification increases churn for long inactivity, no service in the last year, and new-customer uncertainty; failure risk rises with older equipment, long gaps since service, and poor review history.`,
-        mlResult: `Rule-based classification returned ${input.churnLevel} churn risk (${this.formatProbability(input.churnProbability)}) and ${input.failureLevel} failure risk (${this.formatProbability(input.failureProbability)}). Equipment age is ${equipmentAgeYears} years across ${input.signals.equipmentCount} record(s).`,
-        aiExplanation: `The combined risk view means this customer is ${input.churnLevel.toLowerCase()} for churn and ${input.failureLevel.toLowerCase()} for equipment failure, so the system balances relationship recovery with preventive service timing.`,
+        ruleBased: `Churn = (days since last service: >180d -> 0.45, >90d -> 0.25, else -> 0.08) + (zero services in the last 12mo -> +0.25) + (customer tenure <90 days -> +0.08), capped at 0.95. Failure = (equipment age: >10yr -> 0.45, >5yr -> 0.25, else -> 0.08) + (>180 days since last service -> +0.2) + (min(0.2, complaint count x 0.08)), capped at 0.95. Both are pure arithmetic on this customer's own data — no external model call.`,
+        calculation: `Churn for ${input.customerName}: ${this.describeChurnCalculation(input.churnInput)} = ${this.formatProbability(input.churnProbability)} -> ${input.churnLevel}. Failure: ${this.describeFailureCalculation(input.failureInput)} = ${this.formatProbability(input.failureProbability)} -> ${input.failureLevel}.`,
+        interpretation: `${input.customerName} is ${input.churnLevel.toLowerCase()} risk for churn and ${input.failureLevel.toLowerCase()} risk for equipment failure, driven by the specific factors plugged into the formula above — not a generic risk band.`,
       },
       proposedNextStep: {
-        ruleBased: `Next-step rules prioritize paused follow-up review, urgent intervention, retention offer, maintenance scheduling, re-engagement after 90 days, then monitoring or normal cadence.`,
-        mlResult: `Rule-based classification recommended action ${input.recommendedAction}; the selected next step is: ${input.proposedNextStep}`,
-        aiExplanation: `This step is the operational translation of the prediction results, chosen to reduce revenue loss, prevent avoidable equipment issues, and keep outreach aligned with the customer's current risk level.`,
+        ruleBased: `Decision tree, first match wins: follow-up paused -> manual review; churn>70% AND failure>70% -> urgent intervention; churn>70% -> retention offer; failure>70% -> schedule maintenance; recommended action is REENGAGEMENT or >90 days since service -> re-engagement message; churn>=40% OR failure>=40% -> monitor this week; otherwise -> normal cadence.`,
+        calculation: this.describeNextStepBranch(input),
+        interpretation: `This step is the direct operational output of the churn (${this.formatProbability(input.churnProbability)}) and failure (${this.formatProbability(input.failureProbability)}) numbers computed above for ${input.customerName}, translated into what the team should do next.`,
       },
     };
+  }
+
+  private describeChurnCalculation(churn: ChurnPredictionInput): string {
+    const recencyTerm = churn.days_since_last_service > 180
+      ? `${churn.days_since_last_service} days since last service (>180d, +0.45)`
+      : churn.days_since_last_service > 90
+        ? `${churn.days_since_last_service} days since last service (>90d, +0.25)`
+        : `${churn.days_since_last_service} days since last service (<=90d, +0.08)`;
+    const serviceTerm = churn.service_count_last_year === 0
+      ? `0 services in the last year (+0.25)`
+      : `${churn.service_count_last_year} service(s) in the last year (+0)`;
+    const tenureTerm = churn.customer_tenure_days < 90
+      ? `${churn.customer_tenure_days} days as a customer (<90d, +0.08)`
+      : `${churn.customer_tenure_days} days as a customer (>=90d, +0)`;
+    return `${recencyTerm} + ${serviceTerm} + ${tenureTerm}`;
+  }
+
+  private describeFailureCalculation(failure: FailurePredictionInput): string {
+    const equipmentAgeYears = Number((failure.equipment_age_days / 365).toFixed(1));
+    const ageTerm = failure.equipment_age_days > 3650
+      ? `equipment ${equipmentAgeYears}y old (>10y, +0.45)`
+      : failure.equipment_age_days > 1825
+        ? `equipment ${equipmentAgeYears}y old (>5y, +0.25)`
+        : `equipment ${equipmentAgeYears}y old (<=5y, +0.08)`;
+    const recencyTerm = failure.days_since_last_service > 180
+      ? `${failure.days_since_last_service} days since last service (>180d, +0.2)`
+      : `${failure.days_since_last_service} days since last service (<=180d, +0)`;
+    const historyValue = Math.min(0.2, failure.failure_history * 0.08);
+    const historyTerm = `${failure.failure_history} failure(s)/low rating(s) on file (min(0.2, ${failure.failure_history}x0.08), +${historyValue.toFixed(2)})`;
+    return `${ageTerm} + ${recencyTerm} + ${historyTerm}`;
+  }
+
+  private describeNextStepBranch(input: {
+    customerName: string;
+    recommendedAction: string;
+    proposedNextStep: string;
+    churnProbability: number;
+    failureProbability: number;
+    automaticFollowupEnabled: boolean;
+    signals: { daysSinceLastService: number };
+  }): string {
+    const churnPct = this.formatProbability(input.churnProbability);
+    const failurePct = this.formatProbability(input.failureProbability);
+
+    if (!input.automaticFollowupEnabled) {
+      return `Automatic follow-up is paused for ${input.customerName}, so the "paused follow-up" branch fired regardless of risk scores: "${input.proposedNextStep}"`;
+    }
+    if (input.recommendedAction === 'URGENT_INTERVENTION') {
+      return `Churn ${churnPct} AND failure ${failurePct} are both above 70%, so the urgent-intervention branch fired: "${input.proposedNextStep}"`;
+    }
+    if (input.recommendedAction === 'RETENTION') {
+      return `Churn ${churnPct} is above 70%, so the retention branch fired: "${input.proposedNextStep}"`;
+    }
+    if (input.recommendedAction === 'MAINTENANCE') {
+      return `Failure risk ${failurePct} is above 70%, so the maintenance branch fired: "${input.proposedNextStep}"`;
+    }
+    if (input.recommendedAction === 'REENGAGEMENT' || input.signals.daysSinceLastService > 90) {
+      return `Recommended action is ${input.recommendedAction} and it has been ${input.signals.daysSinceLastService} days since service (>90d), so the re-engagement branch fired: "${input.proposedNextStep}"`;
+    }
+    if (input.churnProbability >= 0.4 || input.failureProbability >= 0.4) {
+      return `Churn ${churnPct} or failure ${failurePct} is at or above the 40% monitoring threshold, so the monitor branch fired: "${input.proposedNextStep}"`;
+    }
+    return `Neither risk score reaches the 40% monitoring threshold (churn ${churnPct}, failure ${failurePct}) and service isn't overdue, so the default branch fired: "${input.proposedNextStep}"`;
   }
 
   private formatProbability(value: number) {

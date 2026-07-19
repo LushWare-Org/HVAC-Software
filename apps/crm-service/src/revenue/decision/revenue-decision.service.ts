@@ -125,7 +125,7 @@ export class RevenueDecisionService {
     const audit: RevenueDecisionAudit = {
       ruleResult,
       llmRecommendation,
-      llmModel: llmRecommendation ? (process.env.OPENAI_MODEL_REVENUE ?? 'gpt-4o-mini') : null,
+      llmModel: llmRecommendation ? (process.env.GEMINI_MODEL_REVENUE ?? 'gemini-2.5-flash') : null,
       validation: { passed: validation.passed, failedChecks: validation.failedChecks },
       finalCategory: validation.finalCategory,
       finalChannel: validation.finalChannel,

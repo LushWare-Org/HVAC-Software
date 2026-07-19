@@ -119,7 +119,7 @@ export class FollowupDecisionService {
     const audit: FollowupDecisionAudit = {
       ruleResult,
       llmRecommendation,
-      llmModel: llmRecommendation ? (process.env.OPENAI_MODEL_FOLLOWUP ?? 'gpt-4o-mini') : null,
+      llmModel: llmRecommendation ? (process.env.GEMINI_MODEL_FOLLOWUP ?? 'gemini-2.5-flash') : null,
       validation: { passed: validation.passed, failedChecks: validation.failedChecks },
       finalAction: ruleResult.action as FollowupAction,
       finalChannel: validation.finalChannel,

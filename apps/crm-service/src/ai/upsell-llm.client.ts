@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 import type { UpsellCustomerProfile, UpsellLlmRecommendation } from '@tscrm/types';
 import { UPSELL_LLM_SYSTEM_PROMPT, buildUpsellLlmUserPrompt } from './upsell-llm.prompt';
 
@@ -12,35 +12,39 @@ const REQUEST_TIMEOUT_MS = 8000;
  * opportunity the rule engine has already decided exists. Never decides
  * whether an upsell opportunity exists, or its category. Any failure returns
  * null so the caller falls back to the rule-only, canned-copy path — mirrors
- * RetentionLlmClient.
+ * RetentionLlmClient. Uses Gemini via @google/genai rather than OpenAI —
+ * config.httpOptions.timeout is unreliable on some SDK versions
+ * (googleapis/js-genai#1277), so the call is additionally raced against a
+ * manual timeout.
  */
 @Injectable()
 export class UpsellLlmClient {
   private readonly logger = new Logger(UpsellLlmClient.name);
-  private readonly model = process.env.OPENAI_MODEL_UPSELL ?? 'gpt-4o-mini';
-  private client: OpenAI | null = null;
+  private readonly model = process.env.GEMINI_MODEL_UPSELL ?? 'gemini-2.5-flash';
+  private client: GoogleGenAI | null = null;
 
   async recommend(profile: UpsellCustomerProfile): Promise<UpsellLlmRecommendation | null> {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return null;
     }
 
     try {
-      const completion = await this.getClient(apiKey).chat.completions.create(
-        {
+      const response = await this.withTimeout(
+        this.getClient(apiKey).models.generateContent({
           model: this.model,
-          response_format: { type: 'json_object' },
-          temperature: 0.4,
-          messages: [
-            { role: 'system', content: UPSELL_LLM_SYSTEM_PROMPT },
-            { role: 'user', content: buildUpsellLlmUserPrompt(profile) },
-          ],
-        },
-        { timeout: REQUEST_TIMEOUT_MS },
+          contents: buildUpsellLlmUserPrompt(profile),
+          config: {
+            systemInstruction: UPSELL_LLM_SYSTEM_PROMPT,
+            responseMimeType: 'application/json',
+            temperature: 0.4,
+            httpOptions: { timeout: REQUEST_TIMEOUT_MS },
+          },
+        }),
+        REQUEST_TIMEOUT_MS,
       );
 
-      const raw = completion.choices[0]?.message?.content;
+      const raw = response.text;
       if (!raw) {
         this.logger.warn('Upsell LLM returned an empty response');
         return null;
@@ -59,11 +63,19 @@ export class UpsellLlmClient {
     }
   }
 
-  private getClient(apiKey: string): OpenAI {
+  private getClient(apiKey: string): GoogleGenAI {
     if (!this.client) {
-      this.client = new OpenAI({ apiKey });
+      this.client = new GoogleGenAI({ apiKey });
     }
     return this.client;
+  }
+
+  private withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    let timer: NodeJS.Timeout;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`Gemini request timed out after ${ms}ms`)), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
   }
 
   private isValidRecommendation(value: unknown): value is UpsellLlmRecommendation {

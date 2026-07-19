@@ -355,8 +355,7 @@ The module is:
 
 It registers:
 
-- `ChurnClient`
-- `UpsellClient`
+- `UpsellLlmClient` (Gemini via `@google/genai`; `ChurnClient` was removed — churn/failure risk is computed by `CustomersService`'s rule-based classification instead)
 - `FollowupProducer`
 - `UpsellAgentService`
 - `UpsellCron`
@@ -769,8 +768,7 @@ Use this checklist after changing the Upsell Recommendation Agent.
 - `apps/churn-service/src/services/upsell.service.py`
 - `apps/churn-service/src/schemas/upsell.schema.py`
 - `Server/src/services/ai/upsell_agent.py`
-- `apps/crm-service/src/ai/upsell.client.ts`
-- `apps/crm-service/src/ai/churn.client.ts`
+- `apps/crm-service/src/ai/upsell-llm.client.ts`
 - `apps/crm-service/src/upsell/upsell-agent.service.ts`
 - `apps/crm-service/src/upsell/upsell.controller.ts`
 - `apps/crm-service/src/upsell/upsell.cron.ts`

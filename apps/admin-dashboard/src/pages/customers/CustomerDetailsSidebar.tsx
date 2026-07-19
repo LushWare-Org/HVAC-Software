@@ -211,39 +211,46 @@ function riskColor(level: CustomerStatusSummary["churnPrediction"]["level"]) {
   return "var(--green)";
 }
 
+/**
+ * Only used when the API response is missing `reasoning` entirely (e.g. a
+ * stale cached response). The raw per-customer inputs (equipment age,
+ * tenure, complaint count) aren't part of this summary payload, so this
+ * can't reproduce the backend's full worked arithmetic — it plugs in
+ * whatever real numbers ARE available on `summary` rather than falling
+ * back to generic boilerplate.
+ */
 function fallbackReasoning(summary: CustomerStatusSummary) {
   const upsell = summary.upsellRecommendation;
   const retention = summary.retentionPrediction;
-  const source = "rule-based classification";
 
   return {
     upsellRecommendation: {
-      ruleBased: `Scores consider service recency (${summary.signals.daysSinceLastService} days), failure risk (${summary.failurePrediction.level}), churn risk (${summary.churnPrediction.level}), and monthly spend (${formatMoney(summary.signals.avgMonthlySpend)}).`,
-      mlResult: upsell
-        ? `Recommended ${offerLabel(upsell.recommendedOffer)} with ${formatPct(upsell.confidence)} confidence and ${formatPct(upsell.priorityScore ?? upsell.confidence)} priority.`
-        : "No upsell recommendation was returned for this customer.",
-      aiExplanation: upsell
-        ? `The offer is favored because the customer signals make ${offerLabel(upsell.recommendedOffer).toLowerCase()} the strongest commercial follow-up.`
-        : "The system needs more offer data before it can explain a specific upsell recommendation.",
+      ruleBased: `Rule engine checks, in order: equipment >8yr old -> replacement; >=3 repairs in 12mo -> maintenance plan; new equipment under warranty -> extended warranty; no service in >180 days -> preventive service; premium segment with >$3,600/yr spend -> premium upgrade.`,
+      calculation: upsell
+        ? `${upsell.reason} This selected "${offerLabel(upsell.recommendedOffer)}" at ${formatPct(upsell.confidence)} confidence and ${formatPct(upsell.priorityScore ?? upsell.confidence)} priority.`
+        : "No upsell recommendation exists yet for this customer — the rule engine found no match, or the customer opted out of follow-up.",
+      interpretation: upsell
+        ? `"${offerLabel(upsell.recommendedOffer)}" was picked for the specific reason above, not a generic guess.`
+        : "Nothing to interpret until a recommendation is generated.",
     },
     retentionSuggestion: {
-      ruleBased: "Retention thresholds favor premium contracts for high conversion and value, retention discounts for high churn, and maintenance plans for repeated failure history.",
-      mlResult: retention
-        ? `${source} inputs produced ${formatPct(retention.pConvert)} conversion probability, ${formatMoney(retention.ltv)} annual value, ${formatPct(retention.churnProbability)} churn probability, and score ${Math.round(retention.score)}.`
-        : "No retention suggestion was returned for this customer.",
-      aiExplanation: retention
-        ? `${retention.reason}. Suggested action: ${offerLabel(retention.action)} at ${retention.priority} priority via ${offerLabel(retention.recommendedChannel)}.`
-        : "The system cannot explain a retention action until a retention prediction is available.",
+      ruleBased: "Rule engine checks, in order: >=2 complaints -> discount offer (high priority); agreement expired -> discount offer; >=3 repairs in 12mo -> maintenance plan offer; premium segment with declining engagement -> premium contract; no service in >180 days -> discount offer.",
+      calculation: retention
+        ? `${retention.reason} Conversion ${formatPct(retention.pConvert)} x value ${formatMoney(retention.ltv)} x (1 - churn ${formatPct(retention.churnProbability)}) = score ${Math.round(retention.score).toLocaleString()}. Action: "${offerLabel(retention.action)}" at ${retention.priority} priority via ${offerLabel(retention.recommendedChannel)}.`
+        : "No retention prediction exists yet for this customer.",
+      interpretation: retention
+        ? "The matched rule condition above decided the action — the score is informational context, not the trigger."
+        : "Nothing to interpret until a prediction is generated.",
     },
     failureAndChurnPrediction: {
-      ruleBased: "Fallback rules increase churn for long inactivity and low recent service count; failure risk rises with older equipment, service gaps, and poor review history.",
-      mlResult: `${source} returned ${summary.churnPrediction.level} churn risk (${formatPct(summary.churnPrediction.probability)}) and ${summary.failurePrediction.level} failure risk (${formatPct(summary.failurePrediction.probability)}).`,
-      aiExplanation: `The combined result means this customer needs outreach calibrated to churn risk and service timing calibrated to failure risk.`,
+      ruleBased: "Churn = (days since service: >180d->0.45, >90d->0.25, else->0.08) + (0 services/yr->+0.25) + (tenure<90d->+0.08), capped at 0.95. Failure = (equipment age: >10y->0.45, >5y->0.25, else->0.08) + (>180d since service->+0.2) + min(0.2, complaints x 0.08), capped at 0.95.",
+      calculation: `${summary.signals.daysSinceLastService} days since service and ${summary.signals.serviceCountLastYear} service(s) this year fed the churn formula -> ${formatPct(summary.churnPrediction.probability)} (${summary.churnPrediction.level}). Equipment/complaint history fed the failure formula -> ${formatPct(summary.failurePrediction.probability)} (${summary.failurePrediction.level}). (Full per-input breakdown isn't available in this cached view — reload the page for the complete calculation.)`,
+      interpretation: `This customer is ${summary.churnPrediction.level.toLowerCase()} risk for churn and ${summary.failurePrediction.level.toLowerCase()} risk for equipment failure, from the specific inputs above.`,
     },
     proposedNextStep: {
-      ruleBased: "Next-step rules prioritize paused follow-up review, urgent intervention, retention offers, maintenance scheduling, re-engagement, monitoring, then normal cadence.",
-      mlResult: `Selected next step: ${summary.proposedNextStep}`,
-      aiExplanation: "This converts the risk and recommendation results into the next operational action for the team.",
+      ruleBased: "Decision tree, first match wins: follow-up paused -> manual review; churn>70% AND failure>70% -> urgent; churn>70% -> retention offer; failure>70% -> maintenance; re-engagement action or >90 days since service -> re-engagement message; churn>=40% OR failure>=40% -> monitor; otherwise -> normal cadence.",
+      calculation: `Churn ${formatPct(summary.churnPrediction.probability)} and failure ${formatPct(summary.failurePrediction.probability)} produced: "${summary.proposedNextStep}"`,
+      interpretation: "This step is the direct operational output of the churn/failure numbers above for this specific customer.",
     },
   };
 }
@@ -259,8 +266,8 @@ function ReasoningCard({
   accent: string;
   details: {
     ruleBased: string;
-    mlResult: string;
-    aiExplanation: string;
+    calculation: string;
+    interpretation: string;
   };
 }) {
   return (
@@ -276,16 +283,16 @@ function ReasoningCard({
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider mb-2">Rule based</div>
+          <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider mb-2">Rule thresholds</div>
           <p className="text-sm text-[var(--t1)] leading-relaxed">{details.ruleBased}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider mb-2">ML result</div>
-          <p className="text-sm text-[var(--t1)] leading-relaxed">{details.mlResult}</p>
+          <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider mb-2">Calculation for this customer</div>
+          <p className="text-sm text-[var(--t1)] leading-relaxed">{details.calculation}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider mb-2">AI explanation</div>
-          <p className="text-sm text-[var(--t1)] leading-relaxed">{details.aiExplanation}</p>
+          <div className="text-[11px] font-700 text-[var(--t2)] uppercase tracking-wider mb-2">Why</div>
+          <p className="text-sm text-[var(--t1)] leading-relaxed">{details.interpretation}</p>
         </div>
       </div>
     </div>
