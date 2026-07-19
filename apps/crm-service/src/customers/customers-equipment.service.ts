@@ -11,6 +11,7 @@
  */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { TtlCacheService } from '../cache/ttl-cache.service';
 import { UpsellAgentService } from '../upsell/upsell-agent.service';
 
 export interface EquipmentInput {
@@ -28,6 +29,7 @@ export class CustomersEquipmentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly upsellAgent: UpsellAgentService,
+    private readonly ttlCache: TtlCacheService,
   ) {}
 
   /** Verify the customer exists under this company. Throws NotFound otherwise. */
@@ -44,6 +46,7 @@ export class CustomersEquipmentService {
     return this.prisma.equipment.findMany({
       where: { customerId, companyId },
       orderBy: { createdAt: 'desc' },
+      take: 500,
     });
   }
 
@@ -63,6 +66,7 @@ export class CustomersEquipmentService {
       },
     });
 
+    this.ttlCache.del(`status-summary:${companyId}:${customerId}`);
     void this.upsellAgent.processCustomerProfileUpdate(companyId, customerId);
     return equipment;
   }
@@ -89,6 +93,7 @@ export class CustomersEquipmentService {
       },
     });
 
+    this.ttlCache.del(`status-summary:${companyId}:${customerId}`);
     void this.upsellAgent.processCustomerProfileUpdate(companyId, customerId);
     return equipment;
   }
@@ -98,6 +103,7 @@ export class CustomersEquipmentService {
     const eq = await this.prisma.equipment.findFirst({ where: { id: eqId, customerId, companyId } });
     if (!eq) throw new NotFoundException(`Equipment ${eqId} not found`);
     const deleted = await this.prisma.equipment.delete({ where: { id: eqId } });
+    this.ttlCache.del(`status-summary:${companyId}:${customerId}`);
     void this.upsellAgent.processCustomerProfileUpdate(companyId, customerId);
     return deleted;
   }

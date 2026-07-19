@@ -51,6 +51,7 @@ export class PostsService {
     return this.prisma.contractorPost.findMany({
       where: { companyId },
       orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+      take: 200,
     });
   }
 

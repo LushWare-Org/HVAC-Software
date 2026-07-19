@@ -200,6 +200,7 @@ model Lead {
 
   @@index([companyId])
   @@index([companyId, status])
+  @@index([companyId, createdAt])
   @@index([leadgenId])
   @@map("leads")
 }
@@ -327,6 +328,7 @@ model Booking {
 
   @@index([companyId])
   @@index([companyId, status])
+  @@index([companyId, preferredDate])
   @@map("bookings")
 }
 

@@ -27,7 +27,7 @@ import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import CustomerRecommendationsModal from "../../components/CustomerRecommendationsModal";
-import { useCustomers, useAgreements, useDeleteCustomer, useUpdateCustomer, useCustomerStatusSummary, useCustomerTags } from "../../hooks/useCustomers";
+import { useCustomers, useAgreements, useDeleteCustomer, useUpdateCustomer, useCustomerStatusSummary, useCustomerTags, prefetchCustomerDetail } from "../../hooks/useCustomers";
 import { customerName } from "../../types/api";
 import type { Customer, CustomerStatusSummary } from "../../types/api";
 import { formatMoney } from '../../lib/format'
@@ -609,7 +609,7 @@ export default function Customers() {
                       <tr
                         key={c.id}
                         onClick={() => handleViewClick(c, "customer")}
-                        onMouseEnter={(e) => setHoveredCustomer({ id: c.id, x: e.clientX, y: e.clientY })}
+                        onMouseEnter={(e) => { setHoveredCustomer({ id: c.id, x: e.clientX, y: e.clientY }); prefetchCustomerDetail(c.id) }}
                         onMouseMove={(e) => setHoveredCustomer(current => current?.id === c.id ? { id: c.id, x: e.clientX, y: e.clientY } : current)}
                         onMouseLeave={() => setHoveredCustomer(current => current?.id === c.id ? null : current)}
                         className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"

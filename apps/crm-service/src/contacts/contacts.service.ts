@@ -15,6 +15,7 @@ export class ContactsService {
     return this.prisma.contact.findMany({
       where: { customerId, companyId },
       orderBy: [{ isPrimary: 'desc' }, { firstName: 'asc' }],
+      take: 200,
     });
   }
 

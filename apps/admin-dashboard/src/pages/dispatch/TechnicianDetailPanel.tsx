@@ -4,7 +4,7 @@ import {
   Zap, Navigation, Award, Clock, CheckCircle2,
 } from "lucide-react";
 import type { Technician, DispatchAssignment, Job } from "../../types/api";
-import { getTechAvailability, AVAIL_META } from "./DispatchBoard";
+import { getTechAvailability, AVAIL_META } from "../scheduling/availability";
 import Avatar from "../../components/Avatar";
 
 interface Props {

@@ -23,8 +23,8 @@ export class UsersService {
     private readonly storage: StorageService,
   ) {}
 
-  async findAll(companyId: string, params: { role?: string; search?: string; isActive?: boolean; page?: number; limit?: number }) {
-    const { role, search, isActive } = params;
+  async findAll(companyId: string, params: { role?: string; search?: string; isActive?: boolean; page?: number; limit?: number; slim?: boolean }) {
+    const { role, search, isActive, slim } = params;
     const { page, limit, skip } = clampPagination({ page: params.page, limit: params.limit }, { defaultLimit: 50 });
 
     const where: any = { companyId };
@@ -38,7 +38,17 @@ export class UsersService {
     }
 
     const [data, total] = await Promise.all([
-      this.prisma.companyUser.findMany({ where, orderBy: { name: 'asc' }, skip, take: limit }),
+      this.prisma.companyUser.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+        // slim: identity + presence fields only — used by high-frequency
+        // callers (e.g. the dispatch login map) that don't need full rows.
+        ...(slim
+          ? { select: { id: true, name: true, email: true, role: true, isActive: true, lastLoginAt: true, avatarUrl: true } }
+          : {}),
+      }),
       this.prisma.companyUser.count({ where }),
     ]);
 

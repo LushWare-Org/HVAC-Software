@@ -5,7 +5,7 @@
  *
  * DEMO: reads/writes the mock store; roster edits update live.
  */
-import { useMemo, useState, Suspense, lazy } from 'react'
+import { useEffect, useMemo, useState, Suspense, lazy } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
@@ -52,6 +52,11 @@ export default function ProjectDetail() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { project, isLoading } = useProjectFull(id)
   useTechDirectory() // primes avatar names/colors
+  // Warm the Houses tab's data while the user is still on Overview, so
+  // switching tabs never shows a loading state.
+  useEffect(() => {
+    if (id) import('./housesApi').then(m => m.prefetchHousesForProject(id))
+  }, [id])
   // Deep link from the alert banners: ?house=<id> opens the Houses tab with
   // that house's detail modal already open, instead of dropping you on the
   // project and making you find it yourself.

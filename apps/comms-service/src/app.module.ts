@@ -11,6 +11,7 @@ import { EmailModule } from './email/email.module';
 import { PushModule } from './push/push.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { EnRouteModule } from './enroute/enroute.module';
+import { JobAssignedModule } from './job-assigned/job-assigned.module';
 import { TemplatesModule } from './templates/templates.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { AutomationModule } from './automation/automation.module';
@@ -63,6 +64,7 @@ import { CompanySettingsModule } from './company-settings/company-settings.modul
     // ── Domain modules ─────────────────────────────────────────────────────
     NotificationsModule,
     EnRouteModule,
+    JobAssignedModule,
     TemplatesModule,
     MessagingModule,
     AutomationModule,

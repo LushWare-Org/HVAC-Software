@@ -252,6 +252,7 @@ model Job {
   @@index([companyId, scheduledStart])
   @@index([customerId])
   @@index([agreementId])
+  @@index([companyId, projectId])
   @@index([houseId])
   @@index([equipmentId])
   @@map("jobs")

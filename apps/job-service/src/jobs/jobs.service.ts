@@ -6,17 +6,22 @@ import {
 } from '@nestjs/common';
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisCacheService } from '../redis-cache.service';
 import { Prisma } from '../prisma/generated';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
 import { AuthUser, PaginatedResponse, clampPagination } from '@tscrm/types';
 
 const CREATE_JOB_MAX_ATTEMPTS = 5;
+const STATS_CACHE_TTL_S = 30;
 
 @Injectable()
 export class JobsService {
   private readonly logger = new Logger(JobsService.name);
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: RedisCacheService,
+  ) {}
 
   // ============================================================
   // CREATE
@@ -71,6 +76,7 @@ export class JobsService {
           return createdJob;
         });
 
+        await this.invalidateStatsCache(user.companyId);
         return this.findOne(user.companyId, job.id);
       } catch (error) {
         if (!this.isJobNumberUniqueError(error) || attempt === CREATE_JOB_MAX_ATTEMPTS) {
@@ -100,12 +106,18 @@ export class JobsService {
       customerId?: string;
       agreementId?: string;
       projectId?: string;
+      projectIds?: string[];
       houseId?: string;
       equipmentId?: string;
       isAgreementJob?: boolean;
     } = {},
   ): Promise<PaginatedResponse<unknown>> {
-    const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput });
+    // Batch (multi-project) requests return rows for many projects in one
+    // page, so they get a higher ceiling than the per-entity default.
+    const { page, limit, skip } = clampPagination(
+      { page: pageInput, limit: limitInput },
+      filters.projectIds?.length ? { maxLimit: 500 } : {},
+    );
     const where: any = { companyId };
 
     if (filters.status) where.status = filters.status;
@@ -114,6 +126,9 @@ export class JobsService {
     if (filters.customerId) where.customerId = filters.customerId;
     if (filters.agreementId) where.agreementId = filters.agreementId;
     if (filters.projectId) where.projectId = filters.projectId;
+    // Batch form: one request for many projects' jobs (Projects page overview)
+    // instead of one request per project.
+    if (filters.projectIds?.length) where.projectId = { in: filters.projectIds };
     if (filters.houseId) where.houseId = filters.houseId;
     if (filters.equipmentId) where.equipmentId = filters.equipmentId;
     if (filters.isAgreementJob !== undefined) where.isAgreementJob = filters.isAgreementJob;
@@ -198,6 +213,7 @@ export class JobsService {
       await tx.job.delete({ where: { id } });
     });
 
+    await this.invalidateStatsCache(companyId);
     return { success: true, id };
   }
 
@@ -262,6 +278,8 @@ export class JobsService {
 
       return result;
     });
+
+    await this.invalidateStatsCache(companyId);
 
     if (newStatus === JobStatusDto.EN_ROUTE) {
       const commsBase = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
@@ -372,7 +390,7 @@ export class JobsService {
     }>,
   ) {
     await this.findOne(companyId, id);
-    return this.prisma.job.update({
+    const updated = await this.prisma.job.update({
       where: { id },
       data: {
         ...data,
@@ -381,6 +399,10 @@ export class JobsService {
         scheduledEnd: data.scheduledEnd ? new Date(data.scheduledEnd) : undefined,
       },
     });
+    // Generic PATCH can change status/scheduledStart (the admin UI's status
+    // dropdown goes through here) — the cached stat counts must not lag it.
+    await this.invalidateStatsCache(companyId);
+    return updated;
   }
 
   // ============================================================
@@ -410,38 +432,52 @@ export class JobsService {
   // ============================================================
 
   async getStats(companyId: string) {
-    const statuses = [
-      'PENDING', 'SCHEDULED', 'EN_ROUTE', 'ON_SITE',
-      'COMPLETED', 'INVOICED', 'PAID', 'CANCELLED', 'ON_HOLD',
-    ];
-    const counts = await Promise.all(
-      statuses.map(async (status) => ({
-        status,
-        count: await this.prisma.job.count({
-          where: { companyId, status: status as any },
-        }),
-      })),
-    );
+    const cacheKey = `jobs:stats:${companyId}`;
+    const cached = await this.cache.get<{ byStatus: unknown[]; scheduledToday: number }>(cacheKey);
+    if (cached) return cached;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const scheduledToday = await this.prisma.job.count({
-      where: {
-        companyId,
-        status: { in: ['SCHEDULED', 'EN_ROUTE', 'ON_SITE'] as any },
-        scheduledStart: { gte: today, lt: tomorrow },
-      },
-    });
+    // One GROUP BY for all status counts + one count for today's schedule —
+    // this used to be 10 separate COUNT queries per request.
+    const [grouped, scheduledToday] = await Promise.all([
+      this.prisma.job.groupBy({
+        by: ['status'],
+        where: { companyId },
+        _count: { _all: true },
+      }),
+      this.prisma.job.count({
+        where: {
+          companyId,
+          status: { in: ['SCHEDULED', 'EN_ROUTE', 'ON_SITE'] as any },
+          scheduledStart: { gte: today, lt: tomorrow },
+        },
+      }),
+    ]);
 
-    return { byStatus: counts, scheduledToday };
+    const countByStatus = new Map(grouped.map((g) => [g.status as string, g._count._all]));
+    const statuses = [
+      'PENDING', 'SCHEDULED', 'EN_ROUTE', 'ON_SITE',
+      'COMPLETED', 'INVOICED', 'PAID', 'CANCELLED', 'ON_HOLD',
+    ];
+    const result = {
+      byStatus: statuses.map((status) => ({ status, count: countByStatus.get(status) ?? 0 })),
+      scheduledToday,
+    };
+    await this.cache.set(cacheKey, result, STATS_CACHE_TTL_S);
+    return result;
   }
 
   // ============================================================
   // HELPERS
   // ============================================================
+
+  private async invalidateStatsCache(companyId: string) {
+    await this.cache.del(`jobs:stats:${companyId}`);
+  }
 
   private async generateJobNumber(
     tx: Prisma.TransactionClient,

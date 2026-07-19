@@ -9,7 +9,7 @@ import {
   CalendarClock, DollarSign, ShieldCheck,
 } from 'lucide-react'
 import {
-  useServiceAgreements, useSendAgreement, useRenewAgreement,
+  useServiceAgreements, useSendAgreement, useRenewAgreement, prefetchAgreementDetail,
   type Agreement, type AgreementStatus,
 } from '../../hooks/useAgreements'
 import AgreementEditorModal from './AgreementEditorModal'
@@ -301,7 +301,7 @@ export default function Agreements() {
                     key={a.id}
                     style={{ borderBottom: '1px solid var(--bd)', cursor: 'pointer' }}
                     onClick={() => setDetailId(a.id)}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-card-2)')}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-card-2)'; prefetchAgreementDetail(a.id) }}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <td style={{ padding: '12px 14px' }} onClick={e => e.stopPropagation()}>

@@ -36,6 +36,7 @@ export class HousesService {
     const houses = await this.prisma.house.findMany({
       where: { companyId, projectId },
       orderBy: { createdAt: 'asc' },
+      take: 1000,
     });
     return this.decorate(companyId, houses);
   }
@@ -128,6 +129,7 @@ export class HousesService {
     const houses = await this.prisma.house.findMany({
       where: { companyId, ownerCustomerId: customerId },
       orderBy: { createdAt: 'desc' },
+      take: 50,
     });
     if (houses.length === 0) return [];
     const projectIds = [...new Set(houses.map((h) => h.projectId))];
@@ -153,6 +155,7 @@ export class HousesService {
     return this.prisma.houseIssueReport.findMany({
       where: { companyId, houseId },
       orderBy: { createdAt: 'desc' },
+      take: 200,
     });
   }
 
@@ -160,6 +163,7 @@ export class HousesService {
     return this.prisma.houseIssueReport.findMany({
       where: { companyId, reportedByCustomerId: customerId },
       orderBy: { createdAt: 'desc' },
+      take: 200,
     });
   }
 
@@ -227,6 +231,7 @@ export class HousesService {
       where: { companyId, status: { not: 'RESOLVED' } },
       orderBy: { createdAt: 'desc' },
       include: { house: { include: { project: { select: { id: true, name: true } } } } },
+      take: 500,
     });
     if (issues.length === 0) return [];
 

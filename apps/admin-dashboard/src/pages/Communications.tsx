@@ -123,7 +123,7 @@ export default function Communications() {
     const typingSentRef = useRef(false)
 
     // ── WebSocket ────────────────────────────────────────────────────────────────
-    const { isConnected, joinThread, leaveThread, sendTyping, onNewMessage, onTyping } = useSocket()
+    const { isConnected, joinThread, leaveThread, sendTyping, onNewMessage, onTyping, onThreadsChanged } = useSocket()
 
     // Join/leave thread room on selection
     useEffect(() => {
@@ -145,6 +145,15 @@ export default function Communications() {
         })
         return unsub
     }, [onNewMessage])
+
+    // Real-time: company-wide signal (messages in threads we haven't joined) —
+    // refreshes the threads list + unread badge instead of tight polling.
+    useEffect(() => {
+        const unsub = onThreadsChanged(() => {
+            queryClient.invalidateQueries({ queryKey: ['threads'] })
+        })
+        return unsub
+    }, [onThreadsChanged])
 
     // Real-time: typing indicator from others
     useEffect(() => {

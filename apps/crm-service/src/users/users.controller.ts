@@ -40,6 +40,7 @@ export class UsersController {
     @Query('isActive') isActive?: string,
     @Query('page') page = 1,
     @Query('limit') limit = 50,
+    @Query('slim') slim?: string,
   ) {
     return this.usersService.findAll(user.companyId, {
       role,
@@ -47,6 +48,7 @@ export class UsersController {
       isActive: isActive !== undefined ? isActive === 'true' : undefined,
       page: Number(page),
       limit: Number(limit),
+      slim: slim === 'true',
     });
   }
 

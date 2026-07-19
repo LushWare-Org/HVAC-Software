@@ -151,6 +151,7 @@ model Quote {
   @@unique([companyId, quoteNumber])
   @@index([companyId, status])
   @@index([companyId, customerId])
+  @@index([companyId, projectId])
   @@schema("finance")
 }
 
@@ -240,6 +241,7 @@ model Invoice {
   @@index([companyId, status])
   @@index([companyId, customerId])
   @@index([companyId, dueDate])
+  @@index([companyId, projectId])
   @@schema("finance")
 }
 

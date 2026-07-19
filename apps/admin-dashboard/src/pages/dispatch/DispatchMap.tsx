@@ -581,12 +581,16 @@ export default function DispatchMap({
                       </span>
                     </div>
                     {t.phone && <div style={{ color: '#6b7280', marginBottom: 3 }}>{t.phone}</div>}
+                    {t.speedKmh !== undefined && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 4, background: t.speedKmh > 3 ? '#DBEAFE' : '#F3F4F6', color: t.speedKmh > 3 ? '#1D4ED8' : '#6B7280', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
+                        {t.speedKmh > 3 ? `● MOVING · ${t.speedKmh.toFixed(0)} km/h` : '○ STATIONARY'}
+                      </div>
+                    )}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 4, fontSize: 11 }}>
                       <span style={{ color: '#374151' }}>⭐ {t.rating.toFixed(1)}</span>
                       <span style={{ color: workload >= t.maxDailyJobs ? '#ef4444' : '#374151' }}>
                         📋 {workload}/{t.maxDailyJobs} jobs
                       </span>
-                      {t.speedKmh !== undefined && <span style={{ color: '#374151' }}>🚗 {t.speedKmh.toFixed(0)} km/h</span>}
                       {t.batteryPct !== undefined && (
                         <span style={{ color: t.batteryPct < 20 ? '#ef4444' : '#374151' }}>🔋 {t.batteryPct}%</span>
                       )}

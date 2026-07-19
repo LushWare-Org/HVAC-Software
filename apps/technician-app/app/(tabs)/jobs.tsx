@@ -31,7 +31,13 @@ export default function JobsScreen() {
 
   const { data: jobsData, isLoading, refetch } = useMyJobs({ limit: 100 })
 
-  const todayStr = new Date().toISOString().slice(0, 10)
+  // LOCAL calendar date, not UTC. `toISOString()` gave the UTC date, so an
+  // 11 PM job (UTC+5:30) carried tomorrow's UTC date and landed in the wrong
+  // tab. All bucketing below compares dates in the device's timezone.
+  const localDateStr = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const todayStr = localDateStr(new Date())
+  const jobLocalDate = (iso?: string | null) => (iso ? localDateStr(new Date(iso)) : null)
 
   const filteredJobs = useMemo(() => {
     if (!jobsData?.data) return []
@@ -42,22 +48,24 @@ export default function JobsScreen() {
     switch (activeTab) {
       case 'today':
         jobs = jobs.filter((j) => {
+          if (isCompletedJob(j.status) || j.status === 'CANCELLED') return false
           // Currently in-progress jobs always show in Today
           if (j.status === 'EN_ROUTE' || j.status === 'ON_SITE' || j.status === 'IN_PROGRESS') return true
-          // SCHEDULED jobs only if scheduled for today
-          if (j.status === 'SCHEDULED') return j.scheduledStart?.startsWith(todayStr)
-          // PENDING jobs scheduled for today or with no date
-          if (j.status === 'PENDING') return !j.scheduledStart || j.scheduledStart.startsWith(todayStr)
-          return j.scheduledStart?.startsWith(todayStr) ?? false
+          const jobDate = jobLocalDate(j.scheduledStart)
+          // No schedule yet → needs attention today
+          if (!jobDate) return true
+          // Today's schedule, plus OVERDUE (past-dated, still open) jobs —
+          // previously these vanished from every tab.
+          return jobDate <= todayStr
         })
         break
       case 'upcoming':
         jobs = jobs.filter((j) => {
           if (isCompletedJob(j.status) || j.status === 'CANCELLED') return false
-          if (!j.scheduledStart) return false
-          // Future dates only (not today)
-          const jobDate = j.scheduledStart.slice(0, 10)
-          return jobDate > todayStr
+          if (j.status === 'EN_ROUTE' || j.status === 'ON_SITE' || j.status === 'IN_PROGRESS') return false
+          const jobDate = jobLocalDate(j.scheduledStart)
+          // Future local dates only (not today)
+          return !!jobDate && jobDate > todayStr
         })
         break
       case 'completed':

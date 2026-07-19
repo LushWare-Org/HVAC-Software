@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import {
   useProjectsFull, useTechDirectory, projectProgress, projectFinances,
-  toDateKey, STATUS_META, type Project, type ProjectStatus,
+  toDateKey, STATUS_META, prefetchProjectDetail, type Project, type ProjectStatus,
 } from './projectsApi'
 import { useOpenHouseIssues } from './housesApi'
 import { AvatarStack, ProjectStatusBadge, ProgressBar, fmtMoney, fmtDate } from './shared'
@@ -178,6 +178,8 @@ function ProjectCard({ project: p, openIssueCount, onOpen }: { project: Project;
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={e => { if (e.key === 'Enter') onOpen() }}
+      onMouseEnter={() => prefetchProjectDetail(p.id)}
+      onFocus={() => prefetchProjectDetail(p.id)}
       style={{
         padding: 0, overflow: 'hidden', cursor: 'pointer',
         border: hasOpenIssue ? '1px solid var(--red)' : undefined,

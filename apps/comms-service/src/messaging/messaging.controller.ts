@@ -133,6 +133,8 @@ export class MessagingController {
         lastMessageAt: updatedThread.lastMessageAt,
         unreadCount: updatedThread.unreadCount,
       });
+      // Staff clients not joined to this thread still refresh their list/badge.
+      this.gateway.broadcastToCompany(user.companyId, 'threads_changed', { threadId });
     }
 
     return updatedThread;

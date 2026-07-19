@@ -15,6 +15,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisCacheService } from '../redis-cache.service';
+
+const mockCache = {
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue(undefined),
+  del: jest.fn().mockResolvedValue(undefined),
+};
 import { JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
 import { Role } from '@tscrm/types';
 
@@ -135,6 +142,7 @@ describe('JobsService — updateJobStatus', () => {
       providers: [
         JobsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: RedisCacheService, useValue: mockCache },
       ],
     }).compile();
 
@@ -282,6 +290,7 @@ describe('JobsService — create', () => {
       providers: [
         JobsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: RedisCacheService, useValue: mockCache },
       ],
     }).compile();
     service = module.get<JobsService>(JobsService);
@@ -333,6 +342,7 @@ describe('JobsService — findAll filters', () => {
       providers: [
         JobsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: RedisCacheService, useValue: mockCache },
       ],
     }).compile();
     service = module.get<JobsService>(JobsService);

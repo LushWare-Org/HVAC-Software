@@ -21,51 +21,62 @@ interface CustomerFilters {
   sortDir?: 'asc' | 'desc'
 }
 
+async function fetchCustomers(filters: CustomerFilters): Promise<PaginatedResponse<Customer>> {
+  const params: Record<string, unknown> = {
+    page: filters.page ?? 1,
+    limit: filters.limit ?? 50,
+  }
+  if (filters.search) params.search = filters.search
+  if (filters.type && filters.type !== 'All Types') params.type = filters.type.toUpperCase()
+  if (filters.isActive !== undefined) params.isActive = filters.isActive
+  if (filters.tags && filters.tags.length > 0) params.tags = filters.tags.join(',')
+  if (filters.sortBy) params.sortBy = filters.sortBy
+  if (filters.sortDir) params.sortDir = filters.sortDir
+  const res = await api.get('/crm/customers', { params })
+  const raw = res.data
+  // Normalize: backend returns { data, meta: {...} }, frontend expects flat shape
+  if (raw.meta) {
+    return { data: raw.data, ...raw.meta }
+  }
+  return raw
+}
+
+async function fetchCustomerTags(): Promise<string[]> {
+  const res = await api.get('/crm/customers/tags')
+  // Filter out system-generated tags (e.g. iot:offline:*, portal-signup)
+  return (res.data as string[]).filter(
+    t => !t.startsWith('iot:') && t !== 'portal-signup'
+  )
+}
+
+async function fetchCustomer(id: string): Promise<Customer> {
+  const res = await api.get(`/crm/customers/${id}`)
+  return res.data
+}
+
+async function fetchCustomerStatusSummary(id: string): Promise<CustomerStatusSummary> {
+  const res = await api.get(`/crm/customers/${id}/status-summary`)
+  return res.data
+}
+
 export function useCustomers(filters: CustomerFilters = {}) {
   return useQuery<PaginatedResponse<Customer>>({
     queryKey: ['customers', filters],
-    queryFn: async () => {
-      const params: Record<string, unknown> = {
-        page: filters.page ?? 1,
-        limit: filters.limit ?? 50,
-      }
-      if (filters.search) params.search = filters.search
-      if (filters.type && filters.type !== 'All Types') params.type = filters.type.toUpperCase()
-      if (filters.isActive !== undefined) params.isActive = filters.isActive
-      if (filters.tags && filters.tags.length > 0) params.tags = filters.tags.join(',')
-      if (filters.sortBy) params.sortBy = filters.sortBy
-      if (filters.sortDir) params.sortDir = filters.sortDir
-      const res = await api.get('/crm/customers', { params })
-      const raw = res.data
-      // Normalize: backend returns { data, meta: {...} }, frontend expects flat shape
-      if (raw.meta) {
-        return { data: raw.data, ...raw.meta }
-      }
-      return raw
-    },
+    queryFn: () => fetchCustomers(filters),
   })
 }
 
 export function useCustomerTags() {
   return useQuery<string[]>({
     queryKey: ['customer-tags'],
-    queryFn: async () => {
-      const res = await api.get('/crm/customers/tags')
-      // Filter out system-generated tags (e.g. iot:offline:*, portal-signup)
-      return (res.data as string[]).filter(
-        t => !t.startsWith('iot:') && t !== 'portal-signup'
-      )
-    },
+    queryFn: fetchCustomerTags,
   })
 }
 
 export function useCustomer(id: string) {
   return useQuery<Customer>({
     queryKey: ['customers', id],
-    queryFn: async () => {
-      const res = await api.get(`/crm/customers/${id}`)
-      return res.data
-    },
+    queryFn: () => fetchCustomer(id),
     enabled: !!id,
   })
 }
@@ -73,13 +84,35 @@ export function useCustomer(id: string) {
 export function useCustomerStatusSummary(id?: string | null) {
   return useQuery<CustomerStatusSummary>({
     queryKey: ['customers', id, 'status-summary'],
-    queryFn: async () => {
-      const res = await api.get(`/crm/customers/${id}/status-summary`)
-      return res.data
-    },
+    queryFn: () => fetchCustomerStatusSummary(id!),
     enabled: !!id,
-    staleTime: 0,
+    staleTime: 60 * 1000,
   })
+}
+
+/**
+ * Warm the queries Customers.tsx mounts with. The filter object must match
+ * the page's initial state exactly (page 1, 10/page, createdAt desc) or the
+ * query hash won't line up and the prefetch is wasted.
+ */
+export function prefetchCustomersPage(): Promise<unknown> {
+  const initialFilters: CustomerFilters = {
+    page: 1, limit: 10,
+    search: undefined, type: undefined, isActive: undefined, tags: undefined,
+    sortBy: 'createdAt', sortDir: 'desc',
+  }
+  return Promise.allSettled([
+    queryClient.prefetchQuery({ queryKey: ['customers', initialFilters], queryFn: () => fetchCustomers(initialFilters) }),
+    queryClient.prefetchQuery({ queryKey: ['customer-tags'], queryFn: fetchCustomerTags }),
+  ])
+}
+
+/** Warm one customer's detail + status summary — called on row hover so the sidebar opens instantly. */
+export function prefetchCustomerDetail(id: string): Promise<unknown> {
+  return Promise.allSettled([
+    queryClient.prefetchQuery({ queryKey: ['customers', id], queryFn: () => fetchCustomer(id) }),
+    queryClient.prefetchQuery({ queryKey: ['customers', id, 'status-summary'], queryFn: () => fetchCustomerStatusSummary(id), staleTime: 60 * 1000 }),
+  ])
 }
 
 export function useCreateCustomer() {
@@ -291,6 +324,10 @@ export function useCreateBooking() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agreements'] })
+      // Bookings feed the Dashboard's upcoming-appointments panel and the
+      // customer status-summary (last-service / cadence signals).
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'appointments'] })
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
     },
   })
 }

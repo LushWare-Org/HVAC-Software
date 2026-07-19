@@ -38,18 +38,35 @@ const DEFAULT_DISPATCH_WS_BASE = 'wss://nginx-gateway-2ohuhmktua-uc.a.run.app'
 
 // ─── Technicians ───────────────────────────────────────────────────────────────
 
+async function fetchTechnicians(): Promise<Technician[]> {
+  const res = await api.get('/scheduling/technicians')
+  // Go handler returns { data: [...], count: N }
+  // When the slice is empty Go marshals null, so guard with Array.isArray
+  const arr = res.data?.data
+  return Array.isArray(arr) ? arr : []
+}
+
 export function useTechnicians() {
   return useQuery<Technician[]>({
     queryKey: ['scheduling', 'technicians'],
-    queryFn: async () => {
-      const res = await api.get('/scheduling/technicians')
-      // Go handler returns { data: [...], count: N }
-      // When the slice is empty Go marshals null, so guard with Array.isArray
-      const arr = res.data?.data
-      return Array.isArray(arr) ? arr : []
-    },
+    queryFn: fetchTechnicians,
     staleTime: 30 * 1000,
   })
+}
+
+/**
+ * Warm the Scheduling cockpit's mount queries: technicians + the two job
+ * lists it renders from. The assignments query keys off the fetched tech
+ * ids, so it fires naturally once the page mounts with warm techs.
+ */
+export function prefetchSchedulingPage(): Promise<unknown> {
+  return Promise.allSettled([
+    queryClient.prefetchQuery({ queryKey: ['scheduling', 'technicians'], queryFn: fetchTechnicians, staleTime: 30 * 1000 }),
+    import('./useJobs').then(m => Promise.allSettled([
+      m.prefetchJobs({ status: 'PENDING', limit: 50 }),
+      m.prefetchJobs({ limit: 200 }),
+    ])),
+  ])
 }
 
 export function useCreateTechnician() {
@@ -92,7 +109,7 @@ export function useTechnicianLoginMap(): Record<string, string> {
   const query = useQuery<Record<string, string>>({
     queryKey: ['crm', 'tech-login-map'],
     queryFn: async () => {
-      const res = await api.get('/crm/users', { params: { role: 'technician', limit: 100 } })
+      const res = await api.get('/crm/users', { params: { role: 'technician', limit: 100, slim: true } })
       const users: Array<{ id: string; lastLoginAt?: string }> = res.data?.data ?? []
       const map: Record<string, string> = {}
       for (const u of users) {
@@ -144,6 +161,20 @@ export function useAllTechAssignments(techIds: string[]) {
   return useQuery<FlatAssignment[]>({
     queryKey: ['scheduling', 'assignments', 'all-techs', techIds],
     queryFn: async () => {
+      // One bulk call for the whole company (GET /dispatch/assignments)
+      // instead of one request per technician.
+      try {
+        const res = await api.get('/scheduling/dispatch/assignments')
+        const arr = res.data?.data
+        if (Array.isArray(arr)) {
+          const wanted = new Set(techIds)
+          return arr.filter((a: any) => wanted.has(a.technicianId))
+        }
+      } catch {
+        // Fall through to the legacy per-technician fan-out below — keeps the
+        // page working against a scheduling-service that predates the bulk
+        // endpoint (e.g. prod before the next deploy).
+      }
       const results = await Promise.all(
         techIds.map(async (tid) => {
           try {
@@ -175,6 +206,7 @@ export function useSmartAssign() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scheduling'] })
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }
@@ -191,6 +223,7 @@ export function useManualAssign() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scheduling'] })
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }
@@ -209,6 +242,7 @@ export function useUpdateAssignmentStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scheduling'] })
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }
@@ -301,6 +335,7 @@ export function useDispatchWebSocket() {
         if (event.type === 'ASSIGNMENT_CREATED' || event.type === 'ASSIGNMENT_STATUS_CHANGED') {
           queryClient.invalidateQueries({ queryKey: ['scheduling'] })
           queryClient.invalidateQueries({ queryKey: ['jobs'] })
+          queryClient.invalidateQueries({ queryKey: ['dashboard'] })
         }
 
         if (event.type === 'GPS_UPDATE') {

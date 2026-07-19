@@ -29,8 +29,12 @@ export class BookingsController {
 
   @Get()
   @ApiOperation({ summary: 'List booking requests' })
-  findAll(@CurrentUser() user: AuthUser, @Query('status') status?: string) {
-    return this.bookingsService.findAll(user.companyId, status);
+  findAll(
+    @CurrentUser() user: AuthUser,
+    @Query('status') status?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.bookingsService.findAll(user.companyId, status, limit ? Number(limit) : undefined);
   }
 
   @Post()

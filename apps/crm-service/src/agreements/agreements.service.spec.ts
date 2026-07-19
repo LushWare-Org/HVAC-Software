@@ -45,6 +45,7 @@ function prismaMock(over: any = {}) {
 }
 
 const emailMock = () => ({ sendMail: jest.fn().mockResolvedValue(undefined) }) as any
+const cacheMock = () => ({ get: jest.fn(), set: jest.fn(), del: jest.fn(), delByPrefix: jest.fn() }) as any
 
 describe('addServiceInterval', () => {
   it('adds calendar months for named intervals', () => {
@@ -65,7 +66,7 @@ describe('addServiceInterval', () => {
 
 describe('AgreementsService', () => {
   it('create rejects customers outside the company', async () => {
-    const svc = new AgreementsService(prismaMock({ customer: null }), emailMock())
+    const svc = new AgreementsService(prismaMock({ customer: null }), emailMock(), cacheMock())
     await expect(
       svc.create('co-2', { customerId: 'cust-1', name: 'X', startDate: '2026-01-01' }),
     ).rejects.toBeInstanceOf(BadRequestException)
@@ -73,7 +74,7 @@ describe('AgreementsService', () => {
 
   it('create derives nextServiceDate from startDate + interval', async () => {
     const prisma = prismaMock()
-    const svc = new AgreementsService(prisma, emailMock())
+    const svc = new AgreementsService(prisma, emailMock(), cacheMock())
     await svc.create('co-1', {
       customerId: 'cust-1', name: 'X', startDate: '2026-01-01T00:00:00Z', serviceInterval: 'QUARTERLY',
     })
@@ -83,7 +84,7 @@ describe('AgreementsService', () => {
 
   it('update on ACTIVE agreement records an amendment for material changes', async () => {
     const prisma = prismaMock()
-    const svc = new AgreementsService(prisma, emailMock())
+    const svc = new AgreementsService(prisma, emailMock(), cacheMock())
     await svc.update('co-1', 'ag-1', { visitsIncluded: 6 }, { id: 'u-1', name: 'Admin' })
     expect(prisma.agreementAmendment.create).toHaveBeenCalled()
     const amendment = prisma.agreementAmendment.create.mock.calls[0][0].data
@@ -92,20 +93,20 @@ describe('AgreementsService', () => {
 
   it('update on DRAFT agreement records no amendment', async () => {
     const prisma = prismaMock({ agreement: { ...baseAgreement, status: 'DRAFT' } })
-    const svc = new AgreementsService(prisma, emailMock())
+    const svc = new AgreementsService(prisma, emailMock(), cacheMock())
     await svc.update('co-1', 'ag-1', { visitsIncluded: 6 }, { id: 'u-1' })
     expect(prisma.agreementAmendment.create).not.toHaveBeenCalled()
   })
 
   it('send requires a customer email', async () => {
     const prisma = prismaMock({ agreement: { ...baseAgreement, customer: { ...baseAgreement.customer, email: null } } })
-    const svc = new AgreementsService(prisma, emailMock())
+    const svc = new AgreementsService(prisma, emailMock(), cacheMock())
     await expect(svc.send('co-1', 'ag-1')).rejects.toBeInstanceOf(BadRequestException)
   })
 
   it('confirmByToken activates a SENT agreement and clears the token', async () => {
     const prisma = prismaMock({ agreement: { ...baseAgreement, status: 'SENT', confirmToken: 'tok' } })
-    const svc = new AgreementsService(prisma, emailMock())
+    const svc = new AgreementsService(prisma, emailMock(), cacheMock())
     await svc.confirmByToken('tok', 'Jo Doe')
     const updated = prisma.serviceAgreement.update.mock.calls[0][0].data
     expect(updated.status).toBe('ACTIVE')
@@ -116,13 +117,13 @@ describe('AgreementsService', () => {
 
   it('confirmByToken throws for an unknown token', async () => {
     const prisma = prismaMock({ agreement: null })
-    const svc = new AgreementsService(prisma, emailMock())
+    const svc = new AgreementsService(prisma, emailMock(), cacheMock())
     await expect(svc.confirmByToken('nope')).rejects.toBeInstanceOf(NotFoundException)
   })
 
   it('recordVisit advances schedule and increments visitsUsed', async () => {
     const prisma = prismaMock()
-    const svc = new AgreementsService(prisma, emailMock())
+    const svc = new AgreementsService(prisma, emailMock(), cacheMock())
     await svc.recordVisit('co-1', 'ag-1', new Date('2026-04-01T00:00:00Z'))
     const updated = prisma.serviceAgreement.update.mock.calls[0][0].data
     expect(updated.visitsUsed).toBe(1)
@@ -131,7 +132,7 @@ describe('AgreementsService', () => {
 
   it('recordVisit flags exhausted agreements for renewal', async () => {
     const prisma = prismaMock({ agreement: { ...baseAgreement, visitsUsed: 3 } })
-    const svc = new AgreementsService(prisma, emailMock())
+    const svc = new AgreementsService(prisma, emailMock(), cacheMock())
     await svc.recordVisit('co-1', 'ag-1', new Date('2026-12-01T00:00:00Z'))
     const updated = prisma.serviceAgreement.update.mock.calls[0][0].data
     expect(updated.visitsUsed).toBe(4)
@@ -141,7 +142,7 @@ describe('AgreementsService', () => {
 
   it('renew clones terms into a DRAFT linked by renewedFromId', async () => {
     const prisma = prismaMock()
-    const svc = new AgreementsService(prisma, emailMock())
+    const svc = new AgreementsService(prisma, emailMock(), cacheMock())
     await svc.renew('co-1', 'ag-1')
     const created = prisma.serviceAgreement.create.mock.calls[0][0].data
     expect(created.renewedFromId).toBe('ag-1')

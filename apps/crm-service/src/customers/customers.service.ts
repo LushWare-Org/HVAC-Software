@@ -12,6 +12,7 @@ import { FollowupAgent } from '../agents/followup.agent';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomersEquipmentService, type EquipmentInput } from './customers-equipment.service';
+import { TtlCacheService } from '../cache/ttl-cache.service';
 import { PaginatedResponse, clampPagination } from '@tscrm/types';
 
 @Injectable()
@@ -24,6 +25,7 @@ export class CustomersService {
     private upsellAgent: UpsellAgentService,
     private followupAgent: FollowupAgent,
     private equipment: CustomersEquipmentService,
+    private ttlCache: TtlCacheService,
   ) {}
 
   private provisionalPortalSignupFilter = {
@@ -99,14 +101,16 @@ export class CustomersService {
       }
     })();
 
-    const data = await this.prisma.customer.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy,
-      include: { _count: { select: { contacts: true, equipment: true } } },
-    });
-    const total = await this.prisma.customer.count({ where });
+    const [data, total] = await Promise.all([
+      this.prisma.customer.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: { _count: { select: { contacts: true, equipment: true } } },
+      }),
+      this.prisma.customer.count({ where }),
+    ]);
 
     return {
       data,
@@ -206,6 +210,7 @@ export class CustomersService {
       data: dto,
     });
 
+    this.ttlCache.del(`status-summary:${companyId}:${id}`);
     void this.upsellAgent.processCustomerProfileUpdate(companyId, id);
     return customer;
   }
@@ -268,6 +273,18 @@ export class CustomersService {
   }
 
   async getStatusSummary(companyId: string, id: string) {
+    // Hot path: opened on every customer-row hover/click in the admin UI, and
+    // each compute costs a 5-relation query PLUS an HTTP call to the churn
+    // ML service. Short-TTL cache; derived scores being ≤30s stale is fine.
+    const cacheKey = `status-summary:${companyId}:${id}`;
+    const cached = this.ttlCache.get<Awaited<ReturnType<CustomersService['computeStatusSummary']>>>(cacheKey);
+    if (cached) return cached;
+    const summary = await this.computeStatusSummary(companyId, id);
+    this.ttlCache.set(cacheKey, summary, 30_000);
+    return summary;
+  }
+
+  private async computeStatusSummary(companyId: string, id: string) {
     const customer = await this.prisma.customer.findFirst({
       where: { id, companyId },
       include: {

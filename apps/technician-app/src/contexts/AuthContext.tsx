@@ -149,6 +149,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
+    // Stop push notifications reaching a signed-out device (best-effort;
+    // must run BEFORE the session is cleared so the request is still authed).
+    try {
+      const { unregisterPushToken } = await import('@/hooks/usePushNotifications')
+      await unregisterPushToken()
+    } catch { /* best-effort */ }
     await _clearSession()
     setPendingUser(null)
     await storage.removeRaw(PENDING_USER_KEY)

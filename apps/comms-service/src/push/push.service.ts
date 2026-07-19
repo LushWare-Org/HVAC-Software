@@ -64,6 +64,13 @@ export class PushService implements OnModuleInit {
    */
   async sendToToken(token: string, opts: PushNotificationOptions): Promise<PushDeliveryResult> {
     const start = Date.now();
+
+    // Expo push tokens (technician app) go through Expo's push API — no
+    // Firebase credentials required. FCM handles everything else.
+    if (token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken[')) {
+      return this.sendViaExpo(token, opts, start);
+    }
+
     try {
       if (!this.app) {
         this.logger.debug(`[MOCK PUSH] Token: ${token.substring(0, 20)}… | ${opts.title}`);
@@ -93,6 +100,38 @@ export class PushService implements OnModuleInit {
     } catch (err) {
       const error = (err as Error).message;
       this.logger.error(`Push failed for token: ${error}`);
+      return { success: false, error, durationMs: Date.now() - start };
+    }
+  }
+
+  /** Deliver via Expo's push API (https://docs.expo.dev/push-notifications/sending-notifications/). */
+  private async sendViaExpo(token: string, opts: PushNotificationOptions, start: number): Promise<PushDeliveryResult> {
+    try {
+      const res = await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          to: token,
+          title: opts.title,
+          body: opts.body,
+          data: opts.data,
+          sound: opts.sound ?? 'default',
+          badge: opts.badge,
+        }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      const json = (await res.json()) as { data?: { status: string; id?: string; message?: string } };
+      const ticket = json?.data;
+      if (res.ok && ticket?.status === 'ok') {
+        this.logger.log(`Expo push sent — ticket: ${ticket.id}`);
+        return { success: true, externalId: ticket.id, durationMs: Date.now() - start };
+      }
+      const error = ticket?.message ?? `Expo push HTTP ${res.status}`;
+      this.logger.error(`Expo push failed: ${error}`);
+      return { success: false, error, durationMs: Date.now() - start };
+    } catch (err) {
+      const error = (err as Error).message;
+      this.logger.error(`Expo push failed: ${error}`);
       return { success: false, error, durationMs: Date.now() - start };
     }
   }

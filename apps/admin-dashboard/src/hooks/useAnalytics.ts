@@ -8,6 +8,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import api from '../lib/api'
+import { queryClient } from '../lib/queryClient'
 import type {
   DashboardKpis,
   RevenueSeries,
@@ -119,6 +120,20 @@ export function useAnalyticsKpis(from?: string, to?: string) {
 
 // ─── Revenue series ────────────────────────────────────────────────────────────
 
+async function fetchRevenueSeries(granularity: Granularity, from?: string, to?: string): Promise<RevenueSeries[]> {
+  try {
+    const params: Record<string, string> = { granularity }
+    if (from) params.from = from
+    if (to) params.to = to
+    const res = await api.get('/analytics/revenue/series', { params })
+    console.log(`[Analytics] Revenue series (${granularity}) loaded:`, res.data)
+    return asArray<RevenueSeries>(res.data, DEMO_REVENUE_SERIES)
+  } catch (error) {
+    console.warn(`[Analytics] Failed to fetch revenue series (${granularity}), using demo data:`, error)
+    return DEMO_REVENUE_SERIES
+  }
+}
+
 export function useRevenueSeries(
   granularity: Granularity = 'month',
   from?: string,
@@ -126,43 +141,44 @@ export function useRevenueSeries(
 ) {
   return useQuery<RevenueSeries[]>({
     queryKey: ['analytics', 'revenue-series', granularity, from, to],
-    queryFn: async () => {
-      try {
-        const params: Record<string, string> = { granularity }
-        if (from) params.from = from
-        if (to) params.to = to
-        const res = await api.get('/analytics/revenue/series', { params })
-        console.log(`[Analytics] Revenue series (${granularity}) loaded:`, res.data)
-        return asArray<RevenueSeries>(res.data, DEMO_REVENUE_SERIES)
-      } catch (error) {
-        console.warn(`[Analytics] Failed to fetch revenue series (${granularity}), using demo data:`, error)
-        return DEMO_REVENUE_SERIES
-      }
-    },
+    queryFn: () => fetchRevenueSeries(granularity, from, to),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
 // ─── Jobs by status (for pie chart) ───────────────────────────────────────────
 
+async function fetchJobsByStatus(from?: string, to?: string): Promise<JobsByStatus[]> {
+  try {
+    const params: Record<string, string> = {}
+    if (from) params.from = from
+    if (to) params.to = to
+    const res = await api.get('/analytics/jobs-analytics/by-status', { params })
+    console.log('[Analytics] Jobs by status loaded:', res.data)
+    return asArray<JobsByStatus>(res.data, DEMO_JOB_STATUS)
+  } catch (error) {
+    console.warn('[Analytics] Failed to fetch jobs by status, using demo data:', error)
+    return DEMO_JOB_STATUS
+  }
+}
+
 export function useJobsByStatus(from?: string, to?: string) {
   return useQuery<JobsByStatus[]>({
     queryKey: ['analytics', 'jobs-by-status', from, to],
-    queryFn: async () => {
-      try {
-        const params: Record<string, string> = {}
-        if (from) params.from = from
-        if (to) params.to = to
-        const res = await api.get('/analytics/jobs-analytics/by-status', { params })
-        console.log('[Analytics] Jobs by status loaded:', res.data)
-        return asArray<JobsByStatus>(res.data, DEMO_JOB_STATUS)
-      } catch (error) {
-        console.warn('[Analytics] Failed to fetch jobs by status, using demo data:', error)
-        return DEMO_JOB_STATUS
-      }
-    },
+    queryFn: () => fetchJobsByStatus(from, to),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
+}
+
+/**
+ * Warm the two chart queries Dashboard.tsx mounts with (revenue series by
+ * month + jobs-by-status pie). Same keys as the hooks above.
+ */
+export function prefetchDashboardCharts(): Promise<unknown> {
+  return Promise.allSettled([
+    queryClient.prefetchQuery({ queryKey: ['analytics', 'revenue-series', 'month', undefined, undefined], queryFn: () => fetchRevenueSeries('month'), staleTime: 5 * 60 * 1000 }),
+    queryClient.prefetchQuery({ queryKey: ['analytics', 'jobs-by-status', undefined, undefined], queryFn: () => fetchJobsByStatus(), staleTime: 5 * 60 * 1000 }),
+  ])
 }
 
 // ─── Technician leaderboard ────────────────────────────────────────────────────

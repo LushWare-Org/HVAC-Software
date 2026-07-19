@@ -14,7 +14,7 @@ import { useToast } from '../../contexts/ToastContext'
 import {
   useHouses, useHouse, useCreateHouse, useUpdateHouse, useAssignOwner,
   useGenerateOwnerAccount, useHouseEquipment, useAddHouseEquipment, useHouseIssues,
-  useUpdateIssueStatus, useHouseServiceLog, invalidateHouseServiceLog,
+  useUpdateIssueStatus, useHouseServiceLog, invalidateHouseServiceLog, prefetchHouseDetail,
   ACCOUNT_STATUS_META, ISSUE_STATUS_META,
   type House, type HouseAccountStatus, type IssueStatus, type HouseEquipment, type HouseIssueReport,
 } from './housesApi'
@@ -115,7 +115,7 @@ export default function HousesTab({ projectId, projectName, initialOpenHouseId, 
           {houses.map(h => {
             const hasOpenIssue = (h.openIssueCount ?? 0) > 0
             return (
-            <button key={h.id} onClick={() => setOpenHouseId(h.id)} style={{
+            <button key={h.id} onClick={() => setOpenHouseId(h.id)} onMouseEnter={() => prefetchHouseDetail(h.id)} onFocus={() => prefetchHouseDetail(h.id)} style={{
               textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
               padding: '14px 16px', borderRadius: 12,
               border: `1px solid ${hasOpenIssue ? 'var(--red)' : 'var(--bd)'}`,

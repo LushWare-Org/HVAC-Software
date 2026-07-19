@@ -16,15 +16,14 @@ import ChatWidget from './components/ChatWidget'
 // Dashboard is NOT lazy-loaded — it's the post-login landing page and we want
 // it ready before the login animation finishes.
 import Dashboard from './pages/Dashboard'
-import BanditDashboard from './pages/BanditDashboard'
 import { useCompanySettings } from './hooks/useCompanySettings'
 
+const BanditDashboard = lazy(() => import('./pages/BanditDashboard'))
 const Customers       = lazy(() => import('./pages/customers/Customers'))
 const Jobs            = lazy(() => import('./pages/jobs/Jobs'))
-const DispatchBoard   = lazy(() => import('./pages/dispatch/DispatchBoard'))
 const Finance         = lazy(() => import('./pages/finance/Finance'))
 const Agreements      = lazy(() => import('./pages/agreements/Agreements'))
-const DayPlanner      = lazy(() => import('./pages/planner/DayPlanner'))
+const Scheduling      = lazy(() => import('./pages/scheduling/Scheduling'))
 const Projects        = lazy(() => import('./pages/projects/ProjectsLayoutGate').then(m => ({ default: m.ProjectsPage })))
 const ProjectDetail   = lazy(() => import('./pages/projects/ProjectsLayoutGate').then(m => ({ default: m.ProjectDetailPage })))
 const Communications  = lazy(() => import('./pages/Communications'))
@@ -42,10 +41,9 @@ const AdminImports    = lazy(() => import('./pages/import/AdminImports'))
 export const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   '/customers':      () => import('./pages/customers/Customers'),
   '/jobs':           () => import('./pages/jobs/Jobs'),
-  '/dispatch':       () => import('./pages/dispatch/DispatchBoard'),
   '/finance':        () => import('./pages/finance/Finance'),
   '/agreements':     () => import('./pages/agreements/Agreements'),
-  '/planner':        () => import('./pages/planner/DayPlanner'),
+  '/scheduling':     () => import('./pages/scheduling/Scheduling'),
   '/projects':       () => import('./pages/projects/Projects'),
   '/communications': () => import('./pages/Communications'),
   '/marketing':      () => import('./pages/marketing/Marketing'),
@@ -58,16 +56,20 @@ export const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
 }
 
 /**
- * After the app goes idle, quietly warm the chunks a user is most likely to
- * visit next (Customers, Jobs, Dispatch). Uses requestIdleCallback so we
- * never contend with the initial render or any user interaction. Falls back
- * to a modest setTimeout on Safari, which doesn't ship requestIdleCallback.
+ * After the app goes idle, quietly warm EVERY page: first all route chunks
+ * (parallel — they're static assets), then each page's data via the
+ * prefetch registry (sequential — real backend queries, warmed one route
+ * at a time so we never stampede the services). Uses requestIdleCallback
+ * so we never contend with the initial render or any user interaction;
+ * falls back to a modest setTimeout on Safari.
+ *
+ * The result: clicking any sidebar item renders instantly — code AND data
+ * are already in cache before the first visit.
  */
 function warmLikelyRoutes() {
   const warm = () => {
-    ROUTE_LOADERS['/customers']?.().catch(() => {})
-    ROUTE_LOADERS['/jobs']?.().catch(() => {})
-    ROUTE_LOADERS['/dispatch']?.().catch(() => {})
+    for (const load of Object.values(ROUTE_LOADERS)) load().catch(() => {})
+    import('./lib/prefetchRoutes').then(m => m.warmAllRouteData()).catch(() => {})
   }
   const ric = (window as any).requestIdleCallback as
     | ((cb: () => void, opts?: { timeout: number }) => number)
@@ -161,10 +163,8 @@ function AuthenticatedApp() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/customers" element={<Customers />} />
               <Route path="/jobs" element={<Jobs />} />
-              {/* <Route path="/scheduling" element={<Scheduling />} /> */}
-              <Route path="/dispatch" element={<DispatchBoard />} />
+              <Route path="/scheduling" element={<Scheduling />} />
               <Route path="/agreements" element={<Agreements />} />
-              <Route path="/planner" element={<DayPlanner />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/:id" element={<ProjectDetail />} />
               <Route path="/finance" element={<Finance />} />

@@ -56,11 +56,13 @@ export class QuotesService {
 
   async findAll(
     companyId: string,
-    params: { status?: QuoteStatus; customerId?: string; jobId?: string; projectId?: string; page?: number; limit?: number },
+    params: { status?: QuoteStatus; customerId?: string; jobId?: string; projectId?: string; projectIds?: string[]; page?: number; limit?: number },
   ) {
-    const { status, customerId, jobId, projectId } = params;
+    const { status, customerId, jobId, projectId, projectIds } = params;
     const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
-    const limit = Number.isFinite(Number(params.limit)) ? Math.min(100, Math.max(1, Math.trunc(Number(params.limit)))) : 20;
+    // Batch (multi-project) requests get a higher ceiling — they cover many projects in one page.
+    const maxLimit = projectIds?.length ? 500 : 100;
+    const limit = Number.isFinite(Number(params.limit)) ? Math.min(maxLimit, Math.max(1, Math.trunc(Number(params.limit)))) : 20;
     const skip = (page - 1) * limit;
     const where = {
       companyId,
@@ -68,6 +70,8 @@ export class QuotesService {
       ...(customerId ? { customerId } : {}),
       ...(jobId ? { jobId } : {}),
       ...(projectId ? { projectId } : {}),
+      // Batch form: one request for many projects' quotes (Projects page overview)
+      ...(projectIds?.length ? { projectId: { in: projectIds } } : {}),
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.quote.findMany({

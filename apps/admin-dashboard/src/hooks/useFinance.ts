@@ -90,6 +90,7 @@ export function useCreateInvoice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }
@@ -131,6 +132,7 @@ export function useCreateQuote() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }
@@ -143,6 +145,7 @@ export function useUpdateQuote() {
     },
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['quote', id], data)
     },
   })
@@ -157,6 +160,7 @@ export function useSendQuote() {
     },
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['quote', id], data)
     },
   })
@@ -178,6 +182,7 @@ export function useApproveQuote() {
     },
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['quote', id], data)
     },
   })
@@ -193,6 +198,8 @@ export function useConvertQuote() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }
@@ -207,6 +214,7 @@ export function useUpdateInvoice() {
     },
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['invoice', id], data)
     },
   })
@@ -221,6 +229,7 @@ export function useSendInvoice() {
     },
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['invoice', id], data)
     },
   })
@@ -246,6 +255,7 @@ export function useRecordPayment() {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['payments'] })
       queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }
@@ -259,6 +269,7 @@ export function useVoidInvoice() {
     },
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['invoice', id], data)
     },
   })
@@ -378,6 +389,7 @@ export function useQBSyncInvoice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }

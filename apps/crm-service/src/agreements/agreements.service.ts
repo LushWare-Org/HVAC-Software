@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+import { TtlCacheService } from '../cache/ttl-cache.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { clampPagination } from '@tscrm/types';
@@ -46,6 +47,7 @@ export class AgreementsService {
   constructor(
     private prisma: PrismaService,
     private email: EmailService,
+    private ttlCache: TtlCacheService,
   ) {}
 
   async findAll(
@@ -77,8 +79,9 @@ export class AgreementsService {
   async findMine(companyId: string, customerId: string) {
     const data = await this.prisma.serviceAgreement.findMany({
       where: { companyId, customerId },
-      include: { amendments: { orderBy: { createdAt: 'desc' } } },
+      include: { amendments: { orderBy: { createdAt: 'desc' }, take: 20 } },
       orderBy: { createdAt: 'desc' },
+      take: 100,
     });
     return { data };
   }
@@ -130,6 +133,9 @@ export class AgreementsService {
         jobTemplateId: data.jobTemplateId,
         autoRenew: data.autoRenew ?? false,
       },
+    }).then((created) => {
+      this.ttlCache.del(`status-summary:${companyId}:${created.customerId}`);
+      return created;
     });
   }
 
@@ -188,6 +194,7 @@ export class AgreementsService {
       await this.notifyAmendment(updated).catch(() => undefined);
     }
 
+    this.ttlCache.del(`status-summary:${companyId}:${updated.customerId}`);
     return updated;
   }
 
@@ -296,11 +303,13 @@ export class AgreementsService {
       });
     }
 
+    this.ttlCache.del(`status-summary:${companyId}:${renewed.customerId}`);
     return renewed;
   }
 
   async cancel(companyId: string, id: string) {
-    await this.findOne(companyId, id);
+    const existing = await this.findOne(companyId, id);
+    this.ttlCache.del(`status-summary:${companyId}:${existing.customerId}`);
     return this.prisma.serviceAgreement.update({
       where: { id },
       data: { status: 'CANCELLED' },

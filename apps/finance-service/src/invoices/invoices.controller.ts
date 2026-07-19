@@ -53,10 +53,15 @@ export class InvoicesController {
     @Query('customerId') customerId?: string,
     @Query('jobId') jobId?: string,
     @Query('projectId') projectId?: string,
+    @Query('projectIds') projectIds?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    return this.invoicesService.findAll(user.companyId, { status, customerId, jobId, projectId, page, limit });
+    return this.invoicesService.findAll(user.companyId, {
+      status, customerId, jobId, projectId,
+      projectIds: projectIds ? projectIds.split(',').filter(Boolean) : undefined,
+      page, limit,
+    });
   }
 
   // ── Single ────────────────────────────────────────────────────────────────

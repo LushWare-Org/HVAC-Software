@@ -303,3 +303,47 @@ export function invalidateHouseServiceLog(houseId: string, projectId?: string) {
   queryClient.invalidateQueries({ queryKey: ['houses', houseId, 'service-log'] })
   if (projectId) invalidateProjectLinks(projectId)
 }
+
+// ── Prefetch ──────────────────────────────────────────────────────────────
+
+/** Warm a project's house list so the Houses tab renders instantly. */
+export function prefetchHousesForProject(projectId: string): Promise<unknown> {
+  return queryClient.prefetchQuery({
+    queryKey: ['houses', 'by-project', projectId],
+    queryFn: async () => {
+      const res = await api.get(`/crm/projects/${projectId}/houses`)
+      return ((res.data ?? []) as any[]).map(mapHouse)
+    },
+    staleTime: 15 * 1000,
+  })
+}
+
+/** Warm one house's detail + equipment + issues — called on card hover so the modal opens instantly. */
+export function prefetchHouseDetail(houseId: string): Promise<unknown> {
+  return Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: ['houses', houseId, 'detail'],
+      queryFn: async () => mapHouse((await api.get(`/crm/houses/${houseId}`)).data),
+      staleTime: 15 * 1000,
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['houses', houseId, 'equipment'],
+      queryFn: async () => (await api.get(`/crm/houses/${houseId}/equipment`)).data ?? [],
+      staleTime: 15 * 1000,
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['houses', houseId, 'issues'],
+      queryFn: async () => (await api.get(`/crm/houses/${houseId}/issues`)).data ?? [],
+      staleTime: 15 * 1000,
+    }),
+  ])
+}
+
+/** Warm the company-wide open-issues rollup (Dashboard alert + Projects banner). */
+export function prefetchOpenHouseIssues(): Promise<unknown> {
+  return queryClient.prefetchQuery({
+    queryKey: ['houses', 'issues', 'open'],
+    queryFn: async () => (await api.get('/crm/houses/issues/open')).data ?? [],
+    staleTime: 30 * 1000,
+  })
+}

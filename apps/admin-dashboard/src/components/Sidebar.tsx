@@ -1,11 +1,14 @@
 import { useLocation, Link } from 'react-router-dom'
 import { ROUTE_LOADERS } from '../App'
+import { prefetchRouteData } from '../lib/prefetchRoutes'
 
-// Warm the lazy-loaded chunk for a route before the user clicks. Called on
-// hover/focus — by the time they release the mouse the JS is usually in the
-// module cache, so navigation feels instant.
+// Warm a route before the user clicks. Called on hover/focus — by the time
+// they release the mouse the JS chunk is usually in the module cache AND the
+// page's data is in the React Query cache (prefetchRouteData respects
+// staleTime, so hovering repeatedly costs nothing while data is fresh).
 const prefetched = new Set<string>()
 function prefetchRoute(path: string) {
+  prefetchRouteData(path)
   if (prefetched.has(path)) return
   const loader = ROUTE_LOADERS[path]
   if (!loader) return
@@ -14,9 +17,9 @@ function prefetchRoute(path: string) {
   loader().catch(() => prefetched.delete(path))
 }
 import {
-    LayoutDashboard, Users, Wrench, /* CalendarDays, */ Zap,
+    LayoutDashboard, Users, Wrench, CalendarDays,
     DollarSign, MessageSquare, BarChart3, Settings,
-    Menu, X, LogOut, Shield, Package, Megaphone, Upload, FileSignature, Route, FolderKanban,
+    Menu, X, LogOut, Shield, Package, Megaphone, Upload, FileSignature, FolderKanban,
     ChevronLeft, Plus,
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
@@ -84,11 +87,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
             label: 'Operations',
             items: [
                 { icon: Wrench, label: 'Jobs', path: '/jobs', badge: 0 },
-                { icon: Zap, label: 'Dispatch Board', path: '/dispatch' },
-                { icon: Route, label: 'Day Planner', path: '/planner' },
+                { icon: CalendarDays, label: 'Scheduling', path: '/scheduling' },
                 { icon: FolderKanban, label: 'Projects', path: '/projects' },
-                /* Scheduling page is temporarily disabled — re-enable when Go scheduling service is verified */
-                // { icon: CalendarDays, label: 'Scheduling', path: '/scheduling' },
                 { icon: FileSignature, label: 'Agreements', path: '/agreements' },
             ],
         },

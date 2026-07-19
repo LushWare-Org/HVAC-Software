@@ -6,7 +6,7 @@
  * finance queries per the spec; money arrives as Decimal strings → Number().
  */
 import { useMemo } from 'react'
-import { useQuery, useQueries, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { queryClient } from '../../lib/queryClient'
 import api from '../../lib/api'
 
@@ -270,6 +270,50 @@ const EMPTY_ROSTER = { techUserIds: [] as string[], isOverride: false, isOff: fa
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
+type ProjectLinksBatch = {
+  jobs: Record<string, ProjectJob[]>
+  quotes: Record<string, FinanceDoc[]>
+  invoices: Record<string, FinanceDoc[]>
+}
+
+/**
+ * One request per service for ALL projects' links (`?projectIds=a,b,c`)
+ * instead of 3 requests per project — 3 round-trips total regardless of
+ * project count. Also seeds the per-project query keys so ProjectDetail
+ * renders instantly from cache after visiting the list.
+ */
+async function fetchProjectLinksBatch(projectIds: string[]): Promise<ProjectLinksBatch> {
+  const empty = (): Record<string, any[]> => Object.fromEntries(projectIds.map(id => [id, []]))
+  if (projectIds.length === 0) return { jobs: {}, quotes: {}, invoices: {} }
+  const idsCsv = projectIds.join(',')
+  const [jobsRes, quotesRes, invoicesRes] = await Promise.all([
+    api.get('/jobs/jobs', { params: { projectIds: idsCsv, limit: 500 } }),
+    api.get('/finance/quotes', { params: { projectIds: idsCsv, limit: 500 } }),
+    api.get('/finance/invoices', { params: { projectIds: idsCsv, limit: 500 } }),
+  ])
+  const group = <T,>(rows: any[], map: (r: any) => T): Record<string, T[]> => {
+    const by = empty() as Record<string, T[]>
+    for (const r of rows) {
+      const pid = r?.projectId
+      if (pid && by[pid]) by[pid].push(map(r))
+    }
+    return by
+  }
+  const batch: ProjectLinksBatch = {
+    jobs: group(jobsRes.data?.data ?? [], mapJob),
+    quotes: group(quotesRes.data?.data ?? quotesRes.data?.items ?? [], mapQuote),
+    invoices: group(invoicesRes.data?.data ?? invoicesRes.data?.items ?? [], mapInvoice),
+  }
+  // Seed per-project caches (same keys useProjectFull reads) so opening any
+  // project's detail after the list needs zero link fetches.
+  for (const id of projectIds) {
+    queryClient.setQueryData(['projects', id, 'jobs'], batch.jobs[id] ?? [])
+    queryClient.setQueryData(['projects', id, 'quotes'], batch.quotes[id] ?? [])
+    queryClient.setQueryData(['projects', id, 'invoices'], batch.invoices[id] ?? [])
+  }
+  return batch
+}
+
 /** All projects with roster-today + per-project jobs/quotes/invoices attached. */
 export function useProjectsFull() {
   const listQ = useQuery<ProjectBase[]>({
@@ -285,31 +329,31 @@ export function useProjectsFull() {
   const rostersQ = useRostersByDate(todayKey)
 
   const bases = listQ.data ?? []
-  const linkQs = useQueries({
-    queries: bases.flatMap(p => [
-      { queryKey: ['projects', p.id, 'jobs'], queryFn: () => fetchProjectJobs(p.id), staleTime: 30_000 },
-      { queryKey: ['projects', p.id, 'quotes'], queryFn: () => fetchProjectQuotes(p.id), staleTime: 30_000 },
-      { queryKey: ['projects', p.id, 'invoices'], queryFn: () => fetchProjectInvoices(p.id), staleTime: 30_000 },
-    ]),
+  const projectIds = bases.map(p => p.id)
+  const linksQ = useQuery<ProjectLinksBatch>({
+    queryKey: ['projects', 'links-batch', projectIds.join(',')],
+    queryFn: () => fetchProjectLinksBatch(projectIds),
+    enabled: projectIds.length > 0,
+    staleTime: 30_000,
   })
 
   const projects: Project[] = useMemo(() => {
     const rosterByProject = new Map((rostersQ.data ?? []).map(r => [r.projectId, r]))
-    return bases.map((p, i) => {
+    const links = linksQ.data
+    return bases.map(p => {
       const roster = rosterByProject.get(p.id)
       return {
         ...p,
-        jobs: (linkQs[i * 3]?.data as ProjectJob[]) ?? [],
-        quotes: (linkQs[i * 3 + 1]?.data as FinanceDoc[]) ?? [],
-        invoices: (linkQs[i * 3 + 2]?.data as FinanceDoc[]) ?? [],
+        jobs: links?.jobs[p.id] ?? [],
+        quotes: links?.quotes[p.id] ?? [],
+        invoices: links?.invoices[p.id] ?? [],
         agreements: [],
         rosterToday: roster
           ? { techUserIds: roster.techUserIds, isOverride: roster.isOverride, isOff: roster.isOff }
           : EMPTY_ROSTER,
       }
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bases, rostersQ.data, linkQs.map(q => q.dataUpdatedAt).join(',')])
+  }, [bases, rostersQ.data, linksQ.data])
 
   return { projects, isLoading: listQ.isLoading, isError: listQ.isError, refetch: listQ.refetch }
 }
@@ -527,6 +571,62 @@ export function invalidateProjectLinks(projectId: string) {
   queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'quotes'] })
   queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'invoices'] })
   queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'detail'] })
+  queryClient.invalidateQueries({ queryKey: ['projects', 'links-batch'] })
   queryClient.invalidateQueries({ queryKey: ['projects', 'tech-directory'] })
   queryClient.invalidateQueries({ queryKey: ['projects', 'rosters'] })
+}
+
+// ── Prefetch ──────────────────────────────────────────────────────────────────
+
+/**
+ * Warm the Projects page: the project list + today's rosters first, then the
+ * batched links query (one request per service for every project's
+ * jobs/quotes/invoices) so the cards show their finances instantly.
+ */
+export async function prefetchProjectsPage(): Promise<void> {
+  const todayKey = toDateKey(new Date())
+  const listPromise = queryClient.prefetchQuery({
+    queryKey: ['projects', 'list'],
+    queryFn: async () => {
+      const res = await api.get('/crm/projects', { params: { limit: 100 } })
+      return ((res.data?.data ?? []) as any[]).map(mapApiProject)
+    },
+    staleTime: 30 * 1000,
+  })
+  await Promise.allSettled([
+    listPromise,
+    queryClient.prefetchQuery({
+      queryKey: ['projects', 'rosters', todayKey],
+      queryFn: async () => (await api.get('/crm/projects/rosters', { params: { date: todayKey } })).data,
+      staleTime: 15 * 1000,
+    }),
+  ])
+  const bases = queryClient.getQueryData<ProjectBase[]>(['projects', 'list']) ?? []
+  const projectIds = bases.map(p => p.id)
+  if (projectIds.length) {
+    await queryClient.prefetchQuery({
+      queryKey: ['projects', 'links-batch', projectIds.join(',')],
+      queryFn: () => fetchProjectLinksBatch(projectIds),
+      staleTime: 30_000,
+    })
+  }
+}
+
+/**
+ * Warm one project's detail + houses — called on card hover/press so the
+ * detail page opens with everything already in cache (jobs/quotes/invoices
+ * are usually warm already from the list page's queries).
+ */
+export function prefetchProjectDetail(id: string): Promise<unknown> {
+  return Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: ['projects', id, 'detail'],
+      queryFn: async () => (await api.get(`/crm/projects/${id}`)).data,
+      staleTime: 15 * 1000,
+    }),
+    queryClient.prefetchQuery({ queryKey: ['projects', id, 'jobs'], queryFn: () => fetchProjectJobs(id), staleTime: 30_000 }),
+    queryClient.prefetchQuery({ queryKey: ['projects', id, 'quotes'], queryFn: () => fetchProjectQuotes(id), staleTime: 30_000 }),
+    queryClient.prefetchQuery({ queryKey: ['projects', id, 'invoices'], queryFn: () => fetchProjectInvoices(id), staleTime: 30_000 }),
+    import('./housesApi').then(m => m.prefetchHousesForProject(id)),
+  ])
 }

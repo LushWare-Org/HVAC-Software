@@ -20,6 +20,7 @@ export class AnnouncementsService {
     return this.prisma.companyAnnouncement.findMany({
       where: { companyId },
       orderBy: { createdAt: 'desc' },
+      take: 100,
     });
   }
 
