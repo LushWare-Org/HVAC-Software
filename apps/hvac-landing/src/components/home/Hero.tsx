@@ -53,7 +53,7 @@ export default function Hero() {
           </Button>
           <Button to="/features" variant="outline-inverse" size="lg">
             <Play className="h-4 w-4" />
-            Watch Demo
+            Explore Features
           </Button>
         </div>
       </Container>
