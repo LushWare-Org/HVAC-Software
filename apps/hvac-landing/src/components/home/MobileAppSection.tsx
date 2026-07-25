@@ -32,14 +32,18 @@ function MobileAppShowcase() {
     <div className="relative mx-auto w-[310px] sm:w-[300px]">
       <div className="absolute inset-x-0 top-1/2 -z-10 h-[22rem] -translate-y-1/2 scale-110 rounded-[3rem] bg-navy-400/25 blur-3xl" />
 
-      <div className="relative aspect-[853/1844] overflow-hidden rounded-[1.75rem] shadow-2xl shadow-black/40">
+      <div className="relative aspect-[853/1844]">
         {APP_SCREENS.map((src, index) => (
           <img
             key={src}
             src={src}
             alt="HVACtor technician app screen"
-            className="absolute inset-0 h-full w-full object-contain transition-opacity duration-1000 ease-in-out"
-            style={{ opacity: index === activeIndex ? 1 : 0 }}
+            className={[
+              'absolute inset-0 h-full w-full rounded-[1.75rem] object-contain shadow-2xl shadow-black/40 transition-all duration-700 ease-out',
+              index === activeIndex
+                ? 'z-10 translate-x-0 opacity-100'
+                : 'z-0 translate-x-[220%] opacity-0',
+            ].join(' ')}
           />
         ))}
       </div>
