@@ -14,7 +14,7 @@ interface CtaBannerProps {
 
 export default function CtaBanner({
   heading = 'Ready to dispatch?',
-  subheading = 'Start a 14-day free trial. No credit card, no contract — just your crew, organized.',
+  subheading = 'Start a 14 day free trial. No credit card, no contract, just your crew, organized.',
   primaryLabel = 'Start Free Trial',
   primaryTo = '/contact',
   secondaryLabel = 'Explore Features',
@@ -25,7 +25,7 @@ export default function CtaBanner({
       <Container className="py-12 lg:py-16">
         <Reveal
           once={false}
-          className="relative overflow-hidden rounded-2xl bg-navy-950 px-6 py-10 text-center text-white shadow-block sm:px-10 sm:py-12"
+          className="relative overflow-hidden rounded-2xl bg-navy-900 px-6 py-10 text-center text-white shadow-block sm:px-10 sm:py-12"
         >
           <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-navy-500/25 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 -right-12 h-56 w-56 rounded-full bg-navy-400/15 blur-3xl" />

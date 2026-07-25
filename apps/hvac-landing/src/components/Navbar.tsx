@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Menu, X, Wind } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import clsx from 'clsx'
 import Button from './ui/Button'
 import { NAV_LINKS } from '../data/site'
@@ -43,14 +43,13 @@ export default function Navbar() {
     >
       <nav className="mx-auto flex h-full max-w-content items-center justify-between px-6 lg:px-8" aria-label="Main navigation">
         <NavLink to="/" className="group flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-navy-700 to-navy-900 shadow-md transition-shadow group-hover:shadow-lg group-hover:shadow-navy-800/30">
-            <Wind className="h-5 w-5 text-white" />
+          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg ring-1 ring-slate-200 transition-shadow group-hover:shadow-lg group-hover:shadow-navy-800/20">
+            <img src="/platform/logo.jpg" alt="HVACtor logo" className="h-full w-full object-cover" />
           </span>
           <span className="font-display text-lg font-bold tracking-tight">
             <span className="bg-gradient-to-r from-navy-700 via-navy-600 to-navy-500 bg-clip-text text-transparent">
-              HVAC
+              HVACtor.AI
             </span>
-            <span className="text-ink">tor</span>
           </span>
         </NavLink>
 
@@ -93,7 +92,7 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Button to="/contact" variant="gradient" size="md">
-            Request a demo
+            Request a Demo
           </Button>
         </div>
 
@@ -128,8 +127,8 @@ export default function Navbar() {
       >
         <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-6 py-5">
           <NavLink to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-navy-700 to-navy-900">
-              <Wind className="h-5 w-5 text-white" />
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg ring-1 ring-slate-200">
+              <img src="/platform/logo.jpg" alt="HVACtor logo" className="h-full w-full object-cover" />
             </span>
             <span className="font-display text-lg font-bold tracking-tight">
               <span className="bg-gradient-to-r from-navy-700 via-navy-600 to-navy-500 bg-clip-text text-transparent">

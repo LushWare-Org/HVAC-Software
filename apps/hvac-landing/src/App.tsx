@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import Navbar from './components/Navbar.tsx'
 import Footer from './components/Footer.tsx'
 import ScrollToTop from './components/ScrollToTop.tsx'
+import FloatingActions from './components/FloatingActions.tsx'
 import Home from './pages/Home.tsx'
 import Features from './pages/Features.tsx'
 import Pricing from './pages/Pricing.tsx'
@@ -23,6 +24,7 @@ function App() {
         </Routes>
       </main>
       <Footer />
+      <FloatingActions />
     </div>
   )
 }

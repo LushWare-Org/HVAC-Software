@@ -41,10 +41,10 @@ import {
 /* -------------------------------------------------------------------------- */
 
 export const BRAND = {
-  name: 'HVACtor',
+  name: 'HVACtor.AI',
   tagline: 'Field Service Management for the trades',
   email: 'sales@hvactor.ai',
-  phone: '+1 (888) 555-0142',
+  phone: '+1 (123) 456-7890',
   address: '2200 Market Street, Suite 700, Denver, CO 80205',
 }
 

@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { Wind, Mail, Phone, MapPin } from 'lucide-react'
 import Container from './ui/Container'
 import { BRAND } from '../data/site'
 
@@ -25,8 +24,8 @@ export default function Footer() {
               to="/"
               className="group flex items-center gap-2.5 font-display text-lg font-bold tracking-tight text-white"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-navy-900 shadow-sm transition-transform duration-300 group-hover:-translate-y-0.5">
-                <Wind className="h-5 w-5" />
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm transition-transform duration-300 group-hover:-translate-y-0.5">
+                <img src="/platform/logo.jpg" alt="HVACtor logo" className="h-full w-full object-cover" />
               </span>
               {BRAND.name}
             </Link>
