@@ -2,7 +2,7 @@ import PageHero from '../components/ui/PageHero'
 import Container from '../components/ui/Container'
 import SectionLabel from '../components/ui/SectionLabel'
 // import StatStrip from '../components/ui/StatStrip'
-// import CtaBanner from '../components/ui/CtaBanner'
+import CtaBanner from '../components/ui/CtaBanner'
 import { VALUES, TIMELINE, IMAGES } from '../data/site'
 
 export default function About() {
@@ -107,10 +107,12 @@ export default function About() {
         </Container>
       </section>
 
-      {/* <CtaBanner
+      <CtaBanner
         heading="Come build with us"
         subheading="Whether you want a demo or a career, we’d love to hear from you."
-      /> */}
+        primaryLabel="Get in touch"
+        secondaryLabel={undefined}
+      />
     </>
   )
 }

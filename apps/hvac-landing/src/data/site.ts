@@ -171,7 +171,7 @@ export const FEATURES: Feature[] = [
       'Good-better-best quotes customers approve in-app',
       'On-site and online card / ACH payments',
       'Automated deposits, progress and final billing',
-      'QuickBooks & Xero two-way sync',
+      'QuickBooks two-way sync',
     ],
     image: PRODUCT_SHOTS.finance,
     imageAlt: 'Finance dashboard in HVACtor.ai',
@@ -259,13 +259,13 @@ export const OPERATIONS_SHOWCASE: ShowcaseItem[] = [
     id: 'jobs',
     index: '01',
     icon: Briefcase,
-    title: 'Jobs, tracked from call to closeout',
+    title: 'Jobs, Tracked from Call to Closeout',
     description:
       'Every job carries its own status, priority, and history - so nothing depends on someone remembering to follow up. Completed, invoiced, paid, or overdue, the board shows the real state of the business at a glance.',
     bullets: [
-      'Priority flags for emergency, high, normal, and low-urgency calls',
-      'Full job history searchable by customer, technician, or service type',
-      'Status moves automatically as invoices are sent and paid',
+      'Priority flags for Emergency, High, Normal, and Low-Urgency calls',
+      'Full job history searchable by Customer, Technician, or Service Type',
+      'Status moves automatically as Invoices are Sent and Paid',
     ],
     image: PRODUCT_SHOTS.jobsList,
     imageAlt: 'Jobs list in HVACtor.ai',
@@ -275,7 +275,7 @@ export const OPERATIONS_SHOWCASE: ShowcaseItem[] = [
     id: 'dispatch',
     index: '02',
     icon: MapPinned,
-    title: 'Live dispatch, not a whiteboard photo',
+    title: 'Live Dispatch and Scheduling',
     description:
       'See every unassigned job on a map next to every technician’s live status. Smart-assign routes work to the closest available van; nothing sits in a queue because someone forgot to check a group chat.',
     bullets: [
@@ -291,7 +291,7 @@ export const OPERATIONS_SHOWCASE: ShowcaseItem[] = [
     id: 'projects',
     index: '03',
     icon: FolderKanban,
-    title: 'Projects that hold multiple jobs together',
+    title: 'Projects that Hold Multiple Jobs Together',
     description:
       'Multi-visit installs and retrofits get their own timeline - budget, crew, quoted-versus-invoiced totals, and every linked job in one view, instead of scattered across separate work orders.',
     bullets: [
@@ -307,7 +307,7 @@ export const OPERATIONS_SHOWCASE: ShowcaseItem[] = [
     id: 'agreements',
     index: '04',
     icon: FileClock,
-    title: 'Service agreements that schedule themselves',
+    title: 'Service Agreements that Schedule Themselves',
     description:
       'Maintenance plans generate their own recurring visits - no one has to remember which customers are due this quarter. Renewals, expirations, and contract value stay visible on one board.',
     bullets: [
@@ -326,7 +326,7 @@ export const SALES_SHOWCASE: ShowcaseItem[] = [
     id: 'crm',
     index: '05',
     icon: UserCog,
-    title: 'CRM built around risk and revenue, not just contacts',
+    title: 'CRM Built Around Risk and Revenue, Not Just Contacts',
     description:
       'Every customer carries a live read on retention risk, upsell fit, and days since last service - scored automatically, not guessed at during a busy week.',
     bullets: [
@@ -342,7 +342,7 @@ export const SALES_SHOWCASE: ShowcaseItem[] = [
     id: 'marketing',
     index: '06',
     icon: Megaphone,
-    title: 'Marketing that runs itself - with a kill switch',
+    title: 'Marketing That Runs Itself - With a Kill Switch',
     description:
       'Review requests, equipment-age reminders, and win-back sequences send automatically once you turn them on. A single master switch stops every automated send instantly if you ever need it to.',
     bullets: [
@@ -358,7 +358,7 @@ export const SALES_SHOWCASE: ShowcaseItem[] = [
     id: 'communications',
     index: '07',
     icon: MessagesSquare,
-    title: 'Every conversation, in one inbox',
+    title: 'Every Conversation, in One Inbox',
     description:
       'SMS, in-app messages, and call outcomes land in a single thread per customer - so a reschedule offer sent Monday isn’t a mystery to whoever answers the phone Thursday.',
     bullets: [
@@ -425,10 +425,12 @@ export const AGENTS: Agent[] = [
 
 export interface BusinessTab {
   id: string
+  index: string
   icon: LucideIcon
   label: string
   headline: string
   description: string
+  bullets: string[]
   stats: { value: string; label: string }[]
   image: string
   imageAlt: string
@@ -438,11 +440,17 @@ export interface BusinessTab {
 export const BUSINESS_TABS: BusinessTab[] = [
   {
     id: 'finance',
+    index: '08',
     icon: Wallet,
     label: 'Finance',
-    headline: 'Quotes, invoices, and expenses in one ledger',
+    headline: 'Quotes, Invoices, And Expenses In One Ledger',
     description:
       'Every quote’s status is visible from draft to accepted, every invoice tracked to paid, and QuickBooks stays in sync automatically - no month-end reconciliation surprises.',
+    bullets: [
+      'Good-better-best quotes tracked from draft to accepted',
+      'Invoices reconciled automatically with QuickBooks',
+      'Expenses and AI revenue insights rolled up in one ledger',
+    ],
     stats: [
       { value: '$134K', label: 'Accounts receivable' },
       { value: '44', label: 'Quotes in flight' },
@@ -455,11 +463,17 @@ export const BUSINESS_TABS: BusinessTab[] = [
   },
   {
     id: 'inventory',
+    index: '09',
     icon: PackageSearch,
     label: 'Inventory',
-    headline: 'Parts tracked across the warehouse and every van',
+    headline: 'Parts Tracked Across The Warehouse And Every Van',
     description:
       'Stock levels, reorder points, and unit cost stay visible by location, so a tech doesn’t find out a capacitor is out of stock standing in a customer’s attic.',
+    bullets: [
+      'Live stock levels by warehouse and by individual van',
+      'Automated purchase orders triggered at the reorder point',
+      'Every part costed accurately back to the job',
+    ],
     stats: [
       { value: '16', label: 'Tracked SKUs' },
       { value: '1+6', label: 'Warehouse + van stock' },
@@ -472,11 +486,17 @@ export const BUSINESS_TABS: BusinessTab[] = [
   },
   {
     id: 'analytics',
+    index: '10',
     icon: LineChart,
     label: 'Analytics',
-    headline: 'Revenue, utilization, and agent accuracy in one view',
+    headline: 'Revenue, Utilization, and Agent Accuracy in One View',
     description:
       'Track how the business is actually performing - and how well the AI agents are calling it - with an observability panel built for accountability, not just dashboards.',
+    bullets: [
+      'Revenue and utilization tracked automatically per job',
+      'Agent accuracy trend logged for every AI recommendation',
+      'Full reporting exportable as CSV in one click',
+    ],
     stats: [
       { value: '5', label: 'Live AI insights' },
       { value: 'Rev / Job', label: 'Tracked automatically' },
@@ -804,7 +824,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       'Inventory & parts tracking',
       'Maintenance plans & memberships',
       'Customer self-service portal',
-      'QuickBooks & Xero sync',
+      'QuickBooks sync',
       'Priority support',
     ],
   },

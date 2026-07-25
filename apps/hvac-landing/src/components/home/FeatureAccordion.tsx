@@ -154,7 +154,7 @@ const MARQUEE_FEATURES = [...FEATURES, ...FEATURES]
 export default function FeatureAccordion() {
   return (
     <section id="features" className="bg-white">
-      <Container className="pt-20 lg:pt-28">
+      <Container className="pt-20 lg:pt-20">
         <Reveal className="mx-auto max-w-2xl text-center">
           <h2 className="font-display text-3xl font-bold text-ink sm:text-4xl lg:text-5xl">
             Everything From the First Call to{' '}

@@ -4,7 +4,6 @@ import SectionLabel from '../ui/SectionLabel'
 import Reveal from '../ui/Reveal'
 import { CONSULTANT_AGENTS, INTEGRATIONS, ROADMAP_CARDS } from '../../data/site'
 
-/** Status pill — green when live, red when still on the way. */
 function StatusPill({ status }: { status: 'connected' | 'soon' }) {
   if (status === 'connected') {
     return (
@@ -25,7 +24,6 @@ function StatusPill({ status }: { status: 'connected' | 'soon' }) {
   )
 }
 
-/** Integrations shown as an asymmetric bento grid, connected tile featured and green, upcoming tiles marked red. */
 export function IntegrationsSection() {
   const [featured, ...rest] = INTEGRATIONS
 
@@ -35,7 +33,7 @@ export function IntegrationsSection() {
       <div className="pointer-events-none absolute -right-32 -bottom-32 h-[28rem] w-[28rem] rounded-full bg-navy-500/25 blur-3xl" />
       <Container className="relative py-20 lg:py-28">
         <Reveal className="max-w-2xl">
-          <SectionLabel index="04" tone="light">Integrations</SectionLabel>
+          <SectionLabel index="05" tone="light">Integrations</SectionLabel>
           <h2 className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
             Connects to the tools you already run
           </h2>
@@ -46,7 +44,7 @@ export function IntegrationsSection() {
         </Reveal>
 
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:auto-rows-[minmax(0,1fr)]">
-          {/* Featured, connected integration — large tile, green accent */}
+          {/* Featured, connected integration */}
           <Reveal className="sm:col-span-2 lg:col-span-2 lg:row-span-2">
             <div className="group relative flex h-full transform-gpu flex-col overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white p-7 shadow-block-sm transition-all duration-500 ease-out hover:z-10 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/15 sm:p-8">
               <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-200/30 blur-3xl" />
@@ -106,13 +104,12 @@ export function IntegrationsSection() {
   )
 }
 
-/** Multi-Agent Consultant System + predictive maintenance / HVAC design roadmap. */
 export function RoadmapSection() {
   return (
-    <section id="roadmap" className="bg-navy-50/50">
+    <section id="roadmap" className="bg-white">
       <Container className="py-20 lg:py-28">
         <Reveal className="max-w-2xl">
-          <SectionLabel index="05">Roadmap</SectionLabel>
+          <SectionLabel index="06">Roadmap</SectionLabel>
           <h2 className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">
             What's coming next
           </h2>

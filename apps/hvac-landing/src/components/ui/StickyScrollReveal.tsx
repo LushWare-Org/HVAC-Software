@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { CheckCircle2 } from 'lucide-react'
 import clsx from 'clsx'
 
 export interface StickyScrollItem {
+  index?: string
   title: string
   description: string
+  bullets?: string[]
   content: ReactNode
 }
 
@@ -40,9 +43,20 @@ export default function StickyScrollReveal({ items }: StickyScrollRevealProps) {
               refs.current[i] = el
             }}
           >
+            {item.index && (
+              <span
+                className={clsx(
+                  'font-display text-sm font-bold tabular-nums transition-colors duration-300',
+                  active === i ? 'text-navy-500' : 'text-slate-300',
+                )}
+              >
+                {item.index}
+              </span>
+            )}
             <h3
               className={clsx(
                 'font-display text-2xl font-bold tracking-tight transition-colors duration-300 sm:text-3xl',
+                item.index && 'mt-2',
                 active === i ? 'text-ink' : 'text-slate-300',
               )}
             >
@@ -56,6 +70,22 @@ export default function StickyScrollReveal({ items }: StickyScrollRevealProps) {
             >
               {item.description}
             </p>
+            {item.bullets && (
+              <ul className="mt-6 flex flex-col gap-4">
+                {item.bullets.map((b) => (
+                  <li
+                    key={b}
+                    className={clsx(
+                      'flex items-start gap-3 transition-colors duration-300',
+                      active === i ? 'text-slate-600' : 'text-slate-300',
+                    )}
+                  >
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-none text-green-500" />
+                    <span className="text-[15px] leading-relaxed">{b}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className="relative mt-6 lg:hidden">{item.content}</div>
           </div>
         ))}

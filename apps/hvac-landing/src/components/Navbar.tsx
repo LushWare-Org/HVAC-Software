@@ -54,22 +54,39 @@ export default function Navbar() {
           </span>
         </NavLink>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               end={link.to === '/'}
-              className={({ isActive }) =>
-                clsx(
-                  'rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-navy-50 text-navy-900'
-                    : 'text-slate-600 hover:bg-navy-50 hover:text-navy-800',
-                )
-              }
+              className="group relative rounded-lg px-3.5 py-2 text-sm font-medium select-none"
             >
-              {link.label}
+              {({ isActive }) => (
+                <>
+                  <span className="flex flex-col overflow-hidden" style={{ height: '1.25em' }}>
+                    <span
+                      className={clsx(
+                        'block translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-full',
+                        isActive ? 'font-semibold text-navy-900' : 'font-medium text-slate-600',
+                      )}
+                      style={{ lineHeight: '1.25em' }}
+                    >
+                      {link.label}
+                    </span>
+                    <span
+                      className="block translate-y-0 font-semibold text-navy-900 transition-transform duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-full"
+                      style={{ lineHeight: '1.25em' }}
+                      aria-hidden="true"
+                    >
+                      {link.label}
+                    </span>
+                  </span>
+                  {isActive && (
+                    <span className="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-navy-700" />
+                  )}
+                </>
+              )}
             </NavLink>
           ))}
         </div>

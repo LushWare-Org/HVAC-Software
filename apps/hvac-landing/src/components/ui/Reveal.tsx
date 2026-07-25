@@ -7,6 +7,7 @@ interface RevealProps {
   delay?: number
   duration?: number
   direction?: 'up' | 'left' | 'right'
+  once?: boolean
 }
 
 const HIDDEN_TRANSFORM: Record<NonNullable<RevealProps['direction']>, string> = {
@@ -21,6 +22,7 @@ export default function Reveal({
   delay = 0,
   duration = 700,
   direction = 'up',
+  once = true,
 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
@@ -36,14 +38,16 @@ export default function Reveal({
       ([entry]) => {
         if (entry.isIntersecting) {
           setVisible(true)
-          observer.disconnect()
+          if (once) observer.disconnect()
+        } else if (!once) {
+          setVisible(false)
         }
       },
       { threshold: 0.15 },
     )
     observer.observe(node)
     return () => observer.disconnect()
-  }, [])
+  }, [once])
 
   return (
     <div

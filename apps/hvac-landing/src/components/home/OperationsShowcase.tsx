@@ -25,18 +25,22 @@ export default function OperationsShowcase() {
             const Icon = item.icon
             const reversed = i % 2 === 1
             return (
-              <Reveal
+              <div
                 key={item.id}
-                duration={1000}
-                className="border-b border-ink/15 py-10 last:border-b-0 lg:py-14"
+                className="group border-b border-ink/15 py-10 last:border-b-0 lg:py-14"
               >
                 <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-                  <div className={reversed ? 'lg:order-2' : ''}>
+                  <Reveal
+                    direction="up"
+                    duration={800}
+                    once={false}
+                    className={reversed ? 'lg:order-2' : ''}
+                  >
                     <span className="font-display text-sm font-bold tabular-nums text-navy-500">
                       {item.index}
                     </span>
                     <div className="mt-6 flex items-center gap-4">
-                      <span className="flex h-12 w-12 flex-none items-center justify-center border border-ink bg-navy-900 text-white">
+                      <span className="flex h-12 w-12 flex-none items-center justify-center border border-ink bg-navy-900 text-white transition-transform duration-300 group-hover:scale-110">
                         <Icon className="h-6 w-6" />
                       </span>
                       <h3 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
@@ -54,10 +58,16 @@ export default function OperationsShowcase() {
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </Reveal>
 
-                  <div className={reversed ? 'lg:order-1' : ''}>
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-block-sm">
+                  <Reveal
+                    direction={reversed ? 'left' : 'right'}
+                    delay={150}
+                    duration={900}
+                    once={false}
+                    className={reversed ? 'lg:order-1' : ''}
+                  >
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-block-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-block">
                       {item.url && (
                         <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-4 py-2.5">
                           <span className="flex flex-none gap-1.5">
@@ -79,9 +89,9 @@ export default function OperationsShowcase() {
                         />
                       </div>
                     </div>
-                  </div>
+                  </Reveal>
                 </div>
-              </Reveal>
+              </div>
             )
           })}
         </div>

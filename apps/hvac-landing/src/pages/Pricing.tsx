@@ -5,7 +5,7 @@ import PageHero from '../components/ui/PageHero'
 import Container from '../components/ui/Container'
 import SectionLabel from '../components/ui/SectionLabel'
 import FaqAccordion from '../components/ui/FaqAccordion'
-// import CtaBanner from '../components/ui/CtaBanner'
+import CtaBanner from '../components/ui/CtaBanner'
 import Button from '../components/ui/Button'
 import { PRICING_PLANS, FAQS } from '../data/site'
 
@@ -175,7 +175,7 @@ export default function Pricing() {
         </Container>
       </section>
 
-      {/* <CtaBanner /> */}
+      <CtaBanner />
     </>
   )
 }

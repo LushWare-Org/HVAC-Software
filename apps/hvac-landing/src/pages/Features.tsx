@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import PageHero from '../components/ui/PageHero'
 import Container from '../components/ui/Container'
 import SectionLabel from '../components/ui/SectionLabel'
-// import CtaBanner from '../components/ui/CtaBanner'
+import CtaBanner from '../components/ui/CtaBanner'
 import Button from '../components/ui/Button'
 import Reveal from '../components/ui/Reveal'
 import { FEATURES, OPERATIONS_SHOWCASE, SALES_SHOWCASE, BUSINESS_TABS } from '../data/site'
@@ -33,9 +33,9 @@ const featureRows: Row[] = FEATURES.map((f) => ({
   url: f.url,
 }))
 
-const opsRows: Row[] = OPERATIONS_SHOWCASE.map((item) => ({
+const opsRows: Row[] = OPERATIONS_SHOWCASE.map((item, i) => ({
   key: `ops-${item.id}`,
-  index: item.index,
+  index: String(FEATURES.length + i + 1).padStart(2, '0'),
   icon: item.icon,
   title: item.title,
   description: item.description,
@@ -45,9 +45,9 @@ const opsRows: Row[] = OPERATIONS_SHOWCASE.map((item) => ({
   url: item.url,
 }))
 
-const salesRows: Row[] = SALES_SHOWCASE.map((item) => ({
+const salesRows: Row[] = SALES_SHOWCASE.map((item, i) => ({
   key: `sales-${item.id}`,
-  index: item.index,
+  index: String(FEATURES.length + OPERATIONS_SHOWCASE.length + i + 1).padStart(2, '0'),
   icon: item.icon,
   title: item.title,
   description: item.description,
@@ -59,11 +59,11 @@ const salesRows: Row[] = SALES_SHOWCASE.map((item) => ({
 
 const businessRows: Row[] = BUSINESS_TABS.map((tab, i) => ({
   key: `business-${tab.id}`,
-  index: String(OPERATIONS_SHOWCASE.length + SALES_SHOWCASE.length + i + 1).padStart(2, '0'),
+  index: String(FEATURES.length + OPERATIONS_SHOWCASE.length + SALES_SHOWCASE.length + i + 1).padStart(2, '0'),
   icon: tab.icon,
   title: tab.headline,
   description: tab.description,
-  bullets: tab.stats.map((s) => `${s.label}: ${s.value}`),
+  bullets: tab.bullets,
   image: tab.image,
   imageAlt: tab.imageAlt,
   url: tab.url,
@@ -81,7 +81,12 @@ function FeatureRows({ rows }: { rows: Row[] }) {
             className="group border-b border-ink/15 py-10 last:border-b-0 lg:py-14"
           >
             <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-              <Reveal direction="up" duration={800} className={reversed ? 'lg:order-2' : ''}>
+              <Reveal
+                direction="up"
+                duration={800}
+                once={false}
+                className={reversed ? 'lg:order-2' : ''}
+              >
                 <span className="font-display text-sm font-bold tabular-nums text-navy-500">
                   {row.index}
                 </span>
@@ -108,6 +113,7 @@ function FeatureRows({ rows }: { rows: Row[] }) {
                 direction={reversed ? 'left' : 'right'}
                 delay={150}
                 duration={900}
+                once={false}
                 className={reversed ? 'lg:order-1' : ''}
               >
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-block-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-block">
@@ -181,20 +187,20 @@ export default function Features() {
         title={
           <>
             <span className="block">The Whole Operation,</span>
-            <span className="mt-3 block sm:mt-4">in One System of Record</span>
+            <span className="mt-3 block sm:mt-4">In One System of Record</span>
           </>
         }
         description="Every capability shares the same data. So a job booked in the office is the same job your tech closes, and the same number that lands on the books."
       >
         <Button to="/contact" variant="inverse" size="lg">
-          Request a demo
+          Request a Demo
         </Button>
       </PageHero>
 
       <FeatureGroup
         index="01"
         label="Platform"
-        heading="Everything from the first call to the final invoice"
+        heading="Everything From The First Call To The Final Invoice"
         description="Seven capabilities that share the same data — so a job booked in the office is the same job your tech closes and gets paid for in the field."
         rows={featureRows}
       />
@@ -202,7 +208,7 @@ export default function Features() {
       <FeatureGroup
         index="02"
         label="Operations"
-        heading="Run the job, start to finish"
+        heading="Run The Job, Start To Finish"
         description="Jobs, dispatch, multi-visit projects and service agreements share one record — so nothing gets re-typed between the office and the truck."
         rows={opsRows}
       />
@@ -210,7 +216,7 @@ export default function Features() {
       <FeatureGroup
         index="03"
         label="Sales & Customers"
-        heading="Every account, scored - not guessed at"
+        heading="Every Account, Scored - Not Guessed At"
         description="A CRM that reads risk and revenue automatically, marketing that runs on rails, and one inbox so no conversation gets lost between channels."
         rows={salesRows}
       />
@@ -218,15 +224,15 @@ export default function Features() {
       <FeatureGroup
         index="04"
         label="Business"
-        heading="The back office, without the spreadsheets"
+        heading="The Back Office, Without The Spreadsheets"
         rows={businessRows}
         className="border-b border-ink bg-white last:border-b-0"
       />
 
-      {/* <CtaBanner
+      <CtaBanner
         heading="See it on your data"
         subheading="Book a 30-minute demo and we’ll walk your workflow through HVACtor — dispatch, mobile, invoicing and all."
-      /> */}
+      />
     </>
   )
 }

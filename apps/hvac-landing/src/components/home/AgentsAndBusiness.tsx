@@ -17,7 +17,7 @@ export function AgentsSection() {
 
       <Container className="relative py-20 lg:py-28">
         <Reveal className="max-w-2xl">
-          <SectionLabel index="06" tone="light">On staff, around the clock</SectionLabel>
+          <SectionLabel index="02" tone="light">On staff, around the clock</SectionLabel>
           <h2 className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
             Four agents, each accountable to a number
           </h2>
@@ -58,17 +58,24 @@ export function BusinessSection() {
     <section id="business" className="bg-white">
       <Container className="py-20 lg:py-28">
         <Reveal className="max-w-2xl">
-          <SectionLabel index="03">Business</SectionLabel>
+          <SectionLabel index="04">Business</SectionLabel>
           <h2 className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">
             The back office, without the spreadsheets
           </h2>
+          <p className="mt-5 text-lg leading-relaxed text-slate-600">
+            Quotes, invoices, payments, and reporting stay in sync with the
+            field - so the numbers office staff see are the numbers that are
+            actually true.
+          </p>
         </Reveal>
 
-        <div className="mt-14">
+        <div className="mt-10 border-t border-ink pt-14">
           <StickyScrollReveal
             items={BUSINESS_TABS.map((tab) => ({
+              index: tab.index,
               title: tab.headline,
               description: tab.description,
+              bullets: tab.bullets,
               content: (
                 <div>
                   <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-block-sm">
