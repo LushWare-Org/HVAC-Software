@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import {
   X, Sparkles, CheckCircle2, AlertCircle, Zap, RefreshCw,
-  Phone, TrendingUp, ShieldCheck, Loader2,
+  Phone, TrendingUp, ShieldCheck, Loader2, DollarSign,
 } from 'lucide-react'
 import { useCustomerStatusSummary } from '../hooks/useCustomers'
-import { useExecuteFollowup, useExecuteRetention, useExecuteUpsell } from '../hooks/useCustomers'
+import { useExecuteFollowup, useExecuteRetention, useExecuteUpsell, useExecuteRevenueAgent } from '../hooks/useCustomers'
 import { customerName } from '../types/api'
 import type { Customer, CustomerStatusSummary } from '../types/api'
 import { formatMoney } from '../lib/format'
@@ -128,6 +128,11 @@ const ACTION_LABELS: Record<string, string> = {
   maintenance_plan:  'Maintenance plan',
   replacement:       'Equipment replacement',
   service:           'Service visit',
+  payment_collection: 'Payment collection',
+  quote_recovery:      'Quote recovery',
+  agreement_renewal:   'Agreement renewal',
+  re_engagement:        'Re-engagement',
+  no_opportunity:       'No opportunity right now',
 }
 
 function label(key: string) { return ACTION_LABELS[key] ?? key }
@@ -167,7 +172,7 @@ function FollowupSection({ summary, customerId }: { summary: CustomerStatusSumma
         <Detail label="Churn risk"         value={`${churn.level} (${pct(churn.probability)})`} />
         <Detail label="Recommended channel" value={CHANNEL_LABELS[channel] ?? channel} />
         <Detail label="Current status"     value={summary.currentStatus} />
-        <Detail label="Data source"        value={summary.predictionSource === 'model' ? 'AI model' : 'Rule-based'} />
+        <Detail label="Data source"        value="Rule-based" />
       </div>
       {result && <ResultBanner success={result.success} message={result.message} />}
       <button
@@ -295,6 +300,57 @@ function UpsellSection({ summary, customerId }: { summary: CustomerStatusSummary
   )
 }
 
+// ─── Revenue section ──────────────────────────────────────────────────────────
+
+function RevenueSection({ summary, customerId }: { summary: CustomerStatusSummary; customerId: string }) {
+  const exec = useExecuteRevenueAgent()
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+
+  const rev = summary.revenueRecommendation
+  if (!rev) return null
+
+  const priority: Priority = rev.priority as Priority
+
+  const handleExecute = async () => {
+    setResult(null)
+    try {
+      await exec.mutateAsync(customerId)
+      setResult({ success: true, message: `Revenue recommendation refreshed — ${label(rev.category)}.` })
+    } catch {
+      setResult({ success: false, message: 'Request failed. Try again.' })
+    }
+  }
+
+  return (
+    <Section icon={<DollarSign size={15} />} title="Revenue Recommendation" priority={priority}>
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, flex: 1 }}>
+        <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 10, lineHeight: 1.5 }}>
+          {rev.reason}
+        </p>
+        <Detail label="Category"           value={label(rev.category)} />
+        {rev.action && <Detail label="Recommended action" value={rev.action} />}
+        {rev.expectedRevenueImpact != null && (
+          <Detail label="Expected impact" value={formatMoney(rev.expectedRevenueImpact, { decimals: 0 })} />
+        )}
+        {rev.channel && <Detail label="Recommended channel" value={CHANNEL_LABELS[rev.channel] ?? rev.channel} />}
+        {rev.confidence != null && <Detail label="Confidence" value={pct(rev.confidence)} />}
+      </div>
+      {result && <ResultBanner success={result.success} message={result.message} />}
+      {rev.category !== 'no_opportunity' && (
+        <button
+          onClick={handleExecute}
+          disabled={exec.isPending}
+          className="btn btn-primary btn-sm"
+          style={{ marginTop: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+        >
+          {exec.isPending ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
+          {exec.isPending ? 'Refreshing…' : 'Refresh Revenue Recommendation'}
+        </button>
+      )}
+    </Section>
+  )
+}
+
 // ─── Main modal ───────────────────────────────────────────────────────────────
 
 interface Props {
@@ -370,6 +426,7 @@ export default function CustomerRecommendationsModal({ customer, onClose }: Prop
               <FollowupSection   summary={summary} customerId={customer.id} />
               <RetentionSection  summary={summary} customerId={customer.id} />
               <UpsellSection     summary={summary} customerId={customer.id} />
+              <RevenueSection    summary={summary} customerId={customer.id} />
             </div>
           )}
         </div>

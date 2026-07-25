@@ -1,5 +1,15 @@
 # Retention Agent Implementation
 
+> **Superseded for the live CRM path.** The CRM no longer decides retention
+> actions from ML-style thresholds — see
+> [`docs/retention-agent-rule-llm-redesign.md`](./retention-agent-rule-llm-redesign.md)
+> for the current Rule Engine → LLM → Validation pipeline that backs
+> `CustomersService.getStatusSummary()` and the admin dashboard today. This
+> document remains accurate for the standalone Python agents
+> (`agent/retention_agent.py`, `services/ai/agents/retention_agent.py`), which
+> are unchanged and still useful as a reference for a future ML-backed
+> replacement of the rule engine.
+
 This document records how the Retention Agent is implemented in this system, how its model-backed Python version works, and how the same retention decision behavior is surfaced in the CRM and admin dashboard.
 
 ## Purpose

@@ -71,6 +71,7 @@ export interface CustomerStatusSummary {
     priorityScore?: number | null
     triggerSource?: string | null
     createdAt: string
+    reason: string
   } | null
   retentionPrediction?: {
     customerId: string
@@ -88,6 +89,24 @@ export interface CustomerStatusSummary {
     triggerImmediately: boolean
     reason: string
   } | null
+  revenueRecommendation?: {
+    id: string
+    category:
+      | 'payment_collection'
+      | 'quote_recovery'
+      | 'agreement_renewal'
+      | 'maintenance_plan'
+      | 're_engagement'
+      | 'no_opportunity'
+    action: string | null
+    priority: 'low' | 'medium' | 'high'
+    channel: 'whatsapp' | 'email' | 'call' | null
+    reason: string
+    message: string | null
+    expectedRevenueImpact: number | null
+    confidence: number | null
+    createdAt: string
+  } | null
   churnPrediction: {
     probability: number
     level: 'Low' | 'Medium' | 'High'
@@ -100,27 +119,26 @@ export interface CustomerStatusSummary {
   }
   revenueRisk: number
   proposedNextStep: string
-  predictionSource: 'model' | 'fallback'
   reasoning?: {
     upsellRecommendation: {
       ruleBased: string
-      mlResult: string
-      aiExplanation: string
+      calculation: string
+      interpretation: string
     }
     retentionSuggestion: {
       ruleBased: string
-      mlResult: string
-      aiExplanation: string
+      calculation: string
+      interpretation: string
     }
     failureAndChurnPrediction: {
       ruleBased: string
-      mlResult: string
-      aiExplanation: string
+      calculation: string
+      interpretation: string
     }
     proposedNextStep: {
       ruleBased: string
-      mlResult: string
-      aiExplanation: string
+      calculation: string
+      interpretation: string
     }
   }
   signals: {

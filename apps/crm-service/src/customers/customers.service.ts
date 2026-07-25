@@ -2,28 +2,49 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  Logger,
 } from '@nestjs/common';
 import { Prisma } from '../prisma/generated';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChurnClient, type ChurnPredictionInput, type FailurePredictionInput, type RevenuePredictionResult } from '../ai/churn.client';
 import { UpsellAgentService } from '../upsell/upsell-agent.service';
 import { FollowupAgent } from '../agents/followup.agent';
+import { RetentionAgent, type RetentionRecommendationRecord } from '../agents/retention.agent';
+import { RevenueAgent } from '../agents/revenue.agent';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomersEquipmentService, type EquipmentInput } from './customers-equipment.service';
 import { TtlCacheService } from '../cache/ttl-cache.service';
 import { PaginatedResponse, clampPagination } from '@tscrm/types';
 
+interface ChurnPredictionInput {
+  days_since_last_service: number;
+  service_count_last_year: number;
+  avg_monthly_spend: number;
+  customer_tenure_days: number;
+}
+
+interface FailurePredictionInput {
+  equipment_age_days: number;
+  days_since_last_service: number;
+  service_count_last_year: number;
+  usage_intensity: number;
+  failure_history: number;
+}
+
+interface RevenuePredictionResult {
+  churn_probability: number;
+  failure_probability: number;
+  revenue_risk: number;
+  recommended_action: string;
+}
+
 @Injectable()
 export class CustomersService {
-  private readonly logger = new Logger(CustomersService.name);
-
   constructor(
     private prisma: PrismaService,
-    private churnClient: ChurnClient,
     private upsellAgent: UpsellAgentService,
     private followupAgent: FollowupAgent,
+    private retentionAgent: RetentionAgent,
+    private revenueAgent: RevenueAgent,
     private equipment: CustomersEquipmentService,
     private ttlCache: TtlCacheService,
   ) {}
@@ -339,22 +360,7 @@ export class CustomersService {
       failure_history: failureHistory,
     };
 
-    const fallbackPrediction = this.computeFallbackPrediction(churnInput, failureInput);
-    let prediction = fallbackPrediction;
-    let predictionSource: 'model' | 'fallback' = 'fallback';
-
-    try {
-      const modelPrediction = await this.churnClient.predictRevenue({ churn: churnInput, failure: failureInput });
-      const reconciledPrediction = this.reconcileModelPrediction(modelPrediction, fallbackPrediction, churnInput);
-      prediction = reconciledPrediction.prediction;
-      predictionSource = reconciledPrediction.usedFallback ? 'fallback' : 'model';
-
-      if (reconciledPrediction.usedFallback) {
-        this.logger.warn(`Status summary model returned saturated low risk for customer ${customer.id}; using calibrated fallback scores`);
-      }
-    } catch (error) {
-      this.logger.warn(`Status summary model unavailable for customer ${customer.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    const prediction = this.classifyChurnAndFailureRisk(churnInput, failureInput);
 
     const currentStatus = this.describeCurrentStatus(customer, daysSinceLastService);
     const churnLevel = this.riskLevel(prediction.churn_probability);
@@ -366,16 +372,28 @@ export class CustomersService {
       daysSinceLastService,
       customer.automaticFollowupEnabled,
     );
-    const upsellRecommendation =
-      await this.getLatestUpsellRecommendation(companyId, id) ??
-      this.computeInlineUpsellRecommendation({
-        equipmentAgeDays,
-        failureHistory,
-        daysSinceLastService,
-        avgMonthlySpend,
-        churnProbability: prediction.churn_probability,
-        failureProbability: prediction.failure_probability,
-      });
+    const upsellAgentResult = await this.upsellAgent.ensureRecommendation(companyId, id);
+    const upsellRecommendation = upsellAgentResult
+      ? {
+          id: upsellAgentResult.id,
+          recommendedOffer: upsellAgentResult.category,
+          confidence: upsellAgentResult.confidence,
+          status: upsellAgentResult.status,
+          priorityScore: upsellAgentResult.priorityScore,
+          triggerSource: upsellAgentResult.triggerSource,
+          createdAt: upsellAgentResult.createdAt,
+          reason: upsellAgentResult.reason,
+        }
+      : this.computeInlineUpsellRecommendation({
+          equipmentAgeDays,
+          failureHistory,
+          daysSinceLastService,
+          avgMonthlySpend,
+          churnProbability: prediction.churn_probability,
+          failureProbability: prediction.failure_probability,
+        });
+    const retentionAgentResult = await this.retentionAgent.ensureRecommendation(companyId, id);
+    const revenueRecommendation = await this.revenueAgent.ensureRecommendation(companyId, id);
     const retentionPrediction = this.computeRetentionPrediction({
       customerId: customer.id,
       avgMonthlySpend,
@@ -386,22 +404,27 @@ export class CustomersService {
       hasMobile: Boolean(customer.mobile),
       hasPhone: Boolean(customer.phone),
       hasEmail: Boolean(customer.email),
+      agentResult: retentionAgentResult,
     });
     const reasoning = this.buildStatusReasoning({
+      customerName: `${customer.firstName} ${customer.lastName}`.trim(),
       upsellRecommendation,
       retentionPrediction,
+      churnInput,
+      failureInput,
       churnProbability: prediction.churn_probability,
       churnLevel,
       failureProbability: prediction.failure_probability,
       failureLevel,
-      proposedNextStep,
-      predictionSource,
       recommendedAction: prediction.recommended_action,
+      proposedNextStep,
+      automaticFollowupEnabled: customer.automaticFollowupEnabled,
       signals: {
         daysSinceLastService,
         serviceCountLastYear,
         avgMonthlySpend,
         equipmentAgeDays,
+        customerTenureDays,
         equipmentCount: customer._count.equipment,
         activeAgreementCount: customer.agreements.length,
         failureHistory,
@@ -413,6 +436,7 @@ export class CustomersService {
       currentStatus,
       upsellRecommendation,
       retentionPrediction,
+      revenueRecommendation,
       churnPrediction: {
         probability: prediction.churn_probability,
         level: churnLevel,
@@ -425,7 +449,6 @@ export class CustomersService {
       },
       revenueRisk: prediction.revenue_risk,
       proposedNextStep,
-      predictionSource,
       reasoning,
       signals: {
         daysSinceLastService,
@@ -445,6 +468,10 @@ export class CustomersService {
     const summary = await this.getStatusSummary(companyId, customerId);
     const reason = summary.retentionPrediction?.reason ?? 'Manual retention action triggered';
     return this.followupAgent.triggerRetentionForCustomer(companyId, customerId, reason);
+  }
+
+  async executeRevenue(companyId: string, customerId: string) {
+    return this.revenueAgent.generateRecommendation(companyId, customerId);
   }
 
   // Called by customer portal: find Customer linked to the portal user's account
@@ -620,7 +647,12 @@ export class CustomersService {
     return Math.max(0, Math.floor((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)));
   }
 
-  private computeFallbackPrediction(churn: ChurnPredictionInput, failure: FailurePredictionInput) {
+  /**
+   * Rule-based churn/failure classification. Replaces the previous ML
+   * (churn-service) call — churn & failure risk are now decided purely from
+   * CRM signals, with no external model dependency.
+   */
+  private classifyChurnAndFailureRisk(churn: ChurnPredictionInput, failure: FailurePredictionInput): RevenuePredictionResult {
     const churnProbability = Math.min(
       0.95,
       (churn.days_since_last_service > 180 ? 0.45 : churn.days_since_last_service > 90 ? 0.25 : 0.08) +
@@ -638,53 +670,11 @@ export class CustomersService {
       churn_probability: Number(churnProbability.toFixed(3)),
       failure_probability: Number(failureProbability.toFixed(3)),
       revenue_risk: Number(((churnProbability * churn.avg_monthly_spend * 12) + (failureProbability * 200)).toFixed(2)),
-      recommended_action: this.recommendFallbackAction(churnProbability, failureProbability),
+      recommended_action: this.classifyRecommendedAction(churnProbability, failureProbability),
     };
   }
 
-  private reconcileModelPrediction(
-    modelPrediction: RevenuePredictionResult,
-    fallbackPrediction: RevenuePredictionResult,
-    churnInput: ChurnPredictionInput,
-  ): { prediction: RevenuePredictionResult; usedFallback: boolean } {
-    const churnProbability = this.reconcileProbability(
-      modelPrediction.churn_probability,
-      fallbackPrediction.churn_probability,
-    );
-    const failureProbability = this.reconcileProbability(
-      modelPrediction.failure_probability,
-      fallbackPrediction.failure_probability,
-    );
-    const usedFallback =
-      churnProbability !== modelPrediction.churn_probability ||
-      failureProbability !== modelPrediction.failure_probability;
-
-    if (!usedFallback) {
-      return { prediction: modelPrediction, usedFallback: false };
-    }
-
-    return {
-      prediction: {
-        churn_probability: churnProbability,
-        failure_probability: failureProbability,
-        revenue_risk: Number(((churnProbability * churnInput.avg_monthly_spend * 12) + (failureProbability * 200)).toFixed(2)),
-        recommended_action: this.recommendFallbackAction(churnProbability, failureProbability),
-      },
-      usedFallback: true,
-    };
-  }
-
-  private reconcileProbability(modelProbability: number, fallbackProbability: number): number {
-    if (!Number.isFinite(modelProbability)) {
-      return fallbackProbability;
-    }
-
-    return modelProbability < 0.01 && fallbackProbability >= 0.05
-      ? fallbackProbability
-      : modelProbability;
-  }
-
-  private recommendFallbackAction(churnProbability: number, failureProbability: number): string {
+  private classifyRecommendedAction(churnProbability: number, failureProbability: number): string {
     if (churnProbability > 0.7 && failureProbability > 0.7) return 'URGENT_INTERVENTION';
     if (churnProbability > 0.7) return 'RETENTION';
     if (failureProbability > 0.7) return 'MAINTENANCE';
@@ -717,61 +707,12 @@ export class CustomersService {
     return 'No immediate action. Keep standard follow-up cadence.';
   }
 
-  private async getLatestUpsellRecommendation(companyId: string, customerId: string) {
-    if (!(await this.prisma.tableExists('upsell_recommendations'))) {
-      return null;
-    }
-
-    const rows = await this.prisma.$queryRawUnsafe<Array<{
-      id: string;
-      recommendedOffer: string;
-      confidence: number;
-      status: string;
-      priorityScore: number | null;
-      triggerSource: string | null;
-      createdAt: Date;
-    }>>(
-      `
-        SELECT
-          id,
-          recommended_offer AS "recommendedOffer",
-          confidence,
-          status,
-          priority_score AS "priorityScore",
-          trigger_source AS "triggerSource",
-          created_at AS "createdAt"
-        FROM ${this.prisma.tableRef('upsell_recommendations')}
-        WHERE company_id = $1
-          AND customer_id = $2
-        ORDER BY created_at DESC
-        LIMIT 1
-      `,
-      companyId,
-      customerId,
-    );
-
-    const row = rows[0];
-    if (!row) {
-      return null;
-    }
-
-    const confidence = Number(row.confidence);
-    const priorityScore = row.priorityScore === null ? null : Number(row.priorityScore);
-
-    if (confidence >= 0.995 || confidence <= 0.005) {
-      this.logger.warn(
-        `Ignoring saturated stored upsell recommendation ${row.id} for customer ${customerId}; recalculating from status signals`,
-      );
-      return null;
-    }
-
-    return {
-      ...row,
-      confidence,
-      priorityScore,
-    };
-  }
-
+  /**
+   * Last-resort fallback for when UpsellAgentService.ensureRecommendation()
+   * returns null (customer lookup raced/failed). Mirrors computeRetentionPrediction's
+   * own threshold-rule fallback below. Not the primary path — that's the
+   * rule-based + LLM UpsellAgentService (see apps/crm-service/src/upsell/upsell-agent.service.ts).
+   */
   private computeInlineUpsellRecommendation(signals: {
     equipmentAgeDays: number;
     failureHistory: number;
@@ -828,6 +769,18 @@ export class CustomersService {
         + (signals.failureProbability * 0.15),
     );
 
+    const appliedBoosts: string[] = [];
+    if (equipmentAgeYears > 8) appliedBoosts.push(`equipment is ${equipmentAgeYears.toFixed(1)} years old (>8y, +0.45 to replacement)`);
+    if (signals.failureHistory > 2) appliedBoosts.push(`${signals.failureHistory} failure(s) on file (>2, +0.45 to maintenance plan)`);
+    if (signals.daysSinceLastService > 180) appliedBoosts.push(`${signals.daysSinceLastService} days since last service (>180, +0.4 to service)`);
+    if (signals.failureProbability >= 0.5) appliedBoosts.push(`failure risk ${Math.round(signals.failureProbability * 100)}% (>=50%, +0.15 to maintenance plan)`);
+    if (signals.churnProbability >= 0.5) appliedBoosts.push(`churn risk ${Math.round(signals.churnProbability * 100)}% (>=50%, +0.1 to maintenance plan and service)`);
+    if (signals.avgMonthlySpend >= 250) appliedBoosts.push(`average monthly spend $${Math.round(signals.avgMonthlySpend)} (>=$250, +0.08 to maintenance plan)`);
+
+    const reason = appliedBoosts.length > 0
+      ? `${appliedBoosts.join('; ')} — after normalizing, "${recommendedOffer}" scored highest at ${Math.round(confidence * 100)}%.`
+      : `No scoring boosts applied for this customer; base weights alone put "${recommendedOffer}" highest at ${Math.round(confidence * 100)}%.`;
+
     return {
       id: 'inline',
       recommendedOffer,
@@ -836,9 +789,20 @@ export class CustomersService {
       priorityScore: Number(priorityScore.toFixed(4)),
       triggerSource: 'status_summary',
       createdAt: new Date(),
+      reason,
     };
   }
 
+  /**
+   * pConvert/ltv/churnProbability/score remain informational signals shown on
+   * the "Retention Suggestion" reasoning card — they are no longer what picks
+   * the action. The action/offer/channel/priority/reason now come from the
+   * rule-based + LLM RetentionAgent (see apps/crm-service/src/agents/retention.agent.ts);
+   * agentResult is null only when the customer lookup failed or the
+   * retention_recommendations migration hasn't been applied yet, in which
+   * case we fall back to the same threshold rules this method used to own,
+   * now expressed purely as a rule-only, no-LLM decision.
+   */
   private computeRetentionPrediction(signals: {
     customerId: string;
     avgMonthlySpend: number;
@@ -849,20 +813,41 @@ export class CustomersService {
     hasMobile: boolean;
     hasPhone: boolean;
     hasEmail: boolean;
+    agentResult: RetentionRecommendationRecord | null;
   }) {
     const pConvert = this.clampProbability(signals.upsellConfidence);
     const ltv = Number((signals.avgMonthlySpend * 12).toFixed(2));
     const churnProbability = this.clampProbability(signals.churnProbability);
     const score = Number((pConvert * ltv * (1 - churnProbability)).toFixed(2));
-    const recommendedChannel = this.recommendedRetentionChannel(signals);
 
+    if (signals.agentResult) {
+      const { agentResult } = signals;
+      return {
+        customerId: signals.customerId,
+        pConvert: Number(pConvert.toFixed(4)),
+        ltv,
+        churnProbability: Number(churnProbability.toFixed(4)),
+        score,
+        action: agentResult.action,
+        offer: agentResult.offer,
+        recommendedChannel: agentResult.channel ?? this.recommendedRetentionChannel(signals),
+        priority: agentResult.priority,
+        triggerImmediately: signals.failureHistory >= 3,
+        reason: agentResult.reason,
+      };
+    }
+
+    // Rule-only fallback (no LLM): same safety-gated thresholds as the rule
+    // engine, used only when a stored recommendation isn't available yet.
     let action = 'no_action';
-    if (pConvert > 0.75 && ltv > 1500) {
-      action = 'premium_contract_offer';
+    if (!signals.automaticFollowupEnabled) {
+      action = 'no_action';
     } else if (churnProbability > 0.7) {
       action = 'discount_retention_offer';
     } else if (signals.failureHistory >= 3) {
       action = 'maintenance_plan_offer';
+    } else if (pConvert > 0.75 && ltv > 1500) {
+      action = 'premium_contract_offer';
     }
 
     return {
@@ -873,7 +858,7 @@ export class CustomersService {
       score,
       action,
       offer: this.retentionOffer(action),
-      recommendedChannel,
+      recommendedChannel: this.recommendedRetentionChannel(signals),
       priority: score > 1500 ? 'high' : score >= 500 ? 'medium' : 'low',
       triggerImmediately: signals.failureHistory >= 3,
       reason: this.describeRetentionReason(action, signals.failureHistory, pConvert, signals.automaticFollowupEnabled),
@@ -904,12 +889,14 @@ export class CustomersService {
   }
 
   private buildStatusReasoning(input: {
+    customerName: string;
     upsellRecommendation: {
       recommendedOffer: string;
       confidence: number;
       priorityScore?: number | null;
       status: string;
       triggerSource?: string | null;
+      reason: string;
     };
     retentionPrediction: {
       pConvert: number;
@@ -922,52 +909,114 @@ export class CustomersService {
       triggerImmediately: boolean;
       reason: string;
     };
+    churnInput: ChurnPredictionInput;
+    failureInput: FailurePredictionInput;
     churnProbability: number;
     churnLevel: 'Low' | 'Medium' | 'High';
     failureProbability: number;
     failureLevel: 'Low' | 'Medium' | 'High';
-    proposedNextStep: string;
-    predictionSource: 'model' | 'fallback';
     recommendedAction: string;
+    proposedNextStep: string;
+    automaticFollowupEnabled: boolean;
     signals: {
       daysSinceLastService: number;
       serviceCountLastYear: number;
       avgMonthlySpend: number;
       equipmentAgeDays: number;
+      customerTenureDays: number;
       equipmentCount: number;
       activeAgreementCount: number;
       failureHistory: number;
     };
   }) {
-    const sourceLabel = input.predictionSource === 'model' ? 'ML service' : 'fallback rule model';
     const priorityScore = input.upsellRecommendation.priorityScore ?? input.upsellRecommendation.confidence;
     const equipmentAgeYears = Number((input.signals.equipmentAgeDays / 365).toFixed(1));
 
     return {
       upsellRecommendation: {
-        ruleBased: [
-          `Scores consider service recency (${input.signals.daysSinceLastService} days), equipment risk (${input.failureLevel}), churn risk (${input.churnLevel}), and monthly spend (${input.signals.avgMonthlySpend}).`,
-          `Stored recommendations are used first; otherwise the inline rule engine weights maintenance plan, replacement, and service options.`,
-        ].join(' '),
-        mlResult: `Recommended ${input.upsellRecommendation.recommendedOffer} with ${this.formatProbability(input.upsellRecommendation.confidence)} confidence and ${this.formatProbability(priorityScore)} priority from ${input.upsellRecommendation.status}.`,
-        aiExplanation: `The recommendation favors ${input.upsellRecommendation.recommendedOffer} because the customer's recent service pattern, failure risk, churn risk, and value signals make that offer the most relevant next commercial action.`,
+        ruleBased: `Rule engine checks, in order, the first match wins: equipment >8yr old -> replacement; >=3 repairs in 12mo -> maintenance plan; new equipment still under warranty -> extended warranty; no service in >180 days -> preventive service; premium segment with >$3,600/yr spend -> premium upgrade. If none match, or the customer opted out of follow-up, or the contact-attempt limit was hit, no upsell is offered.`,
+        calculation: `For ${input.customerName}: ${input.upsellRecommendation.reason} This selected category "${input.upsellRecommendation.recommendedOffer}", which the LLM/validation layer scored at ${this.formatProbability(input.upsellRecommendation.confidence)} confidence and ${this.formatProbability(priorityScore)} priority (status: ${input.upsellRecommendation.status}).`,
+        interpretation: `"${input.upsellRecommendation.recommendedOffer}" is recommended specifically because of the condition above — not a generic guess. Priority blends confidence (70% weight) with this customer's churn risk (${this.formatProbability(input.churnProbability)}, 15% weight) and failure risk (${this.formatProbability(input.failureProbability)}, 15% weight).`,
       },
       retentionSuggestion: {
-        ruleBased: `Retention action follows thresholds: premium contract when conversion is above 75% and annual value is above $1,500, retention discount when churn is above 70%, and maintenance plan when repeat failure history is high.`,
-        mlResult: `${sourceLabel} inputs produced ${this.formatProbability(input.retentionPrediction.pConvert)} conversion probability, $${input.retentionPrediction.ltv.toLocaleString()} predicted annual value, ${this.formatProbability(input.retentionPrediction.churnProbability)} churn probability, and score ${input.retentionPrediction.score}.`,
-        aiExplanation: `${input.retentionPrediction.reason}. The suggested action is ${input.retentionPrediction.action} at ${input.retentionPrediction.priority} priority via ${input.retentionPrediction.recommendedChannel}${input.retentionPrediction.triggerImmediately ? ', so it should be triggered immediately' : ''}.`,
+        ruleBased: `Rule engine checks, in order, the first match wins: >=2 complaints/low ratings -> discount retention offer (high priority); maintenance agreement expired -> discount retention offer; >=3 repairs in 12mo -> maintenance plan offer; premium segment with >$2,400/yr spend and declining engagement -> premium contract offer; no service in >180 days -> discount retention offer. Blocked entirely if follow-up is paused, the customer already had 3+ retention attempts, or there's no phone/email on file.`,
+        calculation: `For ${input.customerName}: ${input.retentionPrediction.reason} Conversion probability ${this.formatProbability(input.retentionPrediction.pConvert)} x predicted annual value $${input.retentionPrediction.ltv.toLocaleString()} x (1 - churn ${this.formatProbability(input.retentionPrediction.churnProbability)}) = score ${Math.round(input.retentionPrediction.score).toLocaleString()}. Final action: "${input.retentionPrediction.action}" at ${input.retentionPrediction.priority} priority via ${input.retentionPrediction.recommendedChannel}${input.retentionPrediction.triggerImmediately ? ', flagged to trigger immediately because this customer has 3 or more complaints on file' : ''}.`,
+        interpretation: `The pConvert/LTV/score numbers are informational context, not what picked the action — the matched rule condition above is what decided it for ${input.customerName} specifically.`,
       },
       failureAndChurnPrediction: {
-        ruleBased: `Fallback rules increase churn for long inactivity, no service in the last year, and new-customer uncertainty; failure risk rises with older equipment, long gaps since service, and poor review history.`,
-        mlResult: `${sourceLabel} returned ${input.churnLevel} churn risk (${this.formatProbability(input.churnProbability)}) and ${input.failureLevel} failure risk (${this.formatProbability(input.failureProbability)}). Equipment age is ${equipmentAgeYears} years across ${input.signals.equipmentCount} record(s).`,
-        aiExplanation: `The combined risk view means this customer is ${input.churnLevel.toLowerCase()} for churn and ${input.failureLevel.toLowerCase()} for equipment failure, so the system balances relationship recovery with preventive service timing.`,
+        ruleBased: `Churn = (days since last service: >180d -> 0.45, >90d -> 0.25, else -> 0.08) + (zero services in the last 12mo -> +0.25) + (customer tenure <90 days -> +0.08), capped at 0.95. Failure = (equipment age: >10yr -> 0.45, >5yr -> 0.25, else -> 0.08) + (>180 days since last service -> +0.2) + (min(0.2, complaint count x 0.08)), capped at 0.95. Both are pure arithmetic on this customer's own data — no external model call.`,
+        calculation: `Churn for ${input.customerName}: ${this.describeChurnCalculation(input.churnInput)} = ${this.formatProbability(input.churnProbability)} -> ${input.churnLevel}. Failure: ${this.describeFailureCalculation(input.failureInput)} = ${this.formatProbability(input.failureProbability)} -> ${input.failureLevel}.`,
+        interpretation: `${input.customerName} is ${input.churnLevel.toLowerCase()} risk for churn and ${input.failureLevel.toLowerCase()} risk for equipment failure, driven by the specific factors plugged into the formula above — not a generic risk band.`,
       },
       proposedNextStep: {
-        ruleBased: `Next-step rules prioritize paused follow-up review, urgent intervention, retention offer, maintenance scheduling, re-engagement after 90 days, then monitoring or normal cadence.`,
-        mlResult: `${sourceLabel} recommended action ${input.recommendedAction}; the selected next step is: ${input.proposedNextStep}`,
-        aiExplanation: `This step is the operational translation of the prediction results, chosen to reduce revenue loss, prevent avoidable equipment issues, and keep outreach aligned with the customer's current risk level.`,
+        ruleBased: `Decision tree, first match wins: follow-up paused -> manual review; churn>70% AND failure>70% -> urgent intervention; churn>70% -> retention offer; failure>70% -> schedule maintenance; recommended action is REENGAGEMENT or >90 days since service -> re-engagement message; churn>=40% OR failure>=40% -> monitor this week; otherwise -> normal cadence.`,
+        calculation: this.describeNextStepBranch(input),
+        interpretation: `This step is the direct operational output of the churn (${this.formatProbability(input.churnProbability)}) and failure (${this.formatProbability(input.failureProbability)}) numbers computed above for ${input.customerName}, translated into what the team should do next.`,
       },
     };
+  }
+
+  private describeChurnCalculation(churn: ChurnPredictionInput): string {
+    const recencyTerm = churn.days_since_last_service > 180
+      ? `${churn.days_since_last_service} days since last service (>180d, +0.45)`
+      : churn.days_since_last_service > 90
+        ? `${churn.days_since_last_service} days since last service (>90d, +0.25)`
+        : `${churn.days_since_last_service} days since last service (<=90d, +0.08)`;
+    const serviceTerm = churn.service_count_last_year === 0
+      ? `0 services in the last year (+0.25)`
+      : `${churn.service_count_last_year} service(s) in the last year (+0)`;
+    const tenureTerm = churn.customer_tenure_days < 90
+      ? `${churn.customer_tenure_days} days as a customer (<90d, +0.08)`
+      : `${churn.customer_tenure_days} days as a customer (>=90d, +0)`;
+    return `${recencyTerm} + ${serviceTerm} + ${tenureTerm}`;
+  }
+
+  private describeFailureCalculation(failure: FailurePredictionInput): string {
+    const equipmentAgeYears = Number((failure.equipment_age_days / 365).toFixed(1));
+    const ageTerm = failure.equipment_age_days > 3650
+      ? `equipment ${equipmentAgeYears}y old (>10y, +0.45)`
+      : failure.equipment_age_days > 1825
+        ? `equipment ${equipmentAgeYears}y old (>5y, +0.25)`
+        : `equipment ${equipmentAgeYears}y old (<=5y, +0.08)`;
+    const recencyTerm = failure.days_since_last_service > 180
+      ? `${failure.days_since_last_service} days since last service (>180d, +0.2)`
+      : `${failure.days_since_last_service} days since last service (<=180d, +0)`;
+    const historyValue = Math.min(0.2, failure.failure_history * 0.08);
+    const historyTerm = `${failure.failure_history} failure(s)/low rating(s) on file (min(0.2, ${failure.failure_history}x0.08), +${historyValue.toFixed(2)})`;
+    return `${ageTerm} + ${recencyTerm} + ${historyTerm}`;
+  }
+
+  private describeNextStepBranch(input: {
+    customerName: string;
+    recommendedAction: string;
+    proposedNextStep: string;
+    churnProbability: number;
+    failureProbability: number;
+    automaticFollowupEnabled: boolean;
+    signals: { daysSinceLastService: number };
+  }): string {
+    const churnPct = this.formatProbability(input.churnProbability);
+    const failurePct = this.formatProbability(input.failureProbability);
+
+    if (!input.automaticFollowupEnabled) {
+      return `Automatic follow-up is paused for ${input.customerName}, so the "paused follow-up" branch fired regardless of risk scores: "${input.proposedNextStep}"`;
+    }
+    if (input.recommendedAction === 'URGENT_INTERVENTION') {
+      return `Churn ${churnPct} AND failure ${failurePct} are both above 70%, so the urgent-intervention branch fired: "${input.proposedNextStep}"`;
+    }
+    if (input.recommendedAction === 'RETENTION') {
+      return `Churn ${churnPct} is above 70%, so the retention branch fired: "${input.proposedNextStep}"`;
+    }
+    if (input.recommendedAction === 'MAINTENANCE') {
+      return `Failure risk ${failurePct} is above 70%, so the maintenance branch fired: "${input.proposedNextStep}"`;
+    }
+    if (input.recommendedAction === 'REENGAGEMENT' || input.signals.daysSinceLastService > 90) {
+      return `Recommended action is ${input.recommendedAction} and it has been ${input.signals.daysSinceLastService} days since service (>90d), so the re-engagement branch fired: "${input.proposedNextStep}"`;
+    }
+    if (input.churnProbability >= 0.4 || input.failureProbability >= 0.4) {
+      return `Churn ${churnPct} or failure ${failurePct} is at or above the 40% monitoring threshold, so the monitor branch fired: "${input.proposedNextStep}"`;
+    }
+    return `Neither risk score reaches the 40% monitoring threshold (churn ${churnPct}, failure ${failurePct}) and service isn't overdue, so the default branch fired: "${input.proposedNextStep}"`;
   }
 
   private formatProbability(value: number) {

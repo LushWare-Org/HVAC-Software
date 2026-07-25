@@ -301,7 +301,7 @@ function CustomerHoverSummary({
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8, paddingTop: 8, borderTop: "1px solid var(--border)", fontSize: 12, color: "var(--t3)" }}>
             <span>{summary.signals.daysSinceLastService} days since service</span>
             <span>{summary.signals.serviceCountLastYear} services/year</span>
-            <span>{summary.predictionSource === "model" ? "AI model" : "Fallback"}</span>
+            <span>Rule-based</span>
           </div>
         </div>
       )}

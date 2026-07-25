@@ -134,6 +134,8 @@ model Customer {
   addresses   Address[]
   equipment   Equipment[]
   upsellRecommendations UpsellRecommendation[]
+  retentionRecommendations RetentionRecommendation[]
+  revenueRecommendations RevenueRecommendation[]
   iotConnections CustomerIotConnection[]
   ownedHouses    House[]            @relation("HouseOwner")
   issueReports   HouseIssueReport[]
@@ -518,26 +520,124 @@ model FollowupAttempt {
   @@map("followup_attempts")
 }
 
+// Feedback log for the rule-based + LLM upsell decision engine (see
+// apps/crm-service/src/upsell/). recommendedOffer stores the rule-decided
+// UpsellCategory (kept for backward compatibility with the field name the
+// dashboard already reads); llmOffer/bundle/channel/message/reasonCode/reason
+// hold the LLM-refined recommendation. The outcome columns are filled in
+// later as the offer plays out and become the training dataset for a future
+// ML-backed replacement of the rule engine — mirrors RetentionRecommendation.
 model UpsellRecommendation {
   id               String   @id @default(uuid())
   companyId        String   @map("company_id")
   customerId       String   @map("customer_id")
   customer         Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  recommendedOffer String   @map("recommended_offer")
+  recommendedOffer String   @map("recommended_offer") // UpsellCategory decided by the rule engine
   confidence       Float
   status           String   @default("pending")
-  allScores        Json?    @map("all_scores")
-  ruleOffer        String?  @map("rule_offer")
-  modelOffer       String?  @map("model_offer")
+  allScores        Json?    @map("all_scores") // deprecated: legacy ML score distribution, no longer populated
+  ruleOffer        String?  @map("rule_offer") // matched rule id, e.g. "equipment.aging"
+  modelOffer       String?  @map("model_offer") // "llm" | "rule_engine" — which layer produced the final offer
   triggerSource    String?  @map("trigger_source")
   priorityScore    Float?   @map("priority_score")
   inputPayload     Json?    @map("input_payload")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  ruleResult        Json?  @map("rule_result")
+  llmRecommendation Json?  @map("llm_recommendation")
+  validationResult  Json?  @map("validation_result")
+
+  llmOffer   String? @map("llm_offer") // specific product/service text from the LLM (or null when no LLM offer passed validation)
+  bundle     String? @map("bundle")
+  channel    String? @map("channel")
+  message    String? @map("message")
+  reasonCode String? @map("reason_code")
+  reason     String? @map("reason")
+
+  managerOverride  Json?     @map("manager_override")
+  offerAccepted    Boolean?  @map("offer_accepted")
+  offerRejected    Boolean?  @map("offer_rejected")
+  upsellConversion Boolean?  @map("upsell_conversion")
+  revenueGenerated Decimal?  @map("revenue_generated") @db.Decimal(10, 2)
+  respondedAt      DateTime? @map("responded_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([companyId, customerId, createdAt])
   @@index([companyId, status, priorityScore])
   @@map("upsell_recommendations")
+}
+
+// Feedback log for the rule-based + LLM retention decision engine (see
+// apps/crm-service/src/retention/). One row per generated recommendation;
+// the outcome columns are filled in later as the offer plays out and become
+// the training dataset for a future ML-backed replacement of the rule engine.
+model RetentionRecommendation {
+  id                String   @id @default(uuid())
+  companyId         String   @map("company_id")
+  customerId        String   @map("customer_id")
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  ruleResult        Json     @map("rule_result")
+  llmRecommendation Json?    @map("llm_recommendation")
+  validationResult  Json     @map("validation_result")
+
+  finalAction       String   @map("final_action")
+  finalOffer        Json     @map("final_offer")
+  finalPriority     String   @map("final_priority")
+  finalChannel      String?  @map("final_channel")
+  finalMessage      String?  @map("final_message")
+  reason            String
+  confidence        Float?
+  status            String   @default("generated") // generated | actioned | superseded
+
+  managerOverride     Json?     @map("manager_override")
+  customerAccepted    Boolean?  @map("customer_accepted")
+  customerDeclined    Boolean?  @map("customer_declined")
+  retentionSuccess    Boolean?  @map("retention_success")
+  revenueGenerated    Decimal?  @map("revenue_generated") @db.Decimal(10, 2)
+  respondedAt         DateTime? @map("responded_at")
+
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId, customerId, createdAt])
+  @@index([companyId, status, finalAction])
+  @@map("retention_recommendations")
+}
+
+model RevenueRecommendation {
+  id                String   @id @default(uuid())
+  companyId         String   @map("company_id")
+  customerId        String   @map("customer_id")
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  ruleResult        Json     @map("rule_result")
+  llmRecommendation Json?    @map("llm_recommendation")
+  validationResult  Json     @map("validation_result")
+
+  finalCategory     String   @map("final_category")
+  finalAction       String?  @map("final_action")
+  finalPriority     String   @map("final_priority")
+  finalChannel      String?  @map("final_channel")
+  finalMessage      String?  @map("final_message")
+  reason            String
+  expectedRevenueImpact Decimal? @map("expected_revenue_impact") @db.Decimal(10, 2)
+  confidence        Float?
+  status            String   @default("generated") // generated | actioned | superseded
+
+  managerOverride     Json?     @map("manager_override")
+  customerAccepted    Boolean?  @map("customer_accepted")
+  customerDeclined    Boolean?  @map("customer_declined")
+  revenueRealized     Decimal?  @map("revenue_realized") @db.Decimal(10, 2)
+  respondedAt         DateTime? @map("responded_at")
+
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId, customerId, createdAt])
+  @@index([companyId, status, finalCategory])
+  @@map("revenue_recommendations")
 }
 
 // ---- Data Import ----

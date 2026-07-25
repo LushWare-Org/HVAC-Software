@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Geist Sans', sans-serif;
+  color: #030e22;
+  background-color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@layer components {
+  /* Subtle grid watermark used behind hero / page headers. */
+  .bg-blueprint {
+    background-image:
+      linear-gradient(to right, rgba(3, 14, 34, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(3, 14, 34, 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .bg-blueprint-dark {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  /* Fine dotted schematic texture. */
+  .bg-dotgrid {
+    background-image: radial-gradient(rgba(3, 14, 34, 0.12) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}
+
+/* Hide scrollbar on horizontal tickers while keeping scroll. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

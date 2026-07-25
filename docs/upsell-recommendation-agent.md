@@ -141,7 +141,7 @@ The bandit is serialized to `models/upsell_bandit.pkl` via `joblib` after every 
 3. `UpsellCron` runs immediately on boot and then once per day.
 4. `UpsellAgentService` loads active customer candidates.
 5. The agent builds an upsell feature payload from CRM data.
-6. The agent enriches the payload with churn/failure risk from `ChurnClient.predictRevenue()`.
+6. The agent enriches the payload with churn/failure risk from `CustomersService`'s rule-based classification (no ML service call; `ChurnClient` has been removed).
 7. The agent calls `UpsellClient.recommendOffer()`.
 8. If the model service is unavailable, the agent falls back to local rules.
 9. The recommendation is saved to `upsell_recommendations`.
@@ -355,8 +355,7 @@ The module is:
 
 It registers:
 
-- `ChurnClient`
-- `UpsellClient`
+- `UpsellLlmClient` (Gemini via `@google/genai`; `ChurnClient` was removed — churn/failure risk is computed by `CustomersService`'s rule-based classification instead)
 - `FollowupProducer`
 - `UpsellAgentService`
 - `UpsellCron`
@@ -769,8 +768,7 @@ Use this checklist after changing the Upsell Recommendation Agent.
 - `apps/churn-service/src/services/upsell.service.py`
 - `apps/churn-service/src/schemas/upsell.schema.py`
 - `Server/src/services/ai/upsell_agent.py`
-- `apps/crm-service/src/ai/upsell.client.ts`
-- `apps/crm-service/src/ai/churn.client.ts`
+- `apps/crm-service/src/ai/upsell-llm.client.ts`
 - `apps/crm-service/src/upsell/upsell-agent.service.ts`
 - `apps/crm-service/src/upsell/upsell.controller.ts`
 - `apps/crm-service/src/upsell/upsell.cron.ts`
