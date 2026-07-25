@@ -231,7 +231,7 @@ export default function Features() {
 
       <CtaBanner
         heading="See it on your data"
-        subheading="Book a 30-minute demo and we’ll walk your workflow through HVACtor — dispatch, mobile, invoicing and all."
+        subheading="Book a 30-minute demo and we’ll walk your workflow through HVACtor - dispatch, mobile, invoicing and all."
       />
     </>
   )

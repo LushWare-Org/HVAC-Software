@@ -24,6 +24,7 @@ export default function Pricing() {
           </>
         }
         description="Per-user pricing that scales with your crew. Every plan includes the mobile app, onboarding and updates. Cancel any time."
+        className="pt-20 pb-20 lg:pt-30 lg:pb-20"
       />
 
       <section className="border-b border-ink bg-white">
@@ -85,7 +86,7 @@ export default function Pricing() {
                   className={clsx(
                     'relative flex flex-col rounded-2xl border-2 p-8 transition-all duration-300',
                     plan.featured
-                      ? 'border-red-500 bg-navy-800 text-white shadow-block'
+                      ? 'border-red-500 bg-navy-800 text-white shadow-block hover:-translate-y-1 hover:shadow-block-lg'
                       : 'border-ink bg-white text-ink shadow-block-sm hover:-translate-y-1 hover:shadow-block-sm',
                   )}
                 >

@@ -58,7 +58,7 @@ export function BusinessSection() {
     <section id="business" className="bg-white">
       <Container className="py-20 lg:py-28">
         <Reveal className="max-w-2xl">
-          <SectionLabel index="04">Business</SectionLabel>
+          <SectionLabel index="05">Business</SectionLabel>
           <h2 className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">
             The back office, without the spreadsheets
           </h2>

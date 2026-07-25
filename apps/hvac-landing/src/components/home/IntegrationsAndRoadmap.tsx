@@ -33,7 +33,7 @@ export function IntegrationsSection() {
       <div className="pointer-events-none absolute -right-32 -bottom-32 h-[28rem] w-[28rem] rounded-full bg-navy-500/25 blur-3xl" />
       <Container className="relative py-20 lg:py-28">
         <Reveal className="max-w-2xl">
-          <SectionLabel index="05" tone="light">Integrations</SectionLabel>
+          <SectionLabel index="06" tone="light">Integrations</SectionLabel>
           <h2 className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
             Connects to the tools you already run
           </h2>
@@ -109,7 +109,7 @@ export function RoadmapSection() {
     <section id="roadmap" className="bg-white">
       <Container className="py-20 lg:py-28">
         <Reveal className="max-w-2xl">
-          <SectionLabel index="06">Roadmap</SectionLabel>
+          <SectionLabel index="07">Roadmap</SectionLabel>
           <h2 className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">
             What's coming next
           </h2>
