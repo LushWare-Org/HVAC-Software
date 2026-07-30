@@ -695,38 +695,6 @@ export interface Recommendation {
   priorityScore: number
 }
 
-export interface ExecuteActionRequest {
-  action: string
-  params?: Record<string, unknown>
-}
-
-export interface ExecuteActionResponse {
-  success: boolean
-  action: string
-  executedAt: string
-  message: string
-  logId?: string
-  result?: {
-    summary: string
-    details: Record<string, unknown>
-    affectedCount?: number
-    estimatedRevenue?: number
-  }
-}
-
-export interface ExecutionLog {
-  id: string
-  companyId: string
-  action: string
-  params: Record<string, unknown>
-  status: 'executed' | 'failed'
-  timestamp: string
-  result_summary?: string
-  affected_count?: number
-  estimated_revenue?: number
-  error?: string
-}
-
 export interface RevenueAgentLog {
   timestamp: string
   action: string
