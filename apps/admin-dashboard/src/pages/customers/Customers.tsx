@@ -27,9 +27,9 @@ import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import CustomerRecommendationsModal from "../../components/CustomerRecommendationsModal";
-import { useCustomers, useAgreements, useDeleteCustomer, useUpdateCustomer, useCustomerStatusSummary, useCustomerTags } from "../../hooks/useCustomers";
+import { useCustomers, useAgreements, useDeleteCustomer, useUpdateCustomer, useCustomerTags } from "../../hooks/useCustomers";
 import { customerName } from "../../types/api";
-import type { Customer, CustomerStatusSummary } from "../../types/api";
+import type { Customer } from "../../types/api";
 import { formatMoney } from '../../lib/format'
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
@@ -81,234 +81,6 @@ function FollowupToggle({ checked, disabled, onChange }: { checked: boolean; dis
   );
 }
 
-function pct(value: number) {
-  return `${Math.round(value * 100)}%`;
-}
-
-function offerLabel(value: string) {
-  return value
-    .split("_")
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function riskColor(level: CustomerStatusSummary["churnPrediction"]["level"]) {
-  if (level === "High") return "var(--red)";
-  if (level === "Medium") return "var(--amber)";
-  return "var(--green)";
-}
-
-function inlineUpsellRecommendation(summary: CustomerStatusSummary) {
-  const scores: Record<string, number> = {
-    maintenance_plan: 0.25,
-    replacement: 0.2,
-    service: 0.2,
-  };
-
-  if (summary.signals.daysSinceLastService > 180) scores.service += 0.4;
-  if (summary.failurePrediction.probability >= 0.5) scores.maintenance_plan += 0.15;
-  if (summary.churnPrediction.probability >= 0.5) {
-    scores.maintenance_plan += 0.1;
-    scores.service += 0.1;
-  }
-  if (summary.signals.avgMonthlySpend >= 250) scores.maintenance_plan += 0.08;
-
-  const total = Object.values(scores).reduce((sum, score) => sum + score, 0);
-  const normalized = Object.fromEntries(
-    Object.entries(scores).map(([offer, score]) => [offer, score / total]),
-  );
-  const [recommendedOffer, confidence] = Object.entries(normalized).sort(([, a], [, b]) => b - a)[0];
-  const priorityScore = Math.min(
-    1,
-    (confidence * 0.7)
-      + (summary.churnPrediction.probability * 0.15)
-      + (summary.failurePrediction.probability * 0.15),
-  );
-
-  return {
-    recommendedOffer,
-    confidence,
-    priorityScore,
-    status: "live estimate",
-  };
-}
-
-function inlineRetentionPrediction(summary: CustomerStatusSummary, upsellRecommendation: { confidence: number }) {
-  const pConvert = upsellRecommendation.confidence;
-  const ltv = summary.signals.avgMonthlySpend * 12;
-  const churnProbability = summary.churnPrediction.probability;
-  const score = pConvert * ltv * (1 - churnProbability);
-  let action = "no_action";
-
-  if (pConvert > 0.75 && ltv > 1500) {
-    action = "premium_contract_offer";
-  } else if (churnProbability > 0.7) {
-    action = "discount_retention_offer";
-  } else if (summary.failurePrediction.probability >= 0.7) {
-    action = "maintenance_plan_offer";
-  }
-
-  const offer =
-    action === "premium_contract_offer" ? { type: "premium", discount: 0 } :
-    action === "discount_retention_offer" ? { type: "discounted", discount: 20 } :
-    action === "maintenance_plan_offer" ? { type: "standard", discount: 10 } :
-    { type: "none", discount: 0 };
-
-  return {
-    pConvert,
-    ltv,
-    churnProbability,
-    score,
-    action,
-    offer,
-    recommendedChannel: "email",
-    priority: score > 1500 ? "high" : score >= 500 ? "medium" : "low",
-    triggerImmediately: summary.failurePrediction.probability >= 0.7,
-    reason:
-      action === "premium_contract_offer" ? "High conversion probability and high predicted lifetime value" :
-      action === "discount_retention_offer" ? "High churn probability" :
-      action === "maintenance_plan_offer" ? "High repair frequency" :
-      "Customer does not meet retention targeting thresholds",
-  };
-}
-
-function CustomerHoverSummary({
-  summary,
-  loading,
-  error,
-  anchor,
-}: {
-  summary?: CustomerStatusSummary;
-  loading: boolean;
-  error: boolean;
-  anchor: { x: number; y: number };
-}) {
-  const left = typeof window === "undefined" ? anchor.x + 16 : Math.min(anchor.x + 16, window.innerWidth - 400);
-  const top = typeof window === "undefined" ? anchor.y + 14 : Math.max(12, Math.min(anchor.y + 14, window.innerHeight - 520));
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        zIndex: 80,
-        top,
-        left: Math.max(12, left),
-        width: 360,
-        padding: 14,
-        borderRadius: 8,
-        border: "1px solid var(--border)",
-        background: "var(--bg-card)",
-        boxShadow: "0 18px 44px rgba(15, 23, 42, 0.18)",
-        color: "var(--t1)",
-        pointerEvents: "none",
-      }}
-    >
-      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--t3)", marginBottom: 10 }}>
-        Customer risk summary
-      </div>
-      {loading && (
-        <div style={{ display: "grid", gap: 8 }}>
-          <Skeleton h={16} />
-          <Skeleton h={16} />
-          <Skeleton h={16} />
-          <Skeleton h={30} />
-        </div>
-      )}
-      {!loading && error && (
-        <div style={{ color: "var(--red)", fontSize: 13 }}>
-          Summary unavailable right now.
-        </div>
-      )}
-      {!loading && !error && summary && (
-        <div style={{ display: "grid", gap: 10 }}>
-          {(() => {
-            const upsellRecommendation = summary.upsellRecommendation ?? inlineUpsellRecommendation(summary);
-            const retentionPrediction = summary.retentionPrediction ?? inlineRetentionPrediction(summary, upsellRecommendation);
-
-            return (
-              <>
-          <div>
-            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Current status</div>
-            <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2 }}>{summary.currentStatus}</div>
-          </div>
-          <div style={{ padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card-2)" }}>
-            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Upsell recommendation</div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
-              <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 700 }}>
-                {offerLabel(upsellRecommendation.recommendedOffer)}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--green)", fontWeight: 700 }}>
-                {pct(upsellRecommendation.confidence)}
-              </div>
-            </div>
-            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4, lineHeight: 1.35 }}>
-              Priority {pct(upsellRecommendation.priorityScore ?? upsellRecommendation.confidence)} - {upsellRecommendation.status === "generated" ? "live estimate" : upsellRecommendation.status}
-            </div>
-          </div>
-          <div style={{ padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card-2)" }}>
-            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Retention suggestion</div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
-              <div style={{ fontSize: 13, color: "var(--t1)", fontWeight: 700 }}>
-                {offerLabel(retentionPrediction.action)}
-              </div>
-              <div style={{ fontSize: 12, color: retentionPrediction.priority === "high" ? "var(--red)" : retentionPrediction.priority === "medium" ? "var(--amber)" : "var(--green)", fontWeight: 700 }}>
-                {retentionPrediction.priority.toUpperCase()}
-              </div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
-              <div>
-                <div style={{ fontSize: 10, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Convert</div>
-                <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 700 }}>{pct(retentionPrediction.pConvert)}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>LTV</div>
-                <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 700 }}>{fmt(Math.round(retentionPrediction.ltv))}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Score</div>
-                <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 700 }}>{Math.round(retentionPrediction.score)}</div>
-              </div>
-            </div>
-            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 8, lineHeight: 1.35 }}>
-              Offer: {offerLabel(retentionPrediction.offer.type)}{retentionPrediction.offer.discount > 0 ? `, ${retentionPrediction.offer.discount}% off` : ""} via {offerLabel(retentionPrediction.recommendedChannel)}
-              {retentionPrediction.triggerImmediately ? " - trigger now" : ""}
-            </div>
-            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4, lineHeight: 1.35 }}>
-              {retentionPrediction.reason}
-            </div>
-          </div>
-              </>
-            );
-          })()}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div>
-              <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Failure prediction</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: riskColor(summary.failurePrediction.level), marginTop: 2 }}>
-                {summary.failurePrediction.level} ({pct(summary.failurePrediction.probability)})
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Churn prediction</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: riskColor(summary.churnPrediction.level), marginTop: 2 }}>
-                {summary.churnPrediction.level} ({pct(summary.churnPrediction.probability)})
-              </div>
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: "var(--t4)", fontWeight: 700, textTransform: "uppercase" }}>Proposed next step</div>
-            <div style={{ fontSize: 13, color: "var(--t1)", marginTop: 2, lineHeight: 1.4 }}>{summary.proposedNextStep}</div>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, paddingTop: 8, borderTop: "1px solid var(--border)", fontSize: 12, color: "var(--t3)" }}>
-            <span>{summary.signals.daysSinceLastService} days since service</span>
-            <span>{summary.signals.serviceCountLastYear} services/year</span>
-            <span>Rule-based</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function Customers() {
   const [search, setSearch] = useState("");
   const [customerTypeFilter, setCustomerTypeFilter] = useState("All Types");
@@ -325,7 +97,6 @@ export default function Customers() {
   const [isPortalInviteOpen, setIsPortalInviteOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<any>("contact");
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
-  const [hoveredCustomer, setHoveredCustomer] = useState<{ id: string; x: number; y: number } | null>(null);
   const [recCustomer, setRecCustomer] = useState<Customer | null>(null);
   const [customerPage, setCustomerPage] = useState(1);
   const itemsPerPage = 10;
@@ -359,7 +130,6 @@ export default function Customers() {
 
   const deleteCustomer = useDeleteCustomer();
   const updateCustomer = useUpdateCustomer();
-  const hoveredSummaryQuery = useCustomerStatusSummary(hoveredCustomer?.id);
 
   // ── Derived ──────────────────────────────────────────────────────────────────
 
@@ -609,9 +379,6 @@ export default function Customers() {
                       <tr
                         key={c.id}
                         onClick={() => handleViewClick(c, "customer")}
-                        onMouseEnter={(e) => setHoveredCustomer({ id: c.id, x: e.clientX, y: e.clientY })}
-                        onMouseMove={(e) => setHoveredCustomer(current => current?.id === c.id ? { id: c.id, x: e.clientX, y: e.clientY } : current)}
-                        onMouseLeave={() => setHoveredCustomer(current => current?.id === c.id ? null : current)}
                         className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
                       >
                         <td>
@@ -678,11 +445,7 @@ export default function Customers() {
                         <td className="font-600">{c.totalRevenue != null ? fmt(c.totalRevenue) : '—'}</td>
                         <td className="text-sm text-[var(--t3)]">{new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                         <td>
-                          <div
-                            className="flex items-center gap-1"
-                            onMouseEnter={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
-                            onMouseMove={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
-                          >
+                          <div className="flex items-center gap-1">
                             <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecCustomer(c); }} title="AI Recommendations"><Sparkles size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(c, "customer"); }} title="View Details"><Edit size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); window.location.href = `mailto:${c.email}`; }}><Mail size={15} /></button>
@@ -708,15 +471,6 @@ export default function Customers() {
             </div>
           </div>
         </div>
-
-      {hoveredCustomer && (
-        <CustomerHoverSummary
-          anchor={{ x: hoveredCustomer.x, y: hoveredCustomer.y }}
-          summary={hoveredSummaryQuery.data}
-          loading={hoveredSummaryQuery.isLoading || hoveredSummaryQuery.isFetching}
-          error={hoveredSummaryQuery.isError}
-        />
-      )}
 
       <CustomerDetailsSidebar isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} person={selectedPerson} initialTab={sidebarTab} />
       <AddPersonModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} type="customer" />

@@ -334,9 +334,9 @@ async function seedCustomerSignals(companyId: string) {
       brand: 'Carrier',
       model: 'Infinity 24',
       serialNo: 'HP-DEMO-001',
-      installDate: daysAgo(760),
-      warrantyEnd: daysAgo(-1065),
-      notes: 'Newer residential system with low failure risk.',
+      installDate: daysAgo(200),
+      warrantyEnd: daysAgo(-700),
+      notes: 'Recently installed system, still under active warranty.',
     },
     {
       id: 'demo-equipment-002',
@@ -373,7 +373,7 @@ async function seedCustomerSignals(companyId: string) {
   const bookings = [
     { id: 'demo-booking-001-a', customerId: 'demo-customer-001', serviceType: 'Preventive maintenance', preferredDate: daysAgo(22), status: 'CONVERTED' as const },
     { id: 'demo-booking-001-b', customerId: 'demo-customer-001', serviceType: 'Spring tune-up', preferredDate: daysAgo(145), status: 'CONVERTED' as const },
-    { id: 'demo-booking-001-c', customerId: 'demo-customer-001', serviceType: 'Fall tune-up', preferredDate: daysAgo(310), status: 'CONFIRMED' as const },
+    { id: 'demo-booking-001-c', customerId: 'demo-customer-001', serviceType: 'Fall tune-up', preferredDate: daysAgo(400), status: 'CONFIRMED' as const },
     { id: 'demo-booking-002-a', customerId: 'demo-customer-002', serviceType: 'Emergency cooling repair', preferredDate: daysAgo(38), status: 'CONVERTED' as const },
     { id: 'demo-booking-002-b', customerId: 'demo-customer-002', serviceType: 'Compressor diagnosis', preferredDate: daysAgo(84), status: 'CONVERTED' as const },
     { id: 'demo-booking-002-c', customerId: 'demo-customer-002', serviceType: 'Quarterly commercial service', preferredDate: daysAgo(172), status: 'CONVERTED' as const },
@@ -418,8 +418,35 @@ async function seedCustomerSignals(companyId: string) {
   }
 }
 
+interface MockCustomerSeed {
+  id: string;
+  type: 'RESIDENTIAL' | 'COMMERCIAL';
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  mobile: string | null;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  createdDaysAgo: number;
+  engagementStatus: 'ACTIVE' | 'QUOTE_SENT' | 'INVOICE_SENT' | 'JOB_BOOKED' | 'COMPLETED' | 'INACTIVE';
+  automaticFollowupEnabled: boolean;
+  agreement: {
+    status: 'DRAFT' | 'SENT' | 'ACTIVE' | 'PENDING_RENEWAL' | 'RENEWED' | 'EXPIRED' | 'CANCELLED';
+    value: string;
+    name: string;
+    /** Days from now for the agreement endDate; negative = future. Overrides the ACTIVE/non-ACTIVE default. */
+    endDateDays?: number;
+  };
+  equipment: { type: string; brand: string; model: string; ageDays: number };
+  bookings: number[];
+  ratings: number[];
+}
+
 async function seedAdditionalMockCustomers(companyId: string) {
-  const customers = [
+  const customers: MockCustomerSeed[] = [
     {
       id: 'demo-customer-010',
       type: 'RESIDENTIAL' as const,
@@ -435,9 +462,9 @@ async function seedAdditionalMockCustomers(companyId: string) {
       createdDaysAgo: 4,
       engagementStatus: 'ACTIVE' as const,
       automaticFollowupEnabled: true,
-      agreement: { status: 'ACTIVE' as const, value: '2400.00', name: 'Residential plus maintenance' },
+      agreement: { status: 'ACTIVE', value: '2400.00', name: 'Residential plus maintenance' },
       equipment: { type: 'Heat Pump', brand: 'Lennox', model: 'XP25', ageDays: 1200 },
-      bookings: [16, 185],
+      bookings: [16, 90, 185],
       ratings: [5, 5],
     },
     {
@@ -455,10 +482,10 @@ async function seedAdditionalMockCustomers(companyId: string) {
       createdDaysAgo: 5,
       engagementStatus: 'ACTIVE' as const,
       automaticFollowupEnabled: true,
-      agreement: { status: 'ACTIVE' as const, value: '9600.00', name: 'Commercial critical systems plan' },
-      equipment: { type: 'Rooftop Unit', brand: 'York', model: 'Predator 15 Ton', ageDays: 4300 },
-      bookings: [45, 95, 210, 330],
-      ratings: [2, 2, 3],
+      agreement: { status: 'ACTIVE', value: '9600.00', name: 'Commercial critical systems plan' },
+      equipment: { type: 'Rooftop Unit', brand: 'York', model: 'Predator 15 Ton', ageDays: 1100 },
+      bookings: [200, 260],
+      ratings: [4],
     },
     {
       id: 'demo-customer-012',
@@ -475,7 +502,7 @@ async function seedAdditionalMockCustomers(companyId: string) {
       createdDaysAgo: 6,
       engagementStatus: 'ACTIVE' as const,
       automaticFollowupEnabled: true,
-      agreement: { status: 'DRAFT' as const, value: '0.00', name: 'Draft seasonal maintenance proposal' },
+      agreement: { status: 'ACTIVE', value: '2000.00', name: 'Seasonal maintenance plan (renewing soon)', endDateDays: -20 },
       equipment: { type: 'AC Unit', brand: 'Rheem', model: 'RA16', ageDays: 650 },
       bookings: [35],
       ratings: [4],
@@ -495,9 +522,9 @@ async function seedAdditionalMockCustomers(companyId: string) {
       createdDaysAgo: 7,
       engagementStatus: 'JOB_BOOKED' as const,
       automaticFollowupEnabled: true,
-      agreement: { status: 'ACTIVE' as const, value: '5400.00', name: 'Clinic HVAC compliance plan' },
-      equipment: { type: 'Air Handler', brand: 'Daikin', model: 'Rebel', ageDays: 2500 },
-      bookings: [8, 130, 260],
+      agreement: { status: 'CANCELLED', value: '5400.00', name: 'Cancelled clinic HVAC compliance plan', endDateDays: -200 },
+      equipment: { type: 'Air Handler', brand: 'Daikin', model: 'Rebel', ageDays: 3300 },
+      bookings: [220, 300],
       ratings: [5, 4],
     },
     {
@@ -535,10 +562,10 @@ async function seedAdditionalMockCustomers(companyId: string) {
       createdDaysAgo: 9,
       engagementStatus: 'ACTIVE' as const,
       automaticFollowupEnabled: true,
-      agreement: { status: 'ACTIVE' as const, value: '15000.00', name: 'Hotel multi-system maintenance' },
-      equipment: { type: 'Chiller', brand: 'Carrier', model: 'AquaSnap', ageDays: 5200 },
-      bookings: [18, 54, 118, 190, 310],
-      ratings: [1, 2, 2, 4],
+      agreement: { status: 'EXPIRED', value: '15000.00', name: 'Hotel multi-system maintenance (expired)', endDateDays: 60 },
+      equipment: { type: 'Chiller', brand: 'Carrier', model: 'AquaSnap', ageDays: 2000 },
+      bookings: [45],
+      ratings: [4, 5],
     },
     {
       id: 'demo-customer-016',
@@ -555,7 +582,7 @@ async function seedAdditionalMockCustomers(companyId: string) {
       createdDaysAgo: 10,
       engagementStatus: 'QUOTE_SENT' as const,
       automaticFollowupEnabled: true,
-      agreement: { status: 'SENT' as const, value: '2100.00', name: 'Sent maintenance agreement' },
+      agreement: { status: 'ACTIVE', value: '4000.00', name: 'Premium maintenance agreement' },
       equipment: { type: 'Mini Split', brand: 'Mitsubishi', model: 'MSZ-FS', ageDays: 450 },
       bookings: [74],
       ratings: [5],
@@ -575,7 +602,7 @@ async function seedAdditionalMockCustomers(companyId: string) {
       createdDaysAgo: 11,
       engagementStatus: 'ACTIVE' as const,
       automaticFollowupEnabled: true,
-      agreement: { status: 'ACTIVE' as const, value: '4800.00', name: 'Office park maintenance plan' },
+      agreement: { status: 'ACTIVE', value: '2000.00', name: 'Office park maintenance plan' },
       equipment: { type: 'Split System', brand: 'Goodman', model: 'GSXC18', ageDays: 1800 },
       bookings: [28, 220],
       ratings: [4, 3],
@@ -661,6 +688,10 @@ async function seedAdditionalMockCustomers(companyId: string) {
       },
     });
 
+    const agreementEndDate = daysAgo(
+      customer.agreement.endDateDays ?? (customer.agreement.status === 'ACTIVE' ? -120 : 45),
+    );
+
     await prisma.serviceAgreement.upsert({
       where: { id: `${customer.id}-agreement` },
       update: {
@@ -669,7 +700,7 @@ async function seedAdditionalMockCustomers(companyId: string) {
         name: customer.agreement.name,
         status: customer.agreement.status,
         startDate: daysAgo(380),
-        endDate: customer.agreement.status === 'ACTIVE' ? daysAgo(-120) : daysAgo(45),
+        endDate: agreementEndDate,
         value: customer.agreement.value,
         billingCycle: 'annual',
         autoRenew: customer.agreement.status === 'ACTIVE',
@@ -683,7 +714,7 @@ async function seedAdditionalMockCustomers(companyId: string) {
         name: customer.agreement.name,
         status: customer.agreement.status,
         startDate: daysAgo(380),
-        endDate: customer.agreement.status === 'ACTIVE' ? daysAgo(-120) : daysAgo(45),
+        endDate: agreementEndDate,
         value: customer.agreement.value,
         billingCycle: 'annual',
         autoRenew: customer.agreement.status === 'ACTIVE',
@@ -716,6 +747,18 @@ async function seedAdditionalMockCustomers(companyId: string) {
         warrantyEnd: daysAgo(customer.equipment.ageDays - 3650),
       },
     });
+
+    // Clean up stale booking/review rows left behind if a previous seed run created more
+    // of them than the current profile needs — otherwise leftover rows silently skew the
+    // rule-engine inputs (repair counts, complaint counts) on re-seed.
+    const staleBookingIds = Array.from({ length: 10 }, (_, i) => `${customer.id}-booking-${i + 1}`).slice(customer.bookings.length);
+    if (staleBookingIds.length) {
+      await prisma.booking.deleteMany({ where: { id: { in: staleBookingIds } } });
+    }
+    const staleReviewIds = Array.from({ length: 10 }, (_, i) => `${customer.id}-review-${i + 1}`).slice(customer.ratings.length);
+    if (staleReviewIds.length) {
+      await prisma.review.deleteMany({ where: { id: { in: staleReviewIds } } });
+    }
 
     for (const [index, bookingAge] of customer.bookings.entries()) {
       await prisma.booking.upsert({

@@ -5,7 +5,7 @@ import { UPSELL_LLM_SYSTEM_PROMPT, buildUpsellLlmUserPrompt } from './upsell-llm
 
 const VALID_CHANNELS = new Set(['whatsapp', 'email', 'call']);
 const VALID_PRIORITIES = new Set(['Low', 'Medium', 'High']);
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 12000; // @google/genai rejects deadlines under 10s
 
 /**
  * Recommends the specific offer/bundle/channel/message for an upsell

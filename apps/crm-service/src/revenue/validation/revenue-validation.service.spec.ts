@@ -87,11 +87,21 @@ describe('RevenueValidationService', () => {
     expect(result.finalCategory).toBe('no_opportunity');
   });
 
-  it('falls back to a deliverable channel and no_opportunity when there is no LLM recommendation', () => {
+  it('falls back to the rule-decided category (still no action copy) when there is no LLM recommendation', () => {
     const result = service.validate(baseInput, null);
     expect(result.finalChannel).toBe('whatsapp');
-    expect(result.finalCategory).toBe('no_opportunity');
+    expect(result.finalCategory).toBe('payment_collection');
+    expect(result.finalAction).toBeNull();
     expect(result.finalMessage).toBeNull();
+    expect(result.finalExpectedImpact).toBe(750);
+  });
+
+  it('still forces no_opportunity when there is no LLM recommendation and no contact channel', () => {
+    const result = service.validate(
+      { ...baseInput, hasContactChannel: false, recipientPhone: undefined },
+      null,
+    );
+    expect(result.finalCategory).toBe('no_opportunity');
     expect(result.finalExpectedImpact).toBeNull();
   });
 

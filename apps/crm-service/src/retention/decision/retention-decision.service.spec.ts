@@ -69,15 +69,16 @@ describe('RetentionDecisionService', () => {
     expect(decision.audit.validation.passed).toBe(true);
   });
 
-  it('falls back to a rule-only no_action decision with canned reason when the LLM is unavailable', async () => {
+  it('falls back to the rule-decided action (medium priority, no message) when the LLM is unavailable', async () => {
     const llmRecommend = jest.fn().mockResolvedValue(null);
     const service = buildService(llmRecommend);
 
     const decision = await service.decide({ ...baseRequest, repairCount12Months: 3 });
 
-    expect(decision.action).toBe('no_action'); // no LLM action proposal to validate against policy
+    expect(decision.action).toBe('maintenance_plan_offer'); // FREQUENT_REPAIRS -> maintenance_plan_offer fallback
     expect(decision.channel).toBe('whatsapp'); // derived from recipientPhone, not the LLM
-    expect(decision.message).toBeNull();
+    expect(decision.message).toBeNull(); // customer-facing copy still requires an LLM sign-off
+    expect(decision.priority).toBe('medium'); // ruleHighPriority is false for FREQUENT_REPAIRS
     expect(decision.audit.ruleResult.reasonCode).toBe('FREQUENT_REPAIRS');
   });
 

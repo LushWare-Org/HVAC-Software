@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { RetentionAction, RetentionChannel, RetentionDecisionAudit } from '@tscrm/types';
+import type { RetentionAction, RetentionChannel, RetentionDecisionAudit, RetentionRuleReasonCode } from '@tscrm/types';
 import { RetentionRuleEngine } from '../rules/retention-rule-engine';
 import { RetentionContextBuilder } from '../context/retention-context-builder';
 import { RetentionLlmClient } from '../../ai/retention-llm.client';
@@ -42,6 +42,19 @@ const PRIORITY_MAP: Record<'Low' | 'Medium' | 'High', 'low' | 'medium' | 'high'>
   Low: 'low',
   Medium: 'medium',
   High: 'high',
+};
+
+/**
+ * Default offer when the LLM can't be reached (call failed, quota exhausted).
+ * Mirrors the reasonCode -> action framing already surfaced to users via
+ * CustomersService's "ruleBased" explanation text (customers.service.ts).
+ */
+const RULE_ACTION_MAP: Record<Exclude<RetentionRuleReasonCode, 'NONE'>, RetentionAction> = {
+  CUSTOMER_COMPLAINTS: 'discount_retention_offer',
+  AGREEMENT_EXPIRED: 'discount_retention_offer',
+  FREQUENT_REPAIRS: 'maintenance_plan_offer',
+  HIGH_VALUE_CUSTOMER: 'premium_contract_offer',
+  CUSTOMER_INACTIVE: 'discount_retention_offer',
 };
 
 /**
@@ -112,8 +125,12 @@ export class RetentionDecisionService {
 
     const llmRecommendation = await this.llmClient.recommend(profile);
 
+    const ruleAction: RetentionAction =
+      ruleResult.reasonCode === 'NONE' ? 'no_action' : RULE_ACTION_MAP[ruleResult.reasonCode];
+
     const validation = this.validationService.validate(
       {
+        ruleAction,
         hasContactChannel,
         recipientPhone: request.recipientPhone,
         recipientEmail: request.recipientEmail,

@@ -72,16 +72,17 @@ describe('UpsellDecisionService', () => {
     expect(decision.audit.validation.passed).toBe(true);
   });
 
-  it('falls back to a rule-only no-offer decision with the rule reason when the LLM is unavailable', async () => {
+  it('falls back to the rule-decided category (still no offer copy) when the LLM is unavailable', async () => {
     const llmRecommend = jest.fn().mockResolvedValue(null);
     const service = buildService(llmRecommend);
 
     const decision = await service.decide({ ...baseRequest, repairCount12Months: 3 });
 
-    expect(decision.category).toBe('no_upsell'); // no LLM offer proposal to validate against policy
+    expect(decision.category).toBe('maintenance_plan'); // FREQUENT_REPAIRS rule category surfaces without the LLM
     expect(decision.channel).toBe('whatsapp'); // derived from recipientPhone, not the LLM
-    expect(decision.offer).toBeNull();
+    expect(decision.offer).toBeNull(); // offer/bundle copy still requires an LLM sign-off
     expect(decision.message).toBeNull();
+    expect(decision.priority).toBe('high'); // FREQUENT_REPAIRS is a highPriority rule match
     expect(decision.audit.ruleResult.reasonCode).toBe('FREQUENT_REPAIRS');
   });
 
