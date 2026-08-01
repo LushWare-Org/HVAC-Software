@@ -16,6 +16,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useApproveMyInvoice, useDeclineMyInvoice, useMyInvoices } from '../../hooks/useCustomerPortal'
+import { useMyHouses } from '../../hooks/useMyHouse'
 import { useToast } from '../../contexts/ToastContext'
 import { downloadPdf, viewPdf } from '../../lib/pdf'
 import InvoiceDetailModal from './InvoiceDetailModal.tsx'
@@ -66,6 +67,8 @@ export default function Invoices() {
   const approveInvoice = useApproveMyInvoice()
   const declineInvoice = useDeclineMyInvoice()
   const invoices = data?.data ?? []
+  const { data: houses } = useMyHouses()
+  const houseLabelById = new Map((houses ?? []).map(h => [h.id, h.label]))
 
   const invoicesView = useMemo(
     () => invoices.map(inv => ({ ...inv, status: invoiceStatusOverrides[inv.id] ?? inv.status })),
@@ -238,6 +241,7 @@ export default function Invoices() {
                 <tr>
                   <th>Invoice #</th>
                   <th>Service</th>
+                  <th>House</th>
                   <th>Date</th>
                   <th>Due Date</th>
                   <th>Amount</th>
@@ -248,7 +252,7 @@ export default function Invoices() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', color: 'var(--t3)', padding: '24px' }}>Loading invoices…</td>
+                    <td colSpan={8} style={{ textAlign: 'center', color: 'var(--t3)', padding: '24px' }}>Loading invoices…</td>
                   </tr>
                 ) : paginated.length > 0 ? (
                   paginated.map(invoice => {
@@ -271,6 +275,7 @@ export default function Invoices() {
                             <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>+{invoice.lineItems.length - 1} more</div>
                           )}
                         </td>
+                        <td style={{ fontSize: 12, color: 'var(--t3)' }}>{invoice.houseId ? (houseLabelById.get(invoice.houseId) ?? '—') : '—'}</td>
                         <td style={{ fontSize: 12, color: 'var(--t3)' }}>{fmtDate(invoice.issueDate)}</td>
                         <td style={{ fontSize: 12, color: invoice.status === 'OVERDUE' ? 'var(--red)' : 'var(--t3)' }}>{fmtDate(invoice.dueDate)}</td>
                         <td className="td-primary font-600">{fmtMoney(outstanding > 0 ? outstanding : invoice.total)}</td>
@@ -370,7 +375,7 @@ export default function Invoices() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={7}>
+                    <td colSpan={8}>
                       <div className="empty-state">
                         <div className="empty-icon"><FileText size={22} /></div>
                         <div className="empty-title">No invoices match your filters</div>

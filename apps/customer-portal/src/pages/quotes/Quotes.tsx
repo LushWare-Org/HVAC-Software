@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FileText, Search, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Eye, Download, Loader2, XCircle, CheckCircle2 } from 'lucide-react'
 import { useAcceptMyQuote, useDeclineMyQuote, useMyQuotes } from '../../hooks/useCustomerPortal'
+import { useMyHouses } from '../../hooks/useMyHouse'
 import { useToast } from '../../contexts/ToastContext'
 import { downloadPdf, viewPdf } from '../../lib/pdf'
 import QuoteDetailModal from './QuoteDetailModal'
@@ -43,6 +44,8 @@ export default function Quotes() {
   const acceptQuote = useAcceptMyQuote()
   const declineQuote = useDeclineMyQuote()
   const quotes = data?.data ?? []
+  const { data: houses } = useMyHouses()
+  const houseLabelById = new Map((houses ?? []).map(h => [h.id, h.label]))
 
   const quotesView = useMemo(
     () => quotes.map(quote => ({ ...quote, status: quoteStatusOverrides[quote.id] ?? quote.status })),
@@ -171,6 +174,7 @@ export default function Quotes() {
                 <tr>
                   <th>Quote #</th>
                   <th>Title</th>
+                  <th>House</th>
                   <th>Status</th>
                   <th>Created</th>
                   <th>Total</th>
@@ -179,7 +183,7 @@ export default function Quotes() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan={6}>Loading quotes…</td></tr>
+                  <tr><td colSpan={7}>Loading quotes…</td></tr>
                 ) : paginated.length > 0 ? (
                   paginated.map(quote => {
                     const normalizedStatus = String(quote.status ?? '').toUpperCase()
@@ -194,6 +198,7 @@ export default function Quotes() {
                           <div className="font-600" style={{ color: 'var(--t1)', fontSize: 13 }}>{quote.title}</div>
                           <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{quote.notes || '—'}</div>
                         </td>
+                        <td style={{ fontSize: 12, color: 'var(--t3)' }}>{quote.houseId ? (houseLabelById.get(quote.houseId) ?? '—') : '—'}</td>
                         <td><span className={`badge ${s.css}`}>{s.label}</span></td>
                         <td style={{ fontSize: 12, color: 'var(--t3)' }}>{fmtDate(quote.createdAt)}</td>
                         <td className="td-primary font-600">{fmtMoney(quote.total)}</td>
@@ -276,7 +281,7 @@ export default function Quotes() {
                     )
                   })
                 ) : (
-                  <tr><td colSpan={6}>No quotes found</td></tr>
+                  <tr><td colSpan={7}>No quotes found</td></tr>
                 )}
               </tbody>
             </table>

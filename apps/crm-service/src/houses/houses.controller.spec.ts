@@ -24,4 +24,10 @@ describe('HousesController RBAC', () => {
     const roles = Reflect.getMetadata(ROLES_KEY, HousesController.prototype.findOne);
     expect(roles).not.toContain(Role.CUSTOMER);
   });
+
+  it('PATCH :id/equipment/:equipmentId (apply AI scan suggestions) is staff-only', () => {
+    const roles = Reflect.getMetadata(ROLES_KEY, HousesController.prototype.updateEquipment);
+    expect(roles).toEqual(expect.arrayContaining([Role.COMPANY_ADMIN]));
+    expect(roles).not.toContain(Role.CUSTOMER);
+  });
 });

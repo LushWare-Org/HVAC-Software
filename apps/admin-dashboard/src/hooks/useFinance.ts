@@ -37,6 +37,8 @@ interface InvoiceFilters {
   search?: string
   status?: string
   customerId?: string
+  projectId?: string
+  houseId?: string
 }
 
 export function useInvoice(id: string | undefined) {
@@ -76,6 +78,8 @@ export function useInvoices(filters: InvoiceFilters = {}) {
         params.status = filters.status.toUpperCase()
       }
       if (filters.customerId) params.customerId = filters.customerId
+      if (filters.projectId) params.projectId = filters.projectId
+      if (filters.houseId) params.houseId = filters.houseId
       const res = await api.get('/finance/invoices', { params })
       return res.data
     },
@@ -103,6 +107,8 @@ interface QuoteFilters {
   search?: string
   status?: string
   customerId?: string
+  projectId?: string
+  houseId?: string
 }
 
 export function useQuotes(filters: QuoteFilters = {}) {
@@ -118,6 +124,8 @@ export function useQuotes(filters: QuoteFilters = {}) {
         params.status = filters.status.toUpperCase()
       }
       if (filters.customerId) params.customerId = filters.customerId
+      if (filters.projectId) params.projectId = filters.projectId
+      if (filters.houseId) params.houseId = filters.houseId
       const res = await api.get('/finance/quotes', { params })
       return res.data
     },

@@ -56,9 +56,9 @@ export class QuotesService {
 
   async findAll(
     companyId: string,
-    params: { status?: QuoteStatus; customerId?: string; jobId?: string; projectId?: string; projectIds?: string[]; page?: number; limit?: number },
+    params: { status?: QuoteStatus; customerId?: string; jobId?: string; projectId?: string; projectIds?: string[]; houseId?: string; page?: number; limit?: number },
   ) {
-    const { status, customerId, jobId, projectId, projectIds } = params;
+    const { status, customerId, jobId, projectId, projectIds, houseId } = params;
     const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
     // Batch (multi-project) requests get a higher ceiling — they cover many projects in one page.
     const maxLimit = projectIds?.length ? 500 : 100;
@@ -70,6 +70,7 @@ export class QuotesService {
       ...(customerId ? { customerId } : {}),
       ...(jobId ? { jobId } : {}),
       ...(projectId ? { projectId } : {}),
+      ...(houseId ? { houseId } : {}),
       // Batch form: one request for many projects' quotes (Projects page overview)
       ...(projectIds?.length ? { projectId: { in: projectIds } } : {}),
     };
@@ -428,6 +429,7 @@ export class QuotesService {
           quoteId: id,
           jobId: quote.jobId,
           projectId: quote.projectId,
+          houseId: quote.houseId,
           customerId: quote.customerId,
           customerName: quote.customerName,
           customerEmail: quote.customerEmail,

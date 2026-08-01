@@ -350,6 +350,64 @@ export class AuthService {
   }
 
   /**
+   * Admin creates a brand-new Customer + portal account in one step, for a Housing
+   * Scheme house owner who doesn't exist in the system yet. Mirrors
+   * provisionLeadAccount's Customer creation/reactivation, but — like
+   * provisionHouseOwnerAccount — never creates a Lead, since house owners aren't
+   * sales leads.
+   */
+  async provisionHouseOwner(companyId: string, dto: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  }) {
+    const existingCustomer = await this.prisma.customer.findFirst({
+      where: { companyId, email: dto.email.toLowerCase() },
+    });
+
+    let customer: { id: string; firstName: string; lastName: string; email: string; phone: string | null; auth0UserId: string | null };
+    if (existingCustomer) {
+      if (existingCustomer.auth0UserId) {
+        const linked = await this.prisma.companyUser.findFirst({
+          where: { id: existingCustomer.auth0UserId, companyId, isActive: true },
+        });
+        if (linked) throw new ConflictException('A customer account already exists for this email address');
+      }
+      const updated = await this.prisma.customer.update({
+        where: { id: existingCustomer.id },
+        data: { firstName: dto.firstName, lastName: dto.lastName, phone: dto.phone, isActive: true },
+      });
+      customer = { ...updated, email: updated.email ?? dto.email.toLowerCase() };
+    } else {
+      const created = await this.prisma.customer.create({
+        data: {
+          companyId,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          email: dto.email.toLowerCase(),
+          phone: dto.phone,
+          source: 'admin',
+          tags: ['house-owner'],
+          engagementStatus: 'ACTIVE',
+        },
+      });
+      customer = { ...created, email: created.email ?? dto.email.toLowerCase() };
+    }
+
+    const { user } = await this.provisionPortalAccountForCustomer(companyId, customer);
+
+    return {
+      success: true,
+      userId: user.id,
+      customerId: customer.id,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      message: `Account created and welcome email sent to ${dto.email}`,
+    };
+  }
+
+  /**
    * Admin provisions a portal account for an existing house owner (Housing Scheme
    * projects). No Lead is created — house owners aren't sales leads. Idempotent: if
    * the owner already has active portal access (e.g. they own another house too),

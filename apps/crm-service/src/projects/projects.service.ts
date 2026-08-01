@@ -77,7 +77,7 @@ export class ProjectsService {
       where: { companyId, projectId: id },
       select: {
         id: true, name: true, serviceType: true, serviceInterval: true,
-        nextServiceDate: true, status: true,
+        nextServiceDate: true, status: true, houseId: true,
       },
     });
     // Housing Scheme: rolled-up open-issue count across all houses (Houses tab badge).
@@ -90,7 +90,6 @@ export class ProjectsService {
   }
 
   async create(companyId: string, input: UpsertProjectInput) {
-    if (!input.customerId) throw new BadRequestException('customerId is required');
     if (!input.name?.trim()) throw new BadRequestException('name is required');
     this.validateStatus(input.status);
     this.validateWorkingDays(input.workingDays);
@@ -98,16 +97,18 @@ export class ProjectsService {
       throw new BadRequestException(`templateType must be one of ${PROJECT_TEMPLATES.join(', ')}`);
     }
 
-    const customer = await this.prisma.customer.findFirst({
-      where: { id: input.customerId, companyId },
-      select: { id: true },
-    });
-    if (!customer) throw new BadRequestException('Customer not found in this company');
+    if (input.customerId) {
+      const customer = await this.prisma.customer.findFirst({
+        where: { id: input.customerId, companyId },
+        select: { id: true },
+      });
+      if (!customer) throw new BadRequestException('Customer not found in this company');
+    }
 
     return this.prisma.project.create({
       data: {
         companyId,
-        customerId: input.customerId,
+        customerId: input.customerId ?? null,
         name: input.name.trim(),
         description: input.description ?? null,
         category: input.category ?? null,
@@ -132,9 +133,17 @@ export class ProjectsService {
     this.validateStatus(input.status);
     this.validateWorkingDays(input.workingDays);
 
+    if (input.customerId) {
+      const customer = await this.prisma.customer.findFirst({
+        where: { id: input.customerId, companyId },
+        select: { id: true },
+      });
+      if (!customer) throw new BadRequestException('Customer not found in this company');
+    }
+
     const data: any = {};
     for (const key of [
-      'name', 'description', 'category', 'status', 'budget', 'requiredHeadcount',
+      'customerId', 'name', 'description', 'category', 'status', 'budget', 'requiredHeadcount',
       'siteAddress', 'latitude', 'longitude', 'workingDays', 'baseTeamUserIds', 'notes',
     ] as const) {
       if (input[key] !== undefined) data[key] = input[key];
@@ -314,12 +323,14 @@ export class ProjectsService {
   /** Attach customerName so lists render without extra round-trips. */
   private async decorate(companyId: string, projects: any[]) {
     if (projects.length === 0) return [];
-    const customerIds = [...new Set(projects.map((p) => p.customerId))];
-    const customers = await this.prisma.customer.findMany({
-      where: { companyId, id: { in: customerIds } },
-      select: { id: true, firstName: true, lastName: true },
-    });
+    const customerIds = [...new Set(projects.map((p) => p.customerId).filter(Boolean))] as string[];
+    const customers = customerIds.length
+      ? await this.prisma.customer.findMany({
+          where: { companyId, id: { in: customerIds } },
+          select: { id: true, firstName: true, lastName: true },
+        })
+      : [];
     const names = new Map(customers.map((c) => [c.id, `${c.firstName} ${c.lastName}`.trim()]));
-    return projects.map((p) => ({ ...p, customerName: names.get(p.customerId) ?? '—' }));
+    return projects.map((p) => ({ ...p, customerName: p.customerId ? (names.get(p.customerId) ?? '—') : null }));
   }
 }

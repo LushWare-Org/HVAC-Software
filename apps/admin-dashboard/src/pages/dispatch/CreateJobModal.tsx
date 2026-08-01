@@ -11,6 +11,9 @@ import {
 import { useCreateJob, useJobTypes } from "../../hooks/useJobs";
 import { useCustomers } from "../../hooks/useCustomers";
 import MapPicker from "../../components/MapPickerLazy";
+import ProjectJobLinkPicker, { type ProjectJobLink } from "../../components/ProjectJobLinkPicker";
+import { useHouses } from "../projects/housesApi";
+import type { ProjectTemplateType } from "../projects/projectsApi";
 
 /** When set, the job is created for a fixed customer (e.g. from a project page) — the customer picker is replaced with a locked chip. */
 export interface PresetCustomer {
@@ -31,12 +34,18 @@ interface Props {
   houseId?: string;
   /** Optional: which specific piece of equipment was serviced (job-service accepts an optional equipmentId). */
   equipmentId?: string;
+  /**
+   * Set alongside projectId when the caller is a project page itself (not a
+   * specific house's Equipment row) — lets a Housing Scheme project still offer
+   * "which house is this for?" even though the project itself is already fixed.
+   */
+  projectTemplateType?: ProjectTemplateType;
   /** Extra label shown next to the header, e.g. the project name. */
   contextLabel?: string;
   onCreated?: (job: any) => void;
 }
 
-export default function CreateJobModal({ isOpen, onClose, presetCustomer, projectId, houseId, equipmentId, contextLabel, onCreated }: Props) {
+export default function CreateJobModal({ isOpen, onClose, presetCustomer, projectId, houseId, equipmentId, projectTemplateType, contextLabel, onCreated }: Props) {
   const createJob = useCreateJob();
   const [error, setError] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
@@ -44,6 +53,18 @@ export default function CreateJobModal({ isOpen, onClose, presetCustomer, projec
   const customers = customersQuery.data?.data ?? [];
   const jobTypesQuery = useJobTypes();
   const jobTypes = jobTypesQuery.data ?? [];
+
+  // Only offered when the caller didn't already pin the job to a project/house
+  // (e.g. launched from a project's own Jobs tab or a house's Equipment row) —
+  // in that case the existing locked-chip copy below still applies unchanged.
+  const [projectLink, setProjectLink] = useState<ProjectJobLink>({});
+
+  // Project is already fixed (launched from that project's own Jobs tab), but for
+  // a Housing Scheme project the specific house is still worth narrowing down —
+  // a lighter, house-only version of the same idea, not the full project picker.
+  const showHouseSelect = !!projectId && !houseId && projectTemplateType === 'HOUSING_SCHEME';
+  const housesQuery = useHouses(showHouseSelect ? projectId : undefined);
+  const [selectedHouseId, setSelectedHouseId] = useState('');
 
   const [form, setForm] = useState({
     title: "",
@@ -131,8 +152,8 @@ export default function CreateJobModal({ isOpen, onClose, presetCustomer, projec
         scheduledStart,
         serviceLatitude: form.lat,
         serviceLongitude: form.lng,
-        projectId: projectId || undefined,
-        houseId: houseId || undefined,
+        projectId: projectId || projectLink.projectId || undefined,
+        houseId: houseId || projectLink.houseId || selectedHouseId || undefined,
         equipmentId: equipmentId || undefined,
       } as any,
       {
@@ -146,6 +167,8 @@ export default function CreateJobModal({ isOpen, onClose, presetCustomer, projec
             jobTypeId: "", date: new Date().toISOString().split("T")[0],
             time: "09:00", lat: presetCustomer?.lat ?? 6.9271, lng: presetCustomer?.lng ?? 79.8612,
           });
+          setProjectLink({});
+          setSelectedHouseId("");
           setError("");
         },
         onError: (err: any) => {
@@ -174,8 +197,12 @@ export default function CreateJobModal({ isOpen, onClose, presetCustomer, projec
           <div className="text-white">
             <h3 className="text-lg font-bold flex items-center gap-2"><Wrench size={18} /> {contextLabel ? `Create Job — ${contextLabel}` : 'Create Job for Dispatch'}</h3>
             <p className="text-blue-200 text-xs mt-0.5 flex items-center gap-1.5">
-              {projectId && <FolderKanban size={11} />}
-              {projectId ? 'Linked to this project · appears in the unassigned queue for scheduling' : 'Job will appear in the unassigned queue for scheduling'}
+              {(projectId || projectLink.projectId) && <FolderKanban size={11} />}
+              {projectId
+                ? `Linked to this project${selectedHouseId ? ` — ${housesQuery.data?.find(h => h.id === selectedHouseId)?.label ?? ''}` : ''} · appears in the unassigned queue for scheduling`
+                : projectLink.projectId
+                  ? `Linked to ${projectLink.projectName}${projectLink.houseLabel ? ` — ${projectLink.houseLabel}` : ''} · appears in the unassigned queue for scheduling`
+                  : 'Job will appear in the unassigned queue for scheduling'}
             </p>
           </div>
           <button onClick={onClose} className="text-blue-200 hover:text-white p-1 rounded bg-transparent border-0 cursor-pointer">
@@ -225,6 +252,26 @@ export default function CreateJobModal({ isOpen, onClose, presetCustomer, projec
               </>
             )}
           </div>
+
+          {/* Project/house link — only offered when the caller hasn't already pinned one */}
+          {!projectId && (
+            <div className="space-y-1.5">
+              <ProjectJobLinkPicker value={projectLink} onChange={setProjectLink} customerId={form.customerId || undefined} />
+            </div>
+          )}
+
+          {/* Project is already fixed — just narrow down which house, if this is a Housing Scheme project */}
+          {showHouseSelect && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Which house? (optional)</label>
+              <select value={selectedHouseId} onChange={(e) => setSelectedHouseId(e.target.value)} className={inputCls}>
+                <option value="">General — not house-specific</option>
+                {(housesQuery.data ?? []).map((h) => (
+                  <option key={h.id} value={h.id}>{h.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Title & Description */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

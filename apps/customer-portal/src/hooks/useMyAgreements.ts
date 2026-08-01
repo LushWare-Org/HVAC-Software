@@ -17,6 +17,8 @@ export interface MyAgreementAmendment {
 export interface MyAgreement {
   id: string
   name: string
+  projectId?: string | null
+  houseId?: string | null
   description?: string | null
   status: 'DRAFT' | 'SENT' | 'ACTIVE' | 'PENDING_RENEWAL' | 'RENEWED' | 'EXPIRED' | 'CANCELLED'
   startDate: string

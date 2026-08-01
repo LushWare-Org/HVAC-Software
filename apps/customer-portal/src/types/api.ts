@@ -119,6 +119,8 @@ export interface Job {
   jobType?: { id: string; name: string; tradeType: string }
   statusHistory?: JobStatusHistory[]
   workOrders?: WorkOrder[]
+  projectId?: string
+  houseId?: string
 }
 
 export interface JobStatusHistory {
@@ -234,6 +236,8 @@ export interface Invoice {
   customerId?: string
   customerName?: string
   jobId?: string
+  projectId?: string
+  houseId?: string
   status: InvoiceStatus
   issueDate: string
   dueDate?: string
@@ -284,6 +288,8 @@ export interface Quote {
   customerName?: string
   customerEmail?: string
   jobId?: string
+  projectId?: string
+  houseId?: string
   status: QuoteStatus
   subtotal: string | number
   discountAmount: string | number

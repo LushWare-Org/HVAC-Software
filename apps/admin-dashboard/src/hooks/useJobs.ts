@@ -42,7 +42,7 @@ export function useJobStats() {
 
 // ─── Job list ─────────────────────────────────────────────────────────────────
 
-interface JobFilters {
+export interface JobFilters {
   page?: number
   limit?: number
   search?: string
@@ -50,6 +50,8 @@ interface JobFilters {
   jobTypeId?: string
   assignedToId?: string
   customerId?: string
+  projectId?: string
+  houseId?: string
 }
 
 async function fetchJobsList(filters: JobFilters): Promise<PaginatedResponse<Job>> {
@@ -65,6 +67,8 @@ async function fetchJobsList(filters: JobFilters): Promise<PaginatedResponse<Job
   if (filters.jobTypeId && filters.jobTypeId !== 'all') params.jobTypeId = filters.jobTypeId
   if (filters.assignedToId && filters.assignedToId !== 'all') params.assignedToId = filters.assignedToId
   if (filters.customerId) params.customerId = filters.customerId
+  if (filters.projectId) params.projectId = filters.projectId
+  if (filters.houseId) params.houseId = filters.houseId
   const res = await api.get('/jobs/jobs', { params })
   const raw = res.data
   // Backend returns { data, meta: { total, page, limit, totalPages } }

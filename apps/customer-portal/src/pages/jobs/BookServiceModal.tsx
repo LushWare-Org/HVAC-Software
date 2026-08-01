@@ -22,6 +22,11 @@ import MapPicker from '../../components/MapPickerLazy'
 
 interface BookServiceModalProps {
   onClose: () => void
+  /** Launched from "My Projects" or "My House" — locks the request to that project/house. */
+  projectId?: string
+  projectName?: string
+  houseId?: string
+  houseLabel?: string
 }
 
 type Step = 1 | 2 | 3
@@ -60,7 +65,7 @@ function toDateInput(d: Date) {
   return `${y}-${m}-${day}`
 }
 
-export default function BookServiceModal({ onClose }: BookServiceModalProps) {
+export default function BookServiceModal({ onClose, projectId, projectName, houseId, houseLabel }: BookServiceModalProps) {
   const [step, setStep] = useState<Step>(1)
   const [submitted, setSubmitted] = useState(false)
   const { mutateAsync: bookService, isPending } = useBookService()
@@ -150,6 +155,8 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
       notes: [notes, windowNote, equipmentNote, 'Requested via customer portal'].filter(Boolean).join('\n'),
       scheduledStart: preferredIso || undefined,
       tags: ['portal-request', serviceType.toLowerCase()],
+      projectId,
+      houseId,
     })
 
     setSubmitted(true)
@@ -250,6 +257,17 @@ export default function BookServiceModal({ onClose }: BookServiceModalProps) {
             </div>
           ) : step === 1 ? (
             <>
+              {(projectId || houseId) && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16,
+                  padding: '10px 13px', background: 'var(--blue-dim)', border: '1px solid var(--bd)', borderRadius: 10,
+                }}>
+                  <Link2 size={14} style={{ color: 'var(--blue)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>
+                    Booking for {projectName}{houseLabel ? ` — ${houseLabel}` : ''}
+                  </span>
+                </div>
+              )}
               <span style={lbl}>What do you need help with?</span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
                 {SERVICE_TYPES.map(t => {

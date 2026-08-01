@@ -44,7 +44,13 @@ export function useMyHouses() {
     queryKey: ['my-houses'],
     queryFn: async () => (await api.get('/crm/houses/mine')).data ?? [],
     enabled: isAuthenticated,
-    staleTime: 60 * 1000,
+    // Shorter than the app default (60s) and refetches on focus, unlike most
+    // portal queries — this one gates whether the "My House" nav tab exists at
+    // all, so a customer who was just assigned a house by an admin while their
+    // tab was already open should see it appear the moment they switch back,
+    // not up to a minute later or only after a manual reload.
+    staleTime: 15 * 1000,
+    refetchOnWindowFocus: true,
   })
 }
 
@@ -65,7 +71,11 @@ export function useMyHouseServiceLog(houseId: string | null) {
       return (res.data?.data ?? []) as Array<{ id: string; title: string; status: string; scheduledStart?: string }>
     },
     enabled: !!houseId,
-    staleTime: 60 * 1000,
+    // Shorter + refetch-on-focus, matching useMyHouses/useMyProjects — a job a
+    // staff member just added for this house should show up when the customer
+    // checks back, not after up to a minute's delay.
+    staleTime: 15 * 1000,
+    refetchOnWindowFocus: true,
   })
 }
 

@@ -56,6 +56,13 @@ class ProvisionLeadDto {
   @IsOptional() @IsString() serviceInterest?: string;
 }
 
+class ProvisionHouseOwnerDto {
+  @IsString() firstName!: string;
+  @IsString() lastName!: string;
+  @IsEmail() email!: string;
+  @IsOptional() @IsString() phone?: string;
+}
+
 class ProvisionTechnicianDto {
   @IsString() @MinLength(2) name!: string;
   @IsEmail() email!: string;
@@ -139,6 +146,19 @@ export class AuthController {
   @ApiOperation({ summary: 'Admin: create lead + customer portal account with temp password' })
   provisionLead(@CurrentUser() user: AuthUser, @Body() dto: ProvisionLeadDto) {
     return this.authService.provisionLeadAccount(user.companyId, dto);
+  }
+
+  /**
+   * Admin creates a brand-new customer + portal account for a Housing Scheme house
+   * owner in one step (no Lead created — house owners aren't sales leads).
+   */
+  @Post('provision-house-owner')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_WRITE)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Admin: create a new customer + portal account for a house owner (no Lead)' })
+  provisionHouseOwner(@CurrentUser() user: AuthUser, @Body() dto: ProvisionHouseOwnerDto) {
+    return this.authService.provisionHouseOwner(user.companyId, dto);
   }
 
   /**

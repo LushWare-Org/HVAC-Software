@@ -9,13 +9,14 @@
     .sheet { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.12); }
 
     /* ── Dark executive header ── */
-    .hero { background: #0f172a; color: #ffffff; padding: 36px 40px 32px; position: relative; overflow: hidden; }
+    .hero { background: #0f172a; color: #ffffff; padding: 36px 40px 32px; position: relative; overflow: hidden; min-height: 380px; }
     .hero::before {
       content: '';
       position: absolute; top: -60px; right: -60px;
       width: 260px; height: 260px;
       background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
       border-radius: 50%;
+      z-index: 0; pointer-events: none;
     }
     .hero::after {
       content: '';
@@ -23,6 +24,7 @@
       width: 180px; height: 180px;
       background: radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 70%);
       border-radius: 50%;
+      z-index: 0; pointer-events: none;
     }
     .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; position: relative; z-index: 1; }
     .eyebrow { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #6366f1; margin-bottom: 10px; font-weight: 700; }
@@ -36,7 +38,7 @@
       backdrop-filter: blur(8px);
     }
     .doc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
-    .doc-number { margin-top: 6px; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #ffffff; }
+    .doc-number { margin-top: 6px; font-size: 22px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
     .status-badge {
       display: inline-block; margin-top: 10px; padding: 4px 10px;
       border-radius: 999px; font-size: 9px; font-weight: 700;
@@ -123,185 +125,74 @@
       font-size: 10px; color: #64748b;
     }
     .footer strong { color: #94a3b8; }
+
+    /* ── Template-driven overrides ── */
+    .brand-logo { max-height: 44px; max-width: 160px; object-fit: contain; }
+    .brand-tagline { margin-top: 4px; font-size: 10.5px; color: #94a3b8; }
+    .payment-details-card { background: #f0fdf4; border-color: #bbf7d0; }
+
+    /* ── Slot layout system: rows stack vertically (auto height), blocks sit side-by-side ── */
+    .tpl-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+    .tpl-row:first-child { margin-top: 0; }
+    .tpl-block { box-sizing: border-box; }
+    .tpl-block--free { z-index: 1; }
   </style>
 </head>
 <body>
+  <style>
+    {{#if template.isLetterhead}}
+    .sheet { box-shadow: none; }
+    {{/if}}
+    {{#if template.accentColor}}
+    .hero { background: {{template.accentColor}} !important; }
+    {{/if}}
+  </style>
   <div class="page">
     <div class="sheet">
-      <div class="hero">
-        <div class="hero-top">
-          <div>
-            <div class="eyebrow">Client billing statement</div>
-            <div class="brand-name">{{companyName}}</div>
-            <div class="brand-address">{{companyAddress}}</div>
-          </div>
-          <div class="doc-card">
-            <div class="doc-label">Invoice</div>
-            <div class="doc-number">{{invoiceNumber}}</div>
-            <span class="status-badge status-{{status}}">{{status}}</span>
-          </div>
-        </div>
-        <div class="hero-summary">
-          <div class="summary-card">
-            <div class="summary-label">Bill to</div>
-            <div class="summary-value">{{customerName}}</div>
-            <div class="summary-copy">{{customerEmail}}</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Balance due</div>
-            <div class="summary-value balance-accent">{{#if balanceDue}}{{balanceDueFmt}}{{else}}{{totalFmt}}{{/if}}</div>
-            <div class="summary-copy">Payment due {{dueDate}}</div>
-          </div>
+      {{#if template.isLetterhead}}
+      {{! Only the top band of the uploaded artwork is used as the letterhead — the image
+          is sized to the container's width and the container's height is capped to the
+          admin's chosen safe zone, so CSS clips everything past that point instead of the
+          whole uploaded page/PDF stretching across the entire document. }}
+      <div style="height: {{template.letterheadTopMarginPx}}px; background-image: url('{{template.letterheadImageUrl}}'); background-size: 100% auto; background-repeat: no-repeat; background-position: top center; overflow: hidden;" data-field="letterheadImageUrl"></div>
+      <div style="padding: 0 40px; display: flex; justify-content: flex-end;">
+        <div class="doc-card" style="background: #f1f5f9; border-color: #e2e8f0;">
+          <div class="doc-label" style="color:#64748b;">Invoice</div>
+          <div class="doc-number" style="color:#0f172a;">{{invoiceNumber}}</div>
+          <span class="status-badge status-{{status}}">{{status}}</span>
         </div>
       </div>
+      {{else}}
+      <div class="hero" data-field="accentColor">
+        {{#each rows}}
+        {{#if (eq section "hero")}}
+        {{#each blocks}}
+        {{{blockStyleOverride id style}}}
+        <div class="tpl-block tpl-block--free" data-block-id="{{id}}" data-slot="{{slot}}" style="{{heroBlockStyle this}}">
+          {{> (lookup this "slot") @root}}
+        </div>
+        {{/each}}
+        {{/if}}
+        {{/each}}
+      </div>
+      {{/if}}
 
       <div class="body">
-        {{#if isOverdue}}
-        <div class="alert">⚠ Past due — please arrange payment immediately</div>
-        {{/if}}
-
-        <div class="info-grid">
-          <div class="info-card">
-            <div class="info-label">Invoice date</div>
-            <div class="info-value">{{invoiceDate}}</div>
+        {{#each rows}}
+        {{#if (eq section "body")}}
+        <div class="tpl-row" data-row-id="{{id}}">
+          {{#each blocks}}
+          {{{blockStyleOverride id style}}}
+          <div class="tpl-block" data-block-id="{{id}}" data-slot="{{slot}}" style="width:{{widthPct}}%; {{blockStyle style}}">
+            {{> (lookup this "slot") @root}}
           </div>
-          <div class="info-card">
-            <div class="info-label">Due date</div>
-            <div class="info-value">{{dueDate}}</div>
-          </div>
-          <div class="info-card">
-            <div class="info-label">Quote reference</div>
-            <div class="info-value">{{#if quoteNumber}}{{quoteNumber}}{{else}}Not linked{{/if}}</div>
-          </div>
-          <div class="info-card">
-            <div class="info-label">Status</div>
-            <div class="info-value">{{status}}</div>
-          </div>
-        </div>
-
-        <div class="section-title">Invoice details</div>
-        <div class="section-subtitle">Services and charges for your work order. Retain this document for your financial records.</div>
-
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40%">Description</th>
-              <th style="width:16%">Category</th>
-              <th style="width:8%;text-align:right">Qty</th>
-              <th style="width:16%;text-align:right">Unit price</th>
-              <th style="width:8%;text-align:right">Tax</th>
-              <th style="width:12%;text-align:right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{#each lineItems}}
-            <tr>
-              <td>
-                <div class="item-title">{{description}}</div>
-              </td>
-              <td><div class="item-category">{{category}}</div></td>
-              <td class="td-right">{{quantity}}</td>
-              <td class="td-right">{{unitPriceFmt}}</td>
-              <td class="td-right">{{#if taxable}}Yes{{else}}No{{/if}}</td>
-              <td class="td-right">{{lineTotalFmt}}</td>
-            </tr>
-            {{/each}}
-          </tbody>
-        </table>
-
-        <div class="totals-wrap">
-          <div>
-            {{#if stripePaymentUrl}}
-            <div class="pay-card">
-              <div class="pay-card-title">Pay online</div>
-              <div class="pay-card-text">A secure payment link is available for this invoice. Pay the outstanding balance safely online.</div>
-              <a class="pay-button" href="{{stripePaymentUrl}}">Pay {{#if balanceDue}}{{balanceDueFmt}}{{else}}{{totalFmt}}{{/if}} →</a>
-            </div>
-            {{/if}}
-          </div>
-          <div class="totals-card">
-            <table>
-              <tbody>
-                <tr>
-                  <td class="label">Subtotal</td>
-                  <td class="value">{{subtotalFmt}}</td>
-                </tr>
-                {{#if hasDiscount}}
-                <tr>
-                  <td class="label">Discount</td>
-                  <td class="value">−{{discountAmountFmt}}</td>
-                </tr>
-                {{/if}}
-                <tr>
-                  <td class="label">Tax ({{taxRatePct}}%)</td>
-                  <td class="value">{{taxAmountFmt}}</td>
-                </tr>
-                <tr class="grand-total-row">
-                  <td>Invoice total</td>
-                  <td class="value">{{totalFmt}}</td>
-                </tr>
-                {{#if amountPaid}}
-                <tr class="paid-row">
-                  <td class="label">Amount paid</td>
-                  <td class="value">−{{amountPaidFmt}}</td>
-                </tr>
-                {{/if}}
-                {{#if balanceDue}}
-                <tr class="balance-row">
-                  <td class="label">Balance due</td>
-                  <td class="value">{{balanceDueFmt}}</td>
-                </tr>
-                {{/if}}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {{#if payments.length}}
-        <div class="payment-section">
-          <div class="section-heading">Payment history</div>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Method</th>
-                <th style="text-align:right">Amount</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each payments}}
-              <tr>
-                <td>{{paidAtFmt}}</td>
-                <td>{{paymentMethod}}</td>
-                <td class="td-right">{{amountFmt}}</td>
-                <td>{{status}}</td>
-              </tr>
-              {{/each}}
-            </tbody>
-          </table>
+          {{/each}}
         </div>
         {{/if}}
-
-        <div class="notes-grid">
-          {{#if notes}}
-          <div class="note-card">
-            <div class="note-label">Notes</div>
-            <div class="note-text">{{notes}}</div>
-          </div>
-          {{/if}}
-          {{#if terms}}
-          <div class="note-card">
-            <div class="note-label">Terms &amp; conditions</div>
-            <div class="note-text">{{terms}}</div>
-          </div>
-          {{/if}}
-        </div>
-
-        <div class="footer">
-          <div>Generated {{generatedAt}} · T&amp;S CRM</div>
-          <div><strong>Payment due {{dueDate}}</strong></div>
-        </div>
+        {{/each}}
+        {{#if template.isLetterhead}}
+        <div style="height: {{template.letterheadBottomMarginPx}}px;"></div>
+        {{/if}}
       </div>
     </div>
   </div>

@@ -74,6 +74,16 @@ export type Address = $Result.DefaultSelection<Prisma.$AddressPayload>
  */
 export type Equipment = $Result.DefaultSelection<Prisma.$EquipmentPayload>
 /**
+ * Model EquipmentErrorCode
+ * 
+ */
+export type EquipmentErrorCode = $Result.DefaultSelection<Prisma.$EquipmentErrorCodePayload>
+/**
+ * Model DocumentTemplate
+ * 
+ */
+export type DocumentTemplate = $Result.DefaultSelection<Prisma.$DocumentTemplatePayload>
+/**
  * Model EquipmentConsumable
  * 
  */
@@ -503,6 +513,26 @@ export class PrismaClient<
     * ```
     */
   get equipment(): Prisma.EquipmentDelegate<ExtArgs>;
+
+  /**
+   * `prisma.equipmentErrorCode`: Exposes CRUD operations for the **EquipmentErrorCode** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more EquipmentErrorCodes
+    * const equipmentErrorCodes = await prisma.equipmentErrorCode.findMany()
+    * ```
+    */
+  get equipmentErrorCode(): Prisma.EquipmentErrorCodeDelegate<ExtArgs>;
+
+  /**
+   * `prisma.documentTemplate`: Exposes CRUD operations for the **DocumentTemplate** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DocumentTemplates
+    * const documentTemplates = await prisma.documentTemplate.findMany()
+    * ```
+    */
+  get documentTemplate(): Prisma.DocumentTemplateDelegate<ExtArgs>;
 
   /**
    * `prisma.equipmentConsumable`: Exposes CRUD operations for the **EquipmentConsumable** model.
@@ -1116,6 +1146,8 @@ export namespace Prisma {
     Review: 'Review',
     Address: 'Address',
     Equipment: 'Equipment',
+    EquipmentErrorCode: 'EquipmentErrorCode',
+    DocumentTemplate: 'DocumentTemplate',
     EquipmentConsumable: 'EquipmentConsumable',
     ContractorPost: 'ContractorPost',
     CompanyAnnouncement: 'CompanyAnnouncement',
@@ -1147,7 +1179,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "company" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "retentionRecommendation" | "revenueRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay" | "house" | "houseIssueReport"
+      modelProps: "company" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentErrorCode" | "documentTemplate" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "retentionRecommendation" | "revenueRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay" | "house" | "houseIssueReport"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1988,6 +2020,146 @@ export namespace Prisma {
           count: {
             args: Prisma.EquipmentCountArgs<ExtArgs>
             result: $Utils.Optional<EquipmentCountAggregateOutputType> | number
+          }
+        }
+      }
+      EquipmentErrorCode: {
+        payload: Prisma.$EquipmentErrorCodePayload<ExtArgs>
+        fields: Prisma.EquipmentErrorCodeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.EquipmentErrorCodeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.EquipmentErrorCodeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload>
+          }
+          findFirst: {
+            args: Prisma.EquipmentErrorCodeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.EquipmentErrorCodeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload>
+          }
+          findMany: {
+            args: Prisma.EquipmentErrorCodeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload>[]
+          }
+          create: {
+            args: Prisma.EquipmentErrorCodeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload>
+          }
+          createMany: {
+            args: Prisma.EquipmentErrorCodeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.EquipmentErrorCodeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload>[]
+          }
+          delete: {
+            args: Prisma.EquipmentErrorCodeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload>
+          }
+          update: {
+            args: Prisma.EquipmentErrorCodeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload>
+          }
+          deleteMany: {
+            args: Prisma.EquipmentErrorCodeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.EquipmentErrorCodeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.EquipmentErrorCodeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EquipmentErrorCodePayload>
+          }
+          aggregate: {
+            args: Prisma.EquipmentErrorCodeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateEquipmentErrorCode>
+          }
+          groupBy: {
+            args: Prisma.EquipmentErrorCodeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<EquipmentErrorCodeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.EquipmentErrorCodeCountArgs<ExtArgs>
+            result: $Utils.Optional<EquipmentErrorCodeCountAggregateOutputType> | number
+          }
+        }
+      }
+      DocumentTemplate: {
+        payload: Prisma.$DocumentTemplatePayload<ExtArgs>
+        fields: Prisma.DocumentTemplateFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DocumentTemplateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DocumentTemplateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload>
+          }
+          findFirst: {
+            args: Prisma.DocumentTemplateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DocumentTemplateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload>
+          }
+          findMany: {
+            args: Prisma.DocumentTemplateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload>[]
+          }
+          create: {
+            args: Prisma.DocumentTemplateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload>
+          }
+          createMany: {
+            args: Prisma.DocumentTemplateCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.DocumentTemplateCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload>[]
+          }
+          delete: {
+            args: Prisma.DocumentTemplateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload>
+          }
+          update: {
+            args: Prisma.DocumentTemplateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload>
+          }
+          deleteMany: {
+            args: Prisma.DocumentTemplateDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DocumentTemplateUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.DocumentTemplateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentTemplatePayload>
+          }
+          aggregate: {
+            args: Prisma.DocumentTemplateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDocumentTemplate>
+          }
+          groupBy: {
+            args: Prisma.DocumentTemplateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DocumentTemplateGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DocumentTemplateCountArgs<ExtArgs>
+            result: $Utils.Optional<DocumentTemplateCountAggregateOutputType> | number
           }
         }
       }
@@ -3551,11 +3723,13 @@ export namespace Prisma {
   export type EquipmentCountOutputType = {
     consumables: number
     issueReports: number
+    errorCodes: number
   }
 
   export type EquipmentCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     consumables?: boolean | EquipmentCountOutputTypeCountConsumablesArgs
     issueReports?: boolean | EquipmentCountOutputTypeCountIssueReportsArgs
+    errorCodes?: boolean | EquipmentCountOutputTypeCountErrorCodesArgs
   }
 
   // Custom InputTypes
@@ -3581,6 +3755,13 @@ export namespace Prisma {
    */
   export type EquipmentCountOutputTypeCountIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: HouseIssueReportWhereInput
+  }
+
+  /**
+   * EquipmentCountOutputType without action
+   */
+  export type EquipmentCountOutputTypeCountErrorCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EquipmentErrorCodeWhereInput
   }
 
 
@@ -10775,6 +10956,7 @@ export namespace Prisma {
     signedAt: Date | null
     signedByName: string | null
     documentUrl: string | null
+    templateId: string | null
     billingAmount: Decimal | null
     nextBillingDate: Date | null
     serviceType: string | null
@@ -10788,6 +10970,7 @@ export namespace Prisma {
     leadDays: number | null
     jobTemplateId: string | null
     projectId: string | null
+    houseId: string | null
     customerConfirmedAt: Date | null
     confirmToken: string | null
     renewalReminderSent: boolean | null
@@ -10811,6 +10994,7 @@ export namespace Prisma {
     signedAt: Date | null
     signedByName: string | null
     documentUrl: string | null
+    templateId: string | null
     billingAmount: Decimal | null
     nextBillingDate: Date | null
     serviceType: string | null
@@ -10824,6 +11008,7 @@ export namespace Prisma {
     leadDays: number | null
     jobTemplateId: string | null
     projectId: string | null
+    houseId: string | null
     customerConfirmedAt: Date | null
     confirmToken: string | null
     renewalReminderSent: boolean | null
@@ -10847,6 +11032,7 @@ export namespace Prisma {
     signedAt: number
     signedByName: number
     documentUrl: number
+    templateId: number
     billingAmount: number
     nextBillingDate: number
     serviceType: number
@@ -10860,6 +11046,7 @@ export namespace Prisma {
     leadDays: number
     jobTemplateId: number
     projectId: number
+    houseId: number
     customerConfirmedAt: number
     confirmToken: number
     renewalReminderSent: number
@@ -10903,6 +11090,7 @@ export namespace Prisma {
     signedAt?: true
     signedByName?: true
     documentUrl?: true
+    templateId?: true
     billingAmount?: true
     nextBillingDate?: true
     serviceType?: true
@@ -10916,6 +11104,7 @@ export namespace Prisma {
     leadDays?: true
     jobTemplateId?: true
     projectId?: true
+    houseId?: true
     customerConfirmedAt?: true
     confirmToken?: true
     renewalReminderSent?: true
@@ -10939,6 +11128,7 @@ export namespace Prisma {
     signedAt?: true
     signedByName?: true
     documentUrl?: true
+    templateId?: true
     billingAmount?: true
     nextBillingDate?: true
     serviceType?: true
@@ -10952,6 +11142,7 @@ export namespace Prisma {
     leadDays?: true
     jobTemplateId?: true
     projectId?: true
+    houseId?: true
     customerConfirmedAt?: true
     confirmToken?: true
     renewalReminderSent?: true
@@ -10975,6 +11166,7 @@ export namespace Prisma {
     signedAt?: true
     signedByName?: true
     documentUrl?: true
+    templateId?: true
     billingAmount?: true
     nextBillingDate?: true
     serviceType?: true
@@ -10988,6 +11180,7 @@ export namespace Prisma {
     leadDays?: true
     jobTemplateId?: true
     projectId?: true
+    houseId?: true
     customerConfirmedAt?: true
     confirmToken?: true
     renewalReminderSent?: true
@@ -11098,6 +11291,7 @@ export namespace Prisma {
     signedAt: Date | null
     signedByName: string | null
     documentUrl: string | null
+    templateId: string | null
     billingAmount: Decimal | null
     nextBillingDate: Date | null
     serviceType: string | null
@@ -11111,6 +11305,7 @@ export namespace Prisma {
     leadDays: number
     jobTemplateId: string | null
     projectId: string | null
+    houseId: string | null
     customerConfirmedAt: Date | null
     confirmToken: string | null
     renewalReminderSent: boolean
@@ -11153,6 +11348,7 @@ export namespace Prisma {
     signedAt?: boolean
     signedByName?: boolean
     documentUrl?: boolean
+    templateId?: boolean
     billingAmount?: boolean
     nextBillingDate?: boolean
     serviceType?: boolean
@@ -11166,6 +11362,7 @@ export namespace Prisma {
     leadDays?: boolean
     jobTemplateId?: boolean
     projectId?: boolean
+    houseId?: boolean
     customerConfirmedAt?: boolean
     confirmToken?: boolean
     renewalReminderSent?: boolean
@@ -11193,6 +11390,7 @@ export namespace Prisma {
     signedAt?: boolean
     signedByName?: boolean
     documentUrl?: boolean
+    templateId?: boolean
     billingAmount?: boolean
     nextBillingDate?: boolean
     serviceType?: boolean
@@ -11206,6 +11404,7 @@ export namespace Prisma {
     leadDays?: boolean
     jobTemplateId?: boolean
     projectId?: boolean
+    houseId?: boolean
     customerConfirmedAt?: boolean
     confirmToken?: boolean
     renewalReminderSent?: boolean
@@ -11231,6 +11430,7 @@ export namespace Prisma {
     signedAt?: boolean
     signedByName?: boolean
     documentUrl?: boolean
+    templateId?: boolean
     billingAmount?: boolean
     nextBillingDate?: boolean
     serviceType?: boolean
@@ -11244,6 +11444,7 @@ export namespace Prisma {
     leadDays?: boolean
     jobTemplateId?: boolean
     projectId?: boolean
+    houseId?: boolean
     customerConfirmedAt?: boolean
     confirmToken?: boolean
     renewalReminderSent?: boolean
@@ -11285,6 +11486,7 @@ export namespace Prisma {
       signedAt: Date | null
       signedByName: string | null
       documentUrl: string | null
+      templateId: string | null
       billingAmount: Prisma.Decimal | null
       nextBillingDate: Date | null
       serviceType: string | null
@@ -11298,6 +11500,7 @@ export namespace Prisma {
       leadDays: number
       jobTemplateId: string | null
       projectId: string | null
+      houseId: string | null
       customerConfirmedAt: Date | null
       confirmToken: string | null
       renewalReminderSent: boolean
@@ -11714,6 +11917,7 @@ export namespace Prisma {
     readonly signedAt: FieldRef<"ServiceAgreement", 'DateTime'>
     readonly signedByName: FieldRef<"ServiceAgreement", 'String'>
     readonly documentUrl: FieldRef<"ServiceAgreement", 'String'>
+    readonly templateId: FieldRef<"ServiceAgreement", 'String'>
     readonly billingAmount: FieldRef<"ServiceAgreement", 'Decimal'>
     readonly nextBillingDate: FieldRef<"ServiceAgreement", 'DateTime'>
     readonly serviceType: FieldRef<"ServiceAgreement", 'String'>
@@ -11727,6 +11931,7 @@ export namespace Prisma {
     readonly leadDays: FieldRef<"ServiceAgreement", 'Int'>
     readonly jobTemplateId: FieldRef<"ServiceAgreement", 'String'>
     readonly projectId: FieldRef<"ServiceAgreement", 'String'>
+    readonly houseId: FieldRef<"ServiceAgreement", 'String'>
     readonly customerConfirmedAt: FieldRef<"ServiceAgreement", 'DateTime'>
     readonly confirmToken: FieldRef<"ServiceAgreement", 'String'>
     readonly renewalReminderSent: FieldRef<"ServiceAgreement", 'Boolean'>
@@ -16329,6 +16534,9 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     manualUrl: string | null
+    imageUrl: string | null
+    imageScanStatus: string | null
+    imageScanError: string | null
   }
 
   export type EquipmentMaxAggregateOutputType = {
@@ -16347,6 +16555,9 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     manualUrl: string | null
+    imageUrl: string | null
+    imageScanStatus: string | null
+    imageScanError: string | null
   }
 
   export type EquipmentCountAggregateOutputType = {
@@ -16365,6 +16576,10 @@ export namespace Prisma {
     createdAt: number
     updatedAt: number
     manualUrl: number
+    imageUrl: number
+    imageScanStatus: number
+    imageScanResult: number
+    imageScanError: number
     _all: number
   }
 
@@ -16385,6 +16600,9 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     manualUrl?: true
+    imageUrl?: true
+    imageScanStatus?: true
+    imageScanError?: true
   }
 
   export type EquipmentMaxAggregateInputType = {
@@ -16403,6 +16621,9 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     manualUrl?: true
+    imageUrl?: true
+    imageScanStatus?: true
+    imageScanError?: true
   }
 
   export type EquipmentCountAggregateInputType = {
@@ -16421,6 +16642,10 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     manualUrl?: true
+    imageUrl?: true
+    imageScanStatus?: true
+    imageScanResult?: true
+    imageScanError?: true
     _all?: true
   }
 
@@ -16512,6 +16737,10 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     manualUrl: string | null
+    imageUrl: string | null
+    imageScanStatus: string
+    imageScanResult: JsonValue | null
+    imageScanError: string | null
     _count: EquipmentCountAggregateOutputType | null
     _min: EquipmentMinAggregateOutputType | null
     _max: EquipmentMaxAggregateOutputType | null
@@ -16547,10 +16776,15 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     manualUrl?: boolean
+    imageUrl?: boolean
+    imageScanStatus?: boolean
+    imageScanResult?: boolean
+    imageScanError?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     house?: boolean | Equipment$houseArgs<ExtArgs>
     consumables?: boolean | Equipment$consumablesArgs<ExtArgs>
     issueReports?: boolean | Equipment$issueReportsArgs<ExtArgs>
+    errorCodes?: boolean | Equipment$errorCodesArgs<ExtArgs>
     _count?: boolean | EquipmentCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["equipment"]>
 
@@ -16570,6 +16804,10 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     manualUrl?: boolean
+    imageUrl?: boolean
+    imageScanStatus?: boolean
+    imageScanResult?: boolean
+    imageScanError?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     house?: boolean | Equipment$houseArgs<ExtArgs>
   }, ExtArgs["result"]["equipment"]>
@@ -16590,6 +16828,10 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     manualUrl?: boolean
+    imageUrl?: boolean
+    imageScanStatus?: boolean
+    imageScanResult?: boolean
+    imageScanError?: boolean
   }
 
   export type EquipmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -16597,6 +16839,7 @@ export namespace Prisma {
     house?: boolean | Equipment$houseArgs<ExtArgs>
     consumables?: boolean | Equipment$consumablesArgs<ExtArgs>
     issueReports?: boolean | Equipment$issueReportsArgs<ExtArgs>
+    errorCodes?: boolean | Equipment$errorCodesArgs<ExtArgs>
     _count?: boolean | EquipmentCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type EquipmentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -16611,6 +16854,7 @@ export namespace Prisma {
       house: Prisma.$HousePayload<ExtArgs> | null
       consumables: Prisma.$EquipmentConsumablePayload<ExtArgs>[]
       issueReports: Prisma.$HouseIssueReportPayload<ExtArgs>[]
+      errorCodes: Prisma.$EquipmentErrorCodePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -16628,6 +16872,10 @@ export namespace Prisma {
       createdAt: Date
       updatedAt: Date
       manualUrl: string | null
+      imageUrl: string | null
+      imageScanStatus: string
+      imageScanResult: Prisma.JsonValue | null
+      imageScanError: string | null
     }, ExtArgs["result"]["equipment"]>
     composites: {}
   }
@@ -16996,6 +17244,7 @@ export namespace Prisma {
     house<T extends Equipment$houseArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$houseArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     consumables<T extends Equipment$consumablesArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$consumablesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentConsumablePayload<ExtArgs>, T, "findMany"> | Null>
     issueReports<T extends Equipment$issueReportsArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$issueReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findMany"> | Null>
+    errorCodes<T extends Equipment$errorCodesArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$errorCodesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -17040,6 +17289,10 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"Equipment", 'DateTime'>
     readonly updatedAt: FieldRef<"Equipment", 'DateTime'>
     readonly manualUrl: FieldRef<"Equipment", 'String'>
+    readonly imageUrl: FieldRef<"Equipment", 'String'>
+    readonly imageScanStatus: FieldRef<"Equipment", 'String'>
+    readonly imageScanResult: FieldRef<"Equipment", 'Json'>
+    readonly imageScanError: FieldRef<"Equipment", 'String'>
   }
     
 
@@ -17413,6 +17666,26 @@ export namespace Prisma {
   }
 
   /**
+   * Equipment.errorCodes
+   */
+  export type Equipment$errorCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    where?: EquipmentErrorCodeWhereInput
+    orderBy?: EquipmentErrorCodeOrderByWithRelationInput | EquipmentErrorCodeOrderByWithRelationInput[]
+    cursor?: EquipmentErrorCodeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: EquipmentErrorCodeScalarFieldEnum | EquipmentErrorCodeScalarFieldEnum[]
+  }
+
+  /**
    * Equipment without action
    */
   export type EquipmentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -17424,6 +17697,2079 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: EquipmentInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model EquipmentErrorCode
+   */
+
+  export type AggregateEquipmentErrorCode = {
+    _count: EquipmentErrorCodeCountAggregateOutputType | null
+    _min: EquipmentErrorCodeMinAggregateOutputType | null
+    _max: EquipmentErrorCodeMaxAggregateOutputType | null
+  }
+
+  export type EquipmentErrorCodeMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    equipmentId: string | null
+    code: string | null
+    meaning: string | null
+    source: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type EquipmentErrorCodeMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    equipmentId: string | null
+    code: string | null
+    meaning: string | null
+    source: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type EquipmentErrorCodeCountAggregateOutputType = {
+    id: number
+    companyId: number
+    equipmentId: number
+    code: number
+    meaning: number
+    source: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type EquipmentErrorCodeMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    equipmentId?: true
+    code?: true
+    meaning?: true
+    source?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type EquipmentErrorCodeMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    equipmentId?: true
+    code?: true
+    meaning?: true
+    source?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type EquipmentErrorCodeCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    equipmentId?: true
+    code?: true
+    meaning?: true
+    source?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type EquipmentErrorCodeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EquipmentErrorCode to aggregate.
+     */
+    where?: EquipmentErrorCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EquipmentErrorCodes to fetch.
+     */
+    orderBy?: EquipmentErrorCodeOrderByWithRelationInput | EquipmentErrorCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: EquipmentErrorCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EquipmentErrorCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EquipmentErrorCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned EquipmentErrorCodes
+    **/
+    _count?: true | EquipmentErrorCodeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: EquipmentErrorCodeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: EquipmentErrorCodeMaxAggregateInputType
+  }
+
+  export type GetEquipmentErrorCodeAggregateType<T extends EquipmentErrorCodeAggregateArgs> = {
+        [P in keyof T & keyof AggregateEquipmentErrorCode]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateEquipmentErrorCode[P]>
+      : GetScalarType<T[P], AggregateEquipmentErrorCode[P]>
+  }
+
+
+
+
+  export type EquipmentErrorCodeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EquipmentErrorCodeWhereInput
+    orderBy?: EquipmentErrorCodeOrderByWithAggregationInput | EquipmentErrorCodeOrderByWithAggregationInput[]
+    by: EquipmentErrorCodeScalarFieldEnum[] | EquipmentErrorCodeScalarFieldEnum
+    having?: EquipmentErrorCodeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: EquipmentErrorCodeCountAggregateInputType | true
+    _min?: EquipmentErrorCodeMinAggregateInputType
+    _max?: EquipmentErrorCodeMaxAggregateInputType
+  }
+
+  export type EquipmentErrorCodeGroupByOutputType = {
+    id: string
+    companyId: string
+    equipmentId: string
+    code: string
+    meaning: string | null
+    source: string
+    createdAt: Date
+    updatedAt: Date
+    _count: EquipmentErrorCodeCountAggregateOutputType | null
+    _min: EquipmentErrorCodeMinAggregateOutputType | null
+    _max: EquipmentErrorCodeMaxAggregateOutputType | null
+  }
+
+  type GetEquipmentErrorCodeGroupByPayload<T extends EquipmentErrorCodeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<EquipmentErrorCodeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof EquipmentErrorCodeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], EquipmentErrorCodeGroupByOutputType[P]>
+            : GetScalarType<T[P], EquipmentErrorCodeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type EquipmentErrorCodeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    equipmentId?: boolean
+    code?: boolean
+    meaning?: boolean
+    source?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    equipment?: boolean | EquipmentDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["equipmentErrorCode"]>
+
+  export type EquipmentErrorCodeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    equipmentId?: boolean
+    code?: boolean
+    meaning?: boolean
+    source?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    equipment?: boolean | EquipmentDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["equipmentErrorCode"]>
+
+  export type EquipmentErrorCodeSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    equipmentId?: boolean
+    code?: boolean
+    meaning?: boolean
+    source?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type EquipmentErrorCodeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    equipment?: boolean | EquipmentDefaultArgs<ExtArgs>
+  }
+  export type EquipmentErrorCodeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    equipment?: boolean | EquipmentDefaultArgs<ExtArgs>
+  }
+
+  export type $EquipmentErrorCodePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "EquipmentErrorCode"
+    objects: {
+      equipment: Prisma.$EquipmentPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      equipmentId: string
+      code: string
+      meaning: string | null
+      source: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["equipmentErrorCode"]>
+    composites: {}
+  }
+
+  type EquipmentErrorCodeGetPayload<S extends boolean | null | undefined | EquipmentErrorCodeDefaultArgs> = $Result.GetResult<Prisma.$EquipmentErrorCodePayload, S>
+
+  type EquipmentErrorCodeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<EquipmentErrorCodeFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: EquipmentErrorCodeCountAggregateInputType | true
+    }
+
+  export interface EquipmentErrorCodeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['EquipmentErrorCode'], meta: { name: 'EquipmentErrorCode' } }
+    /**
+     * Find zero or one EquipmentErrorCode that matches the filter.
+     * @param {EquipmentErrorCodeFindUniqueArgs} args - Arguments to find a EquipmentErrorCode
+     * @example
+     * // Get one EquipmentErrorCode
+     * const equipmentErrorCode = await prisma.equipmentErrorCode.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends EquipmentErrorCodeFindUniqueArgs>(args: SelectSubset<T, EquipmentErrorCodeFindUniqueArgs<ExtArgs>>): Prisma__EquipmentErrorCodeClient<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one EquipmentErrorCode that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {EquipmentErrorCodeFindUniqueOrThrowArgs} args - Arguments to find a EquipmentErrorCode
+     * @example
+     * // Get one EquipmentErrorCode
+     * const equipmentErrorCode = await prisma.equipmentErrorCode.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends EquipmentErrorCodeFindUniqueOrThrowArgs>(args: SelectSubset<T, EquipmentErrorCodeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__EquipmentErrorCodeClient<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first EquipmentErrorCode that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EquipmentErrorCodeFindFirstArgs} args - Arguments to find a EquipmentErrorCode
+     * @example
+     * // Get one EquipmentErrorCode
+     * const equipmentErrorCode = await prisma.equipmentErrorCode.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends EquipmentErrorCodeFindFirstArgs>(args?: SelectSubset<T, EquipmentErrorCodeFindFirstArgs<ExtArgs>>): Prisma__EquipmentErrorCodeClient<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first EquipmentErrorCode that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EquipmentErrorCodeFindFirstOrThrowArgs} args - Arguments to find a EquipmentErrorCode
+     * @example
+     * // Get one EquipmentErrorCode
+     * const equipmentErrorCode = await prisma.equipmentErrorCode.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends EquipmentErrorCodeFindFirstOrThrowArgs>(args?: SelectSubset<T, EquipmentErrorCodeFindFirstOrThrowArgs<ExtArgs>>): Prisma__EquipmentErrorCodeClient<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more EquipmentErrorCodes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EquipmentErrorCodeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all EquipmentErrorCodes
+     * const equipmentErrorCodes = await prisma.equipmentErrorCode.findMany()
+     * 
+     * // Get first 10 EquipmentErrorCodes
+     * const equipmentErrorCodes = await prisma.equipmentErrorCode.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const equipmentErrorCodeWithIdOnly = await prisma.equipmentErrorCode.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends EquipmentErrorCodeFindManyArgs>(args?: SelectSubset<T, EquipmentErrorCodeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a EquipmentErrorCode.
+     * @param {EquipmentErrorCodeCreateArgs} args - Arguments to create a EquipmentErrorCode.
+     * @example
+     * // Create one EquipmentErrorCode
+     * const EquipmentErrorCode = await prisma.equipmentErrorCode.create({
+     *   data: {
+     *     // ... data to create a EquipmentErrorCode
+     *   }
+     * })
+     * 
+     */
+    create<T extends EquipmentErrorCodeCreateArgs>(args: SelectSubset<T, EquipmentErrorCodeCreateArgs<ExtArgs>>): Prisma__EquipmentErrorCodeClient<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many EquipmentErrorCodes.
+     * @param {EquipmentErrorCodeCreateManyArgs} args - Arguments to create many EquipmentErrorCodes.
+     * @example
+     * // Create many EquipmentErrorCodes
+     * const equipmentErrorCode = await prisma.equipmentErrorCode.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends EquipmentErrorCodeCreateManyArgs>(args?: SelectSubset<T, EquipmentErrorCodeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many EquipmentErrorCodes and returns the data saved in the database.
+     * @param {EquipmentErrorCodeCreateManyAndReturnArgs} args - Arguments to create many EquipmentErrorCodes.
+     * @example
+     * // Create many EquipmentErrorCodes
+     * const equipmentErrorCode = await prisma.equipmentErrorCode.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many EquipmentErrorCodes and only return the `id`
+     * const equipmentErrorCodeWithIdOnly = await prisma.equipmentErrorCode.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends EquipmentErrorCodeCreateManyAndReturnArgs>(args?: SelectSubset<T, EquipmentErrorCodeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a EquipmentErrorCode.
+     * @param {EquipmentErrorCodeDeleteArgs} args - Arguments to delete one EquipmentErrorCode.
+     * @example
+     * // Delete one EquipmentErrorCode
+     * const EquipmentErrorCode = await prisma.equipmentErrorCode.delete({
+     *   where: {
+     *     // ... filter to delete one EquipmentErrorCode
+     *   }
+     * })
+     * 
+     */
+    delete<T extends EquipmentErrorCodeDeleteArgs>(args: SelectSubset<T, EquipmentErrorCodeDeleteArgs<ExtArgs>>): Prisma__EquipmentErrorCodeClient<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one EquipmentErrorCode.
+     * @param {EquipmentErrorCodeUpdateArgs} args - Arguments to update one EquipmentErrorCode.
+     * @example
+     * // Update one EquipmentErrorCode
+     * const equipmentErrorCode = await prisma.equipmentErrorCode.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends EquipmentErrorCodeUpdateArgs>(args: SelectSubset<T, EquipmentErrorCodeUpdateArgs<ExtArgs>>): Prisma__EquipmentErrorCodeClient<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more EquipmentErrorCodes.
+     * @param {EquipmentErrorCodeDeleteManyArgs} args - Arguments to filter EquipmentErrorCodes to delete.
+     * @example
+     * // Delete a few EquipmentErrorCodes
+     * const { count } = await prisma.equipmentErrorCode.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends EquipmentErrorCodeDeleteManyArgs>(args?: SelectSubset<T, EquipmentErrorCodeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more EquipmentErrorCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EquipmentErrorCodeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many EquipmentErrorCodes
+     * const equipmentErrorCode = await prisma.equipmentErrorCode.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends EquipmentErrorCodeUpdateManyArgs>(args: SelectSubset<T, EquipmentErrorCodeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one EquipmentErrorCode.
+     * @param {EquipmentErrorCodeUpsertArgs} args - Arguments to update or create a EquipmentErrorCode.
+     * @example
+     * // Update or create a EquipmentErrorCode
+     * const equipmentErrorCode = await prisma.equipmentErrorCode.upsert({
+     *   create: {
+     *     // ... data to create a EquipmentErrorCode
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the EquipmentErrorCode we want to update
+     *   }
+     * })
+     */
+    upsert<T extends EquipmentErrorCodeUpsertArgs>(args: SelectSubset<T, EquipmentErrorCodeUpsertArgs<ExtArgs>>): Prisma__EquipmentErrorCodeClient<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of EquipmentErrorCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EquipmentErrorCodeCountArgs} args - Arguments to filter EquipmentErrorCodes to count.
+     * @example
+     * // Count the number of EquipmentErrorCodes
+     * const count = await prisma.equipmentErrorCode.count({
+     *   where: {
+     *     // ... the filter for the EquipmentErrorCodes we want to count
+     *   }
+     * })
+    **/
+    count<T extends EquipmentErrorCodeCountArgs>(
+      args?: Subset<T, EquipmentErrorCodeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], EquipmentErrorCodeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a EquipmentErrorCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EquipmentErrorCodeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends EquipmentErrorCodeAggregateArgs>(args: Subset<T, EquipmentErrorCodeAggregateArgs>): Prisma.PrismaPromise<GetEquipmentErrorCodeAggregateType<T>>
+
+    /**
+     * Group by EquipmentErrorCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EquipmentErrorCodeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends EquipmentErrorCodeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: EquipmentErrorCodeGroupByArgs['orderBy'] }
+        : { orderBy?: EquipmentErrorCodeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, EquipmentErrorCodeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetEquipmentErrorCodeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the EquipmentErrorCode model
+   */
+  readonly fields: EquipmentErrorCodeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for EquipmentErrorCode.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__EquipmentErrorCodeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    equipment<T extends EquipmentDefaultArgs<ExtArgs> = {}>(args?: Subset<T, EquipmentDefaultArgs<ExtArgs>>): Prisma__EquipmentClient<$Result.GetResult<Prisma.$EquipmentPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the EquipmentErrorCode model
+   */ 
+  interface EquipmentErrorCodeFieldRefs {
+    readonly id: FieldRef<"EquipmentErrorCode", 'String'>
+    readonly companyId: FieldRef<"EquipmentErrorCode", 'String'>
+    readonly equipmentId: FieldRef<"EquipmentErrorCode", 'String'>
+    readonly code: FieldRef<"EquipmentErrorCode", 'String'>
+    readonly meaning: FieldRef<"EquipmentErrorCode", 'String'>
+    readonly source: FieldRef<"EquipmentErrorCode", 'String'>
+    readonly createdAt: FieldRef<"EquipmentErrorCode", 'DateTime'>
+    readonly updatedAt: FieldRef<"EquipmentErrorCode", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * EquipmentErrorCode findUnique
+   */
+  export type EquipmentErrorCodeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which EquipmentErrorCode to fetch.
+     */
+    where: EquipmentErrorCodeWhereUniqueInput
+  }
+
+  /**
+   * EquipmentErrorCode findUniqueOrThrow
+   */
+  export type EquipmentErrorCodeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which EquipmentErrorCode to fetch.
+     */
+    where: EquipmentErrorCodeWhereUniqueInput
+  }
+
+  /**
+   * EquipmentErrorCode findFirst
+   */
+  export type EquipmentErrorCodeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which EquipmentErrorCode to fetch.
+     */
+    where?: EquipmentErrorCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EquipmentErrorCodes to fetch.
+     */
+    orderBy?: EquipmentErrorCodeOrderByWithRelationInput | EquipmentErrorCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EquipmentErrorCodes.
+     */
+    cursor?: EquipmentErrorCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EquipmentErrorCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EquipmentErrorCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EquipmentErrorCodes.
+     */
+    distinct?: EquipmentErrorCodeScalarFieldEnum | EquipmentErrorCodeScalarFieldEnum[]
+  }
+
+  /**
+   * EquipmentErrorCode findFirstOrThrow
+   */
+  export type EquipmentErrorCodeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which EquipmentErrorCode to fetch.
+     */
+    where?: EquipmentErrorCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EquipmentErrorCodes to fetch.
+     */
+    orderBy?: EquipmentErrorCodeOrderByWithRelationInput | EquipmentErrorCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EquipmentErrorCodes.
+     */
+    cursor?: EquipmentErrorCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EquipmentErrorCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EquipmentErrorCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EquipmentErrorCodes.
+     */
+    distinct?: EquipmentErrorCodeScalarFieldEnum | EquipmentErrorCodeScalarFieldEnum[]
+  }
+
+  /**
+   * EquipmentErrorCode findMany
+   */
+  export type EquipmentErrorCodeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which EquipmentErrorCodes to fetch.
+     */
+    where?: EquipmentErrorCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EquipmentErrorCodes to fetch.
+     */
+    orderBy?: EquipmentErrorCodeOrderByWithRelationInput | EquipmentErrorCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing EquipmentErrorCodes.
+     */
+    cursor?: EquipmentErrorCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EquipmentErrorCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EquipmentErrorCodes.
+     */
+    skip?: number
+    distinct?: EquipmentErrorCodeScalarFieldEnum | EquipmentErrorCodeScalarFieldEnum[]
+  }
+
+  /**
+   * EquipmentErrorCode create
+   */
+  export type EquipmentErrorCodeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    /**
+     * The data needed to create a EquipmentErrorCode.
+     */
+    data: XOR<EquipmentErrorCodeCreateInput, EquipmentErrorCodeUncheckedCreateInput>
+  }
+
+  /**
+   * EquipmentErrorCode createMany
+   */
+  export type EquipmentErrorCodeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many EquipmentErrorCodes.
+     */
+    data: EquipmentErrorCodeCreateManyInput | EquipmentErrorCodeCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * EquipmentErrorCode createManyAndReturn
+   */
+  export type EquipmentErrorCodeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many EquipmentErrorCodes.
+     */
+    data: EquipmentErrorCodeCreateManyInput | EquipmentErrorCodeCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * EquipmentErrorCode update
+   */
+  export type EquipmentErrorCodeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    /**
+     * The data needed to update a EquipmentErrorCode.
+     */
+    data: XOR<EquipmentErrorCodeUpdateInput, EquipmentErrorCodeUncheckedUpdateInput>
+    /**
+     * Choose, which EquipmentErrorCode to update.
+     */
+    where: EquipmentErrorCodeWhereUniqueInput
+  }
+
+  /**
+   * EquipmentErrorCode updateMany
+   */
+  export type EquipmentErrorCodeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update EquipmentErrorCodes.
+     */
+    data: XOR<EquipmentErrorCodeUpdateManyMutationInput, EquipmentErrorCodeUncheckedUpdateManyInput>
+    /**
+     * Filter which EquipmentErrorCodes to update
+     */
+    where?: EquipmentErrorCodeWhereInput
+  }
+
+  /**
+   * EquipmentErrorCode upsert
+   */
+  export type EquipmentErrorCodeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    /**
+     * The filter to search for the EquipmentErrorCode to update in case it exists.
+     */
+    where: EquipmentErrorCodeWhereUniqueInput
+    /**
+     * In case the EquipmentErrorCode found by the `where` argument doesn't exist, create a new EquipmentErrorCode with this data.
+     */
+    create: XOR<EquipmentErrorCodeCreateInput, EquipmentErrorCodeUncheckedCreateInput>
+    /**
+     * In case the EquipmentErrorCode was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<EquipmentErrorCodeUpdateInput, EquipmentErrorCodeUncheckedUpdateInput>
+  }
+
+  /**
+   * EquipmentErrorCode delete
+   */
+  export type EquipmentErrorCodeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+    /**
+     * Filter which EquipmentErrorCode to delete.
+     */
+    where: EquipmentErrorCodeWhereUniqueInput
+  }
+
+  /**
+   * EquipmentErrorCode deleteMany
+   */
+  export type EquipmentErrorCodeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EquipmentErrorCodes to delete
+     */
+    where?: EquipmentErrorCodeWhereInput
+  }
+
+  /**
+   * EquipmentErrorCode without action
+   */
+  export type EquipmentErrorCodeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EquipmentErrorCode
+     */
+    select?: EquipmentErrorCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentErrorCodeInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model DocumentTemplate
+   */
+
+  export type AggregateDocumentTemplate = {
+    _count: DocumentTemplateCountAggregateOutputType | null
+    _avg: DocumentTemplateAvgAggregateOutputType | null
+    _sum: DocumentTemplateSumAggregateOutputType | null
+    _min: DocumentTemplateMinAggregateOutputType | null
+    _max: DocumentTemplateMaxAggregateOutputType | null
+  }
+
+  export type DocumentTemplateAvgAggregateOutputType = {
+    letterheadTopMarginPx: number | null
+    letterheadBottomMarginPx: number | null
+  }
+
+  export type DocumentTemplateSumAggregateOutputType = {
+    letterheadTopMarginPx: number | null
+    letterheadBottomMarginPx: number | null
+  }
+
+  export type DocumentTemplateMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    documentType: string | null
+    name: string | null
+    isDefault: boolean | null
+    mode: string | null
+    companyName: string | null
+    companyAddress: string | null
+    logoUrl: string | null
+    logoPosition: string | null
+    accentColor: string | null
+    headerText: string | null
+    footerText: string | null
+    bankDetails: string | null
+    showPageNumbers: boolean | null
+    letterheadImageUrl: string | null
+    letterheadTopMarginPx: number | null
+    letterheadBottomMarginPx: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DocumentTemplateMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    documentType: string | null
+    name: string | null
+    isDefault: boolean | null
+    mode: string | null
+    companyName: string | null
+    companyAddress: string | null
+    logoUrl: string | null
+    logoPosition: string | null
+    accentColor: string | null
+    headerText: string | null
+    footerText: string | null
+    bankDetails: string | null
+    showPageNumbers: boolean | null
+    letterheadImageUrl: string | null
+    letterheadTopMarginPx: number | null
+    letterheadBottomMarginPx: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DocumentTemplateCountAggregateOutputType = {
+    id: number
+    companyId: number
+    documentType: number
+    name: number
+    isDefault: number
+    mode: number
+    companyName: number
+    companyAddress: number
+    logoUrl: number
+    logoPosition: number
+    accentColor: number
+    headerText: number
+    footerText: number
+    bankDetails: number
+    showPageNumbers: number
+    rows: number
+    letterheadImageUrl: number
+    letterheadTopMarginPx: number
+    letterheadBottomMarginPx: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DocumentTemplateAvgAggregateInputType = {
+    letterheadTopMarginPx?: true
+    letterheadBottomMarginPx?: true
+  }
+
+  export type DocumentTemplateSumAggregateInputType = {
+    letterheadTopMarginPx?: true
+    letterheadBottomMarginPx?: true
+  }
+
+  export type DocumentTemplateMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    documentType?: true
+    name?: true
+    isDefault?: true
+    mode?: true
+    companyName?: true
+    companyAddress?: true
+    logoUrl?: true
+    logoPosition?: true
+    accentColor?: true
+    headerText?: true
+    footerText?: true
+    bankDetails?: true
+    showPageNumbers?: true
+    letterheadImageUrl?: true
+    letterheadTopMarginPx?: true
+    letterheadBottomMarginPx?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DocumentTemplateMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    documentType?: true
+    name?: true
+    isDefault?: true
+    mode?: true
+    companyName?: true
+    companyAddress?: true
+    logoUrl?: true
+    logoPosition?: true
+    accentColor?: true
+    headerText?: true
+    footerText?: true
+    bankDetails?: true
+    showPageNumbers?: true
+    letterheadImageUrl?: true
+    letterheadTopMarginPx?: true
+    letterheadBottomMarginPx?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DocumentTemplateCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    documentType?: true
+    name?: true
+    isDefault?: true
+    mode?: true
+    companyName?: true
+    companyAddress?: true
+    logoUrl?: true
+    logoPosition?: true
+    accentColor?: true
+    headerText?: true
+    footerText?: true
+    bankDetails?: true
+    showPageNumbers?: true
+    rows?: true
+    letterheadImageUrl?: true
+    letterheadTopMarginPx?: true
+    letterheadBottomMarginPx?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DocumentTemplateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DocumentTemplate to aggregate.
+     */
+    where?: DocumentTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DocumentTemplates to fetch.
+     */
+    orderBy?: DocumentTemplateOrderByWithRelationInput | DocumentTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DocumentTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DocumentTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DocumentTemplates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DocumentTemplates
+    **/
+    _count?: true | DocumentTemplateCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DocumentTemplateAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DocumentTemplateSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DocumentTemplateMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DocumentTemplateMaxAggregateInputType
+  }
+
+  export type GetDocumentTemplateAggregateType<T extends DocumentTemplateAggregateArgs> = {
+        [P in keyof T & keyof AggregateDocumentTemplate]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDocumentTemplate[P]>
+      : GetScalarType<T[P], AggregateDocumentTemplate[P]>
+  }
+
+
+
+
+  export type DocumentTemplateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentTemplateWhereInput
+    orderBy?: DocumentTemplateOrderByWithAggregationInput | DocumentTemplateOrderByWithAggregationInput[]
+    by: DocumentTemplateScalarFieldEnum[] | DocumentTemplateScalarFieldEnum
+    having?: DocumentTemplateScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DocumentTemplateCountAggregateInputType | true
+    _avg?: DocumentTemplateAvgAggregateInputType
+    _sum?: DocumentTemplateSumAggregateInputType
+    _min?: DocumentTemplateMinAggregateInputType
+    _max?: DocumentTemplateMaxAggregateInputType
+  }
+
+  export type DocumentTemplateGroupByOutputType = {
+    id: string
+    companyId: string
+    documentType: string
+    name: string
+    isDefault: boolean
+    mode: string
+    companyName: string | null
+    companyAddress: string | null
+    logoUrl: string | null
+    logoPosition: string | null
+    accentColor: string | null
+    headerText: string | null
+    footerText: string | null
+    bankDetails: string | null
+    showPageNumbers: boolean
+    rows: JsonValue | null
+    letterheadImageUrl: string | null
+    letterheadTopMarginPx: number | null
+    letterheadBottomMarginPx: number | null
+    createdAt: Date
+    updatedAt: Date
+    _count: DocumentTemplateCountAggregateOutputType | null
+    _avg: DocumentTemplateAvgAggregateOutputType | null
+    _sum: DocumentTemplateSumAggregateOutputType | null
+    _min: DocumentTemplateMinAggregateOutputType | null
+    _max: DocumentTemplateMaxAggregateOutputType | null
+  }
+
+  type GetDocumentTemplateGroupByPayload<T extends DocumentTemplateGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DocumentTemplateGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DocumentTemplateGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DocumentTemplateGroupByOutputType[P]>
+            : GetScalarType<T[P], DocumentTemplateGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DocumentTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    documentType?: boolean
+    name?: boolean
+    isDefault?: boolean
+    mode?: boolean
+    companyName?: boolean
+    companyAddress?: boolean
+    logoUrl?: boolean
+    logoPosition?: boolean
+    accentColor?: boolean
+    headerText?: boolean
+    footerText?: boolean
+    bankDetails?: boolean
+    showPageNumbers?: boolean
+    rows?: boolean
+    letterheadImageUrl?: boolean
+    letterheadTopMarginPx?: boolean
+    letterheadBottomMarginPx?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["documentTemplate"]>
+
+  export type DocumentTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    documentType?: boolean
+    name?: boolean
+    isDefault?: boolean
+    mode?: boolean
+    companyName?: boolean
+    companyAddress?: boolean
+    logoUrl?: boolean
+    logoPosition?: boolean
+    accentColor?: boolean
+    headerText?: boolean
+    footerText?: boolean
+    bankDetails?: boolean
+    showPageNumbers?: boolean
+    rows?: boolean
+    letterheadImageUrl?: boolean
+    letterheadTopMarginPx?: boolean
+    letterheadBottomMarginPx?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["documentTemplate"]>
+
+  export type DocumentTemplateSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    documentType?: boolean
+    name?: boolean
+    isDefault?: boolean
+    mode?: boolean
+    companyName?: boolean
+    companyAddress?: boolean
+    logoUrl?: boolean
+    logoPosition?: boolean
+    accentColor?: boolean
+    headerText?: boolean
+    footerText?: boolean
+    bankDetails?: boolean
+    showPageNumbers?: boolean
+    rows?: boolean
+    letterheadImageUrl?: boolean
+    letterheadTopMarginPx?: boolean
+    letterheadBottomMarginPx?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $DocumentTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DocumentTemplate"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      documentType: string
+      name: string
+      isDefault: boolean
+      mode: string
+      companyName: string | null
+      companyAddress: string | null
+      logoUrl: string | null
+      logoPosition: string | null
+      accentColor: string | null
+      headerText: string | null
+      footerText: string | null
+      bankDetails: string | null
+      showPageNumbers: boolean
+      rows: Prisma.JsonValue | null
+      letterheadImageUrl: string | null
+      letterheadTopMarginPx: number | null
+      letterheadBottomMarginPx: number | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["documentTemplate"]>
+    composites: {}
+  }
+
+  type DocumentTemplateGetPayload<S extends boolean | null | undefined | DocumentTemplateDefaultArgs> = $Result.GetResult<Prisma.$DocumentTemplatePayload, S>
+
+  type DocumentTemplateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<DocumentTemplateFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: DocumentTemplateCountAggregateInputType | true
+    }
+
+  export interface DocumentTemplateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DocumentTemplate'], meta: { name: 'DocumentTemplate' } }
+    /**
+     * Find zero or one DocumentTemplate that matches the filter.
+     * @param {DocumentTemplateFindUniqueArgs} args - Arguments to find a DocumentTemplate
+     * @example
+     * // Get one DocumentTemplate
+     * const documentTemplate = await prisma.documentTemplate.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DocumentTemplateFindUniqueArgs>(args: SelectSubset<T, DocumentTemplateFindUniqueArgs<ExtArgs>>): Prisma__DocumentTemplateClient<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one DocumentTemplate that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {DocumentTemplateFindUniqueOrThrowArgs} args - Arguments to find a DocumentTemplate
+     * @example
+     * // Get one DocumentTemplate
+     * const documentTemplate = await prisma.documentTemplate.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DocumentTemplateFindUniqueOrThrowArgs>(args: SelectSubset<T, DocumentTemplateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DocumentTemplateClient<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first DocumentTemplate that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentTemplateFindFirstArgs} args - Arguments to find a DocumentTemplate
+     * @example
+     * // Get one DocumentTemplate
+     * const documentTemplate = await prisma.documentTemplate.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DocumentTemplateFindFirstArgs>(args?: SelectSubset<T, DocumentTemplateFindFirstArgs<ExtArgs>>): Prisma__DocumentTemplateClient<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first DocumentTemplate that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentTemplateFindFirstOrThrowArgs} args - Arguments to find a DocumentTemplate
+     * @example
+     * // Get one DocumentTemplate
+     * const documentTemplate = await prisma.documentTemplate.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DocumentTemplateFindFirstOrThrowArgs>(args?: SelectSubset<T, DocumentTemplateFindFirstOrThrowArgs<ExtArgs>>): Prisma__DocumentTemplateClient<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more DocumentTemplates that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentTemplateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DocumentTemplates
+     * const documentTemplates = await prisma.documentTemplate.findMany()
+     * 
+     * // Get first 10 DocumentTemplates
+     * const documentTemplates = await prisma.documentTemplate.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const documentTemplateWithIdOnly = await prisma.documentTemplate.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DocumentTemplateFindManyArgs>(args?: SelectSubset<T, DocumentTemplateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a DocumentTemplate.
+     * @param {DocumentTemplateCreateArgs} args - Arguments to create a DocumentTemplate.
+     * @example
+     * // Create one DocumentTemplate
+     * const DocumentTemplate = await prisma.documentTemplate.create({
+     *   data: {
+     *     // ... data to create a DocumentTemplate
+     *   }
+     * })
+     * 
+     */
+    create<T extends DocumentTemplateCreateArgs>(args: SelectSubset<T, DocumentTemplateCreateArgs<ExtArgs>>): Prisma__DocumentTemplateClient<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many DocumentTemplates.
+     * @param {DocumentTemplateCreateManyArgs} args - Arguments to create many DocumentTemplates.
+     * @example
+     * // Create many DocumentTemplates
+     * const documentTemplate = await prisma.documentTemplate.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DocumentTemplateCreateManyArgs>(args?: SelectSubset<T, DocumentTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many DocumentTemplates and returns the data saved in the database.
+     * @param {DocumentTemplateCreateManyAndReturnArgs} args - Arguments to create many DocumentTemplates.
+     * @example
+     * // Create many DocumentTemplates
+     * const documentTemplate = await prisma.documentTemplate.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many DocumentTemplates and only return the `id`
+     * const documentTemplateWithIdOnly = await prisma.documentTemplate.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DocumentTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, DocumentTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a DocumentTemplate.
+     * @param {DocumentTemplateDeleteArgs} args - Arguments to delete one DocumentTemplate.
+     * @example
+     * // Delete one DocumentTemplate
+     * const DocumentTemplate = await prisma.documentTemplate.delete({
+     *   where: {
+     *     // ... filter to delete one DocumentTemplate
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DocumentTemplateDeleteArgs>(args: SelectSubset<T, DocumentTemplateDeleteArgs<ExtArgs>>): Prisma__DocumentTemplateClient<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one DocumentTemplate.
+     * @param {DocumentTemplateUpdateArgs} args - Arguments to update one DocumentTemplate.
+     * @example
+     * // Update one DocumentTemplate
+     * const documentTemplate = await prisma.documentTemplate.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DocumentTemplateUpdateArgs>(args: SelectSubset<T, DocumentTemplateUpdateArgs<ExtArgs>>): Prisma__DocumentTemplateClient<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more DocumentTemplates.
+     * @param {DocumentTemplateDeleteManyArgs} args - Arguments to filter DocumentTemplates to delete.
+     * @example
+     * // Delete a few DocumentTemplates
+     * const { count } = await prisma.documentTemplate.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DocumentTemplateDeleteManyArgs>(args?: SelectSubset<T, DocumentTemplateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DocumentTemplates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentTemplateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DocumentTemplates
+     * const documentTemplate = await prisma.documentTemplate.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DocumentTemplateUpdateManyArgs>(args: SelectSubset<T, DocumentTemplateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one DocumentTemplate.
+     * @param {DocumentTemplateUpsertArgs} args - Arguments to update or create a DocumentTemplate.
+     * @example
+     * // Update or create a DocumentTemplate
+     * const documentTemplate = await prisma.documentTemplate.upsert({
+     *   create: {
+     *     // ... data to create a DocumentTemplate
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DocumentTemplate we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DocumentTemplateUpsertArgs>(args: SelectSubset<T, DocumentTemplateUpsertArgs<ExtArgs>>): Prisma__DocumentTemplateClient<$Result.GetResult<Prisma.$DocumentTemplatePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of DocumentTemplates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentTemplateCountArgs} args - Arguments to filter DocumentTemplates to count.
+     * @example
+     * // Count the number of DocumentTemplates
+     * const count = await prisma.documentTemplate.count({
+     *   where: {
+     *     // ... the filter for the DocumentTemplates we want to count
+     *   }
+     * })
+    **/
+    count<T extends DocumentTemplateCountArgs>(
+      args?: Subset<T, DocumentTemplateCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DocumentTemplateCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DocumentTemplate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentTemplateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DocumentTemplateAggregateArgs>(args: Subset<T, DocumentTemplateAggregateArgs>): Prisma.PrismaPromise<GetDocumentTemplateAggregateType<T>>
+
+    /**
+     * Group by DocumentTemplate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentTemplateGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DocumentTemplateGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DocumentTemplateGroupByArgs['orderBy'] }
+        : { orderBy?: DocumentTemplateGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DocumentTemplateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDocumentTemplateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DocumentTemplate model
+   */
+  readonly fields: DocumentTemplateFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DocumentTemplate.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DocumentTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the DocumentTemplate model
+   */ 
+  interface DocumentTemplateFieldRefs {
+    readonly id: FieldRef<"DocumentTemplate", 'String'>
+    readonly companyId: FieldRef<"DocumentTemplate", 'String'>
+    readonly documentType: FieldRef<"DocumentTemplate", 'String'>
+    readonly name: FieldRef<"DocumentTemplate", 'String'>
+    readonly isDefault: FieldRef<"DocumentTemplate", 'Boolean'>
+    readonly mode: FieldRef<"DocumentTemplate", 'String'>
+    readonly companyName: FieldRef<"DocumentTemplate", 'String'>
+    readonly companyAddress: FieldRef<"DocumentTemplate", 'String'>
+    readonly logoUrl: FieldRef<"DocumentTemplate", 'String'>
+    readonly logoPosition: FieldRef<"DocumentTemplate", 'String'>
+    readonly accentColor: FieldRef<"DocumentTemplate", 'String'>
+    readonly headerText: FieldRef<"DocumentTemplate", 'String'>
+    readonly footerText: FieldRef<"DocumentTemplate", 'String'>
+    readonly bankDetails: FieldRef<"DocumentTemplate", 'String'>
+    readonly showPageNumbers: FieldRef<"DocumentTemplate", 'Boolean'>
+    readonly rows: FieldRef<"DocumentTemplate", 'Json'>
+    readonly letterheadImageUrl: FieldRef<"DocumentTemplate", 'String'>
+    readonly letterheadTopMarginPx: FieldRef<"DocumentTemplate", 'Int'>
+    readonly letterheadBottomMarginPx: FieldRef<"DocumentTemplate", 'Int'>
+    readonly createdAt: FieldRef<"DocumentTemplate", 'DateTime'>
+    readonly updatedAt: FieldRef<"DocumentTemplate", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * DocumentTemplate findUnique
+   */
+  export type DocumentTemplateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which DocumentTemplate to fetch.
+     */
+    where: DocumentTemplateWhereUniqueInput
+  }
+
+  /**
+   * DocumentTemplate findUniqueOrThrow
+   */
+  export type DocumentTemplateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which DocumentTemplate to fetch.
+     */
+    where: DocumentTemplateWhereUniqueInput
+  }
+
+  /**
+   * DocumentTemplate findFirst
+   */
+  export type DocumentTemplateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which DocumentTemplate to fetch.
+     */
+    where?: DocumentTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DocumentTemplates to fetch.
+     */
+    orderBy?: DocumentTemplateOrderByWithRelationInput | DocumentTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DocumentTemplates.
+     */
+    cursor?: DocumentTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DocumentTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DocumentTemplates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DocumentTemplates.
+     */
+    distinct?: DocumentTemplateScalarFieldEnum | DocumentTemplateScalarFieldEnum[]
+  }
+
+  /**
+   * DocumentTemplate findFirstOrThrow
+   */
+  export type DocumentTemplateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which DocumentTemplate to fetch.
+     */
+    where?: DocumentTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DocumentTemplates to fetch.
+     */
+    orderBy?: DocumentTemplateOrderByWithRelationInput | DocumentTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DocumentTemplates.
+     */
+    cursor?: DocumentTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DocumentTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DocumentTemplates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DocumentTemplates.
+     */
+    distinct?: DocumentTemplateScalarFieldEnum | DocumentTemplateScalarFieldEnum[]
+  }
+
+  /**
+   * DocumentTemplate findMany
+   */
+  export type DocumentTemplateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which DocumentTemplates to fetch.
+     */
+    where?: DocumentTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DocumentTemplates to fetch.
+     */
+    orderBy?: DocumentTemplateOrderByWithRelationInput | DocumentTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DocumentTemplates.
+     */
+    cursor?: DocumentTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DocumentTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DocumentTemplates.
+     */
+    skip?: number
+    distinct?: DocumentTemplateScalarFieldEnum | DocumentTemplateScalarFieldEnum[]
+  }
+
+  /**
+   * DocumentTemplate create
+   */
+  export type DocumentTemplateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
+    /**
+     * The data needed to create a DocumentTemplate.
+     */
+    data: XOR<DocumentTemplateCreateInput, DocumentTemplateUncheckedCreateInput>
+  }
+
+  /**
+   * DocumentTemplate createMany
+   */
+  export type DocumentTemplateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many DocumentTemplates.
+     */
+    data: DocumentTemplateCreateManyInput | DocumentTemplateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * DocumentTemplate createManyAndReturn
+   */
+  export type DocumentTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many DocumentTemplates.
+     */
+    data: DocumentTemplateCreateManyInput | DocumentTemplateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * DocumentTemplate update
+   */
+  export type DocumentTemplateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
+    /**
+     * The data needed to update a DocumentTemplate.
+     */
+    data: XOR<DocumentTemplateUpdateInput, DocumentTemplateUncheckedUpdateInput>
+    /**
+     * Choose, which DocumentTemplate to update.
+     */
+    where: DocumentTemplateWhereUniqueInput
+  }
+
+  /**
+   * DocumentTemplate updateMany
+   */
+  export type DocumentTemplateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DocumentTemplates.
+     */
+    data: XOR<DocumentTemplateUpdateManyMutationInput, DocumentTemplateUncheckedUpdateManyInput>
+    /**
+     * Filter which DocumentTemplates to update
+     */
+    where?: DocumentTemplateWhereInput
+  }
+
+  /**
+   * DocumentTemplate upsert
+   */
+  export type DocumentTemplateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
+    /**
+     * The filter to search for the DocumentTemplate to update in case it exists.
+     */
+    where: DocumentTemplateWhereUniqueInput
+    /**
+     * In case the DocumentTemplate found by the `where` argument doesn't exist, create a new DocumentTemplate with this data.
+     */
+    create: XOR<DocumentTemplateCreateInput, DocumentTemplateUncheckedCreateInput>
+    /**
+     * In case the DocumentTemplate was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DocumentTemplateUpdateInput, DocumentTemplateUncheckedUpdateInput>
+  }
+
+  /**
+   * DocumentTemplate delete
+   */
+  export type DocumentTemplateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
+    /**
+     * Filter which DocumentTemplate to delete.
+     */
+    where: DocumentTemplateWhereUniqueInput
+  }
+
+  /**
+   * DocumentTemplate deleteMany
+   */
+  export type DocumentTemplateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DocumentTemplates to delete
+     */
+    where?: DocumentTemplateWhereInput
+  }
+
+  /**
+   * DocumentTemplate without action
+   */
+  export type DocumentTemplateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentTemplate
+     */
+    select?: DocumentTemplateSelect<ExtArgs> | null
   }
 
 
@@ -30333,7 +32679,7 @@ export namespace Prisma {
   export type ProjectGroupByOutputType = {
     id: string
     companyId: string
-    customerId: string
+    customerId: string | null
     name: string
     description: string | null
     category: string | null
@@ -30460,7 +32806,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       companyId: string
-      customerId: string
+      customerId: string | null
       name: string
       description: string | null
       category: string | null
@@ -34485,6 +36831,7 @@ export namespace Prisma {
     signedAt: 'signedAt',
     signedByName: 'signedByName',
     documentUrl: 'documentUrl',
+    templateId: 'templateId',
     billingAmount: 'billingAmount',
     nextBillingDate: 'nextBillingDate',
     serviceType: 'serviceType',
@@ -34498,6 +36845,7 @@ export namespace Prisma {
     leadDays: 'leadDays',
     jobTemplateId: 'jobTemplateId',
     projectId: 'projectId',
+    houseId: 'houseId',
     customerConfirmedAt: 'customerConfirmedAt',
     confirmToken: 'confirmToken',
     renewalReminderSent: 'renewalReminderSent',
@@ -34600,10 +36948,55 @@ export namespace Prisma {
     importBatchId: 'importBatchId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
-    manualUrl: 'manualUrl'
+    manualUrl: 'manualUrl',
+    imageUrl: 'imageUrl',
+    imageScanStatus: 'imageScanStatus',
+    imageScanResult: 'imageScanResult',
+    imageScanError: 'imageScanError'
   };
 
   export type EquipmentScalarFieldEnum = (typeof EquipmentScalarFieldEnum)[keyof typeof EquipmentScalarFieldEnum]
+
+
+  export const EquipmentErrorCodeScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    equipmentId: 'equipmentId',
+    code: 'code',
+    meaning: 'meaning',
+    source: 'source',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type EquipmentErrorCodeScalarFieldEnum = (typeof EquipmentErrorCodeScalarFieldEnum)[keyof typeof EquipmentErrorCodeScalarFieldEnum]
+
+
+  export const DocumentTemplateScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    documentType: 'documentType',
+    name: 'name',
+    isDefault: 'isDefault',
+    mode: 'mode',
+    companyName: 'companyName',
+    companyAddress: 'companyAddress',
+    logoUrl: 'logoUrl',
+    logoPosition: 'logoPosition',
+    accentColor: 'accentColor',
+    headerText: 'headerText',
+    footerText: 'footerText',
+    bankDetails: 'bankDetails',
+    showPageNumbers: 'showPageNumbers',
+    rows: 'rows',
+    letterheadImageUrl: 'letterheadImageUrl',
+    letterheadTopMarginPx: 'letterheadTopMarginPx',
+    letterheadBottomMarginPx: 'letterheadBottomMarginPx',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DocumentTemplateScalarFieldEnum = (typeof DocumentTemplateScalarFieldEnum)[keyof typeof DocumentTemplateScalarFieldEnum]
 
 
   export const EquipmentConsumableScalarFieldEnum: {
@@ -35935,6 +38328,7 @@ export namespace Prisma {
     signedAt?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     signedByName?: StringNullableFilter<"ServiceAgreement"> | string | null
     documentUrl?: StringNullableFilter<"ServiceAgreement"> | string | null
+    templateId?: StringNullableFilter<"ServiceAgreement"> | string | null
     billingAmount?: DecimalNullableFilter<"ServiceAgreement"> | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     serviceType?: StringNullableFilter<"ServiceAgreement"> | string | null
@@ -35948,6 +38342,7 @@ export namespace Prisma {
     leadDays?: IntFilter<"ServiceAgreement"> | number
     jobTemplateId?: StringNullableFilter<"ServiceAgreement"> | string | null
     projectId?: StringNullableFilter<"ServiceAgreement"> | string | null
+    houseId?: StringNullableFilter<"ServiceAgreement"> | string | null
     customerConfirmedAt?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     confirmToken?: StringNullableFilter<"ServiceAgreement"> | string | null
     renewalReminderSent?: BoolFilter<"ServiceAgreement"> | boolean
@@ -35974,6 +38369,7 @@ export namespace Prisma {
     signedAt?: SortOrderInput | SortOrder
     signedByName?: SortOrderInput | SortOrder
     documentUrl?: SortOrderInput | SortOrder
+    templateId?: SortOrderInput | SortOrder
     billingAmount?: SortOrderInput | SortOrder
     nextBillingDate?: SortOrderInput | SortOrder
     serviceType?: SortOrderInput | SortOrder
@@ -35987,6 +38383,7 @@ export namespace Prisma {
     leadDays?: SortOrder
     jobTemplateId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
+    houseId?: SortOrderInput | SortOrder
     customerConfirmedAt?: SortOrderInput | SortOrder
     confirmToken?: SortOrderInput | SortOrder
     renewalReminderSent?: SortOrder
@@ -36017,6 +38414,7 @@ export namespace Prisma {
     signedAt?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     signedByName?: StringNullableFilter<"ServiceAgreement"> | string | null
     documentUrl?: StringNullableFilter<"ServiceAgreement"> | string | null
+    templateId?: StringNullableFilter<"ServiceAgreement"> | string | null
     billingAmount?: DecimalNullableFilter<"ServiceAgreement"> | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     serviceType?: StringNullableFilter<"ServiceAgreement"> | string | null
@@ -36030,6 +38428,7 @@ export namespace Prisma {
     leadDays?: IntFilter<"ServiceAgreement"> | number
     jobTemplateId?: StringNullableFilter<"ServiceAgreement"> | string | null
     projectId?: StringNullableFilter<"ServiceAgreement"> | string | null
+    houseId?: StringNullableFilter<"ServiceAgreement"> | string | null
     customerConfirmedAt?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     renewalReminderSent?: BoolFilter<"ServiceAgreement"> | boolean
     renewedFromId?: StringNullableFilter<"ServiceAgreement"> | string | null
@@ -36055,6 +38454,7 @@ export namespace Prisma {
     signedAt?: SortOrderInput | SortOrder
     signedByName?: SortOrderInput | SortOrder
     documentUrl?: SortOrderInput | SortOrder
+    templateId?: SortOrderInput | SortOrder
     billingAmount?: SortOrderInput | SortOrder
     nextBillingDate?: SortOrderInput | SortOrder
     serviceType?: SortOrderInput | SortOrder
@@ -36068,6 +38468,7 @@ export namespace Prisma {
     leadDays?: SortOrder
     jobTemplateId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
+    houseId?: SortOrderInput | SortOrder
     customerConfirmedAt?: SortOrderInput | SortOrder
     confirmToken?: SortOrderInput | SortOrder
     renewalReminderSent?: SortOrder
@@ -36099,6 +38500,7 @@ export namespace Prisma {
     signedAt?: DateTimeNullableWithAggregatesFilter<"ServiceAgreement"> | Date | string | null
     signedByName?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
     documentUrl?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
+    templateId?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
     billingAmount?: DecimalNullableWithAggregatesFilter<"ServiceAgreement"> | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: DateTimeNullableWithAggregatesFilter<"ServiceAgreement"> | Date | string | null
     serviceType?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
@@ -36112,6 +38514,7 @@ export namespace Prisma {
     leadDays?: IntWithAggregatesFilter<"ServiceAgreement"> | number
     jobTemplateId?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
     projectId?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
+    houseId?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
     customerConfirmedAt?: DateTimeNullableWithAggregatesFilter<"ServiceAgreement"> | Date | string | null
     confirmToken?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
     renewalReminderSent?: BoolWithAggregatesFilter<"ServiceAgreement"> | boolean
@@ -36527,10 +38930,15 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Equipment"> | Date | string
     updatedAt?: DateTimeFilter<"Equipment"> | Date | string
     manualUrl?: StringNullableFilter<"Equipment"> | string | null
+    imageUrl?: StringNullableFilter<"Equipment"> | string | null
+    imageScanStatus?: StringFilter<"Equipment"> | string
+    imageScanResult?: JsonNullableFilter<"Equipment">
+    imageScanError?: StringNullableFilter<"Equipment"> | string | null
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
     house?: XOR<HouseNullableRelationFilter, HouseWhereInput> | null
     consumables?: EquipmentConsumableListRelationFilter
     issueReports?: HouseIssueReportListRelationFilter
+    errorCodes?: EquipmentErrorCodeListRelationFilter
   }
 
   export type EquipmentOrderByWithRelationInput = {
@@ -36549,10 +38957,15 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     manualUrl?: SortOrderInput | SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    imageScanStatus?: SortOrder
+    imageScanResult?: SortOrderInput | SortOrder
+    imageScanError?: SortOrderInput | SortOrder
     customer?: CustomerOrderByWithRelationInput
     house?: HouseOrderByWithRelationInput
     consumables?: EquipmentConsumableOrderByRelationAggregateInput
     issueReports?: HouseIssueReportOrderByRelationAggregateInput
+    errorCodes?: EquipmentErrorCodeOrderByRelationAggregateInput
   }
 
   export type EquipmentWhereUniqueInput = Prisma.AtLeast<{
@@ -36574,10 +38987,15 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Equipment"> | Date | string
     updatedAt?: DateTimeFilter<"Equipment"> | Date | string
     manualUrl?: StringNullableFilter<"Equipment"> | string | null
+    imageUrl?: StringNullableFilter<"Equipment"> | string | null
+    imageScanStatus?: StringFilter<"Equipment"> | string
+    imageScanResult?: JsonNullableFilter<"Equipment">
+    imageScanError?: StringNullableFilter<"Equipment"> | string | null
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
     house?: XOR<HouseNullableRelationFilter, HouseWhereInput> | null
     consumables?: EquipmentConsumableListRelationFilter
     issueReports?: HouseIssueReportListRelationFilter
+    errorCodes?: EquipmentErrorCodeListRelationFilter
   }, "id">
 
   export type EquipmentOrderByWithAggregationInput = {
@@ -36596,6 +39014,10 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     manualUrl?: SortOrderInput | SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    imageScanStatus?: SortOrder
+    imageScanResult?: SortOrderInput | SortOrder
+    imageScanError?: SortOrderInput | SortOrder
     _count?: EquipmentCountOrderByAggregateInput
     _max?: EquipmentMaxOrderByAggregateInput
     _min?: EquipmentMinOrderByAggregateInput
@@ -36620,6 +39042,215 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"Equipment"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Equipment"> | Date | string
     manualUrl?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
+    imageUrl?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
+    imageScanStatus?: StringWithAggregatesFilter<"Equipment"> | string
+    imageScanResult?: JsonNullableWithAggregatesFilter<"Equipment">
+    imageScanError?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
+  }
+
+  export type EquipmentErrorCodeWhereInput = {
+    AND?: EquipmentErrorCodeWhereInput | EquipmentErrorCodeWhereInput[]
+    OR?: EquipmentErrorCodeWhereInput[]
+    NOT?: EquipmentErrorCodeWhereInput | EquipmentErrorCodeWhereInput[]
+    id?: StringFilter<"EquipmentErrorCode"> | string
+    companyId?: StringFilter<"EquipmentErrorCode"> | string
+    equipmentId?: StringFilter<"EquipmentErrorCode"> | string
+    code?: StringFilter<"EquipmentErrorCode"> | string
+    meaning?: StringNullableFilter<"EquipmentErrorCode"> | string | null
+    source?: StringFilter<"EquipmentErrorCode"> | string
+    createdAt?: DateTimeFilter<"EquipmentErrorCode"> | Date | string
+    updatedAt?: DateTimeFilter<"EquipmentErrorCode"> | Date | string
+    equipment?: XOR<EquipmentRelationFilter, EquipmentWhereInput>
+  }
+
+  export type EquipmentErrorCodeOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    equipmentId?: SortOrder
+    code?: SortOrder
+    meaning?: SortOrderInput | SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    equipment?: EquipmentOrderByWithRelationInput
+  }
+
+  export type EquipmentErrorCodeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: EquipmentErrorCodeWhereInput | EquipmentErrorCodeWhereInput[]
+    OR?: EquipmentErrorCodeWhereInput[]
+    NOT?: EquipmentErrorCodeWhereInput | EquipmentErrorCodeWhereInput[]
+    companyId?: StringFilter<"EquipmentErrorCode"> | string
+    equipmentId?: StringFilter<"EquipmentErrorCode"> | string
+    code?: StringFilter<"EquipmentErrorCode"> | string
+    meaning?: StringNullableFilter<"EquipmentErrorCode"> | string | null
+    source?: StringFilter<"EquipmentErrorCode"> | string
+    createdAt?: DateTimeFilter<"EquipmentErrorCode"> | Date | string
+    updatedAt?: DateTimeFilter<"EquipmentErrorCode"> | Date | string
+    equipment?: XOR<EquipmentRelationFilter, EquipmentWhereInput>
+  }, "id">
+
+  export type EquipmentErrorCodeOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    equipmentId?: SortOrder
+    code?: SortOrder
+    meaning?: SortOrderInput | SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: EquipmentErrorCodeCountOrderByAggregateInput
+    _max?: EquipmentErrorCodeMaxOrderByAggregateInput
+    _min?: EquipmentErrorCodeMinOrderByAggregateInput
+  }
+
+  export type EquipmentErrorCodeScalarWhereWithAggregatesInput = {
+    AND?: EquipmentErrorCodeScalarWhereWithAggregatesInput | EquipmentErrorCodeScalarWhereWithAggregatesInput[]
+    OR?: EquipmentErrorCodeScalarWhereWithAggregatesInput[]
+    NOT?: EquipmentErrorCodeScalarWhereWithAggregatesInput | EquipmentErrorCodeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"EquipmentErrorCode"> | string
+    companyId?: StringWithAggregatesFilter<"EquipmentErrorCode"> | string
+    equipmentId?: StringWithAggregatesFilter<"EquipmentErrorCode"> | string
+    code?: StringWithAggregatesFilter<"EquipmentErrorCode"> | string
+    meaning?: StringNullableWithAggregatesFilter<"EquipmentErrorCode"> | string | null
+    source?: StringWithAggregatesFilter<"EquipmentErrorCode"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"EquipmentErrorCode"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"EquipmentErrorCode"> | Date | string
+  }
+
+  export type DocumentTemplateWhereInput = {
+    AND?: DocumentTemplateWhereInput | DocumentTemplateWhereInput[]
+    OR?: DocumentTemplateWhereInput[]
+    NOT?: DocumentTemplateWhereInput | DocumentTemplateWhereInput[]
+    id?: StringFilter<"DocumentTemplate"> | string
+    companyId?: StringFilter<"DocumentTemplate"> | string
+    documentType?: StringFilter<"DocumentTemplate"> | string
+    name?: StringFilter<"DocumentTemplate"> | string
+    isDefault?: BoolFilter<"DocumentTemplate"> | boolean
+    mode?: StringFilter<"DocumentTemplate"> | string
+    companyName?: StringNullableFilter<"DocumentTemplate"> | string | null
+    companyAddress?: StringNullableFilter<"DocumentTemplate"> | string | null
+    logoUrl?: StringNullableFilter<"DocumentTemplate"> | string | null
+    logoPosition?: StringNullableFilter<"DocumentTemplate"> | string | null
+    accentColor?: StringNullableFilter<"DocumentTemplate"> | string | null
+    headerText?: StringNullableFilter<"DocumentTemplate"> | string | null
+    footerText?: StringNullableFilter<"DocumentTemplate"> | string | null
+    bankDetails?: StringNullableFilter<"DocumentTemplate"> | string | null
+    showPageNumbers?: BoolFilter<"DocumentTemplate"> | boolean
+    rows?: JsonNullableFilter<"DocumentTemplate">
+    letterheadImageUrl?: StringNullableFilter<"DocumentTemplate"> | string | null
+    letterheadTopMarginPx?: IntNullableFilter<"DocumentTemplate"> | number | null
+    letterheadBottomMarginPx?: IntNullableFilter<"DocumentTemplate"> | number | null
+    createdAt?: DateTimeFilter<"DocumentTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"DocumentTemplate"> | Date | string
+  }
+
+  export type DocumentTemplateOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    documentType?: SortOrder
+    name?: SortOrder
+    isDefault?: SortOrder
+    mode?: SortOrder
+    companyName?: SortOrderInput | SortOrder
+    companyAddress?: SortOrderInput | SortOrder
+    logoUrl?: SortOrderInput | SortOrder
+    logoPosition?: SortOrderInput | SortOrder
+    accentColor?: SortOrderInput | SortOrder
+    headerText?: SortOrderInput | SortOrder
+    footerText?: SortOrderInput | SortOrder
+    bankDetails?: SortOrderInput | SortOrder
+    showPageNumbers?: SortOrder
+    rows?: SortOrderInput | SortOrder
+    letterheadImageUrl?: SortOrderInput | SortOrder
+    letterheadTopMarginPx?: SortOrderInput | SortOrder
+    letterheadBottomMarginPx?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentTemplateWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    companyId_documentType_name?: DocumentTemplateCompanyIdDocumentTypeNameCompoundUniqueInput
+    AND?: DocumentTemplateWhereInput | DocumentTemplateWhereInput[]
+    OR?: DocumentTemplateWhereInput[]
+    NOT?: DocumentTemplateWhereInput | DocumentTemplateWhereInput[]
+    companyId?: StringFilter<"DocumentTemplate"> | string
+    documentType?: StringFilter<"DocumentTemplate"> | string
+    name?: StringFilter<"DocumentTemplate"> | string
+    isDefault?: BoolFilter<"DocumentTemplate"> | boolean
+    mode?: StringFilter<"DocumentTemplate"> | string
+    companyName?: StringNullableFilter<"DocumentTemplate"> | string | null
+    companyAddress?: StringNullableFilter<"DocumentTemplate"> | string | null
+    logoUrl?: StringNullableFilter<"DocumentTemplate"> | string | null
+    logoPosition?: StringNullableFilter<"DocumentTemplate"> | string | null
+    accentColor?: StringNullableFilter<"DocumentTemplate"> | string | null
+    headerText?: StringNullableFilter<"DocumentTemplate"> | string | null
+    footerText?: StringNullableFilter<"DocumentTemplate"> | string | null
+    bankDetails?: StringNullableFilter<"DocumentTemplate"> | string | null
+    showPageNumbers?: BoolFilter<"DocumentTemplate"> | boolean
+    rows?: JsonNullableFilter<"DocumentTemplate">
+    letterheadImageUrl?: StringNullableFilter<"DocumentTemplate"> | string | null
+    letterheadTopMarginPx?: IntNullableFilter<"DocumentTemplate"> | number | null
+    letterheadBottomMarginPx?: IntNullableFilter<"DocumentTemplate"> | number | null
+    createdAt?: DateTimeFilter<"DocumentTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"DocumentTemplate"> | Date | string
+  }, "id" | "companyId_documentType_name">
+
+  export type DocumentTemplateOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    documentType?: SortOrder
+    name?: SortOrder
+    isDefault?: SortOrder
+    mode?: SortOrder
+    companyName?: SortOrderInput | SortOrder
+    companyAddress?: SortOrderInput | SortOrder
+    logoUrl?: SortOrderInput | SortOrder
+    logoPosition?: SortOrderInput | SortOrder
+    accentColor?: SortOrderInput | SortOrder
+    headerText?: SortOrderInput | SortOrder
+    footerText?: SortOrderInput | SortOrder
+    bankDetails?: SortOrderInput | SortOrder
+    showPageNumbers?: SortOrder
+    rows?: SortOrderInput | SortOrder
+    letterheadImageUrl?: SortOrderInput | SortOrder
+    letterheadTopMarginPx?: SortOrderInput | SortOrder
+    letterheadBottomMarginPx?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DocumentTemplateCountOrderByAggregateInput
+    _avg?: DocumentTemplateAvgOrderByAggregateInput
+    _max?: DocumentTemplateMaxOrderByAggregateInput
+    _min?: DocumentTemplateMinOrderByAggregateInput
+    _sum?: DocumentTemplateSumOrderByAggregateInput
+  }
+
+  export type DocumentTemplateScalarWhereWithAggregatesInput = {
+    AND?: DocumentTemplateScalarWhereWithAggregatesInput | DocumentTemplateScalarWhereWithAggregatesInput[]
+    OR?: DocumentTemplateScalarWhereWithAggregatesInput[]
+    NOT?: DocumentTemplateScalarWhereWithAggregatesInput | DocumentTemplateScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DocumentTemplate"> | string
+    companyId?: StringWithAggregatesFilter<"DocumentTemplate"> | string
+    documentType?: StringWithAggregatesFilter<"DocumentTemplate"> | string
+    name?: StringWithAggregatesFilter<"DocumentTemplate"> | string
+    isDefault?: BoolWithAggregatesFilter<"DocumentTemplate"> | boolean
+    mode?: StringWithAggregatesFilter<"DocumentTemplate"> | string
+    companyName?: StringNullableWithAggregatesFilter<"DocumentTemplate"> | string | null
+    companyAddress?: StringNullableWithAggregatesFilter<"DocumentTemplate"> | string | null
+    logoUrl?: StringNullableWithAggregatesFilter<"DocumentTemplate"> | string | null
+    logoPosition?: StringNullableWithAggregatesFilter<"DocumentTemplate"> | string | null
+    accentColor?: StringNullableWithAggregatesFilter<"DocumentTemplate"> | string | null
+    headerText?: StringNullableWithAggregatesFilter<"DocumentTemplate"> | string | null
+    footerText?: StringNullableWithAggregatesFilter<"DocumentTemplate"> | string | null
+    bankDetails?: StringNullableWithAggregatesFilter<"DocumentTemplate"> | string | null
+    showPageNumbers?: BoolWithAggregatesFilter<"DocumentTemplate"> | boolean
+    rows?: JsonNullableWithAggregatesFilter<"DocumentTemplate">
+    letterheadImageUrl?: StringNullableWithAggregatesFilter<"DocumentTemplate"> | string | null
+    letterheadTopMarginPx?: IntNullableWithAggregatesFilter<"DocumentTemplate"> | number | null
+    letterheadBottomMarginPx?: IntNullableWithAggregatesFilter<"DocumentTemplate"> | number | null
+    createdAt?: DateTimeWithAggregatesFilter<"DocumentTemplate"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"DocumentTemplate"> | Date | string
   }
 
   export type EquipmentConsumableWhereInput = {
@@ -37866,7 +40497,7 @@ export namespace Prisma {
     NOT?: ProjectWhereInput | ProjectWhereInput[]
     id?: StringFilter<"Project"> | string
     companyId?: StringFilter<"Project"> | string
-    customerId?: StringFilter<"Project"> | string
+    customerId?: StringNullableFilter<"Project"> | string | null
     name?: StringFilter<"Project"> | string
     description?: StringNullableFilter<"Project"> | string | null
     category?: StringNullableFilter<"Project"> | string | null
@@ -37891,7 +40522,7 @@ export namespace Prisma {
   export type ProjectOrderByWithRelationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    customerId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
     category?: SortOrderInput | SortOrder
@@ -37919,7 +40550,7 @@ export namespace Prisma {
     OR?: ProjectWhereInput[]
     NOT?: ProjectWhereInput | ProjectWhereInput[]
     companyId?: StringFilter<"Project"> | string
-    customerId?: StringFilter<"Project"> | string
+    customerId?: StringNullableFilter<"Project"> | string | null
     name?: StringFilter<"Project"> | string
     description?: StringNullableFilter<"Project"> | string | null
     category?: StringNullableFilter<"Project"> | string | null
@@ -37944,7 +40575,7 @@ export namespace Prisma {
   export type ProjectOrderByWithAggregationInput = {
     id?: SortOrder
     companyId?: SortOrder
-    customerId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
     category?: SortOrderInput | SortOrder
@@ -37975,7 +40606,7 @@ export namespace Prisma {
     NOT?: ProjectScalarWhereWithAggregatesInput | ProjectScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Project"> | string
     companyId?: StringWithAggregatesFilter<"Project"> | string
-    customerId?: StringWithAggregatesFilter<"Project"> | string
+    customerId?: StringNullableWithAggregatesFilter<"Project"> | string | null
     name?: StringWithAggregatesFilter<"Project"> | string
     description?: StringNullableWithAggregatesFilter<"Project"> | string | null
     category?: StringNullableWithAggregatesFilter<"Project"> | string | null
@@ -39173,6 +41804,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -39186,6 +41818,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -39212,6 +41845,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -39225,6 +41859,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -39247,6 +41882,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39260,6 +41896,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -39286,6 +41923,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39299,6 +41937,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -39323,6 +41962,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -39336,6 +41976,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -39357,6 +41998,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39370,6 +42012,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -39393,6 +42036,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39406,6 +42050,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -39870,10 +42515,15 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
     house?: HouseCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUncheckedCreateInput = {
@@ -39892,8 +42542,13 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUpdateInput = {
@@ -39910,10 +42565,15 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
     house?: HouseUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateInput = {
@@ -39932,8 +42592,13 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentCreateManyInput = {
@@ -39952,6 +42617,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
   }
 
   export type EquipmentUpdateManyMutationInput = {
@@ -39968,6 +42637,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type EquipmentUncheckedUpdateManyInput = {
@@ -39986,6 +42659,254 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type EquipmentErrorCodeCreateInput = {
+    id?: string
+    companyId: string
+    code: string
+    meaning?: string | null
+    source?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment: EquipmentCreateNestedOneWithoutErrorCodesInput
+  }
+
+  export type EquipmentErrorCodeUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    equipmentId: string
+    code: string
+    meaning?: string | null
+    source?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EquipmentErrorCodeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    meaning?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUpdateOneRequiredWithoutErrorCodesNestedInput
+  }
+
+  export type EquipmentErrorCodeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    meaning?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EquipmentErrorCodeCreateManyInput = {
+    id?: string
+    companyId: string
+    equipmentId: string
+    code: string
+    meaning?: string | null
+    source?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EquipmentErrorCodeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    meaning?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EquipmentErrorCodeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    meaning?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentTemplateCreateInput = {
+    id?: string
+    companyId: string
+    documentType: string
+    name: string
+    isDefault?: boolean
+    mode?: string
+    companyName?: string | null
+    companyAddress?: string | null
+    logoUrl?: string | null
+    logoPosition?: string | null
+    accentColor?: string | null
+    headerText?: string | null
+    footerText?: string | null
+    bankDetails?: string | null
+    showPageNumbers?: boolean
+    rows?: NullableJsonNullValueInput | InputJsonValue
+    letterheadImageUrl?: string | null
+    letterheadTopMarginPx?: number | null
+    letterheadBottomMarginPx?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DocumentTemplateUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    documentType: string
+    name: string
+    isDefault?: boolean
+    mode?: string
+    companyName?: string | null
+    companyAddress?: string | null
+    logoUrl?: string | null
+    logoPosition?: string | null
+    accentColor?: string | null
+    headerText?: string | null
+    footerText?: string | null
+    bankDetails?: string | null
+    showPageNumbers?: boolean
+    rows?: NullableJsonNullValueInput | InputJsonValue
+    letterheadImageUrl?: string | null
+    letterheadTopMarginPx?: number | null
+    letterheadBottomMarginPx?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DocumentTemplateUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    documentType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    mode?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    companyAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    logoPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    accentColor?: NullableStringFieldUpdateOperationsInput | string | null
+    headerText?: NullableStringFieldUpdateOperationsInput | string | null
+    footerText?: NullableStringFieldUpdateOperationsInput | string | null
+    bankDetails?: NullableStringFieldUpdateOperationsInput | string | null
+    showPageNumbers?: BoolFieldUpdateOperationsInput | boolean
+    rows?: NullableJsonNullValueInput | InputJsonValue
+    letterheadImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    letterheadTopMarginPx?: NullableIntFieldUpdateOperationsInput | number | null
+    letterheadBottomMarginPx?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentTemplateUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    documentType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    mode?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    companyAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    logoPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    accentColor?: NullableStringFieldUpdateOperationsInput | string | null
+    headerText?: NullableStringFieldUpdateOperationsInput | string | null
+    footerText?: NullableStringFieldUpdateOperationsInput | string | null
+    bankDetails?: NullableStringFieldUpdateOperationsInput | string | null
+    showPageNumbers?: BoolFieldUpdateOperationsInput | boolean
+    rows?: NullableJsonNullValueInput | InputJsonValue
+    letterheadImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    letterheadTopMarginPx?: NullableIntFieldUpdateOperationsInput | number | null
+    letterheadBottomMarginPx?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentTemplateCreateManyInput = {
+    id?: string
+    companyId: string
+    documentType: string
+    name: string
+    isDefault?: boolean
+    mode?: string
+    companyName?: string | null
+    companyAddress?: string | null
+    logoUrl?: string | null
+    logoPosition?: string | null
+    accentColor?: string | null
+    headerText?: string | null
+    footerText?: string | null
+    bankDetails?: string | null
+    showPageNumbers?: boolean
+    rows?: NullableJsonNullValueInput | InputJsonValue
+    letterheadImageUrl?: string | null
+    letterheadTopMarginPx?: number | null
+    letterheadBottomMarginPx?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DocumentTemplateUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    documentType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    mode?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    companyAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    logoPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    accentColor?: NullableStringFieldUpdateOperationsInput | string | null
+    headerText?: NullableStringFieldUpdateOperationsInput | string | null
+    footerText?: NullableStringFieldUpdateOperationsInput | string | null
+    bankDetails?: NullableStringFieldUpdateOperationsInput | string | null
+    showPageNumbers?: BoolFieldUpdateOperationsInput | boolean
+    rows?: NullableJsonNullValueInput | InputJsonValue
+    letterheadImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    letterheadTopMarginPx?: NullableIntFieldUpdateOperationsInput | number | null
+    letterheadBottomMarginPx?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentTemplateUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    documentType?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    mode?: StringFieldUpdateOperationsInput | string
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    companyAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    logoPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    accentColor?: NullableStringFieldUpdateOperationsInput | string | null
+    headerText?: NullableStringFieldUpdateOperationsInput | string | null
+    footerText?: NullableStringFieldUpdateOperationsInput | string | null
+    bankDetails?: NullableStringFieldUpdateOperationsInput | string | null
+    showPageNumbers?: BoolFieldUpdateOperationsInput | boolean
+    rows?: NullableJsonNullValueInput | InputJsonValue
+    letterheadImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    letterheadTopMarginPx?: NullableIntFieldUpdateOperationsInput | number | null
+    letterheadBottomMarginPx?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type EquipmentConsumableCreateInput = {
@@ -41455,7 +44376,7 @@ export namespace Prisma {
   export type ProjectCreateInput = {
     id?: string
     companyId: string
-    customerId: string
+    customerId?: string | null
     name: string
     description?: string | null
     category?: string | null
@@ -41480,7 +44401,7 @@ export namespace Prisma {
   export type ProjectUncheckedCreateInput = {
     id?: string
     companyId: string
-    customerId: string
+    customerId?: string | null
     name: string
     description?: string | null
     category?: string | null
@@ -41505,7 +44426,7 @@ export namespace Prisma {
   export type ProjectUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41530,7 +44451,7 @@ export namespace Prisma {
   export type ProjectUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41555,7 +44476,7 @@ export namespace Prisma {
   export type ProjectCreateManyInput = {
     id?: string
     companyId: string
-    customerId: string
+    customerId?: string | null
     name: string
     description?: string | null
     category?: string | null
@@ -41578,7 +44499,7 @@ export namespace Prisma {
   export type ProjectUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41601,7 +44522,7 @@ export namespace Prisma {
   export type ProjectUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42779,6 +45700,7 @@ export namespace Prisma {
     signedAt?: SortOrder
     signedByName?: SortOrder
     documentUrl?: SortOrder
+    templateId?: SortOrder
     billingAmount?: SortOrder
     nextBillingDate?: SortOrder
     serviceType?: SortOrder
@@ -42792,6 +45714,7 @@ export namespace Prisma {
     leadDays?: SortOrder
     jobTemplateId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
     customerConfirmedAt?: SortOrder
     confirmToken?: SortOrder
     renewalReminderSent?: SortOrder
@@ -42824,6 +45747,7 @@ export namespace Prisma {
     signedAt?: SortOrder
     signedByName?: SortOrder
     documentUrl?: SortOrder
+    templateId?: SortOrder
     billingAmount?: SortOrder
     nextBillingDate?: SortOrder
     serviceType?: SortOrder
@@ -42837,6 +45761,7 @@ export namespace Prisma {
     leadDays?: SortOrder
     jobTemplateId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
     customerConfirmedAt?: SortOrder
     confirmToken?: SortOrder
     renewalReminderSent?: SortOrder
@@ -42860,6 +45785,7 @@ export namespace Prisma {
     signedAt?: SortOrder
     signedByName?: SortOrder
     documentUrl?: SortOrder
+    templateId?: SortOrder
     billingAmount?: SortOrder
     nextBillingDate?: SortOrder
     serviceType?: SortOrder
@@ -42873,6 +45799,7 @@ export namespace Prisma {
     leadDays?: SortOrder
     jobTemplateId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
     customerConfirmedAt?: SortOrder
     confirmToken?: SortOrder
     renewalReminderSent?: SortOrder
@@ -43173,6 +46100,28 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
+  export type JsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type HouseNullableRelationFilter = {
     is?: HouseWhereInput | null
@@ -43185,7 +46134,17 @@ export namespace Prisma {
     none?: EquipmentConsumableWhereInput
   }
 
+  export type EquipmentErrorCodeListRelationFilter = {
+    every?: EquipmentErrorCodeWhereInput
+    some?: EquipmentErrorCodeWhereInput
+    none?: EquipmentErrorCodeWhereInput
+  }
+
   export type EquipmentConsumableOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type EquipmentErrorCodeOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -43205,6 +46164,10 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     manualUrl?: SortOrder
+    imageUrl?: SortOrder
+    imageScanStatus?: SortOrder
+    imageScanResult?: SortOrder
+    imageScanError?: SortOrder
   }
 
   export type EquipmentMaxOrderByAggregateInput = {
@@ -43223,6 +46186,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     manualUrl?: SortOrder
+    imageUrl?: SortOrder
+    imageScanStatus?: SortOrder
+    imageScanError?: SortOrder
   }
 
   export type EquipmentMinOrderByAggregateInput = {
@@ -43241,11 +46207,158 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     manualUrl?: SortOrder
+    imageUrl?: SortOrder
+    imageScanStatus?: SortOrder
+    imageScanError?: SortOrder
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type EquipmentRelationFilter = {
     is?: EquipmentWhereInput
     isNot?: EquipmentWhereInput
+  }
+
+  export type EquipmentErrorCodeCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    equipmentId?: SortOrder
+    code?: SortOrder
+    meaning?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EquipmentErrorCodeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    equipmentId?: SortOrder
+    code?: SortOrder
+    meaning?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EquipmentErrorCodeMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    equipmentId?: SortOrder
+    code?: SortOrder
+    meaning?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentTemplateCompanyIdDocumentTypeNameCompoundUniqueInput = {
+    companyId: string
+    documentType: string
+    name: string
+  }
+
+  export type DocumentTemplateCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    documentType?: SortOrder
+    name?: SortOrder
+    isDefault?: SortOrder
+    mode?: SortOrder
+    companyName?: SortOrder
+    companyAddress?: SortOrder
+    logoUrl?: SortOrder
+    logoPosition?: SortOrder
+    accentColor?: SortOrder
+    headerText?: SortOrder
+    footerText?: SortOrder
+    bankDetails?: SortOrder
+    showPageNumbers?: SortOrder
+    rows?: SortOrder
+    letterheadImageUrl?: SortOrder
+    letterheadTopMarginPx?: SortOrder
+    letterheadBottomMarginPx?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentTemplateAvgOrderByAggregateInput = {
+    letterheadTopMarginPx?: SortOrder
+    letterheadBottomMarginPx?: SortOrder
+  }
+
+  export type DocumentTemplateMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    documentType?: SortOrder
+    name?: SortOrder
+    isDefault?: SortOrder
+    mode?: SortOrder
+    companyName?: SortOrder
+    companyAddress?: SortOrder
+    logoUrl?: SortOrder
+    logoPosition?: SortOrder
+    accentColor?: SortOrder
+    headerText?: SortOrder
+    footerText?: SortOrder
+    bankDetails?: SortOrder
+    showPageNumbers?: SortOrder
+    letterheadImageUrl?: SortOrder
+    letterheadTopMarginPx?: SortOrder
+    letterheadBottomMarginPx?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentTemplateMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    documentType?: SortOrder
+    name?: SortOrder
+    isDefault?: SortOrder
+    mode?: SortOrder
+    companyName?: SortOrder
+    companyAddress?: SortOrder
+    logoUrl?: SortOrder
+    logoPosition?: SortOrder
+    accentColor?: SortOrder
+    headerText?: SortOrder
+    footerText?: SortOrder
+    bankDetails?: SortOrder
+    showPageNumbers?: SortOrder
+    letterheadImageUrl?: SortOrder
+    letterheadTopMarginPx?: SortOrder
+    letterheadBottomMarginPx?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentTemplateSumOrderByAggregateInput = {
+    letterheadTopMarginPx?: SortOrder
+    letterheadBottomMarginPx?: SortOrder
   }
 
   export type EquipmentConsumableCountOrderByAggregateInput = {
@@ -43393,28 +46506,6 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
-  export type JsonNullableFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type FollowupAttemptCountOrderByAggregateInput = {
     id?: SortOrder
@@ -43483,31 +46574,6 @@ export namespace Prisma {
 
   export type FollowupAttemptSumOrderByAggregateInput = {
     churnProbability?: SortOrder
-  }
-  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedJsonNullableFilter<$PrismaModel>
-    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type FloatFilter<$PrismaModel = never> = {
@@ -45520,6 +48586,13 @@ export namespace Prisma {
     connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
   }
 
+  export type EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput = {
+    create?: XOR<EquipmentErrorCodeCreateWithoutEquipmentInput, EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput> | EquipmentErrorCodeCreateWithoutEquipmentInput[] | EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: EquipmentErrorCodeCreateOrConnectWithoutEquipmentInput | EquipmentErrorCodeCreateOrConnectWithoutEquipmentInput[]
+    createMany?: EquipmentErrorCodeCreateManyEquipmentInputEnvelope
+    connect?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
+  }
+
   export type EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput = {
     create?: XOR<EquipmentConsumableCreateWithoutEquipmentInput, EquipmentConsumableUncheckedCreateWithoutEquipmentInput> | EquipmentConsumableCreateWithoutEquipmentInput[] | EquipmentConsumableUncheckedCreateWithoutEquipmentInput[]
     connectOrCreate?: EquipmentConsumableCreateOrConnectWithoutEquipmentInput | EquipmentConsumableCreateOrConnectWithoutEquipmentInput[]
@@ -45532,6 +48605,13 @@ export namespace Prisma {
     connectOrCreate?: HouseIssueReportCreateOrConnectWithoutEquipmentInput | HouseIssueReportCreateOrConnectWithoutEquipmentInput[]
     createMany?: HouseIssueReportCreateManyEquipmentInputEnvelope
     connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+  }
+
+  export type EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput = {
+    create?: XOR<EquipmentErrorCodeCreateWithoutEquipmentInput, EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput> | EquipmentErrorCodeCreateWithoutEquipmentInput[] | EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: EquipmentErrorCodeCreateOrConnectWithoutEquipmentInput | EquipmentErrorCodeCreateOrConnectWithoutEquipmentInput[]
+    createMany?: EquipmentErrorCodeCreateManyEquipmentInputEnvelope
+    connect?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
   }
 
   export type CustomerUpdateOneRequiredWithoutEquipmentNestedInput = {
@@ -45580,6 +48660,20 @@ export namespace Prisma {
     deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
   }
 
+  export type EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput = {
+    create?: XOR<EquipmentErrorCodeCreateWithoutEquipmentInput, EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput> | EquipmentErrorCodeCreateWithoutEquipmentInput[] | EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: EquipmentErrorCodeCreateOrConnectWithoutEquipmentInput | EquipmentErrorCodeCreateOrConnectWithoutEquipmentInput[]
+    upsert?: EquipmentErrorCodeUpsertWithWhereUniqueWithoutEquipmentInput | EquipmentErrorCodeUpsertWithWhereUniqueWithoutEquipmentInput[]
+    createMany?: EquipmentErrorCodeCreateManyEquipmentInputEnvelope
+    set?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
+    disconnect?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
+    delete?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
+    connect?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
+    update?: EquipmentErrorCodeUpdateWithWhereUniqueWithoutEquipmentInput | EquipmentErrorCodeUpdateWithWhereUniqueWithoutEquipmentInput[]
+    updateMany?: EquipmentErrorCodeUpdateManyWithWhereWithoutEquipmentInput | EquipmentErrorCodeUpdateManyWithWhereWithoutEquipmentInput[]
+    deleteMany?: EquipmentErrorCodeScalarWhereInput | EquipmentErrorCodeScalarWhereInput[]
+  }
+
   export type EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput = {
     create?: XOR<EquipmentConsumableCreateWithoutEquipmentInput, EquipmentConsumableUncheckedCreateWithoutEquipmentInput> | EquipmentConsumableCreateWithoutEquipmentInput[] | EquipmentConsumableUncheckedCreateWithoutEquipmentInput[]
     connectOrCreate?: EquipmentConsumableCreateOrConnectWithoutEquipmentInput | EquipmentConsumableCreateOrConnectWithoutEquipmentInput[]
@@ -45606,6 +48700,34 @@ export namespace Prisma {
     update?: HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput | HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput[]
     updateMany?: HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput | HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput[]
     deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+  }
+
+  export type EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput = {
+    create?: XOR<EquipmentErrorCodeCreateWithoutEquipmentInput, EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput> | EquipmentErrorCodeCreateWithoutEquipmentInput[] | EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: EquipmentErrorCodeCreateOrConnectWithoutEquipmentInput | EquipmentErrorCodeCreateOrConnectWithoutEquipmentInput[]
+    upsert?: EquipmentErrorCodeUpsertWithWhereUniqueWithoutEquipmentInput | EquipmentErrorCodeUpsertWithWhereUniqueWithoutEquipmentInput[]
+    createMany?: EquipmentErrorCodeCreateManyEquipmentInputEnvelope
+    set?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
+    disconnect?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
+    delete?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
+    connect?: EquipmentErrorCodeWhereUniqueInput | EquipmentErrorCodeWhereUniqueInput[]
+    update?: EquipmentErrorCodeUpdateWithWhereUniqueWithoutEquipmentInput | EquipmentErrorCodeUpdateWithWhereUniqueWithoutEquipmentInput[]
+    updateMany?: EquipmentErrorCodeUpdateManyWithWhereWithoutEquipmentInput | EquipmentErrorCodeUpdateManyWithWhereWithoutEquipmentInput[]
+    deleteMany?: EquipmentErrorCodeScalarWhereInput | EquipmentErrorCodeScalarWhereInput[]
+  }
+
+  export type EquipmentCreateNestedOneWithoutErrorCodesInput = {
+    create?: XOR<EquipmentCreateWithoutErrorCodesInput, EquipmentUncheckedCreateWithoutErrorCodesInput>
+    connectOrCreate?: EquipmentCreateOrConnectWithoutErrorCodesInput
+    connect?: EquipmentWhereUniqueInput
+  }
+
+  export type EquipmentUpdateOneRequiredWithoutErrorCodesNestedInput = {
+    create?: XOR<EquipmentCreateWithoutErrorCodesInput, EquipmentUncheckedCreateWithoutErrorCodesInput>
+    connectOrCreate?: EquipmentCreateOrConnectWithoutErrorCodesInput
+    upsert?: EquipmentUpsertWithoutErrorCodesInput
+    connect?: EquipmentWhereUniqueInput
+    update?: XOR<XOR<EquipmentUpdateToOneWithWhereWithoutErrorCodesInput, EquipmentUpdateWithoutErrorCodesInput>, EquipmentUncheckedUpdateWithoutErrorCodesInput>
   }
 
   export type EquipmentCreateNestedOneWithoutConsumablesInput = {
@@ -46806,6 +49928,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -46819,6 +49942,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -46843,6 +49967,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -46856,6 +49981,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -47131,6 +50257,7 @@ export namespace Prisma {
     signedAt?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     signedByName?: StringNullableFilter<"ServiceAgreement"> | string | null
     documentUrl?: StringNullableFilter<"ServiceAgreement"> | string | null
+    templateId?: StringNullableFilter<"ServiceAgreement"> | string | null
     billingAmount?: DecimalNullableFilter<"ServiceAgreement"> | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     serviceType?: StringNullableFilter<"ServiceAgreement"> | string | null
@@ -47144,6 +50271,7 @@ export namespace Prisma {
     leadDays?: IntFilter<"ServiceAgreement"> | number
     jobTemplateId?: StringNullableFilter<"ServiceAgreement"> | string | null
     projectId?: StringNullableFilter<"ServiceAgreement"> | string | null
+    houseId?: StringNullableFilter<"ServiceAgreement"> | string | null
     customerConfirmedAt?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     confirmToken?: StringNullableFilter<"ServiceAgreement"> | string | null
     renewalReminderSent?: BoolFilter<"ServiceAgreement"> | boolean
@@ -47523,6 +50651,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -47536,6 +50665,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -47560,6 +50690,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -47573,6 +50704,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -47736,9 +50868,14 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     house?: HouseCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUncheckedCreateWithoutCustomerInput = {
@@ -47756,8 +50893,13 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentCreateOrConnectWithoutCustomerInput = {
@@ -48303,6 +51445,10 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Equipment"> | Date | string
     updatedAt?: DateTimeFilter<"Equipment"> | Date | string
     manualUrl?: StringNullableFilter<"Equipment"> | string | null
+    imageUrl?: StringNullableFilter<"Equipment"> | string | null
+    imageScanStatus?: StringFilter<"Equipment"> | string
+    imageScanResult?: JsonNullableFilter<"Equipment">
+    imageScanError?: StringNullableFilter<"Equipment"> | string | null
   }
 
   export type UpsellRecommendationUpsertWithWhereUniqueWithoutCustomerInput = {
@@ -49533,6 +52679,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -49546,6 +52693,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -49571,6 +52719,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -49584,6 +52733,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -49621,6 +52771,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -49634,6 +52785,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -49659,6 +52811,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -49672,6 +52825,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -50596,6 +53750,36 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type EquipmentErrorCodeCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    code: string
+    meaning?: string | null
+    source?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    code: string
+    meaning?: string | null
+    source?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EquipmentErrorCodeCreateOrConnectWithoutEquipmentInput = {
+    where: EquipmentErrorCodeWhereUniqueInput
+    create: XOR<EquipmentErrorCodeCreateWithoutEquipmentInput, EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput>
+  }
+
+  export type EquipmentErrorCodeCreateManyEquipmentInputEnvelope = {
+    data: EquipmentErrorCodeCreateManyEquipmentInput | EquipmentErrorCodeCreateManyEquipmentInput[]
+    skipDuplicates?: boolean
+  }
+
   export type CustomerUpsertWithoutEquipmentInput = {
     update: XOR<CustomerUpdateWithoutEquipmentInput, CustomerUncheckedUpdateWithoutEquipmentInput>
     create: XOR<CustomerCreateWithoutEquipmentInput, CustomerUncheckedCreateWithoutEquipmentInput>
@@ -50771,6 +53955,148 @@ export namespace Prisma {
     data: XOR<HouseIssueReportUpdateManyMutationInput, HouseIssueReportUncheckedUpdateManyWithoutEquipmentInput>
   }
 
+  export type EquipmentErrorCodeUpsertWithWhereUniqueWithoutEquipmentInput = {
+    where: EquipmentErrorCodeWhereUniqueInput
+    update: XOR<EquipmentErrorCodeUpdateWithoutEquipmentInput, EquipmentErrorCodeUncheckedUpdateWithoutEquipmentInput>
+    create: XOR<EquipmentErrorCodeCreateWithoutEquipmentInput, EquipmentErrorCodeUncheckedCreateWithoutEquipmentInput>
+  }
+
+  export type EquipmentErrorCodeUpdateWithWhereUniqueWithoutEquipmentInput = {
+    where: EquipmentErrorCodeWhereUniqueInput
+    data: XOR<EquipmentErrorCodeUpdateWithoutEquipmentInput, EquipmentErrorCodeUncheckedUpdateWithoutEquipmentInput>
+  }
+
+  export type EquipmentErrorCodeUpdateManyWithWhereWithoutEquipmentInput = {
+    where: EquipmentErrorCodeScalarWhereInput
+    data: XOR<EquipmentErrorCodeUpdateManyMutationInput, EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentInput>
+  }
+
+  export type EquipmentErrorCodeScalarWhereInput = {
+    AND?: EquipmentErrorCodeScalarWhereInput | EquipmentErrorCodeScalarWhereInput[]
+    OR?: EquipmentErrorCodeScalarWhereInput[]
+    NOT?: EquipmentErrorCodeScalarWhereInput | EquipmentErrorCodeScalarWhereInput[]
+    id?: StringFilter<"EquipmentErrorCode"> | string
+    companyId?: StringFilter<"EquipmentErrorCode"> | string
+    equipmentId?: StringFilter<"EquipmentErrorCode"> | string
+    code?: StringFilter<"EquipmentErrorCode"> | string
+    meaning?: StringNullableFilter<"EquipmentErrorCode"> | string | null
+    source?: StringFilter<"EquipmentErrorCode"> | string
+    createdAt?: DateTimeFilter<"EquipmentErrorCode"> | Date | string
+    updatedAt?: DateTimeFilter<"EquipmentErrorCode"> | Date | string
+  }
+
+  export type EquipmentCreateWithoutErrorCodesInput = {
+    id?: string
+    companyId: string
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
+    customer: CustomerCreateNestedOneWithoutEquipmentInput
+    house?: HouseCreateNestedOneWithoutEquipmentInput
+    consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentUncheckedCreateWithoutErrorCodesInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    houseId?: string | null
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
+    consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentCreateOrConnectWithoutErrorCodesInput = {
+    where: EquipmentWhereUniqueInput
+    create: XOR<EquipmentCreateWithoutErrorCodesInput, EquipmentUncheckedCreateWithoutErrorCodesInput>
+  }
+
+  export type EquipmentUpsertWithoutErrorCodesInput = {
+    update: XOR<EquipmentUpdateWithoutErrorCodesInput, EquipmentUncheckedUpdateWithoutErrorCodesInput>
+    create: XOR<EquipmentCreateWithoutErrorCodesInput, EquipmentUncheckedCreateWithoutErrorCodesInput>
+    where?: EquipmentWhereInput
+  }
+
+  export type EquipmentUpdateToOneWithWhereWithoutErrorCodesInput = {
+    where?: EquipmentWhereInput
+    data: XOR<EquipmentUpdateWithoutErrorCodesInput, EquipmentUncheckedUpdateWithoutErrorCodesInput>
+  }
+
+  export type EquipmentUpdateWithoutErrorCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
+    customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
+    house?: HouseUpdateOneWithoutEquipmentNestedInput
+    consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+  }
+
+  export type EquipmentUncheckedUpdateWithoutErrorCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
+    consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+  }
+
   export type EquipmentCreateWithoutConsumablesInput = {
     id?: string
     companyId: string
@@ -50785,9 +54111,14 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
     house?: HouseCreateNestedOneWithoutEquipmentInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUncheckedCreateWithoutConsumablesInput = {
@@ -50806,7 +54137,12 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentCreateOrConnectWithoutConsumablesInput = {
@@ -50839,9 +54175,14 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
     house?: HouseUpdateOneWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateWithoutConsumablesInput = {
@@ -50860,7 +54201,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
   export type CustomerCreateWithoutUpsellRecommendationsInput = {
@@ -52026,7 +55372,7 @@ export namespace Prisma {
   export type ProjectCreateWithoutRosterDaysInput = {
     id?: string
     companyId: string
-    customerId: string
+    customerId?: string | null
     name: string
     description?: string | null
     category?: string | null
@@ -52050,7 +55396,7 @@ export namespace Prisma {
   export type ProjectUncheckedCreateWithoutRosterDaysInput = {
     id?: string
     companyId: string
-    customerId: string
+    customerId?: string | null
     name: string
     description?: string | null
     category?: string | null
@@ -52090,7 +55436,7 @@ export namespace Prisma {
   export type ProjectUpdateWithoutRosterDaysInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
@@ -52114,7 +55460,7 @@ export namespace Prisma {
   export type ProjectUncheckedUpdateWithoutRosterDaysInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
@@ -52138,7 +55484,7 @@ export namespace Prisma {
   export type ProjectCreateWithoutHousesInput = {
     id?: string
     companyId: string
-    customerId: string
+    customerId?: string | null
     name: string
     description?: string | null
     category?: string | null
@@ -52162,7 +55508,7 @@ export namespace Prisma {
   export type ProjectUncheckedCreateWithoutHousesInput = {
     id?: string
     companyId: string
-    customerId: string
+    customerId?: string | null
     name: string
     description?: string | null
     category?: string | null
@@ -52281,9 +55627,14 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUncheckedCreateWithoutHouseInput = {
@@ -52301,8 +55652,13 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentCreateOrConnectWithoutHouseInput = {
@@ -52365,7 +55721,7 @@ export namespace Prisma {
   export type ProjectUpdateWithoutHousesInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
@@ -52389,7 +55745,7 @@ export namespace Prisma {
   export type ProjectUncheckedUpdateWithoutHousesInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     category?: NullableStringFieldUpdateOperationsInput | string | null
@@ -52574,9 +55930,14 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
     house?: HouseCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUncheckedCreateWithoutIssueReportsInput = {
@@ -52595,7 +55956,12 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentCreateOrConnectWithoutIssueReportsInput = {
@@ -52746,9 +56112,14 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
     house?: HouseUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateWithoutIssueReportsInput = {
@@ -52767,7 +56138,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
   export type CustomerUpsertWithoutIssueReportsInput = {
@@ -52929,6 +56305,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -52942,6 +56319,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -53212,6 +56590,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53225,6 +56604,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -53249,6 +56629,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53262,6 +56643,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -53285,6 +56667,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53298,6 +56681,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -53479,6 +56863,7 @@ export namespace Prisma {
     signedAt?: Date | string | null
     signedByName?: string | null
     documentUrl?: string | null
+    templateId?: string | null
     billingAmount?: Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: Date | string | null
     serviceType?: string | null
@@ -53492,6 +56877,7 @@ export namespace Prisma {
     leadDays?: number
     jobTemplateId?: string | null
     projectId?: string | null
+    houseId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -53565,6 +56951,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
   }
 
   export type UpsellRecommendationCreateManyCustomerInput = {
@@ -53805,6 +57195,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53818,6 +57209,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -53842,6 +57234,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53855,6 +57248,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -53878,6 +57272,7 @@ export namespace Prisma {
     signedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     signedByName?: NullableStringFieldUpdateOperationsInput | string | null
     documentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     billingAmount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     nextBillingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serviceType?: NullableStringFieldUpdateOperationsInput | string | null
@@ -53891,6 +57286,7 @@ export namespace Prisma {
     leadDays?: IntFieldUpdateOperationsInput | number
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -54063,9 +57459,14 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     house?: HouseUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateWithoutCustomerInput = {
@@ -54083,8 +57484,13 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateManyWithoutCustomerInput = {
@@ -54102,6 +57508,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UpsellRecommendationUpdateWithoutCustomerInput = {
@@ -54583,6 +57993,16 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type EquipmentErrorCodeCreateManyEquipmentInput = {
+    id?: string
+    companyId: string
+    code: string
+    meaning?: string | null
+    source?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type EquipmentConsumableUpdateWithoutEquipmentInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
@@ -54663,6 +58083,36 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EquipmentErrorCodeUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    meaning?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EquipmentErrorCodeUncheckedUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    meaning?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    meaning?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -54891,6 +58341,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
   }
 
   export type HouseIssueReportCreateManyHouseInput = {
@@ -54920,9 +58374,14 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateWithoutHouseInput = {
@@ -54940,8 +58399,13 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateManyWithoutHouseInput = {
@@ -54959,6 +58423,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type HouseIssueReportUpdateWithoutHouseInput = {
@@ -55093,6 +58561,14 @@ export namespace Prisma {
      * @deprecated Use EquipmentDefaultArgs instead
      */
     export type EquipmentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = EquipmentDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use EquipmentErrorCodeDefaultArgs instead
+     */
+    export type EquipmentErrorCodeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = EquipmentErrorCodeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use DocumentTemplateDefaultArgs instead
+     */
+    export type DocumentTemplateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = DocumentTemplateDefaultArgs<ExtArgs>
     /**
      * @deprecated Use EquipmentConsumableDefaultArgs instead
      */

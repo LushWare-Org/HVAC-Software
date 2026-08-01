@@ -34,6 +34,23 @@ export interface House {
   openIssueCount?: number
 }
 
+export type ImageScanStatus = 'NONE' | 'SCANNING' | 'DONE' | 'FAILED'
+
+export interface EquipmentScanResult {
+  brand: string | null
+  model: string | null
+  serialNo: string | null
+  errorCodes: { code: string; meaning: string }[]
+}
+
+export interface EquipmentErrorCode {
+  id: string
+  code: string
+  meaning?: string | null
+  source: 'AI_SCAN' | 'MANUAL'
+  createdAt: string
+}
+
 export interface HouseEquipment {
   id: string
   houseId: string
@@ -45,6 +62,11 @@ export interface HouseEquipment {
   installDate?: string | null
   warrantyEnd?: string | null
   notes?: string | null
+  imageUrl?: string | null
+  imageScanStatus: ImageScanStatus
+  imageScanResult?: EquipmentScanResult | null
+  imageScanError?: string | null
+  errorCodes: EquipmentErrorCode[]
 }
 
 export type IssueStatus = 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED'
@@ -114,6 +136,10 @@ export function useHouseEquipment(houseId: string | undefined) {
     queryFn: async () => (await api.get(`/crm/houses/${houseId}/equipment`)).data ?? [],
     enabled: !!houseId,
     staleTime: 15 * 1000,
+    refetchInterval: (query) => {
+      const data = query.state.data as HouseEquipment[] | undefined
+      return data?.some(e => e.imageScanStatus === 'SCANNING') ? 3000 : false
+    },
   })
 }
 
@@ -211,6 +237,7 @@ export interface UpsertHouseInput {
   address?: string
   tags?: string[]
   notes?: string
+  ownerCustomerId?: string
 }
 
 export function useCreateHouse(projectId: string | undefined) {
@@ -283,6 +310,68 @@ export function useAddHouseEquipment(houseId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['houses', houseId, 'equipment'] })
       queryClient.invalidateQueries({ queryKey: ['houses', houseId, 'detail'] })
+    },
+  })
+}
+
+export function useUploadEquipmentImage(houseId: string) {
+  return useMutation({
+    mutationFn: async ({ equipmentId, file }: { equipmentId: string; file: File }) => {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await api.post(`/crm/equipment/${equipmentId}/image`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return res.data as HouseEquipment
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['houses', houseId, 'equipment'] })
+    },
+  })
+}
+
+/**
+ * Patches one equipment item in the cached ['houses', houseId, 'equipment'] list in
+ * place. Used instead of invalidateQueries by every mutation below — a full
+ * invalidate+refetch per error code is what made "Add all" across several codes feel
+ * slow (N serialized round-trips through React Query's refetch queue for one query
+ * key). Writing the known result straight into the cache is instant and still
+ * correct, since the server response is the full source of truth for that equipment.
+ */
+function patchEquipmentInCache(houseId: string, equipmentId: string, patch: (eq: HouseEquipment) => HouseEquipment) {
+  queryClient.setQueryData<HouseEquipment[]>(['houses', houseId, 'equipment'], (old) =>
+    old?.map((eq) => (eq.id === equipmentId ? patch(eq) : eq)),
+  )
+}
+
+export function useAddErrorCode(houseId: string) {
+  return useMutation({
+    mutationFn: async ({ equipmentId, code, meaning, source }: { equipmentId: string; code: string; meaning?: string; source?: 'AI_SCAN' | 'MANUAL' }) =>
+      (await api.post(`/crm/equipment/${equipmentId}/error-codes`, { code, meaning, source })).data as EquipmentErrorCode,
+    onSuccess: (created, vars) => {
+      patchEquipmentInCache(houseId, vars.equipmentId, (eq) => ({ ...eq, errorCodes: [...eq.errorCodes, created] }))
+    },
+  })
+}
+
+export function useDeleteErrorCode(houseId: string) {
+  return useMutation({
+    mutationFn: async ({ equipmentId, codeId }: { equipmentId: string; codeId: string }) =>
+      (await api.delete(`/crm/equipment/${equipmentId}/error-codes/${codeId}`)).data,
+    onSuccess: (_data, vars) => {
+      patchEquipmentInCache(houseId, vars.equipmentId, (eq) => ({
+        ...eq, errorCodes: eq.errorCodes.filter((c) => c.id !== vars.codeId),
+      }))
+    },
+  })
+}
+
+export function useUpdateHouseEquipment(houseId: string) {
+  return useMutation({
+    mutationFn: async ({ equipmentId, ...patch }: { equipmentId: string; brand?: string; model?: string; serialNo?: string }) =>
+      (await api.patch(`/crm/houses/${houseId}/equipment/${equipmentId}`, patch)).data as HouseEquipment,
+    onSuccess: (updated, vars) => {
+      patchEquipmentInCache(houseId, vars.equipmentId, () => updated)
     },
   })
 }

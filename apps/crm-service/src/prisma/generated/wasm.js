@@ -257,6 +257,7 @@ exports.Prisma.ServiceAgreementScalarFieldEnum = {
   signedAt: 'signedAt',
   signedByName: 'signedByName',
   documentUrl: 'documentUrl',
+  templateId: 'templateId',
   billingAmount: 'billingAmount',
   nextBillingDate: 'nextBillingDate',
   serviceType: 'serviceType',
@@ -270,6 +271,7 @@ exports.Prisma.ServiceAgreementScalarFieldEnum = {
   leadDays: 'leadDays',
   jobTemplateId: 'jobTemplateId',
   projectId: 'projectId',
+  houseId: 'houseId',
   customerConfirmedAt: 'customerConfirmedAt',
   confirmToken: 'confirmToken',
   renewalReminderSent: 'renewalReminderSent',
@@ -357,7 +359,46 @@ exports.Prisma.EquipmentScalarFieldEnum = {
   importBatchId: 'importBatchId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  manualUrl: 'manualUrl'
+  manualUrl: 'manualUrl',
+  imageUrl: 'imageUrl',
+  imageScanStatus: 'imageScanStatus',
+  imageScanResult: 'imageScanResult',
+  imageScanError: 'imageScanError'
+};
+
+exports.Prisma.EquipmentErrorCodeScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  equipmentId: 'equipmentId',
+  code: 'code',
+  meaning: 'meaning',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DocumentTemplateScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  documentType: 'documentType',
+  name: 'name',
+  isDefault: 'isDefault',
+  mode: 'mode',
+  companyName: 'companyName',
+  companyAddress: 'companyAddress',
+  logoUrl: 'logoUrl',
+  logoPosition: 'logoPosition',
+  accentColor: 'accentColor',
+  headerText: 'headerText',
+  footerText: 'footerText',
+  bankDetails: 'bankDetails',
+  showPageNumbers: 'showPageNumbers',
+  rows: 'rows',
+  letterheadImageUrl: 'letterheadImageUrl',
+  letterheadTopMarginPx: 'letterheadTopMarginPx',
+  letterheadBottomMarginPx: 'letterheadBottomMarginPx',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.EquipmentConsumableScalarFieldEnum = {
@@ -725,6 +766,8 @@ exports.Prisma.ModelName = {
   Review: 'Review',
   Address: 'Address',
   Equipment: 'Equipment',
+  EquipmentErrorCode: 'EquipmentErrorCode',
+  DocumentTemplate: 'DocumentTemplate',
   EquipmentConsumable: 'EquipmentConsumable',
   ContractorPost: 'ContractorPost',
   CompanyAnnouncement: 'CompanyAnnouncement',

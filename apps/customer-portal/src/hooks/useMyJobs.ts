@@ -186,6 +186,9 @@ export function useSubmitJobRequest() {
       notes?: string
       tags?: string[]
       scheduledStart?: string
+      /** Booking from "My Projects" / "My House" — job-service verifies this project/house is actually theirs. */
+      projectId?: string
+      houseId?: string
     }) => {
       if (!user?.customerId) throw new Error('Customer account is not linked')
 
@@ -203,6 +206,8 @@ export function useSubmitJobRequest() {
         notes: dto.notes,
         tags: dto.tags ?? ['portal-request'],
         scheduledStart: dto.scheduledStart,
+        projectId: dto.projectId,
+        houseId: dto.houseId,
       }
 
       const { data } = await api.post('/jobs/jobs', payload)

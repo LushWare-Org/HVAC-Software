@@ -13,6 +13,8 @@ import {
   Calendar, MapPin, Send, Wrench, XCircle, FileText, DollarSign, Clock,
 } from 'lucide-react'
 import { useJobTechnicianNames, useMyJobs } from '../../hooks/useCustomerPortal'
+import { useMyProjects } from '../../hooks/useMyProjects'
+import { useMyHouses } from '../../hooks/useMyHouse'
 import JobDetailModal from './JobDetailModal.tsx'
 import BookServiceModal from './BookServiceModal.tsx'
 import CancelJobModal from './CancelJobModal.tsx'
@@ -128,6 +130,18 @@ export default function MyJobs() {
 
   const allJobs = data?.data ?? []
   const technicianNames = useJobTechnicianNames(allJobs)
+
+  // A portal customer has at most a handful of projects/houses — cheap to map once
+  // rather than resolve per-row, unlike the admin Jobs page's much larger scale.
+  const { data: myProjects } = useMyProjects()
+  const { data: myHouses } = useMyHouses()
+  const jobContext = (job: Job): string | null => {
+    if (!job.projectId) return null
+    const projectName = myProjects?.find(p => p.id === job.projectId)?.name
+    const houseLabel = job.houseId ? myHouses?.find(h => h.id === job.houseId)?.label : undefined
+    if (!projectName) return null
+    return houseLabel ? `${projectName} — ${houseLabel}` : projectName
+  }
 
   const grouped = useMemo(() => {
     const active = allJobs
@@ -301,6 +315,11 @@ export default function MyJobs() {
                       <span className={`badge ${s.css}`}>{s.label}</span>
                       <span style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--t1)' }}>{job.title}</span>
                       {who && <span style={{ fontSize: 12, color: 'var(--t3)' }}>· {who}</span>}
+                      {jobContext(job) && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--blue)' }}>
+                          <Briefcase size={11} /> {jobContext(job)}
+                        </span>
+                      )}
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--blue)', whiteSpace: 'nowrap' }}>Details ›</span>
                   </div>
@@ -346,6 +365,11 @@ export default function MyJobs() {
                           <MapPin size={11} /> {job.serviceAddress}
                         </span>
                       )}
+                      {jobContext(job) && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--blue)' }}>
+                          <Briefcase size={11} /> {jobContext(job)}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <span className={`badge ${s.css}`} style={{ flexShrink: 0 }}>{s.label}</span>
@@ -377,7 +401,7 @@ export default function MyJobs() {
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t2)' }}>{job.title}</div>
                   <div style={{ fontSize: 11.5, color: 'var(--t4)', marginTop: 2 }}>
-                    {fmtDate(job.scheduledStart ?? job.createdAt)}{who ? ` · ${who}` : ''}
+                    {fmtDate(job.scheduledStart ?? job.createdAt)}{who ? ` · ${who}` : ''}{jobContext(job) ? ` · ${jobContext(job)}` : ''}
                   </div>
                 </div>
                 <span className={`badge ${s.css}`} style={{ flexShrink: 0 }}>{s.label}</span>

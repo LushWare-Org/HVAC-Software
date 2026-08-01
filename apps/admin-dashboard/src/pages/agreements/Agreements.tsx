@@ -6,12 +6,14 @@
 import { useMemo, useState } from 'react'
 import {
   FileSignature, Plus, RefreshCw, Search, AlertCircle,
-  CalendarClock, DollarSign, ShieldCheck,
+  CalendarClock, DollarSign, ShieldCheck, FolderKanban,
 } from 'lucide-react'
 import {
   useServiceAgreements, useSendAgreement, useRenewAgreement, prefetchAgreementDetail,
   type Agreement, type AgreementStatus,
 } from '../../hooks/useAgreements'
+import { useProjectsFull } from '../projects/projectsApi'
+import { useHouse } from '../projects/housesApi'
 import AgreementEditorModal from './AgreementEditorModal'
 import AgreementDrawer from './AgreementDrawer'
 import { formatMoney } from '../../lib/format'
@@ -19,6 +21,21 @@ import { useToast } from '../../contexts/ToastContext'
 import {
   AgreementStatusBadge, VisitMeter, intervalLabel, fmtDate, fmtMoney, daysUntil, STATUS_STYLES,
 } from './shared'
+
+/** Resolves an agreement's project/house context lazily — cheap house lookup only fires when set. */
+function AgreementProjectCell({ agreement, projectNameById }: { agreement: Agreement; projectNameById: Map<string, string> }) {
+  const { data: house } = useHouse(agreement.houseId ?? undefined)
+  if (!agreement.projectId) return <span style={{ color: 'var(--t4)' }}>—</span>
+  const projectName = projectNameById.get(agreement.projectId) ?? 'Project'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--t2)' }}>
+      <FolderKanban size={11} style={{ color: 'var(--blue)', flexShrink: 0 }} />
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>
+        {projectName}{house ? ` — ${house.label}` : ''}
+      </span>
+    </div>
+  )
+}
 
 const FILTERS: { value: string; label: string }[] = [
   { value: 'ALL', label: 'All' },
@@ -66,6 +83,13 @@ export default function Agreements() {
   const listQuery = useServiceAgreements({ status: statusFilter, limit: 100 })
   const allQuery = useServiceAgreements({ limit: 100 })
   const rawAgreements = listQuery.data?.data ?? []
+
+  const { projects: allProjects } = useProjectsFull()
+  const projectNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const p of allProjects) map.set(p.id, p.name)
+    return map
+  }, [allProjects])
 
   const agreements = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -233,7 +257,7 @@ export default function Agreements() {
               <tbody>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--bd)' }}>
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} style={{ padding: '12px 14px' }}><Skeleton /></td>
                     ))}
                   </tr>
@@ -272,7 +296,7 @@ export default function Agreements() {
                     onChange={e => setSelectedIds(e.target.checked ? agreements.map(a => a.id) : [])}
                   />
                 </th>
-                {(['Agreement', 'Customer', 'Status', 'Visits', 'Next visit', 'Value'] as const).map(h => {
+                {(['Agreement', 'Customer', 'Project / House', 'Status', 'Visits', 'Next visit', 'Value'] as const).map(h => {
                   const key = h === 'Next visit' ? 'nextVisit' : h === 'Value' ? 'value' : h === 'Agreement' ? 'name' : null
                   return (
                     <th
@@ -318,6 +342,7 @@ export default function Agreements() {
                     <td style={{ padding: '12px 14px', color: 'var(--t2)' }}>
                       {a.customer ? `${a.customer.firstName} ${a.customer.lastName}` : '—'}
                     </td>
+                    <td style={{ padding: '12px 14px' }}><AgreementProjectCell agreement={a} projectNameById={projectNameById} /></td>
                     <td style={{ padding: '12px 14px' }}><AgreementStatusBadge status={a.status} /></td>
                     <td style={{ padding: '12px 14px' }}>
                       {(a.visitsIncluded != null || a.serviceInterval) ? <VisitMeter agreement={a} /> : <span style={{ color: 'var(--t4)' }}>—</span>}

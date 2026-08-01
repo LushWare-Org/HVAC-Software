@@ -29,43 +29,42 @@ function riskColor(level: CustomerStatusSummary['churnPrediction']['level']) {
 function fallbackReasoning(summary: CustomerStatusSummary) {
   const upsell = summary.upsellRecommendation
   const retention = summary.retentionPrediction
-  const source = summary.predictionSource === 'model' ? 'ML service' : 'fallback rule model'
 
   return {
     upsellRecommendation: {
       ruleBased: `Scores consider service recency (${summary.signals.daysSinceLastService} days), failure risk (${summary.failurePrediction.level}), churn risk (${summary.churnPrediction.level}), and monthly spend (${formatMoney(summary.signals.avgMonthlySpend)}).`,
-      mlResult: upsell
+      calculation: upsell
         ? `Recommended ${offerLabel(upsell.recommendedOffer)} with ${formatPct(upsell.confidence)} confidence and ${formatPct(upsell.priorityScore ?? upsell.confidence)} priority.`
         : 'No upsell recommendation was returned for this customer.',
-      aiExplanation: upsell
+      interpretation: upsell
         ? `The offer is favored because the customer signals make ${offerLabel(upsell.recommendedOffer).toLowerCase()} the strongest commercial follow-up.`
         : 'The system needs more offer data before it can explain a specific upsell recommendation.',
     },
     retentionSuggestion: {
       ruleBased: 'Retention thresholds favor premium contracts for high conversion and value, retention discounts for high churn, and maintenance plans for repeated failure history.',
-      mlResult: retention
-        ? `${source} inputs produced ${formatPct(retention.pConvert)} conversion probability, ${formatMoney(retention.ltv)} annual value, ${formatPct(retention.churnProbability)} churn probability, and score ${Math.round(retention.score)}.`
+      calculation: retention
+        ? `Inputs produced ${formatPct(retention.pConvert)} conversion probability, ${formatMoney(retention.ltv)} annual value, ${formatPct(retention.churnProbability)} churn probability, and score ${Math.round(retention.score)}.`
         : 'No retention suggestion was returned for this customer.',
-      aiExplanation: retention
+      interpretation: retention
         ? `${retention.reason}. Suggested action: ${offerLabel(retention.action)} at ${retention.priority} priority via ${offerLabel(retention.recommendedChannel)}.`
         : 'The system cannot explain a retention action until a retention prediction is available.',
     },
     failureAndChurnPrediction: {
       ruleBased: 'Fallback rules increase churn for long inactivity and low recent service count; failure risk rises with older equipment, service gaps, and poor review history.',
-      mlResult: `${source} returned ${summary.churnPrediction.level} churn risk (${formatPct(summary.churnPrediction.probability)}) and ${summary.failurePrediction.level} failure risk (${formatPct(summary.failurePrediction.probability)}).`,
-      aiExplanation: 'The combined result means this customer needs outreach calibrated to churn risk and service timing calibrated to failure risk.',
+      calculation: `Returned ${summary.churnPrediction.level} churn risk (${formatPct(summary.churnPrediction.probability)}) and ${summary.failurePrediction.level} failure risk (${formatPct(summary.failurePrediction.probability)}).`,
+      interpretation: 'The combined result means this customer needs outreach calibrated to churn risk and service timing calibrated to failure risk.',
     },
     proposedNextStep: {
       ruleBased: 'Next-step rules prioritize paused follow-up review, urgent intervention, retention offers, maintenance scheduling, re-engagement, monitoring, then normal cadence.',
-      mlResult: `Selected next step: ${summary.proposedNextStep}`,
-      aiExplanation: 'This converts the risk and recommendation results into the next operational action for the team.',
+      calculation: `Selected next step: ${summary.proposedNextStep}`,
+      interpretation: 'This converts the risk and recommendation results into the next operational action for the team.',
     },
   }
 }
 
 function ReasoningCard({ title, result, accent, details }: {
   title: string; result: string; accent: string
-  details: { ruleBased: string; mlResult: string; aiExplanation: string }
+  details: { ruleBased: string; calculation: string; interpretation: string }
 }) {
   return (
     <div style={{ borderRadius: 12, border: '1px solid var(--bd)', background: 'var(--bg-card)', padding: 16 }}>
@@ -79,8 +78,8 @@ function ReasoningCard({ title, result, accent, details }: {
         </span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
-        {(['Rule based', 'ML result', 'AI explanation'] as const).map((label, i) => {
-          const text = [details.ruleBased, details.mlResult, details.aiExplanation][i]
+        {(['Rule based', 'Calculation', 'Interpretation'] as const).map((label, i) => {
+          const text = [details.ruleBased, details.calculation, details.interpretation][i]
           return (
             <div key={label} style={{ borderRadius: 9, border: '1px solid var(--bd)', background: 'var(--bg-card-2)', padding: 11 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{label}</div>
@@ -120,10 +119,6 @@ export default function AiIotTab({ customerId }: { customerId: string }) {
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
-                <div style={{ borderRadius: 9, border: '1px solid var(--bd)', background: 'var(--bg-card-2)', padding: 11 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Prediction source</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', marginTop: 4 }}>{summary.predictionSource === 'model' ? 'ML model' : 'Rule fallback'}</div>
-                </div>
                 <div style={{ borderRadius: 9, border: '1px solid var(--bd)', background: 'var(--bg-card-2)', padding: 11 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Churn risk</div>
                   <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4, color: riskColor(summary.churnPrediction.level) }}>

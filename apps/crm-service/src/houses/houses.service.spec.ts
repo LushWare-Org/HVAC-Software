@@ -82,6 +82,31 @@ describe('HousesService', () => {
         expect.objectContaining({ data: expect.objectContaining({ companyId: CO, projectId: PROJECT_ID, label: 'House 1' }) }),
       );
     });
+
+    it('sets the owner at creation when ownerCustomerId is provided and valid', async () => {
+      prisma.project.findFirst.mockResolvedValue({ id: PROJECT_ID, companyId: CO, templateType: 'HOUSING_SCHEME' });
+      prisma.customer.findFirst.mockResolvedValue({ id: 'cust-1' });
+      prisma.house.create.mockResolvedValue({
+        id: HOUSE_ID, companyId: CO, projectId: PROJECT_ID, label: 'House 1',
+        ownerCustomerId: 'cust-1', tags: [], address: null, notes: null,
+      });
+
+      await service.create(CO, PROJECT_ID, { label: 'House 1', ownerCustomerId: 'cust-1' });
+
+      expect(prisma.customer.findFirst).toHaveBeenCalledWith({ where: { id: 'cust-1', companyId: CO } });
+      expect(prisma.house.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ ownerCustomerId: 'cust-1' }) }),
+      );
+    });
+
+    it('rejects an ownerCustomerId from another company at creation', async () => {
+      prisma.project.findFirst.mockResolvedValue({ id: PROJECT_ID, companyId: CO, templateType: 'HOUSING_SCHEME' });
+      prisma.customer.findFirst.mockResolvedValue(null);
+      await expect(
+        service.create(CO, PROJECT_ID, { label: 'House 1', ownerCustomerId: 'cust-other' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.house.create).not.toHaveBeenCalled();
+    });
   });
 
   describe('listForProject', () => {

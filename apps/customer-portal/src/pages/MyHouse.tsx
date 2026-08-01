@@ -9,12 +9,17 @@ import { useState } from 'react'
 import {
   Home, MapPin, Wind, CalendarClock, ShieldCheck, Wrench,
   AlertTriangle, Send, Loader2, ChevronDown, ChevronUp, ChevronRight, Tag, Plus, X, Check,
+  FileSignature, Receipt, FileText,
 } from 'lucide-react'
 import {
   useMyHouses, useMyHouseEquipment, useMyHouseServiceLog, useMyIssueReports, useReportIssue,
   useAddMyEquipment, type MyHouse as MyHouseType, type MyIssueStatus, type AddMyEquipmentInput,
   type MyHouseEquipment as MyHouseEquipmentType,
 } from '../hooks/useMyHouse'
+import { useMyAgreements } from '../hooks/useMyAgreements'
+import { useMyQuotes, useMyInvoices } from '../hooks/useMyFinance'
+import { formatMoney } from '../lib/format'
+import BookServiceModal from './jobs/BookServiceModal'
 
 const ISSUE_STATUS_META: Record<MyIssueStatus, { label: string; color: string; dim: string }> = {
   OPEN: { label: 'Open', color: 'var(--red)', dim: 'var(--red-dim)' },
@@ -101,6 +106,7 @@ export default function MyHouse() {
 
 function HouseHero({ house }: { house: MyHouseType }) {
   const [showReport, setShowReport] = useState(false)
+  const [showBook, setShowBook] = useState(false)
   const equipmentQ = useMyHouseEquipment(house.id)
 
   return (
@@ -146,14 +152,30 @@ function HouseHero({ house }: { house: MyHouseType }) {
             </div>
           )}
         </div>
-        <button className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 700, whiteSpace: 'nowrap' }}
-          onClick={() => setShowReport(true)}>
-          <AlertTriangle size={14} /> Report an issue
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 700, whiteSpace: 'nowrap' }}
+            onClick={() => setShowBook(true)}>
+            <Wrench size={14} /> Book a service
+          </button>
+          <button className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 700, whiteSpace: 'nowrap' }}
+            onClick={() => setShowReport(true)}>
+            <AlertTriangle size={14} /> Report an issue
+          </button>
+        </div>
       </div>
 
       {showReport && (
         <ReportIssueModal houseId={house.id} equipment={equipmentQ.data} onClose={() => setShowReport(false)} />
+      )}
+
+      {showBook && (
+        <BookServiceModal
+          onClose={() => setShowBook(false)}
+          projectId={house.projectId}
+          projectName={house.projectName}
+          houseId={house.id}
+          houseLabel={house.label}
+        />
       )}
     </div>
   )
@@ -298,6 +320,12 @@ function HouseSection({ house }: { house: MyHouseType }) {
         )}
       </div>
 
+      {/* Agreements */}
+      <HouseAgreementsSection houseId={house.id} />
+
+      {/* Billing */}
+      <HouseBillingSection houseId={house.id} />
+
       {showAddEquipment && (
         <AddEquipmentModal
           saving={addEquipment.isPending}
@@ -308,6 +336,156 @@ function HouseSection({ house }: { house: MyHouseType }) {
 
       {viewingEquipment && (
         <EquipmentDetailModal equipment={viewingEquipment} onClose={() => setViewingEquipment(null)} />
+      )}
+    </div>
+  )
+}
+
+// ── Agreements ────────────────────────────────────────────────────────────
+
+const DOC_STATUS_META: Record<string, { color: string; dim: string }> = {
+  DRAFT: { color: 'var(--t3)', dim: 'var(--bg-card-2)' },
+  SENT: { color: 'var(--blue)', dim: 'var(--blue-dim)' },
+  VIEWED: { color: 'var(--blue)', dim: 'var(--blue-dim)' },
+  ACTIVE: { color: 'var(--green)', dim: 'var(--green-dim)' },
+  ACCEPTED: { color: 'var(--green)', dim: 'var(--green-dim)' },
+  PAID: { color: 'var(--green)', dim: 'var(--green-dim)' },
+  PENDING_RENEWAL: { color: 'var(--amber)', dim: 'var(--amber-dim)' },
+  PARTIALLY_PAID: { color: 'var(--amber)', dim: 'var(--amber-dim)' },
+  OVERDUE: { color: 'var(--red)', dim: 'var(--red-dim)' },
+  EXPIRED: { color: 'var(--red)', dim: 'var(--red-dim)' },
+  DECLINED: { color: 'var(--red)', dim: 'var(--red-dim)' },
+  REJECTED: { color: 'var(--red)', dim: 'var(--red-dim)' },
+  CANCELLED: { color: 'var(--red)', dim: 'var(--red-dim)' },
+  VOID: { color: 'var(--t3)', dim: 'var(--bg-card-2)' },
+  RENEWED: { color: 'var(--t3)', dim: 'var(--bg-card-2)' },
+  CONVERTED: { color: 'var(--blue)', dim: 'var(--blue-dim)' },
+}
+
+function DocStatusBadge({ status }: { status: string }) {
+  const meta = DOC_STATUS_META[status] ?? { color: 'var(--t3)', dim: 'var(--bg-card-2)' }
+  return (
+    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, whiteSpace: 'nowrap', background: meta.dim, color: meta.color }}>
+      {status.replace(/_/g, ' ')}
+    </span>
+  )
+}
+
+function HouseAgreementsSection({ houseId }: { houseId: string }) {
+  const [open, setOpen] = useState(false)
+  const agreementsQ = useMyAgreements()
+  const agreements = (agreementsQ.data?.data ?? []).filter(a => a.houseId === houseId)
+
+  return (
+    <div style={{ borderRadius: 16, border: '1px solid var(--bd)', background: 'var(--bg-card)', overflow: 'hidden' }}>
+      <button onClick={() => setOpen(v => !v)} style={{
+        display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
+        padding: '16px 18px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+      }}>
+        <FileSignature size={13} style={{ color: 'var(--t3)' }} />
+        <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Agreements{agreements.length > 0 ? ` · ${agreements.length}` : ''}
+        </span>
+        {open ? <ChevronUp size={15} style={{ color: 'var(--t4)' }} /> : <ChevronDown size={15} style={{ color: 'var(--t4)' }} />}
+      </button>
+      {open && (
+        <div style={{ borderTop: '1px solid var(--bd)', padding: '12px 18px 16px' }}>
+          {agreementsQ.isLoading ? (
+            <Loader2 size={14} className="animate-spin" style={{ color: 'var(--t3)' }} />
+          ) : agreements.length === 0 ? (
+            <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: 0 }}>No agreements for this house yet.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {agreements.map(a => (
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'var(--bg-card-2)', border: '1px solid var(--bd)' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</p>
+                    <p style={{ fontSize: 11, color: 'var(--t4)', margin: '2px 0 0' }}>
+                      {a.serviceType ?? '—'}{a.nextServiceDate ? ` · next visit ${fmtDate(a.nextServiceDate)}` : ''}
+                    </p>
+                  </div>
+                  <DocStatusBadge status={a.status} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Billing ───────────────────────────────────────────────────────────────
+
+function HouseBillingSection({ houseId }: { houseId: string }) {
+  const [open, setOpen] = useState(false)
+  const quotesQ = useMyQuotes({ houseId, limit: 50 })
+  const invoicesQ = useMyInvoices({ houseId, limit: 50 })
+  const quotes = quotesQ.data?.data ?? []
+  const invoices = invoicesQ.data?.data ?? []
+  const total = quotes.length + invoices.length
+
+  return (
+    <div style={{ borderRadius: 16, border: '1px solid var(--bd)', background: 'var(--bg-card)', overflow: 'hidden' }}>
+      <button onClick={() => setOpen(v => !v)} style={{
+        display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
+        padding: '16px 18px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+      }}>
+        <Receipt size={13} style={{ color: 'var(--t3)' }} />
+        <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Billing{total > 0 ? ` · ${total}` : ''}
+        </span>
+        {open ? <ChevronUp size={15} style={{ color: 'var(--t4)' }} /> : <ChevronDown size={15} style={{ color: 'var(--t4)' }} />}
+      </button>
+      {open && (
+        <div style={{ borderTop: '1px solid var(--bd)', padding: '12px 18px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <FileText size={11} /> Quotes
+            </p>
+            {quotesQ.isLoading ? (
+              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--t3)' }} />
+            ) : quotes.length === 0 ? (
+              <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: 0 }}>No quotes yet.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {quotes.map(q => (
+                  <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'var(--bg-card-2)', border: '1px solid var(--bd)' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.title}</p>
+                      <p style={{ fontSize: 11, color: 'var(--t4)', margin: '2px 0 0' }}>{q.quoteNumber}</p>
+                    </div>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--t1)' }}>{formatMoney(Number(q.total ?? 0))}</span>
+                    <DocStatusBadge status={q.status} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Receipt size={11} /> Invoices
+            </p>
+            {invoicesQ.isLoading ? (
+              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--t3)' }} />
+            ) : invoices.length === 0 ? (
+              <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: 0 }}>No invoices yet.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {invoices.map(i => (
+                  <div key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'var(--bg-card-2)', border: '1px solid var(--bd)' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.invoiceNumber}</p>
+                      <p style={{ fontSize: 11, color: 'var(--t4)', margin: '2px 0 0' }}>{i.dueDate ? `Due ${fmtDate(i.dueDate)}` : ''}</p>
+                    </div>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--t1)' }}>{formatMoney(Number(i.total ?? 0))}</span>
+                    <DocStatusBadge status={i.status} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

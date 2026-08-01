@@ -8,6 +8,7 @@ import { IsOptional, IsString, IsArray, IsEnum, IsBoolean, IsDateString, IsNumbe
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { JobsService } from './jobs.service';
+import { CrmClient } from './crm.client';
 import { CreateJobDto, JobPriorityDto } from './dto/create-job.dto';
 import { UpdateJobStatusDto, JobStatusDto } from './dto/update-job-status.dto';
 
@@ -48,7 +49,10 @@ class UpdateCustomFieldsDto {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('jobs')
 export class JobsController {
-  constructor(private readonly jobsService: JobsService) {}
+  constructor(
+    private readonly jobsService: JobsService,
+    private readonly crmClient: CrmClient,
+  ) {}
 
   // ---- Stats (dashboard) ----
   @Get('stats')
@@ -69,7 +73,7 @@ export class JobsController {
   @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date e.g. 2024-01-01' })
   @ApiQuery({ name: 'dateTo', required: false })
   @ApiQuery({ name: 'customerId', required: false })
-  findAll(
+  async findAll(
     @CurrentUser() user: AuthUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
@@ -87,10 +91,23 @@ export class JobsController {
     @Query('equipmentId') equipmentId?: string,
     @Query('isAgreementJob') isAgreementJob?: string,
   ) {
-    // CUSTOMER role: force-filter to their own customerId for security
-    const effectiveCustomerId = user.role === Role.CUSTOMER
-      ? user.customerId
-      : customerId;
+    // CUSTOMER role: force-filter to their own customerId for security — EXCEPT
+    // when querying a specific houseId they actually own. A house-linked job's
+    // customerId is whoever was picked when the job was created (often the
+    // Housing Scheme project's own top-level customer, not the individual house
+    // owner), so AND-ing customerId with houseId would silently hide a
+    // homeowner's own service history for jobs booked under the project's
+    // customer instead of theirs. Ownership of the house is what actually
+    // authorizes seeing its jobs, not a customerId match on each job row.
+    let effectiveCustomerId = user.role === Role.CUSTOMER ? user.customerId : customerId;
+    if (user.role === Role.CUSTOMER && houseId) {
+      const ownerCustomerId = await this.crmClient.getHouseOwnerCustomerId(user.companyId, houseId);
+      if (ownerCustomerId && ownerCustomerId === user.customerId) {
+        effectiveCustomerId = undefined;
+      } else {
+        throw new ForbiddenException('You can only view jobs for your own house');
+      }
+    }
 
     return this.jobsService.findAll(user.companyId, page, limit, {
       status, assignedToId, jobTypeId, search, dateFrom, dateTo,
@@ -121,6 +138,21 @@ export class JobsController {
   @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Create a new job' })
   async create(@CurrentUser() user: AuthUser, @Body() dto: CreateJobDto) {
+    // Auto-backfill projectId from the house, for EVERY caller (staff or
+    // customer) — regardless of role. A house-linked job with no projectId is
+    // correctly attached to the house but invisible in that project's own Jobs
+    // tab (which is scoped by projectId), a silent gap no caller should have to
+    // remember to avoid by hand. Runs before the customer ownership check below
+    // so that check also benefits from a single fetch.
+    let houseDetails: { ownerCustomerId: string | null; projectId: string } | undefined;
+    if (dto.houseId) {
+      houseDetails = await this.crmClient.getHouseDetails(user.companyId, dto.houseId);
+      if (houseDetails === undefined) {
+        throw new BadRequestException('House not found');
+      }
+      if (!dto.projectId) dto.projectId = houseDetails.projectId;
+    }
+
     if (user.role === Role.CUSTOMER) {
       if (!user.customerId) {
         throw new ForbiddenException('Customer account is not linked to a customer profile');
@@ -130,6 +162,24 @@ export class JobsController {
       }
       if (!dto.serviceAddress?.trim()) {
         throw new BadRequestException('Service address is required');
+      }
+      // A customer may only book against a project/house that is actually theirs —
+      // otherwise a crafted request could attach a job (and its visibility) to any
+      // project or house in the company. houseId is checked in preference to
+      // projectId when both are present, since a house's own owner is the more
+      // specific and authoritative link for a Housing Scheme booking.
+      if (houseDetails) {
+        if (houseDetails.ownerCustomerId !== user.customerId) {
+          throw new ForbiddenException('You can only book a service for your own house');
+        }
+      } else if (dto.projectId) {
+        const projectCustomerId = await this.crmClient.getProjectCustomerId(user.companyId, dto.projectId);
+        if (projectCustomerId === undefined) {
+          throw new BadRequestException('Project not found');
+        }
+        if (projectCustomerId !== user.customerId) {
+          throw new ForbiddenException('You can only book a service for your own project');
+        }
       }
     }
     return this.jobsService.create(user, dto);

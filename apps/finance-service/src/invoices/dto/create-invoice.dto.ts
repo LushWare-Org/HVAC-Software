@@ -10,7 +10,9 @@ export class CreateInvoiceDto {
   @ApiPropertyOptional() @IsOptional() @IsString() quoteId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() jobId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() projectId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() houseId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() workOrderId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() templateId?: string;
   @ApiProperty() @IsString() customerId!: string;
   @ApiPropertyOptional() @IsOptional() @IsString() customerName?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() customerEmail?: string;

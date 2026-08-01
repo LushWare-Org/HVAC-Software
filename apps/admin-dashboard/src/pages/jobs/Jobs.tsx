@@ -4,13 +4,16 @@ import {
   Wrench, Clock, CheckCircle, FileText, Search, AlertTriangle,
   Maximize2, Minimize2, Edit2,
   ChevronLeft, ChevronRight, RefreshCw, AlertCircle,
-  Zap, CalendarDays, Shield, Trash2,
+  Zap, CalendarDays, Shield, Trash2, FolderKanban,
 } from "lucide-react";
 import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
 import { useTechnicians } from "../../hooks/useScheduling";
+import { useProjectsFull } from "../projects/projectsApi";
+import { useHouse } from "../projects/housesApi";
 import type { Job } from "../../types/api";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import Avatar from "../../components/Avatar";
+import CreateJobModal from "../dispatch/CreateJobModal";
 
 const STATUS: Record<string, { label: string; css: string }> = {
   PENDING:     { label: "Pending",     css: "badge-amber" },
@@ -74,9 +77,25 @@ function SortArrow() {
   );
 }
 
-function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId }: {
+/** Resolves the house label lazily (per-row, cheap — only fires when the job has a houseId). */
+function JobProjectCell({ job, projectNameById }: { job: Job; projectNameById: Map<string, string> }) {
+  const { data: house } = useHouse(job.houseId);
+  if (!job.projectId) return <span className="text-xs text-4">—</span>;
+  const projectName = projectNameById.get(job.projectId) ?? "Project";
+  return (
+    <div className="flex items-center gap-1.5" style={{ fontSize: 12, color: "var(--t2)" }}>
+      <FolderKanban size={11} style={{ color: "var(--blue)", flexShrink: 0 }} />
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
+        {projectName}{house ? ` — ${house.label}` : ""}
+      </span>
+    </div>
+  );
+}
+
+function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId, projectNameById }: {
   jobs: Job[]; loading: boolean; onView: (j: Job) => void; onDelete: (j: Job) => void;
   sortMode?: 'priority' | 'date'; avatarByUserId: Record<string, string | undefined>;
+  projectNameById: Map<string, string>;
 }) {
   return (
     <table className="data-table">
@@ -85,6 +104,7 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId }:
           <th>Job ID</th>
           <th>Customer</th>
           <th>Service</th>
+          <th>Project / House</th>
           <th>Technician</th>
           <th style={sortMode === 'date' ? { color: "var(--blue)", fontWeight: 700 } : undefined}>
             Scheduled {sortMode === 'date' && <SortArrow />}
@@ -99,10 +119,10 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId }:
       </thead>
       <tbody>
         {loading && Array.from({ length: 5 }).map((_, i) => (
-          <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
+          <tr key={i}>{Array.from({ length: 10 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
         ))}
         {!loading && jobs.length === 0 && (
-          <tr><td colSpan={9}>
+          <tr><td colSpan={10}>
             <div className="empty-state">
               <div className="empty-icon"><Wrench size={22} /></div>
               <div className="empty-title">No jobs found</div>
@@ -138,6 +158,7 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId }:
                   <div className="text-xs text-4 mt-0.5 truncate" style={{ maxWidth: 160 }}>{j.description}</div>
                 )}
               </td>
+              <td><JobProjectCell job={j} projectNameById={projectNameById} /></td>
               <td><TechAvatar name={j.assignedToName} avatarUrl={j.assignedToId ? avatarByUserId[j.assignedToId] : undefined} /></td>
               <td>
                 {j.scheduledStart ? (
@@ -190,11 +211,13 @@ export default function Jobs() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterAgreement, setFilterAgreement] = useState(false);
+  const [filterProjectId, setFilterProjectId] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [pastPage, setPastPage] = useState(1);
   const [pastStatusFilter, setPastStatusFilter] = useState("all");
   const [sortMode, setSortMode] = useState<'priority' | 'date'>('priority');
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
   const [forecastDays, setForecastDays] = useState<number>(7);
   const PAST_PER_PAGE = 10;
 
@@ -202,6 +225,18 @@ export default function Jobs() {
   const jobsQuery = useJobs({ limit: 200, search: search || undefined });
   const deleteJob = useDeleteJob();
   const techniciansQuery = useTechnicians();
+  const { projects: allProjects } = useProjectsFull();
+  const projectNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of allProjects) map.set(p.id, p.name);
+    return map;
+  }, [allProjects]);
+  // Only projects that actually have a job here get listed — avoids a giant
+  // dropdown of every project in the company when most have no jobs yet.
+  const projectsWithJobs = useMemo(() => {
+    const ids = new Set((jobsQuery.data?.data ?? []).map(j => j.projectId).filter(Boolean) as string[]);
+    return [...ids].map(id => ({ id, name: projectNameById.get(id) ?? 'Project' })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [jobsQuery.data, projectNameById]);
 
   const stats = statsQuery.data;
   const allJobs: Job[] = jobsQuery.data?.data ?? [];
@@ -245,6 +280,7 @@ export default function Jobs() {
     if (filterStatus !== "all") filtered = filtered.filter(j => j.status === filterStatus);
     if (filterPriority !== "all") filtered = filtered.filter(j => (j.priority ?? "NORMAL") === filterPriority);
     if (filterAgreement) filtered = filtered.filter(j => j.isAgreementJob);
+    if (filterProjectId) filtered = filtered.filter(j => j.projectId === filterProjectId);
 
     const active = [...filtered].sort((a, b) => {
       if (sortMode === 'date') {
@@ -273,7 +309,7 @@ export default function Jobs() {
     });
 
     return { activeJobs: active, pastJobs: past, activeStatusCounts: statusCounts, activePriorityCounts: priorityCounts };
-  }, [allJobs, filterStatus, filterPriority, filterAgreement, sortMode]);
+  }, [allJobs, filterStatus, filterPriority, filterAgreement, filterProjectId, sortMode]);
 
   const filteredPastJobs = pastStatusFilter === "all"
     ? pastJobs
@@ -377,6 +413,9 @@ export default function Jobs() {
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--t3)", background: "var(--bg-hover)", padding: "2px 9px", borderRadius: 12 }}>
                 {jobsQuery.isLoading ? "…" : activeJobs.length}
               </span>
+              <button className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
+                <Wrench size={12} /> New job
+              </button>
             </div>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
@@ -421,13 +460,28 @@ export default function Jobs() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div className="filter-search" style={{ maxWidth: 320 }}>
-              <Search size={13} color="var(--t4)" />
-              <input
-                placeholder="Search jobs, customers, services…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <div className="filter-search" style={{ maxWidth: 320 }}>
+                <Search size={13} color="var(--t4)" />
+                <input
+                  placeholder="Search jobs, customers, services…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              {projectsWithJobs.length > 0 && (
+                <select
+                  className="select"
+                  style={{ maxWidth: 220, fontSize: 12.5 }}
+                  value={filterProjectId}
+                  onChange={e => setFilterProjectId(e.target.value)}
+                >
+                  <option value="">All projects</option>
+                  {projectsWithJobs.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
             {/* Status chips */}
             <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
@@ -516,7 +570,7 @@ export default function Jobs() {
 
         <div className="card-body-flush">
           <div className="table-container jobs-table-container">
-            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} avatarByUserId={avatarByUserId} />
+            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} avatarByUserId={avatarByUserId} projectNameById={projectNameById} />
           </div>
         </div>
       </div>
@@ -585,7 +639,7 @@ export default function Jobs() {
             </div>
           ) : (
             <div className="table-container jobs-table-container">
-              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} avatarByUserId={avatarByUserId} />
+              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} avatarByUserId={avatarByUserId} projectNameById={projectNameById} />
             </div>
           )}
         </div>
@@ -641,6 +695,12 @@ export default function Jobs() {
           </div>
         </div>
       )}
+
+      <CreateJobModal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreated={() => jobsQuery.refetch()}
+      />
     </div>
   );
 }

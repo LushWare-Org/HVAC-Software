@@ -109,6 +109,8 @@ model Quote {
   quoteNumber   String // e.g. QUOTE-2024-0001 (auto-generated)
   jobId         String? // optional link to a job in the jobs schema
   projectId     String? // cross-schema ref to crm.projects
+  houseId       String? // Housing Scheme: which house this quote is for (cross-schema ref to crm.houses)
+  templateId    String? // cross-schema ref to crm.document_templates
   customerId    String // cross-schema ref to crm.customers
   customerName  String
   customerEmail String
@@ -151,6 +153,8 @@ model Quote {
   @@unique([companyId, quoteNumber])
   @@index([companyId, status])
   @@index([companyId, customerId])
+  @@index([companyId, projectId])
+  @@index([houseId])
   @@schema("finance")
 }
 
@@ -182,7 +186,9 @@ model Invoice {
   quote         Quote?  @relation("QuoteInvoices", fields: [quoteId], references: [id])
   jobId         String? // cross-schema ref to jobs.job
   projectId     String? // cross-schema ref to crm.projects
+  houseId       String? // Housing Scheme: which house this invoice is for (cross-schema ref to crm.houses)
   workOrderId   String? // cross-schema ref to jobs.work_order
+  templateId    String? // cross-schema ref to crm.document_templates
   customerId    String
   customerName  String
   customerEmail String
@@ -240,6 +246,8 @@ model Invoice {
   @@index([companyId, status])
   @@index([companyId, customerId])
   @@index([companyId, dueDate])
+  @@index([companyId, projectId])
+  @@index([houseId])
   @@schema("finance")
 }
 

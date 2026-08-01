@@ -19,6 +19,7 @@ export interface UpsertHouseInput {
   address?: string | null;
   tags?: string[];
   notes?: string | null;
+  ownerCustomerId?: string;
 }
 
 @Injectable()
@@ -45,6 +46,11 @@ export class HousesService {
     await this.assertProjectIsHousingScheme(companyId, projectId);
     if (!input.label?.trim()) throw new BadRequestException('label is required');
 
+    if (input.ownerCustomerId) {
+      const customer = await this.prisma.customer.findFirst({ where: { id: input.ownerCustomerId, companyId } });
+      if (!customer) throw new BadRequestException('Customer not found in this company');
+    }
+
     const house = await this.prisma.house.create({
       data: {
         companyId,
@@ -53,6 +59,7 @@ export class HousesService {
         address: input.address ?? null,
         tags: input.tags ?? [],
         notes: input.notes ?? null,
+        ownerCustomerId: input.ownerCustomerId ?? null,
       },
     });
     const [decorated] = await this.decorate(companyId, [house]);

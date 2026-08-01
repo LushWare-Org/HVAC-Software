@@ -35,6 +35,8 @@ export class LineItemDto {
 export class CreateQuoteDto {
   @ApiPropertyOptional() @IsOptional() @IsString() jobId?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() projectId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() houseId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() templateId?: string;
   @ApiProperty() @IsString() customerId!: string;
   @ApiProperty() @IsString() customerName!: string;
   @ApiProperty() @IsEmail() customerEmail!: string;

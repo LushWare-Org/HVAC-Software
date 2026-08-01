@@ -1,13 +1,15 @@
 import {
   Controller, Get, Post, Put, Patch, Delete, Param, Body,
-  UseGuards, HttpCode, HttpStatus, ForbiddenException,
+  UseGuards, UseInterceptors, UploadedFile, HttpCode, HttpStatus,
+  ForbiddenException, BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { EquipmentService } from './equipment.service';
 import { ConsumablesService } from './consumables.service';
-import { IsString, IsOptional, IsArray, ValidateNested, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsIn, ValidateNested, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class CreateEquipmentDto {
@@ -46,6 +48,14 @@ class ConsumableBodyDto {
   @IsOptional() @IsString() lastReplacedAt?: string;
   @IsOptional() @IsString() purchaseUrl?: string;
 }
+
+class AddErrorCodeDto {
+  @IsString() code!: string;
+  @IsOptional() @IsString() meaning?: string;
+  @IsOptional() @IsIn(['AI_SCAN', 'MANUAL']) source?: 'AI_SCAN' | 'MANUAL';
+}
+
+const STAFF_WRITE = [Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER];
 
 @ApiTags('Customer Equipment')
 @ApiBearerAuth()
@@ -187,5 +197,47 @@ export class EquipmentController {
   @ApiOperation({ summary: 'Remove a consumable (staff only)' })
   removeConsumable(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.consumablesService.remove(user.companyId, id);
+  }
+}
+
+// ── Equipment photo + AI scan + error codes (id-scoped, not customer-nested) ──
+@ApiTags('Equipment')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('equipment')
+export class EquipmentItemController {
+  constructor(private readonly equipmentService: EquipmentService) {}
+
+  @Post(':id/image')
+  @Roles(...STAFF_WRITE)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload/replace an equipment photo — triggers a background AI scan' })
+  uploadImage(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) throw new BadRequestException('No photo uploaded');
+    return this.equipmentService.uploadImage(user.companyId, id, file);
+  }
+
+  @Post(':id/error-codes')
+  @Roles(...STAFF_WRITE)
+  @ApiOperation({ summary: 'Add an error code entry (manual, or approved from an AI suggestion)' })
+  addErrorCode(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: AddErrorCodeDto,
+  ) {
+    return this.equipmentService.addErrorCode(user.companyId, id, dto);
+  }
+
+  @Delete(':id/error-codes/:codeId')
+  @Roles(...STAFF_WRITE)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove an error code entry' })
+  removeErrorCode(@CurrentUser() user: AuthUser, @Param('codeId') codeId: string) {
+    return this.equipmentService.removeErrorCode(user.companyId, codeId);
   }
 }

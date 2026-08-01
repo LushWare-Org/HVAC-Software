@@ -6,7 +6,7 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../src/prisma/generated"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -242,6 +242,7 @@ model ServiceAgreement {
   signedAt     DateTime?
   signedByName String?
   documentUrl  String?         // S3 key for signed PDF
+  templateId   String?         // cross-schema ref to crm.document_templates (same schema — soft ref, no FK)
 
   // Pricing
   billingAmount   Decimal?  @db.Decimal(10, 2) // per-billing-period amount
@@ -263,6 +264,11 @@ model ServiceAgreement {
 
   // Projects link — agreement-generated jobs inherit this
   projectId String?
+  // Housing Scheme: which house this agreement is for. customerId stays whoever
+  // was picked at creation (often the project's own top-level customer, not the
+  // individual house owner) — houseId is the authoritative visibility link, same
+  // pattern as Job.houseId.
+  houseId   String?
 
   // Customer confirmation & renewal
   customerConfirmedAt DateTime?
@@ -279,6 +285,7 @@ model ServiceAgreement {
   @@index([customerId])
   @@index([companyId, status])
   @@index([companyId, nextServiceDate])
+  @@index([houseId])
   @@map("service_agreements")
 }
 
@@ -433,9 +440,62 @@ model Equipment {
   issueReports  HouseIssueReport[]
   manualUrl     String?   @map("manual_url")
 
+  imageUrl        String?   @map("image_url")
+  imageScanStatus String    @default("NONE") @map("image_scan_status") // NONE | SCANNING | DONE | FAILED
+  imageScanResult Json?     @map("image_scan_result")
+  imageScanError  String?   @map("image_scan_error")
+  errorCodes      EquipmentErrorCode[]
+
   @@index([customerId])
   @@index([houseId])
   @@map("equipment")
+}
+
+model EquipmentErrorCode {
+  id          String    @id @default(uuid())
+  companyId   String
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  code        String
+  meaning     String?
+  source      String    @default("MANUAL") // MANUAL | AI_SCAN
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([equipmentId])
+  @@index([companyId])
+  @@map("equipment_error_codes")
+}
+
+model DocumentTemplate {
+  id          String   @id @default(uuid())
+  companyId   String
+  documentType String  // INVOICE | QUOTE | AGREEMENT
+  name        String
+  isDefault   Boolean  @default(false)
+  mode        String   @default("BUILDER") // BUILDER | LETTERHEAD
+
+  companyName     String?  // overrides the tenant's Company.name on this document, when set
+  companyAddress  String?  // overrides the tenant's Company.address on this document, when set
+  logoUrl         String?
+  logoPosition    String?  @default("LEFT") // LEFT | CENTER | RIGHT
+  accentColor     String?
+  headerText      String?
+  footerText      String?
+  bankDetails     String?
+  showPageNumbers Boolean  @default(true)
+  rows            Json?    // custom row/block arrangement from the drag-positioned slot layout builder; null = use the document type's default arrangement
+
+  letterheadImageUrl       String?
+  letterheadTopMarginPx    Int?     @default(140)
+  letterheadBottomMarginPx Int?     @default(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, documentType, name])
+  @@index([companyId, documentType])
+  @@map("document_templates")
 }
 
 model EquipmentConsumable {
@@ -748,7 +808,7 @@ model IotDeviceHistory {
 model Project {
   id                String    @id @default(uuid())
   companyId         String
-  customerId        String
+  customerId        String?
   name              String
   description       String?
   category          String?             // free text, reporting only

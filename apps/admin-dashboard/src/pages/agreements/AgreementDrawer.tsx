@@ -6,10 +6,10 @@
 import { useState } from 'react'
 import {
   Loader2, Send, RefreshCw, XCircle, Pencil, X, CheckCircle2, AlarmClock, History,
-  FileSignature, CalendarClock,
+  FileSignature, CalendarClock, Download,
 } from 'lucide-react'
 import {
-  useServiceAgreement, useSendAgreement, useRenewAgreement, useCancelAgreement,
+  useServiceAgreement, useSendAgreement, useRenewAgreement, useCancelAgreement, useDownloadAgreementPdf,
   type Agreement,
 } from '../../hooks/useAgreements'
 import { useToast } from '../../contexts/ToastContext'
@@ -76,6 +76,7 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
   const sendMut = useSendAgreement()
   const renewMut = useRenewAgreement()
   const cancelMut = useCancelAgreement()
+  const downloadPdf = useDownloadAgreementPdf()
   const toast = useToast()
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [showAllAmendments, setShowAllAmendments] = useState(false)
@@ -85,6 +86,22 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
       onSuccess: () => toast.showSuccess(success),
       onError: (e: any) => toast.showError(e?.response?.data?.message ?? 'Something went wrong'),
     })
+
+  const onDownloadPdf = async () => {
+    try {
+      const blob = await downloadPdf.mutateAsync(agreement!.id)
+      const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `agreement-${agreement!.name}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (e: any) {
+      toast.showError(e?.response?.data?.message ?? 'Could not download the PDF', 'Download failed')
+    }
+  }
 
   const content = (
     <>
@@ -140,6 +157,9 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
                     <XCircle size={12} /> Cancel
                   </button>
                 )}
+                <button className="btn btn-secondary btn-sm" onClick={onDownloadPdf} disabled={downloadPdf.isPending}>
+                  {downloadPdf.isPending ? <Loader2 size={12} className="spin" /> : <Download size={12} />} Download PDF
+                </button>
               </div>
 
               {/* Visits */}

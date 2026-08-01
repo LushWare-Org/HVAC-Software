@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download, UploadCloud, Briefcase } from 'lucide-react'
+import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download, UploadCloud, Briefcase, FileSignature, FolderKanban } from 'lucide-react'
 import { useInvoices, useQuotes, useExpenses, useFinanceKpis, decimalToNumber, useDeleteExpense, useSendInvoice, useQBStatus, useQBSyncInvoice } from '../../hooks/useFinance'
 import { useJobs } from '../../hooks/useJobs'
 import { useToast } from '../../contexts/ToastContext'
@@ -8,7 +8,25 @@ import AddQuoteModal from './AddQuoteModal'
 import AddInvoiceModal from './AddInvoiceModal'
 import AddExpenseModal from './AddExpenseModal'
 import RecommendationsPanel from '../../components/RecommendationsPanel'
+import DocumentTemplatesTab from './DocumentTemplatesTab'
 import { humanizeStatus, normalizeStatus, formatMoney } from '../../lib/format'
+import { useProjectsFull } from '../projects/projectsApi'
+import { useHouse } from '../projects/housesApi'
+
+/** Resolves a quote/invoice's project/house context lazily — cheap house lookup only fires when set. */
+function DocProjectCell({ projectId, houseId, projectNameById }: { projectId?: string; houseId?: string; projectNameById: Map<string, string> }) {
+  const { data: house } = useHouse(houseId)
+  if (!projectId) return <span className="text-3">—</span>
+  const projectName = projectNameById.get(projectId) ?? 'Project'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
+      <FolderKanban size={10} style={{ color: 'var(--blue)', flexShrink: 0 }} />
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
+        {projectName}{house ? ` — ${house.label}` : ''}
+      </span>
+    </div>
+  )
+}
 
 // ─── Status CSS maps (backend UPPER_CASE = source of truth) ───────────────────
 // All map keys are UPPER_SNAKE_CASE to match backend Prisma enums. Lookups
@@ -106,7 +124,7 @@ const EXP_STATUS_PILLS = [
 
 export default function Finance() {
   const { showError, showSuccess } = useToast()
-  const [tab, setTab] = useState<'invoices' | 'quotes' | 'expenses'>('invoices')
+  const [tab, setTab] = useState<'invoices' | 'quotes' | 'expenses' | 'templates'>('invoices')
   const [isExpanded, setIsExpanded] = useState(false)
   const [invPage, setInvPage] = useState(1)
   const [invSearch, setInvSearch] = useState('')
@@ -140,6 +158,13 @@ export default function Finance() {
   const expenses: Expense[] = expensesQuery.data?.data ?? []
   const totalExpenses = expensesQuery.data?.total ?? 0
   const totalExpPages = Math.max(1, expensesQuery.data?.totalPages ?? 1)
+
+  const { projects: allProjects } = useProjectsFull()
+  const projectNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const p of allProjects) map.set(p.id, p.name)
+    return map
+  }, [allProjects])
 
   // Look up job titles for invoices/quotes/expenses
   const jobsLookupQuery = useJobs({ limit: 200 })
@@ -264,6 +289,9 @@ export default function Finance() {
         <button className={`tab-btn ${tab === 'expenses' ? 'active' : ''}`} onClick={() => setTab('expenses')}>
           <CreditCard size={14} /> Expenses <span className="tab-count">{totalExpenses}</span>
         </button>
+        <button className={`tab-btn ${tab === 'templates' ? 'active' : ''}`} onClick={() => setTab('templates')}>
+          <FileSignature size={14} /> Document Templates
+        </button>
       </div>
 
       {/* ── Invoices ── */}
@@ -297,6 +325,7 @@ export default function Finance() {
                   <tr>
                     <th style={{ textAlign: 'left' }}>Invoice NO</th>
                     <th style={{ textAlign: 'left' }}>Job Ref</th>
+                    <th style={{ textAlign: 'left' }}>Project / House</th>
                     <th style={{ textAlign: 'left' }}>Customer</th>
                     <th style={{ textAlign: 'left' }}>Amount</th>
                     <th style={{ textAlign: 'left' }}>Issue Date</th>
@@ -307,7 +336,7 @@ export default function Finance() {
                   </tr>
                 </thead>
                 <tbody>
-                  {invoicesQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 8 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
+                  {invoicesQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
                   {!invoicesQuery.isLoading && invoices.map(inv => (
                     <tr key={inv.id} onClick={() => window.dispatchEvent(new CustomEvent("open-invoice-detail", { detail: inv }))} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
                       <td><span className="td-mono td-primary">{inv.invoiceNumber}</span></td>
@@ -325,6 +354,7 @@ export default function Finance() {
                           </button>
                         ) : '—'}
                       </td>
+                      <td><DocProjectCell projectId={inv.projectId} houseId={inv.houseId} projectNameById={projectNameById} /></td>
                       <td><div className="cell-user"><span className="cell-name">{inv.customerName ?? '—'}</span></div></td>
                       <td className="td-primary font-600">{fmtDecimal(inv.total)}</td>
                       <td className="text-sm text-3">{new Date(inv.createdAt).toLocaleDateString()}</td>
@@ -377,7 +407,7 @@ export default function Finance() {
                       </td>
                     </tr>
                   ))}
-                  {!invoicesQuery.isLoading && invoices.length === 0 && <tr><td colSpan={qbConnected ? 9 : 8} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No invoices found</td></tr>}
+                  {!invoicesQuery.isLoading && invoices.length === 0 && <tr><td colSpan={qbConnected ? 10 : 9} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No invoices found</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -418,6 +448,7 @@ export default function Finance() {
                   <tr>
                     <th style={{ textAlign: 'left' }}>Quote NO</th>
                     <th style={{ textAlign: 'left' }}>Job</th>
+                    <th style={{ textAlign: 'left' }}>Project / House</th>
                     <th style={{ textAlign: 'left' }}>Customer</th>
                     <th style={{ textAlign: 'left' }}>Title</th>
                     <th style={{ textAlign: 'left' }}>Amount</th>
@@ -427,7 +458,7 @@ export default function Finance() {
                   </tr>
                 </thead>
                 <tbody>
-                  {quotesQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 8 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
+                  {quotesQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
                   {!quotesQuery.isLoading && quotes.map(q => (
                     <tr key={q.id} onClick={() => window.dispatchEvent(new CustomEvent("open-quote-detail", { detail: q }))} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
                       <td><span className="td-mono td-primary">{q.quoteNumber}</span></td>
@@ -445,6 +476,7 @@ export default function Finance() {
                           </button>
                         ) : '—'}
                       </td>
+                      <td><DocProjectCell projectId={q.projectId} houseId={q.houseId} projectNameById={projectNameById} /></td>
                       <td><div className="cell-user"><span className="cell-name">{q.customerName ?? '—'}</span></div></td>
                       <td>{q.title}</td>
                       <td className="td-primary font-600">{fmtDecimal(q.total)}</td>
@@ -463,7 +495,7 @@ export default function Finance() {
                       </td>
                     </tr>
                   ))}
-                  {!quotesQuery.isLoading && quotes.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No quotes found</td></tr>}
+                  {!quotesQuery.isLoading && quotes.length === 0 && <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No quotes found</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -577,6 +609,7 @@ export default function Finance() {
           </div>
         </div>
       )}
+      {tab === 'templates' && <DocumentTemplatesTab />}
       <AddQuoteModal isOpen={isAddQuoteOpen} onClose={() => setIsAddQuoteOpen(false)} />
       <AddInvoiceModal isOpen={isAddInvoiceOpen} onClose={() => setIsAddInvoiceOpen(false)} />
       <AddExpenseModal isOpen={isAddExpenseOpen} onClose={() => setIsAddExpenseOpen(false)} />

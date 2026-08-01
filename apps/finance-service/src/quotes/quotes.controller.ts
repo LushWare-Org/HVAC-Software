@@ -1,6 +1,7 @@
 import {
   Controller, Get, Post, Put, Patch, Delete,
   Param, Body, Query, UseGuards, HttpCode, HttpStatus, Res, DefaultValuePipe, ParseIntPipe,
+  ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import {
@@ -12,7 +13,9 @@ import { Role, AuthUser } from '@tscrm/types';
 import { QuotesService } from './quotes.service';
 import { PdfService } from '../pdf/pdf.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
+import { DocumentTemplateClient } from '../document-templates/document-template.client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CrmClient } from '../crm/crm.client';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QuoteStatus } from '../prisma/generated';
@@ -44,6 +47,8 @@ export class QuotesController {
     private readonly pdfService: PdfService,
     private readonly prisma: PrismaService,
     private readonly companySettings: CompanySettingsClient,
+    private readonly documentTemplates: DocumentTemplateClient,
+    private readonly crmClient: CrmClient,
   ) {}
 
   // ── List ──────────────────────────────────────────────────────────────────
@@ -52,20 +57,38 @@ export class QuotesController {
   @ApiQuery({ name: 'status', enum: QuoteStatus, required: false })
   @ApiQuery({ name: 'customerId', required: false })
   @ApiQuery({ name: 'jobId', required: false })
+  @ApiQuery({ name: 'houseId', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  findAll(
+  async findAll(
     @CurrentUser() user: AuthUser,
     @Query('status') status?: QuoteStatus,
     @Query('customerId') customerId?: string,
     @Query('jobId') jobId?: string,
     @Query('projectId') projectId?: string,
     @Query('projectIds') projectIds?: string,
+    @Query('houseId') houseId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
+    // CUSTOMER role: force-filter to their own customerId for security — this
+    // was previously NOT enforced at all (any customer JWT could pass an
+    // arbitrary ?customerId= and see another customer's quotes). Same
+    // house-ownership carve-out as jobs: a house-linked quote's customerId may
+    // be the project's own top-level customer, not the individual house owner.
+    let effectiveCustomerId = user.role === Role.CUSTOMER ? user.customerId : customerId;
+    if (user.role === Role.CUSTOMER && houseId) {
+      const house = await this.crmClient.getHouseDetails(user.companyId, houseId);
+      if (!house) throw new BadRequestException('House not found');
+      if (house.ownerCustomerId === user.customerId) {
+        effectiveCustomerId = undefined;
+      } else {
+        throw new ForbiddenException('You can only view quotes for your own house');
+      }
+    }
+
     return this.quotesService.findAll(user.companyId, {
-      status, customerId, jobId, projectId,
+      status, customerId: effectiveCustomerId, jobId, projectId, houseId,
       projectIds: projectIds ? projectIds.split(',').filter(Boolean) : undefined,
       page, limit,
     });
@@ -74,15 +97,31 @@ export class QuotesController {
   // ── Single ────────────────────────────────────────────────────────────────
   @Get(':id')
   @ApiOperation({ summary: 'Get a single quote with line items' })
-  findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.quotesService.findOne(user.companyId, id);
+  async findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    const quote = await this.quotesService.findOne(user.companyId, id);
+    if (user.role === Role.CUSTOMER) {
+      const ownsDirectly = (quote as any).customerId === user.customerId;
+      const ownsHouse = (quote as any).houseId
+        ? (await this.crmClient.getHouseDetails(user.companyId, (quote as any).houseId))?.ownerCustomerId === user.customerId
+        : false;
+      if (!ownsDirectly && !ownsHouse) throw new ForbiddenException('Access denied');
+    }
+    return quote;
   }
 
   // ── Create ────────────────────────────────────────────────────────────────
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new quote' })
-  create(@CurrentUser() user: AuthUser, @Body() dto: CreateQuoteDto) {
+  async create(@CurrentUser() user: AuthUser, @Body() dto: CreateQuoteDto) {
+    // Housing Scheme: a quote created for a specific house auto-inherits that
+    // house's project — a house-linked quote with no projectId would otherwise
+    // never show up in that project's own Finances tab (same fix as Job/Agreement).
+    if (dto.houseId && !dto.projectId) {
+      const house = await this.crmClient.getHouseDetails(user.companyId, dto.houseId);
+      if (!house) throw new BadRequestException('House not found');
+      dto.projectId = house.projectId;
+    }
     return this.quotesService.create(user.companyId, user.userId, dto);
   }
 
@@ -181,14 +220,14 @@ export class QuotesController {
     @Res() res: Response,
   ) {
     const quote = await this.quotesService.findOne(user.companyId, id);
-    // TODO: pull real company info from company service / config
-    const companyName = process.env.COMPANY_NAME ?? 'T&S Services';
-    const companyAddress = process.env.COMPANY_ADDRESS ?? '';
     const settings = await this.companySettings.getSettings(user.companyId);
+    const companyName = settings.name || process.env.COMPANY_NAME || 'T&S Services';
+    const companyAddress = settings.address || process.env.COMPANY_ADDRESS || '';
+    const template = await this.documentTemplates.resolve(user.companyId, 'QUOTE', (quote as any).templateId);
     const pdf = await this.pdfService.generateQuotePdf(quote as any, companyName, companyAddress, {
       currency: settings.currency,
       timezone: settings.timezone,
-    });
+    }, template);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${quote.quoteNumber}.pdf"`,

@@ -56,6 +56,35 @@ describe('ProjectsService', () => {
     });
   });
 
+  it('create allows a missing customerId (project created without a customer)', async () => {
+    prisma.project.create.mockResolvedValue({ id: 'p1', companyId: CO, customerId: null, name: 'Tower' });
+    const result = await service.create(CO, { name: 'Tower' });
+    expect(prisma.customer.findFirst).not.toHaveBeenCalled();
+    expect(prisma.project.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ customerId: null }) }),
+    );
+    expect(result.customerId).toBeNull();
+  });
+
+  it('update sets customerId when provided and validates it belongs to the company', async () => {
+    prisma.project.findFirst.mockResolvedValue({ id: 'p1', companyId: CO });
+    prisma.customer.findFirst.mockResolvedValue(null);
+    await expect(
+      service.update(CO, 'p1', { customerId: 'cust-other' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('update persists a valid customerId', async () => {
+    prisma.project.findFirst.mockResolvedValue({ id: 'p1', companyId: CO });
+    prisma.customer.findFirst.mockResolvedValue({ id: 'cust-1' });
+    prisma.project.update.mockResolvedValue({ id: 'p1', companyId: CO, customerId: 'cust-1' });
+    await service.update(CO, 'p1', { customerId: 'cust-1' });
+    expect(prisma.project.update).toHaveBeenCalledWith({
+      where: { id: 'p1' },
+      data: expect.objectContaining({ customerId: 'cust-1' }),
+    });
+  });
+
   it('create validates workingDays values', async () => {
     prisma.customer.findFirst.mockResolvedValue({ id: 'c1' });
     await expect(

@@ -111,6 +111,89 @@ describe('AuthService — house owner provisioning', () => {
   });
 });
 
+describe('AuthService — provisionHouseOwner (brand-new customer)', () => {
+  let service: AuthService;
+  let prisma: ReturnType<typeof makePrisma>;
+  let email: ReturnType<typeof makeEmail>;
+
+  beforeEach(async () => {
+    prisma = makePrisma();
+    email = makeEmail();
+    const mod = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: EmailService, useValue: email },
+      ],
+    }).compile();
+    service = mod.get(AuthService);
+  });
+
+  it('creates a new Customer (no Lead) and a portal account, and sends the welcome email', async () => {
+    prisma.customer.findFirst.mockResolvedValue(null); // no existing customer with this email
+    prisma.customer.create.mockResolvedValue({
+      id: 'cust-new', companyId: CO, firstName: 'Nadia', lastName: 'Fernando',
+      email: 'nadia@example.com', phone: '0771112222', auth0UserId: null,
+    });
+    prisma.companyUser.findFirst.mockResolvedValue(null);
+    prisma.companyUser.create.mockResolvedValue({ id: 'user-new' });
+
+    const result = await service.provisionHouseOwner(CO, {
+      firstName: 'Nadia', lastName: 'Fernando', email: 'nadia@example.com', phone: '0771112222',
+    });
+
+    expect(prisma.customer.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          companyId: CO, firstName: 'Nadia', lastName: 'Fernando', email: 'nadia@example.com',
+        }),
+      }),
+    );
+    expect(prisma.lead.create).not.toHaveBeenCalled();
+    expect(email.sendWelcomeCustomer).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      success: true, userId: 'user-new', customerId: 'cust-new',
+      firstName: 'Nadia', lastName: 'Fernando',
+    });
+  });
+
+  it('reactivates a soft-deleted Customer with the same email instead of erroring', async () => {
+    prisma.customer.findFirst.mockResolvedValue({
+      id: 'cust-old', companyId: CO, firstName: 'Old', lastName: 'Name',
+      email: 'nadia@example.com', phone: null, auth0UserId: null, isActive: false,
+    });
+    prisma.customer.update.mockResolvedValue({
+      id: 'cust-old', companyId: CO, firstName: 'Nadia', lastName: 'Fernando',
+      email: 'nadia@example.com', phone: null, auth0UserId: null,
+    });
+    prisma.companyUser.findFirst.mockResolvedValue(null);
+    prisma.companyUser.create.mockResolvedValue({ id: 'user-new' });
+
+    const result = await service.provisionHouseOwner(CO, {
+      firstName: 'Nadia', lastName: 'Fernando', email: 'nadia@example.com',
+    });
+
+    expect(prisma.customer.create).not.toHaveBeenCalled();
+    expect(prisma.customer.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'cust-old' } }),
+    );
+    expect(result.customerId).toBe('cust-old');
+  });
+
+  it('blocks when the email already has an active portal account', async () => {
+    prisma.customer.findFirst.mockResolvedValue({
+      id: 'cust-existing', companyId: CO, firstName: 'Existing', lastName: 'Owner',
+      email: 'taken@example.com', phone: null, auth0UserId: 'user-existing',
+    });
+    prisma.companyUser.findFirst.mockResolvedValue({ id: 'user-existing', isActive: true });
+
+    await expect(
+      service.provisionHouseOwner(CO, { firstName: 'X', lastName: 'Y', email: 'taken@example.com' }),
+    ).rejects.toThrow(ConflictException);
+    expect(email.sendWelcomeCustomer).not.toHaveBeenCalled();
+  });
+});
+
 describe('AuthService — companyId comes from the caller\'s JWT, not the request body', () => {
   let service: AuthService;
   let prisma: ReturnType<typeof makePrisma>;

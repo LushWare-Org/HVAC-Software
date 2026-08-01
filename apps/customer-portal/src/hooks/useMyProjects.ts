@@ -32,6 +32,14 @@ export interface MyProjectMoney {
   outstanding: number
 }
 
+export interface MyProjectQuote {
+  id: string
+  quoteNumber?: string
+  status: string
+  total: number
+  createdAt: string
+}
+
 export function useMyProjects() {
   const { isAuthenticated } = useAuth()
   return useQuery<MyProject[]>({
@@ -41,7 +49,12 @@ export function useMyProjects() {
       return res.data ?? []
     },
     enabled: isAuthenticated,
-    staleTime: 60 * 1000,
+    // Shorter than the app default (60s) and refetches on focus, unlike most
+    // portal queries — this one gates whether the "My Projects" nav tab exists
+    // at all, so a customer just linked to a project should see it appear the
+    // moment they switch back to an already-open tab, not up to a minute later.
+    staleTime: 15 * 1000,
+    refetchOnWindowFocus: true,
   })
 }
 
@@ -51,6 +64,25 @@ export function useMyProjectJobs(projectId: string | null) {
     queryFn: async () => {
       const res = await api.get('/jobs/jobs', { params: { projectId, limit: 100 } })
       return (res.data?.data ?? []) as MyProjectJob[]
+    },
+    enabled: !!projectId,
+    staleTime: 60 * 1000,
+  })
+}
+
+export function useMyProjectQuotes(projectId: string | null) {
+  return useQuery<MyProjectQuote[]>({
+    queryKey: ['my-projects', projectId, 'quotes'],
+    queryFn: async () => {
+      const res = await api.get('/finance/quotes', { params: { projectId, limit: 50 } })
+      const rows: any[] = res.data?.data ?? res.data?.items ?? []
+      return rows.map(q => ({
+        id: q.id,
+        quoteNumber: q.quoteNumber,
+        status: q.status,
+        total: Number(q.total ?? 0),
+        createdAt: q.createdAt,
+      }))
     },
     enabled: !!projectId,
     staleTime: 60 * 1000,

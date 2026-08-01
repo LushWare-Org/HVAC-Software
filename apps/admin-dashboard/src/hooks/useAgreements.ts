@@ -32,6 +32,8 @@ export interface Agreement {
   name: string
   description?: string | null
   status: AgreementStatus
+  projectId?: string | null
+  houseId?: string | null
   startDate: string
   endDate?: string | null
   value?: string | number | null
@@ -52,6 +54,7 @@ export interface Agreement {
   signedAt?: string | null
   signedByName?: string | null
   renewedFromId?: string | null
+  templateId?: string | null
   createdAt: string
   updatedAt: string
   amendments?: AgreementAmendment[]
@@ -59,6 +62,8 @@ export interface Agreement {
 
 export interface AgreementInput {
   customerId?: string
+  projectId?: string
+  houseId?: string
   name?: string
   description?: string
   startDate?: string
@@ -75,6 +80,7 @@ export interface AgreementInput {
   autoCreateJobs?: boolean
   leadDays?: number
   autoRenew?: boolean
+  templateId?: string
 }
 
 // Agreements render in three namespaces: the Agreements page
@@ -87,7 +93,7 @@ const invalidate = () => {
   queryClient.invalidateQueries({ queryKey: ['customers'] })
 }
 
-type AgreementFilters = { status?: string; customerId?: string; page?: number; limit?: number }
+type AgreementFilters = { status?: string; customerId?: string; projectId?: string; houseId?: string; page?: number; limit?: number }
 
 async function fetchAgreements(filters: AgreementFilters) {
   const params: Record<string, unknown> = {
@@ -96,6 +102,8 @@ async function fetchAgreements(filters: AgreementFilters) {
   }
   if (filters.status && filters.status !== 'ALL') params.status = filters.status
   if (filters.customerId) params.customerId = filters.customerId
+  if (filters.projectId) params.projectId = filters.projectId
+  if (filters.houseId) params.houseId = filters.houseId
   const res = await api.get('/crm/agreements', { params })
   const raw = res.data
   if (raw.meta) return { data: raw.data, ...raw.meta }
@@ -169,5 +177,14 @@ export function useCancelAgreement() {
   return useMutation({
     mutationFn: async (id: string) => (await api.post(`/crm/agreements/${id}/cancel`)).data,
     onSuccess: invalidate,
+  })
+}
+
+export function useDownloadAgreementPdf() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/crm/agreements/${id}/pdf`, { responseType: 'blob' })
+      return res.data as Blob
+    },
   })
 }

@@ -1,0 +1,21 @@
+{{#if isOverdue}}
+<div class="alert">⚠ Past due — please arrange payment immediately</div>
+{{/if}}
+<div class="info-grid">
+  <div class="info-card">
+    <div class="info-label">Invoice date</div>
+    <div class="info-value">{{invoiceDate}}</div>
+  </div>
+  <div class="info-card">
+    <div class="info-label">Due date</div>
+    <div class="info-value">{{dueDate}}</div>
+  </div>
+  <div class="info-card">
+    <div class="info-label">Quote reference</div>
+    <div class="info-value">{{#if quoteNumber}}{{quoteNumber}}{{else}}Not linked{{/if}}</div>
+  </div>
+  <div class="info-card">
+    <div class="info-label">Status</div>
+    <div class="info-value">{{status}}</div>
+  </div>
+</div>

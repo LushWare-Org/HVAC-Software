@@ -31,12 +31,21 @@ export interface ProjectJob {
   id: string
   title: string
   status: string
+  priority?: string
   scheduledStart?: string
   assignedToName?: string
   // Carried through so JobDetailModal's first render (before its own useJob
   // refetch resolves) has what it reads directly off the passed-in job.
   customerId?: string
+  customerName?: string
   description?: string
+  serviceAddress?: string
+  jobNumber?: string
+  // Housing Scheme: which house (and, optionally, which specific unit) this
+  // job is for — resolved to a label/owner client-side via the project's own
+  // house list, since the job row itself only carries the raw id.
+  houseId?: string
+  equipmentId?: string
 }
 
 export interface ProjectAgreement {
@@ -46,6 +55,8 @@ export interface ProjectAgreement {
   interval: string
   nextVisit?: string
   status: string
+  /** Housing Scheme: which house this agreement is for, if any. */
+  houseId?: string
 }
 
 export interface FinanceDoc {
@@ -55,6 +66,8 @@ export interface FinanceDoc {
   total: number // dollars
   status: string
   date: string
+  /** Housing Scheme: which house this quote/invoice is for, if any. */
+  houseId?: string
 }
 
 export interface RosterDay {
@@ -67,8 +80,8 @@ export interface RosterDay {
 export interface Project {
   id: string
   companyId: string
-  customerId: string
-  customerName: string
+  customerId: string | null
+  customerName: string | null
   name: string
   description?: string
   category?: string
@@ -183,8 +196,8 @@ function mapApiProject(raw: any): ProjectBase {
   return {
     id: raw.id,
     companyId: raw.companyId,
-    customerId: raw.customerId,
-    customerName: raw.customerName ?? '—',
+    customerId: raw.customerId ?? null,
+    customerName: raw.customerName ?? null,
     name: raw.name,
     description: raw.description ?? undefined,
     category: raw.category ?? undefined,
@@ -210,10 +223,16 @@ function mapJob(j: any): ProjectJob {
     id: j.id,
     title: j.title,
     status: j.status,
+    priority: j.priority ?? undefined,
     scheduledStart: j.scheduledStart ?? undefined,
     assignedToName: j.assignedToName ?? undefined,
     customerId: j.customerId ?? undefined,
+    customerName: j.customerName ?? undefined,
     description: j.description ?? undefined,
+    serviceAddress: j.serviceAddress ?? undefined,
+    jobNumber: j.jobNumber ?? undefined,
+    houseId: j.houseId ?? undefined,
+    equipmentId: j.equipmentId ?? undefined,
   }
 }
 
@@ -225,6 +244,7 @@ function mapQuote(q: any): FinanceDoc {
     total: Number(q.total ?? 0),
     status: q.status,
     date: String(q.createdAt ?? q.date ?? '').slice(0, 10),
+    houseId: q.houseId ?? undefined,
   }
 }
 
@@ -236,6 +256,7 @@ function mapInvoice(i: any): FinanceDoc {
     total: Number(i.total ?? 0),
     status: i.status,
     date: String(i.issuedAt ?? i.createdAt ?? '').slice(0, 10),
+    houseId: i.houseId ?? undefined,
   }
 }
 
@@ -247,6 +268,7 @@ function mapAgreement(a: any): ProjectAgreement {
     interval: a.serviceInterval ?? '—',
     nextVisit: a.nextServiceDate ? String(a.nextServiceDate).slice(0, 10) : undefined,
     status: a.status,
+    houseId: a.houseId ?? undefined,
   }
 }
 

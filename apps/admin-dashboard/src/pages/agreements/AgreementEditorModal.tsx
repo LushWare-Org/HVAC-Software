@@ -11,6 +11,7 @@ import {
   useCreateAgreement, useUpdateAgreement,
   type Agreement, type AgreementInput,
 } from '../../hooks/useAgreements'
+import { useDocumentTemplates } from '../finance/documentTemplatesApi'
 import { INTERVAL_LABELS, SectionLabel } from './shared'
 
 const BILLING_CYCLES = [
@@ -32,11 +33,15 @@ const fieldRowStyle: React.CSSProperties = {
 }
 
 export default function AgreementEditorModal({
-  agreement, presetCustomerId, presetCustomerName, onClose, onSaved,
+  agreement, presetCustomerId, presetCustomerName, presetProjectId, presetHouseId, onClose, onSaved,
 }: {
   agreement?: Agreement | null
   presetCustomerId?: string
   presetCustomerName?: string
+  /** Attaches the agreement to a project on create. */
+  presetProjectId?: string
+  /** Attaches the agreement to a specific house within a Housing Scheme project; projectId is auto-backfilled server-side if omitted. */
+  presetHouseId?: string
   onClose: () => void
   onSaved?: (a: Agreement) => void
 }) {
@@ -76,7 +81,10 @@ export default function AgreementEditorModal({
     autoCreateJobs: agreement?.autoCreateJobs ?? true,
     leadDays: String(agreement?.leadDays ?? 7),
     autoRenew: agreement?.autoRenew ?? false,
+    templateId: agreement?.templateId ?? '',
   })
+  const templatesQ = useDocumentTemplates('AGREEMENT')
+  const templates = templatesQ.data ?? []
 
   const customersQuery = useCustomers({ search: customerSearch, limit: 8 })
   const customerOptions = useMemo(
@@ -111,6 +119,7 @@ export default function AgreementEditorModal({
       autoCreateJobs: form.autoCreateJobs,
       leadDays: form.leadDays !== '' ? Number(form.leadDays) : undefined,
       autoRenew: form.autoRenew,
+      templateId: form.templateId || undefined,
     }
 
     const opts = {
@@ -118,7 +127,7 @@ export default function AgreementEditorModal({
       onError: (err: any) => setError(err?.response?.data?.message ?? 'Could not save the agreement.'),
     }
     if (isEdit) updateMut.mutate({ id: agreement!.id, ...payload }, opts)
-    else createMut.mutate({ ...payload, customerId: form.customerId }, opts)
+    else createMut.mutate({ ...payload, customerId: form.customerId, projectId: presetProjectId, houseId: presetHouseId }, opts)
   }
 
   return createPortal(
@@ -319,6 +328,21 @@ export default function AgreementEditorModal({
               )}
             </div>
           </div>
+
+          {templates.length > 1 && (
+            <div style={sectionCardStyle}>
+              <SectionLabel icon={FileSignature}>Document</SectionLabel>
+              <div className="form-group">
+                <label className="form-label">Template</label>
+                <select className="form-input" value={form.templateId} onChange={e => set({ templateId: e.target.value })}>
+                  <option value="">Use default</option>
+                  {templates.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}{t.isDefault ? ' (default)' : ''}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '12px 20px', borderTop: '1px solid var(--bd)', flexShrink: 0 }}>

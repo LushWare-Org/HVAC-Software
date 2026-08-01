@@ -5,6 +5,7 @@ import { useCreateInvoice } from "../../hooks/useFinance";
 import { useCustomers } from "../../hooks/useCustomers";
 import { useJobs } from "../../hooks/useJobs";
 import { useToast } from "../../contexts/ToastContext";
+import { useDocumentTemplates } from "./documentTemplatesApi";
 import { customerName as fmtCustomerName } from "../../types/api";
 import type { Customer, Job } from "../../types/api";
 import { formatMoney } from '../../lib/format'
@@ -31,6 +32,8 @@ interface AddInvoiceModalProps {
   presetCustomer?: PresetCustomer | null;
   /** Attaches the invoice to a project on create (finance-service accepts an optional projectId). */
   projectId?: string;
+  /** Attaches the invoice to a specific house within a Housing Scheme project; projectId is auto-backfilled server-side if omitted. */
+  houseId?: string;
   contextLabel?: string;
   onCreated?: (invoice: any) => void;
   onBack?: () => void;
@@ -55,7 +58,7 @@ const INVOICE_CATEGORY_OPTIONS = [
 const inputClass =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none";
 
-export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetCustomer, projectId, contextLabel, onCreated, onBack }: AddInvoiceModalProps) {
+export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetCustomer, projectId, houseId, contextLabel, onCreated, onBack }: AddInvoiceModalProps) {
   const { showError, showSuccess, showInfo } = useToast();
   const [error, setError] = useState("");
   const [customerNameVal, setCustomerNameVal] = useState("");
@@ -69,6 +72,9 @@ export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetC
   const [dueDate, setDueDate] = useState("");
   const [taxRate, setTaxRate] = useState("10");
   const [notes, setNotes] = useState("");
+  const [templateId, setTemplateId] = useState("");
+  const templatesQ = useDocumentTemplates('INVOICE');
+  const templates = templatesQ.data ?? [];
   const [lineItems, setLineItems] = useState<LineItem[]>([
     { description: "", category: "LABOUR", quantity: 1, unitPrice: 0 },
   ]);
@@ -152,9 +158,11 @@ export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetC
         customerEmail: customerEmail || undefined,
         jobId: jobId || undefined,
         projectId: projectId || undefined,
+        houseId: houseId || undefined,
         dueDate: dueDate || undefined,
         taxRate: (parseFloat(taxRate) || 0) / 100,
         notes: notes || undefined,
+        templateId: templateId || undefined,
         lineItems: lineItems.filter((li) => li.description).map((li, i) => ({
           description: li.description,
           category: li.category,
@@ -361,6 +369,18 @@ export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetC
             <label className="block text-xs font-semibold text-gray-400 uppercase">Notes</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Additional notes..." className={`${inputClass} resize-none`} />
           </div>
+
+          {templates.length > 1 && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-400 uppercase">Template</label>
+              <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className={inputClass}>
+                <option value="">Use default</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}{t.isDefault ? ' (default)' : ''}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 rounded-b-xl flex justify-end gap-3 shrink-0">

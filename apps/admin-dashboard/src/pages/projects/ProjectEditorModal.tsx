@@ -4,13 +4,13 @@
  */
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Check, MapPin, Loader2, Home } from 'lucide-react'
+import { X, Check, MapPin, Loader2, Home, User, UserCheck } from 'lucide-react'
 import MapPicker from '../../components/MapPickerLazy'
 import {
   WEEKDAYS, useTechDirectory, useCreateProject, useUpdateProject,
   PROJECT_TEMPLATE_META, type Project, type ProjectStatus, type ProjectTemplateType, type Weekday,
 } from './projectsApi'
-import { useCustomers } from '../../hooks/useCustomers'
+import CustomerPickerWithCreate, { type PickedCustomer } from '../../components/CustomerPickerWithCreate'
 import { TechAvatar } from './shared'
 
 const inp: React.CSSProperties = {
@@ -52,13 +52,11 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
   const createProject = useCreateProject()
   const updateProject = useUpdateProject()
   const { data: techs } = useTechDirectory()
-  const [customerSearch, setCustomerSearch] = useState('')
-  const customersQ = useCustomers({ limit: 50, search: customerSearch || undefined })
-  const customers = customersQ.data?.data ?? []
+  const [pickedCustomer, setPickedCustomer] = useState<PickedCustomer | null>(null)
+  const [showCustomerPicker, setShowCustomerPicker] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     name: project?.name ?? '',
-    customerId: project?.customerId ?? '',
     category: project?.category ?? '',
     status: project?.status ?? 'PLANNING' as ProjectStatus,
     description: project?.description ?? '',
@@ -87,7 +85,7 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
       ? form.baseTeamUserIds.filter(x => x !== id)
       : [...form.baseTeamUserIds, id])
 
-  const valid = form.name.trim() && (project ? true : !!form.customerId)
+  const valid = !!form.name.trim()
   const saving = createProject.isPending || updateProject.isPending
 
   const save = async () => {
@@ -111,7 +109,7 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
     }
     try {
       if (project) await updateProject.mutateAsync({ id: project.id, ...payload })
-      else await createProject.mutateAsync({ ...payload, customerId: form.customerId, templateType: form.templateType })
+      else await createProject.mutateAsync({ ...payload, customerId: pickedCustomer?.id, templateType: form.templateType })
       onClose()
     } catch (e: any) {
       const msg = e?.response?.data?.message
@@ -161,22 +159,35 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
               <input style={inp} value={form.name} placeholder="Lotus Tower — HVAC Modernization"
                 onChange={e => set('name', e.target.value)} />
             </div>
-            <div>
-              <label style={lbl}>Customer *</label>
+            <div style={{ gridColumn: pickedCustomer || showCustomerPicker ? '1 / -1' : undefined }}>
+              <label style={lbl}>Customer</label>
               {project ? (
-                <input style={{ ...inp, opacity: 0.7 }} value={project.customerName} disabled />
+                <input style={{ ...inp, opacity: 0.7 }} value={project.customerName ?? 'No customer assigned'} disabled />
+              ) : pickedCustomer ? (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px',
+                  borderRadius: 9, border: '1px solid var(--green)', background: 'var(--green-dim)',
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>
+                    <UserCheck size={14} style={{ color: 'var(--green)' }} /> {pickedCustomer.firstName} {pickedCustomer.lastName}
+                  </span>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPickedCustomer(null)}>Change</button>
+                </div>
+              ) : showCustomerPicker ? (
+                <CustomerPickerWithCreate
+                  autoFocus
+                  onPick={c => { setPickedCustomer(c); setShowCustomerPicker(false) }}
+                  onCancel={() => setShowCustomerPicker(false)}
+                />
               ) : (
-                <>
-                  <input style={{ ...inp, marginBottom: 6 }} value={customerSearch} placeholder="Search customers…"
-                    onChange={e => setCustomerSearch(e.target.value)} />
-                  <select className="select" style={{ width: '100%' }} value={form.customerId}
-                    onChange={e => set('customerId', e.target.value)}>
-                    <option value="">Select a customer…</option>
-                    {customers.map((c: any) => (
-                      <option key={c.id} value={c.id}>{c.firstName} {c.lastName}{c.companyName ? ` — ${c.companyName}` : ''}</option>
-                    ))}
-                  </select>
-                </>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowCustomerPicker(true)}>
+                  <User size={12} /> Select or create a customer
+                </button>
+              )}
+              {!project && !pickedCustomer && !showCustomerPicker && (
+                <p style={{ fontSize: 10.5, color: 'var(--t4)', margin: '6px 0 0' }}>
+                  Optional — you can add a customer later from the project page.
+                </p>
               )}
             </div>
             <div>

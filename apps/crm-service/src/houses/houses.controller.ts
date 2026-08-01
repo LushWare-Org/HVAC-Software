@@ -14,6 +14,7 @@ class UpsertHouseDto {
   @IsOptional() @IsString() address?: string;
   @IsOptional() @IsArray() tags?: string[];
   @IsOptional() @IsString() notes?: string;
+  @IsOptional() @IsString() ownerCustomerId?: string;
 }
 
 class AssignOwnerDto {
@@ -158,6 +159,19 @@ export class HousesController {
   async addEquipment(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: HouseEquipmentDto) {
     if (user.role === Role.CUSTOMER) await this.assertOwnsHouse(user, id);
     return this.equipmentService.createForHouse(user.companyId, id, dto);
+  }
+
+  @Patch(':id/equipment/:equipmentId')
+  @Roles(...STAFF_WRITE)
+  @ApiOperation({ summary: "Update a house's equipment item (brand/model/serial, typically applying an AI scan suggestion)" })
+  async updateEquipment(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Param('equipmentId') equipmentId: string,
+    @Body() dto: HouseEquipmentDto,
+  ) {
+    await this.assertReadAccess(user, id);
+    return this.equipmentService.update(user.companyId, equipmentId, dto);
   }
 
   // ── Issue reports ────────────────────────────────────────────────────────
