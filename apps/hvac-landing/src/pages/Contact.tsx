@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Mail, Phone, MapPin, CheckCircle2, ArrowRight } from 'lucide-react'
+import { Mail, Phone, MapPin, CheckCircle2, ArrowRight, ArrowDown } from 'lucide-react'
 import PageHero from '../components/ui/PageHero'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
@@ -66,9 +66,14 @@ export default function Contact() {
           </>
         }
         description="Book a demo, start a trial, or ask us anything. A real person on our team will get back to you within one business day."
-      />
+      >
+        <Button href="#contact-form" variant="inverse" size="lg">
+          Jump to Contact Form
+          <ArrowDown className="h-4 w-4" />
+        </Button>
+      </PageHero>
 
-      <section className="bg-slate-50">
+      <section id="contact-form" className="scroll-mt-24 bg-slate-50">
         <Container className="grid gap-6 py-16 lg:grid-cols-[1.3fr_1fr] lg:gap-8 lg:py-24">
           {/* Form */}
           <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-block-sm lg:p-12">

@@ -784,66 +784,104 @@ export const TESTIMONIALS: Testimonial[] = [
 /* -------------------------------------------------------------------------- */
 /*  Pricing                                                                   */
 /* -------------------------------------------------------------------------- */
+export type TeamSizeId = '1' | 'upto5' | 'upto10' | 'upto15' | '16plus'
+
+export interface TeamSizeOption {
+  id: TeamSizeId
+  label: string
+  shortLabel: string
+}
+
+export const PRICING_TEAM_SIZES: TeamSizeOption[] = [
+  { id: '1', label: '1 user', shortLabel: '1' },
+  { id: 'upto5', label: 'Up to 5 users', shortLabel: 'Up to 5' },
+  { id: 'upto10', label: 'Up to 10 users', shortLabel: 'Up to 10' },
+  { id: 'upto15', label: 'Up to 15 users', shortLabel: 'Up to 15' },
+  { id: '16plus', label: '16+ users', shortLabel: '16+' },
+]
+
+export interface PricingTierPrice {
+  annualFirstYear: number
+  annualAfterFirstYear: number
+  monthlyFirst6: number
+  monthlyAfter6: number
+}
 
 export interface PricingPlan {
   name: string
   description: string
-  monthly: number
-  annual: number
   featured?: boolean
   cta: string
   features: string[]
+  prices: Partial<Record<TeamSizeId, PricingTierPrice>>
 }
 
 export const PRICING_PLANS: PricingPlan[] = [
   {
-    name: 'Starter',
+    name: 'Launch',
     description: 'For new shops getting off the whiteboard.',
-    monthly: 49,
-    annual: 39,
-    cta: 'Start free trial',
+    cta: 'Start Free Trial',
     features: [
-      'Up to 3 users',
       'Scheduling & dispatch board',
       'Technician mobile app',
       'Customer records & history',
       'Invoicing & online payments',
       'Email support',
     ],
+    prices: {
+      '1': { annualFirstYear: 19, annualAfterFirstYear: 29, monthlyFirst6: 29, monthlyAfter6: 49 },
+      upto5: { annualFirstYear: 99, annualAfterFirstYear: 139, monthlyFirst6: 109, monthlyAfter6: 189 },
+      upto10: { annualFirstYear: 149, annualAfterFirstYear: 219, monthlyFirst6: 169, monthlyAfter6: 279 },
+      upto15: { annualFirstYear: 199, annualAfterFirstYear: 279, monthlyFirst6: 229, monthlyAfter6: 379 },
+    },
   },
   {
-    name: 'Professional',
+    name: 'Accelerate',
     description: 'For growing crews that live in the field.',
-    monthly: 89,
-    annual: 72,
     featured: true,
-    cta: 'Start free trial',
+    cta: 'Start Free Trial',
     features: [
-      'Unlimited users',
-      'Everything in Starter',
+      'Everything in Launch',
       'Inventory & parts tracking',
       'Maintenance plans & memberships',
       'Customer self-service portal',
       'QuickBooks sync',
       'Priority support',
     ],
+    prices: {
+      '1': { annualFirstYear: 69, annualAfterFirstYear: 89, monthlyFirst6: 79, monthlyAfter6: 129 },
+      upto5: { annualFirstYear: 149, annualAfterFirstYear: 219, monthlyFirst6: 169, monthlyAfter6: 279 },
+      upto10: { annualFirstYear: 199, annualAfterFirstYear: 279, monthlyFirst6: 229, monthlyAfter6: 379 },
+      upto15: { annualFirstYear: 269, annualAfterFirstYear: 379, monthlyFirst6: 289, monthlyAfter6: 469 },
+    },
   },
   {
-    name: 'Enterprise',
+    name: 'Scale',
     description: 'For multi-location operators and franchises.',
-    monthly: 149,
-    annual: 125,
-    cta: 'Talk to sales',
+    cta: 'Start Free Trial',
     features: [
-      'Everything in Professional',
+      'Everything in Accelerate',
       'AI analytics & predictive maintenance',
       'Multi-location & territory management',
       'Advanced permissions & audit logs',
       'Open API & custom integrations',
       'Dedicated success manager',
     ],
+    prices: {
+      '1': { annualFirstYear: 99, annualAfterFirstYear: 139, monthlyFirst6: 109, monthlyAfter6: 189 },
+      upto5: { annualFirstYear: 269, annualAfterFirstYear: 379, monthlyFirst6: 289, monthlyAfter6: 469 },
+      upto10: { annualFirstYear: 299, annualAfterFirstYear: 429, monthlyFirst6: 339, monthlyAfter6: 569 },
+      upto15: { annualFirstYear: 349, annualAfterFirstYear: 499, monthlyFirst6: 399, monthlyAfter6: 659 },
+    },
   },
 ]
+
+export const BETA_OFFER = {
+  seats: 10,
+  freeMonths: 3,
+  discountPct: 25,
+  discountMonths: 12,
+}
 
 /* -------------------------------------------------------------------------- */
 /*  FAQs                                                                      */
@@ -873,12 +911,12 @@ export const FAQS: Faq[] = [
   {
     question: 'Is there a contract or setup fee?',
     answer:
-      'No setup fees and no long-term contract on monthly plans. Annual billing saves you roughly 18%, and you can change plans or cancel any time.',
+      'No setup fees and no long-term contract on monthly plans. Annual billing always locks in a lower monthly rate than paying monthly, and you can change plans or cancel any time.',
   },
   {
-    question: 'How does billing per user work?',
+    question: 'How does team-size pricing work?',
     answer:
-      'You are billed for active users each month. Office staff, dispatchers and field technicians all count as users — the Professional plan includes unlimited users at a flat rate.',
+      'Pick the plan and team size that matches your crew and the price updates for that tier. Every plan also includes discounted introductory pricing — your first year on annual billing, or your first 6 months on monthly billing — before it steps up to the standard rate. Teams of 16+ get custom pricing from our sales team.',
   },
 ]
 

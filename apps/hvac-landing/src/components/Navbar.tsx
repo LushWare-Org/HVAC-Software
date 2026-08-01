@@ -43,12 +43,12 @@ export default function Navbar() {
     >
       <nav className="mx-auto flex h-full max-w-content items-center justify-between px-6 lg:px-8" aria-label="Main navigation">
         <NavLink to="/" className="group flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg ring-1 ring-slate-200 transition-shadow group-hover:shadow-lg group-hover:shadow-navy-800/20">
-            <img src="/platform/logo.jpg" alt="HVACtor logo" className="h-full w-full object-cover" />
+          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full transition-shadow">
+            <img src="/platform/fav.png" alt="HVACtor logo" className="h-full w-full object-cover" />
           </span>
           <span className="font-display text-lg font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-navy-700 via-navy-600 to-navy-500 bg-clip-text text-transparent">
-              HVACtor.AI
+            <span className="bg-gradient-to-r from-navy-900 via-navy-800 to-blue-500 bg-clip-text text-transparent">
+              HVACtor.ai
             </span>
           </span>
         </NavLink>
@@ -127,8 +127,8 @@ export default function Navbar() {
       >
         <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-6 py-5">
           <NavLink to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg ring-1 ring-slate-200">
-              <img src="/platform/logo.jpg" alt="HVACtor logo" className="h-full w-full object-cover" />
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full">
+              <img src="/platform/fav.png" alt="HVACtor logo" className="h-full w-full object-cover" />
             </span>
             <span className="font-display text-lg font-bold tracking-tight">
               <span className="bg-gradient-to-r from-navy-700 via-navy-600 to-navy-500 bg-clip-text text-transparent">

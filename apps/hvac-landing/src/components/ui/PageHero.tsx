@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react'
+import clsx from 'clsx'
 import Container from './Container'
 
 interface PageHeroProps {
   title: ReactNode
   description?: string
   children?: ReactNode
+  className?: string
 }
 
-export default function PageHero({ title, description, children }: PageHeroProps) {
+export default function PageHero({ title, description, children, className }: PageHeroProps) {
   return (
     <section className="relative -mt-20 overflow-hidden bg-gradient-to-br from-navy-800 via-navy-950 to-navy-950 text-white">
       <div className="pointer-events-none absolute inset-0 bg-blueprint-dark opacity-90 [mask-image:radial-gradient(ellipse_90%_75%_at_30%_0%,black,transparent)]" />
@@ -17,7 +19,12 @@ export default function PageHero({ title, description, children }: PageHeroProps
       <div className="pointer-events-none absolute left-16 top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
       <div className="pointer-events-none absolute bottom-10 right-16 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
 
-      <Container className="relative flex flex-col items-start pt-28 pb-12 text-left lg:pt-32 lg:pb-16">
+      <Container
+        className={clsx(
+          'relative flex flex-col items-start pt-28 pb-12 text-left lg:pt-32 lg:pb-16',
+          className,
+        )}
+      >
         <h1 className="max-w-3xl font-display text-4xl font-bold leading-[1.45] tracking-tight text-white sm:text-5xl lg:text-6xl pb-2">
           {title}
         </h1>
@@ -27,7 +34,7 @@ export default function PageHero({ title, description, children }: PageHeroProps
           </p>
         )}
         {children && (
-          <div className="mt-6 flex flex-wrap items-center gap-4 pt-3 pb-8">{children}</div>
+          <div className="mt-6 flex flex-wrap items-center gap-4 pt-4 pb-4">{children}</div>
         )}
       </Container>
     </section>
