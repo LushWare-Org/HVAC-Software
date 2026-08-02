@@ -326,7 +326,16 @@ export default function Jobs() {
               >{d}d</button>
             ))}
           </div>
-          <RecommendationsPanel filterActions={['discount_20', 'same_day_offer', 'increase_price']} forecastDays={forecastDays} />
+          <RecommendationsPanel
+            filterActions={['discount_20', 'same_day_offer', 'increase_price']}
+            forecastDays={forecastDays}
+            filterHandlers={{
+              // Both signals are driven by the scheduled-job volume in the forecast window —
+              // surface exactly those jobs.
+              same_day_offer: () => setFilterStatus('SCHEDULED'),
+              increase_price: () => setFilterStatus('SCHEDULED'),
+            }}
+          />
         </>
       )}
 

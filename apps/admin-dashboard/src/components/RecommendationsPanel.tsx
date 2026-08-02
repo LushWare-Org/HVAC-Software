@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Lightbulb, DollarSign, TrendingUp, TrendingDown, Minus,
-  RefreshCw, AlertCircle, Sparkles,
+  RefreshCw, AlertCircle, Sparkles, Filter,
 } from 'lucide-react'
 import { useRecommendations } from '../hooks/useAnalytics'
 import type { Recommendation } from '../types/api'
@@ -56,9 +56,11 @@ function getExpectedOutcome(rec: Recommendation): string {
 function RecommendationCard({
   rec,
   onIgnore,
+  onFilter,
 }: {
   rec: Recommendation
   onIgnore: (id: string) => void
+  onFilter?: () => void
 }) {
   const p = PRIORITY_CONFIG[rec.priority]
 
@@ -141,13 +143,26 @@ function RecommendationCard({
         </div>
       </div>
 
-      <button
-        className="btn btn-secondary btn-sm"
-        style={{ width: '100%' }}
-        onClick={() => onIgnore(rec.id)}
-      >
-        Dismiss
-      </button>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {onFilter && (
+          <button
+            className="btn btn-secondary btn-sm"
+            style={{ width: 'fit-content', justifyContent: 'center' }}
+            onClick={onFilter}
+            title="Filter the matching entities below"
+          >
+            <Filter size={12} />
+            Filter
+          </button>
+        )}
+        <button
+          className="btn btn-secondary btn-sm"
+          style={{ width: 'fit-content', justifyContent: 'center' }}
+          onClick={() => onIgnore(rec.id)}
+        >
+          Dismiss
+        </button>
+      </div>
     </div>
   )
 }
@@ -158,10 +173,13 @@ export default function RecommendationsPanel({
   filterActions,
   limit,
   forecastDays,
+  filterHandlers,
 }: {
   filterActions?: string[]
   limit?: number
   forecastDays?: number
+  /** Maps a recommendation's `action` to a handler that filters this tab's own entity list down to the set the recommendation refers to. Actions without a handler here only get a Dismiss button — this tab doesn't list that entity type. */
+  filterHandlers?: Partial<Record<string, () => void>>
 } = {}) {
   const { data, isLoading, isError, refetch, isFetching } = useRecommendations(forecastDays)
   const [ignored, setIgnored] = useState<Set<string>>(new Set())
@@ -257,7 +275,12 @@ export default function RecommendationsPanel({
             gap: 14,
           }}>
             {visible.map((rec) => (
-              <RecommendationCard key={rec.id} rec={rec} onIgnore={handleIgnore} />
+              <RecommendationCard
+                key={rec.id}
+                rec={rec}
+                onIgnore={handleIgnore}
+                onFilter={filterHandlers?.[rec.action]}
+              />
             ))}
           </div>
         )}

@@ -252,7 +252,19 @@ export default function Finance() {
         </div>
       )}
 
-      {!isExpanded && <RecommendationsPanel filterActions={['discount_20', 'increase_price', 'geo_target_discount']} />}
+      {!isExpanded && (
+        <RecommendationsPanel
+          filterActions={['discount_20', 'increase_price', 'geo_target_discount']}
+          filterHandlers={{
+            // Pending-quotes-at-risk targets aging SENT quotes — jump to that exact list.
+            geo_target_discount: () => {
+              setTab('quotes');
+              setQuoStatus('sent');
+              setQuoPage(1);
+            },
+          }}
+        />
+      )}
 
       <div className="page-tabs">
         <button className={`tab-btn ${tab === 'invoices' ? 'active' : ''}`} onClick={() => setTab('invoices')}>

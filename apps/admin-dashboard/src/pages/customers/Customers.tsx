@@ -190,7 +190,21 @@ export default function Customers() {
           </div>
         )}
 
-        {!isExpanded && <RecommendationsPanel filterActions={['call', 'geo_target_discount']} />}
+        {!isExpanded && (
+          <RecommendationsPanel
+            filterActions={['call', 'geo_target_discount']}
+            filterHandlers={{
+              // Retention-risk recommendations target active, long-since-serviced customers —
+              // surface exactly that slice: active customers, staleest first.
+              call: () => {
+                setCustomerStatusFilter('Active');
+                setSortBy('updated');
+                setSortDir('asc');
+                setCustomerPage(1);
+              },
+            }}
+          />
+        )}
 
         {/* Customers */}
         <div className="card anim-fade-in">
@@ -347,6 +361,7 @@ export default function Customers() {
                     <option value="city:asc">Location A–Z</option>
                     <option value="city:desc">Location Z–A</option>
                     <option value="updated:desc">Recently active</option>
+                    <option value="updated:asc">Needs attention (longest inactive)</option>
                     <option value="equipment:desc">Most equipment</option>
                     <option value="type:asc">Type</option>
                     <option value="installDate:asc">Earliest install date</option>
