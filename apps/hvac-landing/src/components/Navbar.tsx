@@ -35,18 +35,19 @@ export default function Navbar() {
   }, [open])
 
   return (
+    <>
     <header
       className={clsx(
         'fixed inset-x-0 top-0 z-50 h-16 border-b border-transparent bg-white/90 backdrop-blur transition-colors duration-300',
         scrolled && 'shadow-lg shadow-navy-900/5 border-b border-slate-200',
       )}
     >
-      <nav className="mx-auto flex h-full max-w-content items-center justify-between px-6 lg:px-8" aria-label="Main navigation">
-        <NavLink to="/" className="group flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full transition-shadow">
+      <nav className="mx-auto flex h-full max-w-content items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+        <NavLink to="/" className="group flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full transition-shadow sm:h-9 sm:w-9">
             <img src="/platform/fav.png" alt="HVACtor logo" className="h-full w-full object-cover" />
           </span>
-          <span className="font-display text-lg font-bold tracking-tight">
+          <span className="whitespace-nowrap font-display text-base font-bold tracking-tight sm:text-lg">
             <span className="bg-gradient-to-r from-navy-900 via-navy-800 to-blue-500 bg-clip-text text-transparent">
               HVACtor.ai
             </span>
@@ -98,7 +99,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="text-navy-900 transition-colors duration-300 md:hidden"
+          className="-mr-2 shrink-0 rounded-lg p-2 text-navy-900 transition-colors duration-200 active:bg-navy-50 md:hidden"
           onClick={() => setOpen(true)}
           aria-label="Open menu"
           aria-expanded={open}
@@ -106,6 +107,7 @@ export default function Navbar() {
           <Menu className="h-6 w-6" />
         </button>
       </nav>
+    </header>
 
       {/* Mobile slide-in drawer */}
       <div
@@ -125,12 +127,12 @@ export default function Navbar() {
         aria-modal="true"
         aria-label="Navigation menu"
       >
-        <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-6 py-5">
-          <NavLink to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
+          <NavLink to="/" className="flex min-w-0 items-center gap-2.5" onClick={() => setOpen(false)}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full">
               <img src="/platform/fav.png" alt="HVACtor logo" className="h-full w-full object-cover" />
             </span>
-            <span className="font-display text-lg font-bold tracking-tight">
+            <span className="whitespace-nowrap font-display text-lg font-bold tracking-tight">
               <span className="bg-gradient-to-r from-navy-700 via-navy-600 to-navy-500 bg-clip-text text-transparent">
                 HVAC
               </span>
@@ -139,7 +141,7 @@ export default function Navbar() {
           </NavLink>
           <button
             type="button"
-            className="text-navy-900"
+            className="-mr-2 shrink-0 rounded-lg p-2 text-navy-900 transition-colors duration-200 active:bg-navy-50"
             onClick={() => setOpen(false)}
             aria-label="Close menu"
           >
@@ -147,7 +149,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-4">
+        <div className="overflow-y-auto py-4">
           {NAV_LINKS.map((link) => (
             <NavLink
               key={link.to}
@@ -155,8 +157,10 @@ export default function Navbar() {
               end={link.to === '/'}
               className={({ isActive }) =>
                 clsx(
-                  'flex items-center px-6 py-3 text-base font-medium transition-colors',
-                  isActive ? 'bg-navy-50 text-navy-900' : 'text-slate-700 hover:bg-navy-50 hover:text-navy-800',
+                  'flex items-center px-6 py-3.5 text-base font-medium transition-colors',
+                  isActive
+                    ? 'bg-navy-50 text-navy-900'
+                    : 'text-slate-700 hover:bg-navy-50 hover:text-navy-800 active:bg-navy-50',
                 )
               }
             >
@@ -165,12 +169,12 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="space-y-3 border-t border-slate-100 p-4">
+        <div className="space-y-3 border-t border-slate-100 p-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <Button to="/contact" variant="gradient" size="lg" className="w-full">
-            Request a demo
+            Request a Demo
           </Button>
         </div>
       </aside>
-    </header>
+    </>
   )
 }

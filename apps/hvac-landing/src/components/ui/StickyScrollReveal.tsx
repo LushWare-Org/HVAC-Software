@@ -3,7 +3,6 @@ import { CheckCircle2 } from 'lucide-react'
 import clsx from 'clsx'
 
 export interface StickyScrollItem {
-  index?: string
   title: string
   description: string
   bullets?: string[]
@@ -43,20 +42,9 @@ export default function StickyScrollReveal({ items }: StickyScrollRevealProps) {
               refs.current[i] = el
             }}
           >
-            {item.index && (
-              <span
-                className={clsx(
-                  'font-display text-sm font-bold tabular-nums transition-colors duration-300',
-                  active === i ? 'text-navy-500' : 'text-slate-300',
-                )}
-              >
-                {item.index}
-              </span>
-            )}
             <h3
               className={clsx(
                 'font-display text-2xl font-bold tracking-tight transition-colors duration-300 sm:text-3xl',
-                item.index && 'mt-2',
                 active === i ? 'text-ink' : 'text-slate-300',
               )}
             >

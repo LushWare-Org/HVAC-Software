@@ -72,7 +72,6 @@ export function BusinessSection() {
         <div className="mt-10 border-t border-ink pt-14">
           <StickyScrollReveal
             items={BUSINESS_TABS.map((tab) => ({
-              index: tab.index,
               title: tab.headline,
               description: tab.description,
               bullets: tab.bullets,
