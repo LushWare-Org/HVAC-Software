@@ -11,7 +11,6 @@ import { FEATURES, OPERATIONS_SHOWCASE, SALES_SHOWCASE, BUSINESS_TABS } from '..
 
 interface Row {
   key: string
-  index: string
   icon: LucideIcon
   title: string
   description: string
@@ -23,7 +22,6 @@ interface Row {
 
 const featureRows: Row[] = FEATURES.map((f) => ({
   key: `feature-${f.id}`,
-  index: f.index,
   icon: f.icon,
   title: f.title,
   description: f.description,
@@ -33,9 +31,8 @@ const featureRows: Row[] = FEATURES.map((f) => ({
   url: f.url,
 }))
 
-const opsRows: Row[] = OPERATIONS_SHOWCASE.map((item, i) => ({
+const opsRows: Row[] = OPERATIONS_SHOWCASE.map((item) => ({
   key: `ops-${item.id}`,
-  index: String(FEATURES.length + i + 1).padStart(2, '0'),
   icon: item.icon,
   title: item.title,
   description: item.description,
@@ -45,9 +42,8 @@ const opsRows: Row[] = OPERATIONS_SHOWCASE.map((item, i) => ({
   url: item.url,
 }))
 
-const salesRows: Row[] = SALES_SHOWCASE.map((item, i) => ({
+const salesRows: Row[] = SALES_SHOWCASE.map((item) => ({
   key: `sales-${item.id}`,
-  index: String(FEATURES.length + OPERATIONS_SHOWCASE.length + i + 1).padStart(2, '0'),
   icon: item.icon,
   title: item.title,
   description: item.description,
@@ -57,9 +53,8 @@ const salesRows: Row[] = SALES_SHOWCASE.map((item, i) => ({
   url: item.url,
 }))
 
-const businessRows: Row[] = BUSINESS_TABS.map((tab, i) => ({
+const businessRows: Row[] = BUSINESS_TABS.map((tab) => ({
   key: `business-${tab.id}`,
-  index: String(FEATURES.length + OPERATIONS_SHOWCASE.length + SALES_SHOWCASE.length + i + 1).padStart(2, '0'),
   icon: tab.icon,
   title: tab.headline,
   description: tab.description,
@@ -87,10 +82,7 @@ function FeatureRows({ rows }: { rows: Row[] }) {
                 once={false}
                 className={reversed ? 'lg:order-2' : ''}
               >
-                <span className="font-display text-sm font-bold tabular-nums text-navy-500">
-                  {row.index}
-                </span>
-                <div className="mt-6 flex items-center gap-4">
+                <div className="flex items-center gap-4">
                   <span className="flex h-12 w-12 flex-none items-center justify-center border border-ink bg-navy-900 text-white transition-transform duration-300 group-hover:scale-110">
                     <Icon className="h-6 w-6" />
                   </span>

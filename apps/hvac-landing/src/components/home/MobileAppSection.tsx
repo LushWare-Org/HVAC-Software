@@ -29,7 +29,7 @@ function MobileAppShowcase() {
   }, [])
 
   return (
-    <div className="relative mx-auto w-[310px] sm:w-[300px]">
+    <div className="relative mx-auto w-full max-w-[310px] sm:w-[300px]">
       <div className="absolute inset-x-0 top-1/2 -z-10 h-[22rem] -translate-y-1/2 scale-110 rounded-[3rem] bg-navy-400/25 blur-3xl" />
 
       <div className="relative aspect-[853/1844]">

@@ -36,10 +36,7 @@ export default function SalesShowcase() {
                     once={false}
                     className={reversed ? 'lg:order-2' : ''}
                   >
-                    <span className="font-display text-sm font-bold tabular-nums text-navy-500">
-                      {item.index}
-                    </span>
-                    <div className="mt-6 flex items-center gap-4">
+                    <div className="flex items-center gap-4">
                       <span className="flex h-12 w-12 flex-none items-center justify-center border border-ink bg-navy-900 text-white transition-transform duration-300 group-hover:scale-110">
                         <Icon className="h-6 w-6" />
                       </span>

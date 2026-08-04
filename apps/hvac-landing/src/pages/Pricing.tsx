@@ -48,22 +48,24 @@ export default function Pricing() {
 
           {showBetaBanner && (
             <Reveal delay={80} className="mt-6 flex justify-center px-4">
-              <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 rounded-full border border-navy-100 bg-navy-50 py-1.5 pl-1.5 pr-3 text-sm">
-                <span className="inline-flex items-center gap-1 rounded-full bg-navy-950 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white">
-                  <Sparkles className="h-3 w-3" /> Beta offer
-                </span>
-                <span className="text-navy-800">
+              <div className="flex w-full flex-col gap-2 rounded-2xl border border-navy-100 bg-navy-50 p-4 text-sm sm:w-auto sm:max-w-full sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-2.5 sm:gap-y-1.5 sm:rounded-full sm:py-1.5 sm:pl-1.5 sm:pr-3">
+                <div className="flex w-full items-center justify-between gap-2 sm:contents">
+                  <span className="inline-flex flex-none items-center gap-1 rounded-full bg-navy-950 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white sm:order-1">
+                    <Sparkles className="h-3 w-3" /> Beta offer
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Dismiss beta offer"
+                    onClick={() => setShowBetaBanner(false)}
+                    className="flex-none text-navy-300 transition-colors hover:text-navy-700 sm:order-3"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <span className="text-left text-navy-800 sm:order-2">
                   Our first <strong className="font-semibold">{BETA_OFFER.seats} Beta Clients</strong> get{' '}
                   {BETA_OFFER.freeMonths} months free, then {BETA_OFFER.discountPct}% off for a year. After that billed normally.
                 </span>
-                <button
-                  type="button"
-                  aria-label="Dismiss beta offer"
-                  onClick={() => setShowBetaBanner(false)}
-                  className="text-navy-300 transition-colors hover:text-navy-700"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
               </div>
             </Reveal>
           )}
