@@ -122,17 +122,36 @@ export class JobAssignedNotificationService {
   }
 
   private emailHtml(dto: JobAssignedDto, when: string): string {
+    // Solid violet — matches the technician-account color used elsewhere in the system. No gradients.
+    const rows = [
+      { label: 'Job', value: esc(dto.jobTitle), bold: true },
+      dto.customerName ? { label: 'Customer', value: esc(dto.customerName) } : null,
+      dto.address ? { label: 'Address', value: esc(dto.address) } : null,
+      { label: 'Scheduled', value: esc(when) },
+    ].filter(Boolean) as { label: string; value: string; bold?: boolean }[];
+
     return `
-      <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;padding:24px;">
-        <h2 style="margin:0 0 12px;">You've been assigned a new job</h2>
-        <table style="width:100%;border-collapse:collapse;font-size:14px;">
-          <tr><td style="padding:6px 0;color:#6b7280;">Job</td><td style="padding:6px 0;font-weight:bold;">${esc(dto.jobTitle)}</td></tr>
-          ${dto.customerName ? `<tr><td style="padding:6px 0;color:#6b7280;">Customer</td><td style="padding:6px 0;">${esc(dto.customerName)}</td></tr>` : ''}
-          ${dto.address ? `<tr><td style="padding:6px 0;color:#6b7280;">Address</td><td style="padding:6px 0;">${esc(dto.address)}</td></tr>` : ''}
-          <tr><td style="padding:6px 0;color:#6b7280;">Scheduled</td><td style="padding:6px 0;">${esc(when)}</td></tr>
-        </table>
-        <p style="color:#6b7280;font-size:13px;margin-top:18px;">Open the technician app for full details and to update your status.</p>
-      </div>`;
+<!DOCTYPE html>
+<html>
+<body style="margin:0;background:#F3F4F6;padding:32px 18px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111827;">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(15,23,42,0.06);">
+    <div style="padding:28px 32px;background:#7C3AED;">
+      <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.78);margin-bottom:8px;">Dispatch</div>
+      <h1 style="margin:0;font-size:21px;color:#ffffff;">New job assigned</h1>
+    </div>
+    <div style="padding:30px 32px;">
+      <div style="border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;margin:0 0 20px;">
+        ${rows.map((r, i) => `
+          <div style="display:flex;padding:11px 16px;${i > 0 ? 'border-top:1px solid #E5E7EB;' : ''}background:${i % 2 === 0 ? '#F9FAFB' : '#ffffff'};">
+            <span style="flex:0 0 110px;font-size:12px;color:#6B7280;">${r.label}</span>
+            <span style="font-size:13.5px;color:#111827;${r.bold ? 'font-weight:700;' : ''}">${r.value}</span>
+          </div>`).join('')}
+      </div>
+      <p style="margin:0;font-size:13px;line-height:1.7;color:#6B7280;">Open the technician app for full details and to update your status.</p>
+    </div>
+  </div>
+</body>
+</html>`;
   }
 
   private async fetchTechUser(companyId: string, techUserId: string): Promise<TechUser | null> {

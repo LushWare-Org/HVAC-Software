@@ -2,12 +2,111 @@
  * Overview tab — profile fields, tags, Account Contacts (local-only, unchanged),
  * and Addresses. Extracted from the old "Contact" + "Addresses" tabs.
  */
-import { User, Users, MapPin, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { User, Users, MapPin, Plus, Trash2, ShieldCheck, ShieldAlert, Send, Loader2 } from 'lucide-react'
 import { TagInput } from '../../../components/TagInput'
 import { Field, SectionLabel, Badge, patchById, sectionCardStyle } from '../shared'
+import { useResendWelcomeEmail } from '../../../hooks/useCustomers'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface Contact { id: number; name: string; role: string; email: string; phone: string }
 interface Address { id: number | string; type: string; line1: string; line2?: string; city: string; state?: string; postcode: string; primary?: boolean }
+
+function PortalAccountCard({ customerId, auth0UserId, mustResetPassword, lastLoginAt, email }: {
+  customerId: string
+  auth0UserId?: string
+  mustResetPassword?: boolean
+  lastLoginAt?: string
+  email?: string
+}) {
+  const resendWelcomeEmail = useResendWelcomeEmail()
+  const { showSuccess, showError } = useToast()
+  const [justSent, setJustSent] = useState(false)
+
+  if (!auth0UserId) {
+    return (
+      <div style={sectionCardStyle}>
+        <SectionLabel icon={ShieldAlert}>Portal Account</SectionLabel>
+        <div style={{ fontSize: 12.5, color: 'var(--t4)' }}>
+          This customer doesn't have a portal account yet.
+        </div>
+      </div>
+    )
+  }
+
+  const handleResend = () => {
+    resendWelcomeEmail.mutate(customerId, {
+      onSuccess: (res) => {
+        showSuccess(res.message, 'Welcome Email Resent')
+        setJustSent(true)
+        setTimeout(() => setJustSent(false), 4000)
+      },
+      onError: (err: any) => showError(err?.response?.data?.message ?? 'Failed to resend welcome email.'),
+    })
+  }
+
+  return (
+    <div style={sectionCardStyle}>
+      <SectionLabel icon={mustResetPassword ? ShieldAlert : ShieldCheck}>Portal Account</SectionLabel>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14,
+        border: '1px solid var(--bd)', borderRadius: 12, padding: '14px 16px',
+        background: mustResetPassword ? 'color-mix(in srgb, var(--amber) 6%, var(--bg-card))' : 'var(--bg-card)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: mustResetPassword ? 'var(--amber-dim, rgba(245,158,11,0.12))' : 'var(--green-dim, rgba(34,197,94,0.12))',
+          }}>
+            {mustResetPassword ? <ShieldAlert size={16} style={{ color: 'var(--amber)' }} /> : <ShieldCheck size={16} style={{ color: 'var(--green)' }} />}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>
+                {mustResetPassword ? 'Not yet logged in' : 'Active'}
+              </span>
+              {mustResetPassword && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
+                  padding: '1.5px 7px', borderRadius: 999,
+                  background: 'color-mix(in srgb, var(--amber) 16%, transparent)', color: 'var(--amber)',
+                }}>
+                  Pending
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: 11.5, color: 'var(--t4)', margin: '2px 0 0' }}>
+              {mustResetPassword
+                ? `Welcome email was sent to ${email ?? 'their inbox'} but they haven't signed in yet.`
+                : lastLoginAt
+                  ? `Last signed in ${new Date(lastLoginAt).toLocaleString()}`
+                  : 'Signed in previously.'}
+            </p>
+          </div>
+        </div>
+        {mustResetPassword && (
+          <button
+            onClick={handleResend}
+            disabled={resendWelcomeEmail.isPending || justSent}
+            title="Send a fresh temporary password and welcome email"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+              fontSize: 12, fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer',
+              padding: '8px 14px', borderRadius: 9,
+              background: justSent ? 'var(--green)' : 'var(--amber)',
+              opacity: resendWelcomeEmail.isPending ? 0.75 : 1,
+            }}
+          >
+            {resendWelcomeEmail.isPending
+              ? <Loader2 size={13} className="animate-spin" />
+              : justSent ? <ShieldCheck size={13} /> : <Send size={13} />}
+            {resendWelcomeEmail.isPending ? 'Sending…' : justSent ? 'Sent' : 'Resend Welcome Email'}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function OverviewTab({
   formData, isEditMode, onFieldChange, tags, onTagsChange, allTags,
@@ -26,6 +125,14 @@ export default function OverviewTab({
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <PortalAccountCard
+        customerId={formData.id}
+        auth0UserId={formData.auth0UserId}
+        mustResetPassword={formData.mustResetPassword}
+        lastLoginAt={formData.lastLoginAt}
+        email={formData.email}
+      />
+
       {/* Profile */}
       <div style={sectionCardStyle}>
         <SectionLabel icon={User}>Profile</SectionLabel>

@@ -144,7 +144,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                     {!collapsed && (
                         <div className="min-w-0">
                             <h2 className={`text-lg font-bold leading-tight truncate ${isLight ? 'text-white' : 'text-[var(--t1)]'}`}>
-                                {company?.name ?? 'HomePulse'}
+                                {company?.name ?? 'HVACtor.ai'}
                             </h2>
                             <p className={`text-[11px] leading-tight mt-0.5 truncate ${isLight ? 'text-slate-400' : 'text-[var(--t3)]'}`}>
                                 Management Dashboard

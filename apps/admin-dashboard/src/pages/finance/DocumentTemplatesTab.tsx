@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Star, Trash2, Loader2, FileText, DollarSign, FileSignature } from 'lucide-react'
+import { Plus, Star, Trash2, Loader2, FileText, DollarSign, FileSignature, Receipt } from 'lucide-react'
 import { useToast } from '../../contexts/ToastContext'
 import {
   useDocumentTemplates, useDeleteDocumentTemplate, useSetDefaultTemplate,
@@ -11,6 +11,7 @@ const SECTIONS: { key: DocumentType; label: string; icon: React.ElementType }[] 
   { key: 'INVOICE', label: 'Invoices', icon: FileText },
   { key: 'QUOTE', label: 'Quotes', icon: DollarSign },
   { key: 'AGREEMENT', label: 'Agreements', icon: FileSignature },
+  { key: 'PAYMENT_RECEIPT', label: 'Payment Receipts', icon: Receipt },
 ]
 
 export default function DocumentTemplatesTab() {

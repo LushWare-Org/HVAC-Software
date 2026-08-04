@@ -206,7 +206,7 @@ export default function Dashboard() {
                         {getGreeting()}
                     </div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', lineHeight: 1.2 }}>
-                        {company?.name ?? 'HomePulse'}
+                        {company?.name ?? 'HVACtor.ai'}
                     </div>
                     {company?.city && (
                         <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>

@@ -53,6 +53,8 @@ export class InvoicesController {
   @ApiQuery({ name: 'houseId', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date — filters by createdAt >= start of this day' })
+  @ApiQuery({ name: 'dateTo', required: false, description: 'ISO date — filters by createdAt <= end of this day' })
   async findAll(
     @CurrentUser() user: AuthUser,
     @Query('status') status?: InvoiceStatus,
@@ -63,6 +65,8 @@ export class InvoicesController {
     @Query('houseId') houseId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
   ) {
     // Same security fix as quotes: enforce customerId server-side for the
     // CUSTOMER role instead of trusting the query param, with a house-ownership
@@ -82,7 +86,7 @@ export class InvoicesController {
     return this.invoicesService.findAll(user.companyId, {
       status, customerId: effectiveCustomerId, jobId, projectId, houseId,
       projectIds: projectIds ? projectIds.split(',').filter(Boolean) : undefined,
-      page, limit,
+      page, limit, dateFrom, dateTo,
     });
   }
 
@@ -220,7 +224,7 @@ export class InvoicesController {
   ) {
     const invoice = await this.invoicesService.findOne(user.companyId, id);
     const settings = await this.companySettings.getSettings(user.companyId);
-    const companyName = settings.name || process.env.COMPANY_NAME || 'T&S Services';
+    const companyName = settings.name || process.env.COMPANY_NAME || 'HVACtor.ai';
     const companyAddress = settings.address || process.env.COMPANY_ADDRESS || '';
     const template = await this.documentTemplates.resolve(user.companyId, 'INVOICE', (invoice as any).templateId);
     const pdf = await this.pdfService.generateInvoicePdf(invoice as any, companyName, companyAddress, {
@@ -230,6 +234,54 @@ export class InvoicesController {
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${invoice.invoiceNumber}.pdf"`,
+      'Content-Length': pdf.length,
+    });
+    res.end(pdf);
+  }
+
+  // ── Payment Receipt (view / download) ────────────────────────────────────
+  @Get(':id/payments/:paymentId/receipt.pdf')
+  @ApiOperation({ summary: 'Download a payment receipt as PDF — proof of payment for a specific recorded payment' })
+  async downloadReceiptPdf(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Param('paymentId') paymentId: string,
+    @Res() res: Response,
+  ) {
+    const invoice = await this.invoicesService.findOne(user.companyId, id);
+    const payment = (invoice as any).payments?.find((p: any) => p.id === paymentId);
+    if (!payment) throw new BadRequestException('Payment not found on this invoice');
+
+    const settings = await this.companySettings.getSettings(user.companyId);
+    const companyName = settings.name || process.env.COMPANY_NAME || 'HVACtor.ai';
+    const companyAddress = settings.address || process.env.COMPANY_ADDRESS || '';
+    const template = await this.documentTemplates.resolve(user.companyId, 'PAYMENT_RECEIPT');
+
+    // Balance remaining on the invoice as of right now — a receipt for an older
+    // payment still shows the invoice's current balance, not a stale snapshot.
+    const balanceDue = parseFloat(invoice.balanceDue.toString());
+
+    const pdf = await this.pdfService.generatePaymentReceiptPdf(
+      {
+        receiptNumber: payment.receiptNumber ?? `RCPT-${payment.id.slice(0, 8).toUpperCase()}`,
+        amount: payment.amount,
+        paymentMethod: payment.paymentMethod,
+        paidAt: payment.paidAt ?? payment.createdAt,
+        notes: payment.notes,
+        customerName: invoice.customerName ?? 'Customer',
+        customerEmail: invoice.customerEmail ?? '',
+        invoiceNumber: invoice.invoiceNumber,
+        invoiceTotal: invoice.total,
+        balanceDue,
+      },
+      companyName,
+      companyAddress,
+      { currency: settings.currency, timezone: settings.timezone },
+      template,
+    );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${payment.receiptNumber ?? 'receipt'}.pdf"`,
       'Content-Length': pdf.length,
     });
     res.end(pdf);

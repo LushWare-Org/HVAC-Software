@@ -13,7 +13,7 @@ import { EmailService } from '../email/email.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
 const JWT_EXPIRES_IN = '24h';
-const APP_NAME = process.env.APP_NAME ?? 'T&S Services';
+const APP_NAME = process.env.APP_NAME ?? 'HVACtor.ai';
 
 /** Generate a readable temporary password: 3 groups of 4 alphanumeric chars, e.g. "aX3k-Rm9p-Q2wZ" */
 function generateTempPassword(): string {
@@ -539,7 +539,57 @@ export class AuthService {
       data: { passwordHash: newHash, mustResetPassword: false },
     });
 
+    const company = await this.prisma.company.findUnique({ where: { id: companyId }, select: { name: true } });
+    // Best-effort confirmation email — never blocks the password change itself.
+    this.emailService
+      .sendPasswordResetConfirmation({
+        to: user.email,
+        name: user.name,
+        companyName: company?.name ?? APP_NAME,
+      })
+      .catch(() => undefined);
+
     return { success: true, message: 'Password updated successfully' };
+  }
+
+  /**
+   * Admin resends portal login credentials to a customer who never completed
+   * their first login (mustResetPassword still true / lastLoginAt still null) —
+   * e.g. the original welcome email was missed, filtered as spam, or expired.
+   * Issues a fresh temp password (the original was never persisted in plaintext,
+   * so it cannot be recovered) and re-sends the welcome email.
+   */
+  async resendWelcomeEmail(companyId: string, customerId: string) {
+    const customer = await this.prisma.customer.findFirst({ where: { id: customerId, companyId } });
+    if (!customer) throw new BadRequestException('Customer not found');
+    if (!customer.auth0UserId) {
+      throw new BadRequestException('This customer does not have a portal account yet');
+    }
+    if (!customer.email) {
+      throw new BadRequestException('Customer has no email address on file');
+    }
+
+    const user = await this.prisma.companyUser.findFirst({
+      where: { id: customer.auth0UserId, companyId, isActive: true },
+    });
+    if (!user) throw new BadRequestException('Portal account not found for this customer');
+
+    const tempPassword = generateTempPassword();
+    const passwordHash = await bcrypt.hash(tempPassword, 12);
+    await this.prisma.companyUser.update({
+      where: { id: user.id },
+      data: { passwordHash, mustResetPassword: true },
+    });
+
+    const company = await this.prisma.company.findUnique({ where: { id: companyId }, select: { name: true } });
+    await this.emailService.sendWelcomeCustomer({
+      to: customer.email,
+      name: `${customer.firstName} ${customer.lastName}`.trim(),
+      tempPassword,
+      companyName: company?.name ?? APP_NAME,
+    });
+
+    return { success: true, message: `Welcome email resent to ${customer.email}` };
   }
 
   /**

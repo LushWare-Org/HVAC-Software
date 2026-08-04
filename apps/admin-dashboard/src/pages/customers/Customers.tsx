@@ -27,10 +27,11 @@ import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import CustomerRecommendationsModal from "../../components/CustomerRecommendationsModal";
-import { useCustomers, useAgreements, useDeleteCustomer, useUpdateCustomer, useCustomerStatusSummary, useCustomerTags, prefetchCustomerDetail } from "../../hooks/useCustomers";
+import { useCustomers, useAgreements, useDeleteCustomer, useUpdateCustomer, useCustomerStatusSummary, useCustomerTags, useResendWelcomeEmail, prefetchCustomerDetail } from "../../hooks/useCustomers";
 import { customerName } from "../../types/api";
 import type { Customer, CustomerStatusSummary } from "../../types/api";
 import { formatMoney } from '../../lib/format'
+import { useToast } from "../../contexts/ToastContext";
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
 
@@ -359,6 +360,18 @@ export default function Customers() {
 
   const deleteCustomer = useDeleteCustomer();
   const updateCustomer = useUpdateCustomer();
+  const resendWelcomeEmail = useResendWelcomeEmail();
+  const { showSuccess, showError } = useToast();
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
+  const handleResendWelcomeEmail = (c: Customer) => {
+    setResendingId(c.id);
+    resendWelcomeEmail.mutate(c.id, {
+      onSuccess: (res) => showSuccess(res.message, "Welcome Email Resent"),
+      onError: (err: any) => showError(err?.response?.data?.message ?? "Failed to resend welcome email."),
+      onSettled: () => setResendingId(null),
+    });
+  };
   const hoveredSummaryQuery = useCustomerStatusSummary(hoveredCustomer?.id);
 
   // ── Derived ──────────────────────────────────────────────────────────────────
@@ -616,7 +629,19 @@ export default function Customers() {
                       >
                         <td>
                           <div className="cell-user"><div>
-                            <div className="cell-name">{customerName(c)}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="cell-name">{customerName(c)}</div>
+                              {c.mustResetPassword && (
+                                <span
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold uppercase tracking-wide"
+                                  style={{ background: 'color-mix(in srgb, var(--amber) 16%, transparent)', color: 'var(--amber)', border: '1px solid color-mix(in srgb, var(--amber) 30%, transparent)' }}
+                                  title="This customer hasn't logged in yet — resend their welcome email if it was missed."
+                                >
+                                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--amber)' }} />
+                                  Not yet logged in
+                                </span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2"><Mail size={12} className="text-[var(--t4)]" /> {c.email}</div>
                           </div></div>
                         </td>
@@ -683,6 +708,16 @@ export default function Customers() {
                             onMouseEnter={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
                             onMouseMove={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
                           >
+                            {c.mustResetPassword && (
+                              <button
+                                className="flex items-center justify-center p-1.5 text-amber-500 hover:bg-amber-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer disabled:opacity-50"
+                                onClick={e => { e.stopPropagation(); handleResendWelcomeEmail(c); }}
+                                disabled={resendingId === c.id}
+                                title="Resend Welcome Email"
+                              >
+                                {resendingId === c.id ? <RefreshCw size={15} className="animate-spin" /> : <Send size={15} />}
+                              </button>
+                            )}
                             <button className="flex items-center justify-center p-1.5 text-violet-500 hover:bg-violet-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); setRecCustomer(c); }} title="AI Recommendations"><Sparkles size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--blue)] hover:bg-blue-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer" onClick={e => { e.stopPropagation(); handleViewClick(c, "customer"); }} title="View Details"><Edit size={15} /></button>
                             <button className="flex items-center justify-center p-1.5 text-[var(--t2)] hover:bg-gray-100 rounded-md transition-colors border-0 bg-transparent cursor-pointer" title="Email" onClick={e => { e.stopPropagation(); window.location.href = `mailto:${c.email}`; }}><Mail size={15} /></button>

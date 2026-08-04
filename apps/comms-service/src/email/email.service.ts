@@ -41,6 +41,8 @@ export interface SendEmailOptions {
   replyTo?: string;
   attachments?: SendEmailAttachment[];
   headers?: Record<string, string>;
+  /** Per-tenant sender display name — e.g. the company's own name — overrides the configured default. */
+  fromName?: string;
 }
 
 @Injectable()
@@ -94,6 +96,12 @@ export class EmailService {
           user: smtpUser,
           pass: smtpPass,
         },
+        // Nodemailer's defaults (2 min connection/socket, 30s greeting) far outlast
+        // the 10s timeout callers like finance-service impose on this whole request —
+        // a slow/unreachable relay would hang the caller instead of failing cleanly.
+        connectionTimeout: 8_000,
+        greetingTimeout: 8_000,
+        socketTimeout: 8_000,
       });
       this.logger.log(`Email provider: SMTP (${smtpHost}:${smtpPort})`);
     } else if (this.provider === 'sendgrid') {
@@ -108,6 +116,7 @@ export class EmailService {
 
   async send(opts: SendEmailOptions): Promise<EmailDeliveryResult> {
     const start = Date.now();
+    const fromName = opts.fromName?.trim() || this.fromName;
     try {
       if (this.provider === 'none') {
         const missingConfigError = 'No email provider configured in comms-service';
@@ -121,7 +130,7 @@ export class EmailService {
         }
 
         const info = await this.smtpTransporter.sendMail({
-          from: { name: this.fromName, address: this.fromEmail },
+          from: { name: fromName, address: this.fromEmail },
           to: opts.toName ? `${opts.toName} <${opts.to}>` : opts.to,
           replyTo: opts.replyTo ?? this.fromEmail,
           subject: opts.subject,
@@ -146,7 +155,7 @@ export class EmailService {
 
       const msg: sgMail.MailDataRequired = {
         to: { email: opts.to, name: opts.toName },
-        from: { email: this.fromEmail, name: this.fromName },
+        from: { email: this.fromEmail, name: fromName },
         replyTo: opts.replyTo ?? this.fromEmail,
         subject: opts.subject,
         html: opts.htmlBody,

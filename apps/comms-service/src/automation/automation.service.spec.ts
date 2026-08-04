@@ -16,6 +16,7 @@ import { AutomationService } from './automation.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TemplatesService } from '../templates/templates.service';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { AutomationTrigger } from '../prisma/generated';
 import type { JobStatusChangedEvent } from './dto/automation.dto';
 
@@ -42,6 +43,10 @@ const mockTemplates = {
   findOne: jest.fn(),
 };
 
+const mockCompanySettings = {
+  getSettings: jest.fn().mockResolvedValue({ name: 'Test Co' }),
+};
+
 const COMPANY_ID = 'co-001';
 
 function makeRule(overrides: Partial<any> = {}): any {
@@ -65,6 +70,9 @@ describe('AutomationService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockNotifications.sendEmail.mockResolvedValue({});
+    mockNotifications.sendSms.mockResolvedValue({});
+    mockCompanySettings.getSettings.mockResolvedValue({ name: 'Test Co' });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -72,6 +80,7 @@ describe('AutomationService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: NotificationsService, useValue: mockNotifications },
         { provide: TemplatesService, useValue: mockTemplates },
+        { provide: CompanySettingsClient, useValue: mockCompanySettings },
       ],
     }).compile();
 
@@ -208,7 +217,8 @@ describe('AutomationService', () => {
       await service.processJobStatusChanged(event);
 
       expect(mockNotifications.sendSms).toHaveBeenCalledTimes(1);
-      expect(mockNotifications.sendEmail).toHaveBeenCalledTimes(1);
+      // 1 from the matching EMAIL rule + 1 from the built-in COMPLETED status email.
+      expect(mockNotifications.sendEmail).toHaveBeenCalledTimes(2);
     });
   });
 

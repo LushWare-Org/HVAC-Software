@@ -178,9 +178,9 @@ export default function BookServiceModal({ onClose, projectId, projectName, hous
       <div
         className="cp-modal-container"
         style={{
-          background: 'var(--bg-card)', borderRadius: 18, maxWidth: 640, width: '100%',
+          background: 'var(--bg-card)', borderRadius: 18, maxWidth: 860, width: '100%',
           display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,0.35)',
-          maxHeight: 'min(680px, calc(100vh - 40px))', overflow: 'hidden',
+          maxHeight: 'min(760px, calc(100vh - 40px))', overflow: 'hidden',
           border: '1px solid var(--bd)',
           animation: 'modalIn 0.2s ease-out',
         }}

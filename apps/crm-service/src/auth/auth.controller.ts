@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength, IsOptional, IsArray, IsNumber } from 'class-validator';
 import { CurrentUser, JwtAuthGuard, RolesGuard, Roles } from '@tscrm/auth-client';
@@ -172,5 +172,19 @@ export class AuthController {
   @ApiOperation({ summary: 'Admin: create approved technician account with temp password' })
   provisionTechnician(@CurrentUser() user: AuthUser, @Body() dto: ProvisionTechnicianDto) {
     return this.authService.provisionTechnicianAccount(user.companyId, dto);
+  }
+
+  /**
+   * Admin resends portal login credentials to a customer whose welcome email
+   * was missed or never actioned (mustResetPassword still true — pending first login).
+   * Issues a new temp password since the original cannot be recovered.
+   */
+  @Post('customers/:customerId/resend-welcome-email')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_WRITE)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Admin: resend customer portal welcome email with a fresh temp password' })
+  resendWelcomeEmail(@CurrentUser() user: AuthUser, @Param('customerId') customerId: string) {
+    return this.authService.resendWelcomeEmail(user.companyId, customerId);
   }
 }

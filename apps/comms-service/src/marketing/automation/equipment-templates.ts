@@ -158,7 +158,7 @@ function buildEmail(
   ctaText: string,
   ctaUrl: string,
   unsubLink: string,
-  companyName = 'HomePulse',
+  companyName = 'HVACtor.ai',
 ): string {
   return `<!DOCTYPE html>
 <html>

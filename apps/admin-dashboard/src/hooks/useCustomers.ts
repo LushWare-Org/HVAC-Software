@@ -151,6 +151,18 @@ export function useDeleteCustomer() {
   })
 }
 
+export function useResendWelcomeEmail() {
+  return useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await api.post(`/crm/auth/customers/${customerId}/resend-welcome-email`)
+      return res.data as { success: boolean; message: string }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+    },
+  })
+}
+
 export function useExecuteFollowup() {
   return useMutation({
     mutationFn: async (customerId: string) => {

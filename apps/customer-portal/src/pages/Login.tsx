@@ -46,7 +46,7 @@ export default function Login() {
               <Wrench size={20} color="#ffffff" />
             </div>
             <div>
-              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>HomePulse</h1>
+              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>HVACtor.ai</h1>
               <p style={{ margin: 0, fontSize: 12, opacity: 0.8 }}>Secure customer workspace</p>
             </div>
           </div>

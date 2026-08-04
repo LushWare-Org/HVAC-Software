@@ -84,7 +84,7 @@ const templateCache = new Map<string, HandlebarsTemplateDelegate>();
 const partialsRegistered = new Set<string>();
 
 /** Registers every slot partial for a document type, once, from apps/finance-service/src/pdf/templates/partials/<docType>/<name>.hbs. */
-function registerPartialsOnce(docType: 'invoice' | 'quote' | 'agreement', names: string[]): void {
+function registerPartialsOnce(docType: 'invoice' | 'quote' | 'agreement' | 'payment-receipt', names: string[]): void {
   if (partialsRegistered.has(docType)) return;
   const dir = path.join(__dirname, 'templates', 'partials', docType);
   for (const name of names) {
@@ -97,6 +97,7 @@ function registerPartialsOnce(docType: 'invoice' | 'quote' | 'agreement', names:
 const INVOICE_SLOT_NAMES = ['logo', 'docBadge', 'tagline', 'companyName', 'companyAddress', 'headerText', 'billTo', 'balanceDueCard', 'infoGrid', 'lineItemsTable', 'totalsCard', 'paymentHistory', 'notesCard', 'termsCard', 'bankDetailsCard', 'footerText', 'pageFooterMeta'];
 const QUOTE_SLOT_NAMES = ['logo', 'docBadge', 'tagline', 'companyName', 'companyAddress', 'headerText', 'scopeOfWorkCard', 'quotedTotalCard', 'infoGrid', 'lineItemsTable', 'totalsCard', 'approvalBlock', 'notesCard', 'termsCard', 'bankDetailsCard', 'footerText', 'pageFooterMeta'];
 const AGREEMENT_SLOT_NAMES = ['logo', 'docBadge', 'tagline', 'companyName', 'companyAddress', 'headerText', 'partiesSection', 'scheduleSection', 'pricingSection', 'notesSection', 'bankDetailsSection', 'signatureBlock', 'footerText'];
+const PAYMENT_RECEIPT_SLOT_NAMES = ['logo', 'docBadge', 'tagline', 'companyName', 'companyAddress', 'headerText', 'paidByCard', 'amountPaidCard', 'infoGrid', 'paymentSummaryCard', 'notesCard', 'footerText', 'pageFooterMeta'];
 
 function loadTemplate(name: string): HandlebarsTemplateDelegate {
   if (templateCache.has(name)) return templateCache.get(name)!;
@@ -114,6 +115,19 @@ type InvoiceWithRelations = Invoice & {
   payments: Payment[];
   quote?: { quoteNumber: string } | null;
 };
+
+export interface PaymentReceiptContext {
+  receiptNumber: string;
+  amount: number | { toString(): string };
+  paymentMethod: string;
+  paidAt: Date;
+  notes?: string | null;
+  customerName: string;
+  customerEmail: string;
+  invoiceNumber: string;
+  invoiceTotal: number | { toString(): string };
+  balanceDue: number | { toString(): string };
+}
 
 export interface AgreementPdfContext {
   name: string;
@@ -193,6 +207,14 @@ export class PdfService implements OnModuleDestroy {
     opts: PdfRenderOpts = DEFAULT_RENDER_OPTS, template?: DocumentTemplateConfig | null,
   ): Promise<Buffer> {
     const html = this.renderAgreementHtml(context, companyName, companyAddress, opts, template);
+    return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false });
+  }
+
+  async generatePaymentReceiptPdf(
+    context: PaymentReceiptContext, companyName: string, companyAddress: string,
+    opts: PdfRenderOpts = DEFAULT_RENDER_OPTS, template?: DocumentTemplateConfig | null,
+  ): Promise<Buffer> {
+    const html = this.renderPaymentReceiptHtml(context, companyName, companyAddress, opts, template);
     return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false });
   }
 
@@ -345,6 +367,35 @@ export class PdfService implements OnModuleDestroy {
     });
   }
 
+  renderPaymentReceiptHtml(
+    context: PaymentReceiptContext, companyName: string, companyAddress: string,
+    opts: PdfRenderOpts = DEFAULT_RENDER_OPTS, template?: DocumentTemplateConfig | null,
+  ): string {
+    registerPartialsOnce('payment-receipt', PAYMENT_RECEIPT_SLOT_NAMES);
+    const usd = (v: number | { toString(): string } | null | undefined) => formatMoneySrv(v, opts.currency);
+    const dateStr = (d: Date | null | undefined) => formatDateSrv(d, opts.timezone);
+    const tpl = loadTemplate('payment-receipt');
+    const balanceDue = parseFloat(context.balanceDue.toString());
+    return tpl({
+      companyName: template?.companyName || companyName,
+      companyAddress: template?.companyAddress || companyAddress,
+      template: this.templateContext(template),
+      rows: this.resolveRows('PAYMENT_RECEIPT', template),
+      receiptNumber: context.receiptNumber,
+      amountFmt: usd(context.amount),
+      paymentMethod: context.paymentMethod,
+      paidAtFmt: dateStr(context.paidAt),
+      notes: context.notes ?? '',
+      customerName: context.customerName,
+      customerEmail: context.customerEmail,
+      invoiceNumber: context.invoiceNumber,
+      invoiceTotalFmt: usd(context.invoiceTotal),
+      balanceDue: balanceDue > 0 ? balanceDue : null,
+      balanceDueFmt: usd(context.balanceDue),
+      generatedAt: dateStr(new Date()),
+    });
+  }
+
   /** Normalizes a resolved template into exactly what the .hbs files need — never null, so `{{#if template.x}}` always works. */
   private templateContext(template?: DocumentTemplateConfig | null) {
     if (!template) return { isLetterhead: false };
@@ -362,7 +413,7 @@ export class PdfService implements OnModuleDestroy {
   }
 
   /** A template with no custom rows renders with the document type's built-in default arrangement. */
-  private resolveRows(documentType: 'INVOICE' | 'QUOTE' | 'AGREEMENT', template?: DocumentTemplateConfig | null): TemplateRow[] {
+  private resolveRows(documentType: 'INVOICE' | 'QUOTE' | 'AGREEMENT' | 'PAYMENT_RECEIPT', template?: DocumentTemplateConfig | null): TemplateRow[] {
     return template?.rows && template.rows.length > 0 ? template.rows : DEFAULT_ROWS[documentType];
   }
 

@@ -8,7 +8,7 @@ import { clampPagination } from '@tscrm/types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
 const COMMS_SERVICE_URL = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
-const APP_NAME = process.env.APP_NAME || 'T&S Services';
+const APP_NAME = process.env.APP_NAME || 'HVACtor.ai';
 
 function isUniqueConstraintError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';

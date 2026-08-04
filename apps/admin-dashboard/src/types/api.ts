@@ -55,6 +55,10 @@ export interface Customer {
   totalJobs?: number
   totalRevenue?: number
   lastServiceDate?: string
+  // portal account status (merged from CompanyUser via auth0UserId)
+  auth0UserId?: string
+  mustResetPassword?: boolean
+  lastLoginAt?: string
   // nested relations
   addresses?: Address[]
   equipment?: EquipmentRecord[]
@@ -355,6 +359,18 @@ export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PARTIALLY_PAID' | 'PAID' | 'OVER
 export type QuoteStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'CONVERTED'
 export type ExpenseStatus = 'PENDING' | 'APPROVED' | 'PAID' | 'REJECTED'
 
+export interface Payment {
+  id: string
+  invoiceId: string
+  amount: string        // Prisma Decimal serialised as string
+  paymentMethod: string // CARD | ACH | CASH | CHECK | OTHER
+  status: string        // PENDING | SUCCEEDED | FAILED | REFUNDED
+  receiptNumber?: string
+  paidAt?: string
+  notes?: string
+  createdAt: string
+}
+
 export interface Invoice {
   id: string
   companyId: string
@@ -366,6 +382,8 @@ export interface Invoice {
   jobTitle?: string
   projectId?: string
   houseId?: string
+  quoteId?: string
+  quote?: { quoteNumber: string }
   status: InvoiceStatus
   total: string        // Prisma Decimal serialised as string
   balanceDue: string
@@ -374,6 +392,7 @@ export interface Invoice {
   paidAt?: string
   notes?: string
   quickbooksId?: string
+  payments?: Payment[]
   createdAt: string
   updatedAt: string
 }
@@ -395,6 +414,7 @@ export interface Quote {
   taxRate?: number
   validUntil?: string
   notes?: string
+  invoices?: { id: string; invoiceNumber: string; status: string }[]
   createdAt: string
   updatedAt: string
 }

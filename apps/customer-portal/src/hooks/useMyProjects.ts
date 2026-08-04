@@ -41,14 +41,16 @@ export interface MyProjectQuote {
 }
 
 export function useMyProjects() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   return useQuery<MyProject[]>({
-    queryKey: ['my-projects'],
+    // Scoped by customerId — see useMyHouses for why an unscoped key would
+    // leak a previous session's persisted (localStorage) cache across users.
+    queryKey: ['my-projects', user?.customerId],
     queryFn: async () => {
       const res = await api.get('/crm/projects/mine')
       return res.data ?? []
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!user?.customerId,
     // Shorter than the app default (60s) and refetches on focus, unlike most
     // portal queries — this one gates whether the "My Projects" nav tab exists
     // at all, so a customer just linked to a project should see it appear the

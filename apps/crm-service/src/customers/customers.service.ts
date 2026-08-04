@@ -134,9 +134,31 @@ export class CustomersService {
     ]);
 
     return {
-      data,
+      data: await this.attachPortalStatus(data),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
+  }
+
+  /**
+   * Customer.auth0UserId is a plain string (not a Prisma relation) pointing at
+   * CompanyUser.id, so the portal-account status ("pending first login") has to
+   * be batch-fetched and merged in manually rather than via `include`.
+   */
+  private async attachPortalStatus<T extends { auth0UserId: string | null }>(
+    customers: T[],
+  ): Promise<(T & { mustResetPassword: boolean; lastLoginAt: Date | null })[]> {
+    const userIds = customers.map((c) => c.auth0UserId).filter((id): id is string => !!id);
+    const users = userIds.length
+      ? await this.prisma.companyUser.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, mustResetPassword: true, lastLoginAt: true },
+        })
+      : [];
+    const byId = new Map(users.map((u) => [u.id, u]));
+    return customers.map((c) => {
+      const u = c.auth0UserId ? byId.get(c.auth0UserId) : undefined;
+      return { ...c, mustResetPassword: u?.mustResetPassword ?? false, lastLoginAt: u?.lastLoginAt ?? null };
+    });
   }
 
   private async findAllRawSorted(
@@ -194,7 +216,7 @@ export class CustomersService {
     data.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
 
     return {
-      data,
+      data: await this.attachPortalStatus(data),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
@@ -220,7 +242,8 @@ export class CustomersService {
       throw new NotFoundException(`Customer ${id} not found`);
     }
 
-    return customer;
+    const [withPortalStatus] = await this.attachPortalStatus([customer]);
+    return withPortalStatus;
   }
 
   async update(companyId: string, id: string, dto: UpdateCustomerDto) {

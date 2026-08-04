@@ -996,7 +996,7 @@ function SmsPhoneMockup({ text }: { text: string }) {
         <div style={{ background: '#2c2c2e', borderRadius: 24, overflow: 'hidden' }}>
           <div style={{ background: '#1c1c1e', padding: '10px 16px', textAlign: 'center', borderBottom: '1px solid #3a3a3c' }}>
             <p style={{ margin: 0, fontSize: 11, color: '#98989e', fontWeight: 600 }}>Messages</p>
-            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#fff', fontWeight: 600 }}>T&S Services</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#fff', fontWeight: 600 }}>HVACtor.ai</p>
           </div>
           <div style={{ padding: '16px 12px', minHeight: 120 }}>
             {text ? (

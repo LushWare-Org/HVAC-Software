@@ -39,6 +39,10 @@ interface InvoiceFilters {
   customerId?: string
   projectId?: string
   houseId?: string
+  /** ISO date (YYYY-MM-DD) — inclusive start of range, filters on createdAt */
+  dateFrom?: string
+  /** ISO date (YYYY-MM-DD) — inclusive end of range, filters on createdAt */
+  dateTo?: string
 }
 
 export function useInvoice(id: string | undefined) {
@@ -80,6 +84,8 @@ export function useInvoices(filters: InvoiceFilters = {}) {
       if (filters.customerId) params.customerId = filters.customerId
       if (filters.projectId) params.projectId = filters.projectId
       if (filters.houseId) params.houseId = filters.houseId
+      if (filters.dateFrom) params.dateFrom = filters.dateFrom
+      if (filters.dateTo) params.dateTo = filters.dateTo
       const res = await api.get('/finance/invoices', { params })
       return res.data
     },
@@ -109,6 +115,10 @@ interface QuoteFilters {
   customerId?: string
   projectId?: string
   houseId?: string
+  /** ISO date (YYYY-MM-DD) — inclusive start of range, filters on createdAt */
+  dateFrom?: string
+  /** ISO date (YYYY-MM-DD) — inclusive end of range, filters on createdAt */
+  dateTo?: string
 }
 
 export function useQuotes(filters: QuoteFilters = {}) {
@@ -126,6 +136,8 @@ export function useQuotes(filters: QuoteFilters = {}) {
       if (filters.customerId) params.customerId = filters.customerId
       if (filters.projectId) params.projectId = filters.projectId
       if (filters.houseId) params.houseId = filters.houseId
+      if (filters.dateFrom) params.dateFrom = filters.dateFrom
+      if (filters.dateTo) params.dateTo = filters.dateTo
       const res = await api.get('/finance/quotes', { params })
       return res.data
     },
@@ -290,6 +302,10 @@ interface ExpenseFilters {
   limit?: number
   search?: string
   status?: string
+  /** ISO date (YYYY-MM-DD) — inclusive start of range, filters on expenseDate */
+  dateFrom?: string
+  /** ISO date (YYYY-MM-DD) — inclusive end of range, filters on expenseDate */
+  dateTo?: string
 }
 
 export function useExpenses(filters: ExpenseFilters = {}) {
@@ -304,6 +320,8 @@ export function useExpenses(filters: ExpenseFilters = {}) {
       if (filters.status && filters.status !== 'all') {
         params.status = filters.status.toUpperCase()
       }
+      if (filters.dateFrom) params.dateFrom = filters.dateFrom
+      if (filters.dateTo) params.dateTo = filters.dateTo
       const res = await api.get('/finance/expenses', { params })
       return res.data
     },

@@ -6,28 +6,103 @@
  *   SMTP_PORT     — 587 (TLS) or 465 (SSL)
  *   SMTP_USER     — sender email address
  *   SMTP_PASS     — app password / SMTP password
- *   SMTP_FROM     — "T&S Services <noreply@example.com>"
+ *   SMTP_FROM     — "HVACtor.ai <noreply@example.com>"
  *
  * Dev fallback: if SMTP_HOST is not set, emails are printed to the console
  * so you can see the temp password during development without needing SMTP.
+ *
+ * Sender display name is per-tenant: every send() call can pass the actual
+ * company's name (e.g. "Acme HVAC"), which becomes the "From" name instead of
+ * a single fixed system name. HVACtor.ai is only the fallback when no tenant
+ * name is available.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
 
-const APP_NAME = process.env.APP_NAME ?? 'T&S Services';
+const APP_NAME = process.env.APP_NAME ?? 'HVACtor.ai';
 
 // Accept either:
-//   SMTP_FROM="T&S Services <noreply@example.com>"   (single var, full format)
+//   SMTP_FROM="HVACtor.ai <noreply@example.com>"   (single var, full format)
 //   SMTP_FROM_NAME + SMTP_FROM_EMAIL                 (two-var format used by some providers)
 // Falls back to the sender's SMTP_USER if no explicit from address is set.
 // Never falls back to a fake domain — that guarantees spam filtering.
-function resolveSmtpFrom(): string {
-  if (process.env.SMTP_FROM) return process.env.SMTP_FROM;
-  const name  = process.env.SMTP_FROM_NAME  ?? APP_NAME;
-  const email = process.env.SMTP_FROM_EMAIL ?? process.env.SMTP_USER ?? '';
-  return email ? `${name} <${email}>` : name;
+function resolveSmtpFromEmail(): string {
+  if (process.env.SMTP_FROM) {
+    const match = process.env.SMTP_FROM.match(/<([^>]+)>/);
+    if (match) return match[1];
+  }
+  return process.env.SMTP_FROM_EMAIL ?? process.env.SMTP_USER ?? '';
 }
-const SMTP_FROM = resolveSmtpFrom();
+const SMTP_FROM_EMAIL = resolveSmtpFromEmail();
+const SMTP_FROM_NAME_DEFAULT = process.env.SMTP_FROM_NAME ?? APP_NAME;
+
+// ── Shared design system for every transactional email in this service ──────
+// Solid brand colors (matching the admin-dashboard/customer-portal palette),
+// no gradients — accent color is chosen per context so the mail's tone
+// matches what it's about (blue = general/account, violet = technician,
+// green = success/confirmation, amber = reminder, red = alert).
+export const EMAIL_ACCENT = {
+  blue: '#2563EB',
+  green: '#059669',
+  amber: '#D97706',
+  red: '#DC2626',
+  violet: '#7C3AED',
+  cyan: '#0891B2',
+} as const;
+export type EmailAccent = keyof typeof EMAIL_ACCENT;
+
+const TEXT_PRIMARY = '#111827';
+const TEXT_MUTED = '#4B5563';
+const TEXT_FAINT = '#6B7280';
+const BORDER = '#E5E7EB';
+const BG_PAGE = '#F3F4F6';
+const BG_MUTED = '#F9FAFB';
+
+/**
+ * Wraps rendered content in the shared card shell: solid-color header band,
+ * white rounded card body, consistent footer. Used by every template below
+ * and available to other crm-service modules (agreements, IoT) so every
+ * notification in the system looks and feels the same.
+ */
+export function renderEmailCard(opts: {
+  accent: EmailAccent;
+  eyebrow: string;
+  title: string;
+  subtitle?: string;
+  bodyHtml: string;
+  companyName: string;
+}): string {
+  const color = EMAIL_ACCENT[opts.accent];
+  return `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;background:${BG_PAGE};padding:32px 18px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:${TEXT_PRIMARY};">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid ${BORDER};border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(15,23,42,0.06);">
+    <div style="padding:28px 32px;background:${color};">
+      <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.78);margin-bottom:8px;">${opts.eyebrow}</div>
+      <h1 style="margin:0;font-size:21px;line-height:1.3;color:#ffffff;">${opts.title}</h1>
+      ${opts.subtitle ? `<p style="margin:8px 0 0;font-size:13.5px;color:rgba(255,255,255,0.85);">${opts.subtitle}</p>` : ''}
+    </div>
+    <div style="padding:30px 32px;">
+      ${opts.bodyHtml}
+      <p style="margin:26px 0 0;font-size:12.5px;line-height:1.7;color:${TEXT_FAINT};border-top:1px solid ${BORDER};padding-top:16px;">
+        Sent by ${opts.companyName} · Powered by HVACtor.ai
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/** A tinted info box used inside email bodies — credentials, reminders, warnings, etc. */
+export function emailInfoBox(opts: { accent: EmailAccent; label?: string; html: string }): string {
+  const color = EMAIL_ACCENT[opts.accent];
+  return `
+  <div style="border:1px solid ${color}33;background:${color}0d;border-radius:12px;padding:16px 18px;margin:0 0 16px 0;">
+    ${opts.label ? `<p style="margin:0 0 8px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:${color};">${opts.label}</p>` : ''}
+    ${opts.html}
+  </div>`;
+}
 
 @Injectable()
 export class EmailService {
@@ -74,37 +149,36 @@ export class EmailService {
   }): Promise<void> {
     const portalUrl = opts.portalUrl ?? process.env.CUSTOMER_PORTAL_URL ?? 'http://localhost:5174';
     const subject = `Your ${opts.companyName} customer portal access`;
-    const html = `
-<!DOCTYPE html>
-<html>
-<body style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
-  <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); padding: 28px 24px; border-radius: 12px; margin-bottom: 24px;">
-    <h1 style="color: #fff; margin: 0; font-size: 22px;">Welcome to ${opts.companyName}! 🎉</h1>
-    <p style="color: #bfdbfe; margin: 8px 0 0;">Your customer portal account is ready.</p>
-  </div>
+    const body = `
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi <strong>${opts.name}</strong>,</p>
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:${TEXT_MUTED};">
+        An account has been created for you so you can track your jobs, view invoices, and message our team directly.
+      </p>
+      ${emailInfoBox({
+        accent: 'blue',
+        label: 'Your login details',
+        html: `
+          <p style="margin:4px 0;font-size:13.5px;"><strong>Portal:</strong> <a href="${portalUrl}" style="color:${EMAIL_ACCENT.blue};">${portalUrl}</a></p>
+          <p style="margin:4px 0;font-size:13.5px;"><strong>Email:</strong> ${opts.to}</p>
+          <p style="margin:4px 0;font-size:13.5px;"><strong>Temporary password:</strong> <code style="background:#e0eaff;padding:2px 8px;border-radius:5px;font-size:14px;letter-spacing:0.5px;">${opts.tempPassword}</code></p>
+        `,
+      })}
+      ${emailInfoBox({
+        accent: 'amber',
+        html: `<p style="margin:0;font-size:13px;line-height:1.6;color:#92400e;">You'll be asked to set a new password the first time you sign in.</p>`,
+      })}
+      <p style="margin:0;font-size:13.5px;line-height:1.7;color:${TEXT_MUTED};">Questions? Just reply to this email.</p>
+    `;
+    const html = renderEmailCard({
+      accent: 'blue',
+      eyebrow: 'Account created',
+      title: `Welcome to ${opts.companyName}`,
+      subtitle: 'Your customer portal is ready to use.',
+      bodyHtml: body,
+      companyName: opts.companyName,
+    });
 
-  <p>Hi <strong>${opts.name}</strong>,</p>
-  <p>An account has been created for you so you can track your jobs, view invoices, and communicate with our team.</p>
-
-  <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px 20px; margin: 20px 0;">
-    <p style="margin: 0 0 8px; font-size: 13px; color: #0369a1; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Your Login Details</p>
-    <p style="margin: 4px 0;"><strong>Portal:</strong> <a href="${portalUrl}" style="color: #2563eb;">${portalUrl}</a></p>
-    <p style="margin: 4px 0;"><strong>Email:</strong> ${opts.to}</p>
-    <p style="margin: 4px 0;"><strong>Temporary Password:</strong> <code style="background: #e0f2fe; padding: 2px 8px; border-radius: 4px; font-size: 15px; letter-spacing: 1px;">${opts.tempPassword}</code></p>
-  </div>
-
-  <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px 16px; margin: 16px 0;">
-    <p style="margin: 0; font-size: 13px; color: #92400e;">
-      ⚠️ <strong>Important:</strong> You will be asked to set a new password when you first sign in. Please do this before continuing.
-    </p>
-  </div>
-
-  <p>If you have any questions, simply reply to this email or contact us directly.</p>
-  <p>Welcome aboard!<br><strong>${opts.companyName} Team</strong></p>
-</body>
-</html>`;
-
-    await this.send({ to: opts.to, subject, html });
+    await this.send({ to: opts.to, subject, html, companyName: opts.companyName });
   }
 
   async sendWelcomeTechnician(opts: {
@@ -115,46 +189,84 @@ export class EmailService {
     appName?: string;
   }): Promise<void> {
     const subject = `Your ${opts.companyName} technician account`;
-    const html = `
-<!DOCTYPE html>
-<html>
-<body style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
-  <div style="background: linear-gradient(135deg, #7c3aed, #6d28d9); padding: 28px 24px; border-radius: 12px; margin-bottom: 24px;">
-    <h1 style="color: #fff; margin: 0; font-size: 22px;">Welcome to the Team! 🔧</h1>
-    <p style="color: #ddd6fe; margin: 8px 0 0;">Your technician account has been set up.</p>
-  </div>
+    const body = `
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi <strong>${opts.name}</strong>,</p>
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:${TEXT_MUTED};">
+        Your technician account at <strong>${opts.companyName}</strong> is set up. Download the
+        <strong>${opts.appName ?? 'HVACtor.ai Technician'}</strong> app and sign in below.
+      </p>
+      ${emailInfoBox({
+        accent: 'violet',
+        label: 'Your login details',
+        html: `
+          <p style="margin:4px 0;font-size:13.5px;"><strong>Email:</strong> ${opts.to}</p>
+          <p style="margin:4px 0;font-size:13.5px;"><strong>Temporary password:</strong> <code style="background:#ede9fe;padding:2px 8px;border-radius:5px;font-size:14px;letter-spacing:0.5px;">${opts.tempPassword}</code></p>
+        `,
+      })}
+      ${emailInfoBox({
+        accent: 'amber',
+        html: `<p style="margin:0;font-size:13px;line-height:1.6;color:#92400e;">You must set a new password on first sign-in before you can start taking jobs.</p>`,
+      })}
+      <p style="margin:0;font-size:13.5px;line-height:1.7;color:${TEXT_MUTED};">Questions? Contact your dispatcher or admin.</p>
+    `;
+    const html = renderEmailCard({
+      accent: 'violet',
+      eyebrow: 'Account created',
+      title: 'Welcome to the team',
+      subtitle: `Your ${opts.companyName} technician account has been set up.`,
+      bodyHtml: body,
+      companyName: opts.companyName,
+    });
 
-  <p>Hi <strong>${opts.name}</strong>,</p>
-  <p>Your technician account at <strong>${opts.companyName}</strong> has been created by an administrator. Download the <strong>${opts.appName ?? 'T&S Technician'}</strong> app and sign in with the credentials below.</p>
-
-  <div style="background: #faf5ff; border: 1px solid #ddd6fe; border-radius: 8px; padding: 16px 20px; margin: 20px 0;">
-    <p style="margin: 0 0 8px; font-size: 13px; color: #7c3aed; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Your Login Details</p>
-    <p style="margin: 4px 0;"><strong>Email:</strong> ${opts.to}</p>
-    <p style="margin: 4px 0;"><strong>Temporary Password:</strong> <code style="background: #ede9fe; padding: 2px 8px; border-radius: 4px; font-size: 15px; letter-spacing: 1px;">${opts.tempPassword}</code></p>
-  </div>
-
-  <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px 16px; margin: 16px 0;">
-    <p style="margin: 0; font-size: 13px; color: #92400e;">
-      ⚠️ <strong>Action required:</strong> You will be prompted to set a new password when you first sign in. This must be done before you can use the app.
-    </p>
-  </div>
-
-  <p>Questions? Contact your administrator directly.</p>
-  <p>Good luck!<br><strong>${opts.companyName} Admin Team</strong></p>
-</body>
-</html>`;
-
-    await this.send({ to: opts.to, subject, html });
+    await this.send({ to: opts.to, subject, html, companyName: opts.companyName });
   }
 
-  async sendMail(opts: { to: string; subject: string; html: string }): Promise<void> {
+  async sendPasswordResetConfirmation(opts: {
+    to: string;
+    name: string;
+    companyName: string;
+    portalUrl?: string;
+  }): Promise<void> {
+    const portalUrl = opts.portalUrl ?? process.env.CUSTOMER_PORTAL_URL ?? 'http://localhost:5174';
+    const subject = `Your ${opts.companyName} password was changed`;
+    const when = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+    const body = `
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi <strong>${opts.name}</strong>,</p>
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:${TEXT_MUTED};">
+        This confirms the password for your ${opts.companyName} account was changed on <strong>${when}</strong>.
+      </p>
+      ${emailInfoBox({
+        accent: 'green',
+        html: `<p style="margin:0;font-size:13px;line-height:1.7;color:${TEXT_MUTED};">Sign in with your new password any time at <a href="${portalUrl}" style="color:${EMAIL_ACCENT.green};font-weight:600;">${portalUrl}</a>.</p>`,
+      })}
+      ${emailInfoBox({
+        accent: 'red',
+        html: `<p style="margin:0;font-size:13px;line-height:1.6;color:#991b1b;"><strong>Wasn't you?</strong> Contact us immediately so we can secure your account.</p>`,
+      })}
+    `;
+    const html = renderEmailCard({
+      accent: 'green',
+      eyebrow: 'Security update',
+      title: 'Password changed successfully',
+      bodyHtml: body,
+      companyName: opts.companyName,
+    });
+
+    await this.send({ to: opts.to, subject, html, companyName: opts.companyName });
+  }
+
+  async sendMail(opts: { to: string; subject: string; html: string; companyName?: string }): Promise<void> {
     return this.send(opts);
   }
 
-  private async send(opts: { to: string; subject: string; html: string }): Promise<void> {
+  private async send(opts: { to: string; subject: string; html: string; companyName?: string }): Promise<void> {
+    const fromName = opts.companyName?.trim() || SMTP_FROM_NAME_DEFAULT;
+    const from = SMTP_FROM_EMAIL ? `${fromName} <${SMTP_FROM_EMAIL}>` : fromName;
+
     if (!this.transporter) {
       // Dev fallback — print to console so admins can see the temp password
       this.logger.warn('━━━ DEV EMAIL (no SMTP configured) ━━━━━━━━━━━━━━━━━━━━━━');
+      this.logger.warn(`FROM:    ${from}`);
       this.logger.warn(`TO:      ${opts.to}`);
       this.logger.warn(`SUBJECT: ${opts.subject}`);
       // Extract text content from HTML for readable console output
@@ -169,7 +281,7 @@ export class EmailService {
       return;
     }
     try {
-      await this.transporter.sendMail({ from: SMTP_FROM, to: opts.to, subject: opts.subject, html: opts.html });
+      await this.transporter.sendMail({ from, to: opts.to, subject: opts.subject, html: opts.html });
       this.logger.log(`Email sent to ${opts.to}: ${opts.subject}`);
     } catch (err) {
       this.logger.error(`Failed to send email to ${opts.to}:`, err);

@@ -32,12 +32,13 @@ function makeService() {
   const sms = { send: jest.fn().mockResolvedValue({ success: true }) };
   const crmClient = { getWinbackCandidates: jest.fn(), getActiveCompanyIds: jest.fn() };
   const churnGate = { scoreAndGate: jest.fn() };
+  const companySettings = { getSettings: jest.fn().mockResolvedValue({ name: 'HVACtor.ai' }) };
   const queue = { add: jest.fn().mockResolvedValue({}) };
 
   const service = new WinbackService(
-    db as any, suppression as any, sms as any, crmClient as any, churnGate as any, queue as any,
+    db as any, suppression as any, sms as any, crmClient as any, churnGate as any, companySettings as any, queue as any,
   );
-  return { service, db, suppression, sms, crmClient, churnGate, queue };
+  return { service, db, suppression, sms, crmClient, churnGate, companySettings, queue };
 }
 
 describe('WinbackService', () => {

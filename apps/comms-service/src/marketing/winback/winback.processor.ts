@@ -5,6 +5,7 @@ import { SuppressionService } from '../suppression/suppression.service';
 import { MarketingPrismaService } from '../prisma/marketing-prisma.service';
 import { signMarketingToken } from '../common/marketing-token.util';
 import { step2EmailSubject, step2EmailBody, step3Sms } from './winback-templates';
+import { CompanySettingsClient } from '../../company-settings/company-settings.client';
 
 const CLICK_BASE = process.env.MARKETING_CLICK_BASE_URL ?? 'http://localhost:3000';
 const OFFER_TEXT = process.env.WINBACK_OFFER_TEXT ?? '15% off your next service';
@@ -42,6 +43,7 @@ export class WinbackProcessor {
     private readonly sms: SmsService,
     private readonly suppression: SuppressionService,
     private readonly db: MarketingPrismaService,
+    private readonly companySettings: CompanySettingsClient,
   ) {}
 
   async processEmail(data: WinbackEmailPayload): Promise<void> {
@@ -57,7 +59,8 @@ export class WinbackProcessor {
     const unsubToken = signMarketingToken({ type: 'unsub', companyId, customerId, channel: 'EMAIL', address: to });
     const trackedLink = `${CLICK_BASE}/m/r/${token}?dest=${encodeURIComponent(CLICK_BASE + '/book')}`;
     const unsubLink = `${CLICK_BASE}/m/u/${unsubToken}`;
-    const vars = { customerName, companyName: 'T&S Services', trackedLink, unsubLink, offerText: OFFER_TEXT };
+    const companyName = (await this.companySettings.getSettings(companyId)).name || 'HVACtor.ai';
+    const vars = { customerName, companyName, trackedLink, unsubLink, offerText: OFFER_TEXT };
 
     const result = await this.email.send({
       to,
@@ -85,7 +88,8 @@ export class WinbackProcessor {
 
     const token = signMarketingToken({ type: 'review-click', companyId, customerId, jobId: 'winback-s3' });
     const trackedLink = `${CLICK_BASE}/m/r/${token}?dest=${encodeURIComponent(CLICK_BASE + '/book')}`;
-    const body = step3Sms({ customerName, companyName: 'T&S Services', trackedLink, unsubLink: '', offerText: OFFER_TEXT });
+    const companyName = (await this.companySettings.getSettings(companyId)).name || 'HVACtor.ai';
+    const body = step3Sms({ customerName, companyName, trackedLink, unsubLink: '', offerText: OFFER_TEXT });
 
     const result = await this.sms.send(phone, body, companyId);
     if (!result.success) {

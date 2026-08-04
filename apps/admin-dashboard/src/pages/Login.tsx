@@ -31,7 +31,7 @@ export default function Login() {
               <span className="text-white text-xl font-bold">T&S</span>
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-white">T&S Brothers CRM</h1>
+          <h1 className="text-2xl font-bold text-white">HVACtor.ai</h1>
           <p className="text-gray-400 text-sm mt-1">Sign in to your account</p>
         </div>
 
@@ -111,7 +111,7 @@ export default function Login() {
 
         {/* Info */}
         <p className="text-center text-gray-600 text-xs mt-6">
-          &copy; {new Date().getFullYear()} T&S Brothers Plumbing & HVAC
+          &copy; {new Date().getFullYear()} HVACtor.ai
         </p>
       </div>
     </div>

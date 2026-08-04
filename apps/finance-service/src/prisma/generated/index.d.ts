@@ -6733,6 +6733,7 @@ export namespace Prisma {
     amount: Decimal | null
     paymentMethod: $Enums.PaymentMethod | null
     status: $Enums.PaymentStatus | null
+    receiptNumber: string | null
     stripePaymentIntentId: string | null
     stripeChargeId: string | null
     quickbooksId: string | null
@@ -6749,6 +6750,7 @@ export namespace Prisma {
     amount: Decimal | null
     paymentMethod: $Enums.PaymentMethod | null
     status: $Enums.PaymentStatus | null
+    receiptNumber: string | null
     stripePaymentIntentId: string | null
     stripeChargeId: string | null
     quickbooksId: string | null
@@ -6765,6 +6767,7 @@ export namespace Prisma {
     amount: number
     paymentMethod: number
     status: number
+    receiptNumber: number
     stripePaymentIntentId: number
     stripeChargeId: number
     quickbooksId: number
@@ -6791,6 +6794,7 @@ export namespace Prisma {
     amount?: true
     paymentMethod?: true
     status?: true
+    receiptNumber?: true
     stripePaymentIntentId?: true
     stripeChargeId?: true
     quickbooksId?: true
@@ -6807,6 +6811,7 @@ export namespace Prisma {
     amount?: true
     paymentMethod?: true
     status?: true
+    receiptNumber?: true
     stripePaymentIntentId?: true
     stripeChargeId?: true
     quickbooksId?: true
@@ -6823,6 +6828,7 @@ export namespace Prisma {
     amount?: true
     paymentMethod?: true
     status?: true
+    receiptNumber?: true
     stripePaymentIntentId?: true
     stripeChargeId?: true
     quickbooksId?: true
@@ -6926,6 +6932,7 @@ export namespace Prisma {
     amount: Decimal
     paymentMethod: $Enums.PaymentMethod
     status: $Enums.PaymentStatus
+    receiptNumber: string | null
     stripePaymentIntentId: string | null
     stripeChargeId: string | null
     quickbooksId: string | null
@@ -6961,6 +6968,7 @@ export namespace Prisma {
     amount?: boolean
     paymentMethod?: boolean
     status?: boolean
+    receiptNumber?: boolean
     stripePaymentIntentId?: boolean
     stripeChargeId?: boolean
     quickbooksId?: boolean
@@ -6978,6 +6986,7 @@ export namespace Prisma {
     amount?: boolean
     paymentMethod?: boolean
     status?: boolean
+    receiptNumber?: boolean
     stripePaymentIntentId?: boolean
     stripeChargeId?: boolean
     quickbooksId?: boolean
@@ -6995,6 +7004,7 @@ export namespace Prisma {
     amount?: boolean
     paymentMethod?: boolean
     status?: boolean
+    receiptNumber?: boolean
     stripePaymentIntentId?: boolean
     stripeChargeId?: boolean
     quickbooksId?: boolean
@@ -7023,6 +7033,7 @@ export namespace Prisma {
       amount: Prisma.Decimal
       paymentMethod: $Enums.PaymentMethod
       status: $Enums.PaymentStatus
+      receiptNumber: string | null
       stripePaymentIntentId: string | null
       stripeChargeId: string | null
       quickbooksId: string | null
@@ -7430,6 +7441,7 @@ export namespace Prisma {
     readonly amount: FieldRef<"Payment", 'Decimal'>
     readonly paymentMethod: FieldRef<"Payment", 'PaymentMethod'>
     readonly status: FieldRef<"Payment", 'PaymentStatus'>
+    readonly receiptNumber: FieldRef<"Payment", 'String'>
     readonly stripePaymentIntentId: FieldRef<"Payment", 'String'>
     readonly stripeChargeId: FieldRef<"Payment", 'String'>
     readonly quickbooksId: FieldRef<"Payment", 'String'>
@@ -11801,6 +11813,7 @@ export namespace Prisma {
     amount: 'amount',
     paymentMethod: 'paymentMethod',
     status: 'status',
+    receiptNumber: 'receiptNumber',
     stripePaymentIntentId: 'stripePaymentIntentId',
     stripeChargeId: 'stripeChargeId',
     quickbooksId: 'quickbooksId',
@@ -12715,6 +12728,7 @@ export namespace Prisma {
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
+    receiptNumber?: StringNullableFilter<"Payment"> | string | null
     stripePaymentIntentId?: StringNullableFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableFilter<"Payment"> | string | null
     quickbooksId?: StringNullableFilter<"Payment"> | string | null
@@ -12732,6 +12746,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrderInput | SortOrder
     stripePaymentIntentId?: SortOrderInput | SortOrder
     stripeChargeId?: SortOrderInput | SortOrder
     quickbooksId?: SortOrderInput | SortOrder
@@ -12752,6 +12767,7 @@ export namespace Prisma {
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
+    receiptNumber?: StringNullableFilter<"Payment"> | string | null
     stripePaymentIntentId?: StringNullableFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableFilter<"Payment"> | string | null
     quickbooksId?: StringNullableFilter<"Payment"> | string | null
@@ -12769,6 +12785,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrderInput | SortOrder
     stripePaymentIntentId?: SortOrderInput | SortOrder
     stripeChargeId?: SortOrderInput | SortOrder
     quickbooksId?: SortOrderInput | SortOrder
@@ -12793,6 +12810,7 @@ export namespace Prisma {
     amount?: DecimalWithAggregatesFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodWithAggregatesFilter<"Payment"> | $Enums.PaymentMethod
     status?: EnumPaymentStatusWithAggregatesFilter<"Payment"> | $Enums.PaymentStatus
+    receiptNumber?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     stripePaymentIntentId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     quickbooksId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
@@ -13871,6 +13889,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -13888,6 +13907,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -13903,6 +13923,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13920,6 +13941,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13936,6 +13958,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -13951,6 +13974,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13967,6 +13991,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -15101,6 +15126,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripeChargeId?: SortOrder
     quickbooksId?: SortOrder
@@ -15121,6 +15147,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripeChargeId?: SortOrder
     quickbooksId?: SortOrder
@@ -15137,6 +15164,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripeChargeId?: SortOrder
     quickbooksId?: SortOrder
@@ -16656,6 +16684,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -16671,6 +16700,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -16877,6 +16907,7 @@ export namespace Prisma {
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
+    receiptNumber?: StringNullableFilter<"Payment"> | string | null
     stripePaymentIntentId?: StringNullableFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableFilter<"Payment"> | string | null
     quickbooksId?: StringNullableFilter<"Payment"> | string | null
@@ -17645,6 +17676,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -17693,6 +17725,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17708,6 +17741,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17723,6 +17757,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null

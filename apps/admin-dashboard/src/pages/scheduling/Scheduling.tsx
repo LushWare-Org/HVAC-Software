@@ -29,7 +29,7 @@ import {
 import { useJobs, useUpdateJobStatus } from '../../hooks/useJobs'
 import type { Job, Technician, AssignResponse, ScoredTechnician } from '../../types/api'
 import AddTechnicianModal from '../../components/AddTechnicianModal'
-import CreateJobModal from '../dispatch/CreateJobModal'
+import AddJobModal from '../jobs/AddJobModal'
 import JobDetailPanel from '../dispatch/JobDetailPanel'
 import TechnicianDetailPanel from '../dispatch/TechnicianDetailPanel'
 import AddQuoteModal from '../finance/AddQuoteModal'
@@ -378,7 +378,7 @@ export default function Scheduling() {
 
       {/* Shared modals (unchanged from Dispatch) */}
       <AddTechnicianModal isOpen={showAddTech} onClose={() => setShowAddTech(false)} />
-      <CreateJobModal isOpen={showCreateJob} onClose={() => setShowCreateJob(false)} />
+      <AddJobModal isOpen={showCreateJob} onClose={() => setShowCreateJob(false)} />
 
       {selectedTech && (
         <TechnicianDetailPanel

@@ -6,6 +6,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EmailProcessor } from './email.processor';
 import { EmailService } from '../../email/email.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CompanySettingsClient } from '../../company-settings/company-settings.client';
 import { DeliveryStatus } from '../../prisma/generated';
 import type { EmailJobPayload } from '../notifications.service';
 import { Job } from 'bullmq';
@@ -16,6 +17,7 @@ const mockPrisma = {
 };
 
 const mockEmailService = { send: jest.fn() };
+const mockCompanySettings = { getSettings: jest.fn().mockResolvedValue({ name: 'HVACtor.ai' }) };
 
 function makeJob(data: EmailJobPayload): Job<EmailJobPayload> {
   return { id: 'job-email-1', data } as unknown as Job<EmailJobPayload>;
@@ -31,6 +33,7 @@ describe('EmailProcessor', () => {
         EmailProcessor,
         { provide: EmailService, useValue: mockEmailService },
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: CompanySettingsClient, useValue: mockCompanySettings },
       ],
     }).compile();
     processor = module.get<EmailProcessor>(EmailProcessor);

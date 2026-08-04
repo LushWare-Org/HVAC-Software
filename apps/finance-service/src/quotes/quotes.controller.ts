@@ -60,6 +60,8 @@ export class QuotesController {
   @ApiQuery({ name: 'houseId', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date — filters by createdAt >= start of this day' })
+  @ApiQuery({ name: 'dateTo', required: false, description: 'ISO date — filters by createdAt <= end of this day' })
   async findAll(
     @CurrentUser() user: AuthUser,
     @Query('status') status?: QuoteStatus,
@@ -70,6 +72,8 @@ export class QuotesController {
     @Query('houseId') houseId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
   ) {
     // CUSTOMER role: force-filter to their own customerId for security — this
     // was previously NOT enforced at all (any customer JWT could pass an
@@ -90,7 +94,7 @@ export class QuotesController {
     return this.quotesService.findAll(user.companyId, {
       status, customerId: effectiveCustomerId, jobId, projectId, houseId,
       projectIds: projectIds ? projectIds.split(',').filter(Boolean) : undefined,
-      page, limit,
+      page, limit, dateFrom, dateTo,
     });
   }
 
@@ -221,7 +225,7 @@ export class QuotesController {
   ) {
     const quote = await this.quotesService.findOne(user.companyId, id);
     const settings = await this.companySettings.getSettings(user.companyId);
-    const companyName = settings.name || process.env.COMPANY_NAME || 'T&S Services';
+    const companyName = settings.name || process.env.COMPANY_NAME || 'HVACtor.ai';
     const companyAddress = settings.address || process.env.COMPANY_ADDRESS || '';
     const template = await this.documentTemplates.resolve(user.companyId, 'QUOTE', (quote as any).templateId);
     const pdf = await this.pdfService.generateQuotePdf(quote as any, companyName, companyAddress, {

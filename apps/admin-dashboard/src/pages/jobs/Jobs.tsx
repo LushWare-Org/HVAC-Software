@@ -13,7 +13,6 @@ import { useHouse } from "../projects/housesApi";
 import type { Job } from "../../types/api";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import Avatar from "../../components/Avatar";
-import CreateJobModal from "../dispatch/CreateJobModal";
 
 const STATUS: Record<string, { label: string; css: string }> = {
   PENDING:     { label: "Pending",     css: "badge-amber" },
@@ -217,7 +216,6 @@ export default function Jobs() {
   const [pastStatusFilter, setPastStatusFilter] = useState("all");
   const [sortMode, setSortMode] = useState<'priority' | 'date'>('priority');
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
   const [forecastDays, setForecastDays] = useState<number>(7);
   const PAST_PER_PAGE = 10;
 
@@ -413,9 +411,6 @@ export default function Jobs() {
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--t3)", background: "var(--bg-hover)", padding: "2px 9px", borderRadius: 12 }}>
                 {jobsQuery.isLoading ? "…" : activeJobs.length}
               </span>
-              <button className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
-                <Wrench size={12} /> New job
-              </button>
             </div>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
@@ -695,12 +690,6 @@ export default function Jobs() {
           </div>
         </div>
       )}
-
-      <CreateJobModal
-        isOpen={showCreate}
-        onClose={() => setShowCreate(false)}
-        onCreated={() => jobsQuery.refetch()}
-      />
     </div>
   );
 }

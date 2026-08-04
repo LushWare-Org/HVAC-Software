@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { queryClient } from '../../lib/queryClient'
 import api from '../../lib/api'
 
-export type DocumentType = 'INVOICE' | 'QUOTE' | 'AGREEMENT'
+export type DocumentType = 'INVOICE' | 'QUOTE' | 'AGREEMENT' | 'PAYMENT_RECEIPT'
 export type TemplateMode = 'BUILDER' | 'LETTERHEAD'
 
 export interface TextStyle {
@@ -108,6 +108,25 @@ export const DEFAULT_ROWS: Record<DocumentType, TemplateRow[]> = {
     { id: 'row-bankDetails', section: 'body', blocks: [{ id: 'b-bankDetails', slot: 'agreement/bankDetailsSection', widthPct: 100 }] },
     { id: 'row-signature', section: 'body', blocks: [{ id: 'b-signature', slot: 'agreement/signatureBlock', widthPct: 100 }] },
     { id: 'row-footer', section: 'body', blocks: [{ id: 'b-footerText', slot: 'agreement/footerText', widthPct: 100 }] },
+  ],
+  PAYMENT_RECEIPT: [
+    { id: 'row-hero', section: 'hero', blocks: [
+      { id: 'b-logo', slot: 'payment-receipt/logo', widthPct: 100, x: 40, y: 36, widthPx: 150 },
+      { id: 'b-docBadge', slot: 'payment-receipt/docBadge', widthPct: 100, x: 464, y: 36, widthPx: 300 },
+      { id: 'b-tagline', slot: 'payment-receipt/tagline', widthPct: 100, x: 40, y: 86, widthPx: 400 },
+      { id: 'b-companyName', slot: 'payment-receipt/companyName', widthPct: 100, x: 40, y: 114, widthPx: 400 },
+      { id: 'b-companyAddress', slot: 'payment-receipt/companyAddress', widthPct: 100, x: 40, y: 150, widthPx: 320 },
+      { id: 'b-headerText', slot: 'payment-receipt/headerText', widthPct: 100, x: 40, y: 196, widthPx: 320 },
+      { id: 'b-paidBy', slot: 'payment-receipt/paidByCard', widthPct: 100, x: 40, y: 230, widthPx: 380 },
+      { id: 'b-amountPaid', slot: 'payment-receipt/amountPaidCard', widthPct: 100, x: 464, y: 230, widthPx: 300 },
+    ] },
+    { id: 'row-infoGrid', section: 'body', blocks: [{ id: 'b-infoGrid', slot: 'payment-receipt/infoGrid', widthPct: 100 }] },
+    { id: 'row-summary', section: 'body', blocks: [{ id: 'b-summary', slot: 'payment-receipt/paymentSummaryCard', widthPct: 100 }] },
+    { id: 'row-notes', section: 'body', blocks: [{ id: 'b-notes', slot: 'payment-receipt/notesCard', widthPct: 100 }] },
+    { id: 'row-footer', section: 'body', blocks: [
+      { id: 'b-pageFooterMeta', slot: 'payment-receipt/pageFooterMeta', widthPct: 70 },
+      { id: 'b-footerText', slot: 'payment-receipt/footerText', widthPct: 30 },
+    ] },
   ],
 }
 

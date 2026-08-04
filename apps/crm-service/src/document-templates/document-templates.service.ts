@@ -4,11 +4,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { Prisma } from '../prisma/generated';
 
-const DOCUMENT_TYPES = ['INVOICE', 'QUOTE', 'AGREEMENT'];
+const DOCUMENT_TYPES = ['INVOICE', 'QUOTE', 'AGREEMENT', 'PAYMENT_RECEIPT'];
 const MODES = ['BUILDER', 'LETTERHEAD'];
 
 export interface UpsertTemplateInput {
-  documentType: 'INVOICE' | 'QUOTE' | 'AGREEMENT';
+  documentType: 'INVOICE' | 'QUOTE' | 'AGREEMENT' | 'PAYMENT_RECEIPT';
   name?: string;
   mode?: 'BUILDER' | 'LETTERHEAD';
   companyName?: string | null;

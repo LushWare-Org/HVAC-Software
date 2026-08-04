@@ -280,6 +280,10 @@ model Payment {
   paymentMethod PaymentMethod @default(CARD)
   status        PaymentStatus @default(PENDING)
 
+  // Proof-of-payment receipt — the PDF handed to the customer and kept on file
+  // by the company. Set once, at recording time; e.g. "RCPT-2026-0001".
+  receiptNumber String?
+
   // Stripe identifiers
   stripePaymentIntentId String?
   stripeChargeId        String?

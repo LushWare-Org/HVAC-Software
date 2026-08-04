@@ -234,6 +234,7 @@ exports.Prisma.PaymentScalarFieldEnum = {
   amount: 'amount',
   paymentMethod: 'paymentMethod',
   status: 'status',
+  receiptNumber: 'receiptNumber',
   stripePaymentIntentId: 'stripePaymentIntentId',
   stripeChargeId: 'stripeChargeId',
   quickbooksId: 'quickbooksId',

@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Check, MapPin, Loader2, Home, User, UserCheck } from 'lucide-react'
+import { X, Check, MapPin, Loader2, Home, User, UserCheck, Briefcase, FileSignature, Receipt, CalendarClock } from 'lucide-react'
 import MapPicker from '../../components/MapPickerLazy'
 import {
   WEEKDAYS, useTechDirectory, useCreateProject, useUpdateProject,
@@ -52,7 +52,11 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
   const createProject = useCreateProject()
   const updateProject = useUpdateProject()
   const { data: techs } = useTechDirectory()
-  const [pickedCustomer, setPickedCustomer] = useState<PickedCustomer | null>(null)
+  // Seeded from the project being edited (if it already has a customer) so the
+  // same picker UI handles "assign for the first time" and "change" alike.
+  const [pickedCustomer, setPickedCustomer] = useState<PickedCustomer | null>(
+    project?.customerId ? { id: project.customerId, firstName: project.customerName ?? 'Customer', lastName: '' } : null
+  )
   const [showCustomerPicker, setShowCustomerPicker] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
@@ -106,10 +110,11 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
       workingDays: form.workingDays,
       baseTeamUserIds: form.baseTeamUserIds,
       notes: form.notes.trim() || undefined,
+      customerId: pickedCustomer?.id,
     }
     try {
       if (project) await updateProject.mutateAsync({ id: project.id, ...payload })
-      else await createProject.mutateAsync({ ...payload, customerId: pickedCustomer?.id, templateType: form.templateType })
+      else await createProject.mutateAsync({ ...payload, templateType: form.templateType })
       onClose()
     } catch (e: any) {
       const msg = e?.response?.data?.message
@@ -131,10 +136,10 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
         aria-modal="true"
         aria-label={project ? 'Edit project' : 'New project'}
         style={{
-          width: 680, maxWidth: '100%', padding: 0, overflow: 'hidden',
+          width: 980, maxWidth: '96vw', padding: 0, overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
           // Lock to the viewport: header + footer stay pinned, only the body scrolls
-          height: 'min(760px, calc(100vh - 48px))',
+          height: 'min(860px, calc(100vh - 48px))',
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -151,6 +156,25 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
 
         {/* Scrollable body */}
         <div className="card-body" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* At a glance — only meaningful once the project has linked entities to summarize */}
+          {project && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+              {[
+                { icon: Briefcase, label: 'Jobs', value: project.jobs.length },
+                { icon: FileSignature, label: 'Agreements', value: project.agreements.length },
+                { icon: Receipt, label: 'Quotes / Invoices', value: project.quotes.length + project.invoices.length },
+                { icon: CalendarClock, label: 'Created', value: new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
+              ].map(s => (
+                <div key={s.label} style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--bg-card-2)', border: '1px solid var(--bd)' }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <s.icon size={11} /> {s.label}
+                  </p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', margin: '4px 0 0' }}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
           <SectionLabel>Project</SectionLabel>
           {/* Identity */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -161,32 +185,30 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
             </div>
             <div style={{ gridColumn: pickedCustomer || showCustomerPicker ? '1 / -1' : undefined }}>
               <label style={lbl}>Customer</label>
-              {project ? (
-                <input style={{ ...inp, opacity: 0.7 }} value={project.customerName ?? 'No customer assigned'} disabled />
+              {showCustomerPicker ? (
+                <CustomerPickerWithCreate
+                  autoFocus
+                  onPick={c => { setPickedCustomer(c); setShowCustomerPicker(false) }}
+                  onCancel={() => setShowCustomerPicker(false)}
+                />
               ) : pickedCustomer ? (
                 <div style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px',
                   borderRadius: 9, border: '1px solid var(--green)', background: 'var(--green-dim)',
                 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>
-                    <UserCheck size={14} style={{ color: 'var(--green)' }} /> {pickedCustomer.firstName} {pickedCustomer.lastName}
+                    <UserCheck size={14} style={{ color: 'var(--green)' }} /> {`${pickedCustomer.firstName} ${pickedCustomer.lastName}`.trim()}
                   </span>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPickedCustomer(null)}>Change</button>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowCustomerPicker(true)}>Change</button>
                 </div>
-              ) : showCustomerPicker ? (
-                <CustomerPickerWithCreate
-                  autoFocus
-                  onPick={c => { setPickedCustomer(c); setShowCustomerPicker(false) }}
-                  onCancel={() => setShowCustomerPicker(false)}
-                />
               ) : (
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowCustomerPicker(true)}>
                   <User size={12} /> Select or create a customer
                 </button>
               )}
-              {!project && !pickedCustomer && !showCustomerPicker && (
+              {!pickedCustomer && !showCustomerPicker && (
                 <p style={{ fontSize: 10.5, color: 'var(--t4)', margin: '6px 0 0' }}>
-                  Optional — you can add a customer later from the project page.
+                  Optional — you can add or change the customer any time from here.
                 </p>
               )}
             </div>

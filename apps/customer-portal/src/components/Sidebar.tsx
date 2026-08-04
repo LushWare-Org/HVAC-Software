@@ -115,7 +115,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     : 'border border-[var(--bd)] bg-[var(--bg-card)] text-[var(--t2)] hover:bg-[var(--bg-hover)] hover:text-[var(--t1)]'
 
   const { settings } = useCompany()
-  const brandName = settings?.name || 'HomePulse'
+  const brandName = settings?.name || 'HVACtor.ai'
 
   return (
     <aside className={sidebarClasses}>
@@ -131,7 +131,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
               {brandName}
             </h2>
             <p className={`text-[11px] leading-tight mt-0.5 truncate ${isLight ? 'text-slate-400' : 'text-[var(--t3)]'}`}>
-              {settings?.name ? 'Powered by HomePulse' : 'Your Service Portal'}
+              {settings?.name ? 'Powered by HVACtor.ai' : 'Your Service Portal'}
             </p>
           </div>
         )}

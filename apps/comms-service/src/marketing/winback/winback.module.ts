@@ -7,6 +7,7 @@ import { SmsModule } from '../../sms/sms.module';
 import { EmailModule } from '../../email/email.module';
 import { CrmClient } from '../automation/crm.client';
 import { ChurnGateService } from '../review/churn-gate.service';
+import { CompanySettingsModule } from '../../company-settings/company-settings.module';
 
 // WinbackModule provides WinbackService (scan logic) and WinbackProcessor (step handlers).
 // The daily scan cron is registered by EquipmentAutomationModule to avoid queue duplication.
@@ -18,6 +19,7 @@ import { ChurnGateService } from '../review/churn-gate.service';
     SuppressionModule,
     SmsModule,
     EmailModule,
+    CompanySettingsModule,
   ],
   providers: [WinbackService, CrmClient, ChurnGateService],
   exports: [WinbackService],

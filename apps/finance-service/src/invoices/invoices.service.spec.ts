@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { NotificationClientService } from '../notification-client/notification-client.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
+import { DocumentTemplateClient } from '../document-templates/document-template.client';
 import { InvoiceStatus, PaymentStatus } from '../prisma/generated';
 
 // ── Mock Stripe ───────────────────────────────────────────────────────────
@@ -84,6 +85,7 @@ const mockPrisma = {
   },
   payment: {
     create: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
   },
   $transaction: jest.fn((args: any) => {
     if (Array.isArray(args)) return Promise.all(args);
@@ -93,7 +95,11 @@ const mockPrisma = {
 
 // ── Suite ─────────────────────────────────────────────────────────────────
 
-const mockPdfService = { generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')), generateQuotePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')) };
+const mockPdfService = {
+  generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')),
+  generateQuotePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')),
+  generatePaymentReceiptPdf: jest.fn().mockResolvedValue(Buffer.from('pdf')),
+};
 const mockNotificationClient = { sendEmail: jest.fn().mockResolvedValue(undefined), sendSms: jest.fn().mockResolvedValue(undefined) };
 const mockSettingsClient = {
   getSettings: jest.fn().mockResolvedValue({
@@ -101,6 +107,7 @@ const mockSettingsClient = {
     currency: 'USD', timezone: 'America/New_York', features: {},
   }),
 };
+const mockDocumentTemplateClient = { resolve: jest.fn().mockResolvedValue(null) };
 
 describe('InvoicesService', () => {
   let service: InvoicesService;
@@ -119,6 +126,7 @@ describe('InvoicesService', () => {
         { provide: PdfService, useValue: mockPdfService },
         { provide: NotificationClientService, useValue: mockNotificationClient },
         { provide: CompanySettingsClient, useValue: mockSettingsClient },
+        { provide: DocumentTemplateClient, useValue: mockDocumentTemplateClient },
         {
           provide: ConfigService,
           useValue: {

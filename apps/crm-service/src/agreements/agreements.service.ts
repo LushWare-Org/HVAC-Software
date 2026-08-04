@@ -125,7 +125,7 @@ export class AgreementsService {
     const pdf = await this.financeRender.renderAgreement({
       companyId,
       templateId: (agreement as any).templateId ?? undefined,
-      companyName: company?.name ?? 'T&S Services',
+      companyName: company?.name ?? 'HVACtor.ai',
       companyAddress: company?.address ?? '',
       context: {
         name: agreement.name,

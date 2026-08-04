@@ -29,7 +29,7 @@ import { useHouses, ACCOUNT_STATUS_META, type House } from './housesApi'
 import { AvatarStack, TechAvatar, ProjectStatusBadge, ProgressBar, fmtMoney, fmtDate } from './shared'
 import ProjectEditorModal from './ProjectEditorModal'
 import AddTechnicianModal from '../../components/AddTechnicianModal'
-import CreateJobModal from '../dispatch/CreateJobModal'
+import AddJobModal from '../jobs/AddJobModal'
 import AddQuoteModal from '../finance/AddQuoteModal'
 import AddInvoiceModal from '../finance/AddInvoiceModal'
 import AgreementEditorModal from '../agreements/AgreementEditorModal'
@@ -640,8 +640,7 @@ function JobsTab({ project: p }: { project: Project }) {
             title={!p.customerId ? 'Add a customer to this project first' : undefined}>
             <Link2 size={12} /> {showLinker ? 'Close' : 'Link existing'}
           </button>
-          <button className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)} disabled={!p.customerId}
-            title={!p.customerId ? 'Add a customer to this project first' : undefined}>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
             <Plus size={12} /> Create job
           </button>
         </div>
@@ -734,12 +733,11 @@ function JobsTab({ project: p }: { project: Project }) {
         </Suspense>
       )}
 
-      <CreateJobModal
-        isOpen={showCreate && !!p.customerId}
+      <AddJobModal
+        isOpen={showCreate}
         onClose={() => setShowCreate(false)}
-        presetCustomer={p.customerId ? { id: p.customerId, name: p.customerName ?? '—', address: p.siteAddress, lat: p.latitude, lng: p.longitude } : undefined}
-        projectId={p.id}
-        projectTemplateType={p.templateType}
+        lockedCustomer={p.customerId ? { id: p.customerId, name: p.customerName ?? '—', address: p.siteAddress, lat: p.latitude, lng: p.longitude } : undefined}
+        lockedProject={{ id: p.id, name: p.name, templateType: p.templateType }}
         contextLabel={p.name}
         onCreated={() => invalidateProjectLinks(p.id)}
       />

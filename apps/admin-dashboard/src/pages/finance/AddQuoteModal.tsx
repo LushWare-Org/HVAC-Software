@@ -80,6 +80,16 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
     { description: "", category: "LABOUR", quantity: 1, unitPrice: 0 },
   ]);
 
+  // Default the template dropdown to whichever template is marked active, so
+  // it's visibly selected rather than silently falling back server-side.
+  useEffect(() => {
+    if (isOpen && !templateId) {
+      const active = templates.find((t) => t.isDefault);
+      if (active) setTemplateId(active.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, templates.length]);
+
   // Fetch existing customers and jobs for dropdowns
   const customersQuery = useCustomers({ limit: 100, search: customerSearch || undefined });
   const customers: Customer[] = customersQuery.data?.data ?? [];
@@ -188,7 +198,7 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 admin-modal-backdrop" onClick={onClose}>
-      <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl admin-modal-box" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl admin-modal-box" onClick={e => e.stopPropagation()}>
         <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-5 flex items-center justify-between rounded-t-xl shrink-0">
           <div className="text-white">
             {onBack && (
@@ -384,9 +394,9 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-400 uppercase">Template</label>
               <select value={templateId} onChange={e => setTemplateId(e.target.value)} className={inputClass}>
-                <option value="">Use default</option>
+                {!templates.some((t) => t.isDefault) && <option value="">Use default</option>}
                 {templates.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}{t.isDefault ? ' (default)' : ''}</option>
+                  <option key={t.id} value={t.id}>{t.name}{t.isDefault ? ' (active)' : ''}</option>
                 ))}
               </select>
             </div>

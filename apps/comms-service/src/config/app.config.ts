@@ -1,5 +1,8 @@
 export default () => ({
   port: parseInt(process.env.COMMS_PORT ?? '3005', 10),
+  // Shared secret for service-to-service calls into automation/events/* (job-service,
+  // finance-service). Must match INTERNAL_API_KEY in the calling service's .env.
+  internalApiKey: process.env.INTERNAL_API_KEY ?? '',
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID ?? '',
     authToken: process.env.TWILIO_AUTH_TOKEN ?? '',
@@ -9,7 +12,7 @@ export default () => ({
   sendgrid: {
     apiKey: process.env.SENDGRID_API_KEY ?? '',
     fromEmail: process.env.SENDGRID_FROM_EMAIL ?? 'no-reply@tscrm.com',
-    fromName: process.env.SENDGRID_FROM_NAME ?? 'HomePulse',
+    fromName: process.env.SENDGRID_FROM_NAME ?? 'HVACtor.ai',
   },
   email: {
     provider: (process.env.EMAIL_PROVIDER ?? 'auto').toLowerCase(), // auto | smtp | sendgrid
@@ -21,7 +24,7 @@ export default () => ({
     user: process.env.SMTP_USER ?? '',
     pass: process.env.SMTP_PASS ?? '',
     fromEmail: process.env.SMTP_FROM_EMAIL ?? process.env.SENDGRID_FROM_EMAIL ?? 'no-reply@tscrm.com',
-    fromName: process.env.SMTP_FROM_NAME ?? process.env.SENDGRID_FROM_NAME ?? 'HomePulse',
+    fromName: process.env.SMTP_FROM_NAME ?? process.env.SENDGRID_FROM_NAME ?? 'HVACtor.ai',
   },
   firebase: {
     projectId: process.env.FIREBASE_PROJECT_ID ?? '',

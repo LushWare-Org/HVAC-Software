@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #f0f2f5; }
+    .page { width: 100%; max-width: 860px; margin: 0 auto; padding: 28px; }
+    .sheet { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.12); }
+
+    /* ── Dark executive header (green accent — this is a confirmation, not a bill) ── */
+    .hero { background: #0f172a; color: #ffffff; padding: 36px 40px 32px; position: relative; overflow: hidden; min-height: 380px; }
+    .hero::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: 0; pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; bottom: -40px; left: 30%;
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: 0; pointer-events: none;
+    }
+    .eyebrow { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #34d399; margin-bottom: 10px; font-weight: 700; }
+    .brand-name { font-size: 26px; font-weight: 800; line-height: 1.1; color: #ffffff; letter-spacing: -0.02em; }
+    .brand-address { margin-top: 10px; max-width: 300px; font-size: 11px; line-height: 1.7; color: #94a3b8; white-space: pre-line; }
+    .doc-card {
+      min-width: 210px; padding: 18px 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+    }
+    .doc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
+    .doc-number { margin-top: 6px; font-size: 22px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
+    .status-badge {
+      display: inline-block; margin-top: 10px; padding: 4px 10px;
+      border-radius: 999px; font-size: 9px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .status-PAID { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+
+    .summary-card { border-radius: 8px; padding: 16px 18px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); }
+    .summary-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: #64748b; font-weight: 700; }
+    .summary-value { margin-top: 6px; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
+    .summary-copy { margin-top: 6px; font-size: 11px; line-height: 1.55; color: #94a3b8; }
+    .balance-accent { color: #34d399; }
+
+    /* ── Body ── */
+    .body { padding: 32px 40px 40px; }
+    .info-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 28px; }
+    .info-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; background: #f8fafc; }
+    .info-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.13em; color: #64748b; margin-bottom: 6px; font-weight: 700; }
+    .info-value { font-size: 12px; font-weight: 700; color: #0f172a; line-height: 1.4; }
+
+    .section-heading { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.13em; color: #64748b; margin-bottom: 12px; }
+    .payment-section { margin-top: 4px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px 22px; background: #ffffff; }
+    .summary-statement { font-size: 13px; line-height: 1.8; color: #334155; margin-bottom: 18px; }
+    .summary-statement strong { color: #0f172a; }
+
+    table { width: 100%; border-collapse: collapse; }
+    .totals-card { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; max-width: 380px; }
+    .totals-card td { padding: 11px 16px; font-size: 12px; }
+    .totals-card .label { color: #475569; }
+    .totals-card .value { text-align: right; font-weight: 700; color: #0f172a; }
+    .paid-row td { color: #16a34a; }
+    .balance-row { background: #f0fdf4; }
+    .balance-row .label, .balance-row .value { color: #166534; font-weight: 800; font-size: 13px; }
+
+    .notes-grid { margin-top: 24px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .note-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; background: #f8fafc; }
+    .note-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.13em; color: #64748b; margin-bottom: 8px; font-weight: 700; }
+    .note-text { font-size: 12px; line-height: 1.7; color: #334155; white-space: pre-line; }
+
+    .footer {
+      margin-top: 28px; padding: 16px 20px;
+      background: #0f172a; border-radius: 8px;
+      display: flex; justify-content: space-between; gap: 10px;
+      font-size: 10px; color: #64748b;
+    }
+    .footer strong { color: #94a3b8; }
+
+    /* ── Template-driven overrides ── */
+    .brand-logo { max-height: 44px; max-width: 160px; object-fit: contain; }
+    .brand-tagline { margin-top: 4px; font-size: 10.5px; color: #94a3b8; }
+
+    /* ── Slot layout system: rows stack vertically (auto height), blocks sit side-by-side ── */
+    .tpl-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+    .tpl-row:first-child { margin-top: 0; }
+    .tpl-block { box-sizing: border-box; }
+    .tpl-block--free { z-index: 1; }
+  </style>
+</head>
+<body>
+  <style>
+    {{#if template.isLetterhead}}
+    .sheet { box-shadow: none; }
+    {{/if}}
+    {{#if template.accentColor}}
+    .hero { background: {{template.accentColor}} !important; }
+    {{/if}}
+  </style>
+  <div class="page">
+    <div class="sheet">
+      {{#if template.isLetterhead}}
+      <div style="height: {{template.letterheadTopMarginPx}}px; background-image: url('{{template.letterheadImageUrl}}'); background-size: 100% auto; background-repeat: no-repeat; background-position: top center; overflow: hidden;" data-field="letterheadImageUrl"></div>
+      <div style="padding: 0 40px; display: flex; justify-content: flex-end;">
+        <div class="doc-card" style="background: #f1f5f9; border-color: #e2e8f0;">
+          <div class="doc-label" style="color:#64748b;">Payment receipt</div>
+          <div class="doc-number" style="color:#0f172a;">{{receiptNumber}}</div>
+          <span class="status-badge status-PAID">PAID</span>
+        </div>
+      </div>
+      {{else}}
+      <div class="hero" data-field="accentColor">
+        {{#each rows}}
+        {{#if (eq section "hero")}}
+        {{#each blocks}}
+        {{{blockStyleOverride id style}}}
+        <div class="tpl-block tpl-block--free" data-block-id="{{id}}" data-slot="{{slot}}" style="{{heroBlockStyle this}}">
+          {{> (lookup this "slot") @root}}
+        </div>
+        {{/each}}
+        {{/if}}
+        {{/each}}
+      </div>
+      {{/if}}
+
+      <div class="body">
+        {{#each rows}}
+        {{#if (eq section "body")}}
+        <div class="tpl-row" data-row-id="{{id}}">
+          {{#each blocks}}
+          {{{blockStyleOverride id style}}}
+          <div class="tpl-block" data-block-id="{{id}}" data-slot="{{slot}}" style="width:{{widthPct}}%; {{blockStyle style}}">
+            {{> (lookup this "slot") @root}}
+          </div>
+          {{/each}}
+        </div>
+        {{/if}}
+        {{/each}}
+        {{#if template.isLetterhead}}
+        <div style="height: {{template.letterheadBottomMarginPx}}px;"></div>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

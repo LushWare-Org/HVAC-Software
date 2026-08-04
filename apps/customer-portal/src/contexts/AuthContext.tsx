@@ -88,6 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token])
 
   const logout = useCallback(() => {
+    // Otherwise the next login on this browser (any account) would rehydrate
+    // this session's persisted query results under the same unscoped-by-login
+    // keys until each query's own refetch resolves — same risk _setSession
+    // guards against on the way in.
+    clearPersistedQueryCache()
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
     setToken(null)

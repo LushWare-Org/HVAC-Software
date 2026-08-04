@@ -30,15 +30,22 @@ export class ExpensesService {
       category?: ExpenseCategory;
       page?: number;
       limit?: number;
+      dateFrom?: string;
+      dateTo?: string;
     },
   ) {
-    const { jobId, technicianId, category } = params;
-    const { page, limit, skip } = clampPagination({ page: params.page, limit: params.limit });
+    const { jobId, technicianId, category, dateFrom, dateTo } = params;
+    // 500 covers a full CSV export in one page, same ceiling used by invoices/quotes.
+    const { page, limit, skip } = clampPagination({ page: params.page, limit: params.limit }, { maxLimit: 500 });
+    const expenseDateFilter: { gte?: Date; lte?: Date } = {};
+    if (dateFrom) expenseDateFilter.gte = new Date(`${dateFrom}T00:00:00.000Z`);
+    if (dateTo) expenseDateFilter.lte = new Date(`${dateTo}T23:59:59.999Z`);
     const where = {
       companyId,
       ...(jobId ? { jobId } : {}),
       ...(technicianId ? { technicianId } : {}),
       ...(category ? { category } : {}),
+      ...(dateFrom || dateTo ? { expenseDate: expenseDateFilter } : {}),
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.expense.findMany({

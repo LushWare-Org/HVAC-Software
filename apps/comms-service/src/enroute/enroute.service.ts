@@ -12,7 +12,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { EnRouteNotificationDto } from './dto/enroute.dto';
 
-const COMPANY_NAME = process.env.SENDGRID_FROM_NAME ?? process.env.SMTP_FROM_NAME ?? 'T&S Services';
+const COMPANY_NAME = process.env.SENDGRID_FROM_NAME ?? process.env.SMTP_FROM_NAME ?? 'HVACtor.ai';
 const CRM_SERVICE_URL = process.env.CRM_SERVICE_URL ?? 'http://localhost:3001';
 // Timezone used to render the arrival window in the customer's local time.
 const COMPANY_TIMEZONE = process.env.COMPANY_TIMEZONE ?? 'America/Chicago';
@@ -44,12 +44,13 @@ export class EnRouteNotificationService {
     this.pruneDedupe();
 
     const settings = await this.companySettings.getSettings(companyId);
+    const companyName = settings.name || COMPANY_NAME;
     const window = this.formatWindow(dto.etaStart, dto.etaEnd, settings.timezone);
     const avatarUrl = await this.fetchTechAvatar(companyId, dto.techUserId);
 
     const [email, sms] = await Promise.all([
-      this.sendEmail(companyId, dto, window, avatarUrl),
-      this.sendSms(companyId, dto, window),
+      this.sendEmail(companyId, dto, window, avatarUrl, companyName),
+      this.sendSms(companyId, dto, window, companyName),
     ]);
     return { email, sms, deduped: false };
   }
@@ -96,7 +97,7 @@ export class EnRouteNotificationService {
     return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
   }
 
-  private async sendEmail(companyId: string, dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null): Promise<boolean> {
+  private async sendEmail(companyId: string, dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null, companyName: string): Promise<boolean> {
     if (!dto.customerEmail) return false;
     try {
       await this.notifications.sendEmail({
@@ -106,7 +107,7 @@ export class EnRouteNotificationService {
         recipientName: dto.customerName,
         recipientEmail: dto.customerEmail,
         subject: `${dto.techName} is on the way — ${dto.jobTitle}`,
-        htmlBody: this.buildEmailHtml(dto, window, avatarUrl),
+        htmlBody: this.buildEmailHtml(dto, window, avatarUrl, companyName),
       });
       return true;
     } catch (err) {
@@ -115,11 +116,11 @@ export class EnRouteNotificationService {
     }
   }
 
-  private async sendSms(companyId: string, dto: EnRouteNotificationDto, window: string | null): Promise<boolean> {
+  private async sendSms(companyId: string, dto: EnRouteNotificationDto, window: string | null, companyName: string): Promise<boolean> {
     if (!dto.customerPhone) return false;
     const eta = window ? ` — expected ${window}` : '';
     const body =
-      `Hi${dto.customerName ? ` ${dto.customerName}` : ''}, ${dto.techName} from ${COMPANY_NAME} ` +
+      `Hi${dto.customerName ? ` ${dto.customerName}` : ''}, ${dto.techName} from ${companyName} ` +
       `is on the way for "${dto.jobTitle}"${eta}.`;
     try {
       await this.notifications.sendSms({
@@ -137,7 +138,7 @@ export class EnRouteNotificationService {
     }
   }
 
-  buildEmailHtml(dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null): string {
+  buildEmailHtml(dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null, companyName: string = COMPANY_NAME): string {
     const name = esc(dto.techName);
     const initials = dto.techName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const photo = avatarUrl
@@ -152,7 +153,7 @@ export class EnRouteNotificationService {
   <tr><td align="center">
     <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;font-family:Arial,Helvetica,sans-serif;">
       <tr><td style="background:#0f172a;padding:18px 28px;">
-        <span style="color:#ffffff;font-size:15px;font-weight:700;">${esc(COMPANY_NAME)}</span>
+        <span style="color:#ffffff;font-size:15px;font-weight:700;">${esc(companyName)}</span>
       </td></tr>
       <tr><td align="center" style="padding:28px 28px 8px;">${photo}</td></tr>
       <tr><td align="center" style="padding:4px 28px 0;">
@@ -171,7 +172,7 @@ export class EnRouteNotificationService {
       <tr><td style="padding:0 28px 26px;">
         <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
           Please make sure someone is available at the service address.
-          Sent by ${esc(COMPANY_NAME)} — reply to this email or contact us if the time doesn't work.
+          Sent by ${esc(companyName)} — reply to this email or contact us if the time doesn't work.
         </p>
       </td></tr>
     </table>

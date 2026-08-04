@@ -77,6 +77,26 @@ export class JobsService {
         });
 
         await this.invalidateStatsCache(user.companyId);
+
+        // Best-effort confirmation email to the customer — never blocks job creation.
+        if (job.customerEmail) {
+          const commsBase = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
+          axios.post(`${commsBase}/automation/events/job-status-changed`, {
+            companyId: user.companyId,
+            jobId: job.id,
+            jobStatus: 'PENDING',
+            customerId: job.customerId,
+            customerName: job.customerName,
+            customerEmail: job.customerEmail,
+            jobAddress: job.serviceAddress,
+            jobTitle: job.title,
+            jobNumber: job.jobNumber,
+            scheduledAt: job.scheduledStart?.toISOString() ?? undefined,
+          }, { headers: { 'x-internal-api-key': process.env.INTERNAL_API_KEY ?? '' } }).catch((err: unknown) => {
+            this.logger.warn(`Failed to notify comms-service of job creation: ${err instanceof Error ? err.message : String(err)}`);
+          });
+        }
+
         return this.findOne(user.companyId, job.id);
       } catch (error) {
         if (!this.isJobNumberUniqueError(error) || attempt === CREATE_JOB_MAX_ATTEMPTS) {
@@ -112,11 +132,16 @@ export class JobsService {
       isAgreementJob?: boolean;
     } = {},
   ): Promise<PaginatedResponse<unknown>> {
-    // Batch (multi-project) requests return rows for many projects in one
-    // page, so they get a higher ceiling than the per-entity default.
+    // The admin Jobs page and Scheduling board both fetch the company's full
+    // job list in one shot (limit: 200) rather than paging through a table —
+    // the default 100-row cap silently truncated that request to 100, so any
+    // job sorted past row 100 (including housing-scheme/project jobs with an
+    // ordinary scheduledStart date) never made it into the response at all.
+    // Batch (multi-project) requests get an even higher ceiling since they
+    // cover many projects in one page.
     const { page, limit, skip } = clampPagination(
       { page: pageInput, limit: limitInput },
-      filters.projectIds?.length ? { maxLimit: 500 } : {},
+      { maxLimit: filters.projectIds?.length ? 500 : 250 },
     );
     const where: any = { companyId };
 
@@ -151,7 +176,15 @@ export class JobsService {
         where,
         skip,
         take: limit,
-        orderBy: [{ scheduledStart: 'asc' }, { createdAt: 'desc' }],
+        // Postgres/Prisma default NULLS LAST on an ascending sort would push
+        // every unscheduled job (scheduledStart = null — e.g. a brand-new
+        // customer-submitted booking, or any job not yet dispatched) behind
+        // every job that has ever had a scheduled date, company-wide — with a
+        // fixed page size and no default status filter, that silently drops
+        // new unscheduled jobs off page 1 entirely once a company has more
+        // historical scheduled jobs than the page limit. Unscheduled jobs need
+        // triage first, so they sort to the front instead.
+        orderBy: [{ scheduledStart: { sort: 'asc', nulls: 'first' } }, { createdAt: 'desc' }],
         include: {
           jobType: { select: { id: true, name: true, slug: true, color: true, icon: true } },
           _count: { select: { workOrders: true, photos: true } },
@@ -233,7 +266,7 @@ export class JobsService {
         id: true, status: true, customerId: true,
         customerName: true, customerEmail: true,
         serviceAddress: true, assignedToName: true, scheduledStart: true,
-        agreementId: true,
+        agreementId: true, title: true, jobNumber: true,
       },
     });
     if (!job) throw new NotFoundException(`Job ${jobId} not found`);
@@ -281,7 +314,14 @@ export class JobsService {
 
     await this.invalidateStatsCache(companyId);
 
-    if (newStatus === JobStatusDto.EN_ROUTE) {
+    // EN_ROUTE uses its own richer pipeline (tech photo + real ETA window) via
+    // scheduling-service → POST /notifications/en-route — not this one.
+    // Every other customer-visible transition gets a status email from here.
+    const NOTIFIABLE_STATUSES: JobStatusDto[] = [
+      JobStatusDto.EN_ROUTE, JobStatusDto.SCHEDULED, JobStatusDto.ON_SITE,
+      JobStatusDto.COMPLETED, JobStatusDto.CANCELLED,
+    ];
+    if (NOTIFIABLE_STATUSES.includes(newStatus)) {
       const commsBase = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
       const payload = {
         companyId,
@@ -291,11 +331,16 @@ export class JobsService {
         customerName: job.customerName,
         customerEmail: job.customerEmail ?? undefined,
         jobAddress: job.serviceAddress,
+        jobTitle: job.title,
+        jobNumber: job.jobNumber,
         technicianName: job.assignedToName ?? undefined,
         scheduledAt: job.scheduledStart?.toISOString() ?? undefined,
+        cancellationReason: dto.cancellationReason,
       };
-      axios.post(`${commsBase}/automation/events/job-status-changed`, payload).catch((err: unknown) => {
-        this.logger.warn(`Failed to notify comms-service of EN_ROUTE: ${err instanceof Error ? err.message : String(err)}`);
+      axios.post(`${commsBase}/automation/events/job-status-changed`, payload, {
+        headers: { 'x-internal-api-key': process.env.INTERNAL_API_KEY ?? '' },
+      }).catch((err: unknown) => {
+        this.logger.warn(`Failed to notify comms-service of ${newStatus}: ${err instanceof Error ? err.message : String(err)}`);
       });
     }
 

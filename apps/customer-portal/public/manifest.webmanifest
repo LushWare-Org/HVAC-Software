@@ -1,7 +1,7 @@
 {
-  "name": "HomePulse",
-  "short_name": "HomePulse",
-  "description": "HomePulse — your home service portal for jobs, invoices, equipment and more.",
+  "name": "HVACtor.ai",
+  "short_name": "HVACtor.ai",
+  "description": "HVACtor.ai — your home service portal for jobs, invoices, equipment and more.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

@@ -90,6 +90,47 @@ function PillGroup({ options, value, onChange }: {
   )
 }
 
+function DateRangeFilter({ from, to, onFrom, onTo, onClear }: {
+  from: string
+  to: string
+  onFrom: (v: string) => void
+  onTo: (v: string) => void
+  onClear: () => void
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <input
+        type="date"
+        className="select"
+        style={{ width: 130, fontSize: 12, padding: '5px 8px' }}
+        value={from}
+        max={to || undefined}
+        onChange={e => onFrom(e.target.value)}
+        title="From date"
+      />
+      <span style={{ fontSize: 11, color: 'var(--t4)' }}>to</span>
+      <input
+        type="date"
+        className="select"
+        style={{ width: 130, fontSize: 12, padding: '5px 8px' }}
+        value={to}
+        min={from || undefined}
+        onChange={e => onTo(e.target.value)}
+        title="To date"
+      />
+      {(from || to) && (
+        <button
+          onClick={onClear}
+          title="Clear date range"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t4)', fontSize: 11, padding: '4px 2px' }}
+        >
+          Clear
+        </button>
+      )}
+    </div>
+  )
+}
+
 function exportToCsv(filename: string, rows: string[][], headers: string[]) {
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
   const lines = [headers.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))]
@@ -129,12 +170,18 @@ export default function Finance() {
   const [invPage, setInvPage] = useState(1)
   const [invSearch, setInvSearch] = useState('')
   const [invStatus, setInvStatus] = useState('all')
+  const [invDateFrom, setInvDateFrom] = useState('')
+  const [invDateTo, setInvDateTo] = useState('')
   const [quoPage, setQuoPage] = useState(1)
   const [quoSearch, setQuoSearch] = useState('')
   const [quoStatus, setQuoStatus] = useState('all')
+  const [quoDateFrom, setQuoDateFrom] = useState('')
+  const [quoDateTo, setQuoDateTo] = useState('')
   const [expPage, setExpPage] = useState(1)
   const [expSearch, setExpSearch] = useState('')
   const [expStatus, setExpStatus] = useState('all')
+  const [expDateFrom, setExpDateFrom] = useState('')
+  const [expDateTo, setExpDateTo] = useState('')
   const [isAddQuoteOpen, setIsAddQuoteOpen] = useState(false)
   const [isAddInvoiceOpen, setIsAddInvoiceOpen] = useState(false)
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false)
@@ -143,21 +190,31 @@ export default function Finance() {
   // ── API ───────────────────────────────────────────────────────────────────
 
   const kpiQuery = useFinanceKpis()
-  const invoicesQuery = useInvoices({ page: invPage, limit: itemsPerPage, search: invSearch || undefined, status: invStatus !== 'all' ? invStatus : undefined })
-  const quotesQuery = useQuotes({ page: quoPage, limit: itemsPerPage, search: quoSearch || undefined, status: quoStatus !== 'all' ? quoStatus : undefined })
-  const expensesQuery = useExpenses({ page: expPage, limit: itemsPerPage, search: expSearch || undefined, status: expStatus !== 'all' ? expStatus : undefined })
+  const invoicesQuery = useInvoices({ page: invPage, limit: itemsPerPage, search: invSearch || undefined, status: invStatus !== 'all' ? invStatus : undefined, dateFrom: invDateFrom || undefined, dateTo: invDateTo || undefined })
+  const quotesQuery = useQuotes({ page: quoPage, limit: itemsPerPage, search: quoSearch || undefined, status: quoStatus !== 'all' ? quoStatus : undefined, dateFrom: quoDateFrom || undefined, dateTo: quoDateTo || undefined })
+  const expensesQuery = useExpenses({ page: expPage, limit: itemsPerPage, search: expSearch || undefined, status: expStatus !== 'all' ? expStatus : undefined, dateFrom: expDateFrom || undefined, dateTo: expDateTo || undefined })
+
+  // Full filtered set (same filters, no pagination — up to the 500-row service ceiling) —
+  // used for the CSV export and the always-visible filtered total, since the paginated
+  // queries above only ever hold one page's worth of rows.
+  const invoicesAllQuery = useInvoices({ limit: 500, page: 1, search: invSearch || undefined, status: invStatus !== 'all' ? invStatus : undefined, dateFrom: invDateFrom || undefined, dateTo: invDateTo || undefined })
+  const quotesAllQuery = useQuotes({ limit: 500, page: 1, search: quoSearch || undefined, status: quoStatus !== 'all' ? quoStatus : undefined, dateFrom: quoDateFrom || undefined, dateTo: quoDateTo || undefined })
+  const expensesAllQuery = useExpenses({ limit: 500, page: 1, search: expSearch || undefined, status: expStatus !== 'all' ? expStatus : undefined, dateFrom: expDateFrom || undefined, dateTo: expDateTo || undefined })
 
   const invoices: Invoice[] = invoicesQuery.data?.data ?? []
   const totalInvoices = invoicesQuery.data?.total ?? 0
   const totalInvPages = Math.max(1, invoicesQuery.data?.totalPages ?? 1)
+  const invoicesTotalAmount = useMemo(() => (invoicesAllQuery.data?.data ?? []).reduce((s, inv) => s + decimalToNumber(inv.total), 0), [invoicesAllQuery.data])
 
   const quotes: Quote[] = quotesQuery.data?.data ?? []
   const totalQuotes = quotesQuery.data?.total ?? 0
   const totalQuoPages = Math.max(1, quotesQuery.data?.totalPages ?? 1)
+  const quotesTotalAmount = useMemo(() => (quotesAllQuery.data?.data ?? []).reduce((s, q) => s + decimalToNumber(q.total), 0), [quotesAllQuery.data])
 
   const expenses: Expense[] = expensesQuery.data?.data ?? []
   const totalExpenses = expensesQuery.data?.total ?? 0
   const totalExpPages = Math.max(1, expensesQuery.data?.totalPages ?? 1)
+  const expensesTotalAmount = useMemo(() => (expensesAllQuery.data?.data ?? []).reduce((s, exp) => s + decimalToNumber(exp.amount), 0), [expensesAllQuery.data])
 
   const { projects: allProjects } = useProjectsFull()
   const projectNameById = useMemo(() => {
@@ -205,47 +262,70 @@ export default function Finance() {
   const qbSync = useQBSyncInvoice()
   const qbConnected = qbStatus.data?.connected ?? false
 
+  // Exports the FULL filtered set (respecting search/status/date-range — up to the
+  // 500-row service ceiling), not just the current 10-row page, and appends a
+  // grand-total row so the downloaded file is self-contained.
   const handleExport = useCallback(() => {
+    const rangeSuffix = (from: string, to: string) => (from || to) ? `_${from || 'start'}_to_${to || 'today'}` : ''
+
     if (tab === 'invoices') {
-      exportToCsv('invoices.csv',
-        invoices.map(inv => [
-          inv.invoiceNumber,
-          inv.customerName ?? '',
-          inv.jobTitle ?? '',
-          fmtDecimal(inv.total),
-          inv.status,
-          inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '',
-          inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '',
-        ]),
+      const all = invoicesAllQuery.data?.data ?? []
+      const totalAmount = all.reduce((s, inv) => s + decimalToNumber(inv.total), 0)
+      exportToCsv(`invoices${rangeSuffix(invDateFrom, invDateTo)}.csv`,
+        [
+          ...all.map(inv => [
+            inv.invoiceNumber,
+            inv.customerName ?? '',
+            inv.jobTitle ?? '',
+            fmtDecimal(inv.total),
+            inv.status,
+            inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '',
+            inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '',
+          ]),
+          ['', '', '', '', '', '', ''],
+          ['TOTAL', `${all.length} invoice${all.length === 1 ? '' : 's'}`, '', fmtDecimal(totalAmount), '', '', ''],
+        ],
         ['Invoice No', 'Customer', 'Job', 'Amount', 'Status', 'Issue Date', 'Due Date'],
       )
     } else if (tab === 'quotes') {
-      exportToCsv('quotes.csv',
-        quotes.map(q => [
-          q.quoteNumber,
-          q.customerName ?? '',
-          q.title,
-          fmtDecimal(q.total),
-          q.status,
-          q.createdAt ? new Date(q.createdAt).toLocaleDateString() : '',
-          q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '',
-        ]),
+      const all = quotesAllQuery.data?.data ?? []
+      const totalAmount = all.reduce((s, q) => s + decimalToNumber(q.total), 0)
+      exportToCsv(`quotes${rangeSuffix(quoDateFrom, quoDateTo)}.csv`,
+        [
+          ...all.map(q => [
+            q.quoteNumber,
+            q.customerName ?? '',
+            q.title,
+            fmtDecimal(q.total),
+            q.status,
+            q.createdAt ? new Date(q.createdAt).toLocaleDateString() : '',
+            q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '',
+          ]),
+          ['', '', '', '', '', '', ''],
+          ['TOTAL', `${all.length} quote${all.length === 1 ? '' : 's'}`, '', fmtDecimal(totalAmount), '', '', ''],
+        ],
         ['Quote No', 'Customer', 'Title', 'Amount', 'Status', 'Created', 'Valid Until'],
       )
     } else {
-      exportToCsv('expenses.csv',
-        expenses.map(exp => [
-          exp.id.slice(0, 8),
-          exp.category,
-          exp.vendor ?? '',
-          fmtDecimal(exp.amount),
-          exp.status,
-          exp.date ? new Date(exp.date).toLocaleDateString() : '',
-        ]),
+      const all = expensesAllQuery.data?.data ?? []
+      const totalAmount = all.reduce((s, exp) => s + decimalToNumber(exp.amount), 0)
+      exportToCsv(`expenses${rangeSuffix(expDateFrom, expDateTo)}.csv`,
+        [
+          ...all.map(exp => [
+            exp.id.slice(0, 8),
+            exp.category,
+            exp.vendor ?? '',
+            fmtDecimal(exp.amount),
+            exp.status,
+            exp.date ? new Date(exp.date).toLocaleDateString() : '',
+          ]),
+          ['', '', '', '', '', ''],
+          ['TOTAL', `${all.length} expense${all.length === 1 ? '' : 's'}`, '', fmtDecimal(totalAmount), '', ''],
+        ],
         ['Ref', 'Category', 'Vendor', 'Amount', 'Status', 'Date'],
       )
     }
-  }, [tab, invoices, quotes, expenses])
+  }, [tab, invoicesAllQuery.data, quotesAllQuery.data, expensesAllQuery.data, invDateFrom, invDateTo, quoDateFrom, quoDateTo, expDateFrom, expDateTo])
 
   useEffect(() => {
     const handler = () => handleExport()
@@ -307,6 +387,12 @@ export default function Finance() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div className="filter-bar">
                 <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search invoices…" value={invSearch} onChange={e => { setInvSearch(e.target.value); setInvPage(1); }} /></div>
+                <DateRangeFilter
+                  from={invDateFrom} to={invDateTo}
+                  onFrom={v => { setInvDateFrom(v); setInvPage(1); }}
+                  onTo={v => { setInvDateTo(v); setInvPage(1); }}
+                  onClear={() => { setInvDateFrom(''); setInvDateTo(''); setInvPage(1); }}
+                />
                 <div className="flex items-center gap-2 ml-auto">
                   <button className="btn btn-secondary btn-sm flex items-center gap-1" onClick={handleExport}><Download size={12} /> Export CSV</button>
                   <button className="btn btn-primary btn-sm" onClick={() => setIsAddInvoiceOpen(true)}><Plus size={12} /> Create Invoice</button>
@@ -413,7 +499,10 @@ export default function Finance() {
             </div>
           </div>
           <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-            <span className="text-[13px] text-[var(--t3)]">Showing {totalInvoices > 0 ? (invPage - 1) * itemsPerPage + 1 : 0} to {Math.min(invPage * itemsPerPage, totalInvoices)} of {totalInvoices} invoices</span>
+            <span className="text-[13px] text-[var(--t3)]">
+              Showing {totalInvoices > 0 ? (invPage - 1) * itemsPerPage + 1 : 0} to {Math.min(invPage * itemsPerPage, totalInvoices)} of {totalInvoices} invoices
+              {' '}· Total <strong style={{ color: 'var(--t1)' }}>{fmtDecimal(invoicesTotalAmount)}</strong>
+            </span>
             <div className="flex items-center gap-2">
               <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setInvPage(p => Math.max(1, p - 1))} disabled={invPage === 1}><ChevronLeft size={18} /></button>
               <span className="text-[13px] text-[var(--t2)] mx-2">Page {invPage} of {totalInvPages}</span>
@@ -430,6 +519,12 @@ export default function Finance() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div className="filter-bar">
                 <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search quotes…" value={quoSearch} onChange={e => { setQuoSearch(e.target.value); setQuoPage(1); }} /></div>
+                <DateRangeFilter
+                  from={quoDateFrom} to={quoDateTo}
+                  onFrom={v => { setQuoDateFrom(v); setQuoPage(1); }}
+                  onTo={v => { setQuoDateTo(v); setQuoPage(1); }}
+                  onClear={() => { setQuoDateFrom(''); setQuoDateTo(''); setQuoPage(1); }}
+                />
                 <div className="flex items-center gap-2 ml-auto">
                   <button className="btn btn-secondary btn-sm flex items-center gap-1" onClick={handleExport}><Download size={12} /> Export CSV</button>
                   <button className="btn btn-primary btn-sm" onClick={() => setIsAddQuoteOpen(true)}><Plus size={12} /> Create Quote</button>
@@ -501,7 +596,10 @@ export default function Finance() {
             </div>
           </div>
           <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-            <span className="text-[13px] text-[var(--t3)]">Showing {totalQuotes > 0 ? (quoPage - 1) * itemsPerPage + 1 : 0} to {Math.min(quoPage * itemsPerPage, totalQuotes)} of {totalQuotes} quotes</span>
+            <span className="text-[13px] text-[var(--t3)]">
+              Showing {totalQuotes > 0 ? (quoPage - 1) * itemsPerPage + 1 : 0} to {Math.min(quoPage * itemsPerPage, totalQuotes)} of {totalQuotes} quotes
+              {' '}· Total <strong style={{ color: 'var(--t1)' }}>{fmtDecimal(quotesTotalAmount)}</strong>
+            </span>
             <div className="flex items-center gap-2">
               <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setQuoPage(p => Math.max(1, p - 1))} disabled={quoPage === 1}><ChevronLeft size={18} /></button>
               <span className="text-[13px] text-[var(--t2)] mx-2">Page {quoPage} of {totalQuoPages}</span>
@@ -518,6 +616,12 @@ export default function Finance() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div className="filter-bar">
                 <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search expenses…" value={expSearch} onChange={e => { setExpSearch(e.target.value); setExpPage(1); }} /></div>
+                <DateRangeFilter
+                  from={expDateFrom} to={expDateTo}
+                  onFrom={v => { setExpDateFrom(v); setExpPage(1); }}
+                  onTo={v => { setExpDateTo(v); setExpPage(1); }}
+                  onClear={() => { setExpDateFrom(''); setExpDateTo(''); setExpPage(1); }}
+                />
                 <div className="flex items-center gap-2 ml-auto">
                   <button className="btn btn-secondary btn-sm flex items-center gap-1" onClick={handleExport}><Download size={12} /> Export CSV</button>
                   <button className="btn btn-primary btn-sm" onClick={() => setIsAddExpenseOpen(true)}><Plus size={12} /> Log Expense</button>
@@ -600,7 +704,10 @@ export default function Finance() {
             </div>
           </div>
           <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-            <span className="text-[13px] text-[var(--t3)]">Showing {totalExpenses > 0 ? (expPage - 1) * itemsPerPage + 1 : 0} to {Math.min(expPage * itemsPerPage, totalExpenses)} of {totalExpenses} expenses</span>
+            <span className="text-[13px] text-[var(--t3)]">
+              Showing {totalExpenses > 0 ? (expPage - 1) * itemsPerPage + 1 : 0} to {Math.min(expPage * itemsPerPage, totalExpenses)} of {totalExpenses} expenses
+              {' '}· Total <strong style={{ color: 'var(--t1)' }}>{fmtDecimal(expensesTotalAmount)}</strong>
+            </span>
             <div className="flex items-center gap-2">
               <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setExpPage(p => Math.max(1, p - 1))} disabled={expPage === 1}><ChevronLeft size={18} /></button>
               <span className="text-[13px] text-[var(--t2)] mx-2">Page {expPage} of {totalExpPages}</span>

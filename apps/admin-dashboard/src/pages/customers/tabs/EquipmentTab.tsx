@@ -83,9 +83,9 @@ export default function EquipmentTab({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
               <Field label="Serial No." name="serial" value={eq.serial} isEdit={isEditMode}
                 onChange={e => patchById(onEquipmentChange, eq.id, { serial: e.target.value })} />
-              <Field label="Install Date" name="install" value={eq.install} isEdit={isEditMode}
+              <Field label="Install Date" name="install" value={eq.install} type="date" isEdit={isEditMode}
                 onChange={e => patchById(onEquipmentChange, eq.id, { install: e.target.value })} />
-              <Field label="Warranty Until" name="warranty" value={eq.warranty} isEdit={isEditMode}
+              <Field label="Warranty Until" name="warranty" value={eq.warranty} type="date" isEdit={isEditMode}
                 onChange={e => patchById(onEquipmentChange, eq.id, { warranty: e.target.value })} />
             </div>
             <div style={{ marginTop: 10 }}>

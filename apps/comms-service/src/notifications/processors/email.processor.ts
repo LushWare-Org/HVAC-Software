@@ -9,6 +9,7 @@ import { QueueName } from '@tscrm/queue';
 import { EmailService } from '../../email/email.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DeliveryStatus } from '../../prisma/generated';
+import { CompanySettingsClient } from '../../company-settings/company-settings.client';
 import type { EmailJobPayload } from '../notifications.service';
 
 @Processor(QueueName.SEND_EMAIL)
@@ -18,6 +19,7 @@ export class EmailProcessor extends WorkerHost {
   constructor(
     private readonly emailService: EmailService,
     private readonly prisma: PrismaService,
+    private readonly companySettings: CompanySettingsClient,
   ) {
     super();
   }
@@ -31,7 +33,11 @@ export class EmailProcessor extends WorkerHost {
       data: { status: DeliveryStatus.SENT, sentAt: new Date() },
     });
 
-    const result = await this.emailService.send({ to, toName, subject, htmlBody, attachments });
+    // Sender display name is the tenant's own company, not a fixed system name.
+    const settings = await this.companySettings.getSettings(companyId);
+    const fromName = settings.name || undefined;
+
+    const result = await this.emailService.send({ to, toName, subject, htmlBody, attachments, fromName });
 
     if (result.success) {
       await this.prisma.notification.update({

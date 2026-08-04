@@ -506,11 +506,13 @@ export class IotService {
     const honeywellUrl = `${base}/api/crm/iot/honeywell/connect-portal`;
     const nestUrl = `${base}/api/crm/iot/nest/connect-portal`;
 
-    const appName = process.env.APP_NAME ?? 'T&S Services';
+    const company = await this.prisma.company.findFirst({ where: { id: companyId } });
+    const appName = company?.name ?? process.env.APP_NAME ?? 'HVACtor.ai';
 
     await this.email.sendMail({
       to: customer.email,
       subject: `Connect your thermostat — ${appName}`,
+      companyName: appName,
       html: `
 <!DOCTYPE html>
 <html lang="en">

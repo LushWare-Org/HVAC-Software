@@ -27,7 +27,7 @@ import { useQuotes, useInvoices } from '../../hooks/useFinance'
 import AgreementEditorModal from '../agreements/AgreementEditorModal'
 import AddQuoteModal from '../finance/AddQuoteModal'
 import AddInvoiceModal from '../finance/AddInvoiceModal'
-import CreateJobModal from '../dispatch/CreateJobModal'
+import AddJobModal from '../jobs/AddJobModal'
 import type { Job } from '../../types/api'
 import { useTechnicians } from '../../hooks/useScheduling'
 import Avatar from '../../components/Avatar'
@@ -74,6 +74,52 @@ function AccountStatusBadge({ status }: { status: HouseAccountStatus }) {
 function IssueStatusBadge({ status }: { status: IssueStatus }) {
   const m = ISSUE_STATUS_META[status]
   return <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: m.dim, color: m.color }}>{m.label}</span>
+}
+
+// Shown in place of Agreements/Billing/Equipment when a house has no owner yet —
+// lets the admin assign one right there instead of dead-ending on "go to Overview".
+function AssignOwnerPrompt({ house, projectId, description }: { house: House; projectId: string; description: string }) {
+  const assignOwner = useAssignOwner(projectId)
+  const { showSuccess, showError } = useToast()
+  const [picking, setPicking] = useState(false)
+  const [assigning, setAssigning] = useState(false)
+
+  const pickOwner = async (c: PickedCustomer) => {
+    setAssigning(true)
+    try {
+      await assignOwner.mutateAsync({ houseId: house.id, customerId: c.id })
+      showSuccess(`${house.label} is now owned by ${c.firstName} ${c.lastName}.`.trim(), 'Owner assigned')
+      setPicking(false)
+    } catch (e: any) {
+      showError(e?.response?.data?.message ?? 'Could not assign this owner', 'Assign owner failed')
+    } finally {
+      setAssigning(false)
+    }
+  }
+
+  return (
+    <div style={{ padding: '28px 16px', textAlign: 'center' }}>
+      <AlertTriangle size={18} style={{ color: 'var(--amber)', marginBottom: 8 }} />
+      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t2)', margin: 0 }}>No owner assigned yet</p>
+      <p style={{ fontSize: 12, color: 'var(--t4)', margin: '4px 0 14px' }}>{description}</p>
+      {picking ? (
+        assigning ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '8px 2px' }}>
+            <Loader2 size={13} className="animate-spin" style={{ color: 'var(--t3)' }} />
+            <span style={{ fontSize: 12, color: 'var(--t4)' }}>Assigning…</span>
+          </div>
+        ) : (
+          <div style={{ maxWidth: 360, margin: '0 auto', textAlign: 'left' }}>
+            <CustomerPickerWithCreate autoFocus onPick={pickOwner} onCancel={() => setPicking(false)} />
+          </div>
+        )
+      ) : (
+        <button className="btn btn-primary btn-sm" onClick={() => setPicking(true)}>
+          <User size={12} /> Assign owner
+        </button>
+      )}
+    </div>
+  )
 }
 
 // ── Tab entry point ──────────────────────────────────────────────────────────
@@ -427,9 +473,9 @@ function HouseDetailModal({ houseId, projectId, projectName, onClose }: {
             </div>
           ) : (
             <>
-              {tab === 'overview' && <OverviewSection house={house} projectId={projectId} equipment={equipment} onViewAllJobs={() => setTab('servicelog')} />}
+              {tab === 'overview' && <OverviewSection house={house} projectId={projectId} projectName={projectName} equipment={equipment} onViewAllJobs={() => setTab('servicelog')} />}
               {tab === 'equipment' && <EquipmentSection house={house} equipment={equipment} projectId={projectId} projectName={projectName} />}
-              {tab === 'servicelog' && <ServiceLogSection house={house} equipment={equipment} />}
+              {tab === 'servicelog' && <ServiceLogSection house={house} equipment={equipment} projectId={projectId} projectName={projectName} />}
               {tab === 'issues' && <IssuesSection house={house} issues={issues} />}
               {tab === 'agreements' && <HouseAgreementsSection house={house} projectId={projectId} />}
               {tab === 'billing' && <HouseBillingSection house={house} projectId={projectId} projectName={projectName} />}
@@ -444,8 +490,8 @@ function HouseDetailModal({ houseId, projectId, projectName, onClose }: {
 
 // ── Overview ──────────────────────────────────────────────────────────────
 
-function OverviewSection({ house, projectId, equipment, onViewAllJobs }: {
-  house: House; projectId: string; equipment: HouseEquipment[]; onViewAllJobs: () => void
+function OverviewSection({ house, projectId, projectName, equipment, onViewAllJobs }: {
+  house: House; projectId: string; projectName: string; equipment: HouseEquipment[]; onViewAllJobs: () => void
 }) {
   const assignOwner = useAssignOwner(projectId)
   const generateAccount = useGenerateOwnerAccount(projectId)
@@ -605,12 +651,13 @@ function OverviewSection({ house, projectId, equipment, onViewAllJobs }: {
         <TagsAndNotesEditor house={house} onSave={(patch) => updateHouse.mutate({ id: house.id, ...patch })} saving={updateHouse.isPending} />
       </div>
 
-      <CreateJobModal
+      <AddJobModal
         isOpen={!!visitFor}
         onClose={() => setVisitFor(null)}
-        presetCustomer={house.ownerCustomerId ? { id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined } : undefined}
-        projectId={projectId}
-        houseId={house.id}
+        lockedCustomer={house.ownerCustomerId ? { id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined } : undefined}
+        lockedProject={{ id: projectId, name: projectName, templateType: 'HOUSING_SCHEME' }}
+        lockedHouseId={house.id}
+        lockedHouseLabel={house.label}
         contextLabel={house.label}
         onCreated={() => invalidateHouseServiceLog(house.id, projectId)}
       />
@@ -651,13 +698,7 @@ function HouseAgreementsSection({ house, projectId }: { house: House; projectId:
   const [showCreate, setShowCreate] = useState(false)
 
   if (!house.ownerCustomerId) {
-    return (
-      <div style={{ padding: '28px 16px', textAlign: 'center' }}>
-        <AlertTriangle size={18} style={{ color: 'var(--amber)', marginBottom: 8 }} />
-        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t2)', margin: 0 }}>Assign an owner first</p>
-        <p style={{ fontSize: 12, color: 'var(--t4)', margin: '4px 0 0' }}>Agreements belong to the house's owner — set one from the Overview tab.</p>
-      </div>
-    )
+    return <AssignOwnerPrompt house={house} projectId={projectId} description="Agreements belong to the house's owner." />
   }
 
   return (
@@ -730,13 +771,7 @@ function HouseBillingSection({ house, projectId, projectName }: { house: House; 
   const [showCreateInvoice, setShowCreateInvoice] = useState(false)
 
   if (!house.ownerCustomerId) {
-    return (
-      <div style={{ padding: '28px 16px', textAlign: 'center' }}>
-        <AlertTriangle size={18} style={{ color: 'var(--amber)', marginBottom: 8 }} />
-        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t2)', margin: 0 }}>Assign an owner first</p>
-        <p style={{ fontSize: 12, color: 'var(--t4)', margin: '4px 0 0' }}>Quotes and invoices belong to the house's owner — set one from the Overview tab.</p>
-      </div>
-    )
+    return <AssignOwnerPrompt house={house} projectId={projectId} description="Quotes and invoices belong to the house's owner." />
   }
 
   const presetCustomer = { id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', email: house.ownerEmail ?? undefined }
@@ -826,15 +861,10 @@ function EquipmentSection({ house, equipment, projectId, projectName }: {
   const [visitFor, setVisitFor] = useState<{ id?: string } | null>(null)
   const [viewingId, setViewingId] = useState<string | null>(null)
   const viewing = equipment.find(e => e.id === viewingId) ?? null
+  const visitForEquipment = visitFor?.id ? equipment.find(e => e.id === visitFor.id) : undefined
 
   if (!house.ownerCustomerId) {
-    return (
-      <div style={{ padding: '28px 16px', textAlign: 'center' }}>
-        <AlertTriangle size={18} style={{ color: 'var(--amber)', marginBottom: 8 }} />
-        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t2)', margin: 0 }}>Assign an owner first</p>
-        <p style={{ fontSize: 12, color: 'var(--t4)', margin: '4px 0 0' }}>Equipment belongs to the house's owner — set one from the Overview tab.</p>
-      </div>
-    )
+    return <AssignOwnerPrompt house={house} projectId={projectId} description="Equipment belongs to the house's owner." />
   }
 
   return (
@@ -899,13 +929,15 @@ function EquipmentSection({ house, equipment, projectId, projectName }: {
         />
       )}
 
-      <CreateJobModal
+      <AddJobModal
         isOpen={!!visitFor}
         onClose={() => setVisitFor(null)}
-        presetCustomer={{ id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined }}
-        projectId={projectId}
-        houseId={house.id}
-        equipmentId={visitFor?.id}
+        lockedCustomer={{ id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined }}
+        lockedProject={{ id: projectId, name: projectName, templateType: 'HOUSING_SCHEME' }}
+        lockedHouseId={house.id}
+        lockedHouseLabel={house.label}
+        lockedEquipmentId={visitFor?.id}
+        lockedEquipmentLabel={visitForEquipment ? [visitForEquipment.brand, visitForEquipment.type, visitForEquipment.model].filter(Boolean).join(' ') : undefined}
         contextLabel={`${projectName} — ${house.label}`}
         onCreated={() => invalidateHouseServiceLog(house.id, projectId)}
       />
@@ -1353,19 +1385,66 @@ const JOB_BADGE: Record<string, string> = {
   PAID: 'badge-green', CANCELLED: 'badge-red',
 }
 
-function ServiceLogSection({ house, equipment }: { house: House; equipment: HouseEquipment[] }) {
+function ServiceLogSection({ house, equipment, projectId, projectName }: {
+  house: House; equipment: HouseEquipment[]; projectId: string; projectName: string
+}) {
   const { jobs, isLoading } = useHouseServiceLog(house.id, equipment.map(e => e.id))
   const [viewJob, setViewJob] = useState<Job | null>(null)
+  const [visitFor, setVisitFor] = useState<{ id?: string } | null>(null)
+  const [visitEquipmentId, setVisitEquipmentId] = useState('')
   const techniciansQuery = useTechnicians()
+  const visitForEquipment = visitFor?.id ? equipment.find(e => e.id === visitFor.id) : undefined
+
+  const header = (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {equipment.length > 0 && (
+          <select
+            value={visitEquipmentId}
+            onChange={e => setVisitEquipmentId(e.target.value)}
+            style={{ ...inp, width: 'auto', minWidth: 160, padding: '7px 10px', fontSize: 12 }}
+          >
+            <option value="">General visit</option>
+            {equipment.map(eq => (
+              <option key={eq.id} value={eq.id}>
+                {[eq.brand, eq.type, eq.model].filter(Boolean).join(' ') || eq.type}
+              </option>
+            ))}
+          </select>
+        )}
+        <button className="btn btn-secondary btn-sm" onClick={() => setVisitFor({ id: visitEquipmentId || undefined })}>
+          <Plus size={12} /> New service visit
+        </button>
+      </div>
+    </div>
+  )
 
   if (isLoading) {
     return <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}><Loader2 size={18} className="animate-spin" style={{ color: 'var(--t3)' }} /></div>
   }
   if (jobs.length === 0) {
-    return <p style={{ padding: '28px 0', fontSize: 12.5, color: 'var(--t4)', textAlign: 'center' }}>No service visits logged for this house yet.</p>
+    return (
+      <div>
+        {header}
+        <p style={{ padding: '28px 0', fontSize: 12.5, color: 'var(--t4)', textAlign: 'center' }}>No service visits logged for this house yet.</p>
+        <AddJobModal
+          isOpen={!!visitFor}
+          onClose={() => setVisitFor(null)}
+          lockedCustomer={house.ownerCustomerId ? { id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined } : undefined}
+          lockedProject={{ id: projectId, name: projectName, templateType: 'HOUSING_SCHEME' }}
+          lockedHouseId={house.id}
+          lockedHouseLabel={house.label}
+          lockedEquipmentId={visitFor?.id}
+          lockedEquipmentLabel={visitForEquipment ? [visitForEquipment.brand, visitForEquipment.type, visitForEquipment.model].filter(Boolean).join(' ') : undefined}
+          contextLabel={`${projectName} — ${house.label}`}
+          onCreated={() => invalidateHouseServiceLog(house.id, projectId)}
+        />
+      </div>
+    )
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {header}
       {jobs.map((j: any) => (
         <button key={j.id} onClick={() => setViewJob(j as Job)} style={{
           display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 10,
@@ -1402,6 +1481,19 @@ function ServiceLogSection({ house, equipment }: { house: House; equipment: Hous
           <JobDetailModal isOpen={!!viewJob} onClose={() => setViewJob(null)} job={viewJob} />
         </Suspense>
       )}
+
+      <AddJobModal
+        isOpen={!!visitFor}
+        onClose={() => setVisitFor(null)}
+        lockedCustomer={house.ownerCustomerId ? { id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined } : undefined}
+        lockedProject={{ id: projectId, name: projectName, templateType: 'HOUSING_SCHEME' }}
+        lockedHouseId={house.id}
+        lockedHouseLabel={house.label}
+        lockedEquipmentId={visitFor?.id}
+        lockedEquipmentLabel={visitForEquipment ? [visitForEquipment.brand, visitForEquipment.type, visitForEquipment.model].filter(Boolean).join(' ') : undefined}
+        contextLabel={`${projectName} — ${house.label}`}
+        onCreated={() => invalidateHouseServiceLog(house.id, projectId)}
+      />
     </div>
   )
 }

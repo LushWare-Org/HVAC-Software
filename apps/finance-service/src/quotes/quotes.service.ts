@@ -56,14 +56,17 @@ export class QuotesService {
 
   async findAll(
     companyId: string,
-    params: { status?: QuoteStatus; customerId?: string; jobId?: string; projectId?: string; projectIds?: string[]; houseId?: string; page?: number; limit?: number },
+    params: { status?: QuoteStatus; customerId?: string; jobId?: string; projectId?: string; projectIds?: string[]; houseId?: string; page?: number; limit?: number; dateFrom?: string; dateTo?: string },
   ) {
-    const { status, customerId, jobId, projectId, projectIds, houseId } = params;
+    const { status, customerId, jobId, projectId, projectIds, houseId, dateFrom, dateTo } = params;
     const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
-    // Batch (multi-project) requests get a higher ceiling — they cover many projects in one page.
-    const maxLimit = projectIds?.length ? 500 : 100;
+    // 500 covers both the multi-project batch case and a full CSV export in one page.
+    const maxLimit = 500;
     const limit = Number.isFinite(Number(params.limit)) ? Math.min(maxLimit, Math.max(1, Math.trunc(Number(params.limit)))) : 20;
     const skip = (page - 1) * limit;
+    const createdAtFilter: { gte?: Date; lte?: Date } = {};
+    if (dateFrom) createdAtFilter.gte = new Date(`${dateFrom}T00:00:00.000Z`);
+    if (dateTo) createdAtFilter.lte = new Date(`${dateTo}T23:59:59.999Z`);
     const where = {
       companyId,
       ...(status ? { status } : {}),
@@ -73,6 +76,7 @@ export class QuotesService {
       ...(houseId ? { houseId } : {}),
       // Batch form: one request for many projects' quotes (Projects page overview)
       ...(projectIds?.length ? { projectId: { in: projectIds } } : {}),
+      ...(dateFrom || dateTo ? { createdAt: createdAtFilter } : {}),
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.quote.findMany({
@@ -92,7 +96,13 @@ export class QuotesService {
   async findOne(companyId: string, id: string) {
     const quote = await this.prisma.quote.findFirst({
       where: { id, companyId },
-      include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
+      include: {
+        lineItems: { orderBy: { sortOrder: 'asc' } },
+        invoices: {
+          select: { id: true, invoiceNumber: true, status: true },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
     if (!quote) throw new NotFoundException(`Quote ${id} not found`);
     return quote;
@@ -240,14 +250,16 @@ export class QuotesService {
     }
 
     {
-      const companyName = process.env.COMPANY_NAME ?? 'T&S Services';
-      const companyAddress = process.env.COMPANY_ADDRESS ?? '';
+      const sendSettings = await this.companySettings.getSettings(companyId);
+      const companyName = sendSettings.name || process.env.COMPANY_NAME || 'HVACtor.ai';
+      const companyAddress = sendSettings.address || process.env.COMPANY_ADDRESS || '';
       const total = Number(updated.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const validUntil = updated.validUntil ? new Date(updated.validUntil).toLocaleDateString() : 'Upon receipt';
+      // Solid brand green (matches the Quote color used across the admin UI) — no gradients.
       const emailHtml = `
         <div style="margin:0;background:#f4f6fb;padding:32px 18px;font-family:Arial,sans-serif;color:#14213d;">
           <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #dbe3f0;border-radius:20px;overflow:hidden;box-shadow:0 20px 45px rgba(15,23,42,0.08);">
-            <div style="padding:28px 32px;background:linear-gradient(135deg,#0f766e,#0f766e 45%,#0b4f4a);color:#ffffff;">
+            <div style="padding:28px 32px;background:#059669;color:#ffffff;">
               <div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;opacity:0.82;margin-bottom:10px;">Quote attached</div>
               <h2 style="margin:0;font-size:28px;line-height:1.15;">${updated.quoteNumber}</h2>
               <p style="margin:10px 0 0 0;font-size:14px;line-height:1.6;max-width:440px;color:rgba(255,255,255,0.9);">Your quotation from ${companyName} is ready for review. A PDF copy is attached for your records.</p>
@@ -266,21 +278,25 @@ export class QuotesService {
                 </div>
               </div>
               <div style="border:1px solid #dbe3f0;border-radius:16px;padding:18px 20px;background:#ffffff;">
-                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#0f766e;margin-bottom:8px;">Next step</div>
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#059669;margin-bottom:8px;">Next step</div>
                 <p style="margin:0;font-size:14px;line-height:1.7;color:#475569;">Approve the quote in your portal to keep the work moving. If you need revisions or clarification, reply to this email and our team will assist promptly.</p>
               </div>
               <p style="margin:22px 0 0 0;font-size:13px;line-height:1.7;color:#64748b;">${companyAddress}</p>
+              <p style="margin:6px 0 0 0;font-size:11px;line-height:1.6;color:#94a3b8;">Powered by HVACtor.ai</p>
             </div>
           </div>
         </div>
       `;
 
-      const sendSettings = await this.companySettings.getSettings(companyId);
       const quotePdf = await this.pdfService.generateQuotePdf(updated as any, companyName, companyAddress, {
         currency: sendSettings.currency,
         timezone: sendSettings.timezone,
       });
-      await this.notificationClient.sendEmail({
+      // Best-effort — the quote is already marked SENT with its PDF generated;
+      // a slow/unreachable comms-service or SMTP relay must never fail this
+      // action or leave the quote stuck. Same fire-and-forget convention used
+      // for job-assigned/en-route notifications elsewhere in the platform.
+      this.notificationClient.sendEmail({
         companyId,
         recipientId: updated.customerId ?? updated.id,
         recipientName: updated.customerName ?? undefined,
@@ -296,6 +312,8 @@ export class QuotesService {
             contentBase64: quotePdf.toString('base64'),
           },
         ],
+      }).catch((err) => {
+        this.logger.warn(`Quote ${updated.quoteNumber} email to ${recipientEmail} failed: ${(err as Error).message}`);
       });
     }
 

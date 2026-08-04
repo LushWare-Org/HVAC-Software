@@ -19,6 +19,11 @@ const SAMPLE_INVOICE: any = {
   subtotal: 150, discountAmount: 0, taxRate: 0.08, taxAmount: 12, total: 162, amountPaid: 0, balanceDue: 162,
   stripePaymentUrl: '', payments: [], notes: 'Sample notes', terms: 'Sample terms',
 };
+const SAMPLE_PAYMENT_RECEIPT: any = {
+  receiptNumber: 'RCPT-SAMPLE-001', amount: 162, paymentMethod: 'CARD', paidAt: new Date(),
+  notes: '', customerName: 'Jordan Rivera', customerEmail: 'jordan@example.com',
+  invoiceNumber: 'INV-SAMPLE-001', invoiceTotal: 162, balanceDue: 0,
+};
 const SAMPLE_AGREEMENT: any = {
   name: 'Sample Service Agreement', description: 'Preview only', customerName: 'Jordan Rivera', customerEmail: 'jordan@example.com',
   startDate: new Date(), endDate: new Date(Date.now() + 365 * 86400000), serviceType: 'AC Maintenance', serviceInterval: 'QUARTERLY',
@@ -40,7 +45,7 @@ interface RenderAgreementBody {
 }
 
 interface PreviewBody {
-  documentType: 'INVOICE' | 'QUOTE' | 'AGREEMENT';
+  documentType: 'INVOICE' | 'QUOTE' | 'AGREEMENT' | 'PAYMENT_RECEIPT';
   template: Partial<DocumentTemplateConfig>;
 }
 
@@ -86,6 +91,9 @@ export class DocumentRenderController {
     }
     if (body.documentType === 'INVOICE') {
       return { html: this.pdfService.renderInvoiceHtml(SAMPLE_INVOICE, 'Your Company Name', '123 Main St, Anytown', undefined, template) };
+    }
+    if (body.documentType === 'PAYMENT_RECEIPT') {
+      return { html: this.pdfService.renderPaymentReceiptHtml(SAMPLE_PAYMENT_RECEIPT, 'Your Company Name', '123 Main St, Anytown', undefined, template) };
     }
     return { html: this.pdfService.renderAgreementHtml(SAMPLE_AGREEMENT, 'Your Company Name', '123 Main St, Anytown', undefined, template) };
   }

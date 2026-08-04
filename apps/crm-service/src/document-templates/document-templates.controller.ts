@@ -12,7 +12,7 @@ import { DocumentTemplatesService } from './document-templates.service';
 const STAFF_WRITE = [Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER];
 
 class UpsertTemplateDto {
-  @IsIn(['INVOICE', 'QUOTE', 'AGREEMENT']) documentType!: 'INVOICE' | 'QUOTE' | 'AGREEMENT';
+  @IsIn(['INVOICE', 'QUOTE', 'AGREEMENT', 'PAYMENT_RECEIPT']) documentType!: 'INVOICE' | 'QUOTE' | 'AGREEMENT' | 'PAYMENT_RECEIPT';
   @IsOptional() @IsString() name?: string;
   @IsOptional() @IsIn(['BUILDER', 'LETTERHEAD']) mode?: 'BUILDER' | 'LETTERHEAD';
   @IsOptional() @IsString() companyName?: string;

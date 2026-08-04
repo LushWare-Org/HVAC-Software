@@ -39,11 +39,15 @@ export interface MyIssueReport {
 }
 
 export function useMyHouses() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   return useQuery<MyHouse[]>({
-    queryKey: ['my-houses'],
+    // Scoped by customerId — the persisted cache (localStorage) is keyed by
+    // query key with no other session boundary, so an unscoped ['my-houses']
+    // key would serve a previous customer's (or a house-less customer's)
+    // cached result to whoever logs in next on this browser.
+    queryKey: ['my-houses', user?.customerId],
     queryFn: async () => (await api.get('/crm/houses/mine')).data ?? [],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!user?.customerId,
     // Shorter than the app default (60s) and refetches on focus, unlike most
     // portal queries — this one gates whether the "My House" nav tab exists at
     // all, so a customer who was just assigned a house by an admin while their
@@ -80,11 +84,11 @@ export function useMyHouseServiceLog(houseId: string | null) {
 }
 
 export function useMyIssueReports() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   return useQuery<MyIssueReport[]>({
-    queryKey: ['my-houses', 'issues'],
+    queryKey: ['my-houses', user?.customerId, 'issues'],
     queryFn: async () => (await api.get('/crm/houses/mine/issues')).data ?? [],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!user?.customerId,
     staleTime: 30 * 1000,
   })
 }
