@@ -129,7 +129,7 @@ export default function Pricing() {
             </div>
           </Reveal>
 
-          <div className="mt-14 grid gap-6 lg:grid-cols-3 lg:items-center lg:gap-8">
+          <div className="mt-14 grid gap-6 lg:grid-cols-3 lg:items-start lg:gap-8">
             {PRICING_PLANS.map((plan, i) => {
               const priceSet = plan.prices[teamSize]
               const isCustom = !priceSet
@@ -151,6 +151,8 @@ export default function Pricing() {
                   )
                 : null
 
+              const isDark = Boolean(plan.featured || plan.special)
+
               return (
                 <Reveal key={plan.name} delay={160 + i * 80}>
                   <div
@@ -158,7 +160,9 @@ export default function Pricing() {
                       'relative flex h-full flex-col rounded-3xl border-2 p-8 transition-all duration-300',
                       plan.featured
                         ? 'border-red-500 bg-navy-900 text-white shadow-block-lg lg:-translate-y-3 lg:py-12 hover:shadow-[0_25px_60px_-15px_rgba(239,68,68,0.45)]'
-                        : 'border-slate-600 bg-white text-ink shadow-block-sm hover:-translate-y-1 hover:shadow-block',
+                        : plan.special
+                          ? 'border-amber-400 bg-navy-950 text-white shadow-block-lg hover:shadow-[0_25px_60px_-15px_rgba(251,191,36,0.35)]'
+                          : 'border-slate-600 bg-white text-ink shadow-block-sm hover:-translate-y-1 hover:shadow-block',
                     )}
                   >
                     {plan.featured && (
@@ -166,7 +170,12 @@ export default function Pricing() {
                         <Sparkles className="h-3.5 w-3.5" /> Most popular
                       </span>
                     )}
-                    {billing === 'annual' && savingsPct !== null && savingsPct > 0 && (
+                    {plan.special && (
+                      <span className="absolute -top-4 right-6 inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-navy-950 shadow-md">
+                        <Sparkles className="h-3.5 w-3.5" /> Tailored
+                      </span>
+                    )}
+                    {!plan.negotiable && billing === 'annual' && savingsPct !== null && savingsPct > 0 && (
                       <span
                         className={clsx(
                           'absolute right-4 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider shadow-sm',
@@ -184,7 +193,7 @@ export default function Pricing() {
                       <p
                         className={clsx(
                           'mt-3 text-sm',
-                          plan.featured ? 'text-white/60' : 'text-slate-500',
+                          isDark ? 'text-white/60' : 'text-slate-500',
                         )}
                       >
                         {plan.description}
@@ -193,15 +202,17 @@ export default function Pricing() {
                       {isCustom ? (
                         <div className="mt-8">
                           <span className="font-display text-4xl font-bold tracking-tight">
-                            Custom
+                            {plan.negotiable ? 'Negotiable' : 'Custom'}
                           </span>
                           <p
                             className={clsx(
                               'mt-4 text-sm',
-                              plan.featured ? 'text-white/50' : 'text-slate-400',
+                              isDark ? 'text-white/50' : 'text-slate-400',
                             )}
                           >
-                            Talk to us for a plan built around your team.
+                            {plan.negotiable
+                              ? 'Tailored SaaS or on-site software, scoped and priced around your operation.'
+                              : 'Talk to us for a plan built around your team.'}
                           </p>
                         </div>
                       ) : (
@@ -209,7 +220,7 @@ export default function Pricing() {
                           <p
                             className={clsx(
                               'text-xs font-bold uppercase tracking-wider',
-                              plan.featured ? 'text-white/40' : 'text-slate-400',
+                              isDark ? 'text-white/40' : 'text-slate-400',
                             )}
                           >
                             {billing === 'annual' ? '1st year price' : 'First 6 months price'}
@@ -221,7 +232,7 @@ export default function Pricing() {
                             <span
                               className={clsx(
                                 'mb-1.5 text-sm font-medium',
-                                plan.featured ? 'text-white/50' : 'text-slate-400',
+                                isDark ? 'text-white/50' : 'text-slate-400',
                               )}
                             >
                               /mo
@@ -230,7 +241,7 @@ export default function Pricing() {
                           <p
                             className={clsx(
                               'mt-4 text-sm',
-                              plan.featured ? 'text-white/60' : 'text-slate-500',
+                              isDark ? 'text-white/60' : 'text-slate-500',
                             )}
                           >
                             {billing === 'annual'
@@ -243,11 +254,11 @@ export default function Pricing() {
                       <div className="mt-8">
                         <Button
                           to="/contact"
-                          variant={plan.featured ? 'inverse' : 'outline'}
+                          variant={isDark ? 'inverse' : 'outline'}
                           size="md"
                           className="w-full"
                         >
-                          {isCustom ? 'Talk to sales' : plan.cta}
+                          {isCustom && !plan.negotiable ? 'Talk to sales' : plan.cta}
                         </Button>
                       </div>
 
@@ -257,10 +268,15 @@ export default function Pricing() {
                             <CheckCircle2
                               className={clsx(
                                 'mt-0.5 h-4 w-4 flex-none',
-                                plan.featured ? 'text-sky-300' : 'text-navy-600',
+                                plan.featured ? 'text-sky-300' : plan.special ? 'text-amber-300' : 'text-navy-600',
                               )}
                             />
-                            <span className={plan.featured ? 'text-white/80' : 'text-slate-600'}>
+                            <span
+                              className={clsx(
+                                isDark ? 'text-white/80' : 'text-slate-600',
+                                f.startsWith('Everything in') && 'font-bold',
+                              )}
+                            >
                               {f}
                             </span>
                           </li>
