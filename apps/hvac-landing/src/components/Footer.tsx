@@ -61,7 +61,7 @@ export default function Footer() {
 
         <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-5 text-sm text-white/50 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            &copy; {new Date().getFullYear()} {BRAND.name}, Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} {BRAND.name} All rights reserved.
           </p>
         </div>
       </Container>

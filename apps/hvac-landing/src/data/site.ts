@@ -811,6 +811,8 @@ export interface PricingPlan {
   name: string
   description: string
   featured?: boolean
+  special?: boolean
+  negotiable?: boolean
   cta: string
   features: string[]
   prices: Partial<Record<TeamSizeId, PricingTierPrice>>
@@ -819,14 +821,21 @@ export interface PricingPlan {
 export const PRICING_PLANS: PricingPlan[] = [
   {
     name: 'Launch',
-    description: 'For new shops getting off the whiteboard.',
+    description: 'For new contractors getting off the whiteboard.',
     cta: 'Start Free Trial',
     features: [
       'Scheduling & dispatch board',
-      'Technician mobile app',
+      'Exclusive day planner',
+      'Inventory & parts tracking',
       'Customer records & history',
       'Invoicing & online payments',
-      'Email support',
+      'Technician mobile app',
+      'Previous data import facility',
+      'Customer self-service portal',
+      'Commercial project dashboard',
+      'Service & maintenance agreements',
+      'Email support & notifications',
+      'Data analytics dashboard',
     ],
     prices: {
       '1': { annualFirstYear: 19, annualAfterFirstYear: 29, monthlyFirst6: 29, monthlyAfter6: 49 },
@@ -842,10 +851,16 @@ export const PRICING_PLANS: PricingPlan[] = [
     cta: 'Start Free Trial',
     features: [
       'Everything in Launch',
-      'Inventory & parts tracking',
+      'Software self-tailoring modules',
+      'Management insights & AI recommendations',
+      'Onboard marketing facilities',
       'Maintenance plans & memberships',
-      'Customer self-service portal',
-      'QuickBooks sync',
+      'In-app communication',
+      'AI voice agent calling',
+      'IOT integration & Predictive maintenance',
+      'QuickBooks accounting sync',
+      'Multi-location & territory management',
+      'Advanced permissions & audit logs',
       'Priority support',
     ],
     prices: {
@@ -857,22 +872,17 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
   {
     name: 'Scale',
-    description: 'For multi-location operators and franchises.',
-    cta: 'Start Free Trial',
+    description:
+      'For contractors scaling up who need tailored software, built as SaaS or deployed on-site.',
+    special: true,
+    negotiable: true,
+    cta: 'Book a Free Consultation',
     features: [
       'Everything in Accelerate',
-      'AI analytics & predictive maintenance',
-      'Multi-location & territory management',
-      'Advanced permissions & audit logs',
-      'Open API & custom integrations',
-      'Dedicated success manager',
+      'Advanced custom tailor-made software',
+      'SaaS & onsite setup option',
     ],
-    prices: {
-      '1': { annualFirstYear: 99, annualAfterFirstYear: 139, monthlyFirst6: 109, monthlyAfter6: 189 },
-      upto5: { annualFirstYear: 269, annualAfterFirstYear: 379, monthlyFirst6: 289, monthlyAfter6: 469 },
-      upto10: { annualFirstYear: 299, annualAfterFirstYear: 429, monthlyFirst6: 339, monthlyAfter6: 569 },
-      upto15: { annualFirstYear: 349, annualAfterFirstYear: 499, monthlyFirst6: 399, monthlyAfter6: 659 },
-    },
+    prices: {},
   },
 ]
 
