@@ -36,6 +36,12 @@ interface RevenuePredictionResult {
   recommended_action: string;
 }
 
+// Mirrors apps/analytics-service/src/recommendations/insights/insight-data.service.ts's
+// getRetentionFacts formula exactly, so the "Filter" button on the Customer Retention Risk
+// recommendation surfaces precisely the customers counted in that recommendation.
+const HIGH_VALUE_LTV_THRESHOLD = 2000;
+const CHURN_RISK_MIN_PROBABILITY = 0.4;
+
 @Injectable()
 export class CustomersService {
   constructor(
@@ -84,9 +90,14 @@ export class CustomersService {
     tags?: string[],
     sortBy?: string,
     sortDir?: 'asc' | 'desc',
+    riskSegment?: string,
   ): Promise<PaginatedResponse<unknown>> {
     const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput });
     const dir = sortDir ?? 'desc';
+
+    const riskSegmentIds = riskSegment === 'retention_risk'
+      ? await this.findRetentionRiskCustomerIds(companyId)
+      : undefined;
 
     const where: any = {
       companyId,
@@ -94,6 +105,7 @@ export class CustomersService {
       NOT: this.provisionalPortalSignupFilter,
       ...(type && { type: type as any }),
       ...(tags && tags.length > 0 && { tags: { hasSome: tags } }),
+      ...(riskSegmentIds && { id: { in: riskSegmentIds } }),
       ...(search && {
         OR: [
           { firstName: { contains: search, mode: 'insensitive' as const } },
@@ -133,6 +145,58 @@ export class CustomersService {
       data,
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
+  }
+
+  /**
+   * Returns the exact customer IDs the "Customer Retention Risk" AI recommendation counted:
+   * active customers with >= $2,000 in active-agreement LTV whose computed churn probability
+   * is >= 40%. Cross-schema raw SQL (jobs.jobs, crm.service_agreements) mirrors the same
+   * pattern already used in agents/followup.agent.ts.
+   */
+  private async findRetentionRiskCustomerIds(companyId: string): Promise<string[]> {
+    const rows = await this.prisma.$queryRawUnsafe<Array<{
+      id: string;
+      days_since_last_service: number;
+      services_last_year: number;
+      tenure_days: number;
+      ltv: string;
+    }>>(
+      `
+        SELECT
+          c.id,
+          COALESCE(EXTRACT(DAY FROM NOW() - MAX(j."completedAt"))::INT, 9999) AS days_since_last_service,
+          COUNT(j.id) FILTER (WHERE j."completedAt" >= NOW() - INTERVAL '365 days')::INT AS services_last_year,
+          EXTRACT(DAY FROM NOW() - c."createdAt")::INT AS tenure_days,
+          COALESCE((
+            SELECT SUM(sa.value) FROM crm.service_agreements sa
+            WHERE sa."customerId" = c.id AND sa.status = 'ACTIVE'
+          ), 0)::TEXT AS ltv
+        FROM crm.customers c
+        LEFT JOIN jobs.jobs j ON j."customerId" = c.id AND j.status = 'COMPLETED'
+        WHERE c."companyId" = $1 AND c."isActive" = true
+        GROUP BY c.id, c."createdAt"
+      `,
+      companyId,
+    );
+
+    const atRiskIds: string[] = [];
+    for (const row of rows) {
+      const ltv = Number(row.ltv);
+      if (ltv < HIGH_VALUE_LTV_THRESHOLD) continue;
+
+      const churnProbability = Math.min(
+        0.95,
+        (row.days_since_last_service > 180 ? 0.45 : row.days_since_last_service > 90 ? 0.25 : 0.08) +
+          (row.services_last_year === 0 ? 0.25 : 0) +
+          (row.tenure_days < 90 ? 0.08 : 0),
+      );
+
+      if (churnProbability >= CHURN_RISK_MIN_PROBABILITY) {
+        atRiskIds.push(row.id);
+      }
+    }
+
+    return atRiskIds;
   }
 
   private async findAllRawSorted(

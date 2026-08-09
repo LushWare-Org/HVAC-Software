@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Lightbulb, DollarSign, TrendingUp, TrendingDown, Minus,
   RefreshCw, AlertCircle, Sparkles, Filter,
@@ -7,6 +8,30 @@ import { useRecommendations } from '../hooks/useAnalytics'
 import type { Recommendation } from '../types/api'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Recommendations that quantify a specific set of real entities ("9 quote(s)…",
+ * "3 high-value customer(s)…") get a Filter button that jumps straight to that
+ * tab's list, pre-filtered with the exact same predicate the recommendation's
+ * count was computed from (see crm-service CustomersService.findRetentionRiskCustomerIds
+ * and finance-service QuotesService.findAll's `pendingAging` branch — both
+ * mirror apps/analytics-service's InsightDataService formulas exactly).
+ * `low_demand`/`discount_20` and the never-generated `same_day_offer` describe
+ * idle capacity, not a listed entity set, so they intentionally have no entry
+ * here and fall back to Dismiss-only.
+ */
+function filterDestination(action: string, forecastDays?: number): string | undefined {
+  switch (action) {
+    case 'call':
+      return '/customers?filter=retention_risk'
+    case 'geo_target_discount':
+      return '/finance?tab=quotes&filter=pending_quotes'
+    case 'increase_price':
+      return `/jobs?filter=high_utilization${forecastDays ? `&forecastDays=${forecastDays}` : ''}`
+    default:
+      return undefined
+  }
+}
 
 function Skeleton({ h = 14 }: { h?: number }) {
   return (
@@ -173,14 +198,12 @@ export default function RecommendationsPanel({
   filterActions,
   limit,
   forecastDays,
-  filterHandlers,
 }: {
   filterActions?: string[]
   limit?: number
   forecastDays?: number
-  /** Maps a recommendation's `action` to a handler that filters this tab's own entity list down to the set the recommendation refers to. Actions without a handler here only get a Dismiss button — this tab doesn't list that entity type. */
-  filterHandlers?: Partial<Record<string, () => void>>
 } = {}) {
+  const navigate = useNavigate()
   const { data, isLoading, isError, refetch, isFetching } = useRecommendations(forecastDays)
   const [ignored, setIgnored] = useState<Set<string>>(new Set())
 
@@ -274,14 +297,17 @@ export default function RecommendationsPanel({
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
             gap: 14,
           }}>
-            {visible.map((rec) => (
-              <RecommendationCard
-                key={rec.id}
-                rec={rec}
-                onIgnore={handleIgnore}
-                onFilter={filterHandlers?.[rec.action]}
-              />
-            ))}
+            {visible.map((rec) => {
+              const dest = filterDestination(rec.action, forecastDays)
+              return (
+                <RecommendationCard
+                  key={rec.id}
+                  rec={rec}
+                  onIgnore={handleIgnore}
+                  onFilter={dest ? () => navigate(dest) : undefined}
+                />
+              )
+            })}
           </div>
         )}
       </div>

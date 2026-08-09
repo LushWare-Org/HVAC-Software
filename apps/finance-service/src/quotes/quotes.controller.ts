@@ -54,6 +54,7 @@ export class QuotesController {
   @ApiQuery({ name: 'jobId', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'pendingAging', required: false, type: Boolean, description: 'Restrict to SENT/VIEWED quotes older than 7 days — matches the "Pending Quotes at Risk" AI recommendation' })
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('status') status?: QuoteStatus,
@@ -62,8 +63,9 @@ export class QuotesController {
     @Query('projectId') projectId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('pendingAging') pendingAging?: string,
   ) {
-    return this.quotesService.findAll(user.companyId, { status, customerId, jobId, projectId, page, limit });
+    return this.quotesService.findAll(user.companyId, { status, customerId, jobId, projectId, page, limit, pendingAging: pendingAging === 'true' });
   }
 
   // ── Single ────────────────────────────────────────────────────────────────

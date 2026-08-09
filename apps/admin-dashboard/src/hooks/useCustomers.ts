@@ -19,6 +19,8 @@ interface CustomerFilters {
   tags?: string[]
   sortBy?: string
   sortDir?: 'asc' | 'desc'
+  /** Restricts to customers matching an AI Revenue Recommendation segment (currently only 'retention_risk'). */
+  riskSegment?: string
 }
 
 export function useCustomers(filters: CustomerFilters = {}) {
@@ -35,6 +37,7 @@ export function useCustomers(filters: CustomerFilters = {}) {
       if (filters.tags && filters.tags.length > 0) params.tags = filters.tags.join(',')
       if (filters.sortBy) params.sortBy = filters.sortBy
       if (filters.sortDir) params.sortDir = filters.sortDir
+      if (filters.riskSegment) params.riskSegment = filters.riskSegment
       const res = await api.get('/crm/customers', { params })
       const raw = res.data
       // Normalize: backend returns { data, meta: {...} }, frontend expects flat shape

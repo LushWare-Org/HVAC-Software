@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download, UploadCloud, Briefcase } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download, UploadCloud, Briefcase, Sparkles, X } from 'lucide-react'
 import { useInvoices, useQuotes, useExpenses, useFinanceKpis, decimalToNumber, useDeleteExpense, useSendInvoice, useQBStatus, useQBSyncInvoice } from '../../hooks/useFinance'
 import { useJobs } from '../../hooks/useJobs'
 import { useToast } from '../../contexts/ToastContext'
@@ -114,6 +115,7 @@ export default function Finance() {
   const [quoPage, setQuoPage] = useState(1)
   const [quoSearch, setQuoSearch] = useState('')
   const [quoStatus, setQuoStatus] = useState('all')
+  const [quoPendingAging, setQuoPendingAging] = useState(false)
   const [expPage, setExpPage] = useState(1)
   const [expSearch, setExpSearch] = useState('')
   const [expStatus, setExpStatus] = useState('all')
@@ -122,11 +124,33 @@ export default function Finance() {
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false)
   const itemsPerPage = 10
 
+  // ── AI recommendation deep-link ─────────────────────────────────────────────
+  // "Filter" on the Pending Quotes at Risk recommendation lands here as
+  // ?tab=quotes&filter=pending_quotes — restricts the Quotes tab to exactly the
+  // quotes that recommendation counted (SENT/VIEWED, pending 7+ days).
+  const [searchParams, setSearchParams] = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('tab') === 'quotes') setTab('quotes')
+    if (searchParams.get('filter') === 'pending_quotes') {
+      setQuoPendingAging(true)
+      setQuoPage(1)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  const clearQuotePendingFilter = () => {
+    const next = new URLSearchParams(searchParams)
+    next.delete('filter')
+    setSearchParams(next)
+    setQuoPendingAging(false)
+    setQuoPage(1)
+  }
+
   // ── API ───────────────────────────────────────────────────────────────────
 
   const kpiQuery = useFinanceKpis()
   const invoicesQuery = useInvoices({ page: invPage, limit: itemsPerPage, search: invSearch || undefined, status: invStatus !== 'all' ? invStatus : undefined })
-  const quotesQuery = useQuotes({ page: quoPage, limit: itemsPerPage, search: quoSearch || undefined, status: quoStatus !== 'all' ? quoStatus : undefined })
+  const quotesQuery = useQuotes({ page: quoPage, limit: itemsPerPage, search: quoSearch || undefined, status: quoStatus !== 'all' ? quoStatus : undefined, pendingAging: quoPendingAging })
   const expensesQuery = useExpenses({ page: expPage, limit: itemsPerPage, search: expSearch || undefined, status: expStatus !== 'all' ? expStatus : undefined })
 
   const invoices: Invoice[] = invoicesQuery.data?.data ?? []
@@ -252,19 +276,7 @@ export default function Finance() {
         </div>
       )}
 
-      {!isExpanded && (
-        <RecommendationsPanel
-          filterActions={['discount_20', 'increase_price', 'geo_target_discount']}
-          filterHandlers={{
-            // Pending-quotes-at-risk targets aging SENT quotes — jump to that exact list.
-            geo_target_discount: () => {
-              setTab('quotes');
-              setQuoStatus('sent');
-              setQuoPage(1);
-            },
-          }}
-        />
-      )}
+      {!isExpanded && <RecommendationsPanel filterActions={['discount_20', 'increase_price', 'geo_target_discount']} />}
 
       <div className="page-tabs">
         <button className={`tab-btn ${tab === 'invoices' ? 'active' : ''}`} onClick={() => setTab('invoices')}>
@@ -408,6 +420,15 @@ export default function Finance() {
       {/* ── Quotes ── */}
       {tab === 'quotes' && (
         <div className="card anim-fade-in">
+          {quoPendingAging && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'color-mix(in srgb, var(--amber) 10%, transparent)', borderRadius: 8, color: 'var(--amber)', fontSize: 13, margin: '0 0 8px' }}>
+              <Sparkles size={14} />
+              Showing quotes from the Pending Quotes at Risk recommendation — sent/viewed, pending over 7 days.
+              <button onClick={clearQuotePendingFilter} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--amber)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                <X size={12} /> Clear filter
+              </button>
+            </div>
+          )}
           <div className="card-body" style={{ paddingBottom: 0 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div className="filter-bar">
@@ -420,7 +441,19 @@ export default function Finance() {
                   </button>
                 </div>
               </div>
-              <PillGroup options={QUO_STATUS_PILLS} value={quoStatus} onChange={v => { setQuoStatus(v); setQuoPage(1); }} />
+              <PillGroup
+                options={[...QUO_STATUS_PILLS, { label: 'Pending 7+ Days', value: 'aging' }]}
+                value={quoPendingAging ? 'aging' : quoStatus}
+                onChange={v => {
+                  if (v === 'aging') {
+                    setQuoPendingAging(true)
+                  } else {
+                    setQuoPendingAging(false)
+                    setQuoStatus(v)
+                  }
+                  setQuoPage(1)
+                }}
+              />
             </div>
           </div>
           <div className="card-body-flush mt-2">

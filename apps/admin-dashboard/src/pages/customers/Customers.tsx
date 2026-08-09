@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Users,
   FileText,
@@ -101,6 +101,20 @@ export default function Customers() {
   const [customerPage, setCustomerPage] = useState(1);
   const itemsPerPage = 10;
 
+  // ── AI recommendation deep-link ─────────────────────────────────────────────
+  // "Filter" on the Customer Retention Risk recommendation lands here as
+  // ?filter=retention_risk — restricts the list to exactly the customers that
+  // recommendation counted (see CustomersService.findRetentionRiskCustomerIds).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const riskSegment = searchParams.get('filter') === 'retention_risk' ? 'retention_risk' : undefined;
+
+  const clearRiskFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('filter');
+    setSearchParams(next);
+    setCustomerPage(1);
+  };
+
   // ── API queries ─────────────────────────────────────────────────────────────
 
   const customersQuery = useCustomers({
@@ -111,11 +125,17 @@ export default function Customers() {
     tags: tagFilter.length > 0 ? tagFilter : undefined,
     sortBy,
     sortDir,
+    riskSegment,
   });
   const tagsQuery = useCustomerTags();
 
   const navigate = useNavigate();
   const agreementsQuery = useAgreements({ page: 1, limit: 1 });
+
+  // Reset to page 1 whenever the AI-recommendation deep-link filter toggles
+  useEffect(() => {
+    setCustomerPage(1);
+  }, [riskSegment]);
 
   // Close tag popover on outside click
   useEffect(() => {
@@ -190,24 +210,19 @@ export default function Customers() {
           </div>
         )}
 
-        {!isExpanded && (
-          <RecommendationsPanel
-            filterActions={['call', 'geo_target_discount']}
-            filterHandlers={{
-              // Retention-risk recommendations target active, long-since-serviced customers —
-              // surface exactly that slice: active customers, staleest first.
-              call: () => {
-                setCustomerStatusFilter('Active');
-                setSortBy('updated');
-                setSortDir('asc');
-                setCustomerPage(1);
-              },
-            }}
-          />
-        )}
+        {!isExpanded && <RecommendationsPanel filterActions={['call', 'geo_target_discount']} />}
 
         {/* Customers */}
         <div className="card anim-fade-in">
+            {riskSegment && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'color-mix(in srgb, var(--amber) 10%, transparent)', borderRadius: 8, color: 'var(--amber)', fontSize: 13, margin: '0 0 8px' }}>
+                <Sparkles size={14} />
+                Showing customers from the Customer Retention Risk recommendation — active, high-value, churn probability ≥ 40%.
+                <button onClick={clearRiskFilter} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--amber)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                  <X size={12} /> Clear filter
+                </button>
+              </div>
+            )}
             {customersQuery.isError && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--red-dim)', borderRadius: 8, color: 'var(--red)', fontSize: 13, margin: '0 0 8px' }}>
                 <AlertCircle size={14} /> Failed to load customers.
@@ -361,7 +376,6 @@ export default function Customers() {
                     <option value="city:asc">Location A–Z</option>
                     <option value="city:desc">Location Z–A</option>
                     <option value="updated:desc">Recently active</option>
-                    <option value="updated:asc">Needs attention (longest inactive)</option>
                     <option value="equipment:desc">Most equipment</option>
                     <option value="type:asc">Type</option>
                     <option value="installDate:asc">Earliest install date</option>
