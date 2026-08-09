@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RecommendationEngineService } from './recommendation-engine.service';
+import type { RecommendationExplanation } from './insights/insight-explanation';
 
 export interface Recommendation {
   id: string;
@@ -13,6 +14,7 @@ export interface Recommendation {
   reason: string;
   trend: 'up' | 'down' | 'neutral';
   priorityScore: number;
+  explanation: RecommendationExplanation;
 }
 
 @Injectable()

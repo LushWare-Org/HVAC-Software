@@ -3,9 +3,11 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '../../prisma/generated';
 import type { PendingQuoteFacts, RetentionFacts, UtilizationFacts } from './insight-types';
 
-const HIGH_VALUE_LTV_THRESHOLD = 2000; // annual active-agreement value considered "high value"
-const CHURN_RISK_MIN_PROBABILITY = 0.4; // mirrors CustomersService.riskLevel's "Medium" cutoff
-const PENDING_QUOTE_AGING_DAYS = 7; // mirrors RevenueRuleEngine's PENDING_QUOTE_DAYS
+// Exported so InsightExplanationService can describe these thresholds in the "Reason" breakdown
+// without duplicating the numbers.
+export const HIGH_VALUE_LTV_THRESHOLD = 2000; // annual active-agreement value considered "high value"
+export const CHURN_RISK_MIN_PROBABILITY = 0.4; // mirrors CustomersService.riskLevel's "Medium" cutoff
+export const PENDING_QUOTE_AGING_DAYS = 7; // mirrors RevenueRuleEngine's PENDING_QUOTE_DAYS
 
 /**
  * Real cross-schema reads backing the AI Revenue Recommendations panel.

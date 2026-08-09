@@ -681,6 +681,18 @@ export interface RevenueAgentTrendPoint {
   sample_size: number
 }
 
+export interface RecommendationExplanation {
+  usedLlm: boolean
+  groundTruth: string
+  message: string
+  priority: string
+  expectedOutcome: string
+  action: string
+  impact: string
+  confidence: string
+  metrics: Record<string, number>
+}
+
 export interface Recommendation {
   id: string
   title: string
@@ -693,6 +705,8 @@ export interface Recommendation {
   reason: string
   trend: 'up' | 'down' | 'neutral'
   priorityScore: number
+  /** Optional: absent only if this recommendation came from a Redis cache entry written before the "Reason" feature shipped. */
+  explanation?: RecommendationExplanation
 }
 
 export interface RevenueAgentLog {

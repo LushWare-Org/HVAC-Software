@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
   Lightbulb, DollarSign, TrendingUp, TrendingDown, Minus,
-  RefreshCw, AlertCircle, Sparkles, Filter,
+  RefreshCw, AlertCircle, Sparkles, Filter, HelpCircle, X,
+  Database, MessageSquare, Flag, Percent,
 } from 'lucide-react'
 import { useRecommendations } from '../hooks/useAnalytics'
 import type { Recommendation } from '../types/api'
@@ -76,6 +78,123 @@ function getExpectedOutcome(rec: Recommendation): string {
   }
 }
 
+// ─── Reason popup ─────────────────────────────────────────────────────────────
+
+function ReasonModal({ rec, onClose }: { rec: Recommendation; onClose: () => void }) {
+  const explanation = rec.explanation
+  const p = PRIORITY_CONFIG[rec.priority]
+
+  const rows = explanation
+    ? [
+        { icon: <Database size={14} />, label: 'Ground truth', text: explanation.groundTruth },
+        { icon: <MessageSquare size={14} />, label: 'Message', text: explanation.message },
+        { icon: <Flag size={14} />, label: 'Priority', text: explanation.priority },
+        { icon: <TrendingUp size={14} />, label: 'Expected outcome', text: explanation.expectedOutcome },
+        { icon: <Lightbulb size={14} />, label: 'Action', text: explanation.action },
+        { icon: <DollarSign size={14} />, label: 'Impact', text: explanation.impact },
+        { icon: <Percent size={14} />, label: 'Confidence', text: explanation.confidence },
+      ]
+    : []
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'var(--bg-card)',
+          borderRadius: 14,
+          width: '100%',
+          maxWidth: 560,
+          maxHeight: '85vh',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',
+          padding: '18px 22px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            <HelpCircle size={18} style={{ color: '#fff', flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>Why this recommendation?</div>
+              <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {rec.title}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+              color: '#fff', background: 'rgba(255,255,255,0.2)',
+              borderRadius: 4, padding: '2px 7px',
+            }}>
+              {p.label}
+            </span>
+            <button
+              onClick={onClose}
+              style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex', color: '#fff' }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ overflowY: 'auto', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {!explanation ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, color: 'var(--t3)', fontSize: 13 }}>
+              <AlertCircle size={15} style={{ flexShrink: 0 }} />
+              This recommendation was served from cache before the Reason breakdown existed — click Refresh above to regenerate it with a full explanation.
+            </div>
+          ) : (
+            <>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--t2)',
+                background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
+                borderRadius: 'var(--r-sm)', padding: '9px 12px',
+              }}>
+                <Sparkles size={13} style={{ color: 'var(--amber)', flexShrink: 0 }} />
+                {explanation.usedLlm
+                  ? 'Copy was LLM-written; every number was computed by the rule engine, not the LLM.'
+                  : 'No live LLM response was available — copy and numbers both come straight from the rule engine.'}
+              </div>
+
+              {rows.map((row) => (
+                <div key={row.label} style={{
+                  display: 'flex', gap: 10, alignItems: 'flex-start',
+                  background: 'var(--bg-card-2)', border: '1px solid var(--bd)',
+                  borderRadius: 'var(--r-sm)', padding: '10px 12px',
+                }}>
+                  <span style={{ color: 'var(--amber)', flexShrink: 0, marginTop: 1 }}>{row.icon}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 3 }}>
+                      {row.label}
+                    </div>
+                    <p style={{ fontSize: 12.5, color: 'var(--t1)', margin: 0, lineHeight: 1.6 }}>{row.text}</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
 // ─── Card ─────────────────────────────────────────────────────────────────────
 
 function RecommendationCard({
@@ -88,6 +207,7 @@ function RecommendationCard({
   onFilter?: () => void
 }) {
   const p = PRIORITY_CONFIG[rec.priority]
+  const [showReason, setShowReason] = useState(false)
 
   return (
     <div style={{
@@ -168,7 +288,7 @@ function RecommendationCard({
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {onFilter && (
           <button
             className="btn btn-secondary btn-sm"
@@ -183,11 +303,22 @@ function RecommendationCard({
         <button
           className="btn btn-secondary btn-sm"
           style={{ width: 'fit-content', justifyContent: 'center' }}
+          onClick={() => setShowReason(true)}
+          title="Show the reason and calculation behind this recommendation"
+        >
+          <HelpCircle size={12} />
+          Reason
+        </button>
+        <button
+          className="btn btn-secondary btn-sm"
+          style={{ width: 'fit-content', justifyContent: 'center' }}
           onClick={() => onIgnore(rec.id)}
         >
           Dismiss
         </button>
       </div>
+
+      {showReason && <ReasonModal rec={rec} onClose={() => setShowReason(false)} />}
     </div>
   )
 }

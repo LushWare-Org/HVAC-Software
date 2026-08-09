@@ -4,6 +4,7 @@ import { InsightDataService } from './insights/insight-data.service';
 import { InsightRuleEngine } from './insights/insight-rule-engine';
 import { InsightLlmClient } from './insights/insight-llm.client';
 import { InsightValidationService } from './insights/insight-validation.service';
+import { buildExplanation } from './insights/insight-explanation';
 import type { InsightCategory, InsightSignal } from './insights/insight-types';
 import type { Recommendation } from './recommendations.service';
 
@@ -108,6 +109,7 @@ export class RecommendationEngineService {
       priority: PRIORITY_MAP[validated.priority],
       reason: validated.reason,
       trend: TREND_BY_CATEGORY[signal.category],
+      explanation: buildExplanation(signal, validated, llmRec !== null),
     };
   }
 }
