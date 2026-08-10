@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import ReactDOM from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { X, Wrench, Calendar, FileText, DollarSign, User, Clock, MessageSquare, Send, Star, ClipboardCheck, Download } from 'lucide-react'
+import { X, Wrench, Calendar, FileText, DollarSign, User, Clock, MessageSquare, Send, Star, ClipboardCheck, Download, CalendarClock } from 'lucide-react'
 import { useJobAssignments, useMyJob, useTechnician, useJobInvoices, useJobQuotes, useCreateMyThread, useMyThread, useSendMyThreadMessage, useMarkMyThreadRead, useJobReview } from '../../hooks/useCustomerPortal'
 import ReviewModal from '../../components/ReviewModal'
+import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
+import RescheduleModal from '../../components/reschedule/RescheduleModal'
+import EditPreferredTimeModal from './EditPreferredTimeModal.tsx'
+import { CUSTOMER_RESCHEDULABLE_STATUSES } from '../../lib/reschedule'
 import { printServiceReport } from '../../lib/serviceReportPdf'
 import { useSocket } from '../../hooks/useSocket'
 import { useAuth } from '../../contexts/AuthContext'
@@ -58,6 +62,8 @@ function fmtDateTime(iso?: string) {
 }
 
 export default function JobDetailModal({ job: initialJob, onClose, onCancel }: JobDetailModalProps) {
+  const [showReschedule, setShowReschedule] = useState(false)
+  const [showEditTime, setShowEditTime] = useState(false)
   const { user } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
@@ -381,7 +387,10 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div className="cp-modal-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <InfoField label="Scheduled Date" icon={<Calendar size={11} />}>
-                  <div style={fieldStyle}>{fmtDate(job.scheduledStart)}</div>
+                  <div style={{ ...fieldStyle, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {fmtDate(job.scheduledStart)}
+                    <RescheduleBadge state={job.rescheduleState} size="sm" />
+                  </div>
                 </InfoField>
                 <InfoField label="Estimated Cost" icon={<DollarSign size={11} />}>
                   <div style={fieldStyle}>—</div>
@@ -729,6 +738,35 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
               {existingReview ? `Your rating: ${existingReview.rating}/5` : 'Rate this job'}
             </button>
           )}
+          {job.status === 'PENDING' && !job.assignedToId && (
+            <button
+              onClick={() => setShowEditTime(true)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '9px 16px', borderRadius: 9,
+                border: '1px solid var(--bd)', background: 'var(--bg-card)',
+                color: 'var(--t2)', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <CalendarClock size={14} /> Change time
+            </button>
+          )}
+          {!(job.status === 'PENDING' && !job.assignedToId)
+            && CUSTOMER_RESCHEDULABLE_STATUSES.includes(job.status) && (
+            <button
+              onClick={() => setShowReschedule(true)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '9px 16px', borderRadius: 9,
+                border: '1px solid var(--bd)', background: 'var(--bg-card)',
+                color: 'var(--t2)', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <CalendarClock size={14} /> Reschedule
+            </button>
+          )}
           {onCancel && ['PENDING', 'SCHEDULED'].includes(job.status) && (
             <button
               onClick={() => {
@@ -783,6 +821,24 @@ export default function JobDetailModal({ job: initialJob, onClose, onCancel }: J
         technicianName={technician?.name ?? assignment?.technicianName ?? job.assignedToName ?? undefined}
         existing={existingReview ?? undefined}
       />
+
+      {showEditTime && (
+        <EditPreferredTimeModal
+          job={{ id: job.id, title: job.title, scheduledStart: job.scheduledStart }}
+          onClose={() => setShowEditTime(false)}
+        />
+      )}
+
+      {showReschedule && (
+        <RescheduleModal
+          job={{
+            id: job.id, title: job.title, scheduledStart: job.scheduledStart,
+            status: job.status, rescheduleState: job.rescheduleState,
+          }}
+          isOpen
+          onClose={() => setShowReschedule(false)}
+        />
+      )}
     </div>
   )
 

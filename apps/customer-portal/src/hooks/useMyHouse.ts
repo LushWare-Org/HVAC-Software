@@ -4,6 +4,7 @@
  * Spec: docs/superpowers/specs/2026-07-13-project-templates-housing-scheme-design.md
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { RescheduleStateValue } from '../types/api'
 import api from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -72,7 +73,11 @@ export function useMyHouseServiceLog(houseId: string | null) {
     queryKey: ['my-houses', houseId, 'service-log'],
     queryFn: async () => {
       const res = await api.get('/jobs/jobs', { params: { houseId, limit: 100 } })
-      return (res.data?.data ?? []) as Array<{ id: string; title: string; status: string; scheduledStart?: string }>
+      return (res.data?.data ?? []) as Array<{
+        id: string; title: string; status: string; scheduledStart?: string
+        /** Open reschedule negotiation, if any — drives the RescheduleBadge. */
+        rescheduleState?: RescheduleStateValue | null
+      }>
     },
     enabled: !!houseId,
     // Shorter + refetch-on-focus, matching useMyHouses/useMyProjects — a job a

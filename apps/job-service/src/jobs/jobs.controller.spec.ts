@@ -161,3 +161,130 @@ describe('JobsController.findAll — customer houseId visibility', () => {
     );
   });
 });
+
+describe('JobsController.patch — customer field whitelist', () => {
+  let controller: JobsController;
+  let jobsService: {
+    findOne: jest.Mock; patchFields: jest.Mock; updateStatus: jest.Mock;
+  };
+
+  beforeEach(() => {
+    jobsService = {
+      findOne: jest.fn().mockResolvedValue({ id: 'job-1', customerId: CUSTOMER_ID, status: 'SCHEDULED' }),
+      patchFields: jest.fn().mockResolvedValue({}),
+      updateStatus: jest.fn().mockResolvedValue({}),
+    };
+    controller = new JobsController(
+      jobsService as unknown as JobsService,
+      {} as unknown as CrmClient,
+    );
+  });
+
+  // ── What a customer legitimately does ────────────────────────────────────
+
+  it('lets a customer cancel their own job with a reason', async () => {
+    await expect(
+      controller.patch(makeUser(), 'job-1', {
+        status: 'CANCELLED', statusNote: 'no longer needed',
+        cancellationReason: 'plans changed',
+      } as any),
+    ).resolves.toBeDefined();
+    expect(jobsService.updateStatus).toHaveBeenCalled();
+  });
+
+  // ── The hole this closes ─────────────────────────────────────────────────
+
+  it('refuses a customer moving their own appointment via scheduledStart', async () => {
+    // Was HTTP 200 and silently moved a committed appointment, bypassing the
+    // whole reschedule negotiation.
+    await expect(
+      controller.patch(makeUser(), 'job-1', { scheduledStart: '2026-12-25T09:00:00Z' } as any),
+    ).rejects.toThrow(ForbiddenException);
+    expect(jobsService.patchFields).not.toHaveBeenCalled();
+  });
+
+  it('refuses a customer assigning themselves a technician', async () => {
+    await expect(
+      controller.patch(makeUser(), 'job-1', {
+        assignedToId: 'tech-x', assignedToName: 'Chosen Tech',
+      } as any),
+    ).rejects.toThrow(ForbiddenException);
+    expect(jobsService.patchFields).not.toHaveBeenCalled();
+  });
+
+  it('refuses a customer writing staff-only internalNotes', async () => {
+    await expect(
+      controller.patch(makeUser(), 'job-1', { internalNotes: 'injected' } as any),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('refuses a customer rewriting estimatedValue (feeds dashboards/forecasts)', async () => {
+    await expect(
+      controller.patch(makeUser(), 'job-1', { estimatedValue: 1 } as any),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it.each([
+    'title', 'description', 'priority', 'scheduledEnd', 'notes',
+    'projectId', 'houseId', 'equipmentId', 'hasPartShortage',
+    'partShortageNote', 'completedAt', 'gpsTrackingEnabled', 'force',
+  ])('refuses a customer setting %s', async (field) => {
+    await expect(
+      controller.patch(makeUser(), 'job-1', { [field]: 'x' } as any),
+    ).rejects.toThrow(ForbiddenException);
+    expect(jobsService.patchFields).not.toHaveBeenCalled();
+  });
+
+  it('refuses a forbidden field even when bundled with a legitimate cancel', async () => {
+    // The interesting smuggling case: a valid cancellation carrying a payload.
+    await expect(
+      controller.patch(makeUser(), 'job-1', {
+        status: 'CANCELLED', scheduledStart: '2026-12-25T09:00:00Z',
+      } as any),
+    ).rejects.toThrow(ForbiddenException);
+    expect(jobsService.updateStatus).not.toHaveBeenCalled();
+    expect(jobsService.patchFields).not.toHaveBeenCalled();
+  });
+
+  it('names the offending fields so the client can be fixed', async () => {
+    await expect(
+      controller.patch(makeUser(), 'job-1', { internalNotes: 'x', estimatedValue: 2 } as any),
+    ).rejects.toThrow(/internalNotes.*estimatedValue|estimatedValue.*internalNotes/);
+  });
+
+  it('ignores explicitly-undefined fields rather than rejecting them', async () => {
+    // Clients commonly spread optional values; undefined is not an attempt to write.
+    await expect(
+      controller.patch(makeUser(), 'job-1', {
+        status: 'CANCELLED', scheduledStart: undefined, internalNotes: undefined,
+      } as any),
+    ).resolves.toBeDefined();
+  });
+
+  it('still blocks a customer touching another customer\'s job', async () => {
+    jobsService.findOne.mockResolvedValue({ id: 'job-1', customerId: OTHER_CUSTOMER_ID });
+    await expect(
+      controller.patch(makeUser(), 'job-1', { status: 'CANCELLED' } as any),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('still blocks a customer setting a status other than CANCELLED', async () => {
+    await expect(
+      controller.patch(makeUser(), 'job-1', { status: 'COMPLETED' } as any),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  // ── Staff are unaffected ─────────────────────────────────────────────────
+
+  it.each([Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN])(
+    'leaves %s free to patch operational fields', async (role) => {
+      await expect(
+        controller.patch(makeUser({ role, customerId: null }), 'job-1', {
+          scheduledStart: '2026-12-25T09:00:00Z',
+          assignedToName: 'Miguel',
+          internalNotes: 'staff note',
+        } as any),
+      ).resolves.toBeDefined();
+      expect(jobsService.patchFields).toHaveBeenCalled();
+    });
+});

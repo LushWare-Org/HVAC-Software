@@ -3,6 +3,7 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
@@ -10,7 +11,12 @@ import { RedisCacheService } from '../redis-cache.service';
 import { Prisma } from '../prisma/generated';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
-import { AuthUser, PaginatedResponse, clampPagination } from '@tscrm/types';
+import { AuthUser, PaginatedResponse, Role, clampPagination } from '@tscrm/types';
+import { JobEventsPublisher } from '../realtime/job-events.publisher';
+
+// Roles allowed to correct a job's status outside the normal forward-moving
+// state machine (dto.force = true) — e.g. undoing a technician's mis-tap.
+const STATUS_OVERRIDE_ROLES: Role[] = [Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER];
 
 const CREATE_JOB_MAX_ATTEMPTS = 5;
 const STATS_CACHE_TTL_S = 30;
@@ -21,6 +27,7 @@ export class JobsService {
   constructor(
     private prisma: PrismaService,
     private cache: RedisCacheService,
+    private readonly events: JobEventsPublisher,
   ) {}
 
   // ============================================================
@@ -77,6 +84,13 @@ export class JobsService {
         });
 
         await this.invalidateStatsCache(user.companyId);
+
+        this.events.publish(user.companyId, {
+          jobId: job.id, change: 'CREATED', status: job.status,
+          scheduledStart: job.scheduledStart?.toISOString() ?? null,
+          jobNumber: job.jobNumber, title: job.title,
+          customerName: job.customerName, actorUserId: user.userId,
+        });
 
         // Best-effort confirmation email to the customer — never blocks job creation.
         if (job.customerEmail) {
@@ -274,9 +288,21 @@ export class JobsService {
     const currentStatus = job.status as JobStatusDto;
     const newStatus = dto.status;
 
-    // Guard: validate the transition is allowed
+    // Guard: validate the transition is allowed — unless an admin is
+    // deliberately correcting a mistake (dto.force). PAID stays immutable
+    // either way: it means money has actually been received and recorded
+    // against an invoice, and a status flip here can't undo that, so forcing
+    // it would just make the job's status lie about its finance state.
     const allowed = STATUS_TRANSITIONS[currentStatus];
-    if (!allowed.includes(newStatus)) {
+    const isOverride = !!dto.force && allowed && !allowed.includes(newStatus);
+    if (isOverride) {
+      if (!STATUS_OVERRIDE_ROLES.includes(user.role as Role)) {
+        throw new ForbiddenException('Only an admin or office manager can correct a job status outside the normal flow.');
+      }
+      if (currentStatus === JobStatusDto.PAID || newStatus === JobStatusDto.PAID) {
+        throw new BadRequestException('PAID reflects a recorded payment and cannot be set or cleared by a status override.');
+      }
+    } else if (!allowed.includes(newStatus)) {
       throw new BadRequestException(
         `Cannot transition job from ${currentStatus} to ${newStatus}. ` +
         `Allowed: [${allowed.join(', ')}]`,
@@ -305,7 +331,9 @@ export class JobsService {
           toStatus: newStatus as any,
           changedById: user.userId,
           changedByName: user.name ?? user.email,
-          note: dto.note,
+          note: isOverride
+            ? `[Admin correction] ${currentStatus} → ${newStatus}${dto.note ? ` — ${dto.note}` : ''}`
+            : dto.note,
         },
       });
 
@@ -314,12 +342,20 @@ export class JobsService {
 
     await this.invalidateStatsCache(companyId);
 
+    this.events.publish(companyId, {
+      jobId, change: 'STATUS', status: newStatus, previousStatus: currentStatus,
+      assignedToId: (updated as any).assignedToId ?? null,
+      assignedToName: (updated as any).assignedToName ?? null,
+      jobNumber: job.jobNumber, title: job.title,
+      customerName: job.customerName, actorUserId: user.userId,
+    });
+
     // EN_ROUTE uses its own richer pipeline (tech photo + real ETA window) via
     // scheduling-service → POST /notifications/en-route — not this one.
     // Every other customer-visible transition gets a status email from here.
     const NOTIFIABLE_STATUSES: JobStatusDto[] = [
       JobStatusDto.EN_ROUTE, JobStatusDto.SCHEDULED, JobStatusDto.ON_SITE,
-      JobStatusDto.COMPLETED, JobStatusDto.CANCELLED,
+      JobStatusDto.COMPLETED, JobStatusDto.CANCELLED, JobStatusDto.ON_HOLD,
     ];
     if (NOTIFIABLE_STATUSES.includes(newStatus)) {
       const commsBase = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
@@ -336,6 +372,7 @@ export class JobsService {
         technicianName: job.assignedToName ?? undefined,
         scheduledAt: job.scheduledStart?.toISOString() ?? undefined,
         cancellationReason: dto.cancellationReason,
+        statusNote: dto.note,
       };
       axios.post(`${commsBase}/automation/events/job-status-changed`, payload, {
         headers: { 'x-internal-api-key': process.env.INTERNAL_API_KEY ?? '' },
@@ -366,6 +403,118 @@ export class JobsService {
           );
         });
     }
+
+    return updated;
+  }
+
+  // ============================================================
+  // CUSTOMER: change the requested time, before anyone has committed
+  // ============================================================
+
+  /**
+   * Lets a customer move the time they asked for while the job is still
+   * uncommitted — PENDING with no technician assigned.
+   *
+   * The distinction that makes this safe: on such a job `scheduledStart` is
+   * only the preference typed at booking. Nobody has promised it and no
+   * technician is holding the slot, so changing it costs the company nothing
+   * and needs no approval. The moment a technician is assigned it becomes a
+   * commitment, and the customer is redirected to the reschedule negotiation.
+   *
+   * Deliberately its own method rather than a field on the general PATCH: that
+   * endpoint is locked down to a strict whitelist for customers precisely so a
+   * customer can never write `scheduledStart` directly on a committed job.
+   */
+  async updatePreferredTime(
+    user: AuthUser,
+    jobId: string,
+    dto: {
+      preferredStart: string;
+      preferredEnd?: string;
+      window?: string;
+      note?: string;
+    },
+  ) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, companyId: user.companyId },
+      select: {
+        id: true, status: true, customerId: true, assignedToId: true,
+        assignedToName: true, estimatedDurationMins: true, notes: true,
+      },
+    });
+    if (!job) throw new NotFoundException(`Job ${jobId} not found`);
+
+    if (user.role === Role.CUSTOMER && job.customerId !== user.customerId) {
+      throw new ForbiddenException('You can only change your own bookings');
+    }
+
+    if (job.status !== JobStatusDto.PENDING) {
+      throw new BadRequestException(
+        job.status === JobStatusDto.SCHEDULED
+          ? 'This visit is already scheduled — request a reschedule instead so we can confirm the new time with you.'
+          : `A ${job.status} job's time cannot be changed here.`,
+      );
+    }
+
+    // Assigned means a human has committed to it, even if the status has not
+    // caught up yet. Negotiate rather than move it unilaterally.
+    if (job.assignedToId) {
+      throw new BadRequestException(
+        'A technician has already been assigned — request a reschedule instead so we can confirm the new time.',
+      );
+    }
+
+    const start = new Date(dto.preferredStart);
+    if (Number.isNaN(start.getTime())) {
+      throw new BadRequestException('That is not a valid date and time');
+    }
+    if (start.getTime() <= Date.now()) {
+      throw new BadRequestException('Please choose a time in the future');
+    }
+
+    const end = dto.preferredEnd ? new Date(dto.preferredEnd) : null;
+    if (end && Number.isNaN(end.getTime())) {
+      throw new BadRequestException('That is not a valid end time');
+    }
+    if (end && end.getTime() <= start.getTime()) {
+      throw new BadRequestException('The end time must be after the start time');
+    }
+
+    const resolvedEnd = end
+      ?? new Date(start.getTime() + (job.estimatedDurationMins ?? 120) * 60_000);
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.job.update({
+        where: { id: jobId },
+        data: { scheduledStart: start, scheduledEnd: resolvedEnd },
+      });
+
+      // Recorded in the job's own history so a dispatcher picking this up later
+      // can see the customer moved it themselves, and when.
+      await tx.jobStatusHistory.create({
+        data: {
+          jobId,
+          fromStatus: JobStatusDto.PENDING as any,
+          toStatus: JobStatusDto.PENDING as any,
+          changedById: user.userId,
+          changedByName: user.name ?? user.email,
+          note: `Preferred time changed to ${start.toISOString()}`
+            + (dto.window ? ` (${dto.window})` : '')
+            + (dto.note ? ` — ${dto.note}` : ''),
+        },
+      });
+
+      return result;
+    });
+
+    await this.invalidateStatsCache(user.companyId);
+
+    this.events.publish(user.companyId, {
+      jobId, change: 'SCHEDULE',
+      status: job.status,
+      scheduledStart: start.toISOString(),
+      actorUserId: user.userId,
+    });
 
     return updated;
   }

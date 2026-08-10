@@ -13,6 +13,7 @@ import {
   Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { nextInvoiceNumber } from './invoice-number';
 import Stripe from 'stripe';
 import { isFeatureEnabled } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
@@ -144,9 +145,9 @@ export class InvoicesService {
           return d;
         })();
 
-    const year = new Date().getFullYear();
-    const count = await this.prisma.invoice.count({ where: { companyId } });
-    const invoiceNumber = `INV-${year}-${String(count + 1).padStart(4, '0')}`;
+    // MAX-based, not count-based: a deleted invoice would otherwise make the
+    // next number collide with a live one. See invoice-number.ts.
+    const invoiceNumber = await nextInvoiceNumber(this.prisma, companyId);
 
     const invoice = await this.prisma.invoice.create({
       data: {

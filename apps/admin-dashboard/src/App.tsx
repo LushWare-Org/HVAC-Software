@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
+import { useTechDirectory } from './components/TechAvatar'
 import Login from './pages/Login'
 import ChatWidget from './components/ChatWidget'
 
@@ -120,6 +121,10 @@ function AuthenticatedApp() {
 
   // Prime tenant currency/timezone for the format helpers (once per session).
   useCompanySettings()
+
+  // Prime the technician directory so TechAvatar can resolve a photo anywhere,
+  // including the many surfaces that only hold a job's `assignedToId`/name.
+  useTechDirectory()
 
   // Warm the most-used route chunks once, when the browser is idle.
   useEffect(() => {

@@ -21,6 +21,9 @@ import { NotificationClientService } from '../notification-client/notification-c
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QuoteStatus, DiscountType } from '../prisma/generated';
+import {
+  nextInvoiceNumber, isInvoiceNumberTaken, INVOICE_NUMBER_MAX_ATTEMPTS,
+} from '../invoices/invoice-number';
 
 // ── Valid status transitions ───────────────────────────────────────────────
 const QUOTE_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
@@ -432,84 +435,131 @@ export class QuotesService {
       throw new BadRequestException(`Quote already converted to invoice ${existing.invoiceNumber}`);
     }
 
-    const year = new Date().getFullYear();
-    const count = await this.prisma.invoice.count({ where: { companyId } });
-    const invoiceNumber = `INV-${year}-${String(count + 1).padStart(4, '0')}`;
-
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 30);
 
-    const invoice = await this.prisma.$transaction(async (tx) => {
-      const inv = await tx.invoice.create({
-        data: {
-          companyId,
-          invoiceNumber,
-          quoteId: id,
-          jobId: quote.jobId,
-          projectId: quote.projectId,
-          houseId: quote.houseId,
-          customerId: quote.customerId,
-          customerName: quote.customerName,
-          customerEmail: quote.customerEmail,
-          subtotal: quote.subtotal,
-          discountAmount: quote.discountAmount,
-          taxRate: quote.taxRate,
-          taxAmount: quote.taxAmount,
-          total: quote.total,
-          balanceDue: quote.total,
-          amountPaid: 0,
-          dueDate,
-          notes: quote.notes,
-          terms: quote.terms,
-          createdByUserId,
-          lineItems: {
-            create: quote.lineItems.map((li) => ({
-              description: li.description,
-              category: li.category,
-              quantity: li.quantity,
-              unitPrice: li.unitPrice,
-              lineTotal: li.lineTotal,
-              taxable: li.taxable,
-              sortOrder: li.sortOrder,
-            })),
+    /**
+     * The transaction is deliberately as small as it can be — two writes and
+     * nothing else.
+     *
+     * It used to also run the `include` fetch and a cross-schema raw UPDATE
+     * inside the critical section. Against a remote Postgres (Supabase in
+     * ap-northeast-2, through PgBouncer) each extra round trip costs real
+     * latency, and Prisma's default interactive-transaction timeout is only 5
+     * seconds. On a quote with a few line items that budget ran out between the
+     * invoice `create` and the quote `update`, which is precisely the
+     * "Transaction not found … refers to an old closed transaction" error: the
+     * transaction had already been rolled back by the time the second statement
+     * ran.
+     *
+     * So: only the two writes that must be atomic stay inside, the timeout is
+     * explicit rather than inherited, and everything else happens after commit.
+     */
+    let invoiceId: string | null = null;
+
+    for (let attempt = 1; attempt <= INVOICE_NUMBER_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        invoiceId = await this.prisma.$transaction(
+          async (tx) => {
+            // Read MAX inside the transaction so a concurrent conversion that
+            // committed a moment ago is visible to us.
+            const invoiceNumber = await nextInvoiceNumber(tx, companyId);
+
+            const inv = await tx.invoice.create({
+              data: {
+                companyId,
+                invoiceNumber,
+                quoteId: id,
+                jobId: quote.jobId,
+                projectId: quote.projectId,
+                houseId: quote.houseId,
+                customerId: quote.customerId,
+                customerName: quote.customerName,
+                customerEmail: quote.customerEmail,
+                subtotal: quote.subtotal,
+                discountAmount: quote.discountAmount,
+                taxRate: quote.taxRate,
+                taxAmount: quote.taxAmount,
+                total: quote.total,
+                balanceDue: quote.total,
+                amountPaid: 0,
+                dueDate,
+                notes: quote.notes,
+                terms: quote.terms,
+                createdByUserId,
+                lineItems: {
+                  create: quote.lineItems.map((li) => ({
+                    description: li.description,
+                    category: li.category,
+                    quantity: li.quantity,
+                    unitPrice: li.unitPrice,
+                    lineTotal: li.lineTotal,
+                    taxable: li.taxable,
+                    sortOrder: li.sortOrder,
+                  })),
+                },
+              },
+              select: { id: true },
+            });
+
+            await tx.quote.update({
+              where: { id },
+              data: { status: QuoteStatus.CONVERTED },
+            });
+
+            return inv.id;
           },
-        },
-        include: {
-          lineItems: { orderBy: { sortOrder: 'asc' } },
-          payments: true,
-          quote: { select: { quoteNumber: true } },
-        },
-      });
-      await tx.quote.update({
-        where: { id },
-        data: { status: QuoteStatus.CONVERTED },
-      });
-
-      // Backfill jobs.jobs.estimatedValue if the quote is attached to a job
-      // and the job's estimate is still null. We never overwrite an existing
-      // estimate — that's authoritative user input. Best-effort: if the
-      // cross-schema write fails, the conversion still succeeds.
-      if (quote.jobId) {
-        try {
-          await tx.$executeRawUnsafe(
-            `UPDATE "jobs"."jobs"
-                SET "estimatedValue" = $1
-              WHERE "id" = $2
-                AND "companyId" = $3
-                AND "estimatedValue" IS NULL`,
-            quote.total,
-            quote.jobId,
-            companyId,
-          );
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.warn(`[finance] could not backfill job ${quote.jobId} estimatedValue:`, err);
-        }
+          {
+            // Generous relative to the two statements inside, because the
+            // round-trip latency — not the work — is what dominates here.
+            timeout: Number(process.env.PRISMA_TRANSACTION_TIMEOUT_MS ?? 20_000),
+            maxWait: Number(process.env.PRISMA_TRANSACTION_MAX_WAIT_MS ?? 10_000),
+          },
+        );
+        break;
+      } catch (err) {
+        // Two callers converting at once can still land on the same number.
+        // Retrying re-reads MAX and takes the next one.
+        if (!isInvoiceNumberTaken(err) || attempt === INVOICE_NUMBER_MAX_ATTEMPTS) throw err;
       }
-      return inv;
-    });
+    }
 
-    return invoice;
+    if (!invoiceId) {
+      throw new BadRequestException('Could not allocate an invoice number — please try again');
+    }
+
+    // Best-effort, after commit: seed the job's estimate from the quote total so
+    // dashboards have a figure before the invoice is paid. Never overwrites an
+    // existing estimate — that is authoritative user input — and a failure here
+    // must not undo a conversion the user has already been told succeeded.
+    if (quote.jobId) {
+      try {
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE "jobs"."jobs"
+              SET "estimatedValue" = $1
+            WHERE "id" = $2
+              AND "companyId" = $3
+              AND "estimatedValue" IS NULL`,
+          quote.total,
+          quote.jobId,
+          companyId,
+        );
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn(`[finance] could not backfill job ${quote.jobId} estimatedValue:`, err);
+      }
+    }
+
+    // Fetch the full shape outside the transaction — the caller needs it, but
+    // holding a transaction open for a read does nothing except burn budget.
+    return this.prisma.invoice.findUniqueOrThrow({
+      where: { id: invoiceId },
+      include: {
+        lineItems: { orderBy: { sortOrder: 'asc' } },
+        payments: true,
+        quote: { select: { quoteNumber: true } },
+      },
+    });
   }
 
   // ── Delete (draft only) ───────────────────────────────────────────────────

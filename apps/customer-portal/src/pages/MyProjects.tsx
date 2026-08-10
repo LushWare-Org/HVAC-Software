@@ -4,6 +4,7 @@
  * The sidebar entry only appears when the customer has ≥1 project.
  */
 import { useState } from 'react'
+import RescheduleBadge from '../components/reschedule/RescheduleBadge'
 import { useNavigate } from 'react-router-dom'
 import {
   FolderKanban, MapPin, CalendarRange, ChevronDown, ChevronUp,
@@ -254,6 +255,7 @@ function ProjectCard({ project: p, open, onToggle }: { project: MyProject; open:
                         {j.title}
                       </span>
                       <span style={{ fontSize: 11, color: 'var(--t3)', whiteSpace: 'nowrap' }}>{fmtDate(j.scheduledStart)}</span>
+                      <RescheduleBadge state={j.rescheduleState} size="sm" />
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, whiteSpace: 'nowrap',
                         background: isDone ? 'var(--green-dim, rgba(22,163,74,0.12))' : 'var(--blue-dim, rgba(37,99,235,0.12))',

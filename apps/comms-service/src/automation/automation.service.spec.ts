@@ -125,6 +125,25 @@ describe('AutomationService', () => {
       );
     });
 
+    it('sends a built-in status email with the hold reason when jobStatus is ON_HOLD', async () => {
+      mockPrisma.automationRule.findMany.mockResolvedValue([]); // no automation rules configured
+      mockNotifications.sendEmail.mockResolvedValue({});
+
+      await service.processJobStatusChanged({
+        ...event,
+        jobStatus: 'ON_HOLD',
+        statusNote: 'Waiting on a special-order part',
+      });
+
+      expect(mockNotifications.sendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          recipientEmail: 'alice@test.com',
+          subject: expect.stringContaining('on hold'),
+          htmlBody: expect.stringContaining('Waiting on a special-order part'),
+        }),
+      );
+    });
+
     it('does not fire when condition value does not match', async () => {
       // Rule fires on COMPLETED but event is IN_PROGRESS
       mockPrisma.automationRule.findMany.mockResolvedValue([makeRule()]);

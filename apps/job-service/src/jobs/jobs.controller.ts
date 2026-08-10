@@ -10,7 +10,7 @@ import { Role, AuthUser } from '@tscrm/types';
 import { JobsService } from './jobs.service';
 import { CrmClient } from './crm.client';
 import { CreateJobDto, JobPriorityDto } from './dto/create-job.dto';
-import { UpdateJobStatusDto, JobStatusDto } from './dto/update-job-status.dto';
+import { UpdateJobStatusDto, JobStatusDto, UpdatePreferredTimeDto } from './dto/update-job-status.dto';
 
 class UpdateJobDto {
   @IsOptional() @IsString() title?: string;
@@ -34,6 +34,9 @@ class UpdateJobDto {
 class PatchJobDto extends UpdateJobDto {
   @IsOptional() @IsEnum(JobStatusDto) status?: JobStatusDto;
   @IsOptional() @IsString() statusNote?: string;
+  // Admin correction — see UpdateJobStatusDto.force. Re-validated by role in
+  // JobsService.updateStatus regardless of what the client sends.
+  @IsOptional() @IsBoolean() force?: boolean;
   @IsOptional() @IsBoolean() gpsTrackingEnabled?: boolean;
   @IsOptional() @IsString() completedAt?: string;
   @IsOptional() @IsBoolean() hasPartShortage?: boolean;
@@ -43,6 +46,22 @@ class PatchJobDto extends UpdateJobDto {
 class UpdateCustomFieldsDto {
   @IsArray() fields!: Array<{ fieldDefId: string; value: unknown }>;
 }
+
+/**
+ * The only PATCH fields a CUSTOMER may set on their own job.
+ *
+ * A whitelist, deliberately — the previous guard blacklisted `status` alone,
+ * which let a customer write every other field on PatchJobDto: moving
+ * `scheduledStart` on a committed appointment (bypassing the reschedule
+ * negotiation entirely), assigning themselves a technician via
+ * `assignedToId`/`assignedToName`, writing into staff-only `internalNotes`, and
+ * rewriting `estimatedValue`, which feeds dashboards and forecasts.
+ *
+ * Keep this list minimal. Anything a customer legitimately needs to change gets
+ * its own purpose-built, separately-authorised endpoint (see RescheduleModule
+ * for how appointment times are negotiated) rather than being added here.
+ */
+const CUSTOMER_PATCHABLE_FIELDS = ['status', 'statusNote', 'cancellationReason'] as const;
 
 @ApiTags('Jobs')
 @ApiBearerAuth()
@@ -208,7 +227,7 @@ export class JobsController {
   ) {
     const job = await this.jobsService.findOne(user.companyId, id) as any;
 
-    // CUSTOMER role: can only cancel their own jobs
+    // CUSTOMER role: their own job, cancellation only, and nothing else.
     if (user.role === Role.CUSTOMER) {
       if (job.customerId !== user.customerId) {
         throw new ForbiddenException('Access denied');
@@ -216,9 +235,22 @@ export class JobsController {
       if (dto.status && dto.status !== 'CANCELLED') {
         throw new ForbiddenException('Customers may only cancel jobs');
       }
+      // Whitelist, not blacklist: every field absent from
+      // CUSTOMER_PATCHABLE_FIELDS is rejected outright, so adding a new field to
+      // PatchJobDto can never silently become customer-writable.
+      const forbidden = Object.keys(dto).filter(
+        (key) => (dto as Record<string, unknown>)[key] !== undefined
+          && !(CUSTOMER_PATCHABLE_FIELDS as readonly string[]).includes(key),
+      );
+      if (forbidden.length > 0) {
+        throw new ForbiddenException(
+          `Customers cannot change: ${forbidden.join(', ')}. `
+          + 'To move an appointment, request a reschedule instead.',
+        );
+      }
     }
 
-    const { status, statusNote, gpsTrackingEnabled, completedAt, ...fields } = dto;
+    const { status, statusNote, force, gpsTrackingEnabled, completedAt, ...fields } = dto;
     const hasFields = Object.values(fields).some((v) => v !== undefined);
     if (hasFields || gpsTrackingEnabled !== undefined || completedAt !== undefined) {
       await this.jobsService.patchFields(user.companyId, id, {
@@ -227,10 +259,29 @@ export class JobsController {
     }
     if (status) {
       return this.jobsService.updateStatus(
-        user.companyId, id, user, { status, note: statusNote },
+        user.companyId, id, user, { status, note: statusNote, force },
       );
     }
     return this.jobsService.findOne(user.companyId, id);
+  }
+
+  // ---- Customer: change the requested time on an uncommitted job ----
+  @Patch(':id/preferred-time')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Change the customer's requested time (PENDING, unassigned jobs only)",
+    description:
+      'A booking nobody has committed to yet — no approval needed. Once a technician '
+      + 'is assigned, or the job is SCHEDULED, this returns 400 and the caller must use '
+      + 'the reschedule negotiation instead.',
+  })
+  updatePreferredTime(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdatePreferredTimeDto,
+  ) {
+    return this.jobsService.updatePreferredTime(user, id, dto);
   }
 
   // ---- Status transition (state machine) ----

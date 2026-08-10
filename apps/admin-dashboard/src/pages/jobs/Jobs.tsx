@@ -11,6 +11,7 @@ import { useTechnicians } from "../../hooks/useScheduling";
 import { useProjectsFull } from "../projects/projectsApi";
 import { useHouse } from "../projects/housesApi";
 import type { Job } from "../../types/api";
+import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import Avatar from "../../components/Avatar";
 
@@ -176,7 +177,7 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId, p
                   {(j.priority ?? "NORMAL").toLowerCase()}
                 </span>
               </td>
-              <td className="text-center"><span className={`badge ${s.css}`}>{s.label}</span></td>
+              <td className="text-center"><span className={`badge ${s.css}`}>{s.label}</span>{j.rescheduleState && <div style={{ marginTop: 3 }}><RescheduleBadge state={j.rescheduleState} size="sm" /></div>}</td>
               <td className="text-right td-primary font-600">${Number(amount).toLocaleString()}</td>
               <td className="sticky-actions">
                 <div className="flex items-center gap-0.5 justify-center">

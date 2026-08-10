@@ -138,45 +138,56 @@ export class EnRouteNotificationService {
     }
   }
 
+  // Styled to match the rest of the job-status email family (solid accent
+  // header with an uppercase eyebrow, 560px card, same footer line) — this
+  // one just leads with the technician's photo since that's the one thing
+  // customers actually want to see the moment their tech sets off.
   buildEmailHtml(dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null, companyName: string = COMPANY_NAME): string {
     const name = esc(dto.techName);
     const initials = dto.techName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const photo = avatarUrl
-      ? `<img src="${esc(avatarUrl)}" alt="${name}" width="96" height="96" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid #2563eb;display:block;" />`
-      : `<div style="width:96px;height:96px;border-radius:50%;background:#1e293b;color:#fff;border:3px solid #2563eb;font:700 32px/90px Arial,sans-serif;text-align:center;">${esc(initials)}</div>`;
+      ? `<img src="${esc(avatarUrl)}" alt="${name}" width="88" height="88" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid #ffffff;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:block;" />`
+      : `<div style="width:88px;height:88px;border-radius:50%;background:rgba(255,255,255,0.16);color:#fff;border:3px solid #ffffff;font:700 30px/82px Arial,sans-serif;text-align:center;">${esc(initials)}</div>`;
     const etaLine = window
-      ? `Expected arrival <strong style="color:#0f172a;">${esc(window)}</strong>`
+      ? `Expected to arrive <strong>${esc(window)}</strong>`
       : 'They will arrive shortly';
+    const greetName = dto.customerName ? esc(dto.customerName) : 'there';
 
     return `
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:24px 0;">
-  <tr><td align="center">
-    <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;font-family:Arial,Helvetica,sans-serif;">
-      <tr><td style="background:#0f172a;padding:18px 28px;">
-        <span style="color:#ffffff;font-size:15px;font-weight:700;">${esc(companyName)}</span>
-      </td></tr>
-      <tr><td align="center" style="padding:28px 28px 8px;">${photo}</td></tr>
-      <tr><td align="center" style="padding:4px 28px 0;">
-        <p style="margin:8px 0 2px;font-size:19px;font-weight:700;color:#0f172a;">${name} is on the way</p>
-        <p style="margin:0 0 14px;font-size:14px;color:#475569;">${etaLine}</p>
-      </td></tr>
-      <tr><td style="padding:6px 28px 24px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
-          <tr><td style="padding:14px 18px;">
-            <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;">Your service</p>
-            <p style="margin:0;font-size:14px;font-weight:600;color:#0f172a;">${esc(dto.jobTitle)}</p>
-            ${dto.serviceAddress ? `<p style="margin:4px 0 0;font-size:13px;color:#475569;">${esc(dto.serviceAddress)}</p>` : ''}
-          </td></tr>
-        </table>
-      </td></tr>
-      <tr><td style="padding:0 28px 26px;">
-        <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
-          Please make sure someone is available at the service address.
-          Sent by ${esc(companyName)} — reply to this email or contact us if the time doesn't work.
+<!DOCTYPE html>
+<html>
+<body style="margin:0;background:#F3F4F6;padding:32px 18px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111827;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(15,23,42,0.06);">
+    <div style="padding:28px 32px;background:#2563EB;">
+      <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.78);margin-bottom:14px;">Technician en route</div>
+      <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td style="padding-right:16px;">${photo}</td>
+        <td>
+          <h1 style="margin:0 0 4px;font-size:20px;color:#ffffff;">${name} is on the way</h1>
+          <p style="margin:0;font-size:13.5px;color:rgba(255,255,255,0.85);">${etaLine}</p>
+        </td>
+      </tr></table>
+    </div>
+    <div style="padding:30px 32px;">
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
+        Hi ${greetName}, just a heads up — <strong>${name}</strong> from ${esc(companyName)} has started heading your way for your service visit.
+      </p>
+      <div style="border:1px solid #2563EB33;background:#2563EB0d;border-radius:12px;padding:16px 18px;">
+        <p style="margin:0;font-size:11.5px;font-weight:700;text-transform:uppercase;color:#2563EB;letter-spacing:0.06em;margin-bottom:6px;">Your service</p>
+        <p style="margin:0;font-size:14.5px;font-weight:700;color:#111827;">${esc(dto.jobTitle)}</p>
+        ${dto.serviceAddress ? `<p style="margin:6px 0 0;font-size:13.5px;color:#4B5563;">${esc(dto.serviceAddress)}</p>` : ''}
+      </div>
+      <div style="margin-top:18px;padding:14px 16px;background:#F9FAFB;border-radius:10px;">
+        <p style="margin:0;font-size:12.5px;line-height:1.7;color:#6B7280;">
+          Please make sure someone's available at the address above around that time. If the timing doesn't work, just reply to this email or contact us and we'll help reschedule.
         </p>
-      </td></tr>
-    </table>
-  </td></tr>
-</table>`;
+      </div>
+      <p style="margin:26px 0 0;font-size:12.5px;line-height:1.7;color:#6B7280;border-top:1px solid #E5E7EB;padding-top:16px;">
+        Sent by ${esc(companyName)} · Powered by HVACtor.ai
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
   }
 }

@@ -8,6 +8,7 @@ import { lazy, Suspense, useState } from 'react'
 import { Loader2, Zap, Users, Phone, Maximize2, Minimize2 } from 'lucide-react'
 import type { Job, Technician, ScoredTechnician } from '../../types/api'
 import Avatar from '../../components/Avatar'
+import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 import { getTechAvailability, AVAIL_META, type AvailabilityTier } from './availability'
 
 const DispatchMap = lazy(() => import('../dispatch/DispatchMap'))
@@ -75,6 +76,7 @@ export default function BoardLive({
                 {job.serviceLatitude && job.serviceLongitude && (
                   <span style={{ fontSize: 8, fontWeight: 700, color: '#166534', background: '#DCFCE7', padding: '1px 5px', borderRadius: 3 }}>GPS</span>
                 )}
+                <RescheduleBadge state={job.rescheduleState} size="sm" />
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t1)' }}>{job.title}</div>
               <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 3 }}>{job.customerName ?? '—'} · {job.serviceAddress ?? job.customerAddress ?? 'No address'}</div>

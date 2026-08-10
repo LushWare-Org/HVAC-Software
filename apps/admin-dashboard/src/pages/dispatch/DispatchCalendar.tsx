@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { TechChip } from '../../components/TechAvatar'
 import {
   addDays,
   addMonths,
@@ -13,6 +14,7 @@ import {
 } from 'date-fns'
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, Loader2, MapPin, Sparkles, User } from 'lucide-react'
 import type { DispatchAssignment, Job, ScoredTechnician, Technician } from '../../types/api'
+import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 
 interface DispatchCalendarProps {
   jobs: Job[]
@@ -172,13 +174,18 @@ export default function DispatchCalendar({
                           style={{ borderColor: accent, background: accentDim }}
                         >
                           <div className="text-[11px] font-semibold truncate" style={{ color: 'var(--t1)' }}>{job.title}</div>
+                          {job.rescheduleState && <div className="mt-0.5"><RescheduleBadge state={job.rescheduleState} size="sm" /></div>}
                           <div className="mt-1 flex items-center gap-1 text-[10px]" style={{ color: 'var(--t3)' }}>
                             <Clock size={10} />
                             {job.scheduledStart ? format(new Date(job.scheduledStart), 'p') : 'Needs scheduling'}
                           </div>
                           <div className="mt-1 text-[10px] truncate" style={{ color: 'var(--t3)' }}>{job.customerName ?? 'No customer'}</div>
                           <div className="mt-2 inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: 'var(--bg-card)', color: accent }}>
-                            {assigned ? `Assigned to ${tech?.name ?? assignment?.technicianName ?? 'Technician'}` : 'Awaiting assignment'}
+                            {assigned
+                              ? <TechChip id={tech?.id ?? assignment?.technicianId ?? job.assignedToId}
+                                          name={tech?.name ?? assignment?.technicianName}
+                                          size={18} fontSize={10} fallback="Technician" />
+                              : 'Awaiting assignment'}
                           </div>
                         </div>
                       )

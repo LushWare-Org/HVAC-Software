@@ -31,6 +31,7 @@ import AddJobModal from '../jobs/AddJobModal'
 import type { Job } from '../../types/api'
 import { useTechnicians } from '../../hooks/useScheduling'
 import Avatar from '../../components/Avatar'
+import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 import CustomerPickerWithCreate, { type PickedCustomer } from '../../components/CustomerPickerWithCreate'
 
 // Consistent with every other consumer of this modal app-wide (ProjectDetail,
@@ -633,8 +634,9 @@ function OverviewSection({ house, projectId, projectName, equipment, onViewAllJo
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.title}</p>
-                  <p style={{ fontSize: 11, color: 'var(--t4)', margin: '2px 0 0' }}>
-                    {fmtDate(j.scheduledStart)}{j.assignedToName ? ` · ${j.assignedToName}` : ' · Unassigned'}
+                  <p style={{ fontSize: 11, color: 'var(--t4)', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span>{fmtDate(j.scheduledStart)}{j.assignedToName ? ` · ${j.assignedToName}` : ' · Unassigned'}</span>
+                    <RescheduleBadge state={j.rescheduleState} size="sm" />
                   </p>
                 </div>
                 <span className={`badge ${JOB_BADGE[j.status] ?? 'badge-neutral'}`} style={{ flexShrink: 0 }}>{String(j.status).replace('_', ' ')}</span>

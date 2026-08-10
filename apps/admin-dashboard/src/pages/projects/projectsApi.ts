@@ -6,6 +6,7 @@
  * finance queries per the spec; money arrives as Decimal strings → Number().
  */
 import { useMemo } from 'react'
+import type { RescheduleStateValue } from '../../types/api'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { queryClient } from '../../lib/queryClient'
 import api from '../../lib/api'
@@ -34,6 +35,8 @@ export interface ProjectJob {
   priority?: string
   scheduledStart?: string
   assignedToName?: string
+  /** Open reschedule negotiation, if any — drives the RescheduleBadge on job rows. */
+  rescheduleState?: RescheduleStateValue | null
   // Carried through so JobDetailModal's first render (before its own useJob
   // refetch resolves) has what it reads directly off the passed-in job.
   customerId?: string
@@ -226,6 +229,9 @@ function mapJob(j: any): ProjectJob {
     priority: j.priority ?? undefined,
     scheduledStart: j.scheduledStart ?? undefined,
     assignedToName: j.assignedToName ?? undefined,
+    // Explicit mapper, so this must be carried through or the reschedule badge
+    // silently never appears on project/house job rows.
+    rescheduleState: j.rescheduleState ?? null,
     customerId: j.customerId ?? undefined,
     customerName: j.customerName ?? undefined,
     description: j.description ?? undefined,

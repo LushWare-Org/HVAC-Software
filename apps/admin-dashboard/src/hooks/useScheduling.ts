@@ -257,11 +257,33 @@ export function useUpdateAssignmentStatus() {
 export type WsStatus = 'connecting' | 'connected' | 'disconnected' | 'error'
 
 export interface DispatchEvent {
-  type: 'GPS_UPDATE' | 'ASSIGNMENT_CREATED' | 'ASSIGNMENT_STATUS_CHANGED' | 'TECHNICIAN_ONLINE' | 'PING'
+  type:
+    | 'GPS_UPDATE'
+    | 'ASSIGNMENT_CREATED'
+    | 'ASSIGNMENT_STATUS_CHANGED'
+    | 'TECHNICIAN_ONLINE'
+    // Published by job-service: status changes, new jobs, schedule moves and
+    // reschedule-badge changes. The board's data is mostly jobs, so without
+    // these it could only ever reflect assignment and GPS activity.
+    | 'JOB_CHANGED'
+    | 'PING'
   companyId?: string
   payload: Record<string, unknown>
   timestamp?: string
 }
+
+/**
+ * How often to refetch the board while the socket is NOT connected.
+ *
+ * A fallback, not the primary path: without it a Redis outage or a dropped
+ * socket leaves the page silently frozen, which is what trained people to hit
+ * refresh. Only runs while a component using this hook is mounted, so it costs
+ * nothing on other pages.
+ */
+const FALLBACK_POLL_MS = 8_000
+
+/** Reconnect backoff — quick first retry, then easing off to avoid hammering. */
+const RECONNECT_STEPS_MS = [1_000, 2_000, 5_000, 10_000, 20_000]
 
 function resolveDispatchWsBase(): string {
   // Allow explicit override for non-standard local setups.
@@ -289,6 +311,7 @@ export function useDispatchWebSocket() {
   const [lastEvent, setLastEvent] = useState<DispatchEvent | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const attemptRef = useRef(0)
   const { token, user } = useAuth()
 
   // Auth contract for the Go scheduling /ws endpoint:
@@ -324,6 +347,12 @@ export function useDispatchWebSocket() {
 
     ws.onopen = () => {
       setStatus('connected')
+      attemptRef.current = 0
+      // The socket was down for some interval — whatever changed in the gap was
+      // never delivered, so resync once on reconnect rather than waiting for the
+      // next event to arrive.
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['scheduling'] })
       console.info('[WS] Dispatch board connected')
     }
 
@@ -370,6 +399,24 @@ export function useDispatchWebSocket() {
         if (event.type === 'TECHNICIAN_ONLINE') {
           queryClient.invalidateQueries({ queryKey: ['scheduling', 'technicians'] })
         }
+
+        // A job changed in job-service — status, schedule, assignment or
+        // reschedule state. Every board surface reads from ['jobs'], so one
+        // invalidation refreshes the queue, the map, the planner and the
+        // calendar together.
+        if (event.type === 'JOB_CHANGED') {
+          queryClient.invalidateQueries({ queryKey: ['jobs'] })
+          queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+          const change = (event.payload as { change?: string } | undefined)?.change
+          // A reschedule also moves the inbox count and the badge.
+          if (change === 'RESCHEDULE') {
+            queryClient.invalidateQueries({ queryKey: ['reschedule'] })
+          }
+          // An assignment change alters the dispatch board's assignment map.
+          if (change === 'RESCHEDULE' || change === 'ASSIGNMENT') {
+            queryClient.invalidateQueries({ queryKey: ['scheduling'] })
+          }
+        }
       } catch {
         // Ignore non-JSON messages (ping/pong frames)
       }
@@ -381,8 +428,13 @@ export function useDispatchWebSocket() {
 
     ws.onclose = () => {
       setStatus('disconnected')
-      console.info('[WS] Dispatch board disconnected — reconnecting in 5s')
-      reconnectTimer.current = setTimeout(connect, 5000)
+      // Exponential-ish backoff: a transient blip recovers in a second, while a
+      // service that is genuinely down is not hammered every 5s by every open
+      // dispatcher tab.
+      const delay = RECONNECT_STEPS_MS[Math.min(attemptRef.current, RECONNECT_STEPS_MS.length - 1)]
+      attemptRef.current += 1
+      console.info(`[WS] Dispatch board disconnected — reconnecting in ${delay / 1000}s`)
+      reconnectTimer.current = setTimeout(connect, delay)
     }
   }
 
@@ -396,6 +448,50 @@ export function useDispatchWebSocket() {
     // so the new credentials are used on the WS handshake.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.id])
+
+  // ── Fallback: poll while the socket is down ──────────────────────────────
+  //
+  // Realtime should never be all-or-nothing. Redis being unreachable, a proxy
+  // dropping the upgrade, or a laptop waking from sleep all leave the socket
+  // shut — and previously that meant the board froze with no indication. This
+  // keeps it current at a slower cadence until the socket returns, then stops.
+  useEffect(() => {
+    if (status === 'connected') return
+    const id = setInterval(() => {
+      if (document.visibilityState !== 'visible') return  // don't poll hidden tabs
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['scheduling'] })
+    }, FALLBACK_POLL_MS)
+    return () => clearInterval(id)
+  }, [status])
+
+  // ── Resync when the operator comes back to the tab ───────────────────────
+  //
+  // Cheap and high-value: a dispatcher switching back after ten minutes wants
+  // to trust what they see immediately, not after the next event happens to
+  // fire. Also covers the case where the socket died silently while hidden.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['scheduling'] })
+      queryClient.invalidateQueries({ queryKey: ['reschedule'] })
+      // If the socket dropped while we were away, reconnect now rather than
+      // waiting out the remaining backoff.
+      if (wsRef.current?.readyState !== WebSocket.OPEN) {
+        if (reconnectTimer.current) clearTimeout(reconnectTimer.current)
+        attemptRef.current = 0
+        connect()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', onVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('online', onVisible)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return { status, lastEvent }
 }

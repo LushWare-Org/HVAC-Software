@@ -57,6 +57,7 @@ export interface JobStatusChangedEvent {
   jobTitle?: string;
   jobNumber?: string;
   cancellationReason?: string;
+  statusNote?: string;
 }
 
 export interface InvoiceSentEvent {

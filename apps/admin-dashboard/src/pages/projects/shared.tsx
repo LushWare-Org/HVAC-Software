@@ -1,5 +1,6 @@
 /** Shared atoms for the Projects module (list, detail, planner band). */
 import { techById, STATUS_META, type ProjectStatus } from './projectsApi'
+import SharedTechAvatar, { techAvatarUrl } from '../../components/TechAvatar'
 import { formatMoney } from '../../lib/format'
 
 export function fmtMoney(v?: number) {
@@ -17,8 +18,20 @@ export function initialsOf(name: string) {
   return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
+/**
+ * A roster technician's photo, falling back to a deterministic colour chip.
+ *
+ * Delegates to the shared components/TechAvatar so a photo shows wherever one
+ * exists — this used to render initials only, even for technicians who had
+ * uploaded one. The per-tech `color` is kept as the no-photo fallback so roster
+ * bands stay visually distinguishable at a glance.
+ */
 export function TechAvatar({ userId, size = 26 }: { userId: string; size?: number }) {
   const t = techById(userId)
+  const photo = techAvatarUrl(userId)
+  if (photo) {
+    return <SharedTechAvatar id={userId} name={t?.name} avatarUrl={photo} size={size} />
+  }
   return (
     <span
       title={t?.name ?? userId}

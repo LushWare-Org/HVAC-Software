@@ -22,7 +22,7 @@ export {
 
 // Jobs + bookings + service requests
 export {
-  useMyJobs, useMyJob, useJobAssignments, useTechnician, useJobTechnicianNames,
+  useMyJobs, useMyJob, useJobAssignments, useTechnician, useJobTechnicianNames, useJobTechnicians, useUpdatePreferredTime,
   useCancelJob, useBookService, useSubmitJobRequest,
 } from './useMyJobs'
 

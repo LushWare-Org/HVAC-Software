@@ -12,10 +12,13 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { JobEventsPublisher } from '../realtime/job-events.publisher';
 import { RedisCacheService } from '../redis-cache.service';
+
+const mockEvents = { publish: jest.fn() };
 
 const mockCache = {
   get: jest.fn().mockResolvedValue(null),
@@ -116,6 +119,12 @@ describe('STATUS_TRANSITIONS map', () => {
     expect(STATUS_TRANSITIONS[JobStatusDto.CANCELLED]).toHaveLength(1);
   });
 
+  it('SCHEDULED can return to PENDING (descheduled back to the dispatch queue)', () => {
+    // Set when a reschedule is applied: the new time may not suit whoever was
+    // booked, so the job is unassigned and re-queued. See RescheduleApplyService.
+    expect(STATUS_TRANSITIONS[JobStatusDto.SCHEDULED]).toContain(JobStatusDto.PENDING);
+  });
+
   it('ON_HOLD can resume as SCHEDULED or be CANCELLED', () => {
     const transitions = STATUS_TRANSITIONS[JobStatusDto.ON_HOLD];
     expect(transitions).toContain(JobStatusDto.SCHEDULED);
@@ -142,6 +151,7 @@ describe('JobsService — updateJobStatus', () => {
       providers: [
         JobsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: JobEventsPublisher, useValue: mockEvents },
         { provide: RedisCacheService, useValue: mockCache },
       ],
     }).compile();
@@ -173,6 +183,7 @@ describe('JobsService — updateJobStatus', () => {
     const validCases: Array<[JobStatusDto, JobStatusDto]> = [
       [JobStatusDto.PENDING, JobStatusDto.SCHEDULED],
       [JobStatusDto.PENDING, JobStatusDto.CANCELLED],
+      [JobStatusDto.SCHEDULED, JobStatusDto.PENDING],
       [JobStatusDto.SCHEDULED, JobStatusDto.EN_ROUTE],
       [JobStatusDto.SCHEDULED, JobStatusDto.ON_HOLD],
       [JobStatusDto.SCHEDULED, JobStatusDto.CANCELLED],
@@ -223,6 +234,91 @@ describe('JobsService — updateJobStatus', () => {
         expect(mockPrisma.job.update).not.toHaveBeenCalled();
       },
     );
+  });
+
+  // ── Admin status override (force) ───────────────────────────────────────
+
+  describe('admin status override (force)', () => {
+    it('lets a company_admin force a normally-invalid backward transition', async () => {
+      setupUpdateMocks(JobStatusDto.ON_SITE, JobStatusDto.SCHEDULED);
+
+      await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.COMPANY_ADMIN), {
+        status: JobStatusDto.SCHEDULED,
+        force: true,
+      });
+
+      expect(mockPrisma.job.update).toHaveBeenCalled();
+    });
+
+    it('lets a super_admin and office_manager force too', async () => {
+      for (const role of [Role.SUPER_ADMIN, Role.OFFICE_MANAGER]) {
+        setupUpdateMocks(JobStatusDto.COMPLETED, JobStatusDto.EN_ROUTE);
+        await expect(
+          service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(role), {
+            status: JobStatusDto.EN_ROUTE,
+            force: true,
+          }),
+        ).resolves.toBeDefined();
+      }
+    });
+
+    it('rejects force from a dispatcher, technician, or customer', async () => {
+      for (const role of [Role.DISPATCHER, Role.TECHNICIAN, Role.CUSTOMER]) {
+        setupUpdateMocks(JobStatusDto.ON_SITE, JobStatusDto.SCHEDULED);
+        await expect(
+          service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(role), {
+            status: JobStatusDto.SCHEDULED,
+            force: true,
+          }),
+        ).rejects.toThrow(ForbiddenException);
+        expect(mockPrisma.job.update).not.toHaveBeenCalled();
+      }
+    });
+
+    it('still blocks forcing FROM PAID even for an admin', async () => {
+      setupUpdateMocks(JobStatusDto.PAID, JobStatusDto.PENDING);
+      await expect(
+        service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.SUPER_ADMIN), {
+          status: JobStatusDto.PENDING,
+          force: true,
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.job.update).not.toHaveBeenCalled();
+    });
+
+    it('still blocks forcing TO PAID even for an admin', async () => {
+      setupUpdateMocks(JobStatusDto.SCHEDULED, JobStatusDto.PAID);
+      await expect(
+        service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.SUPER_ADMIN), {
+          status: JobStatusDto.PAID,
+          force: true,
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.job.update).not.toHaveBeenCalled();
+    });
+
+    it('tags the status-history note as an admin correction', async () => {
+      setupUpdateMocks(JobStatusDto.ON_SITE, JobStatusDto.SCHEDULED);
+      await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.COMPANY_ADMIN), {
+        status: JobStatusDto.SCHEDULED,
+        force: true,
+        note: 'tech tapped the wrong stage',
+      });
+      const historyCall = mockPrisma.jobStatusHistory.create.mock.calls[0][0];
+      expect(historyCall.data.note).toContain('[Admin correction]');
+      expect(historyCall.data.note).toContain('tech tapped the wrong stage');
+    });
+
+    it('does not need force for an already-valid transition (no override tag)', async () => {
+      setupUpdateMocks(JobStatusDto.PENDING, JobStatusDto.SCHEDULED);
+      await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.COMPANY_ADMIN), {
+        status: JobStatusDto.SCHEDULED,
+        force: true,
+        note: 'normal move',
+      });
+      const historyCall = mockPrisma.jobStatusHistory.create.mock.calls[0][0];
+      expect(historyCall.data.note).toBe('normal move');
+    });
   });
 
   // ── Timestamp side-effects ──────────────────────────────────────────────
@@ -290,6 +386,7 @@ describe('JobsService — create', () => {
       providers: [
         JobsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: JobEventsPublisher, useValue: mockEvents },
         { provide: RedisCacheService, useValue: mockCache },
       ],
     }).compile();
@@ -342,6 +439,7 @@ describe('JobsService — findAll filters', () => {
       providers: [
         JobsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: JobEventsPublisher, useValue: mockEvents },
         { provide: RedisCacheService, useValue: mockCache },
       ],
     }).compile();
@@ -370,5 +468,152 @@ describe('JobsService — findAll filters', () => {
     const findManyCall = mockPrisma.job.findMany.mock.calls[0][0];
     expect(findManyCall.where.houseId).toBeUndefined();
     expect(findManyCall.where.equipmentId).toBeUndefined();
+  });
+});
+
+// ── Customer changing their own requested time ─────────────────────────────
+// The rule under test: it is allowed only while nobody has committed to the
+// slot. PENDING + unassigned = a preference. Anything else = a promise, and
+// promises go through the reschedule negotiation.
+
+describe('JobsService — updatePreferredTime', () => {
+  let service: JobsService;
+  const CUSTOMER = 'cust-001';
+  const future = new Date(Date.now() + 4 * 86_400_000).toISOString();
+
+  function customer(customerId = CUSTOMER) {
+    return { ...makeAuthUser(Role.CUSTOMER), customerId } as any;
+  }
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    mockPrisma.job.update.mockImplementation(({ data }: any) => ({ id: JOB_ID, ...data }));
+    mockPrisma.jobStatusHistory.create.mockResolvedValue({});
+    mockPrisma.$transaction.mockImplementation((fn: any) =>
+      typeof fn === 'function' ? fn(mockPrisma) : Promise.all(fn));
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        JobsService,
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: JobEventsPublisher, useValue: mockEvents },
+        { provide: RedisCacheService, useValue: mockCache },
+      ],
+    }).compile();
+    service = module.get(JobsService);
+  });
+
+  const pendingUnassigned = (overrides: Record<string, unknown> = {}) => ({
+    id: JOB_ID, status: 'PENDING', customerId: CUSTOMER,
+    assignedToId: null, assignedToName: null,
+    estimatedDurationMins: 90, notes: null,
+    ...overrides,
+  });
+
+  it('lets a customer move their own time on a PENDING unassigned job', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned());
+
+    await service.updatePreferredTime(customer(), JOB_ID, { preferredStart: future });
+
+    const data = mockPrisma.job.update.mock.calls[0][0].data;
+    expect(data.scheduledStart).toEqual(new Date(future));
+    expect(data.scheduledEnd).toBeInstanceOf(Date);
+  });
+
+  it('derives the end from the job estimate when none is given', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned({ estimatedDurationMins: 90 }));
+
+    await service.updatePreferredTime(customer(), JOB_ID, { preferredStart: future });
+
+    const { scheduledStart, scheduledEnd } = mockPrisma.job.update.mock.calls[0][0].data;
+    expect(scheduledEnd.getTime() - scheduledStart.getTime()).toBe(90 * 60_000);
+  });
+
+  it('records the change in job history so a dispatcher can see it', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned());
+
+    await service.updatePreferredTime(customer(), JOB_ID, {
+      preferredStart: future, window: 'morning', note: 'mornings are better',
+    });
+
+    const note = mockPrisma.jobStatusHistory.create.mock.calls[0][0].data.note;
+    expect(note).toContain('Preferred time changed');
+    expect(note).toContain('morning');
+    expect(note).toContain('mornings are better');
+  });
+
+  it('refuses once the job is SCHEDULED, pointing at reschedule instead', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned({ status: 'SCHEDULED' }));
+
+    await expect(
+      service.updatePreferredTime(customer(), JOB_ID, { preferredStart: future }),
+    ).rejects.toThrow(/reschedule/i);
+    expect(mockPrisma.job.update).not.toHaveBeenCalled();
+  });
+
+  it('refuses when a technician is assigned, even if still PENDING', async () => {
+    // Assignment means a human committed, whether or not the status caught up.
+    mockPrisma.job.findFirst.mockResolvedValue(
+      pendingUnassigned({ assignedToId: 'tech-1', assignedToName: 'Miguel' }));
+
+    await expect(
+      service.updatePreferredTime(customer(), JOB_ID, { preferredStart: future }),
+    ).rejects.toThrow(/reschedule/i);
+    expect(mockPrisma.job.update).not.toHaveBeenCalled();
+  });
+
+  it.each(['COMPLETED', 'CANCELLED', 'EN_ROUTE', 'ON_SITE', 'PAID'])(
+    'refuses on a %s job', async (status) => {
+      mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned({ status }));
+      await expect(
+        service.updatePreferredTime(customer(), JOB_ID, { preferredStart: future }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+  it("refuses another customer's job", async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned());
+    await expect(
+      service.updatePreferredTime(customer('someone-else'), JOB_ID, { preferredStart: future }),
+    ).rejects.toThrow(ForbiddenException);
+    expect(mockPrisma.job.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects a time in the past', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned());
+    await expect(
+      service.updatePreferredTime(customer(), JOB_ID, {
+        preferredStart: new Date(Date.now() - 86_400_000).toISOString(),
+      }),
+    ).rejects.toThrow(/future/i);
+  });
+
+  it('rejects an end that is not after the start', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned());
+    await expect(
+      service.updatePreferredTime(customer(), JOB_ID, {
+        preferredStart: future, preferredEnd: future,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects an unparseable date', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned());
+    await expect(
+      service.updatePreferredTime(customer(), JOB_ID, { preferredStart: 'not-a-date' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws NotFound for a job in another company', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(null);
+    await expect(
+      service.updatePreferredTime(customer(), 'nope', { preferredStart: future }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('lets staff use it too, without the ownership check', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(pendingUnassigned({ customerId: 'someone-else' }));
+    await expect(
+      service.updatePreferredTime(makeAuthUser(Role.DISPATCHER), JOB_ID, { preferredStart: future }),
+    ).resolves.toBeDefined();
   });
 });

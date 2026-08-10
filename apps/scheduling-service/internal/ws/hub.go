@@ -2,7 +2,10 @@ package ws
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -32,6 +35,12 @@ type Hub struct {
 
 	// Redis client for pub/sub subscriptions
 	redis *redis.Client
+
+	// instanceID identifies this pod. Messages we publish carry it, so when they
+	// come back to us over the Redis pattern subscription we can skip them —
+	// we already delivered them locally. Without this, every local client would
+	// receive each event twice whenever Redis is healthy.
+	instanceID string
 }
 
 // Client represents a single WebSocket connection.
@@ -77,10 +86,24 @@ var upgrader = websocket.Upgrader{
 // NewHub creates a Hub and starts the Redis pub/sub listener.
 func NewHub(redisClient *redis.Client) *Hub {
 	h := &Hub{
-		clients: make(map[string]map[*Client]bool),
-		redis:   redisClient,
+		clients:    make(map[string]map[*Client]bool),
+		redis:      redisClient,
+		instanceID: newInstanceID(),
 	}
 	return h
+}
+
+// newInstanceID returns a value unique to this process, used to recognise our
+// own messages when they return over Redis. Random is sufficient — it only has
+// to be distinct between concurrently-running pods, never persisted or matched.
+func newInstanceID() string {
+	buf := make([]byte, 8)
+	if _, err := rand.Read(buf); err != nil {
+		// Time-based fallback: still distinct enough in practice, and a
+		// collision would only cost duplicate delivery, never lost delivery.
+		return fmt.Sprintf("pod-%d", time.Now().UnixNano())
+	}
+	return "pod-" + hex.EncodeToString(buf)
 }
 
 // StartRedisSubscriber subscribes to all GPS and assignment channels.
@@ -125,6 +148,15 @@ func (h *Hub) broadcastFromRedis(channel string, payload []byte) {
 		return
 	}
 
+	// Skip anything this pod published — those clients already have it.
+	var envelope struct {
+		Origin string `json:"origin"`
+	}
+	if err := json.Unmarshal(payload, &envelope); err == nil &&
+		envelope.Origin != "" && envelope.Origin == h.instanceID {
+		return
+	}
+
 	h.broadcast(companyID, payload)
 }
 
@@ -146,11 +178,22 @@ func (h *Hub) broadcast(companyID string, payload []byte) {
 // BroadcastMessage encodes a WSMessage as JSON and publishes it to Redis
 // so all service pods can fan it out to their connected clients.
 func (h *Hub) BroadcastMessage(ctx context.Context, msg models.WSMessage) {
+	msg.Origin = h.instanceID
+
 	data, err := json.Marshal(msg)
 	if err != nil {
 		log.Printf("⚠️  Failed to marshal WS message: %v", err)
 		return
 	}
+
+	// Deliver to our own clients first, and unconditionally.
+	//
+	// This used to go only to Redis, which meant a Redis outage silently dropped
+	// every event — including for the browser connected to this very process, so
+	// the dispatch board just quietly stopped updating and users learned to hit
+	// refresh. Local delivery also removes a network hop from the common
+	// single-pod case, so the board reacts immediately.
+	h.broadcast(msg.CompanyID, data)
 
 	var channel string
 	switch {
@@ -160,8 +203,10 @@ func (h *Hub) BroadcastMessage(ctx context.Context, msg models.WSMessage) {
 		channel = database.AssignmentChannel(msg.CompanyID)
 	}
 
+	// Then fan out to the other pods. Best-effort: a failure here costs
+	// cross-pod delivery, not this pod's clients.
 	if err := h.redis.Publish(ctx, channel, data).Err(); err != nil {
-		log.Printf("⚠️  Redis publish failed on %s: %v", channel, err)
+		log.Printf("⚠️  Redis publish failed on %s (local clients still notified): %v", channel, err)
 	}
 }
 

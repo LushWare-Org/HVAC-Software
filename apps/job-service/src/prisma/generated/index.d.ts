@@ -73,6 +73,16 @@ export type WorkOrderTaskCompletion = $Result.DefaultSelection<Prisma.$WorkOrder
  * 
  */
 export type WorkOrderLineItem = $Result.DefaultSelection<Prisma.$WorkOrderLineItemPayload>
+/**
+ * Model RescheduleRequest
+ * 
+ */
+export type RescheduleRequest = $Result.DefaultSelection<Prisma.$RescheduleRequestPayload>
+/**
+ * Model RescheduleSlot
+ * 
+ */
+export type RescheduleSlot = $Result.DefaultSelection<Prisma.$RescheduleSlotPayload>
 
 /**
  * Enums
@@ -128,6 +138,15 @@ export const JobPriority: {
 export type JobPriority = (typeof JobPriority)[keyof typeof JobPriority]
 
 
+export const RescheduleState: {
+  AWAITING_CUSTOMER: 'AWAITING_CUSTOMER',
+  AWAITING_ADMIN: 'AWAITING_ADMIN',
+  READY_TO_APPLY: 'READY_TO_APPLY'
+};
+
+export type RescheduleState = (typeof RescheduleState)[keyof typeof RescheduleState]
+
+
 export const PhotoType: {
   BEFORE: 'BEFORE',
   AFTER: 'AFTER',
@@ -149,6 +168,48 @@ export const WorkOrderStatus: {
 
 export type WorkOrderStatus = (typeof WorkOrderStatus)[keyof typeof WorkOrderStatus]
 
+
+export const RescheduleActor: {
+  ADMIN: 'ADMIN',
+  CUSTOMER: 'CUSTOMER'
+};
+
+export type RescheduleActor = (typeof RescheduleActor)[keyof typeof RescheduleActor]
+
+
+export const RescheduleMode: {
+  PROPOSE_SLOTS: 'PROPOSE_SLOTS',
+  OPEN_ASK: 'OPEN_ASK'
+};
+
+export type RescheduleMode = (typeof RescheduleMode)[keyof typeof RescheduleMode]
+
+
+export const RescheduleReason: {
+  PARTS_DELAY: 'PARTS_DELAY',
+  TECH_UNAVAILABLE: 'TECH_UNAVAILABLE',
+  WEATHER: 'WEATHER',
+  EMERGENCY_BUMP: 'EMERGENCY_BUMP',
+  CAPACITY: 'CAPACITY',
+  CUSTOMER_UNAVAILABLE: 'CUSTOMER_UNAVAILABLE',
+  ACCESS_ISSUE: 'ACCESS_ISSUE',
+  OTHER: 'OTHER'
+};
+
+export type RescheduleReason = (typeof RescheduleReason)[keyof typeof RescheduleReason]
+
+
+export const RescheduleStatus: {
+  AWAITING_RESPONSE: 'AWAITING_RESPONSE',
+  SLOT_PICKED: 'SLOT_PICKED',
+  DECLINED: 'DECLINED',
+  SUPERSEDED: 'SUPERSEDED',
+  APPLIED: 'APPLIED',
+  CANCELLED: 'CANCELLED'
+};
+
+export type RescheduleStatus = (typeof RescheduleStatus)[keyof typeof RescheduleStatus]
+
 }
 
 export type CustomFieldType = $Enums.CustomFieldType
@@ -167,6 +228,10 @@ export type JobPriority = $Enums.JobPriority
 
 export const JobPriority: typeof $Enums.JobPriority
 
+export type RescheduleState = $Enums.RescheduleState
+
+export const RescheduleState: typeof $Enums.RescheduleState
+
 export type PhotoType = $Enums.PhotoType
 
 export const PhotoType: typeof $Enums.PhotoType
@@ -174,6 +239,22 @@ export const PhotoType: typeof $Enums.PhotoType
 export type WorkOrderStatus = $Enums.WorkOrderStatus
 
 export const WorkOrderStatus: typeof $Enums.WorkOrderStatus
+
+export type RescheduleActor = $Enums.RescheduleActor
+
+export const RescheduleActor: typeof $Enums.RescheduleActor
+
+export type RescheduleMode = $Enums.RescheduleMode
+
+export const RescheduleMode: typeof $Enums.RescheduleMode
+
+export type RescheduleReason = $Enums.RescheduleReason
+
+export const RescheduleReason: typeof $Enums.RescheduleReason
+
+export type RescheduleStatus = $Enums.RescheduleStatus
+
+export const RescheduleStatus: typeof $Enums.RescheduleStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -417,6 +498,26 @@ export class PrismaClient<
     * ```
     */
   get workOrderLineItem(): Prisma.WorkOrderLineItemDelegate<ExtArgs>;
+
+  /**
+   * `prisma.rescheduleRequest`: Exposes CRUD operations for the **RescheduleRequest** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RescheduleRequests
+    * const rescheduleRequests = await prisma.rescheduleRequest.findMany()
+    * ```
+    */
+  get rescheduleRequest(): Prisma.RescheduleRequestDelegate<ExtArgs>;
+
+  /**
+   * `prisma.rescheduleSlot`: Exposes CRUD operations for the **RescheduleSlot** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RescheduleSlots
+    * const rescheduleSlots = await prisma.rescheduleSlot.findMany()
+    * ```
+    */
+  get rescheduleSlot(): Prisma.RescheduleSlotDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -869,7 +970,9 @@ export namespace Prisma {
     JobPhoto: 'JobPhoto',
     WorkOrder: 'WorkOrder',
     WorkOrderTaskCompletion: 'WorkOrderTaskCompletion',
-    WorkOrderLineItem: 'WorkOrderLineItem'
+    WorkOrderLineItem: 'WorkOrderLineItem',
+    RescheduleRequest: 'RescheduleRequest',
+    RescheduleSlot: 'RescheduleSlot'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -885,7 +988,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "jobType" | "jobTemplate" | "jobTemplateTask" | "jobCustomFieldDef" | "jobCustomFieldValue" | "priceBookItem" | "job" | "jobStatusHistory" | "jobPhoto" | "workOrder" | "workOrderTaskCompletion" | "workOrderLineItem"
+      modelProps: "jobType" | "jobTemplate" | "jobTemplateTask" | "jobCustomFieldDef" | "jobCustomFieldValue" | "priceBookItem" | "job" | "jobStatusHistory" | "jobPhoto" | "workOrder" | "workOrderTaskCompletion" | "workOrderLineItem" | "rescheduleRequest" | "rescheduleSlot"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1729,6 +1832,146 @@ export namespace Prisma {
           }
         }
       }
+      RescheduleRequest: {
+        payload: Prisma.$RescheduleRequestPayload<ExtArgs>
+        fields: Prisma.RescheduleRequestFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RescheduleRequestFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RescheduleRequestFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload>
+          }
+          findFirst: {
+            args: Prisma.RescheduleRequestFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RescheduleRequestFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload>
+          }
+          findMany: {
+            args: Prisma.RescheduleRequestFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload>[]
+          }
+          create: {
+            args: Prisma.RescheduleRequestCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload>
+          }
+          createMany: {
+            args: Prisma.RescheduleRequestCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.RescheduleRequestCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload>[]
+          }
+          delete: {
+            args: Prisma.RescheduleRequestDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload>
+          }
+          update: {
+            args: Prisma.RescheduleRequestUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload>
+          }
+          deleteMany: {
+            args: Prisma.RescheduleRequestDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RescheduleRequestUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.RescheduleRequestUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleRequestPayload>
+          }
+          aggregate: {
+            args: Prisma.RescheduleRequestAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRescheduleRequest>
+          }
+          groupBy: {
+            args: Prisma.RescheduleRequestGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RescheduleRequestGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RescheduleRequestCountArgs<ExtArgs>
+            result: $Utils.Optional<RescheduleRequestCountAggregateOutputType> | number
+          }
+        }
+      }
+      RescheduleSlot: {
+        payload: Prisma.$RescheduleSlotPayload<ExtArgs>
+        fields: Prisma.RescheduleSlotFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RescheduleSlotFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RescheduleSlotFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload>
+          }
+          findFirst: {
+            args: Prisma.RescheduleSlotFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RescheduleSlotFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload>
+          }
+          findMany: {
+            args: Prisma.RescheduleSlotFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload>[]
+          }
+          create: {
+            args: Prisma.RescheduleSlotCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload>
+          }
+          createMany: {
+            args: Prisma.RescheduleSlotCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.RescheduleSlotCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload>[]
+          }
+          delete: {
+            args: Prisma.RescheduleSlotDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload>
+          }
+          update: {
+            args: Prisma.RescheduleSlotUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload>
+          }
+          deleteMany: {
+            args: Prisma.RescheduleSlotDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RescheduleSlotUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.RescheduleSlotUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RescheduleSlotPayload>
+          }
+          aggregate: {
+            args: Prisma.RescheduleSlotAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRescheduleSlot>
+          }
+          groupBy: {
+            args: Prisma.RescheduleSlotGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RescheduleSlotGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RescheduleSlotCountArgs<ExtArgs>
+            result: $Utils.Optional<RescheduleSlotCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2045,6 +2288,7 @@ export namespace Prisma {
     customFieldValues: number
     statusHistory: number
     photos: number
+    rescheduleRequests: number
   }
 
   export type JobCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2052,6 +2296,7 @@ export namespace Prisma {
     customFieldValues?: boolean | JobCountOutputTypeCountCustomFieldValuesArgs
     statusHistory?: boolean | JobCountOutputTypeCountStatusHistoryArgs
     photos?: boolean | JobCountOutputTypeCountPhotosArgs
+    rescheduleRequests?: boolean | JobCountOutputTypeCountRescheduleRequestsArgs
   }
 
   // Custom InputTypes
@@ -2093,6 +2338,13 @@ export namespace Prisma {
     where?: JobPhotoWhereInput
   }
 
+  /**
+   * JobCountOutputType without action
+   */
+  export type JobCountOutputTypeCountRescheduleRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RescheduleRequestWhereInput
+  }
+
 
   /**
    * Count Type WorkOrderCountOutputType
@@ -2131,6 +2383,37 @@ export namespace Prisma {
    */
   export type WorkOrderCountOutputTypeCountTaskCompletionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: WorkOrderTaskCompletionWhereInput
+  }
+
+
+  /**
+   * Count Type RescheduleRequestCountOutputType
+   */
+
+  export type RescheduleRequestCountOutputType = {
+    slots: number
+  }
+
+  export type RescheduleRequestCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    slots?: boolean | RescheduleRequestCountOutputTypeCountSlotsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * RescheduleRequestCountOutputType without action
+   */
+  export type RescheduleRequestCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequestCountOutputType
+     */
+    select?: RescheduleRequestCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * RescheduleRequestCountOutputType without action
+   */
+  export type RescheduleRequestCountOutputTypeCountSlotsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RescheduleSlotWhereInput
   }
 
 
@@ -8515,6 +8798,7 @@ export namespace Prisma {
     cancellationReason: string | null
     hasPartShortage: boolean | null
     partShortageNote: string | null
+    rescheduleState: $Enums.RescheduleState | null
     createdByUserId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -8562,6 +8846,7 @@ export namespace Prisma {
     cancellationReason: string | null
     hasPartShortage: boolean | null
     partShortageNote: string | null
+    rescheduleState: $Enums.RescheduleState | null
     createdByUserId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -8610,6 +8895,7 @@ export namespace Prisma {
     cancellationReason: number
     hasPartShortage: number
     partShortageNote: number
+    rescheduleState: number
     createdByUserId: number
     createdAt: number
     updatedAt: number
@@ -8675,6 +8961,7 @@ export namespace Prisma {
     cancellationReason?: true
     hasPartShortage?: true
     partShortageNote?: true
+    rescheduleState?: true
     createdByUserId?: true
     createdAt?: true
     updatedAt?: true
@@ -8722,6 +9009,7 @@ export namespace Prisma {
     cancellationReason?: true
     hasPartShortage?: true
     partShortageNote?: true
+    rescheduleState?: true
     createdByUserId?: true
     createdAt?: true
     updatedAt?: true
@@ -8770,6 +9058,7 @@ export namespace Prisma {
     cancellationReason?: true
     hasPartShortage?: true
     partShortageNote?: true
+    rescheduleState?: true
     createdByUserId?: true
     createdAt?: true
     updatedAt?: true
@@ -8905,6 +9194,7 @@ export namespace Prisma {
     cancellationReason: string | null
     hasPartShortage: boolean
     partShortageNote: string | null
+    rescheduleState: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt: Date
     updatedAt: Date
@@ -8972,6 +9262,7 @@ export namespace Prisma {
     cancellationReason?: boolean
     hasPartShortage?: boolean
     partShortageNote?: boolean
+    rescheduleState?: boolean
     createdByUserId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -8982,6 +9273,7 @@ export namespace Prisma {
     customFieldValues?: boolean | Job$customFieldValuesArgs<ExtArgs>
     statusHistory?: boolean | Job$statusHistoryArgs<ExtArgs>
     photos?: boolean | Job$photosArgs<ExtArgs>
+    rescheduleRequests?: boolean | Job$rescheduleRequestsArgs<ExtArgs>
     _count?: boolean | JobCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["job"]>
 
@@ -9027,6 +9319,7 @@ export namespace Prisma {
     cancellationReason?: boolean
     hasPartShortage?: boolean
     partShortageNote?: boolean
+    rescheduleState?: boolean
     createdByUserId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -9077,6 +9370,7 @@ export namespace Prisma {
     cancellationReason?: boolean
     hasPartShortage?: boolean
     partShortageNote?: boolean
+    rescheduleState?: boolean
     createdByUserId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -9090,6 +9384,7 @@ export namespace Prisma {
     customFieldValues?: boolean | Job$customFieldValuesArgs<ExtArgs>
     statusHistory?: boolean | Job$statusHistoryArgs<ExtArgs>
     photos?: boolean | Job$photosArgs<ExtArgs>
+    rescheduleRequests?: boolean | Job$rescheduleRequestsArgs<ExtArgs>
     _count?: boolean | JobCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type JobIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9106,6 +9401,7 @@ export namespace Prisma {
       customFieldValues: Prisma.$JobCustomFieldValuePayload<ExtArgs>[]
       statusHistory: Prisma.$JobStatusHistoryPayload<ExtArgs>[]
       photos: Prisma.$JobPhotoPayload<ExtArgs>[]
+      rescheduleRequests: Prisma.$RescheduleRequestPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -9149,6 +9445,7 @@ export namespace Prisma {
       cancellationReason: string | null
       hasPartShortage: boolean
       partShortageNote: string | null
+      rescheduleState: $Enums.RescheduleState | null
       createdByUserId: string
       createdAt: Date
       updatedAt: Date
@@ -9523,6 +9820,7 @@ export namespace Prisma {
     customFieldValues<T extends Job$customFieldValuesArgs<ExtArgs> = {}>(args?: Subset<T, Job$customFieldValuesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JobCustomFieldValuePayload<ExtArgs>, T, "findMany"> | Null>
     statusHistory<T extends Job$statusHistoryArgs<ExtArgs> = {}>(args?: Subset<T, Job$statusHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JobStatusHistoryPayload<ExtArgs>, T, "findMany"> | Null>
     photos<T extends Job$photosArgs<ExtArgs> = {}>(args?: Subset<T, Job$photosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JobPhotoPayload<ExtArgs>, T, "findMany"> | Null>
+    rescheduleRequests<T extends Job$rescheduleRequestsArgs<ExtArgs> = {}>(args?: Subset<T, Job$rescheduleRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9593,6 +9891,7 @@ export namespace Prisma {
     readonly cancellationReason: FieldRef<"Job", 'String'>
     readonly hasPartShortage: FieldRef<"Job", 'Boolean'>
     readonly partShortageNote: FieldRef<"Job", 'String'>
+    readonly rescheduleState: FieldRef<"Job", 'RescheduleState'>
     readonly createdByUserId: FieldRef<"Job", 'String'>
     readonly createdAt: FieldRef<"Job", 'DateTime'>
     readonly updatedAt: FieldRef<"Job", 'DateTime'>
@@ -10022,6 +10321,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: JobPhotoScalarFieldEnum | JobPhotoScalarFieldEnum[]
+  }
+
+  /**
+   * Job.rescheduleRequests
+   */
+  export type Job$rescheduleRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    where?: RescheduleRequestWhereInput
+    orderBy?: RescheduleRequestOrderByWithRelationInput | RescheduleRequestOrderByWithRelationInput[]
+    cursor?: RescheduleRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: RescheduleRequestScalarFieldEnum | RescheduleRequestScalarFieldEnum[]
   }
 
   /**
@@ -15130,6 +15449,2054 @@ export namespace Prisma {
 
 
   /**
+   * Model RescheduleRequest
+   */
+
+  export type AggregateRescheduleRequest = {
+    _count: RescheduleRequestCountAggregateOutputType | null
+    _min: RescheduleRequestMinAggregateOutputType | null
+    _max: RescheduleRequestMaxAggregateOutputType | null
+  }
+
+  export type RescheduleRequestMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    jobId: string | null
+    openedBy: $Enums.RescheduleActor | null
+    openedByUserId: string | null
+    openedByName: string | null
+    mode: $Enums.RescheduleMode | null
+    reasonCode: $Enums.RescheduleReason | null
+    reason: string | null
+    status: $Enums.RescheduleStatus | null
+    pickedSlotId: string | null
+    responseNote: string | null
+    respondedAt: Date | null
+    respondedByName: string | null
+    appliedAt: Date | null
+    nudgedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RescheduleRequestMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    jobId: string | null
+    openedBy: $Enums.RescheduleActor | null
+    openedByUserId: string | null
+    openedByName: string | null
+    mode: $Enums.RescheduleMode | null
+    reasonCode: $Enums.RescheduleReason | null
+    reason: string | null
+    status: $Enums.RescheduleStatus | null
+    pickedSlotId: string | null
+    responseNote: string | null
+    respondedAt: Date | null
+    respondedByName: string | null
+    appliedAt: Date | null
+    nudgedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RescheduleRequestCountAggregateOutputType = {
+    id: number
+    companyId: number
+    jobId: number
+    openedBy: number
+    openedByUserId: number
+    openedByName: number
+    mode: number
+    reasonCode: number
+    reason: number
+    status: number
+    pickedSlotId: number
+    responseNote: number
+    respondedAt: number
+    respondedByName: number
+    appliedAt: number
+    nudgedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type RescheduleRequestMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    jobId?: true
+    openedBy?: true
+    openedByUserId?: true
+    openedByName?: true
+    mode?: true
+    reasonCode?: true
+    reason?: true
+    status?: true
+    pickedSlotId?: true
+    responseNote?: true
+    respondedAt?: true
+    respondedByName?: true
+    appliedAt?: true
+    nudgedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RescheduleRequestMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    jobId?: true
+    openedBy?: true
+    openedByUserId?: true
+    openedByName?: true
+    mode?: true
+    reasonCode?: true
+    reason?: true
+    status?: true
+    pickedSlotId?: true
+    responseNote?: true
+    respondedAt?: true
+    respondedByName?: true
+    appliedAt?: true
+    nudgedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RescheduleRequestCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    jobId?: true
+    openedBy?: true
+    openedByUserId?: true
+    openedByName?: true
+    mode?: true
+    reasonCode?: true
+    reason?: true
+    status?: true
+    pickedSlotId?: true
+    responseNote?: true
+    respondedAt?: true
+    respondedByName?: true
+    appliedAt?: true
+    nudgedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type RescheduleRequestAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RescheduleRequest to aggregate.
+     */
+    where?: RescheduleRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RescheduleRequests to fetch.
+     */
+    orderBy?: RescheduleRequestOrderByWithRelationInput | RescheduleRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RescheduleRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RescheduleRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RescheduleRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned RescheduleRequests
+    **/
+    _count?: true | RescheduleRequestCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RescheduleRequestMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RescheduleRequestMaxAggregateInputType
+  }
+
+  export type GetRescheduleRequestAggregateType<T extends RescheduleRequestAggregateArgs> = {
+        [P in keyof T & keyof AggregateRescheduleRequest]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRescheduleRequest[P]>
+      : GetScalarType<T[P], AggregateRescheduleRequest[P]>
+  }
+
+
+
+
+  export type RescheduleRequestGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RescheduleRequestWhereInput
+    orderBy?: RescheduleRequestOrderByWithAggregationInput | RescheduleRequestOrderByWithAggregationInput[]
+    by: RescheduleRequestScalarFieldEnum[] | RescheduleRequestScalarFieldEnum
+    having?: RescheduleRequestScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RescheduleRequestCountAggregateInputType | true
+    _min?: RescheduleRequestMinAggregateInputType
+    _max?: RescheduleRequestMaxAggregateInputType
+  }
+
+  export type RescheduleRequestGroupByOutputType = {
+    id: string
+    companyId: string
+    jobId: string
+    openedBy: $Enums.RescheduleActor
+    openedByUserId: string | null
+    openedByName: string | null
+    mode: $Enums.RescheduleMode
+    reasonCode: $Enums.RescheduleReason
+    reason: string | null
+    status: $Enums.RescheduleStatus
+    pickedSlotId: string | null
+    responseNote: string | null
+    respondedAt: Date | null
+    respondedByName: string | null
+    appliedAt: Date | null
+    nudgedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: RescheduleRequestCountAggregateOutputType | null
+    _min: RescheduleRequestMinAggregateOutputType | null
+    _max: RescheduleRequestMaxAggregateOutputType | null
+  }
+
+  type GetRescheduleRequestGroupByPayload<T extends RescheduleRequestGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RescheduleRequestGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RescheduleRequestGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RescheduleRequestGroupByOutputType[P]>
+            : GetScalarType<T[P], RescheduleRequestGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RescheduleRequestSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    jobId?: boolean
+    openedBy?: boolean
+    openedByUserId?: boolean
+    openedByName?: boolean
+    mode?: boolean
+    reasonCode?: boolean
+    reason?: boolean
+    status?: boolean
+    pickedSlotId?: boolean
+    responseNote?: boolean
+    respondedAt?: boolean
+    respondedByName?: boolean
+    appliedAt?: boolean
+    nudgedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    job?: boolean | JobDefaultArgs<ExtArgs>
+    slots?: boolean | RescheduleRequest$slotsArgs<ExtArgs>
+    _count?: boolean | RescheduleRequestCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["rescheduleRequest"]>
+
+  export type RescheduleRequestSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    jobId?: boolean
+    openedBy?: boolean
+    openedByUserId?: boolean
+    openedByName?: boolean
+    mode?: boolean
+    reasonCode?: boolean
+    reason?: boolean
+    status?: boolean
+    pickedSlotId?: boolean
+    responseNote?: boolean
+    respondedAt?: boolean
+    respondedByName?: boolean
+    appliedAt?: boolean
+    nudgedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    job?: boolean | JobDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["rescheduleRequest"]>
+
+  export type RescheduleRequestSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    jobId?: boolean
+    openedBy?: boolean
+    openedByUserId?: boolean
+    openedByName?: boolean
+    mode?: boolean
+    reasonCode?: boolean
+    reason?: boolean
+    status?: boolean
+    pickedSlotId?: boolean
+    responseNote?: boolean
+    respondedAt?: boolean
+    respondedByName?: boolean
+    appliedAt?: boolean
+    nudgedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type RescheduleRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    job?: boolean | JobDefaultArgs<ExtArgs>
+    slots?: boolean | RescheduleRequest$slotsArgs<ExtArgs>
+    _count?: boolean | RescheduleRequestCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type RescheduleRequestIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    job?: boolean | JobDefaultArgs<ExtArgs>
+  }
+
+  export type $RescheduleRequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "RescheduleRequest"
+    objects: {
+      job: Prisma.$JobPayload<ExtArgs>
+      slots: Prisma.$RescheduleSlotPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      jobId: string
+      openedBy: $Enums.RescheduleActor
+      openedByUserId: string | null
+      openedByName: string | null
+      mode: $Enums.RescheduleMode
+      reasonCode: $Enums.RescheduleReason
+      reason: string | null
+      status: $Enums.RescheduleStatus
+      pickedSlotId: string | null
+      responseNote: string | null
+      respondedAt: Date | null
+      respondedByName: string | null
+      appliedAt: Date | null
+      nudgedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["rescheduleRequest"]>
+    composites: {}
+  }
+
+  type RescheduleRequestGetPayload<S extends boolean | null | undefined | RescheduleRequestDefaultArgs> = $Result.GetResult<Prisma.$RescheduleRequestPayload, S>
+
+  type RescheduleRequestCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<RescheduleRequestFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: RescheduleRequestCountAggregateInputType | true
+    }
+
+  export interface RescheduleRequestDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['RescheduleRequest'], meta: { name: 'RescheduleRequest' } }
+    /**
+     * Find zero or one RescheduleRequest that matches the filter.
+     * @param {RescheduleRequestFindUniqueArgs} args - Arguments to find a RescheduleRequest
+     * @example
+     * // Get one RescheduleRequest
+     * const rescheduleRequest = await prisma.rescheduleRequest.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RescheduleRequestFindUniqueArgs>(args: SelectSubset<T, RescheduleRequestFindUniqueArgs<ExtArgs>>): Prisma__RescheduleRequestClient<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one RescheduleRequest that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {RescheduleRequestFindUniqueOrThrowArgs} args - Arguments to find a RescheduleRequest
+     * @example
+     * // Get one RescheduleRequest
+     * const rescheduleRequest = await prisma.rescheduleRequest.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RescheduleRequestFindUniqueOrThrowArgs>(args: SelectSubset<T, RescheduleRequestFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RescheduleRequestClient<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first RescheduleRequest that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleRequestFindFirstArgs} args - Arguments to find a RescheduleRequest
+     * @example
+     * // Get one RescheduleRequest
+     * const rescheduleRequest = await prisma.rescheduleRequest.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RescheduleRequestFindFirstArgs>(args?: SelectSubset<T, RescheduleRequestFindFirstArgs<ExtArgs>>): Prisma__RescheduleRequestClient<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first RescheduleRequest that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleRequestFindFirstOrThrowArgs} args - Arguments to find a RescheduleRequest
+     * @example
+     * // Get one RescheduleRequest
+     * const rescheduleRequest = await prisma.rescheduleRequest.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RescheduleRequestFindFirstOrThrowArgs>(args?: SelectSubset<T, RescheduleRequestFindFirstOrThrowArgs<ExtArgs>>): Prisma__RescheduleRequestClient<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more RescheduleRequests that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleRequestFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all RescheduleRequests
+     * const rescheduleRequests = await prisma.rescheduleRequest.findMany()
+     * 
+     * // Get first 10 RescheduleRequests
+     * const rescheduleRequests = await prisma.rescheduleRequest.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const rescheduleRequestWithIdOnly = await prisma.rescheduleRequest.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RescheduleRequestFindManyArgs>(args?: SelectSubset<T, RescheduleRequestFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a RescheduleRequest.
+     * @param {RescheduleRequestCreateArgs} args - Arguments to create a RescheduleRequest.
+     * @example
+     * // Create one RescheduleRequest
+     * const RescheduleRequest = await prisma.rescheduleRequest.create({
+     *   data: {
+     *     // ... data to create a RescheduleRequest
+     *   }
+     * })
+     * 
+     */
+    create<T extends RescheduleRequestCreateArgs>(args: SelectSubset<T, RescheduleRequestCreateArgs<ExtArgs>>): Prisma__RescheduleRequestClient<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many RescheduleRequests.
+     * @param {RescheduleRequestCreateManyArgs} args - Arguments to create many RescheduleRequests.
+     * @example
+     * // Create many RescheduleRequests
+     * const rescheduleRequest = await prisma.rescheduleRequest.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RescheduleRequestCreateManyArgs>(args?: SelectSubset<T, RescheduleRequestCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many RescheduleRequests and returns the data saved in the database.
+     * @param {RescheduleRequestCreateManyAndReturnArgs} args - Arguments to create many RescheduleRequests.
+     * @example
+     * // Create many RescheduleRequests
+     * const rescheduleRequest = await prisma.rescheduleRequest.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many RescheduleRequests and only return the `id`
+     * const rescheduleRequestWithIdOnly = await prisma.rescheduleRequest.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends RescheduleRequestCreateManyAndReturnArgs>(args?: SelectSubset<T, RescheduleRequestCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a RescheduleRequest.
+     * @param {RescheduleRequestDeleteArgs} args - Arguments to delete one RescheduleRequest.
+     * @example
+     * // Delete one RescheduleRequest
+     * const RescheduleRequest = await prisma.rescheduleRequest.delete({
+     *   where: {
+     *     // ... filter to delete one RescheduleRequest
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RescheduleRequestDeleteArgs>(args: SelectSubset<T, RescheduleRequestDeleteArgs<ExtArgs>>): Prisma__RescheduleRequestClient<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one RescheduleRequest.
+     * @param {RescheduleRequestUpdateArgs} args - Arguments to update one RescheduleRequest.
+     * @example
+     * // Update one RescheduleRequest
+     * const rescheduleRequest = await prisma.rescheduleRequest.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RescheduleRequestUpdateArgs>(args: SelectSubset<T, RescheduleRequestUpdateArgs<ExtArgs>>): Prisma__RescheduleRequestClient<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more RescheduleRequests.
+     * @param {RescheduleRequestDeleteManyArgs} args - Arguments to filter RescheduleRequests to delete.
+     * @example
+     * // Delete a few RescheduleRequests
+     * const { count } = await prisma.rescheduleRequest.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RescheduleRequestDeleteManyArgs>(args?: SelectSubset<T, RescheduleRequestDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RescheduleRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleRequestUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many RescheduleRequests
+     * const rescheduleRequest = await prisma.rescheduleRequest.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RescheduleRequestUpdateManyArgs>(args: SelectSubset<T, RescheduleRequestUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one RescheduleRequest.
+     * @param {RescheduleRequestUpsertArgs} args - Arguments to update or create a RescheduleRequest.
+     * @example
+     * // Update or create a RescheduleRequest
+     * const rescheduleRequest = await prisma.rescheduleRequest.upsert({
+     *   create: {
+     *     // ... data to create a RescheduleRequest
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the RescheduleRequest we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RescheduleRequestUpsertArgs>(args: SelectSubset<T, RescheduleRequestUpsertArgs<ExtArgs>>): Prisma__RescheduleRequestClient<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of RescheduleRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleRequestCountArgs} args - Arguments to filter RescheduleRequests to count.
+     * @example
+     * // Count the number of RescheduleRequests
+     * const count = await prisma.rescheduleRequest.count({
+     *   where: {
+     *     // ... the filter for the RescheduleRequests we want to count
+     *   }
+     * })
+    **/
+    count<T extends RescheduleRequestCountArgs>(
+      args?: Subset<T, RescheduleRequestCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RescheduleRequestCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a RescheduleRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleRequestAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RescheduleRequestAggregateArgs>(args: Subset<T, RescheduleRequestAggregateArgs>): Prisma.PrismaPromise<GetRescheduleRequestAggregateType<T>>
+
+    /**
+     * Group by RescheduleRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleRequestGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RescheduleRequestGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RescheduleRequestGroupByArgs['orderBy'] }
+        : { orderBy?: RescheduleRequestGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RescheduleRequestGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRescheduleRequestGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the RescheduleRequest model
+   */
+  readonly fields: RescheduleRequestFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for RescheduleRequest.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RescheduleRequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    job<T extends JobDefaultArgs<ExtArgs> = {}>(args?: Subset<T, JobDefaultArgs<ExtArgs>>): Prisma__JobClient<$Result.GetResult<Prisma.$JobPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    slots<T extends RescheduleRequest$slotsArgs<ExtArgs> = {}>(args?: Subset<T, RescheduleRequest$slotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the RescheduleRequest model
+   */ 
+  interface RescheduleRequestFieldRefs {
+    readonly id: FieldRef<"RescheduleRequest", 'String'>
+    readonly companyId: FieldRef<"RescheduleRequest", 'String'>
+    readonly jobId: FieldRef<"RescheduleRequest", 'String'>
+    readonly openedBy: FieldRef<"RescheduleRequest", 'RescheduleActor'>
+    readonly openedByUserId: FieldRef<"RescheduleRequest", 'String'>
+    readonly openedByName: FieldRef<"RescheduleRequest", 'String'>
+    readonly mode: FieldRef<"RescheduleRequest", 'RescheduleMode'>
+    readonly reasonCode: FieldRef<"RescheduleRequest", 'RescheduleReason'>
+    readonly reason: FieldRef<"RescheduleRequest", 'String'>
+    readonly status: FieldRef<"RescheduleRequest", 'RescheduleStatus'>
+    readonly pickedSlotId: FieldRef<"RescheduleRequest", 'String'>
+    readonly responseNote: FieldRef<"RescheduleRequest", 'String'>
+    readonly respondedAt: FieldRef<"RescheduleRequest", 'DateTime'>
+    readonly respondedByName: FieldRef<"RescheduleRequest", 'String'>
+    readonly appliedAt: FieldRef<"RescheduleRequest", 'DateTime'>
+    readonly nudgedAt: FieldRef<"RescheduleRequest", 'DateTime'>
+    readonly createdAt: FieldRef<"RescheduleRequest", 'DateTime'>
+    readonly updatedAt: FieldRef<"RescheduleRequest", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * RescheduleRequest findUnique
+   */
+  export type RescheduleRequestFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleRequest to fetch.
+     */
+    where: RescheduleRequestWhereUniqueInput
+  }
+
+  /**
+   * RescheduleRequest findUniqueOrThrow
+   */
+  export type RescheduleRequestFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleRequest to fetch.
+     */
+    where: RescheduleRequestWhereUniqueInput
+  }
+
+  /**
+   * RescheduleRequest findFirst
+   */
+  export type RescheduleRequestFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleRequest to fetch.
+     */
+    where?: RescheduleRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RescheduleRequests to fetch.
+     */
+    orderBy?: RescheduleRequestOrderByWithRelationInput | RescheduleRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RescheduleRequests.
+     */
+    cursor?: RescheduleRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RescheduleRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RescheduleRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RescheduleRequests.
+     */
+    distinct?: RescheduleRequestScalarFieldEnum | RescheduleRequestScalarFieldEnum[]
+  }
+
+  /**
+   * RescheduleRequest findFirstOrThrow
+   */
+  export type RescheduleRequestFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleRequest to fetch.
+     */
+    where?: RescheduleRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RescheduleRequests to fetch.
+     */
+    orderBy?: RescheduleRequestOrderByWithRelationInput | RescheduleRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RescheduleRequests.
+     */
+    cursor?: RescheduleRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RescheduleRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RescheduleRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RescheduleRequests.
+     */
+    distinct?: RescheduleRequestScalarFieldEnum | RescheduleRequestScalarFieldEnum[]
+  }
+
+  /**
+   * RescheduleRequest findMany
+   */
+  export type RescheduleRequestFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleRequests to fetch.
+     */
+    where?: RescheduleRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RescheduleRequests to fetch.
+     */
+    orderBy?: RescheduleRequestOrderByWithRelationInput | RescheduleRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing RescheduleRequests.
+     */
+    cursor?: RescheduleRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RescheduleRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RescheduleRequests.
+     */
+    skip?: number
+    distinct?: RescheduleRequestScalarFieldEnum | RescheduleRequestScalarFieldEnum[]
+  }
+
+  /**
+   * RescheduleRequest create
+   */
+  export type RescheduleRequestCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    /**
+     * The data needed to create a RescheduleRequest.
+     */
+    data: XOR<RescheduleRequestCreateInput, RescheduleRequestUncheckedCreateInput>
+  }
+
+  /**
+   * RescheduleRequest createMany
+   */
+  export type RescheduleRequestCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many RescheduleRequests.
+     */
+    data: RescheduleRequestCreateManyInput | RescheduleRequestCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * RescheduleRequest createManyAndReturn
+   */
+  export type RescheduleRequestCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many RescheduleRequests.
+     */
+    data: RescheduleRequestCreateManyInput | RescheduleRequestCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * RescheduleRequest update
+   */
+  export type RescheduleRequestUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    /**
+     * The data needed to update a RescheduleRequest.
+     */
+    data: XOR<RescheduleRequestUpdateInput, RescheduleRequestUncheckedUpdateInput>
+    /**
+     * Choose, which RescheduleRequest to update.
+     */
+    where: RescheduleRequestWhereUniqueInput
+  }
+
+  /**
+   * RescheduleRequest updateMany
+   */
+  export type RescheduleRequestUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update RescheduleRequests.
+     */
+    data: XOR<RescheduleRequestUpdateManyMutationInput, RescheduleRequestUncheckedUpdateManyInput>
+    /**
+     * Filter which RescheduleRequests to update
+     */
+    where?: RescheduleRequestWhereInput
+  }
+
+  /**
+   * RescheduleRequest upsert
+   */
+  export type RescheduleRequestUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    /**
+     * The filter to search for the RescheduleRequest to update in case it exists.
+     */
+    where: RescheduleRequestWhereUniqueInput
+    /**
+     * In case the RescheduleRequest found by the `where` argument doesn't exist, create a new RescheduleRequest with this data.
+     */
+    create: XOR<RescheduleRequestCreateInput, RescheduleRequestUncheckedCreateInput>
+    /**
+     * In case the RescheduleRequest was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RescheduleRequestUpdateInput, RescheduleRequestUncheckedUpdateInput>
+  }
+
+  /**
+   * RescheduleRequest delete
+   */
+  export type RescheduleRequestDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+    /**
+     * Filter which RescheduleRequest to delete.
+     */
+    where: RescheduleRequestWhereUniqueInput
+  }
+
+  /**
+   * RescheduleRequest deleteMany
+   */
+  export type RescheduleRequestDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RescheduleRequests to delete
+     */
+    where?: RescheduleRequestWhereInput
+  }
+
+  /**
+   * RescheduleRequest.slots
+   */
+  export type RescheduleRequest$slotsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    where?: RescheduleSlotWhereInput
+    orderBy?: RescheduleSlotOrderByWithRelationInput | RescheduleSlotOrderByWithRelationInput[]
+    cursor?: RescheduleSlotWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: RescheduleSlotScalarFieldEnum | RescheduleSlotScalarFieldEnum[]
+  }
+
+  /**
+   * RescheduleRequest without action
+   */
+  export type RescheduleRequestDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleRequest
+     */
+    select?: RescheduleRequestSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleRequestInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model RescheduleSlot
+   */
+
+  export type AggregateRescheduleSlot = {
+    _count: RescheduleSlotCountAggregateOutputType | null
+    _min: RescheduleSlotMinAggregateOutputType | null
+    _max: RescheduleSlotMaxAggregateOutputType | null
+  }
+
+  export type RescheduleSlotMinAggregateOutputType = {
+    id: string | null
+    requestId: string | null
+    startAt: Date | null
+    endAt: Date | null
+    window: string | null
+  }
+
+  export type RescheduleSlotMaxAggregateOutputType = {
+    id: string | null
+    requestId: string | null
+    startAt: Date | null
+    endAt: Date | null
+    window: string | null
+  }
+
+  export type RescheduleSlotCountAggregateOutputType = {
+    id: number
+    requestId: number
+    startAt: number
+    endAt: number
+    window: number
+    _all: number
+  }
+
+
+  export type RescheduleSlotMinAggregateInputType = {
+    id?: true
+    requestId?: true
+    startAt?: true
+    endAt?: true
+    window?: true
+  }
+
+  export type RescheduleSlotMaxAggregateInputType = {
+    id?: true
+    requestId?: true
+    startAt?: true
+    endAt?: true
+    window?: true
+  }
+
+  export type RescheduleSlotCountAggregateInputType = {
+    id?: true
+    requestId?: true
+    startAt?: true
+    endAt?: true
+    window?: true
+    _all?: true
+  }
+
+  export type RescheduleSlotAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RescheduleSlot to aggregate.
+     */
+    where?: RescheduleSlotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RescheduleSlots to fetch.
+     */
+    orderBy?: RescheduleSlotOrderByWithRelationInput | RescheduleSlotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RescheduleSlotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RescheduleSlots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RescheduleSlots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned RescheduleSlots
+    **/
+    _count?: true | RescheduleSlotCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RescheduleSlotMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RescheduleSlotMaxAggregateInputType
+  }
+
+  export type GetRescheduleSlotAggregateType<T extends RescheduleSlotAggregateArgs> = {
+        [P in keyof T & keyof AggregateRescheduleSlot]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRescheduleSlot[P]>
+      : GetScalarType<T[P], AggregateRescheduleSlot[P]>
+  }
+
+
+
+
+  export type RescheduleSlotGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RescheduleSlotWhereInput
+    orderBy?: RescheduleSlotOrderByWithAggregationInput | RescheduleSlotOrderByWithAggregationInput[]
+    by: RescheduleSlotScalarFieldEnum[] | RescheduleSlotScalarFieldEnum
+    having?: RescheduleSlotScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RescheduleSlotCountAggregateInputType | true
+    _min?: RescheduleSlotMinAggregateInputType
+    _max?: RescheduleSlotMaxAggregateInputType
+  }
+
+  export type RescheduleSlotGroupByOutputType = {
+    id: string
+    requestId: string
+    startAt: Date
+    endAt: Date
+    window: string | null
+    _count: RescheduleSlotCountAggregateOutputType | null
+    _min: RescheduleSlotMinAggregateOutputType | null
+    _max: RescheduleSlotMaxAggregateOutputType | null
+  }
+
+  type GetRescheduleSlotGroupByPayload<T extends RescheduleSlotGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RescheduleSlotGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RescheduleSlotGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RescheduleSlotGroupByOutputType[P]>
+            : GetScalarType<T[P], RescheduleSlotGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RescheduleSlotSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requestId?: boolean
+    startAt?: boolean
+    endAt?: boolean
+    window?: boolean
+    request?: boolean | RescheduleRequestDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["rescheduleSlot"]>
+
+  export type RescheduleSlotSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requestId?: boolean
+    startAt?: boolean
+    endAt?: boolean
+    window?: boolean
+    request?: boolean | RescheduleRequestDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["rescheduleSlot"]>
+
+  export type RescheduleSlotSelectScalar = {
+    id?: boolean
+    requestId?: boolean
+    startAt?: boolean
+    endAt?: boolean
+    window?: boolean
+  }
+
+  export type RescheduleSlotInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    request?: boolean | RescheduleRequestDefaultArgs<ExtArgs>
+  }
+  export type RescheduleSlotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    request?: boolean | RescheduleRequestDefaultArgs<ExtArgs>
+  }
+
+  export type $RescheduleSlotPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "RescheduleSlot"
+    objects: {
+      request: Prisma.$RescheduleRequestPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      requestId: string
+      startAt: Date
+      endAt: Date
+      window: string | null
+    }, ExtArgs["result"]["rescheduleSlot"]>
+    composites: {}
+  }
+
+  type RescheduleSlotGetPayload<S extends boolean | null | undefined | RescheduleSlotDefaultArgs> = $Result.GetResult<Prisma.$RescheduleSlotPayload, S>
+
+  type RescheduleSlotCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<RescheduleSlotFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: RescheduleSlotCountAggregateInputType | true
+    }
+
+  export interface RescheduleSlotDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['RescheduleSlot'], meta: { name: 'RescheduleSlot' } }
+    /**
+     * Find zero or one RescheduleSlot that matches the filter.
+     * @param {RescheduleSlotFindUniqueArgs} args - Arguments to find a RescheduleSlot
+     * @example
+     * // Get one RescheduleSlot
+     * const rescheduleSlot = await prisma.rescheduleSlot.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RescheduleSlotFindUniqueArgs>(args: SelectSubset<T, RescheduleSlotFindUniqueArgs<ExtArgs>>): Prisma__RescheduleSlotClient<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one RescheduleSlot that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {RescheduleSlotFindUniqueOrThrowArgs} args - Arguments to find a RescheduleSlot
+     * @example
+     * // Get one RescheduleSlot
+     * const rescheduleSlot = await prisma.rescheduleSlot.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RescheduleSlotFindUniqueOrThrowArgs>(args: SelectSubset<T, RescheduleSlotFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RescheduleSlotClient<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first RescheduleSlot that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleSlotFindFirstArgs} args - Arguments to find a RescheduleSlot
+     * @example
+     * // Get one RescheduleSlot
+     * const rescheduleSlot = await prisma.rescheduleSlot.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RescheduleSlotFindFirstArgs>(args?: SelectSubset<T, RescheduleSlotFindFirstArgs<ExtArgs>>): Prisma__RescheduleSlotClient<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first RescheduleSlot that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleSlotFindFirstOrThrowArgs} args - Arguments to find a RescheduleSlot
+     * @example
+     * // Get one RescheduleSlot
+     * const rescheduleSlot = await prisma.rescheduleSlot.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RescheduleSlotFindFirstOrThrowArgs>(args?: SelectSubset<T, RescheduleSlotFindFirstOrThrowArgs<ExtArgs>>): Prisma__RescheduleSlotClient<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more RescheduleSlots that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleSlotFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all RescheduleSlots
+     * const rescheduleSlots = await prisma.rescheduleSlot.findMany()
+     * 
+     * // Get first 10 RescheduleSlots
+     * const rescheduleSlots = await prisma.rescheduleSlot.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const rescheduleSlotWithIdOnly = await prisma.rescheduleSlot.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RescheduleSlotFindManyArgs>(args?: SelectSubset<T, RescheduleSlotFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a RescheduleSlot.
+     * @param {RescheduleSlotCreateArgs} args - Arguments to create a RescheduleSlot.
+     * @example
+     * // Create one RescheduleSlot
+     * const RescheduleSlot = await prisma.rescheduleSlot.create({
+     *   data: {
+     *     // ... data to create a RescheduleSlot
+     *   }
+     * })
+     * 
+     */
+    create<T extends RescheduleSlotCreateArgs>(args: SelectSubset<T, RescheduleSlotCreateArgs<ExtArgs>>): Prisma__RescheduleSlotClient<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many RescheduleSlots.
+     * @param {RescheduleSlotCreateManyArgs} args - Arguments to create many RescheduleSlots.
+     * @example
+     * // Create many RescheduleSlots
+     * const rescheduleSlot = await prisma.rescheduleSlot.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RescheduleSlotCreateManyArgs>(args?: SelectSubset<T, RescheduleSlotCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many RescheduleSlots and returns the data saved in the database.
+     * @param {RescheduleSlotCreateManyAndReturnArgs} args - Arguments to create many RescheduleSlots.
+     * @example
+     * // Create many RescheduleSlots
+     * const rescheduleSlot = await prisma.rescheduleSlot.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many RescheduleSlots and only return the `id`
+     * const rescheduleSlotWithIdOnly = await prisma.rescheduleSlot.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends RescheduleSlotCreateManyAndReturnArgs>(args?: SelectSubset<T, RescheduleSlotCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a RescheduleSlot.
+     * @param {RescheduleSlotDeleteArgs} args - Arguments to delete one RescheduleSlot.
+     * @example
+     * // Delete one RescheduleSlot
+     * const RescheduleSlot = await prisma.rescheduleSlot.delete({
+     *   where: {
+     *     // ... filter to delete one RescheduleSlot
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RescheduleSlotDeleteArgs>(args: SelectSubset<T, RescheduleSlotDeleteArgs<ExtArgs>>): Prisma__RescheduleSlotClient<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one RescheduleSlot.
+     * @param {RescheduleSlotUpdateArgs} args - Arguments to update one RescheduleSlot.
+     * @example
+     * // Update one RescheduleSlot
+     * const rescheduleSlot = await prisma.rescheduleSlot.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RescheduleSlotUpdateArgs>(args: SelectSubset<T, RescheduleSlotUpdateArgs<ExtArgs>>): Prisma__RescheduleSlotClient<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more RescheduleSlots.
+     * @param {RescheduleSlotDeleteManyArgs} args - Arguments to filter RescheduleSlots to delete.
+     * @example
+     * // Delete a few RescheduleSlots
+     * const { count } = await prisma.rescheduleSlot.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RescheduleSlotDeleteManyArgs>(args?: SelectSubset<T, RescheduleSlotDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RescheduleSlots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleSlotUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many RescheduleSlots
+     * const rescheduleSlot = await prisma.rescheduleSlot.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RescheduleSlotUpdateManyArgs>(args: SelectSubset<T, RescheduleSlotUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one RescheduleSlot.
+     * @param {RescheduleSlotUpsertArgs} args - Arguments to update or create a RescheduleSlot.
+     * @example
+     * // Update or create a RescheduleSlot
+     * const rescheduleSlot = await prisma.rescheduleSlot.upsert({
+     *   create: {
+     *     // ... data to create a RescheduleSlot
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the RescheduleSlot we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RescheduleSlotUpsertArgs>(args: SelectSubset<T, RescheduleSlotUpsertArgs<ExtArgs>>): Prisma__RescheduleSlotClient<$Result.GetResult<Prisma.$RescheduleSlotPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of RescheduleSlots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleSlotCountArgs} args - Arguments to filter RescheduleSlots to count.
+     * @example
+     * // Count the number of RescheduleSlots
+     * const count = await prisma.rescheduleSlot.count({
+     *   where: {
+     *     // ... the filter for the RescheduleSlots we want to count
+     *   }
+     * })
+    **/
+    count<T extends RescheduleSlotCountArgs>(
+      args?: Subset<T, RescheduleSlotCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RescheduleSlotCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a RescheduleSlot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleSlotAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RescheduleSlotAggregateArgs>(args: Subset<T, RescheduleSlotAggregateArgs>): Prisma.PrismaPromise<GetRescheduleSlotAggregateType<T>>
+
+    /**
+     * Group by RescheduleSlot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RescheduleSlotGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RescheduleSlotGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RescheduleSlotGroupByArgs['orderBy'] }
+        : { orderBy?: RescheduleSlotGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RescheduleSlotGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRescheduleSlotGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the RescheduleSlot model
+   */
+  readonly fields: RescheduleSlotFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for RescheduleSlot.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RescheduleSlotClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    request<T extends RescheduleRequestDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RescheduleRequestDefaultArgs<ExtArgs>>): Prisma__RescheduleRequestClient<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the RescheduleSlot model
+   */ 
+  interface RescheduleSlotFieldRefs {
+    readonly id: FieldRef<"RescheduleSlot", 'String'>
+    readonly requestId: FieldRef<"RescheduleSlot", 'String'>
+    readonly startAt: FieldRef<"RescheduleSlot", 'DateTime'>
+    readonly endAt: FieldRef<"RescheduleSlot", 'DateTime'>
+    readonly window: FieldRef<"RescheduleSlot", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * RescheduleSlot findUnique
+   */
+  export type RescheduleSlotFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleSlot to fetch.
+     */
+    where: RescheduleSlotWhereUniqueInput
+  }
+
+  /**
+   * RescheduleSlot findUniqueOrThrow
+   */
+  export type RescheduleSlotFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleSlot to fetch.
+     */
+    where: RescheduleSlotWhereUniqueInput
+  }
+
+  /**
+   * RescheduleSlot findFirst
+   */
+  export type RescheduleSlotFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleSlot to fetch.
+     */
+    where?: RescheduleSlotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RescheduleSlots to fetch.
+     */
+    orderBy?: RescheduleSlotOrderByWithRelationInput | RescheduleSlotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RescheduleSlots.
+     */
+    cursor?: RescheduleSlotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RescheduleSlots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RescheduleSlots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RescheduleSlots.
+     */
+    distinct?: RescheduleSlotScalarFieldEnum | RescheduleSlotScalarFieldEnum[]
+  }
+
+  /**
+   * RescheduleSlot findFirstOrThrow
+   */
+  export type RescheduleSlotFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleSlot to fetch.
+     */
+    where?: RescheduleSlotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RescheduleSlots to fetch.
+     */
+    orderBy?: RescheduleSlotOrderByWithRelationInput | RescheduleSlotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RescheduleSlots.
+     */
+    cursor?: RescheduleSlotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RescheduleSlots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RescheduleSlots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RescheduleSlots.
+     */
+    distinct?: RescheduleSlotScalarFieldEnum | RescheduleSlotScalarFieldEnum[]
+  }
+
+  /**
+   * RescheduleSlot findMany
+   */
+  export type RescheduleSlotFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    /**
+     * Filter, which RescheduleSlots to fetch.
+     */
+    where?: RescheduleSlotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RescheduleSlots to fetch.
+     */
+    orderBy?: RescheduleSlotOrderByWithRelationInput | RescheduleSlotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing RescheduleSlots.
+     */
+    cursor?: RescheduleSlotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RescheduleSlots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RescheduleSlots.
+     */
+    skip?: number
+    distinct?: RescheduleSlotScalarFieldEnum | RescheduleSlotScalarFieldEnum[]
+  }
+
+  /**
+   * RescheduleSlot create
+   */
+  export type RescheduleSlotCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    /**
+     * The data needed to create a RescheduleSlot.
+     */
+    data: XOR<RescheduleSlotCreateInput, RescheduleSlotUncheckedCreateInput>
+  }
+
+  /**
+   * RescheduleSlot createMany
+   */
+  export type RescheduleSlotCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many RescheduleSlots.
+     */
+    data: RescheduleSlotCreateManyInput | RescheduleSlotCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * RescheduleSlot createManyAndReturn
+   */
+  export type RescheduleSlotCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many RescheduleSlots.
+     */
+    data: RescheduleSlotCreateManyInput | RescheduleSlotCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * RescheduleSlot update
+   */
+  export type RescheduleSlotUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    /**
+     * The data needed to update a RescheduleSlot.
+     */
+    data: XOR<RescheduleSlotUpdateInput, RescheduleSlotUncheckedUpdateInput>
+    /**
+     * Choose, which RescheduleSlot to update.
+     */
+    where: RescheduleSlotWhereUniqueInput
+  }
+
+  /**
+   * RescheduleSlot updateMany
+   */
+  export type RescheduleSlotUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update RescheduleSlots.
+     */
+    data: XOR<RescheduleSlotUpdateManyMutationInput, RescheduleSlotUncheckedUpdateManyInput>
+    /**
+     * Filter which RescheduleSlots to update
+     */
+    where?: RescheduleSlotWhereInput
+  }
+
+  /**
+   * RescheduleSlot upsert
+   */
+  export type RescheduleSlotUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    /**
+     * The filter to search for the RescheduleSlot to update in case it exists.
+     */
+    where: RescheduleSlotWhereUniqueInput
+    /**
+     * In case the RescheduleSlot found by the `where` argument doesn't exist, create a new RescheduleSlot with this data.
+     */
+    create: XOR<RescheduleSlotCreateInput, RescheduleSlotUncheckedCreateInput>
+    /**
+     * In case the RescheduleSlot was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RescheduleSlotUpdateInput, RescheduleSlotUncheckedUpdateInput>
+  }
+
+  /**
+   * RescheduleSlot delete
+   */
+  export type RescheduleSlotDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+    /**
+     * Filter which RescheduleSlot to delete.
+     */
+    where: RescheduleSlotWhereUniqueInput
+  }
+
+  /**
+   * RescheduleSlot deleteMany
+   */
+  export type RescheduleSlotDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RescheduleSlots to delete
+     */
+    where?: RescheduleSlotWhereInput
+  }
+
+  /**
+   * RescheduleSlot without action
+   */
+  export type RescheduleSlotDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RescheduleSlot
+     */
+    select?: RescheduleSlotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RescheduleSlotInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -15283,6 +17650,7 @@ export namespace Prisma {
     cancellationReason: 'cancellationReason',
     hasPartShortage: 'hasPartShortage',
     partShortageNote: 'partShortageNote',
+    rescheduleState: 'rescheduleState',
     createdByUserId: 'createdByUserId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -15371,6 +17739,41 @@ export namespace Prisma {
   };
 
   export type WorkOrderLineItemScalarFieldEnum = (typeof WorkOrderLineItemScalarFieldEnum)[keyof typeof WorkOrderLineItemScalarFieldEnum]
+
+
+  export const RescheduleRequestScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    jobId: 'jobId',
+    openedBy: 'openedBy',
+    openedByUserId: 'openedByUserId',
+    openedByName: 'openedByName',
+    mode: 'mode',
+    reasonCode: 'reasonCode',
+    reason: 'reason',
+    status: 'status',
+    pickedSlotId: 'pickedSlotId',
+    responseNote: 'responseNote',
+    respondedAt: 'respondedAt',
+    respondedByName: 'respondedByName',
+    appliedAt: 'appliedAt',
+    nudgedAt: 'nudgedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type RescheduleRequestScalarFieldEnum = (typeof RescheduleRequestScalarFieldEnum)[keyof typeof RescheduleRequestScalarFieldEnum]
+
+
+  export const RescheduleSlotScalarFieldEnum: {
+    id: 'id',
+    requestId: 'requestId',
+    startAt: 'startAt',
+    endAt: 'endAt',
+    window: 'window'
+  };
+
+  export type RescheduleSlotScalarFieldEnum = (typeof RescheduleSlotScalarFieldEnum)[keyof typeof RescheduleSlotScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -15553,6 +17956,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'RescheduleState'
+   */
+  export type EnumRescheduleStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleState'>
+    
+
+
+  /**
+   * Reference to a field of type 'RescheduleState[]'
+   */
+  export type ListEnumRescheduleStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleState[]'>
+    
+
+
+  /**
    * Reference to a field of type 'PhotoType'
    */
   export type EnumPhotoTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PhotoType'>
@@ -15577,6 +17994,62 @@ export namespace Prisma {
    * Reference to a field of type 'WorkOrderStatus[]'
    */
   export type ListEnumWorkOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkOrderStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'RescheduleActor'
+   */
+  export type EnumRescheduleActorFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleActor'>
+    
+
+
+  /**
+   * Reference to a field of type 'RescheduleActor[]'
+   */
+  export type ListEnumRescheduleActorFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleActor[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'RescheduleMode'
+   */
+  export type EnumRescheduleModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleMode'>
+    
+
+
+  /**
+   * Reference to a field of type 'RescheduleMode[]'
+   */
+  export type ListEnumRescheduleModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleMode[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'RescheduleReason'
+   */
+  export type EnumRescheduleReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleReason'>
+    
+
+
+  /**
+   * Reference to a field of type 'RescheduleReason[]'
+   */
+  export type ListEnumRescheduleReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleReason[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'RescheduleStatus'
+   */
+  export type EnumRescheduleStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'RescheduleStatus[]'
+   */
+  export type ListEnumRescheduleStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleStatus[]'>
     
 
 
@@ -16163,6 +18636,7 @@ export namespace Prisma {
     cancellationReason?: StringNullableFilter<"Job"> | string | null
     hasPartShortage?: BoolFilter<"Job"> | boolean
     partShortageNote?: StringNullableFilter<"Job"> | string | null
+    rescheduleState?: EnumRescheduleStateNullableFilter<"Job"> | $Enums.RescheduleState | null
     createdByUserId?: StringFilter<"Job"> | string
     createdAt?: DateTimeFilter<"Job"> | Date | string
     updatedAt?: DateTimeFilter<"Job"> | Date | string
@@ -16173,6 +18647,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueListRelationFilter
     statusHistory?: JobStatusHistoryListRelationFilter
     photos?: JobPhotoListRelationFilter
+    rescheduleRequests?: RescheduleRequestListRelationFilter
   }
 
   export type JobOrderByWithRelationInput = {
@@ -16217,6 +18692,7 @@ export namespace Prisma {
     cancellationReason?: SortOrderInput | SortOrder
     hasPartShortage?: SortOrder
     partShortageNote?: SortOrderInput | SortOrder
+    rescheduleState?: SortOrderInput | SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -16227,6 +18703,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueOrderByRelationAggregateInput
     statusHistory?: JobStatusHistoryOrderByRelationAggregateInput
     photos?: JobPhotoOrderByRelationAggregateInput
+    rescheduleRequests?: RescheduleRequestOrderByRelationAggregateInput
   }
 
   export type JobWhereUniqueInput = Prisma.AtLeast<{
@@ -16275,6 +18752,7 @@ export namespace Prisma {
     cancellationReason?: StringNullableFilter<"Job"> | string | null
     hasPartShortage?: BoolFilter<"Job"> | boolean
     partShortageNote?: StringNullableFilter<"Job"> | string | null
+    rescheduleState?: EnumRescheduleStateNullableFilter<"Job"> | $Enums.RescheduleState | null
     createdByUserId?: StringFilter<"Job"> | string
     createdAt?: DateTimeFilter<"Job"> | Date | string
     updatedAt?: DateTimeFilter<"Job"> | Date | string
@@ -16285,6 +18763,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueListRelationFilter
     statusHistory?: JobStatusHistoryListRelationFilter
     photos?: JobPhotoListRelationFilter
+    rescheduleRequests?: RescheduleRequestListRelationFilter
   }, "id" | "companyId_jobNumber">
 
   export type JobOrderByWithAggregationInput = {
@@ -16329,6 +18808,7 @@ export namespace Prisma {
     cancellationReason?: SortOrderInput | SortOrder
     hasPartShortage?: SortOrder
     partShortageNote?: SortOrderInput | SortOrder
+    rescheduleState?: SortOrderInput | SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -16385,6 +18865,7 @@ export namespace Prisma {
     cancellationReason?: StringNullableWithAggregatesFilter<"Job"> | string | null
     hasPartShortage?: BoolWithAggregatesFilter<"Job"> | boolean
     partShortageNote?: StringNullableWithAggregatesFilter<"Job"> | string | null
+    rescheduleState?: EnumRescheduleStateNullableWithAggregatesFilter<"Job"> | $Enums.RescheduleState | null
     createdByUserId?: StringWithAggregatesFilter<"Job"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Job"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Job"> | Date | string
@@ -16806,6 +19287,184 @@ export namespace Prisma {
     taxable?: BoolWithAggregatesFilter<"WorkOrderLineItem"> | boolean
     lineTotal?: DecimalWithAggregatesFilter<"WorkOrderLineItem"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeWithAggregatesFilter<"WorkOrderLineItem"> | Date | string
+  }
+
+  export type RescheduleRequestWhereInput = {
+    AND?: RescheduleRequestWhereInput | RescheduleRequestWhereInput[]
+    OR?: RescheduleRequestWhereInput[]
+    NOT?: RescheduleRequestWhereInput | RescheduleRequestWhereInput[]
+    id?: StringFilter<"RescheduleRequest"> | string
+    companyId?: StringFilter<"RescheduleRequest"> | string
+    jobId?: StringFilter<"RescheduleRequest"> | string
+    openedBy?: EnumRescheduleActorFilter<"RescheduleRequest"> | $Enums.RescheduleActor
+    openedByUserId?: StringNullableFilter<"RescheduleRequest"> | string | null
+    openedByName?: StringNullableFilter<"RescheduleRequest"> | string | null
+    mode?: EnumRescheduleModeFilter<"RescheduleRequest"> | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFilter<"RescheduleRequest"> | $Enums.RescheduleReason
+    reason?: StringNullableFilter<"RescheduleRequest"> | string | null
+    status?: EnumRescheduleStatusFilter<"RescheduleRequest"> | $Enums.RescheduleStatus
+    pickedSlotId?: StringNullableFilter<"RescheduleRequest"> | string | null
+    responseNote?: StringNullableFilter<"RescheduleRequest"> | string | null
+    respondedAt?: DateTimeNullableFilter<"RescheduleRequest"> | Date | string | null
+    respondedByName?: StringNullableFilter<"RescheduleRequest"> | string | null
+    appliedAt?: DateTimeNullableFilter<"RescheduleRequest"> | Date | string | null
+    nudgedAt?: DateTimeNullableFilter<"RescheduleRequest"> | Date | string | null
+    createdAt?: DateTimeFilter<"RescheduleRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"RescheduleRequest"> | Date | string
+    job?: XOR<JobRelationFilter, JobWhereInput>
+    slots?: RescheduleSlotListRelationFilter
+  }
+
+  export type RescheduleRequestOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    openedBy?: SortOrder
+    openedByUserId?: SortOrderInput | SortOrder
+    openedByName?: SortOrderInput | SortOrder
+    mode?: SortOrder
+    reasonCode?: SortOrder
+    reason?: SortOrderInput | SortOrder
+    status?: SortOrder
+    pickedSlotId?: SortOrderInput | SortOrder
+    responseNote?: SortOrderInput | SortOrder
+    respondedAt?: SortOrderInput | SortOrder
+    respondedByName?: SortOrderInput | SortOrder
+    appliedAt?: SortOrderInput | SortOrder
+    nudgedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    job?: JobOrderByWithRelationInput
+    slots?: RescheduleSlotOrderByRelationAggregateInput
+  }
+
+  export type RescheduleRequestWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: RescheduleRequestWhereInput | RescheduleRequestWhereInput[]
+    OR?: RescheduleRequestWhereInput[]
+    NOT?: RescheduleRequestWhereInput | RescheduleRequestWhereInput[]
+    companyId?: StringFilter<"RescheduleRequest"> | string
+    jobId?: StringFilter<"RescheduleRequest"> | string
+    openedBy?: EnumRescheduleActorFilter<"RescheduleRequest"> | $Enums.RescheduleActor
+    openedByUserId?: StringNullableFilter<"RescheduleRequest"> | string | null
+    openedByName?: StringNullableFilter<"RescheduleRequest"> | string | null
+    mode?: EnumRescheduleModeFilter<"RescheduleRequest"> | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFilter<"RescheduleRequest"> | $Enums.RescheduleReason
+    reason?: StringNullableFilter<"RescheduleRequest"> | string | null
+    status?: EnumRescheduleStatusFilter<"RescheduleRequest"> | $Enums.RescheduleStatus
+    pickedSlotId?: StringNullableFilter<"RescheduleRequest"> | string | null
+    responseNote?: StringNullableFilter<"RescheduleRequest"> | string | null
+    respondedAt?: DateTimeNullableFilter<"RescheduleRequest"> | Date | string | null
+    respondedByName?: StringNullableFilter<"RescheduleRequest"> | string | null
+    appliedAt?: DateTimeNullableFilter<"RescheduleRequest"> | Date | string | null
+    nudgedAt?: DateTimeNullableFilter<"RescheduleRequest"> | Date | string | null
+    createdAt?: DateTimeFilter<"RescheduleRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"RescheduleRequest"> | Date | string
+    job?: XOR<JobRelationFilter, JobWhereInput>
+    slots?: RescheduleSlotListRelationFilter
+  }, "id">
+
+  export type RescheduleRequestOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    openedBy?: SortOrder
+    openedByUserId?: SortOrderInput | SortOrder
+    openedByName?: SortOrderInput | SortOrder
+    mode?: SortOrder
+    reasonCode?: SortOrder
+    reason?: SortOrderInput | SortOrder
+    status?: SortOrder
+    pickedSlotId?: SortOrderInput | SortOrder
+    responseNote?: SortOrderInput | SortOrder
+    respondedAt?: SortOrderInput | SortOrder
+    respondedByName?: SortOrderInput | SortOrder
+    appliedAt?: SortOrderInput | SortOrder
+    nudgedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: RescheduleRequestCountOrderByAggregateInput
+    _max?: RescheduleRequestMaxOrderByAggregateInput
+    _min?: RescheduleRequestMinOrderByAggregateInput
+  }
+
+  export type RescheduleRequestScalarWhereWithAggregatesInput = {
+    AND?: RescheduleRequestScalarWhereWithAggregatesInput | RescheduleRequestScalarWhereWithAggregatesInput[]
+    OR?: RescheduleRequestScalarWhereWithAggregatesInput[]
+    NOT?: RescheduleRequestScalarWhereWithAggregatesInput | RescheduleRequestScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"RescheduleRequest"> | string
+    companyId?: StringWithAggregatesFilter<"RescheduleRequest"> | string
+    jobId?: StringWithAggregatesFilter<"RescheduleRequest"> | string
+    openedBy?: EnumRescheduleActorWithAggregatesFilter<"RescheduleRequest"> | $Enums.RescheduleActor
+    openedByUserId?: StringNullableWithAggregatesFilter<"RescheduleRequest"> | string | null
+    openedByName?: StringNullableWithAggregatesFilter<"RescheduleRequest"> | string | null
+    mode?: EnumRescheduleModeWithAggregatesFilter<"RescheduleRequest"> | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonWithAggregatesFilter<"RescheduleRequest"> | $Enums.RescheduleReason
+    reason?: StringNullableWithAggregatesFilter<"RescheduleRequest"> | string | null
+    status?: EnumRescheduleStatusWithAggregatesFilter<"RescheduleRequest"> | $Enums.RescheduleStatus
+    pickedSlotId?: StringNullableWithAggregatesFilter<"RescheduleRequest"> | string | null
+    responseNote?: StringNullableWithAggregatesFilter<"RescheduleRequest"> | string | null
+    respondedAt?: DateTimeNullableWithAggregatesFilter<"RescheduleRequest"> | Date | string | null
+    respondedByName?: StringNullableWithAggregatesFilter<"RescheduleRequest"> | string | null
+    appliedAt?: DateTimeNullableWithAggregatesFilter<"RescheduleRequest"> | Date | string | null
+    nudgedAt?: DateTimeNullableWithAggregatesFilter<"RescheduleRequest"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"RescheduleRequest"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"RescheduleRequest"> | Date | string
+  }
+
+  export type RescheduleSlotWhereInput = {
+    AND?: RescheduleSlotWhereInput | RescheduleSlotWhereInput[]
+    OR?: RescheduleSlotWhereInput[]
+    NOT?: RescheduleSlotWhereInput | RescheduleSlotWhereInput[]
+    id?: StringFilter<"RescheduleSlot"> | string
+    requestId?: StringFilter<"RescheduleSlot"> | string
+    startAt?: DateTimeFilter<"RescheduleSlot"> | Date | string
+    endAt?: DateTimeFilter<"RescheduleSlot"> | Date | string
+    window?: StringNullableFilter<"RescheduleSlot"> | string | null
+    request?: XOR<RescheduleRequestRelationFilter, RescheduleRequestWhereInput>
+  }
+
+  export type RescheduleSlotOrderByWithRelationInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    window?: SortOrderInput | SortOrder
+    request?: RescheduleRequestOrderByWithRelationInput
+  }
+
+  export type RescheduleSlotWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: RescheduleSlotWhereInput | RescheduleSlotWhereInput[]
+    OR?: RescheduleSlotWhereInput[]
+    NOT?: RescheduleSlotWhereInput | RescheduleSlotWhereInput[]
+    requestId?: StringFilter<"RescheduleSlot"> | string
+    startAt?: DateTimeFilter<"RescheduleSlot"> | Date | string
+    endAt?: DateTimeFilter<"RescheduleSlot"> | Date | string
+    window?: StringNullableFilter<"RescheduleSlot"> | string | null
+    request?: XOR<RescheduleRequestRelationFilter, RescheduleRequestWhereInput>
+  }, "id">
+
+  export type RescheduleSlotOrderByWithAggregationInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    window?: SortOrderInput | SortOrder
+    _count?: RescheduleSlotCountOrderByAggregateInput
+    _max?: RescheduleSlotMaxOrderByAggregateInput
+    _min?: RescheduleSlotMinOrderByAggregateInput
+  }
+
+  export type RescheduleSlotScalarWhereWithAggregatesInput = {
+    AND?: RescheduleSlotScalarWhereWithAggregatesInput | RescheduleSlotScalarWhereWithAggregatesInput[]
+    OR?: RescheduleSlotScalarWhereWithAggregatesInput[]
+    NOT?: RescheduleSlotScalarWhereWithAggregatesInput | RescheduleSlotScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"RescheduleSlot"> | string
+    requestId?: StringWithAggregatesFilter<"RescheduleSlot"> | string
+    startAt?: DateTimeWithAggregatesFilter<"RescheduleSlot"> | Date | string
+    endAt?: DateTimeWithAggregatesFilter<"RescheduleSlot"> | Date | string
+    window?: StringNullableWithAggregatesFilter<"RescheduleSlot"> | string | null
   }
 
   export type JobTypeCreateInput = {
@@ -17431,6 +20090,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -17441,6 +20101,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
   export type JobUncheckedCreateInput = {
@@ -17485,6 +20146,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -17493,6 +20155,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
   export type JobUpdateInput = {
@@ -17535,6 +20198,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17545,6 +20209,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateInput = {
@@ -17589,6 +20254,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17597,6 +20263,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
   export type JobCreateManyInput = {
@@ -17641,6 +20308,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -17687,6 +20355,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17735,6 +20404,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18203,6 +20873,211 @@ export namespace Prisma {
     taxable?: BoolFieldUpdateOperationsInput | boolean
     lineTotal?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RescheduleRequestCreateInput = {
+    id?: string
+    companyId: string
+    openedBy: $Enums.RescheduleActor
+    openedByUserId?: string | null
+    openedByName?: string | null
+    mode: $Enums.RescheduleMode
+    reasonCode: $Enums.RescheduleReason
+    reason?: string | null
+    status?: $Enums.RescheduleStatus
+    pickedSlotId?: string | null
+    responseNote?: string | null
+    respondedAt?: Date | string | null
+    respondedByName?: string | null
+    appliedAt?: Date | string | null
+    nudgedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    job: JobCreateNestedOneWithoutRescheduleRequestsInput
+    slots?: RescheduleSlotCreateNestedManyWithoutRequestInput
+  }
+
+  export type RescheduleRequestUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    jobId: string
+    openedBy: $Enums.RescheduleActor
+    openedByUserId?: string | null
+    openedByName?: string | null
+    mode: $Enums.RescheduleMode
+    reasonCode: $Enums.RescheduleReason
+    reason?: string | null
+    status?: $Enums.RescheduleStatus
+    pickedSlotId?: string | null
+    responseNote?: string | null
+    respondedAt?: Date | string | null
+    respondedByName?: string | null
+    appliedAt?: Date | string | null
+    nudgedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    slots?: RescheduleSlotUncheckedCreateNestedManyWithoutRequestInput
+  }
+
+  export type RescheduleRequestUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    openedBy?: EnumRescheduleActorFieldUpdateOperationsInput | $Enums.RescheduleActor
+    openedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    openedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    mode?: EnumRescheduleModeFieldUpdateOperationsInput | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFieldUpdateOperationsInput | $Enums.RescheduleReason
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRescheduleStatusFieldUpdateOperationsInput | $Enums.RescheduleStatus
+    pickedSlotId?: NullableStringFieldUpdateOperationsInput | string | null
+    responseNote?: NullableStringFieldUpdateOperationsInput | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    respondedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nudgedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    job?: JobUpdateOneRequiredWithoutRescheduleRequestsNestedInput
+    slots?: RescheduleSlotUpdateManyWithoutRequestNestedInput
+  }
+
+  export type RescheduleRequestUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    jobId?: StringFieldUpdateOperationsInput | string
+    openedBy?: EnumRescheduleActorFieldUpdateOperationsInput | $Enums.RescheduleActor
+    openedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    openedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    mode?: EnumRescheduleModeFieldUpdateOperationsInput | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFieldUpdateOperationsInput | $Enums.RescheduleReason
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRescheduleStatusFieldUpdateOperationsInput | $Enums.RescheduleStatus
+    pickedSlotId?: NullableStringFieldUpdateOperationsInput | string | null
+    responseNote?: NullableStringFieldUpdateOperationsInput | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    respondedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nudgedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    slots?: RescheduleSlotUncheckedUpdateManyWithoutRequestNestedInput
+  }
+
+  export type RescheduleRequestCreateManyInput = {
+    id?: string
+    companyId: string
+    jobId: string
+    openedBy: $Enums.RescheduleActor
+    openedByUserId?: string | null
+    openedByName?: string | null
+    mode: $Enums.RescheduleMode
+    reasonCode: $Enums.RescheduleReason
+    reason?: string | null
+    status?: $Enums.RescheduleStatus
+    pickedSlotId?: string | null
+    responseNote?: string | null
+    respondedAt?: Date | string | null
+    respondedByName?: string | null
+    appliedAt?: Date | string | null
+    nudgedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RescheduleRequestUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    openedBy?: EnumRescheduleActorFieldUpdateOperationsInput | $Enums.RescheduleActor
+    openedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    openedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    mode?: EnumRescheduleModeFieldUpdateOperationsInput | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFieldUpdateOperationsInput | $Enums.RescheduleReason
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRescheduleStatusFieldUpdateOperationsInput | $Enums.RescheduleStatus
+    pickedSlotId?: NullableStringFieldUpdateOperationsInput | string | null
+    responseNote?: NullableStringFieldUpdateOperationsInput | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    respondedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nudgedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RescheduleRequestUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    jobId?: StringFieldUpdateOperationsInput | string
+    openedBy?: EnumRescheduleActorFieldUpdateOperationsInput | $Enums.RescheduleActor
+    openedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    openedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    mode?: EnumRescheduleModeFieldUpdateOperationsInput | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFieldUpdateOperationsInput | $Enums.RescheduleReason
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRescheduleStatusFieldUpdateOperationsInput | $Enums.RescheduleStatus
+    pickedSlotId?: NullableStringFieldUpdateOperationsInput | string | null
+    responseNote?: NullableStringFieldUpdateOperationsInput | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    respondedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nudgedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RescheduleSlotCreateInput = {
+    id?: string
+    startAt: Date | string
+    endAt: Date | string
+    window?: string | null
+    request: RescheduleRequestCreateNestedOneWithoutSlotsInput
+  }
+
+  export type RescheduleSlotUncheckedCreateInput = {
+    id?: string
+    requestId: string
+    startAt: Date | string
+    endAt: Date | string
+    window?: string | null
+  }
+
+  export type RescheduleSlotUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    window?: NullableStringFieldUpdateOperationsInput | string | null
+    request?: RescheduleRequestUpdateOneRequiredWithoutSlotsNestedInput
+  }
+
+  export type RescheduleSlotUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    window?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type RescheduleSlotCreateManyInput = {
+    id?: string
+    requestId: string
+    startAt: Date | string
+    endAt: Date | string
+    window?: string | null
+  }
+
+  export type RescheduleSlotUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    window?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type RescheduleSlotUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: StringFieldUpdateOperationsInput | string
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    window?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -18940,6 +21815,13 @@ export namespace Prisma {
     isEmpty?: boolean
   }
 
+  export type EnumRescheduleStateNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleState | EnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RescheduleState[] | ListEnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.RescheduleState[] | ListEnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumRescheduleStateNullableFilter<$PrismaModel> | $Enums.RescheduleState | null
+  }
+
   export type JobTypeNullableRelationFilter = {
     is?: JobTypeWhereInput | null
     isNot?: JobTypeWhereInput | null
@@ -18968,6 +21850,12 @@ export namespace Prisma {
     none?: JobPhotoWhereInput
   }
 
+  export type RescheduleRequestListRelationFilter = {
+    every?: RescheduleRequestWhereInput
+    some?: RescheduleRequestWhereInput
+    none?: RescheduleRequestWhereInput
+  }
+
   export type WorkOrderOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -18977,6 +21865,10 @@ export namespace Prisma {
   }
 
   export type JobPhotoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type RescheduleRequestOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -19027,6 +21919,7 @@ export namespace Prisma {
     cancellationReason?: SortOrder
     hasPartShortage?: SortOrder
     partShortageNote?: SortOrder
+    rescheduleState?: SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -19082,6 +21975,7 @@ export namespace Prisma {
     cancellationReason?: SortOrder
     hasPartShortage?: SortOrder
     partShortageNote?: SortOrder
+    rescheduleState?: SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -19129,6 +22023,7 @@ export namespace Prisma {
     cancellationReason?: SortOrder
     hasPartShortage?: SortOrder
     partShortageNote?: SortOrder
+    rescheduleState?: SortOrder
     createdByUserId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -19191,6 +22086,16 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type EnumRescheduleStateNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleState | EnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RescheduleState[] | ListEnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.RescheduleState[] | ListEnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumRescheduleStateNullableWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleState | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleStateNullableFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleStateNullableFilter<$PrismaModel>
   }
 
   export type EnumJobStatusNullableFilter<$PrismaModel = never> = {
@@ -19477,6 +22382,176 @@ export namespace Prisma {
     quantity?: SortOrder
     unitPrice?: SortOrder
     lineTotal?: SortOrder
+  }
+
+  export type EnumRescheduleActorFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleActor | EnumRescheduleActorFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleActor[] | ListEnumRescheduleActorFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleActor[] | ListEnumRescheduleActorFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleActorFilter<$PrismaModel> | $Enums.RescheduleActor
+  }
+
+  export type EnumRescheduleModeFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleMode | EnumRescheduleModeFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleMode[] | ListEnumRescheduleModeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleMode[] | ListEnumRescheduleModeFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleModeFilter<$PrismaModel> | $Enums.RescheduleMode
+  }
+
+  export type EnumRescheduleReasonFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleReason | EnumRescheduleReasonFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleReason[] | ListEnumRescheduleReasonFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleReason[] | ListEnumRescheduleReasonFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleReasonFilter<$PrismaModel> | $Enums.RescheduleReason
+  }
+
+  export type EnumRescheduleStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleStatus | EnumRescheduleStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleStatus[] | ListEnumRescheduleStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleStatus[] | ListEnumRescheduleStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleStatusFilter<$PrismaModel> | $Enums.RescheduleStatus
+  }
+
+  export type RescheduleSlotListRelationFilter = {
+    every?: RescheduleSlotWhereInput
+    some?: RescheduleSlotWhereInput
+    none?: RescheduleSlotWhereInput
+  }
+
+  export type RescheduleSlotOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type RescheduleRequestCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    openedBy?: SortOrder
+    openedByUserId?: SortOrder
+    openedByName?: SortOrder
+    mode?: SortOrder
+    reasonCode?: SortOrder
+    reason?: SortOrder
+    status?: SortOrder
+    pickedSlotId?: SortOrder
+    responseNote?: SortOrder
+    respondedAt?: SortOrder
+    respondedByName?: SortOrder
+    appliedAt?: SortOrder
+    nudgedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RescheduleRequestMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    openedBy?: SortOrder
+    openedByUserId?: SortOrder
+    openedByName?: SortOrder
+    mode?: SortOrder
+    reasonCode?: SortOrder
+    reason?: SortOrder
+    status?: SortOrder
+    pickedSlotId?: SortOrder
+    responseNote?: SortOrder
+    respondedAt?: SortOrder
+    respondedByName?: SortOrder
+    appliedAt?: SortOrder
+    nudgedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RescheduleRequestMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    openedBy?: SortOrder
+    openedByUserId?: SortOrder
+    openedByName?: SortOrder
+    mode?: SortOrder
+    reasonCode?: SortOrder
+    reason?: SortOrder
+    status?: SortOrder
+    pickedSlotId?: SortOrder
+    responseNote?: SortOrder
+    respondedAt?: SortOrder
+    respondedByName?: SortOrder
+    appliedAt?: SortOrder
+    nudgedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumRescheduleActorWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleActor | EnumRescheduleActorFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleActor[] | ListEnumRescheduleActorFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleActor[] | ListEnumRescheduleActorFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleActorWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleActor
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleActorFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleActorFilter<$PrismaModel>
+  }
+
+  export type EnumRescheduleModeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleMode | EnumRescheduleModeFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleMode[] | ListEnumRescheduleModeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleMode[] | ListEnumRescheduleModeFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleModeWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleMode
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleModeFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleModeFilter<$PrismaModel>
+  }
+
+  export type EnumRescheduleReasonWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleReason | EnumRescheduleReasonFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleReason[] | ListEnumRescheduleReasonFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleReason[] | ListEnumRescheduleReasonFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleReasonWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleReason
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleReasonFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleReasonFilter<$PrismaModel>
+  }
+
+  export type EnumRescheduleStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleStatus | EnumRescheduleStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleStatus[] | ListEnumRescheduleStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleStatus[] | ListEnumRescheduleStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleStatusWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleStatusFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleStatusFilter<$PrismaModel>
+  }
+
+  export type RescheduleRequestRelationFilter = {
+    is?: RescheduleRequestWhereInput
+    isNot?: RescheduleRequestWhereInput
+  }
+
+  export type RescheduleSlotCountOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    window?: SortOrder
+  }
+
+  export type RescheduleSlotMaxOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    window?: SortOrder
+  }
+
+  export type RescheduleSlotMinOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    startAt?: SortOrder
+    endAt?: SortOrder
+    window?: SortOrder
   }
 
   export type JobTemplateCreateNestedManyWithoutJobTypeInput = {
@@ -19935,6 +23010,13 @@ export namespace Prisma {
     connect?: JobPhotoWhereUniqueInput | JobPhotoWhereUniqueInput[]
   }
 
+  export type RescheduleRequestCreateNestedManyWithoutJobInput = {
+    create?: XOR<RescheduleRequestCreateWithoutJobInput, RescheduleRequestUncheckedCreateWithoutJobInput> | RescheduleRequestCreateWithoutJobInput[] | RescheduleRequestUncheckedCreateWithoutJobInput[]
+    connectOrCreate?: RescheduleRequestCreateOrConnectWithoutJobInput | RescheduleRequestCreateOrConnectWithoutJobInput[]
+    createMany?: RescheduleRequestCreateManyJobInputEnvelope
+    connect?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+  }
+
   export type WorkOrderUncheckedCreateNestedManyWithoutJobInput = {
     create?: XOR<WorkOrderCreateWithoutJobInput, WorkOrderUncheckedCreateWithoutJobInput> | WorkOrderCreateWithoutJobInput[] | WorkOrderUncheckedCreateWithoutJobInput[]
     connectOrCreate?: WorkOrderCreateOrConnectWithoutJobInput | WorkOrderCreateOrConnectWithoutJobInput[]
@@ -19963,6 +23045,13 @@ export namespace Prisma {
     connect?: JobPhotoWhereUniqueInput | JobPhotoWhereUniqueInput[]
   }
 
+  export type RescheduleRequestUncheckedCreateNestedManyWithoutJobInput = {
+    create?: XOR<RescheduleRequestCreateWithoutJobInput, RescheduleRequestUncheckedCreateWithoutJobInput> | RescheduleRequestCreateWithoutJobInput[] | RescheduleRequestUncheckedCreateWithoutJobInput[]
+    connectOrCreate?: RescheduleRequestCreateOrConnectWithoutJobInput | RescheduleRequestCreateOrConnectWithoutJobInput[]
+    createMany?: RescheduleRequestCreateManyJobInputEnvelope
+    connect?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+  }
+
   export type NullableDecimalFieldUpdateOperationsInput = {
     set?: Decimal | DecimalJsLike | number | string | null
     increment?: Decimal | DecimalJsLike | number | string
@@ -19986,6 +23075,10 @@ export namespace Prisma {
   export type JobUpdatetagsInput = {
     set?: string[]
     push?: string | string[]
+  }
+
+  export type NullableEnumRescheduleStateFieldUpdateOperationsInput = {
+    set?: $Enums.RescheduleState | null
   }
 
   export type JobTypeUpdateOneWithoutJobsNestedInput = {
@@ -20064,6 +23157,20 @@ export namespace Prisma {
     deleteMany?: JobPhotoScalarWhereInput | JobPhotoScalarWhereInput[]
   }
 
+  export type RescheduleRequestUpdateManyWithoutJobNestedInput = {
+    create?: XOR<RescheduleRequestCreateWithoutJobInput, RescheduleRequestUncheckedCreateWithoutJobInput> | RescheduleRequestCreateWithoutJobInput[] | RescheduleRequestUncheckedCreateWithoutJobInput[]
+    connectOrCreate?: RescheduleRequestCreateOrConnectWithoutJobInput | RescheduleRequestCreateOrConnectWithoutJobInput[]
+    upsert?: RescheduleRequestUpsertWithWhereUniqueWithoutJobInput | RescheduleRequestUpsertWithWhereUniqueWithoutJobInput[]
+    createMany?: RescheduleRequestCreateManyJobInputEnvelope
+    set?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+    disconnect?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+    delete?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+    connect?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+    update?: RescheduleRequestUpdateWithWhereUniqueWithoutJobInput | RescheduleRequestUpdateWithWhereUniqueWithoutJobInput[]
+    updateMany?: RescheduleRequestUpdateManyWithWhereWithoutJobInput | RescheduleRequestUpdateManyWithWhereWithoutJobInput[]
+    deleteMany?: RescheduleRequestScalarWhereInput | RescheduleRequestScalarWhereInput[]
+  }
+
   export type WorkOrderUncheckedUpdateManyWithoutJobNestedInput = {
     create?: XOR<WorkOrderCreateWithoutJobInput, WorkOrderUncheckedCreateWithoutJobInput> | WorkOrderCreateWithoutJobInput[] | WorkOrderUncheckedCreateWithoutJobInput[]
     connectOrCreate?: WorkOrderCreateOrConnectWithoutJobInput | WorkOrderCreateOrConnectWithoutJobInput[]
@@ -20118,6 +23225,20 @@ export namespace Prisma {
     update?: JobPhotoUpdateWithWhereUniqueWithoutJobInput | JobPhotoUpdateWithWhereUniqueWithoutJobInput[]
     updateMany?: JobPhotoUpdateManyWithWhereWithoutJobInput | JobPhotoUpdateManyWithWhereWithoutJobInput[]
     deleteMany?: JobPhotoScalarWhereInput | JobPhotoScalarWhereInput[]
+  }
+
+  export type RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput = {
+    create?: XOR<RescheduleRequestCreateWithoutJobInput, RescheduleRequestUncheckedCreateWithoutJobInput> | RescheduleRequestCreateWithoutJobInput[] | RescheduleRequestUncheckedCreateWithoutJobInput[]
+    connectOrCreate?: RescheduleRequestCreateOrConnectWithoutJobInput | RescheduleRequestCreateOrConnectWithoutJobInput[]
+    upsert?: RescheduleRequestUpsertWithWhereUniqueWithoutJobInput | RescheduleRequestUpsertWithWhereUniqueWithoutJobInput[]
+    createMany?: RescheduleRequestCreateManyJobInputEnvelope
+    set?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+    disconnect?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+    delete?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+    connect?: RescheduleRequestWhereUniqueInput | RescheduleRequestWhereUniqueInput[]
+    update?: RescheduleRequestUpdateWithWhereUniqueWithoutJobInput | RescheduleRequestUpdateWithWhereUniqueWithoutJobInput[]
+    updateMany?: RescheduleRequestUpdateManyWithWhereWithoutJobInput | RescheduleRequestUpdateManyWithWhereWithoutJobInput[]
+    deleteMany?: RescheduleRequestScalarWhereInput | RescheduleRequestScalarWhereInput[]
   }
 
   export type JobCreateNestedOneWithoutStatusHistoryInput = {
@@ -20300,6 +23421,92 @@ export namespace Prisma {
     delete?: PriceBookItemWhereInput | boolean
     connect?: PriceBookItemWhereUniqueInput
     update?: XOR<XOR<PriceBookItemUpdateToOneWithWhereWithoutLineItemsInput, PriceBookItemUpdateWithoutLineItemsInput>, PriceBookItemUncheckedUpdateWithoutLineItemsInput>
+  }
+
+  export type JobCreateNestedOneWithoutRescheduleRequestsInput = {
+    create?: XOR<JobCreateWithoutRescheduleRequestsInput, JobUncheckedCreateWithoutRescheduleRequestsInput>
+    connectOrCreate?: JobCreateOrConnectWithoutRescheduleRequestsInput
+    connect?: JobWhereUniqueInput
+  }
+
+  export type RescheduleSlotCreateNestedManyWithoutRequestInput = {
+    create?: XOR<RescheduleSlotCreateWithoutRequestInput, RescheduleSlotUncheckedCreateWithoutRequestInput> | RescheduleSlotCreateWithoutRequestInput[] | RescheduleSlotUncheckedCreateWithoutRequestInput[]
+    connectOrCreate?: RescheduleSlotCreateOrConnectWithoutRequestInput | RescheduleSlotCreateOrConnectWithoutRequestInput[]
+    createMany?: RescheduleSlotCreateManyRequestInputEnvelope
+    connect?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+  }
+
+  export type RescheduleSlotUncheckedCreateNestedManyWithoutRequestInput = {
+    create?: XOR<RescheduleSlotCreateWithoutRequestInput, RescheduleSlotUncheckedCreateWithoutRequestInput> | RescheduleSlotCreateWithoutRequestInput[] | RescheduleSlotUncheckedCreateWithoutRequestInput[]
+    connectOrCreate?: RescheduleSlotCreateOrConnectWithoutRequestInput | RescheduleSlotCreateOrConnectWithoutRequestInput[]
+    createMany?: RescheduleSlotCreateManyRequestInputEnvelope
+    connect?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+  }
+
+  export type EnumRescheduleActorFieldUpdateOperationsInput = {
+    set?: $Enums.RescheduleActor
+  }
+
+  export type EnumRescheduleModeFieldUpdateOperationsInput = {
+    set?: $Enums.RescheduleMode
+  }
+
+  export type EnumRescheduleReasonFieldUpdateOperationsInput = {
+    set?: $Enums.RescheduleReason
+  }
+
+  export type EnumRescheduleStatusFieldUpdateOperationsInput = {
+    set?: $Enums.RescheduleStatus
+  }
+
+  export type JobUpdateOneRequiredWithoutRescheduleRequestsNestedInput = {
+    create?: XOR<JobCreateWithoutRescheduleRequestsInput, JobUncheckedCreateWithoutRescheduleRequestsInput>
+    connectOrCreate?: JobCreateOrConnectWithoutRescheduleRequestsInput
+    upsert?: JobUpsertWithoutRescheduleRequestsInput
+    connect?: JobWhereUniqueInput
+    update?: XOR<XOR<JobUpdateToOneWithWhereWithoutRescheduleRequestsInput, JobUpdateWithoutRescheduleRequestsInput>, JobUncheckedUpdateWithoutRescheduleRequestsInput>
+  }
+
+  export type RescheduleSlotUpdateManyWithoutRequestNestedInput = {
+    create?: XOR<RescheduleSlotCreateWithoutRequestInput, RescheduleSlotUncheckedCreateWithoutRequestInput> | RescheduleSlotCreateWithoutRequestInput[] | RescheduleSlotUncheckedCreateWithoutRequestInput[]
+    connectOrCreate?: RescheduleSlotCreateOrConnectWithoutRequestInput | RescheduleSlotCreateOrConnectWithoutRequestInput[]
+    upsert?: RescheduleSlotUpsertWithWhereUniqueWithoutRequestInput | RescheduleSlotUpsertWithWhereUniqueWithoutRequestInput[]
+    createMany?: RescheduleSlotCreateManyRequestInputEnvelope
+    set?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+    disconnect?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+    delete?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+    connect?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+    update?: RescheduleSlotUpdateWithWhereUniqueWithoutRequestInput | RescheduleSlotUpdateWithWhereUniqueWithoutRequestInput[]
+    updateMany?: RescheduleSlotUpdateManyWithWhereWithoutRequestInput | RescheduleSlotUpdateManyWithWhereWithoutRequestInput[]
+    deleteMany?: RescheduleSlotScalarWhereInput | RescheduleSlotScalarWhereInput[]
+  }
+
+  export type RescheduleSlotUncheckedUpdateManyWithoutRequestNestedInput = {
+    create?: XOR<RescheduleSlotCreateWithoutRequestInput, RescheduleSlotUncheckedCreateWithoutRequestInput> | RescheduleSlotCreateWithoutRequestInput[] | RescheduleSlotUncheckedCreateWithoutRequestInput[]
+    connectOrCreate?: RescheduleSlotCreateOrConnectWithoutRequestInput | RescheduleSlotCreateOrConnectWithoutRequestInput[]
+    upsert?: RescheduleSlotUpsertWithWhereUniqueWithoutRequestInput | RescheduleSlotUpsertWithWhereUniqueWithoutRequestInput[]
+    createMany?: RescheduleSlotCreateManyRequestInputEnvelope
+    set?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+    disconnect?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+    delete?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+    connect?: RescheduleSlotWhereUniqueInput | RescheduleSlotWhereUniqueInput[]
+    update?: RescheduleSlotUpdateWithWhereUniqueWithoutRequestInput | RescheduleSlotUpdateWithWhereUniqueWithoutRequestInput[]
+    updateMany?: RescheduleSlotUpdateManyWithWhereWithoutRequestInput | RescheduleSlotUpdateManyWithWhereWithoutRequestInput[]
+    deleteMany?: RescheduleSlotScalarWhereInput | RescheduleSlotScalarWhereInput[]
+  }
+
+  export type RescheduleRequestCreateNestedOneWithoutSlotsInput = {
+    create?: XOR<RescheduleRequestCreateWithoutSlotsInput, RescheduleRequestUncheckedCreateWithoutSlotsInput>
+    connectOrCreate?: RescheduleRequestCreateOrConnectWithoutSlotsInput
+    connect?: RescheduleRequestWhereUniqueInput
+  }
+
+  export type RescheduleRequestUpdateOneRequiredWithoutSlotsNestedInput = {
+    create?: XOR<RescheduleRequestCreateWithoutSlotsInput, RescheduleRequestUncheckedCreateWithoutSlotsInput>
+    connectOrCreate?: RescheduleRequestCreateOrConnectWithoutSlotsInput
+    upsert?: RescheduleRequestUpsertWithoutSlotsInput
+    connect?: RescheduleRequestWhereUniqueInput
+    update?: XOR<XOR<RescheduleRequestUpdateToOneWithWhereWithoutSlotsInput, RescheduleRequestUpdateWithoutSlotsInput>, RescheduleRequestUncheckedUpdateWithoutSlotsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -20619,6 +23826,13 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type NestedEnumRescheduleStateNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleState | EnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RescheduleState[] | ListEnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.RescheduleState[] | ListEnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumRescheduleStateNullableFilter<$PrismaModel> | $Enums.RescheduleState | null
+  }
+
   export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
     in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
@@ -20667,6 +23881,16 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumRescheduleStateNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleState | EnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RescheduleState[] | ListEnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.RescheduleState[] | ListEnumRescheduleStateFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumRescheduleStateNullableWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleState | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleStateNullableFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleStateNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumJobStatusNullableFilter<$PrismaModel = never> = {
@@ -20718,6 +23942,74 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumWorkOrderStatusFilter<$PrismaModel>
     _max?: NestedEnumWorkOrderStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumRescheduleActorFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleActor | EnumRescheduleActorFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleActor[] | ListEnumRescheduleActorFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleActor[] | ListEnumRescheduleActorFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleActorFilter<$PrismaModel> | $Enums.RescheduleActor
+  }
+
+  export type NestedEnumRescheduleModeFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleMode | EnumRescheduleModeFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleMode[] | ListEnumRescheduleModeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleMode[] | ListEnumRescheduleModeFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleModeFilter<$PrismaModel> | $Enums.RescheduleMode
+  }
+
+  export type NestedEnumRescheduleReasonFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleReason | EnumRescheduleReasonFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleReason[] | ListEnumRescheduleReasonFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleReason[] | ListEnumRescheduleReasonFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleReasonFilter<$PrismaModel> | $Enums.RescheduleReason
+  }
+
+  export type NestedEnumRescheduleStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleStatus | EnumRescheduleStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleStatus[] | ListEnumRescheduleStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleStatus[] | ListEnumRescheduleStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleStatusFilter<$PrismaModel> | $Enums.RescheduleStatus
+  }
+
+  export type NestedEnumRescheduleActorWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleActor | EnumRescheduleActorFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleActor[] | ListEnumRescheduleActorFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleActor[] | ListEnumRescheduleActorFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleActorWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleActor
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleActorFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleActorFilter<$PrismaModel>
+  }
+
+  export type NestedEnumRescheduleModeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleMode | EnumRescheduleModeFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleMode[] | ListEnumRescheduleModeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleMode[] | ListEnumRescheduleModeFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleModeWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleMode
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleModeFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleModeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumRescheduleReasonWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleReason | EnumRescheduleReasonFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleReason[] | ListEnumRescheduleReasonFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleReason[] | ListEnumRescheduleReasonFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleReasonWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleReason
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleReasonFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleReasonFilter<$PrismaModel>
+  }
+
+  export type NestedEnumRescheduleStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RescheduleStatus | EnumRescheduleStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RescheduleStatus[] | ListEnumRescheduleStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RescheduleStatus[] | ListEnumRescheduleStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRescheduleStatusWithAggregatesFilter<$PrismaModel> | $Enums.RescheduleStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRescheduleStatusFilter<$PrismaModel>
+    _max?: NestedEnumRescheduleStatusFilter<$PrismaModel>
   }
 
   export type JobTemplateCreateWithoutJobTypeInput = {
@@ -20840,6 +24132,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20849,6 +24142,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
   export type JobUncheckedCreateWithoutJobTypeInput = {
@@ -20892,6 +24186,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20900,6 +24195,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
   export type JobCreateOrConnectWithoutJobTypeInput = {
@@ -21040,6 +24336,7 @@ export namespace Prisma {
     cancellationReason?: StringNullableFilter<"Job"> | string | null
     hasPartShortage?: BoolFilter<"Job"> | boolean
     partShortageNote?: StringNullableFilter<"Job"> | string | null
+    rescheduleState?: EnumRescheduleStateNullableFilter<"Job"> | $Enums.RescheduleState | null
     createdByUserId?: StringFilter<"Job"> | string
     createdAt?: DateTimeFilter<"Job"> | Date | string
     updatedAt?: DateTimeFilter<"Job"> | Date | string
@@ -21157,6 +24454,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21166,6 +24464,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
   export type JobUncheckedCreateWithoutTemplateInput = {
@@ -21209,6 +24508,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21217,6 +24517,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
   export type JobCreateOrConnectWithoutTemplateInput = {
@@ -21567,6 +24868,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21576,6 +24878,7 @@ export namespace Prisma {
     workOrders?: WorkOrderCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
   export type JobUncheckedCreateWithoutCustomFieldValuesInput = {
@@ -21620,6 +24923,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21627,6 +24931,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
   export type JobCreateOrConnectWithoutCustomFieldValuesInput = {
@@ -21720,6 +25025,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21729,6 +25035,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateWithoutCustomFieldValuesInput = {
@@ -21773,6 +25080,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21780,6 +25088,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
   export type JobCustomFieldDefUpsertWithoutValuesInput = {
@@ -22093,6 +25402,58 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type RescheduleRequestCreateWithoutJobInput = {
+    id?: string
+    companyId: string
+    openedBy: $Enums.RescheduleActor
+    openedByUserId?: string | null
+    openedByName?: string | null
+    mode: $Enums.RescheduleMode
+    reasonCode: $Enums.RescheduleReason
+    reason?: string | null
+    status?: $Enums.RescheduleStatus
+    pickedSlotId?: string | null
+    responseNote?: string | null
+    respondedAt?: Date | string | null
+    respondedByName?: string | null
+    appliedAt?: Date | string | null
+    nudgedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    slots?: RescheduleSlotCreateNestedManyWithoutRequestInput
+  }
+
+  export type RescheduleRequestUncheckedCreateWithoutJobInput = {
+    id?: string
+    companyId: string
+    openedBy: $Enums.RescheduleActor
+    openedByUserId?: string | null
+    openedByName?: string | null
+    mode: $Enums.RescheduleMode
+    reasonCode: $Enums.RescheduleReason
+    reason?: string | null
+    status?: $Enums.RescheduleStatus
+    pickedSlotId?: string | null
+    responseNote?: string | null
+    respondedAt?: Date | string | null
+    respondedByName?: string | null
+    appliedAt?: Date | string | null
+    nudgedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    slots?: RescheduleSlotUncheckedCreateNestedManyWithoutRequestInput
+  }
+
+  export type RescheduleRequestCreateOrConnectWithoutJobInput = {
+    where: RescheduleRequestWhereUniqueInput
+    create: XOR<RescheduleRequestCreateWithoutJobInput, RescheduleRequestUncheckedCreateWithoutJobInput>
+  }
+
+  export type RescheduleRequestCreateManyJobInputEnvelope = {
+    data: RescheduleRequestCreateManyJobInput | RescheduleRequestCreateManyJobInput[]
+    skipDuplicates?: boolean
+  }
+
   export type JobTypeUpsertWithoutJobsInput = {
     update: XOR<JobTypeUpdateWithoutJobsInput, JobTypeUncheckedUpdateWithoutJobsInput>
     create: XOR<JobTypeCreateWithoutJobsInput, JobTypeUncheckedCreateWithoutJobsInput>
@@ -22290,6 +25651,46 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"JobPhoto"> | Date | string
   }
 
+  export type RescheduleRequestUpsertWithWhereUniqueWithoutJobInput = {
+    where: RescheduleRequestWhereUniqueInput
+    update: XOR<RescheduleRequestUpdateWithoutJobInput, RescheduleRequestUncheckedUpdateWithoutJobInput>
+    create: XOR<RescheduleRequestCreateWithoutJobInput, RescheduleRequestUncheckedCreateWithoutJobInput>
+  }
+
+  export type RescheduleRequestUpdateWithWhereUniqueWithoutJobInput = {
+    where: RescheduleRequestWhereUniqueInput
+    data: XOR<RescheduleRequestUpdateWithoutJobInput, RescheduleRequestUncheckedUpdateWithoutJobInput>
+  }
+
+  export type RescheduleRequestUpdateManyWithWhereWithoutJobInput = {
+    where: RescheduleRequestScalarWhereInput
+    data: XOR<RescheduleRequestUpdateManyMutationInput, RescheduleRequestUncheckedUpdateManyWithoutJobInput>
+  }
+
+  export type RescheduleRequestScalarWhereInput = {
+    AND?: RescheduleRequestScalarWhereInput | RescheduleRequestScalarWhereInput[]
+    OR?: RescheduleRequestScalarWhereInput[]
+    NOT?: RescheduleRequestScalarWhereInput | RescheduleRequestScalarWhereInput[]
+    id?: StringFilter<"RescheduleRequest"> | string
+    companyId?: StringFilter<"RescheduleRequest"> | string
+    jobId?: StringFilter<"RescheduleRequest"> | string
+    openedBy?: EnumRescheduleActorFilter<"RescheduleRequest"> | $Enums.RescheduleActor
+    openedByUserId?: StringNullableFilter<"RescheduleRequest"> | string | null
+    openedByName?: StringNullableFilter<"RescheduleRequest"> | string | null
+    mode?: EnumRescheduleModeFilter<"RescheduleRequest"> | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFilter<"RescheduleRequest"> | $Enums.RescheduleReason
+    reason?: StringNullableFilter<"RescheduleRequest"> | string | null
+    status?: EnumRescheduleStatusFilter<"RescheduleRequest"> | $Enums.RescheduleStatus
+    pickedSlotId?: StringNullableFilter<"RescheduleRequest"> | string | null
+    responseNote?: StringNullableFilter<"RescheduleRequest"> | string | null
+    respondedAt?: DateTimeNullableFilter<"RescheduleRequest"> | Date | string | null
+    respondedByName?: StringNullableFilter<"RescheduleRequest"> | string | null
+    appliedAt?: DateTimeNullableFilter<"RescheduleRequest"> | Date | string | null
+    nudgedAt?: DateTimeNullableFilter<"RescheduleRequest"> | Date | string | null
+    createdAt?: DateTimeFilter<"RescheduleRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"RescheduleRequest"> | Date | string
+  }
+
   export type JobCreateWithoutStatusHistoryInput = {
     id?: string
     companyId: string
@@ -22330,6 +25731,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22339,6 +25741,7 @@ export namespace Prisma {
     workOrders?: WorkOrderCreateNestedManyWithoutJobInput
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
   export type JobUncheckedCreateWithoutStatusHistoryInput = {
@@ -22383,6 +25786,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22390,6 +25794,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedCreateNestedManyWithoutJobInput
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
   export type JobCreateOrConnectWithoutStatusHistoryInput = {
@@ -22448,6 +25853,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22457,6 +25863,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUpdateManyWithoutJobNestedInput
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateWithoutStatusHistoryInput = {
@@ -22501,6 +25908,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22508,6 +25916,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedUpdateManyWithoutJobNestedInput
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
   export type JobCreateWithoutPhotosInput = {
@@ -22550,6 +25959,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22559,6 +25969,7 @@ export namespace Prisma {
     workOrders?: WorkOrderCreateNestedManyWithoutJobInput
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
   export type JobUncheckedCreateWithoutPhotosInput = {
@@ -22603,6 +26014,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22610,6 +26022,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedCreateNestedManyWithoutJobInput
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
   export type JobCreateOrConnectWithoutPhotosInput = {
@@ -22668,6 +26081,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22677,6 +26091,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUpdateManyWithoutJobNestedInput
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateWithoutPhotosInput = {
@@ -22721,6 +26136,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22728,6 +26144,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedUpdateManyWithoutJobNestedInput
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
   export type JobCreateWithoutWorkOrdersInput = {
@@ -22770,6 +26187,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22779,6 +26197,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
   export type JobUncheckedCreateWithoutWorkOrdersInput = {
@@ -22823,6 +26242,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22830,6 +26250,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
   export type JobCreateOrConnectWithoutWorkOrdersInput = {
@@ -22956,6 +26377,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22965,6 +26387,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateWithoutWorkOrdersInput = {
@@ -23009,6 +26432,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23016,6 +26440,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
   export type WorkOrderLineItemUpsertWithWhereUniqueWithoutWorkOrderInput = {
@@ -23330,6 +26755,385 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type JobCreateWithoutRescheduleRequestsInput = {
+    id?: string
+    companyId: string
+    jobNumber: string
+    customerId: string
+    customerName: string
+    customerPhone?: string | null
+    customerEmail?: string | null
+    serviceAddress: string
+    serviceCity?: string | null
+    serviceState?: string | null
+    serviceZip?: string | null
+    serviceLatitude?: Decimal | DecimalJsLike | number | string | null
+    serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
+    title: string
+    description?: string | null
+    status?: $Enums.JobStatus
+    priority?: $Enums.JobPriority
+    assignedToId?: string | null
+    assignedToName?: string | null
+    scheduledStart?: Date | string | null
+    scheduledEnd?: Date | string | null
+    actualStart?: Date | string | null
+    actualEnd?: Date | string | null
+    estimatedDurationMins?: number | null
+    travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
+    quoteId?: string | null
+    invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
+    notes?: string | null
+    internalNotes?: string | null
+    tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
+    createdByUserId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    completedAt?: Date | string | null
+    jobType?: JobTypeCreateNestedOneWithoutJobsInput
+    template?: JobTemplateCreateNestedOneWithoutJobsInput
+    workOrders?: WorkOrderCreateNestedManyWithoutJobInput
+    customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
+    statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
+    photos?: JobPhotoCreateNestedManyWithoutJobInput
+  }
+
+  export type JobUncheckedCreateWithoutRescheduleRequestsInput = {
+    id?: string
+    companyId: string
+    jobNumber: string
+    customerId: string
+    customerName: string
+    customerPhone?: string | null
+    customerEmail?: string | null
+    serviceAddress: string
+    serviceCity?: string | null
+    serviceState?: string | null
+    serviceZip?: string | null
+    serviceLatitude?: Decimal | DecimalJsLike | number | string | null
+    serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    jobTypeId?: string | null
+    templateId?: string | null
+    projectId?: string | null
+    houseId?: string | null
+    equipmentId?: string | null
+    title: string
+    description?: string | null
+    status?: $Enums.JobStatus
+    priority?: $Enums.JobPriority
+    assignedToId?: string | null
+    assignedToName?: string | null
+    scheduledStart?: Date | string | null
+    scheduledEnd?: Date | string | null
+    actualStart?: Date | string | null
+    actualEnd?: Date | string | null
+    estimatedDurationMins?: number | null
+    travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
+    quoteId?: string | null
+    invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
+    notes?: string | null
+    internalNotes?: string | null
+    tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
+    createdByUserId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    completedAt?: Date | string | null
+    workOrders?: WorkOrderUncheckedCreateNestedManyWithoutJobInput
+    customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
+    statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
+    photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+  }
+
+  export type JobCreateOrConnectWithoutRescheduleRequestsInput = {
+    where: JobWhereUniqueInput
+    create: XOR<JobCreateWithoutRescheduleRequestsInput, JobUncheckedCreateWithoutRescheduleRequestsInput>
+  }
+
+  export type RescheduleSlotCreateWithoutRequestInput = {
+    id?: string
+    startAt: Date | string
+    endAt: Date | string
+    window?: string | null
+  }
+
+  export type RescheduleSlotUncheckedCreateWithoutRequestInput = {
+    id?: string
+    startAt: Date | string
+    endAt: Date | string
+    window?: string | null
+  }
+
+  export type RescheduleSlotCreateOrConnectWithoutRequestInput = {
+    where: RescheduleSlotWhereUniqueInput
+    create: XOR<RescheduleSlotCreateWithoutRequestInput, RescheduleSlotUncheckedCreateWithoutRequestInput>
+  }
+
+  export type RescheduleSlotCreateManyRequestInputEnvelope = {
+    data: RescheduleSlotCreateManyRequestInput | RescheduleSlotCreateManyRequestInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type JobUpsertWithoutRescheduleRequestsInput = {
+    update: XOR<JobUpdateWithoutRescheduleRequestsInput, JobUncheckedUpdateWithoutRescheduleRequestsInput>
+    create: XOR<JobCreateWithoutRescheduleRequestsInput, JobUncheckedCreateWithoutRescheduleRequestsInput>
+    where?: JobWhereInput
+  }
+
+  export type JobUpdateToOneWithWhereWithoutRescheduleRequestsInput = {
+    where?: JobWhereInput
+    data: XOR<JobUpdateWithoutRescheduleRequestsInput, JobUncheckedUpdateWithoutRescheduleRequestsInput>
+  }
+
+  export type JobUpdateWithoutRescheduleRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    jobNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceAddress?: StringFieldUpdateOperationsInput | string
+    serviceCity?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceState?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
+    priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
+    assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
+    travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quoteId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
+    createdByUserId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    jobType?: JobTypeUpdateOneWithoutJobsNestedInput
+    template?: JobTemplateUpdateOneWithoutJobsNestedInput
+    workOrders?: WorkOrderUpdateManyWithoutJobNestedInput
+    customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
+    statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
+    photos?: JobPhotoUpdateManyWithoutJobNestedInput
+  }
+
+  export type JobUncheckedUpdateWithoutRescheduleRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    jobNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceAddress?: StringFieldUpdateOperationsInput | string
+    serviceCity?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceState?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
+    priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
+    assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
+    travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quoteId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
+    createdByUserId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    workOrders?: WorkOrderUncheckedUpdateManyWithoutJobNestedInput
+    customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
+    statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
+    photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+  }
+
+  export type RescheduleSlotUpsertWithWhereUniqueWithoutRequestInput = {
+    where: RescheduleSlotWhereUniqueInput
+    update: XOR<RescheduleSlotUpdateWithoutRequestInput, RescheduleSlotUncheckedUpdateWithoutRequestInput>
+    create: XOR<RescheduleSlotCreateWithoutRequestInput, RescheduleSlotUncheckedCreateWithoutRequestInput>
+  }
+
+  export type RescheduleSlotUpdateWithWhereUniqueWithoutRequestInput = {
+    where: RescheduleSlotWhereUniqueInput
+    data: XOR<RescheduleSlotUpdateWithoutRequestInput, RescheduleSlotUncheckedUpdateWithoutRequestInput>
+  }
+
+  export type RescheduleSlotUpdateManyWithWhereWithoutRequestInput = {
+    where: RescheduleSlotScalarWhereInput
+    data: XOR<RescheduleSlotUpdateManyMutationInput, RescheduleSlotUncheckedUpdateManyWithoutRequestInput>
+  }
+
+  export type RescheduleSlotScalarWhereInput = {
+    AND?: RescheduleSlotScalarWhereInput | RescheduleSlotScalarWhereInput[]
+    OR?: RescheduleSlotScalarWhereInput[]
+    NOT?: RescheduleSlotScalarWhereInput | RescheduleSlotScalarWhereInput[]
+    id?: StringFilter<"RescheduleSlot"> | string
+    requestId?: StringFilter<"RescheduleSlot"> | string
+    startAt?: DateTimeFilter<"RescheduleSlot"> | Date | string
+    endAt?: DateTimeFilter<"RescheduleSlot"> | Date | string
+    window?: StringNullableFilter<"RescheduleSlot"> | string | null
+  }
+
+  export type RescheduleRequestCreateWithoutSlotsInput = {
+    id?: string
+    companyId: string
+    openedBy: $Enums.RescheduleActor
+    openedByUserId?: string | null
+    openedByName?: string | null
+    mode: $Enums.RescheduleMode
+    reasonCode: $Enums.RescheduleReason
+    reason?: string | null
+    status?: $Enums.RescheduleStatus
+    pickedSlotId?: string | null
+    responseNote?: string | null
+    respondedAt?: Date | string | null
+    respondedByName?: string | null
+    appliedAt?: Date | string | null
+    nudgedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    job: JobCreateNestedOneWithoutRescheduleRequestsInput
+  }
+
+  export type RescheduleRequestUncheckedCreateWithoutSlotsInput = {
+    id?: string
+    companyId: string
+    jobId: string
+    openedBy: $Enums.RescheduleActor
+    openedByUserId?: string | null
+    openedByName?: string | null
+    mode: $Enums.RescheduleMode
+    reasonCode: $Enums.RescheduleReason
+    reason?: string | null
+    status?: $Enums.RescheduleStatus
+    pickedSlotId?: string | null
+    responseNote?: string | null
+    respondedAt?: Date | string | null
+    respondedByName?: string | null
+    appliedAt?: Date | string | null
+    nudgedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RescheduleRequestCreateOrConnectWithoutSlotsInput = {
+    where: RescheduleRequestWhereUniqueInput
+    create: XOR<RescheduleRequestCreateWithoutSlotsInput, RescheduleRequestUncheckedCreateWithoutSlotsInput>
+  }
+
+  export type RescheduleRequestUpsertWithoutSlotsInput = {
+    update: XOR<RescheduleRequestUpdateWithoutSlotsInput, RescheduleRequestUncheckedUpdateWithoutSlotsInput>
+    create: XOR<RescheduleRequestCreateWithoutSlotsInput, RescheduleRequestUncheckedCreateWithoutSlotsInput>
+    where?: RescheduleRequestWhereInput
+  }
+
+  export type RescheduleRequestUpdateToOneWithWhereWithoutSlotsInput = {
+    where?: RescheduleRequestWhereInput
+    data: XOR<RescheduleRequestUpdateWithoutSlotsInput, RescheduleRequestUncheckedUpdateWithoutSlotsInput>
+  }
+
+  export type RescheduleRequestUpdateWithoutSlotsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    openedBy?: EnumRescheduleActorFieldUpdateOperationsInput | $Enums.RescheduleActor
+    openedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    openedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    mode?: EnumRescheduleModeFieldUpdateOperationsInput | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFieldUpdateOperationsInput | $Enums.RescheduleReason
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRescheduleStatusFieldUpdateOperationsInput | $Enums.RescheduleStatus
+    pickedSlotId?: NullableStringFieldUpdateOperationsInput | string | null
+    responseNote?: NullableStringFieldUpdateOperationsInput | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    respondedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nudgedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    job?: JobUpdateOneRequiredWithoutRescheduleRequestsNestedInput
+  }
+
+  export type RescheduleRequestUncheckedUpdateWithoutSlotsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    jobId?: StringFieldUpdateOperationsInput | string
+    openedBy?: EnumRescheduleActorFieldUpdateOperationsInput | $Enums.RescheduleActor
+    openedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    openedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    mode?: EnumRescheduleModeFieldUpdateOperationsInput | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFieldUpdateOperationsInput | $Enums.RescheduleReason
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRescheduleStatusFieldUpdateOperationsInput | $Enums.RescheduleStatus
+    pickedSlotId?: NullableStringFieldUpdateOperationsInput | string | null
+    responseNote?: NullableStringFieldUpdateOperationsInput | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    respondedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nudgedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type JobTemplateCreateManyJobTypeInput = {
     id?: string
     companyId: string
@@ -23398,6 +27202,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23531,6 +27336,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23540,6 +27346,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateWithoutJobTypeInput = {
@@ -23583,6 +27390,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23591,6 +27399,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateManyWithoutJobTypeInput = {
@@ -23634,6 +27443,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23693,6 +27503,7 @@ export namespace Prisma {
     cancellationReason?: string | null
     hasPartShortage?: boolean
     partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
     createdByUserId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23775,6 +27586,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23784,6 +27596,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateWithoutTemplateInput = {
@@ -23827,6 +27640,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23835,6 +27649,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateManyWithoutTemplateInput = {
@@ -23878,6 +27693,7 @@ export namespace Prisma {
     cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
     partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
     createdByUserId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24002,6 +27818,26 @@ export namespace Prisma {
     photoType?: $Enums.PhotoType
     uploadedById: string
     createdAt?: Date | string
+  }
+
+  export type RescheduleRequestCreateManyJobInput = {
+    id?: string
+    companyId: string
+    openedBy: $Enums.RescheduleActor
+    openedByUserId?: string | null
+    openedByName?: string | null
+    mode: $Enums.RescheduleMode
+    reasonCode: $Enums.RescheduleReason
+    reason?: string | null
+    status?: $Enums.RescheduleStatus
+    pickedSlotId?: string | null
+    responseNote?: string | null
+    respondedAt?: Date | string | null
+    respondedByName?: string | null
+    appliedAt?: Date | string | null
+    nudgedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type WorkOrderUpdateWithoutJobInput = {
@@ -24140,6 +27976,68 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type RescheduleRequestUpdateWithoutJobInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    openedBy?: EnumRescheduleActorFieldUpdateOperationsInput | $Enums.RescheduleActor
+    openedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    openedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    mode?: EnumRescheduleModeFieldUpdateOperationsInput | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFieldUpdateOperationsInput | $Enums.RescheduleReason
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRescheduleStatusFieldUpdateOperationsInput | $Enums.RescheduleStatus
+    pickedSlotId?: NullableStringFieldUpdateOperationsInput | string | null
+    responseNote?: NullableStringFieldUpdateOperationsInput | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    respondedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nudgedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    slots?: RescheduleSlotUpdateManyWithoutRequestNestedInput
+  }
+
+  export type RescheduleRequestUncheckedUpdateWithoutJobInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    openedBy?: EnumRescheduleActorFieldUpdateOperationsInput | $Enums.RescheduleActor
+    openedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    openedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    mode?: EnumRescheduleModeFieldUpdateOperationsInput | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFieldUpdateOperationsInput | $Enums.RescheduleReason
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRescheduleStatusFieldUpdateOperationsInput | $Enums.RescheduleStatus
+    pickedSlotId?: NullableStringFieldUpdateOperationsInput | string | null
+    responseNote?: NullableStringFieldUpdateOperationsInput | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    respondedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nudgedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    slots?: RescheduleSlotUncheckedUpdateManyWithoutRequestNestedInput
+  }
+
+  export type RescheduleRequestUncheckedUpdateManyWithoutJobInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    openedBy?: EnumRescheduleActorFieldUpdateOperationsInput | $Enums.RescheduleActor
+    openedByUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    openedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    mode?: EnumRescheduleModeFieldUpdateOperationsInput | $Enums.RescheduleMode
+    reasonCode?: EnumRescheduleReasonFieldUpdateOperationsInput | $Enums.RescheduleReason
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRescheduleStatusFieldUpdateOperationsInput | $Enums.RescheduleStatus
+    pickedSlotId?: NullableStringFieldUpdateOperationsInput | string | null
+    responseNote?: NullableStringFieldUpdateOperationsInput | string | null
+    respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    respondedByName?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nudgedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type WorkOrderLineItemCreateManyWorkOrderInput = {
     id?: string
     priceBookItemId?: string | null
@@ -24236,6 +28134,34 @@ export namespace Prisma {
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type RescheduleSlotCreateManyRequestInput = {
+    id?: string
+    startAt: Date | string
+    endAt: Date | string
+    window?: string | null
+  }
+
+  export type RescheduleSlotUpdateWithoutRequestInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    window?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type RescheduleSlotUncheckedUpdateWithoutRequestInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    window?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type RescheduleSlotUncheckedUpdateManyWithoutRequestInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    window?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
 
 
   /**
@@ -24265,6 +28191,10 @@ export namespace Prisma {
      * @deprecated Use WorkOrderCountOutputTypeDefaultArgs instead
      */
     export type WorkOrderCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = WorkOrderCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use RescheduleRequestCountOutputTypeDefaultArgs instead
+     */
+    export type RescheduleRequestCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = RescheduleRequestCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use JobTypeDefaultArgs instead
      */
@@ -24313,6 +28243,14 @@ export namespace Prisma {
      * @deprecated Use WorkOrderLineItemDefaultArgs instead
      */
     export type WorkOrderLineItemArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = WorkOrderLineItemDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use RescheduleRequestDefaultArgs instead
+     */
+    export type RescheduleRequestArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = RescheduleRequestDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use RescheduleSlotDefaultArgs instead
+     */
+    export type RescheduleSlotArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = RescheduleSlotDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

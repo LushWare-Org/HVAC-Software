@@ -37,6 +37,7 @@ import type { Agreement } from '../../hooks/useAgreements'
 import type { Job } from '../../types/api'
 import HousesTab from './HousesTab'
 import HouseIssuesAlert from '../../components/HouseIssuesAlert'
+import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 
 // Consistent with every other consumer of this modal (DayPlanner, Finance,
 // AgreementDrawer, Topbar) — lazy-loaded, same component app-wide.
@@ -690,7 +691,10 @@ function JobsTab({ project: p }: { project: Project }) {
                 <Wrench size={14} style={{ color: 'var(--t3)' }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{j.title}</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', margin: 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  {j.title}
+                  <RescheduleBadge state={j.rescheduleState} size="sm" />
+                </p>
                 <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span>{fmtDate(j.scheduledStart)}{j.assignedToName ? ` · ${j.assignedToName}` : ' · Unassigned'}</span>
                   {house && (

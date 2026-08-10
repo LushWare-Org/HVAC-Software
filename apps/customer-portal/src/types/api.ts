@@ -121,6 +121,44 @@ export interface Job {
   workOrders?: WorkOrder[]
   projectId?: string
   houseId?: string
+  /**
+   * Non-null while a reschedule negotiation is open, saying whose move it is.
+   * Denormalized by job-service so any job list can show status with no extra
+   * request — see components/reschedule/RescheduleBadge.
+   */
+  rescheduleState?: RescheduleStateValue | null
+}
+
+// ── Rescheduling ────────────────────────────────────────────────────────────
+// Mirrors packages/types/src/reschedule.ts. The portal deliberately does not
+// depend on @tscrm/types (see the featureEnabled mirror in lib/format.ts).
+
+export type RescheduleStateValue = 'AWAITING_CUSTOMER' | 'AWAITING_ADMIN' | 'READY_TO_APPLY'
+
+export interface RescheduleSlot {
+  id: string
+  startAt: string
+  endAt: string
+  window?: string | null
+}
+
+export interface RescheduleRequest {
+  id: string
+  companyId: string
+  jobId: string
+  openedBy: 'ADMIN' | 'CUSTOMER'
+  openedByName?: string | null
+  mode: 'PROPOSE_SLOTS' | 'OPEN_ASK'
+  reasonCode: string
+  reason?: string | null
+  slots: RescheduleSlot[]
+  status: 'AWAITING_RESPONSE' | 'SLOT_PICKED' | 'DECLINED' | 'SUPERSEDED' | 'APPLIED' | 'CANCELLED'
+  pickedSlotId?: string | null
+  responseNote?: string | null
+  respondedAt?: string | null
+  respondedByName?: string | null
+  appliedAt?: string | null
+  createdAt: string
 }
 
 export interface JobStatusHistory {

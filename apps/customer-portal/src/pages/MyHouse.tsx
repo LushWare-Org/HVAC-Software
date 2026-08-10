@@ -6,6 +6,7 @@
  * pattern established by Dashboard.tsx's "Live Visit" hero.
  */
 import { useState } from 'react'
+import RescheduleBadge from '../components/reschedule/RescheduleBadge'
 import {
   Home, MapPin, Wind, CalendarClock, ShieldCheck, Wrench,
   AlertTriangle, Send, Loader2, ChevronDown, ChevronUp, ChevronRight, Tag, Plus, X, Check,
@@ -308,6 +309,7 @@ function HouseSection({ house }: { house: MyHouseType }) {
                     <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'var(--bg-card-2)', border: '1px solid var(--bd)' }}>
                       <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.title}</span>
                       <span style={{ fontSize: 11, color: 'var(--t3)', whiteSpace: 'nowrap' }}>{fmtDate(j.scheduledStart)}</span>
+                      <RescheduleBadge state={j.rescheduleState} size="sm" />
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, whiteSpace: 'nowrap', background: meta.done ? 'var(--green-dim)' : 'var(--blue-dim)', color: meta.done ? 'var(--green)' : 'var(--blue)' }}>
                         {meta.label}
                       </span>

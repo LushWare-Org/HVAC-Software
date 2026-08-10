@@ -5,6 +5,7 @@
  * queries, matching the admin roll-up rule (Decimal strings → Number()).
  */
 import { useQuery } from '@tanstack/react-query'
+import type { RescheduleStateValue } from '../types/api'
 import api from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -24,6 +25,8 @@ export interface MyProjectJob {
   title: string
   status: string
   scheduledStart?: string | null
+  /** Open reschedule negotiation, if any — drives the RescheduleBadge. */
+  rescheduleState?: RescheduleStateValue | null
 }
 
 export interface MyProjectMoney {

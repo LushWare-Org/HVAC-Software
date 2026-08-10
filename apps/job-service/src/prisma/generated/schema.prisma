@@ -235,15 +235,22 @@ model Job {
   hasPartShortage    Boolean @default(false)
   partShortageNote   String?
 
+  // Denormalized "whose move is it" for the open reschedule request, if any.
+  // Written in the same transaction as the request so it cannot drift. Exists so
+  // every job list can render a status badge with no join and no extra query —
+  // see docs/superpowers/specs/2026-08-05-job-rescheduling-design.md.
+  rescheduleState RescheduleState?
+
   createdByUserId String // Auth0 user ID
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   completedAt     DateTime?
 
-  workOrders        WorkOrder[]
-  customFieldValues JobCustomFieldValue[]
-  statusHistory     JobStatusHistory[]
-  photos            JobPhoto[]
+  workOrders         WorkOrder[]
+  customFieldValues  JobCustomFieldValue[]
+  statusHistory      JobStatusHistory[]
+  photos             JobPhoto[]
+  rescheduleRequests RescheduleRequest[]
 
   @@unique([companyId, jobNumber])
   @@index([companyId])
@@ -252,8 +259,10 @@ model Job {
   @@index([companyId, scheduledStart])
   @@index([customerId])
   @@index([agreementId])
+  @@index([companyId, projectId])
   @@index([houseId])
   @@index([equipmentId])
+  @@index([companyId, rescheduleState])
   @@map("jobs")
 }
 
@@ -393,4 +402,97 @@ model WorkOrderLineItem {
 
   @@index([workOrderId])
   @@map("work_order_line_items")
+}
+
+// ============================================================
+// RESCHEDULING — two-way negotiation over a job's appointment
+//
+// Either side may open a request, proposing 1–3 candidate slots or asking
+// openly for the other's availability. Counters append a new row (marking the
+// previous one SUPERSEDED) so the whole negotiation survives. Staff always
+// confirm the final calendar write.
+//
+// Design: docs/superpowers/specs/2026-08-05-job-rescheduling-design.md
+// ============================================================
+
+model RescheduleRequest {
+  id        String @id @default(uuid())
+  companyId String
+  jobId     String
+  job       Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  openedBy       RescheduleActor
+  openedByUserId String?
+  openedByName   String?
+  mode           RescheduleMode
+  reasonCode     RescheduleReason
+  reason         String? // free text, shown verbatim to the other side
+
+  slots RescheduleSlot[] // 1–3 when PROPOSE_SLOTS, empty when OPEN_ASK
+
+  status          RescheduleStatus @default(AWAITING_RESPONSE)
+  pickedSlotId    String?
+  responseNote    String?
+  respondedAt     DateTime?
+  respondedByName String?
+  appliedAt       DateTime?
+  nudgedAt        DateTime? // set by the staleness sweep; null = not yet nudged
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId, jobId])
+  @@index([companyId, status])
+  @@map("reschedule_requests")
+}
+
+// A child table rather than a JSON column: pickedSlotId ultimately writes to a
+// customer's calendar, so "the applied slot is one we actually offered" is worth
+// having the database guarantee instead of trusting the service to have checked.
+model RescheduleSlot {
+  id        String            @id @default(uuid())
+  requestId String
+  request   RescheduleRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  startAt   DateTime
+  endAt     DateTime
+  window    String? // 'morning' | 'afternoon' | 'evening' — display label
+
+  @@index([requestId])
+  @@map("reschedule_slots")
+}
+
+enum RescheduleActor {
+  ADMIN
+  CUSTOMER
+}
+
+enum RescheduleMode {
+  PROPOSE_SLOTS
+  OPEN_ASK
+}
+
+enum RescheduleStatus {
+  AWAITING_RESPONSE
+  SLOT_PICKED
+  DECLINED
+  SUPERSEDED
+  APPLIED
+  CANCELLED
+}
+
+enum RescheduleState {
+  AWAITING_CUSTOMER
+  AWAITING_ADMIN
+  READY_TO_APPLY
+}
+
+enum RescheduleReason {
+  PARTS_DELAY
+  TECH_UNAVAILABLE
+  WEATHER
+  EMERGENCY_BUMP
+  CAPACITY
+  CUSTOMER_UNAVAILABLE
+  ACCESS_ISSUE
+  OTHER
 }

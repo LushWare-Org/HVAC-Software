@@ -6,6 +6,7 @@ import { FileText, ClipboardList, Plus, ExternalLink } from 'lucide-react'
 import { decimalToNumber } from '../../../hooks/useFinance'
 import { formatMoney } from '../../../lib/format'
 import { Badge, SectionLabel } from '../shared'
+import RescheduleBadge from '../../../components/reschedule/RescheduleBadge'
 
 const JOB_TONE: Record<string, 'green' | 'blue' | 'amber' | 'red' | 'neutral'> = {
   COMPLETED: 'green', INVOICED: 'blue', ON_SITE: 'blue', EN_ROUTE: 'blue',
@@ -129,7 +130,12 @@ export default function JobsTab({
               icon={<ClipboardList size={14} style={{ color: 'var(--amber)' }} />}
               title={j.title}
               meta={`${j.serviceAddress ?? j.customerAddress ?? ''} · ${new Date(j.createdAt).toLocaleDateString()}`}
-              badge={<Badge tone={JOB_TONE[j.status] ?? 'neutral'}>{j.status.replace(/_/g, ' ')}</Badge>}
+              badge={
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                  <RescheduleBadge state={j.rescheduleState} size="sm" />
+                  <Badge tone={JOB_TONE[j.status] ?? 'neutral'}>{j.status.replace(/_/g, ' ')}</Badge>
+                </span>
+              }
               onClick={() => window.dispatchEvent(new CustomEvent('open-job-detail', { detail: j }))}
             />
           ))

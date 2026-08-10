@@ -6,8 +6,9 @@
  * sources and mutations as the original Day Planner — nothing reimplemented.
  */
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react'
+import TechAvatar, { TechChip } from '../../components/TechAvatar'
 import {
-  Loader2, MapPin, Send, User as UserIcon, X, Clock, AlertCircle, CheckCircle2, Maximize2, Minimize2,
+  Loader2, MapPin, Send, X, Clock, AlertCircle, CheckCircle2, Maximize2, Minimize2,
 } from 'lucide-react'
 import { useJobs, useUpdateJobFields } from '../../hooks/useJobs'
 import { useTechnicians, useManualAssign } from '../../hooks/useScheduling'
@@ -16,20 +17,22 @@ import { useServiceAgreements, type Agreement } from '../../hooks/useAgreements'
 import { useCreateThread, useSendThreadMessage } from '../../hooks/useComms'
 import { useToast } from '../../contexts/ToastContext'
 import type { Job, Technician } from '../../types/api'
+import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 import type { PlannerJobPin, OpportunityPin } from '../planner/PlannerMap'
 import TechnicianModal from '../planner/TechnicianModal'
 import AgreementDrawer from '../agreements/AgreementDrawer'
 import ProjectsTodayBand from '../projects/ProjectsTodayBand'
 import { formatMoney } from '../../lib/format'
+import {
+  buildDayPlan, jobCoords,
+  DAY_START_H, DAY_END_H, DEFAULT_DURATION_MIN,
+  type ProposedAssignment,
+} from '../../lib/dayPlan'
 
 const PlannerMap = lazy(() => import('../planner/PlannerMap'))
 const JobDetailModal = lazy(() => import('../jobs/JobDetailModal'))
 
-const DAY_START_H = 8
-const DAY_END_H = 17
 const DAY_SPAN_MIN = (DAY_END_H - DAY_START_H) * 60
-const DEFAULT_DURATION_MIN = 90
-const TRAVEL_BUFFER_MIN = 30
 const OPPORTUNITY_WINDOW_DAYS = 5
 
 function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate() + n); return x }
@@ -45,76 +48,7 @@ function dayLabel(d: Date): string {
   return fmtDay(d)
 }
 
-function jobCoords(j: Job): { lat: number; lng: number } | null {
-  const lat = j.serviceLatitude != null ? Number(j.serviceLatitude) : NaN
-  const lng = j.serviceLongitude != null ? Number(j.serviceLongitude) : NaN
-  return Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0) ? { lat, lng } : null
-}
-
-function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
-  const R = 6371
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180
-  const s = Math.sin(dLat / 2) ** 2 + Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
-  return 2 * R * Math.asin(Math.sqrt(s))
-}
-
 const OPEN_STATUSES = new Set(['PENDING', 'SCHEDULED', 'EN_ROUTE', 'ON_SITE', 'ON_HOLD'])
-
-interface ProposedAssignment { job: Job; tech: Technician; start: Date; end: Date; distanceKm: number | null }
-
-function buildDayPlan(date: Date, jobs: Job[], techs: Technician[]): ProposedAssignment[] {
-  if (techs.length === 0) return []
-  const buckets = new Map<string, Job[]>(techs.map(t => [t.id, []]))
-  jobs.forEach((job, i) => {
-    const coords = jobCoords(job)
-    let chosen: Technician
-    if (coords) {
-      const withLoc = techs.filter(t => t.currentLocation)
-      chosen = withLoc.length
-        ? withLoc.reduce((best, t) => haversineKm(coords, t.currentLocation!) < haversineKm(coords, best.currentLocation!) ? t : best)
-        : techs[i % techs.length]
-    } else {
-      chosen = techs[i % techs.length]
-    }
-    buckets.get(chosen.id)!.push(job)
-  })
-
-  const proposals: ProposedAssignment[] = []
-  for (const tech of techs) {
-    const pool = [...(buckets.get(tech.id) ?? [])]
-    if (pool.length === 0) continue
-    const ordered: Job[] = []
-    let cursor = tech.currentLocation ?? null
-    while (pool.length) {
-      let nextIdx = 0
-      if (cursor) {
-        let bestD = Infinity
-        pool.forEach((j, idx) => {
-          const c = jobCoords(j)
-          const d = c ? haversineKm(cursor!, c) : Infinity
-          if (d < bestD) { bestD = d; nextIdx = idx }
-        })
-      }
-      const [job] = pool.splice(nextIdx, 1)
-      ordered.push(job)
-      cursor = jobCoords(job) ?? cursor
-    }
-    let clock = new Date(date); clock.setHours(DAY_START_H, 0, 0, 0)
-    let prev: { lat: number; lng: number } | null = tech.currentLocation ?? null
-    for (const job of ordered) {
-      const durMin = job.estimatedDurationMins ?? DEFAULT_DURATION_MIN
-      const coords = jobCoords(job)
-      const distanceKm = prev && coords ? haversineKm(prev, coords) : null
-      const start = new Date(clock)
-      const end = new Date(start.getTime() + durMin * 60_000)
-      proposals.push({ job, tech, start, end, distanceKm })
-      clock = new Date(end.getTime() + TRAVEL_BUFFER_MIN * 60_000)
-      prev = coords ?? prev
-    }
-  }
-  return proposals
-}
 
 function Legend() {
   const items = [
@@ -440,7 +374,7 @@ export default function BoardPlan({
                     <div key={t.id} style={{ flexShrink: 0, opacity: onProject ? 0.55 : 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
                         <button onClick={() => setViewTech(t)} title={`View ${t.name}'s day`} style={{ fontWeight: 600, color: jobs.length ? 'var(--t1)' : 'var(--t3)', display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 12 }}>
-                          <UserIcon size={11} style={{ color: 'var(--t3)' }} /> {t.name}
+                          <TechAvatar id={t.id} name={t.name} avatarUrl={t.avatarUrl} size={20} /> {t.name}
                         </button>
                         {onProject ? (
                           <span title={`Reserved by ${onProject}`} style={{ fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 99, background: 'var(--violet-dim)', color: 'var(--violet)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>
@@ -548,7 +482,8 @@ export default function BoardPlan({
             <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {selectedJob.assignedToName && (
                 <p style={{ fontSize: 13, color: 'var(--t2)', margin: 0 }}>
-                  Currently: <strong>{selectedJob.assignedToName}</strong>{selectedJob.scheduledStart ? ` at ${fmtTime(selectedJob.scheduledStart)}` : ''}
+                  Currently: <TechChip id={selectedJob.assignedToId} name={selectedJob.assignedToName} size={20} />
+                  {selectedJob.scheduledStart ? ` at ${fmtTime(selectedJob.scheduledStart)}` : ''}
                 </p>
               )}
               <div className="form-group">
@@ -582,10 +517,25 @@ export default function BoardPlan({
             <div className="card-header">
               <div>
                 <div className="card-title">Proposed schedule — {dayLabel(date)}</div>
-                <div className="card-subtitle">Optimal assignment shown by default (nearest technician, routes ordered by proximity) — adjust any row's technician or time before applying. Nothing is saved until you apply.</div>
+                <div className="card-subtitle">Customer-requested times are kept as-is; jobs with no requested time fill the gaps around them (nearest technician, routes ordered by proximity). Adjust any row before applying — nothing is saved until you apply.</div>
               </div>
             </div>
             <div className="card-body" style={{ overflowY: 'auto', padding: 0 }}>
+              {planPreview.some(p => p.requestedTimeConflict) && (
+                <div style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 8, margin: '14px 16px 0',
+                  padding: '11px 13px', borderRadius: 10,
+                  background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.28)',
+                }}>
+                  <AlertCircle size={14} style={{ color: '#B45309', flexShrink: 0, marginTop: 1 }} />
+                  <p style={{ margin: 0, fontSize: 12.5, color: 'var(--t2)' }}>
+                    <b>{planPreview.filter(p => p.requestedTimeConflict).length}</b>{' '}
+                    job{planPreview.filter(p => p.requestedTimeConflict).length === 1 ? '' : 's'} could not
+                    keep the time the customer asked for — every technician was already booked. Those rows are
+                    marked below. Consider rescheduling them with the customer rather than moving them silently.
+                  </p>
+                </div>
+              )}
               {planPreview.length === 0 ? (
                 <div style={{ padding: 24 }}>
                   <p style={{ fontSize: 13, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}><AlertCircle size={14} /> Nothing to schedule — no unassigned jobs with locations.</p>
@@ -604,7 +554,10 @@ export default function BoardPlan({
                       return (
                         <tr key={p.job.id} style={{ borderBottom: '1px solid var(--bd)' }}>
                           <td style={{ padding: '12px 16px' }}>
-                            <p style={{ fontWeight: 600, color: 'var(--t1)', margin: 0, fontSize: 13.5 }}>{p.job.title}</p>
+                            <p style={{ fontWeight: 600, color: 'var(--t1)', margin: 0, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              {p.job.title}
+                              <RescheduleBadge state={p.job.rescheduleState} size="sm" />
+                            </p>
                             <p style={{ fontSize: 11.5, color: 'var(--t4)', margin: '2px 0 0' }}>{p.job.customerName ?? ''} {p.job.serviceAddress ? `· ${p.job.serviceAddress}` : ''}</p>
                           </td>
                           <td style={{ padding: '12px 16px', minWidth: 220 }}>
@@ -620,14 +573,33 @@ export default function BoardPlan({
                               })}
                             </select>
                           </td>
-                          <td style={{ padding: '12px 16px', minWidth: 130 }}>
+                          <td style={{ padding: '12px 16px', minWidth: 150 }}>
                             <input
                               type="time"
                               className="form-input"
-                              style={{ fontSize: 12.5, padding: '7px 10px', height: 36 }}
+                              style={{
+                                fontSize: 12.5, padding: '7px 10px', height: 36,
+                                borderColor: p.requestedTimeConflict ? 'var(--amber)' : undefined,
+                              }}
                               value={edit.time}
                               onChange={e => setPreviewEdits(prev => ({ ...prev, [p.job.id]: { ...edit, time: e.target.value } }))}
                             />
+                            {p.honoursRequestedTime && (
+                              <span title="This is the time the customer asked for" style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 4,
+                                fontSize: 10, fontWeight: 700, color: '#047857',
+                              }}>
+                                <CheckCircle2 size={10} /> Customer's time
+                              </span>
+                            )}
+                            {p.requestedTimeConflict && (
+                              <span title={p.requestedTimeConflict.reason} style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 4,
+                                fontSize: 10, fontWeight: 700, color: '#B45309',
+                              }}>
+                                <AlertCircle size={10} /> asked for {fmtTime(p.requestedTimeConflict.requested.toISOString())}
+                              </span>
+                            )}
                           </td>
                           <td style={{ padding: '12px 16px', color: 'var(--t3)' }}>{p.distanceKm != null ? `${p.distanceKm.toFixed(1)} km` : '—'}</td>
                         </tr>

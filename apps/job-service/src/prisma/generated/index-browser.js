@@ -244,6 +244,7 @@ exports.Prisma.JobScalarFieldEnum = {
   cancellationReason: 'cancellationReason',
   hasPartShortage: 'hasPartShortage',
   partShortageNote: 'partShortageNote',
+  rescheduleState: 'rescheduleState',
   createdByUserId: 'createdByUserId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -316,6 +317,35 @@ exports.Prisma.WorkOrderLineItemScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.RescheduleRequestScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  jobId: 'jobId',
+  openedBy: 'openedBy',
+  openedByUserId: 'openedByUserId',
+  openedByName: 'openedByName',
+  mode: 'mode',
+  reasonCode: 'reasonCode',
+  reason: 'reason',
+  status: 'status',
+  pickedSlotId: 'pickedSlotId',
+  responseNote: 'responseNote',
+  respondedAt: 'respondedAt',
+  respondedByName: 'respondedByName',
+  appliedAt: 'appliedAt',
+  nudgedAt: 'nudgedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.RescheduleSlotScalarFieldEnum = {
+  id: 'id',
+  requestId: 'requestId',
+  startAt: 'startAt',
+  endAt: 'endAt',
+  window: 'window'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -383,6 +413,12 @@ exports.JobPriority = exports.$Enums.JobPriority = {
   EMERGENCY: 'EMERGENCY'
 };
 
+exports.RescheduleState = exports.$Enums.RescheduleState = {
+  AWAITING_CUSTOMER: 'AWAITING_CUSTOMER',
+  AWAITING_ADMIN: 'AWAITING_ADMIN',
+  READY_TO_APPLY: 'READY_TO_APPLY'
+};
+
 exports.PhotoType = exports.$Enums.PhotoType = {
   BEFORE: 'BEFORE',
   AFTER: 'AFTER',
@@ -399,6 +435,36 @@ exports.WorkOrderStatus = exports.$Enums.WorkOrderStatus = {
   CANCELLED: 'CANCELLED'
 };
 
+exports.RescheduleActor = exports.$Enums.RescheduleActor = {
+  ADMIN: 'ADMIN',
+  CUSTOMER: 'CUSTOMER'
+};
+
+exports.RescheduleMode = exports.$Enums.RescheduleMode = {
+  PROPOSE_SLOTS: 'PROPOSE_SLOTS',
+  OPEN_ASK: 'OPEN_ASK'
+};
+
+exports.RescheduleReason = exports.$Enums.RescheduleReason = {
+  PARTS_DELAY: 'PARTS_DELAY',
+  TECH_UNAVAILABLE: 'TECH_UNAVAILABLE',
+  WEATHER: 'WEATHER',
+  EMERGENCY_BUMP: 'EMERGENCY_BUMP',
+  CAPACITY: 'CAPACITY',
+  CUSTOMER_UNAVAILABLE: 'CUSTOMER_UNAVAILABLE',
+  ACCESS_ISSUE: 'ACCESS_ISSUE',
+  OTHER: 'OTHER'
+};
+
+exports.RescheduleStatus = exports.$Enums.RescheduleStatus = {
+  AWAITING_RESPONSE: 'AWAITING_RESPONSE',
+  SLOT_PICKED: 'SLOT_PICKED',
+  DECLINED: 'DECLINED',
+  SUPERSEDED: 'SUPERSEDED',
+  APPLIED: 'APPLIED',
+  CANCELLED: 'CANCELLED'
+};
+
 exports.Prisma.ModelName = {
   JobType: 'JobType',
   JobTemplate: 'JobTemplate',
@@ -411,7 +477,9 @@ exports.Prisma.ModelName = {
   JobPhoto: 'JobPhoto',
   WorkOrder: 'WorkOrder',
   WorkOrderTaskCompletion: 'WorkOrderTaskCompletion',
-  WorkOrderLineItem: 'WorkOrderLineItem'
+  WorkOrderLineItem: 'WorkOrderLineItem',
+  RescheduleRequest: 'RescheduleRequest',
+  RescheduleSlot: 'RescheduleSlot'
 };
 
 /**

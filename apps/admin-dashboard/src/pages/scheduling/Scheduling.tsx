@@ -19,7 +19,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  CalendarDays, Users, CheckCircle2, AlertCircle, X, LayoutGrid, Activity, Sparkles,
+  CalendarDays, Users, CheckCircle2, AlertCircle, X, LayoutGrid, Activity, Sparkles, CalendarClock,
 } from 'lucide-react'
 import {
   useTechnicians, useSmartAssign, useManualAssign,
@@ -37,13 +37,16 @@ import AddInvoiceModal from '../finance/AddInvoiceModal'
 import DispatchCalendar from '../dispatch/DispatchCalendar'
 import { techOnProjectMessage } from '../projects/projectsApi'
 
+import ReschedulesInbox from './ReschedulesInbox'
+import { useRescheduleInbox } from '../../hooks/useReschedule'
+
 import BoardLive from './BoardLive'
 import BoardPlan, { type PlanStats } from './BoardPlan'
 import ActiveControlTower from './ActiveControlTower'
 import CompletedLedger from './CompletedLedger'
 
 type Scope = 'live' | 'plan'
-type SubTab = 'board' | 'active' | 'completed' | 'calendar'
+type SubTab = 'board' | 'active' | 'completed' | 'calendar' | 'reschedules'
 
 function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate() + n); return x }
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x }
@@ -115,6 +118,11 @@ export default function Scheduling() {
       window.removeEventListener('scheduling-date-step', stepDateHandler)
     }
   }, [])
+
+  const rescheduleInboxQ = useRescheduleInbox()
+  // meta.total, not data.length — the latter is one page and would
+  // under-report the badge once a company has more than 20 open.
+  const rescheduleCount = rescheduleInboxQ.data?.meta?.total ?? 0
 
   const techsQuery = useTechnicians()
   const techs: Technician[] = techsQuery.data ?? []
@@ -258,13 +266,30 @@ export default function Scheduling() {
     <div className="anim-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: -8 }}>
 
       {/* Sub-tabs — primary navigation for the page. Stats sit on the right,
-          only meaningful (and only shown) for Board, which has a scope. */}
-      <div className="page-tabs" style={{ marginBottom: 0, justifyContent: 'space-between', paddingRight: 16 }}>
+          only meaningful (and only shown) for Board, which has a scope.
+          Pinned below the topbar: the map view (Board · See all jobs) grows
+          taller than the viewport, and scrolling down to work the map used
+          to carry this bar off-screen with it — "the KPI counts disappear"
+          reported by users. Sticky keeps job/tech counts visible at all
+          times, however far the map is scrolled. */}
+      <div
+        className="page-tabs"
+        style={{
+          marginBottom: 0, justifyContent: 'space-between', paddingRight: 16,
+          position: 'sticky', top: 'var(--topbar-h)', zIndex: 20,
+          background: 'var(--bg-app)', paddingTop: 4,
+        }}
+      >
+
         <div style={{ display: 'flex' }}>
           <button className={`tab-btn ${subTab === 'board' ? 'active' : ''}`} onClick={() => setSubTab('board')}><LayoutGrid size={14} /> Board</button>
           <button className={`tab-btn ${subTab === 'active' ? 'active' : ''}`} onClick={() => setSubTab('active')}><Activity size={14} /> Active <span className="tab-count">{activeAssignments.length}</span></button>
           <button className={`tab-btn ${subTab === 'completed' ? 'active' : ''}`} onClick={() => setSubTab('completed')}><CheckCircle2 size={14} /> Completed <span className="tab-count">{completedRows.length}</span></button>
           <button className={`tab-btn ${subTab === 'calendar' ? 'active' : ''}`} onClick={() => setSubTab('calendar')}><CalendarDays size={14} /> Calendar</button>
+          <button className={`tab-btn ${subTab === 'reschedules' ? 'active' : ''}`} onClick={() => setSubTab('reschedules')}>
+            <CalendarClock size={14} /> Reschedules
+            {rescheduleCount > 0 && <span className="tab-count">{rescheduleCount}</span>}
+          </button>
         </div>
         {subTab === 'board' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12.5, color: 'var(--t2)', flexWrap: 'wrap' }}>
@@ -359,6 +384,15 @@ export default function Scheduling() {
       )}
 
       {subTab === 'completed' && <CompletedLedger rows={completedRows} onOpen={handleOpenJob} />}
+
+      {subTab === 'reschedules' && (
+        <ReschedulesInbox
+          onOpenJob={(jobId) => {
+            const job = allJobs.find(j => j.id === jobId)
+            if (job) handleOpenJob(job, assignmentByJobId[job.id])
+          }}
+        />
+      )}
 
       {subTab === 'calendar' && (
         <DispatchCalendar

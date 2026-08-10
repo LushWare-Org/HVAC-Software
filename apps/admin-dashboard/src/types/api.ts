@@ -322,9 +322,69 @@ export interface Job {
   cancellationReason?: string
   hasPartShortage?: boolean
   partShortageNote?: string
+  /**
+   * Non-null while a reschedule negotiation is open on this job, saying whose
+   * move it is. Denormalized by job-service so any job list can render a status
+   * badge with no extra query — see RescheduleBadge.
+   */
+  rescheduleState?: RescheduleStateValue | null
   createdAt: string
   updatedAt: string
   statusHistory?: { id: string; fromStatus?: string; toStatus: string; changedById?: string; notes?: string; createdAt: string }[]
+}
+
+// ── Rescheduling ────────────────────────────────────────────────────────────
+
+export type RescheduleStateValue = 'AWAITING_CUSTOMER' | 'AWAITING_ADMIN' | 'READY_TO_APPLY'
+
+export interface RescheduleSlot {
+  id: string
+  startAt: string
+  endAt: string
+  window?: string | null
+}
+
+export interface RescheduleRequest {
+  id: string
+  companyId: string
+  jobId: string
+  openedBy: 'ADMIN' | 'CUSTOMER'
+  openedByName?: string | null
+  mode: 'PROPOSE_SLOTS' | 'OPEN_ASK'
+  reasonCode: string
+  reason?: string | null
+  slots: RescheduleSlot[]
+  status: 'AWAITING_RESPONSE' | 'SLOT_PICKED' | 'DECLINED' | 'SUPERSEDED' | 'APPLIED' | 'CANCELLED'
+  pickedSlotId?: string | null
+  responseNote?: string | null
+  respondedAt?: string | null
+  respondedByName?: string | null
+  appliedAt?: string | null
+  createdAt: string
+}
+
+export interface RescheduleInboxRow {
+  request: RescheduleRequest
+  job: {
+    id: string
+    jobNumber: string
+    title: string
+    customerName?: string | null
+    customerEmail?: string | null
+    scheduledStart?: string | null
+    status: string
+    assignedToName?: string | null
+  }
+  /** No reply in over 5 days — rendered red so it cannot be scrolled past. */
+  isStale: boolean
+}
+
+export interface RescheduleStats {
+  byReason: Record<string, number>
+  byActor: Record<string, number>
+  applied: number
+  declined: number
+  total: number
 }
 
 export interface JobTemplate {

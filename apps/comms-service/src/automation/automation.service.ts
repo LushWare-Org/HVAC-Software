@@ -47,6 +47,7 @@ const JOB_EVENT_STYLE: Record<string, { accent: string; eyebrow: string }> = {
   SCHEDULED: { accent: '#2563EB', eyebrow: 'Visit scheduled' },
   ON_SITE:   { accent: '#7C3AED', eyebrow: 'Technician on site' },
   COMPLETED: { accent: '#059669', eyebrow: 'Job completed' },
+  ON_HOLD:   { accent: '#D97706', eyebrow: 'Visit on hold' },
   CANCELLED: { accent: '#DC2626', eyebrow: 'Job cancelled' },
 };
 
@@ -108,6 +109,18 @@ function jobStatusEmailHtml(event: JobStatusChangedEvent, companyName: string): 
         <div style="border:1px solid #05966933;background:#0596690d;border-radius:12px;padding:16px 18px;">
           <p style="margin:0;font-size:13px;line-height:1.6;color:#4B5563;">You can view your invoice and job history any time from your customer portal.</p>
         </div>
+      `;
+      break;
+    case 'ON_HOLD':
+      title = 'Your visit has been put on hold';
+      subject = `Your visit is on hold — ${jobLabel}`;
+      bodyHtml = `
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
+        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
+          <strong>${jobLabel}</strong> with ${esc(companyName)} has been placed on hold for now. We'll reach out as soon as it's ready to reschedule.
+        </p>
+        ${event.statusNote ? `<div style="border:1px solid #D9770633;background:#D977060d;border-radius:12px;padding:16px 18px;"><p style="margin:0;font-size:11.5px;font-weight:700;text-transform:uppercase;color:#D97706;letter-spacing:0.06em;margin-bottom:6px;">Reason</p><p style="margin:0;font-size:13.5px;color:#111827;">${esc(event.statusNote)}</p></div>` : ''}
+        <p style="margin:18px 0 0;font-size:13.5px;line-height:1.7;color:#4B5563;">Questions in the meantime? Reply to this email or contact us and we'll help.</p>
       `;
       break;
     case 'CANCELLED':

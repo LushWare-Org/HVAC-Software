@@ -78,6 +78,11 @@ export function useCustomerDashboard() {
       outstandingBalance,
       nextAppointment,
       recentJobs,
+      // Full list, not the 10-row `recentJobs` slice. The reschedule banner
+      // needs every job with an open request, including older ones that fall
+      // outside that slice — and this reuses the query already made above
+      // rather than adding a second fetch.
+      allJobs: jobs,
       pendingInvoiceItems: pendingInvoices.slice(0, 3),
     },
   }

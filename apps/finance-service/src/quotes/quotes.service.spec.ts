@@ -16,6 +16,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { NotificationClientService } from '../notification-client/notification-client.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
+import { PrismaClientKnownRequestError } from '../prisma/generated/runtime/library';
 import { QuoteStatus } from '../prisma/generated';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -71,8 +72,14 @@ const mockPrisma: any = {
     count: jest.fn(),
     findFirst: jest.fn(),
     create: jest.fn(),
+    findUniqueOrThrow: jest.fn(),
   },
-  $transaction: jest.fn((args: any) => {
+  // Invoice numbers come from MAX(existing), not count() — see invoice-number.ts.
+  $queryRaw: jest.fn().mockResolvedValue([{ maxNumber: 0 }]),
+  $executeRawUnsafe: jest.fn().mockResolvedValue(0),
+  // Second arg is the timeout/maxWait options object; ignore it but accept it,
+  // otherwise a callback+options call silently does nothing.
+  $transaction: jest.fn((args: any, _opts?: any) => {
     if (Array.isArray(args)) return Promise.all(args);
     return args(mockPrisma); // callback form
   }),
@@ -292,6 +299,108 @@ describe('QuotesService', () => {
       expect(createCall.data.quoteId).toBe(QUOTE_ID);
       expect(createCall.data.companyId).toBe(COMPANY_ID);
       expect(createCall.data.invoiceNumber).toMatch(/INV-\d{4}-0001/);
+      expect(mockPrisma.quote.update).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: QUOTE_ID },
+        data: { status: QuoteStatus.CONVERTED },
+      }));
+    });
+
+    // ── The reported production failure ─────────────────────────────────────
+    // "Transaction API error: Transaction not found ... refers to an old closed
+    // transaction" — Prisma's default 5s interactive-transaction budget expired
+    // between the invoice create and the quote update, because the transaction
+    // also carried a 3-way include fetch and a cross-schema raw UPDATE while
+    // talking to a remote Postgres. These guard the shape that fixed it.
+
+    it('sets an explicit transaction timeout rather than inheriting the 5s default', async () => {
+      const q = makeQuote({ status: QuoteStatus.ACCEPTED });
+      mockPrisma.quote.findFirst.mockResolvedValue(q);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null);
+      mockPrisma.invoice.create.mockImplementation(({ data }: any) =>
+        Promise.resolve({ ...data, id: 'inv-001' }),
+      );
+
+      await service.convertToInvoice(COMPANY_ID, QUOTE_ID, USER_ID);
+
+      const opts = mockPrisma.$transaction.mock.calls[0][1];
+      expect(opts?.timeout).toBeGreaterThanOrEqual(15_000);
+      expect(opts?.maxWait).toBeGreaterThan(0);
+    });
+
+    it('keeps the heavy include fetch OUT of the transaction', async () => {
+      const q = makeQuote({ status: QuoteStatus.ACCEPTED });
+      mockPrisma.quote.findFirst.mockResolvedValue(q);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null);
+      mockPrisma.invoice.create.mockImplementation(({ data }: any) =>
+        Promise.resolve({ ...data, id: 'inv-001' }),
+      );
+
+      await service.convertToInvoice(COMPANY_ID, QUOTE_ID, USER_ID);
+
+      // Inside the transaction the create selects only the id…
+      expect(mockPrisma.invoice.create.mock.calls[0][0].select).toEqual({ id: true });
+      expect(mockPrisma.invoice.create.mock.calls[0][0].include).toBeUndefined();
+      // …and the full shape is read afterwards.
+      expect(mockPrisma.invoice.findUniqueOrThrow).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'inv-001' } }),
+      );
+    });
+
+    it('runs the cross-schema estimate backfill after commit, not inside', async () => {
+      const q = makeQuote({ status: QuoteStatus.ACCEPTED, jobId: 'job-1' });
+      mockPrisma.quote.findFirst.mockResolvedValue(q);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null);
+      mockPrisma.invoice.create.mockImplementation(({ data }: any) =>
+        Promise.resolve({ ...data, id: 'inv-001' }),
+      );
+
+      await service.convertToInvoice(COMPANY_ID, QUOTE_ID, USER_ID);
+
+      // It still happens — just on the client, after the transaction closed.
+      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalled();
+      const sql = String(mockPrisma.$executeRawUnsafe.mock.calls[0][0]);
+      expect(sql).toContain('jobs"."jobs"');
+      expect(sql).toContain('estimatedValue');
+    });
+
+    it('still returns the invoice when the estimate backfill fails', async () => {
+      const q = makeQuote({ status: QuoteStatus.ACCEPTED, jobId: 'job-1' });
+      mockPrisma.quote.findFirst.mockResolvedValue(q);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null);
+      mockPrisma.invoice.create.mockImplementation(({ data }: any) =>
+        Promise.resolve({ ...data, id: 'inv-001' }),
+      );
+      mockPrisma.$executeRawUnsafe.mockRejectedValueOnce(new Error('jobs schema unreachable'));
+      mockPrisma.invoice.findUniqueOrThrow.mockResolvedValue({ id: 'inv-001' });
+
+      // Best-effort means best-effort: a conversion the user was told succeeded
+      // must not fail because a denormalised estimate could not be written.
+      await expect(service.convertToInvoice(COMPANY_ID, QUOTE_ID, USER_ID))
+        .resolves.toEqual(expect.objectContaining({ id: 'inv-001' }));
+    });
+
+    it('retries with a fresh number when two conversions collide', async () => {
+      const q = makeQuote({ status: QuoteStatus.ACCEPTED });
+      mockPrisma.quote.findFirst.mockResolvedValue(q);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null);
+
+      const collision: any = new Error('Unique constraint failed');
+      collision.code = 'P2002';
+      collision.meta = { target: ['companyId', 'invoiceNumber'] };
+      Object.setPrototypeOf(collision, PrismaClientKnownRequestError.prototype);
+
+      mockPrisma.invoice.create
+        .mockRejectedValueOnce(collision)
+        .mockImplementation(({ data }: any) => Promise.resolve({ ...data, id: 'inv-002' }));
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([{ maxNumber: 4 }])   // first try -> 0005
+        .mockResolvedValueOnce([{ maxNumber: 5 }]);  // retry re-reads -> 0006
+
+      await service.convertToInvoice(COMPANY_ID, QUOTE_ID, USER_ID);
+
+      expect(mockPrisma.invoice.create).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.invoice.create.mock.calls[1][0].data.invoiceNumber)
+        .toMatch(/^INV-\d{4}-0006$/);
     });
 
     it('throws if quote is not ACCEPTED', async () => {

@@ -5,6 +5,7 @@
  * grouped by date and totalled — only the presentation is new.
  */
 import { useMemo } from 'react'
+import { TechChip } from '../../components/TechAvatar'
 import { CheckCircle2 } from 'lucide-react'
 import { formatMoney } from '../../lib/format'
 
@@ -114,7 +115,11 @@ export default function CompletedLedger({ rows, onOpen }: { rows: CompletedRow[]
                         <div style={{ fontSize: 10, color: 'var(--t4)' }}>{at ? new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</div>
                       </div>
                       <span style={{ fontSize: 11.5, color: 'var(--t2)' }}>{job.customerName ?? '—'}</span>
-                      <span style={{ fontSize: 11.5, color: 'var(--t2)' }}>{assignment?.technicianName ?? job.assignedToName ?? '—'}</span>
+                      <TechChip
+                        id={assignment?.technicianId ?? job.assignedToId}
+                        name={assignment?.technicianName ?? job.assignedToName}
+                        size={20} fontSize={11.5} fallback="—"
+                      />
                       <span><span style={{ fontSize: 9, fontWeight: 700, color: tone.color, background: tone.bg, padding: '2px 8px', borderRadius: 8 }}>{job.status}</span></span>
                       <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: 'var(--t1)' }}>{formatMoney(job.finalAmount ?? job.estimatedAmount ?? 0, { decimals: 0 })}</span>
                     </div>

@@ -24,19 +24,19 @@ datasource db {
 model JobType {
   id          String   @id @default(uuid())
   companyId   String
-  name        String                         // "HVAC", "Plumbing"
-  slug        String                         // "hvac", "plumbing" — for icons/routing
+  name        String // "HVAC", "Plumbing"
+  slug        String // "hvac", "plumbing" — for icons/routing
   description String?
-  icon        String?                        // lucide icon name or URL
-  color       String?                        // hex, for UI colour coding
+  icon        String? // lucide icon name or URL
+  color       String? // hex, for UI colour coding
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  templates         JobTemplate[]
-  customFieldDefs   JobCustomFieldDef[]
-  jobs              Job[]
+  templates       JobTemplate[]
+  customFieldDefs JobCustomFieldDef[]
+  jobs            Job[]
 
   @@unique([companyId, slug])
   @@index([companyId])
@@ -49,17 +49,17 @@ model JobTemplate {
   companyId             String
   jobTypeId             String
   jobType               JobType  @relation(fields: [jobTypeId], references: [id])
-  name                  String   // "Annual AC Tune-Up"
+  name                  String // "Annual AC Tune-Up"
   description           String?
   estimatedDurationMins Int      @default(60)
   version               Int      @default(1)
   isActive              Boolean  @default(true)
-  requiredParts         Json?            // [{inventoryItemId, name, qty}] — parts needed for this job type
+  requiredParts         Json? // [{inventoryItemId, name, qty}] — parts needed for this job type
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  tasks       JobTemplateTask[]
-  jobs        Job[]
+  tasks JobTemplateTask[]
+  jobs  Job[]
 
   @@index([companyId])
   @@index([jobTypeId])
@@ -69,17 +69,17 @@ model JobTemplate {
 // Individual checklist tasks within a template
 // Technician ticks these off on-site
 model JobTemplateTask {
-  id             String      @id @default(uuid())
-  templateId     String
-  template       JobTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  taskName       String      // "Check refrigerant levels"
-  description    String?
-  taskOrder      Int
-  isRequired     Boolean     @default(true)
-  photoRequired  Boolean     @default(false)
-  safetyNote     String?     // highlighted in red on technician app
-  estimatedMins  Int?
-  createdAt      DateTime    @default(now())
+  id            String      @id @default(uuid())
+  templateId    String
+  template      JobTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  taskName      String // "Check refrigerant levels"
+  description   String?
+  taskOrder     Int
+  isRequired    Boolean     @default(true)
+  photoRequired Boolean     @default(false)
+  safetyNote    String? // highlighted in red on technician app
+  estimatedMins Int?
+  createdAt     DateTime    @default(now())
 
   @@index([templateId])
   @@map("job_template_tasks")
@@ -89,21 +89,21 @@ model JobTemplateTask {
 // e.g. HVAC → "refrigerant_type" (select), "tonnage" (number), "filter_size" (text)
 // e.g. Electrical → "panel_amperage" (number), "circuit_count" (number)
 model JobCustomFieldDef {
-  id          String          @id @default(uuid())
-  companyId   String
-  jobTypeId   String
-  jobType     JobType         @relation(fields: [jobTypeId], references: [id])
-  fieldKey    String          // machine-readable key: "refrigerant_type"
-  label       String          // human label: "Refrigerant Type"
-  fieldType   CustomFieldType
-  options     Json?           // for SELECT type: ["R-410A", "R-22", "R-32"]
-  isRequired  Boolean         @default(false)
-  helpText    String?
-  sortOrder   Int             @default(0)
-  isActive    Boolean         @default(true)
-  createdAt   DateTime        @default(now())
+  id         String          @id @default(uuid())
+  companyId  String
+  jobTypeId  String
+  jobType    JobType         @relation(fields: [jobTypeId], references: [id])
+  fieldKey   String // machine-readable key: "refrigerant_type"
+  label      String // human label: "Refrigerant Type"
+  fieldType  CustomFieldType
+  options    Json? // for SELECT type: ["R-410A", "R-22", "R-32"]
+  isRequired Boolean         @default(false)
+  helpText   String?
+  sortOrder  Int             @default(0)
+  isActive   Boolean         @default(true)
+  createdAt  DateTime        @default(now())
 
-  values      JobCustomFieldValue[]
+  values JobCustomFieldValue[]
 
   @@unique([jobTypeId, fieldKey])
   @@index([jobTypeId])
@@ -122,13 +122,13 @@ enum CustomFieldType {
 
 // Actual values stored per job — flexible JSONB
 model JobCustomFieldValue {
-  id            String           @id @default(uuid())
-  jobId         String
-  job           Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  fieldDefId    String
-  fieldDef      JobCustomFieldDef @relation(fields: [fieldDefId], references: [id])
-  value         Json             // stores any type — text, number, array, boolean
-  updatedAt     DateTime         @updatedAt
+  id         String            @id @default(uuid())
+  jobId      String
+  job        Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fieldDefId String
+  fieldDef   JobCustomFieldDef @relation(fields: [fieldDefId], references: [id])
+  value      Json // stores any type — text, number, array, boolean
+  updatedAt  DateTime          @updatedAt
 
   @@unique([jobId, fieldDefId])
   @@index([jobId])
@@ -140,21 +140,21 @@ model JobCustomFieldValue {
 // ============================================================
 
 model PriceBookItem {
-  id            String        @id @default(uuid())
-  companyId     String
-  category      PriceCategory
-  code          String?       // internal part/service code
-  name          String
-  description   String?
-  unit          String        @default("each") // each, hour, sqft, lbs
-  unitPrice     Decimal       @db.Decimal(10, 2)
-  taxable       Boolean       @default(true)
-  isActive      Boolean       @default(true)
-  jobTypeId     String?       // optional: restrict to a trade type
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id          String        @id @default(uuid())
+  companyId   String
+  category    PriceCategory
+  code        String? // internal part/service code
+  name        String
+  description String?
+  unit        String        @default("each") // each, hour, sqft, lbs
+  unitPrice   Decimal       @db.Decimal(10, 2)
+  taxable     Boolean       @default(true)
+  isActive    Boolean       @default(true)
+  jobTypeId   String? // optional: restrict to a trade type
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  lineItems     WorkOrderLineItem[]
+  lineItems WorkOrderLineItem[]
 
   @@index([companyId])
   @@index([companyId, category])
@@ -175,40 +175,40 @@ enum PriceCategory {
 // ============================================================
 
 model Job {
-  id               String      @id @default(uuid())
+  id               String   @id @default(uuid())
   companyId        String
-  jobNumber        String                        // human-readable: "JOB-2024-0001"
-  customerId       String                        // FK to crm.customers (cross-service ref)
-  customerName     String                        // denormalised for display without join
+  jobNumber        String // human-readable: "JOB-2024-0001"
+  customerId       String // FK to crm.customers (cross-service ref)
+  customerName     String // denormalised for display without join
   customerPhone    String?
   customerEmail    String?
   serviceAddress   String
   serviceCity      String?
   serviceState     String?
   serviceZip       String?
-  serviceLatitude  Decimal?    @db.Decimal(10, 7)
-  serviceLongitude Decimal?    @db.Decimal(10, 7)
+  serviceLatitude  Decimal? @db.Decimal(10, 7)
+  serviceLongitude Decimal? @db.Decimal(10, 7)
 
-  jobTypeId        String?
-  jobType          JobType?    @relation(fields: [jobTypeId], references: [id])
-  templateId       String?
-  template         JobTemplate? @relation(fields: [templateId], references: [id])
-  projectId        String?                       // FK to crm.projects (cross-service ref)
-  houseId          String?                       // FK to crm.houses (cross-service ref) — Housing Scheme template
-  equipmentId      String?                       // FK to crm.equipment (cross-service ref) — optional, which unit was serviced
+  jobTypeId   String?
+  jobType     JobType?     @relation(fields: [jobTypeId], references: [id])
+  templateId  String?
+  template    JobTemplate? @relation(fields: [templateId], references: [id])
+  projectId   String? // FK to crm.projects (cross-service ref)
+  houseId     String? // FK to crm.houses (cross-service ref) — Housing Scheme template
+  equipmentId String? // FK to crm.equipment (cross-service ref) — optional, which unit was serviced
 
-  title            String
-  description      String?
-  status           JobStatus   @default(PENDING)
-  priority         JobPriority @default(NORMAL)
+  title       String
+  description String?
+  status      JobStatus   @default(PENDING)
+  priority    JobPriority @default(NORMAL)
 
   // Scheduling refs (set by scheduling-service, stored here for query convenience)
-  assignedToId     String?     // Auth0 user ID of primary technician
-  assignedToName   String?
-  scheduledStart   DateTime?
-  scheduledEnd     DateTime?
-  actualStart      DateTime?
-  actualEnd        DateTime?
+  assignedToId   String? // Auth0 user ID of primary technician
+  assignedToName String?
+  scheduledStart DateTime?
+  scheduledEnd   DateTime?
+  actualStart    DateTime?
+  actualEnd      DateTime?
 
   estimatedDurationMins Int?
   travelDistanceKm      Decimal? @db.Decimal(8, 2)
@@ -217,33 +217,40 @@ model Job {
   // exists. Settable on create (e.g. from quote total or a template estimate)
   // and updated by finance-service when a quote is converted. The billed
   // amount remains authoritative on the Invoice record.
-  estimatedValue   Decimal?    @db.Decimal(10, 2)
+  estimatedValue Decimal? @db.Decimal(10, 2)
 
   // Finance refs (set by finance-service)
-  quoteId          String?
-  invoiceId        String?
+  quoteId   String?
+  invoiceId String?
 
   // Agreement ref (set when auto-created from a crm.service_agreements row)
-  agreementId      String?
-  isAgreementJob   Boolean     @default(false)
+  agreementId    String?
+  isAgreementJob Boolean @default(false)
 
-  notes            String?
-  internalNotes    String?
-  tags             String[]
+  notes         String?
+  internalNotes String?
+  tags          String[]
 
-  cancellationReason  String?
-  hasPartShortage     Boolean  @default(false)
-  partShortageNote    String?
+  cancellationReason String?
+  hasPartShortage    Boolean @default(false)
+  partShortageNote   String?
 
-  createdByUserId  String      // Auth0 user ID
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  completedAt      DateTime?
+  // Denormalized "whose move is it" for the open reschedule request, if any.
+  // Written in the same transaction as the request so it cannot drift. Exists so
+  // every job list can render a status badge with no join and no extra query —
+  // see docs/superpowers/specs/2026-08-05-job-rescheduling-design.md.
+  rescheduleState RescheduleState?
 
-  workOrders       WorkOrder[]
-  customFieldValues JobCustomFieldValue[]
-  statusHistory    JobStatusHistory[]
-  photos           JobPhoto[]
+  createdByUserId String // Auth0 user ID
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+
+  workOrders         WorkOrder[]
+  customFieldValues  JobCustomFieldValue[]
+  statusHistory      JobStatusHistory[]
+  photos             JobPhoto[]
+  rescheduleRequests RescheduleRequest[]
 
   @@unique([companyId, jobNumber])
   @@index([companyId])
@@ -255,6 +262,7 @@ model Job {
   @@index([companyId, projectId])
   @@index([houseId])
   @@index([equipmentId])
+  @@index([companyId, rescheduleState])
   @@map("jobs")
 }
 
@@ -279,15 +287,15 @@ enum JobPriority {
 
 // Audit trail of every job status change
 model JobStatusHistory {
-  id         String    @id @default(uuid())
-  jobId      String
-  job        Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  fromStatus JobStatus?
-  toStatus   JobStatus
-  changedById String   // Auth0 user ID
+  id            String     @id @default(uuid())
+  jobId         String
+  job           Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fromStatus    JobStatus?
+  toStatus      JobStatus
+  changedById   String // Auth0 user ID
   changedByName String
-  note       String?
-  createdAt  DateTime  @default(now())
+  note          String?
+  createdAt     DateTime   @default(now())
 
   @@index([jobId])
   @@map("job_status_history")
@@ -295,15 +303,15 @@ model JobStatusHistory {
 
 // Job photos (uploaded by technician on-site)
 model JobPhoto {
-  id          String   @id @default(uuid())
-  jobId       String
-  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  workOrderId String?
-  s3Key       String   // e.g. "photos/company-id/job-id/before-001.jpg"
-  caption     String?
-  photoType   PhotoType @default(GENERAL)
-  uploadedById String  // Auth0 user ID
-  createdAt   DateTime @default(now())
+  id           String    @id @default(uuid())
+  jobId        String
+  job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  workOrderId  String?
+  s3Key        String // e.g. "photos/company-id/job-id/before-001.jpg"
+  caption      String?
+  photoType    PhotoType @default(GENERAL)
+  uploadedById String // Auth0 user ID
+  createdAt    DateTime  @default(now())
 
   @@index([jobId])
   @@map("job_photos")
@@ -323,24 +331,24 @@ enum PhotoType {
 // ============================================================
 
 model WorkOrder {
-  id             String          @id @default(uuid())
-  companyId      String
-  jobId          String
-  job            Job             @relation(fields: [jobId], references: [id])
-  workOrderNumber String                        // "WO-2024-0001"
-  technicianId   String                         // Auth0 user ID
-  technicianName String
-  status         WorkOrderStatus @default(PENDING)
-  scheduledStart DateTime?
-  scheduledEnd   DateTime?
-  checkinAt      DateTime?
-  checkoutAt     DateTime?
-  signatureUrl   String?                        // customer signature S3 key
+  id              String          @id @default(uuid())
+  companyId       String
+  jobId           String
+  job             Job             @relation(fields: [jobId], references: [id])
+  workOrderNumber String // "WO-2024-0001"
+  technicianId    String // Auth0 user ID
+  technicianName  String
+  status          WorkOrderStatus @default(PENDING)
+  scheduledStart  DateTime?
+  scheduledEnd    DateTime?
+  checkinAt       DateTime?
+  checkoutAt      DateTime?
+  signatureUrl    String? // customer signature S3 key
   technicianNotes String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
-  lineItems      WorkOrderLineItem[]
+  lineItems       WorkOrderLineItem[]
   taskCompletions WorkOrderTaskCompletion[]
 
   @@unique([companyId, workOrderNumber])
@@ -363,9 +371,9 @@ model WorkOrderTaskCompletion {
   id             String    @id @default(uuid())
   workOrderId    String
   workOrder      WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
-  templateTaskId String?   // null for ad-hoc tasks added by admins
+  templateTaskId String? // null for ad-hoc tasks added by admins
   isAdHoc        Boolean   @default(false)
-  taskName       String    // denormalised for record-keeping
+  taskName       String // denormalised for record-keeping
   isRequired     Boolean   @default(false)
   isCompleted    Boolean   @default(false)
   photoUrl       String?
@@ -385,7 +393,7 @@ model WorkOrderLineItem {
   priceBookItem   PriceBookItem? @relation(fields: [priceBookItemId], references: [id])
   description     String
   category        PriceCategory  @default(PART)
-  quantity        Decimal        @db.Decimal(8, 2) @default(1)
+  quantity        Decimal        @default(1) @db.Decimal(8, 2)
   unitPrice       Decimal        @db.Decimal(10, 2)
   taxable         Boolean        @default(true)
   // computed: quantity × unitPrice (stored for invoice snapshot)
@@ -394,4 +402,97 @@ model WorkOrderLineItem {
 
   @@index([workOrderId])
   @@map("work_order_line_items")
+}
+
+// ============================================================
+// RESCHEDULING — two-way negotiation over a job's appointment
+//
+// Either side may open a request, proposing 1–3 candidate slots or asking
+// openly for the other's availability. Counters append a new row (marking the
+// previous one SUPERSEDED) so the whole negotiation survives. Staff always
+// confirm the final calendar write.
+//
+// Design: docs/superpowers/specs/2026-08-05-job-rescheduling-design.md
+// ============================================================
+
+model RescheduleRequest {
+  id        String @id @default(uuid())
+  companyId String
+  jobId     String
+  job       Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  openedBy       RescheduleActor
+  openedByUserId String?
+  openedByName   String?
+  mode           RescheduleMode
+  reasonCode     RescheduleReason
+  reason         String? // free text, shown verbatim to the other side
+
+  slots RescheduleSlot[] // 1–3 when PROPOSE_SLOTS, empty when OPEN_ASK
+
+  status          RescheduleStatus @default(AWAITING_RESPONSE)
+  pickedSlotId    String?
+  responseNote    String?
+  respondedAt     DateTime?
+  respondedByName String?
+  appliedAt       DateTime?
+  nudgedAt        DateTime? // set by the staleness sweep; null = not yet nudged
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId, jobId])
+  @@index([companyId, status])
+  @@map("reschedule_requests")
+}
+
+// A child table rather than a JSON column: pickedSlotId ultimately writes to a
+// customer's calendar, so "the applied slot is one we actually offered" is worth
+// having the database guarantee instead of trusting the service to have checked.
+model RescheduleSlot {
+  id        String            @id @default(uuid())
+  requestId String
+  request   RescheduleRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  startAt   DateTime
+  endAt     DateTime
+  window    String? // 'morning' | 'afternoon' | 'evening' — display label
+
+  @@index([requestId])
+  @@map("reschedule_slots")
+}
+
+enum RescheduleActor {
+  ADMIN
+  CUSTOMER
+}
+
+enum RescheduleMode {
+  PROPOSE_SLOTS
+  OPEN_ASK
+}
+
+enum RescheduleStatus {
+  AWAITING_RESPONSE
+  SLOT_PICKED
+  DECLINED
+  SUPERSEDED
+  APPLIED
+  CANCELLED
+}
+
+enum RescheduleState {
+  AWAITING_CUSTOMER
+  AWAITING_ADMIN
+  READY_TO_APPLY
+}
+
+enum RescheduleReason {
+  PARTS_DELAY
+  TECH_UNAVAILABLE
+  WEATHER
+  EMERGENCY_BUMP
+  CAPACITY
+  CUSTOMER_UNAVAILABLE
+  ACCESS_ISSUE
+  OTHER
 }

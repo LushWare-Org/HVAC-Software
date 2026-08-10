@@ -272,7 +272,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     return (
         <>
             <header className={`admin-topbar h-20 border-b flex items-center justify-between px-6 gap-6 flex-shrink-0 sticky top-0 z-30 transition-colors duration-300 ${topbarBg}`}>
-                <div className="flex-1 min-w-0 flex items-center gap-3">
+                <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
                     {showMenu && (
                         <button
                             className="topbar-hamburger"
@@ -282,7 +282,15 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                             <Menu size={20} />
                         </button>
                     )}
-                    <div className="min-w-0">
+                    {/* min-w-0 lets this block shrink, but flex items with no
+                        min-width default to their content size — so when the
+                        scope switch + date stepper (Scheduling, Plan a day)
+                        both sit on this row, the title used to be squeezed
+                        to zero width first and its truncated text vanished
+                        entirely. flex-wrap above lets those controls drop to
+                        their own row instead of fighting the title for space,
+                        and this floor keeps "Scheduling" legible either way. */}
+                    <div className="min-w-0" style={{ minWidth: 140 }}>
                     <h2 className={`text-2xl font-bold tracking-tight truncate ${isLight ? 'text-slate-900' : 'text-[var(--t1)]'}`}>
                         {headerParams.title}
                     </h2>

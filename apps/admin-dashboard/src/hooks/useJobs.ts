@@ -148,11 +148,12 @@ export function useCreateJob() {
 
 export function useUpdateJobStatus() {
   return useMutation({
-    mutationFn: async ({ id, status, statusNote, cancellationReason }: { id: string; status: string; statusNote?: string; cancellationReason?: string }) => {
+    mutationFn: async ({ id, status, statusNote, cancellationReason, force }: { id: string; status: string; statusNote?: string; cancellationReason?: string; force?: boolean }) => {
       const res = await api.patch(`/jobs/jobs/${id}`, {
         status: status.toUpperCase(),
         statusNote,
         cancellationReason,
+        force,
       })
       return res.data
     },
