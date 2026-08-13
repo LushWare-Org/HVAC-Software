@@ -35,6 +35,8 @@ export class ExpensesController {
   @ApiQuery({ name: 'jobId', required: false })
   @ApiQuery({ name: 'technicianId', required: false })
   @ApiQuery({ name: 'category', enum: ExpenseCategory, required: false })
+  @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date — filters by expenseDate >= start of this day' })
+  @ApiQuery({ name: 'dateTo', required: false, description: 'ISO date — filters by expenseDate <= end of this day' })
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('jobId') jobId?: string,
@@ -42,8 +44,10 @@ export class ExpensesController {
     @Query('category') category?: ExpenseCategory,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
   ) {
-    return this.expensesService.findAll(user.companyId, { jobId, technicianId, category, page, limit });
+    return this.expensesService.findAll(user.companyId, { jobId, technicianId, category, page, limit, dateFrom, dateTo });
   }
 
   @Get('job/:jobId/summary')

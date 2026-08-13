@@ -6,6 +6,7 @@ import { CampaignController } from './campaign.controller';
 import { MarketingPrismaModule } from '../prisma/marketing-prisma.module';
 import { AudienceModule } from '../audience/audience.module';
 import { TemplatesModule } from '../templates/templates.module';
+import { CompanySettingsModule } from '../../company-settings/company-settings.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { TemplatesModule } from '../templates/templates.module';
     MarketingPrismaModule,
     AudienceModule,
     TemplatesModule,
+    CompanySettingsModule,
   ],
   controllers: [CampaignController],
   providers: [CampaignService],

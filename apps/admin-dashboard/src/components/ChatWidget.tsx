@@ -148,7 +148,7 @@ export default function ChatWidget() {
               <Bot size={16} color="#fff" />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>HomePulse Assistant</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>HVACtor.ai Assistant</div>
               <div style={{ fontSize: 11, color: 'var(--t3)' }}>Ask me anything about your business</div>
             </div>
           </div>

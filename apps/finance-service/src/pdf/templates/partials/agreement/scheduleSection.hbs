@@ -1,0 +1,10 @@
+<div class="section">
+  <div class="section-title">Schedule</div>
+  <div class="kv-grid">
+    <div class="kv-row"><span class="kv-label">Service type</span><span class="kv-value">{{serviceType}}</span></div>
+    <div class="kv-row"><span class="kv-label">Interval</span><span class="kv-value">{{serviceInterval}}</span></div>
+    <div class="kv-row"><span class="kv-label">Start</span><span class="kv-value">{{startDateFmt}}</span></div>
+    <div class="kv-row"><span class="kv-label">End</span><span class="kv-value">{{endDateFmt}}</span></div>
+    {{#if visitsIncluded}}<div class="kv-row"><span class="kv-label">Visits included</span><span class="kv-value">{{visitsUsed}} of {{visitsIncluded}} used</span></div>{{/if}}
+  </div>
+</div>

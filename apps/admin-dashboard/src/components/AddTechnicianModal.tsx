@@ -15,13 +15,13 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X, UserPlus, AlertCircle, Loader2, MapPin, Plus, Trash2,
-  CheckCircle2, Mail, Camera,
+  CheckCircle2, Mail, Camera, User, Wrench, Gauge,
 } from "lucide-react";
 import api from "../lib/api";
 import { useCheckEmail } from "../hooks/useCustomers";
 import { useProvisionTechnicianAccount } from "../hooks/useScheduling";
 import { useEnsureVan } from "../hooks/useInventory";
-import { useAuth } from "../contexts/AuthContext";
+import MapPickerLazy from "./MapPickerLazy";
 
 // Common trade skills for quick-add chips
 const COMMON_SKILLS = [
@@ -39,7 +39,6 @@ interface Props {
 }
 
 export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreated }: Props) {
-  const { user }   = useAuth();
   const checkEmail = useCheckEmail();
   const provision  = useProvisionTechnicianAccount();
   const ensureVan  = useEnsureVan();
@@ -57,6 +56,9 @@ export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreate
   const [photoFile,    setPhotoFile]    = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  // Optional — most admins leave this for the technician to set on first app sign-in.
+  const [setLocationNow, setSetLocationNow] = useState(false);
+  const [coords, setCoords] = useState({ lat: 6.9271, lng: 79.8612 });
 
   // Lock the dashboard behind the modal — without this, wheel/trackpad input
   // over the backdrop scrolls the page underneath instead of staying put.
@@ -91,6 +93,8 @@ export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreate
     setCustomSkill("");
     setPhotoFile(null);
     setPhotoPreview(null);
+    setSetLocationNow(false);
+    setCoords({ lat: 6.9271, lng: 79.8612 });
     setError("");
     setSuccess("");
   };
@@ -146,16 +150,18 @@ export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreate
       return;
     }
 
-    // Step 2: provision CRM account + scheduling profile (no location — the
-    // technician sets their base location on first sign-in in the app)
+    // Step 2: provision CRM account + scheduling profile. Base location is
+    // optional here — most admins leave it for the technician to set on
+    // first app sign-in, but it can be pre-set now if it's already known.
     try {
       const result = await provision.mutateAsync({
-        companyId:   user!.companyId,
         name:        form.name.trim(),
         email,
         phone:       form.phone || undefined,
         skills:      skills.length > 0 ? skills : undefined,
         maxDailyJobs: form.maxDailyJobs,
+        latitude:    setLocationNow ? coords.lat : undefined,
+        longitude:   setLocationNow ? coords.lng : undefined,
       });
 
       // Auto-create van inventory for the new technician
@@ -203,15 +209,14 @@ export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreate
         role="dialog"
         aria-modal="true"
         aria-label="Add Technician"
-        className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col admin-modal-box overflow-hidden"
-        style={{ height: "min(680px, calc(100vh - 48px))" }}
+        className="bg-white rounded-xl max-w-4xl w-full max-h-[92vh] shadow-2xl flex flex-col admin-modal-box overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-blue-600 px-6 py-5 rounded-t-xl flex items-center justify-between shrink-0">
+        <div className="bg-blue-600 px-8 py-5 rounded-t-xl flex items-center justify-between shrink-0">
           <div className="text-white">
-            <h3 className="text-lg font-bold">Add Technician</h3>
-            <p className="text-blue-200 text-xs mt-0.5">
+            <h3 className="text-xl font-bold">Add Technician</h3>
+            <p className="text-blue-200 text-sm mt-0.5">
               {subtitle ?? 'Register a new field technician — creates a login account automatically'}
             </p>
           </div>
@@ -223,7 +228,7 @@ export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreate
         {/* Scrollable body */}
         {/* min-h-0 is required so this flex child actually shrinks and
             scrolls instead of growing past the dialog's fixed height */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
+        <div className="flex-1 min-h-0 overflow-y-auto p-8 space-y-5">
 
           {/* Error */}
           {error && (
@@ -250,159 +255,197 @@ export default function AddTechnicianModal({ isOpen, onClose, subtitle, onCreate
             </div>
           )}
 
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={form.name}
-                onChange={(e) => { setForm((p) => ({ ...p, name: e.target.value })); setError(""); }}
-                placeholder="John Smith"
-                disabled={isLoading}
-                className={inputCls}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase">
-                Email Address <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => { setForm((p) => ({ ...p, email: e.target.value })); setError(""); }}
-                placeholder="john@example.com"
-                disabled={isLoading}
-                className={inputCls}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase">Phone</label>
-              <input
-                value={form.phone}
-                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-                placeholder="+94 77 123 4567"
-                disabled={isLoading}
-                className={inputCls}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase">Max Daily Jobs</label>
-              <input
-                type="number"
-                min={1}
-                max={20}
-                value={form.maxDailyJobs}
-                onChange={(e) => setForm((p) => ({ ...p, maxDailyJobs: Number(e.target.value) }))}
-                disabled={isLoading}
-                className={`${inputCls} w-32`}
-              />
-            </div>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* ── Left column: identity + photo ── */}
+            <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/60 space-y-4">
+              <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                <User size={13} /> Identity
+              </div>
 
-          {/* Profile photo (optional) — customers see it in en-route emails */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-gray-500 uppercase">Profile Photo (optional)</label>
-            <div className="flex items-center gap-3">
-              {photoPreview ? (
-                <img src={photoPreview} alt="Preview" className="w-14 h-14 rounded-full object-cover border-2 border-blue-400" />
-              ) : (
-                <div className="w-14 h-14 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
-                  <Camera size={20} />
-                </div>
-              )}
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={(e) => handlePickPhoto(e.target.files?.[0] ?? null)}
-              />
-              <button
-                type="button"
-                onClick={() => photoInputRef.current?.click()}
-                disabled={isLoading}
-                className="px-3 py-2 rounded-lg bg-blue-100 text-blue-700 text-xs font-medium cursor-pointer border border-blue-200 hover:bg-blue-200"
-              >
-                {photoFile ? "Change photo" : "Choose photo"}
-              </button>
-              {photoFile && (
-                <button
-                  type="button"
-                  onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
-                  className="text-xs text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-            <p className="text-[10px] text-gray-400">
-              Customers see this photo in "your technician is on the way" emails. Max 2 MB.
-            </p>
-          </div>
-
-          {/* Skills */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-gray-500 uppercase">Skills & Specializations</label>
-            <div className="flex flex-wrap gap-2">
-              {COMMON_SKILLS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => toggleSkill(s)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer transition-all ${
-                    skills.includes(s)
-                      ? "bg-blue-100 text-blue-700 border-blue-300"
-                      : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100"
-                  }`}
-                >
-                  {skills.includes(s) ? "✓ " : ""}{s}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-2">
-              <input
-                value={customSkill}
-                onChange={(e) => setCustomSkill(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addCustomSkill()}
-                placeholder="Add custom skill…"
-                className={`flex-1 ${inputCls}`}
-              />
-              <button
-                type="button"
-                onClick={addCustomSkill}
-                className="px-3 py-2 rounded-lg bg-blue-100 text-blue-700 text-xs font-medium cursor-pointer border border-blue-200 hover:bg-blue-200"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
-            {skills.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {skills.map((s) => (
-                  <span key={s} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-200">
-                    {s}
+              <div className="flex items-center gap-3">
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-blue-400 shrink-0" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 shrink-0">
+                    <Camera size={22} />
+                  </div>
+                )}
+                <div className="flex flex-col gap-1.5">
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => handlePickPhoto(e.target.files?.[0] ?? null)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={isLoading}
+                    className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-xs font-medium cursor-pointer border border-blue-200 hover:bg-blue-200 w-fit"
+                  >
+                    {photoFile ? "Change photo" : "Choose photo"}
+                  </button>
+                  {photoFile && (
                     <button
                       type="button"
-                      onClick={() => setSkills((prev) => prev.filter((x) => x !== s))}
-                      className="text-blue-400 hover:text-blue-700 bg-transparent border-0 cursor-pointer p-0"
+                      onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                      className="text-xs text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer text-left"
                     >
-                      <Trash2 size={10} />
+                      Remove photo
                     </button>
-                  </span>
-                ))}
+                  )}
+                </div>
               </div>
-            )}
+              <p className="text-[10px] text-gray-400 -mt-2">
+                Customers see this photo in "your technician is on the way" emails. Max 2 MB.
+              </p>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-500 uppercase">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={form.name}
+                  onChange={(e) => { setForm((p) => ({ ...p, name: e.target.value })); setError(""); }}
+                  placeholder="John Smith"
+                  disabled={isLoading}
+                  className={inputCls}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-500 uppercase">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => { setForm((p) => ({ ...p, email: e.target.value })); setError(""); }}
+                  placeholder="john@example.com"
+                  disabled={isLoading}
+                  className={inputCls}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-500 uppercase">Phone</label>
+                <input
+                  value={form.phone}
+                  onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                  placeholder="+94 77 123 4567"
+                  disabled={isLoading}
+                  className={inputCls}
+                />
+              </div>
+            </div>
+
+            {/* ── Right column: skills + capacity + base location ── */}
+            <div className="flex flex-col gap-5">
+              <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/60 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                  <Wrench size={13} /> Skills & Specializations
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {COMMON_SKILLS.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => toggleSkill(s)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer transition-all ${
+                        skills.includes(s)
+                          ? "bg-blue-100 text-blue-700 border-blue-300"
+                          : "bg-white text-gray-500 border-gray-200 hover:bg-gray-100"
+                      }`}
+                    >
+                      {skills.includes(s) ? "✓ " : ""}{s}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    value={customSkill}
+                    onChange={(e) => setCustomSkill(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addCustomSkill()}
+                    placeholder="Add custom skill…"
+                    className={`flex-1 ${inputCls} bg-white`}
+                  />
+                  <button
+                    type="button"
+                    onClick={addCustomSkill}
+                    className="px-3 py-2 rounded-lg bg-blue-100 text-blue-700 text-xs font-medium cursor-pointer border border-blue-200 hover:bg-blue-200"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+                {skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {skills.map((s) => (
+                      <span key={s} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-200">
+                        {s}
+                        <button
+                          type="button"
+                          onClick={() => setSkills((prev) => prev.filter((x) => x !== s))}
+                          className="text-blue-400 hover:text-blue-700 bg-transparent border-0 cursor-pointer p-0"
+                        >
+                          <Trash2 size={10} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/60 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                  <Gauge size={13} /> Dispatch Capacity
+                </div>
+                <label className="text-xs font-semibold text-gray-500 uppercase">Max Daily Jobs</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={form.maxDailyJobs}
+                  onChange={(e) => setForm((p) => ({ ...p, maxDailyJobs: Number(e.target.value) }))}
+                  disabled={isLoading}
+                  className={`${inputCls} w-32 bg-white`}
+                />
+                <p className="text-[11px] text-gray-400">
+                  Caps how many jobs smart dispatch will auto-assign to this technician per day.
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Base location — set by the technician, not the admin */}
-          <div className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 text-xs">
-            <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400" />
-            <span>
-              <strong className="text-gray-600">Base location:</strong> the technician sets their own
-              base location (map or GPS) when they first sign in to the app. Until then they won't be
-              considered by smart dispatch auto-assignment.
-            </span>
+          {/* Base location — optional, otherwise the technician sets it themselves */}
+          <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/60 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                <MapPin size={13} /> Base Location
+              </div>
+              <label className="flex items-center gap-2 text-xs font-medium text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={setLocationNow}
+                  onChange={(e) => setSetLocationNow(e.target.checked)}
+                  className="cursor-pointer"
+                />
+                Set it now
+              </label>
+            </div>
+            {setLocationNow ? (
+              <MapPickerLazy
+                label="Technician's base / home location"
+                lat={coords.lat}
+                lng={coords.lng}
+                onChange={(lat, lng) => setCoords({ lat, lng })}
+                height="200px"
+              />
+            ) : (
+              <p className="text-xs text-gray-500">
+                Leave unchecked and the technician will set their own base location (map or GPS) the first
+                time they sign in to the app. Until then they won't be considered by smart dispatch
+                auto-assignment.
+              </p>
+            )}
           </div>
         </div>
 

@@ -54,6 +54,10 @@ export interface JobStatusChangedEvent {
   jobAddress?: string;
   technicianName?: string;
   scheduledAt?: string;
+  jobTitle?: string;
+  jobNumber?: string;
+  cancellationReason?: string;
+  statusNote?: string;
 }
 
 export interface InvoiceSentEvent {

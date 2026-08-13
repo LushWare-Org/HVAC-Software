@@ -37,6 +37,12 @@ interface InvoiceFilters {
   search?: string
   status?: string
   customerId?: string
+  projectId?: string
+  houseId?: string
+  /** ISO date (YYYY-MM-DD) — inclusive start of range, filters on createdAt */
+  dateFrom?: string
+  /** ISO date (YYYY-MM-DD) — inclusive end of range, filters on createdAt */
+  dateTo?: string
 }
 
 export function useInvoice(id: string | undefined) {
@@ -76,6 +82,10 @@ export function useInvoices(filters: InvoiceFilters = {}) {
         params.status = filters.status.toUpperCase()
       }
       if (filters.customerId) params.customerId = filters.customerId
+      if (filters.projectId) params.projectId = filters.projectId
+      if (filters.houseId) params.houseId = filters.houseId
+      if (filters.dateFrom) params.dateFrom = filters.dateFrom
+      if (filters.dateTo) params.dateTo = filters.dateTo
       const res = await api.get('/finance/invoices', { params })
       return res.data
     },
@@ -90,6 +100,7 @@ export function useCreateInvoice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }
@@ -104,6 +115,12 @@ interface QuoteFilters {
   customerId?: string
   /** Restricts to SENT/VIEWED quotes older than 7 days — matches the "Pending Quotes at Risk" AI recommendation. Overrides `status` when true. */
   pendingAging?: boolean
+  projectId?: string
+  houseId?: string
+  /** ISO date (YYYY-MM-DD) — inclusive start of range, filters on createdAt */
+  dateFrom?: string
+  /** ISO date (YYYY-MM-DD) — inclusive end of range, filters on createdAt */
+  dateTo?: string
 }
 
 export function useQuotes(filters: QuoteFilters = {}) {
@@ -121,6 +138,10 @@ export function useQuotes(filters: QuoteFilters = {}) {
         params.status = filters.status.toUpperCase()
       }
       if (filters.customerId) params.customerId = filters.customerId
+      if (filters.projectId) params.projectId = filters.projectId
+      if (filters.houseId) params.houseId = filters.houseId
+      if (filters.dateFrom) params.dateFrom = filters.dateFrom
+      if (filters.dateTo) params.dateTo = filters.dateTo
       const res = await api.get('/finance/quotes', { params })
       return res.data
     },
@@ -135,6 +156,7 @@ export function useCreateQuote() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }
@@ -147,6 +169,7 @@ export function useUpdateQuote() {
     },
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['quote', id], data)
     },
   })
@@ -161,6 +184,7 @@ export function useSendQuote() {
     },
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['quote', id], data)
     },
   })
@@ -182,6 +206,7 @@ export function useApproveQuote() {
     },
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['quote', id], data)
     },
   })
@@ -197,6 +222,8 @@ export function useConvertQuote() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] })
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }
@@ -211,6 +238,7 @@ export function useUpdateInvoice() {
     },
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['invoice', id], data)
     },
   })
@@ -225,6 +253,7 @@ export function useSendInvoice() {
     },
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['invoice', id], data)
     },
   })
@@ -250,6 +279,7 @@ export function useRecordPayment() {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['payments'] })
       queryClient.invalidateQueries({ queryKey: ['invoice', invoiceId] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }
@@ -263,6 +293,7 @@ export function useVoidInvoice() {
     },
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.setQueryData(['invoice', id], data)
     },
   })
@@ -275,6 +306,10 @@ interface ExpenseFilters {
   limit?: number
   search?: string
   status?: string
+  /** ISO date (YYYY-MM-DD) — inclusive start of range, filters on expenseDate */
+  dateFrom?: string
+  /** ISO date (YYYY-MM-DD) — inclusive end of range, filters on expenseDate */
+  dateTo?: string
 }
 
 export function useExpenses(filters: ExpenseFilters = {}) {
@@ -289,6 +324,8 @@ export function useExpenses(filters: ExpenseFilters = {}) {
       if (filters.status && filters.status !== 'all') {
         params.status = filters.status.toUpperCase()
       }
+      if (filters.dateFrom) params.dateFrom = filters.dateFrom
+      if (filters.dateTo) params.dateTo = filters.dateTo
       const res = await api.get('/finance/expenses', { params })
       return res.data
     },
@@ -382,6 +419,7 @@ export function useQBSyncInvoice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
   })
 }

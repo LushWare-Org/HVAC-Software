@@ -22,6 +22,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TemplatesService } from '../templates/templates.service';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { Channel, AutomationTrigger } from '../prisma/generated';
 import {
   CreateAutomationRuleDto,
@@ -34,6 +35,130 @@ import {
   AppointmentBookedEvent,
 } from './dto/automation.dto';
 
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Solid brand colors — no gradients. Chosen per event so the mail's tone
+// matches what happened (blue = informational, amber = in progress/on site,
+// green = success, red = cancelled).
+const JOB_EVENT_STYLE: Record<string, { accent: string; eyebrow: string }> = {
+  PENDING:   { accent: '#2563EB', eyebrow: 'Service request received' },
+  SCHEDULED: { accent: '#2563EB', eyebrow: 'Visit scheduled' },
+  ON_SITE:   { accent: '#7C3AED', eyebrow: 'Technician on site' },
+  COMPLETED: { accent: '#059669', eyebrow: 'Job completed' },
+  ON_HOLD:   { accent: '#D97706', eyebrow: 'Visit on hold' },
+  CANCELLED: { accent: '#DC2626', eyebrow: 'Job cancelled' },
+};
+
+function jobStatusEmailHtml(event: JobStatusChangedEvent, companyName: string): { subject: string; html: string } | null {
+  const style = JOB_EVENT_STYLE[event.jobStatus];
+  if (!style) return null;
+
+  const jobLabel = event.jobTitle ? esc(event.jobTitle) : `Job ${event.jobNumber ?? event.jobId.slice(-6).toUpperCase()}`;
+  const when = event.scheduledAt
+    ? new Date(event.scheduledAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    : null;
+
+  let title: string;
+  let subject: string;
+  let bodyHtml: string;
+
+  switch (event.jobStatus) {
+    case 'PENDING':
+      title = 'Your service request has been received';
+      subject = `We've received your service request — ${jobLabel}`;
+      bodyHtml = `
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
+        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
+          Thanks for reaching out to ${esc(companyName)}. We've logged your request for <strong>${jobLabel}</strong> and our team will schedule it shortly.
+        </p>
+        ${event.jobAddress ? `<div style="border:1px solid #2563EB33;background:#2563EB0d;border-radius:12px;padding:16px 18px;"><p style="margin:0;font-size:11.5px;font-weight:700;text-transform:uppercase;color:#2563EB;letter-spacing:0.06em;margin-bottom:6px;">Service address</p><p style="margin:0;font-size:13.5px;color:#111827;">${esc(event.jobAddress)}</p></div>` : ''}
+      `;
+      break;
+    case 'SCHEDULED':
+      title = 'Your visit is scheduled';
+      subject = `Your visit is scheduled — ${jobLabel}`;
+      bodyHtml = `
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
+        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;"><strong>${jobLabel}</strong> has been scheduled with ${esc(companyName)}.</p>
+        <div style="border:1px solid #2563EB33;background:#2563EB0d;border-radius:12px;padding:16px 18px;">
+          ${when ? `<p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111827;">${esc(when)}</p>` : ''}
+          ${event.jobAddress ? `<p style="margin:0;font-size:13.5px;color:#4B5563;">${esc(event.jobAddress)}</p>` : ''}
+        </div>
+      `;
+      break;
+    case 'ON_SITE':
+      title = 'Your technician has arrived';
+      subject = `${event.technicianName ?? 'Your technician'} has arrived — ${jobLabel}`;
+      bodyHtml = `
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
+        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
+          <strong>${esc(event.technicianName ?? 'Your technician')}</strong> has arrived and is now working on <strong>${jobLabel}</strong>.
+        </p>
+      `;
+      break;
+    case 'COMPLETED':
+      title = 'Your job is complete';
+      subject = `Job complete — ${jobLabel}`;
+      bodyHtml = `
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
+        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
+          <strong>${jobLabel}</strong> has been completed. Thank you for choosing ${esc(companyName)}.
+        </p>
+        <div style="border:1px solid #05966933;background:#0596690d;border-radius:12px;padding:16px 18px;">
+          <p style="margin:0;font-size:13px;line-height:1.6;color:#4B5563;">You can view your invoice and job history any time from your customer portal.</p>
+        </div>
+      `;
+      break;
+    case 'ON_HOLD':
+      title = 'Your visit has been put on hold';
+      subject = `Your visit is on hold — ${jobLabel}`;
+      bodyHtml = `
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
+        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
+          <strong>${jobLabel}</strong> with ${esc(companyName)} has been placed on hold for now. We'll reach out as soon as it's ready to reschedule.
+        </p>
+        ${event.statusNote ? `<div style="border:1px solid #D9770633;background:#D977060d;border-radius:12px;padding:16px 18px;"><p style="margin:0;font-size:11.5px;font-weight:700;text-transform:uppercase;color:#D97706;letter-spacing:0.06em;margin-bottom:6px;">Reason</p><p style="margin:0;font-size:13.5px;color:#111827;">${esc(event.statusNote)}</p></div>` : ''}
+        <p style="margin:18px 0 0;font-size:13.5px;line-height:1.7;color:#4B5563;">Questions in the meantime? Reply to this email or contact us and we'll help.</p>
+      `;
+      break;
+    case 'CANCELLED':
+      title = 'Your job was cancelled';
+      subject = `Job cancelled — ${jobLabel}`;
+      bodyHtml = `
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
+        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;"><strong>${jobLabel}</strong> has been cancelled.</p>
+        ${event.cancellationReason ? `<div style="border:1px solid #DC262633;background:#DC26260d;border-radius:12px;padding:16px 18px;"><p style="margin:0;font-size:13px;color:#4B5563;">${esc(event.cancellationReason)}</p></div>` : ''}
+        <p style="margin:18px 0 0;font-size:13.5px;line-height:1.7;color:#4B5563;">If this wasn't expected, reply to this email or contact us and we'll help reschedule.</p>
+      `;
+      break;
+    default:
+      return null;
+  }
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;background:#F3F4F6;padding:32px 18px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111827;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(15,23,42,0.06);">
+    <div style="padding:28px 32px;background:${style.accent};">
+      <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.78);margin-bottom:8px;">${style.eyebrow}</div>
+      <h1 style="margin:0;font-size:21px;color:#ffffff;">${title}</h1>
+    </div>
+    <div style="padding:30px 32px;">
+      ${bodyHtml}
+      <p style="margin:26px 0 0;font-size:12.5px;line-height:1.7;color:#6B7280;border-top:1px solid #E5E7EB;padding-top:16px;">
+        Sent by ${esc(companyName)} · Powered by HVACtor.ai
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return { subject, html };
+}
+
 @Injectable()
 export class AutomationService {
   private readonly logger = new Logger(AutomationService.name);
@@ -42,6 +167,7 @@ export class AutomationService {
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
     private readonly templates: TemplatesService,
+    private readonly companySettings: CompanySettingsClient,
   ) {}
 
   // ── Rule CRUD ─────────────────────────────────────────────────────────────
@@ -111,27 +237,26 @@ export class AutomationService {
       scheduledAt: event.scheduledAt ?? '',
     };
 
-    if (event.jobStatus === 'EN_ROUTE' && event.customerEmail) {
-      const techName = event.technicianName ? event.technicianName : 'Your technician';
-      const addressLine = event.jobAddress ? `<p>Service address: <strong>${event.jobAddress}</strong></p>` : '';
-      await this.notifications.sendEmail({
-        companyId: event.companyId,
-        customerId: event.customerId,
-        jobId: event.jobId,
-        recipientId: event.customerId,
-        recipientName: event.customerName,
-        recipientEmail: event.customerEmail,
-        subject: `${techName} is on the way — Job #${event.jobId.slice(-6).toUpperCase()}`,
-        htmlBody: `
-          <p>Hi ${event.customerName},</p>
-          <p><strong>${techName}</strong> is now en route to your location and should arrive shortly.</p>
-          ${addressLine}
-          <p>If you have any questions, please don't hesitate to contact us.</p>
-          <p>Thank you for choosing our service.</p>
-        `,
-      }).catch((err: unknown) => {
-        this.logger.warn(`EN_ROUTE email failed: ${err instanceof Error ? err.message : String(err)}`);
-      });
+    // NOTE: EN_ROUTE customer email is intentionally NOT sent from here.
+    // scheduling-service already triggers the richer EnRouteNotificationService
+    // (tech photo, real ETA window) via POST /notifications/en-route — sending
+    // a second, plainer email here would double-notify the customer.
+    if (event.customerEmail && event.jobStatus !== 'EN_ROUTE') {
+      const rendered = jobStatusEmailHtml(event, (await this.companySettings.getSettings(event.companyId)).name || 'HVACtor.ai');
+      if (rendered) {
+        await this.notifications.sendEmail({
+          companyId: event.companyId,
+          customerId: event.customerId,
+          jobId: event.jobId,
+          recipientId: event.customerId,
+          recipientName: event.customerName,
+          recipientEmail: event.customerEmail,
+          subject: rendered.subject,
+          htmlBody: rendered.html,
+        }).catch((err: unknown) => {
+          this.logger.warn(`Job ${event.jobStatus} email failed: ${err instanceof Error ? err.message : String(err)}`);
+        });
+      }
     }
 
     await this.executeRules(event.companyId, AutomationTrigger.JOB_STATUS_CHANGED, event as any, context);

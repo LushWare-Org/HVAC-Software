@@ -257,6 +257,7 @@ exports.Prisma.ServiceAgreementScalarFieldEnum = {
   signedAt: 'signedAt',
   signedByName: 'signedByName',
   documentUrl: 'documentUrl',
+  templateId: 'templateId',
   billingAmount: 'billingAmount',
   nextBillingDate: 'nextBillingDate',
   serviceType: 'serviceType',
@@ -270,6 +271,7 @@ exports.Prisma.ServiceAgreementScalarFieldEnum = {
   leadDays: 'leadDays',
   jobTemplateId: 'jobTemplateId',
   projectId: 'projectId',
+  houseId: 'houseId',
   customerConfirmedAt: 'customerConfirmedAt',
   confirmToken: 'confirmToken',
   renewalReminderSent: 'renewalReminderSent',
@@ -346,6 +348,7 @@ exports.Prisma.EquipmentScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
   customerId: 'customerId',
+  houseId: 'houseId',
   type: 'type',
   brand: 'brand',
   model: 'model',
@@ -356,7 +359,46 @@ exports.Prisma.EquipmentScalarFieldEnum = {
   importBatchId: 'importBatchId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  manualUrl: 'manualUrl'
+  manualUrl: 'manualUrl',
+  imageUrl: 'imageUrl',
+  imageScanStatus: 'imageScanStatus',
+  imageScanResult: 'imageScanResult',
+  imageScanError: 'imageScanError'
+};
+
+exports.Prisma.EquipmentErrorCodeScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  equipmentId: 'equipmentId',
+  code: 'code',
+  meaning: 'meaning',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DocumentTemplateScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  documentType: 'documentType',
+  name: 'name',
+  isDefault: 'isDefault',
+  mode: 'mode',
+  companyName: 'companyName',
+  companyAddress: 'companyAddress',
+  logoUrl: 'logoUrl',
+  logoPosition: 'logoPosition',
+  accentColor: 'accentColor',
+  headerText: 'headerText',
+  footerText: 'footerText',
+  bankDetails: 'bankDetails',
+  showPageNumbers: 'showPageNumbers',
+  rows: 'rows',
+  letterheadImageUrl: 'letterheadImageUrl',
+  letterheadTopMarginPx: 'letterheadTopMarginPx',
+  letterheadBottomMarginPx: 'letterheadBottomMarginPx',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.EquipmentConsumableScalarFieldEnum = {
@@ -576,6 +618,7 @@ exports.Prisma.ProjectScalarFieldEnum = {
   description: 'description',
   category: 'category',
   status: 'status',
+  templateType: 'templateType',
   startDate: 'startDate',
   targetEndDate: 'targetEndDate',
   budget: 'budget',
@@ -598,6 +641,33 @@ exports.Prisma.ProjectRosterDayScalarFieldEnum = {
   techUserIds: 'techUserIds',
   isOff: 'isOff',
   updatedBy: 'updatedBy',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.HouseScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  projectId: 'projectId',
+  label: 'label',
+  address: 'address',
+  ownerCustomerId: 'ownerCustomerId',
+  tags: 'tags',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.HouseIssueReportScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  houseId: 'houseId',
+  equipmentId: 'equipmentId',
+  reportedByCustomerId: 'reportedByCustomerId',
+  errorCode: 'errorCode',
+  description: 'description',
+  status: 'status',
+  resolvedNote: 'resolvedNote',
+  createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
@@ -696,6 +766,8 @@ exports.Prisma.ModelName = {
   Review: 'Review',
   Address: 'Address',
   Equipment: 'Equipment',
+  EquipmentErrorCode: 'EquipmentErrorCode',
+  DocumentTemplate: 'DocumentTemplate',
   EquipmentConsumable: 'EquipmentConsumable',
   ContractorPost: 'ContractorPost',
   CompanyAnnouncement: 'CompanyAnnouncement',
@@ -709,7 +781,9 @@ exports.Prisma.ModelName = {
   CustomerIotDevice: 'CustomerIotDevice',
   IotDeviceHistory: 'IotDeviceHistory',
   Project: 'Project',
-  ProjectRosterDay: 'ProjectRosterDay'
+  ProjectRosterDay: 'ProjectRosterDay',
+  House: 'House',
+  HouseIssueReport: 'HouseIssueReport'
 };
 
 /**

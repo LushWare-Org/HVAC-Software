@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download, UploadCloud, Briefcase, Sparkles, X } from 'lucide-react'
+import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download, UploadCloud, Briefcase, FileSignature, FolderKanban } from 'lucide-react'
 import { useInvoices, useQuotes, useExpenses, useFinanceKpis, decimalToNumber, useDeleteExpense, useSendInvoice, useQBStatus, useQBSyncInvoice } from '../../hooks/useFinance'
 import { useJobs } from '../../hooks/useJobs'
 import { useToast } from '../../contexts/ToastContext'
@@ -9,7 +8,25 @@ import AddQuoteModal from './AddQuoteModal'
 import AddInvoiceModal from './AddInvoiceModal'
 import AddExpenseModal from './AddExpenseModal'
 import RecommendationsPanel from '../../components/RecommendationsPanel'
+import DocumentTemplatesTab from './DocumentTemplatesTab'
 import { humanizeStatus, normalizeStatus, formatMoney } from '../../lib/format'
+import { useProjectsFull } from '../projects/projectsApi'
+import { useHouse } from '../projects/housesApi'
+
+/** Resolves a quote/invoice's project/house context lazily — cheap house lookup only fires when set. */
+function DocProjectCell({ projectId, houseId, projectNameById }: { projectId?: string; houseId?: string; projectNameById: Map<string, string> }) {
+  const { data: house } = useHouse(houseId)
+  if (!projectId) return <span className="text-3">—</span>
+  const projectName = projectNameById.get(projectId) ?? 'Project'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
+      <FolderKanban size={10} style={{ color: 'var(--blue)', flexShrink: 0 }} />
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
+        {projectName}{house ? ` — ${house.label}` : ''}
+      </span>
+    </div>
+  )
+}
 
 // ─── Status CSS maps (backend UPPER_CASE = source of truth) ───────────────────
 // All map keys are UPPER_SNAKE_CASE to match backend Prisma enums. Lookups
@@ -73,6 +90,47 @@ function PillGroup({ options, value, onChange }: {
   )
 }
 
+function DateRangeFilter({ from, to, onFrom, onTo, onClear }: {
+  from: string
+  to: string
+  onFrom: (v: string) => void
+  onTo: (v: string) => void
+  onClear: () => void
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <input
+        type="date"
+        className="select"
+        style={{ width: 130, fontSize: 12, padding: '5px 8px' }}
+        value={from}
+        max={to || undefined}
+        onChange={e => onFrom(e.target.value)}
+        title="From date"
+      />
+      <span style={{ fontSize: 11, color: 'var(--t4)' }}>to</span>
+      <input
+        type="date"
+        className="select"
+        style={{ width: 130, fontSize: 12, padding: '5px 8px' }}
+        value={to}
+        min={from || undefined}
+        onChange={e => onTo(e.target.value)}
+        title="To date"
+      />
+      {(from || to) && (
+        <button
+          onClick={onClear}
+          title="Clear date range"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t4)', fontSize: 11, padding: '4px 2px' }}
+        >
+          Clear
+        </button>
+      )}
+    </div>
+  )
+}
+
 function exportToCsv(filename: string, rows: string[][], headers: string[]) {
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
   const lines = [headers.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))]
@@ -107,18 +165,24 @@ const EXP_STATUS_PILLS = [
 
 export default function Finance() {
   const { showError, showSuccess } = useToast()
-  const [tab, setTab] = useState<'invoices' | 'quotes' | 'expenses'>('invoices')
+  const [tab, setTab] = useState<'invoices' | 'quotes' | 'expenses' | 'templates'>('invoices')
   const [isExpanded, setIsExpanded] = useState(false)
   const [invPage, setInvPage] = useState(1)
   const [invSearch, setInvSearch] = useState('')
   const [invStatus, setInvStatus] = useState('all')
+  const [invDateFrom, setInvDateFrom] = useState('')
+  const [invDateTo, setInvDateTo] = useState('')
   const [quoPage, setQuoPage] = useState(1)
   const [quoSearch, setQuoSearch] = useState('')
   const [quoStatus, setQuoStatus] = useState('all')
   const [quoPendingAging, setQuoPendingAging] = useState(false)
+  const [quoDateFrom, setQuoDateFrom] = useState('')
+  const [quoDateTo, setQuoDateTo] = useState('')
   const [expPage, setExpPage] = useState(1)
   const [expSearch, setExpSearch] = useState('')
   const [expStatus, setExpStatus] = useState('all')
+  const [expDateFrom, setExpDateFrom] = useState('')
+  const [expDateTo, setExpDateTo] = useState('')
   const [isAddQuoteOpen, setIsAddQuoteOpen] = useState(false)
   const [isAddInvoiceOpen, setIsAddInvoiceOpen] = useState(false)
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false)
@@ -149,21 +213,38 @@ export default function Finance() {
   // ── API ───────────────────────────────────────────────────────────────────
 
   const kpiQuery = useFinanceKpis()
-  const invoicesQuery = useInvoices({ page: invPage, limit: itemsPerPage, search: invSearch || undefined, status: invStatus !== 'all' ? invStatus : undefined })
-  const quotesQuery = useQuotes({ page: quoPage, limit: itemsPerPage, search: quoSearch || undefined, status: quoStatus !== 'all' ? quoStatus : undefined, pendingAging: quoPendingAging })
-  const expensesQuery = useExpenses({ page: expPage, limit: itemsPerPage, search: expSearch || undefined, status: expStatus !== 'all' ? expStatus : undefined })
+  const invoicesQuery = useInvoices({ page: invPage, limit: itemsPerPage, search: invSearch || undefined, status: invStatus !== 'all' ? invStatus : undefined, dateFrom: invDateFrom || undefined, dateTo: invDateTo || undefined })
+  const quotesQuery = useQuotes({ page: quoPage, limit: itemsPerPage, search: quoSearch || undefined, status: quoStatus !== 'all' ? quoStatus : undefined, dateFrom: quoDateFrom || undefined, dateTo: quoDateTo || undefined })
+  const expensesQuery = useExpenses({ page: expPage, limit: itemsPerPage, search: expSearch || undefined, status: expStatus !== 'all' ? expStatus : undefined, dateFrom: expDateFrom || undefined, dateTo: expDateTo || undefined })
+
+  // Full filtered set (same filters, no pagination — up to the 500-row service ceiling) —
+  // used for the CSV export and the always-visible filtered total, since the paginated
+  // queries above only ever hold one page's worth of rows.
+  const invoicesAllQuery = useInvoices({ limit: 500, page: 1, search: invSearch || undefined, status: invStatus !== 'all' ? invStatus : undefined, dateFrom: invDateFrom || undefined, dateTo: invDateTo || undefined })
+  const quotesAllQuery = useQuotes({ limit: 500, page: 1, search: quoSearch || undefined, status: quoStatus !== 'all' ? quoStatus : undefined, dateFrom: quoDateFrom || undefined, dateTo: quoDateTo || undefined })
+  const expensesAllQuery = useExpenses({ limit: 500, page: 1, search: expSearch || undefined, status: expStatus !== 'all' ? expStatus : undefined, dateFrom: expDateFrom || undefined, dateTo: expDateTo || undefined })
 
   const invoices: Invoice[] = invoicesQuery.data?.data ?? []
   const totalInvoices = invoicesQuery.data?.total ?? 0
   const totalInvPages = Math.max(1, invoicesQuery.data?.totalPages ?? 1)
+  const invoicesTotalAmount = useMemo(() => (invoicesAllQuery.data?.data ?? []).reduce((s, inv) => s + decimalToNumber(inv.total), 0), [invoicesAllQuery.data])
 
   const quotes: Quote[] = quotesQuery.data?.data ?? []
   const totalQuotes = quotesQuery.data?.total ?? 0
   const totalQuoPages = Math.max(1, quotesQuery.data?.totalPages ?? 1)
+  const quotesTotalAmount = useMemo(() => (quotesAllQuery.data?.data ?? []).reduce((s, q) => s + decimalToNumber(q.total), 0), [quotesAllQuery.data])
 
   const expenses: Expense[] = expensesQuery.data?.data ?? []
   const totalExpenses = expensesQuery.data?.total ?? 0
   const totalExpPages = Math.max(1, expensesQuery.data?.totalPages ?? 1)
+  const expensesTotalAmount = useMemo(() => (expensesAllQuery.data?.data ?? []).reduce((s, exp) => s + decimalToNumber(exp.amount), 0), [expensesAllQuery.data])
+
+  const { projects: allProjects } = useProjectsFull()
+  const projectNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const p of allProjects) map.set(p.id, p.name)
+    return map
+  }, [allProjects])
 
   // Look up job titles for invoices/quotes/expenses
   const jobsLookupQuery = useJobs({ limit: 200 })
@@ -204,47 +285,70 @@ export default function Finance() {
   const qbSync = useQBSyncInvoice()
   const qbConnected = qbStatus.data?.connected ?? false
 
+  // Exports the FULL filtered set (respecting search/status/date-range — up to the
+  // 500-row service ceiling), not just the current 10-row page, and appends a
+  // grand-total row so the downloaded file is self-contained.
   const handleExport = useCallback(() => {
+    const rangeSuffix = (from: string, to: string) => (from || to) ? `_${from || 'start'}_to_${to || 'today'}` : ''
+
     if (tab === 'invoices') {
-      exportToCsv('invoices.csv',
-        invoices.map(inv => [
-          inv.invoiceNumber,
-          inv.customerName ?? '',
-          inv.jobTitle ?? '',
-          fmtDecimal(inv.total),
-          inv.status,
-          inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '',
-          inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '',
-        ]),
+      const all = invoicesAllQuery.data?.data ?? []
+      const totalAmount = all.reduce((s, inv) => s + decimalToNumber(inv.total), 0)
+      exportToCsv(`invoices${rangeSuffix(invDateFrom, invDateTo)}.csv`,
+        [
+          ...all.map(inv => [
+            inv.invoiceNumber,
+            inv.customerName ?? '',
+            inv.jobTitle ?? '',
+            fmtDecimal(inv.total),
+            inv.status,
+            inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '',
+            inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '',
+          ]),
+          ['', '', '', '', '', '', ''],
+          ['TOTAL', `${all.length} invoice${all.length === 1 ? '' : 's'}`, '', fmtDecimal(totalAmount), '', '', ''],
+        ],
         ['Invoice No', 'Customer', 'Job', 'Amount', 'Status', 'Issue Date', 'Due Date'],
       )
     } else if (tab === 'quotes') {
-      exportToCsv('quotes.csv',
-        quotes.map(q => [
-          q.quoteNumber,
-          q.customerName ?? '',
-          q.title,
-          fmtDecimal(q.total),
-          q.status,
-          q.createdAt ? new Date(q.createdAt).toLocaleDateString() : '',
-          q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '',
-        ]),
+      const all = quotesAllQuery.data?.data ?? []
+      const totalAmount = all.reduce((s, q) => s + decimalToNumber(q.total), 0)
+      exportToCsv(`quotes${rangeSuffix(quoDateFrom, quoDateTo)}.csv`,
+        [
+          ...all.map(q => [
+            q.quoteNumber,
+            q.customerName ?? '',
+            q.title,
+            fmtDecimal(q.total),
+            q.status,
+            q.createdAt ? new Date(q.createdAt).toLocaleDateString() : '',
+            q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '',
+          ]),
+          ['', '', '', '', '', '', ''],
+          ['TOTAL', `${all.length} quote${all.length === 1 ? '' : 's'}`, '', fmtDecimal(totalAmount), '', '', ''],
+        ],
         ['Quote No', 'Customer', 'Title', 'Amount', 'Status', 'Created', 'Valid Until'],
       )
     } else {
-      exportToCsv('expenses.csv',
-        expenses.map(exp => [
-          exp.id.slice(0, 8),
-          exp.category,
-          exp.vendor ?? '',
-          fmtDecimal(exp.amount),
-          exp.status,
-          exp.date ? new Date(exp.date).toLocaleDateString() : '',
-        ]),
+      const all = expensesAllQuery.data?.data ?? []
+      const totalAmount = all.reduce((s, exp) => s + decimalToNumber(exp.amount), 0)
+      exportToCsv(`expenses${rangeSuffix(expDateFrom, expDateTo)}.csv`,
+        [
+          ...all.map(exp => [
+            exp.id.slice(0, 8),
+            exp.category,
+            exp.vendor ?? '',
+            fmtDecimal(exp.amount),
+            exp.status,
+            exp.date ? new Date(exp.date).toLocaleDateString() : '',
+          ]),
+          ['', '', '', '', '', ''],
+          ['TOTAL', `${all.length} expense${all.length === 1 ? '' : 's'}`, '', fmtDecimal(totalAmount), '', ''],
+        ],
         ['Ref', 'Category', 'Vendor', 'Amount', 'Status', 'Date'],
       )
     }
-  }, [tab, invoices, quotes, expenses])
+  }, [tab, invoicesAllQuery.data, quotesAllQuery.data, expensesAllQuery.data, invDateFrom, invDateTo, quoDateFrom, quoDateTo, expDateFrom, expDateTo])
 
   useEffect(() => {
     const handler = () => handleExport()
@@ -288,6 +392,9 @@ export default function Finance() {
         <button className={`tab-btn ${tab === 'expenses' ? 'active' : ''}`} onClick={() => setTab('expenses')}>
           <CreditCard size={14} /> Expenses <span className="tab-count">{totalExpenses}</span>
         </button>
+        <button className={`tab-btn ${tab === 'templates' ? 'active' : ''}`} onClick={() => setTab('templates')}>
+          <FileSignature size={14} /> Document Templates
+        </button>
       </div>
 
       {/* ── Invoices ── */}
@@ -303,6 +410,12 @@ export default function Finance() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div className="filter-bar">
                 <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search invoices…" value={invSearch} onChange={e => { setInvSearch(e.target.value); setInvPage(1); }} /></div>
+                <DateRangeFilter
+                  from={invDateFrom} to={invDateTo}
+                  onFrom={v => { setInvDateFrom(v); setInvPage(1); }}
+                  onTo={v => { setInvDateTo(v); setInvPage(1); }}
+                  onClear={() => { setInvDateFrom(''); setInvDateTo(''); setInvPage(1); }}
+                />
                 <div className="flex items-center gap-2 ml-auto">
                   <button className="btn btn-secondary btn-sm flex items-center gap-1" onClick={handleExport}><Download size={12} /> Export CSV</button>
                   <button className="btn btn-primary btn-sm" onClick={() => setIsAddInvoiceOpen(true)}><Plus size={12} /> Create Invoice</button>
@@ -321,6 +434,7 @@ export default function Finance() {
                   <tr>
                     <th style={{ textAlign: 'left' }}>Invoice NO</th>
                     <th style={{ textAlign: 'left' }}>Job Ref</th>
+                    <th style={{ textAlign: 'left' }}>Project / House</th>
                     <th style={{ textAlign: 'left' }}>Customer</th>
                     <th style={{ textAlign: 'left' }}>Amount</th>
                     <th style={{ textAlign: 'left' }}>Issue Date</th>
@@ -331,7 +445,7 @@ export default function Finance() {
                   </tr>
                 </thead>
                 <tbody>
-                  {invoicesQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 8 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
+                  {invoicesQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
                   {!invoicesQuery.isLoading && invoices.map(inv => (
                     <tr key={inv.id} onClick={() => window.dispatchEvent(new CustomEvent("open-invoice-detail", { detail: inv }))} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
                       <td><span className="td-mono td-primary">{inv.invoiceNumber}</span></td>
@@ -349,6 +463,7 @@ export default function Finance() {
                           </button>
                         ) : '—'}
                       </td>
+                      <td><DocProjectCell projectId={inv.projectId} houseId={inv.houseId} projectNameById={projectNameById} /></td>
                       <td><div className="cell-user"><span className="cell-name">{inv.customerName ?? '—'}</span></div></td>
                       <td className="td-primary font-600">{fmtDecimal(inv.total)}</td>
                       <td className="text-sm text-3">{new Date(inv.createdAt).toLocaleDateString()}</td>
@@ -401,13 +516,16 @@ export default function Finance() {
                       </td>
                     </tr>
                   ))}
-                  {!invoicesQuery.isLoading && invoices.length === 0 && <tr><td colSpan={qbConnected ? 9 : 8} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No invoices found</td></tr>}
+                  {!invoicesQuery.isLoading && invoices.length === 0 && <tr><td colSpan={qbConnected ? 10 : 9} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No invoices found</td></tr>}
                 </tbody>
               </table>
             </div>
           </div>
           <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-            <span className="text-[13px] text-[var(--t3)]">Showing {totalInvoices > 0 ? (invPage - 1) * itemsPerPage + 1 : 0} to {Math.min(invPage * itemsPerPage, totalInvoices)} of {totalInvoices} invoices</span>
+            <span className="text-[13px] text-[var(--t3)]">
+              Showing {totalInvoices > 0 ? (invPage - 1) * itemsPerPage + 1 : 0} to {Math.min(invPage * itemsPerPage, totalInvoices)} of {totalInvoices} invoices
+              {' '}· Total <strong style={{ color: 'var(--t1)' }}>{fmtDecimal(invoicesTotalAmount)}</strong>
+            </span>
             <div className="flex items-center gap-2">
               <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setInvPage(p => Math.max(1, p - 1))} disabled={invPage === 1}><ChevronLeft size={18} /></button>
               <span className="text-[13px] text-[var(--t2)] mx-2">Page {invPage} of {totalInvPages}</span>
@@ -433,6 +551,12 @@ export default function Finance() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div className="filter-bar">
                 <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search quotes…" value={quoSearch} onChange={e => { setQuoSearch(e.target.value); setQuoPage(1); }} /></div>
+                <DateRangeFilter
+                  from={quoDateFrom} to={quoDateTo}
+                  onFrom={v => { setQuoDateFrom(v); setQuoPage(1); }}
+                  onTo={v => { setQuoDateTo(v); setQuoPage(1); }}
+                  onClear={() => { setQuoDateFrom(''); setQuoDateTo(''); setQuoPage(1); }}
+                />
                 <div className="flex items-center gap-2 ml-auto">
                   <button className="btn btn-secondary btn-sm flex items-center gap-1" onClick={handleExport}><Download size={12} /> Export CSV</button>
                   <button className="btn btn-primary btn-sm" onClick={() => setIsAddQuoteOpen(true)}><Plus size={12} /> Create Quote</button>
@@ -463,6 +587,7 @@ export default function Finance() {
                   <tr>
                     <th style={{ textAlign: 'left' }}>Quote NO</th>
                     <th style={{ textAlign: 'left' }}>Job</th>
+                    <th style={{ textAlign: 'left' }}>Project / House</th>
                     <th style={{ textAlign: 'left' }}>Customer</th>
                     <th style={{ textAlign: 'left' }}>Title</th>
                     <th style={{ textAlign: 'left' }}>Amount</th>
@@ -472,7 +597,7 @@ export default function Finance() {
                   </tr>
                 </thead>
                 <tbody>
-                  {quotesQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 8 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
+                  {quotesQuery.isLoading && Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>)}
                   {!quotesQuery.isLoading && quotes.map(q => (
                     <tr key={q.id} onClick={() => window.dispatchEvent(new CustomEvent("open-quote-detail", { detail: q }))} className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group">
                       <td><span className="td-mono td-primary">{q.quoteNumber}</span></td>
@@ -490,6 +615,7 @@ export default function Finance() {
                           </button>
                         ) : '—'}
                       </td>
+                      <td><DocProjectCell projectId={q.projectId} houseId={q.houseId} projectNameById={projectNameById} /></td>
                       <td><div className="cell-user"><span className="cell-name">{q.customerName ?? '—'}</span></div></td>
                       <td>{q.title}</td>
                       <td className="td-primary font-600">{fmtDecimal(q.total)}</td>
@@ -508,13 +634,16 @@ export default function Finance() {
                       </td>
                     </tr>
                   ))}
-                  {!quotesQuery.isLoading && quotes.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No quotes found</td></tr>}
+                  {!quotesQuery.isLoading && quotes.length === 0 && <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>No quotes found</td></tr>}
                 </tbody>
               </table>
             </div>
           </div>
           <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-            <span className="text-[13px] text-[var(--t3)]">Showing {totalQuotes > 0 ? (quoPage - 1) * itemsPerPage + 1 : 0} to {Math.min(quoPage * itemsPerPage, totalQuotes)} of {totalQuotes} quotes</span>
+            <span className="text-[13px] text-[var(--t3)]">
+              Showing {totalQuotes > 0 ? (quoPage - 1) * itemsPerPage + 1 : 0} to {Math.min(quoPage * itemsPerPage, totalQuotes)} of {totalQuotes} quotes
+              {' '}· Total <strong style={{ color: 'var(--t1)' }}>{fmtDecimal(quotesTotalAmount)}</strong>
+            </span>
             <div className="flex items-center gap-2">
               <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setQuoPage(p => Math.max(1, p - 1))} disabled={quoPage === 1}><ChevronLeft size={18} /></button>
               <span className="text-[13px] text-[var(--t2)] mx-2">Page {quoPage} of {totalQuoPages}</span>
@@ -531,6 +660,12 @@ export default function Finance() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div className="filter-bar">
                 <div className="filter-search"><Search size={13} color="var(--t4)" /><input placeholder="Search expenses…" value={expSearch} onChange={e => { setExpSearch(e.target.value); setExpPage(1); }} /></div>
+                <DateRangeFilter
+                  from={expDateFrom} to={expDateTo}
+                  onFrom={v => { setExpDateFrom(v); setExpPage(1); }}
+                  onTo={v => { setExpDateTo(v); setExpPage(1); }}
+                  onClear={() => { setExpDateFrom(''); setExpDateTo(''); setExpPage(1); }}
+                />
                 <div className="flex items-center gap-2 ml-auto">
                   <button className="btn btn-secondary btn-sm flex items-center gap-1" onClick={handleExport}><Download size={12} /> Export CSV</button>
                   <button className="btn btn-primary btn-sm" onClick={() => setIsAddExpenseOpen(true)}><Plus size={12} /> Log Expense</button>
@@ -613,7 +748,10 @@ export default function Finance() {
             </div>
           </div>
           <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-            <span className="text-[13px] text-[var(--t3)]">Showing {totalExpenses > 0 ? (expPage - 1) * itemsPerPage + 1 : 0} to {Math.min(expPage * itemsPerPage, totalExpenses)} of {totalExpenses} expenses</span>
+            <span className="text-[13px] text-[var(--t3)]">
+              Showing {totalExpenses > 0 ? (expPage - 1) * itemsPerPage + 1 : 0} to {Math.min(expPage * itemsPerPage, totalExpenses)} of {totalExpenses} expenses
+              {' '}· Total <strong style={{ color: 'var(--t1)' }}>{fmtDecimal(expensesTotalAmount)}</strong>
+            </span>
             <div className="flex items-center gap-2">
               <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setExpPage(p => Math.max(1, p - 1))} disabled={expPage === 1}><ChevronLeft size={18} /></button>
               <span className="text-[13px] text-[var(--t2)] mx-2">Page {expPage} of {totalExpPages}</span>
@@ -622,6 +760,7 @@ export default function Finance() {
           </div>
         </div>
       )}
+      {tab === 'templates' && <DocumentTemplatesTab />}
       <AddQuoteModal isOpen={isAddQuoteOpen} onClose={() => setIsAddQuoteOpen(false)} />
       <AddInvoiceModal isOpen={isAddInvoiceOpen} onClose={() => setIsAddInvoiceOpen(false)} />
       <AddExpenseModal isOpen={isAddExpenseOpen} onClose={() => setIsAddExpenseOpen(false)} />

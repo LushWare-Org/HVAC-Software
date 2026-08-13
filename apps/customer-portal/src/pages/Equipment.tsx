@@ -522,7 +522,11 @@ function EquipmentCard({ item, index, onSelect }: { item: CustomerEquipment; ind
         padding: 20, width: '100%', textAlign: 'left', cursor: 'pointer',
         // Overdue left stripe uses the CSS var — adapts across themes
         boxShadow: overdue ? 'inset 3px 0 0 var(--red)' : undefined,
-        background: 'none',
+        // NOT background:'none' — that stripped the .card class's var(--bg-card)
+        // background, leaving var(--t1)/var(--t3) text sitting directly on the
+        // dark page canvas (dark-on-dark in light theme). Buttons have no default
+        // background, so removing the override lets the .card class's own
+        // background show through, same as every other card in the app.
       }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>

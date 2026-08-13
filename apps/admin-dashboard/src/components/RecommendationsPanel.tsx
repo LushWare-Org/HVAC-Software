@@ -1,6 +1,8 @@
-import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { useState, type ReactNode } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
 import {
   Lightbulb, DollarSign, TrendingUp, TrendingDown, Minus,
   RefreshCw, AlertCircle, Sparkles, Filter, HelpCircle, X,
@@ -46,6 +48,20 @@ const PRIORITY_CONFIG = {
   medium: { color: 'var(--amber)', bg: 'rgba(245,158,11,0.12)',     label: 'MEDIUM', borderColor: '#f59e0b' },
   low:    { color: 'var(--green)', bg: 'rgba(16,185,129,0.12)',     label: 'LOW',    borderColor: '#10b981' },
 } as const
+
+// Compact-strip tag per action type — mirrors the color language of ACTION_PARAMS.
+const ACTION_TAG: Record<string, { label: string; color: string; bg: string }> = {
+  discount_20:         { label: 'DISCOUNT',      color: '#D97706', bg: 'rgba(217,158,6,0.12)' },
+  same_day_offer:      { label: 'SAME-DAY',      color: '#059669', bg: 'rgba(5,150,105,0.12)' },
+  increase_price:      { label: 'PRICE UP',      color: '#7C3AED', bg: 'rgba(124,58,237,0.12)' },
+  geo_target_discount: { label: 'GEO OFFER',     color: '#0891B2', bg: 'rgba(8,145,178,0.12)' },
+  call:                { label: 'OUTREACH',      color: '#2563EB', bg: 'rgba(37,99,235,0.12)' },
+  upsell:              { label: 'UPSELL',        color: '#059669', bg: 'rgba(5,150,105,0.12)' },
+  review_request:      { label: 'REVIEW',        color: '#2563EB', bg: 'rgba(37,99,235,0.12)' },
+}
+function tagFor(rec: Recommendation) {
+  return ACTION_TAG[rec.action] ?? { label: rec.priority.toUpperCase(), color: PRIORITY_CONFIG[rec.priority].color, bg: PRIORITY_CONFIG[rec.priority].bg }
+}
 
 function TrendIcon({ trend }: { trend: Recommendation['trend'] }) {
   if (trend === 'up')   return <TrendingUp  size={13} style={{ color: 'var(--green)', flexShrink: 0 }} />
@@ -325,18 +341,66 @@ function RecommendationCard({
 
 // ─── Panel ────────────────────────────────────────────────────────────────────
 
+// ─── Professional AI badge ─────────────────────────────────────────────────────
+
+function AiBadge() {
+  return (
+    <div style={{
+      width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+      background: 'linear-gradient(135deg,#3B82F6,#1D4ED8)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: '0 1px 4px rgba(37,99,235,0.35)',
+    }}>
+      <Sparkles size={14} color="#fff" strokeWidth={2.2} />
+    </div>
+  )
+}
+
+// ─── Compact strip (default, collapsed view) ───────────────────────────────────
+
+function CompactStrip({ visible }: { visible: Recommendation[] }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
+      {visible.map((rec) => {
+        const tag = tagFor(rec)
+        return (
+          <div key={rec.id} style={{
+            display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 220px', minWidth: 200,
+            background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 'var(--r-sm)', padding: '9px 12px',
+          }}>
+            <span style={{
+              alignSelf: 'flex-start', fontSize: 9, fontWeight: 800, letterSpacing: '0.05em',
+              color: tag.color, background: tag.bg, padding: '2px 7px', borderRadius: 4,
+            }}>
+              {tag.label}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', lineHeight: 1.35 }}>
+              {rec.title}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function RecommendationsPanel({
   filterActions,
   limit,
   forecastDays,
+  headerExtra,
+  defaultExpanded = false,
 }: {
   filterActions?: string[]
   limit?: number
   forecastDays?: number
+  headerExtra?: ReactNode
+  defaultExpanded?: boolean
 } = {}) {
   const navigate = useNavigate()
   const { data, isLoading, isError, refetch, isFetching } = useRecommendations(forecastDays)
   const [ignored, setIgnored] = useState<Set<string>>(new Set())
+  const [expanded, setExpanded] = useState(defaultExpanded)
 
   const visible = (data ?? [])
     .filter((r) => !ignored.has(r.id))
@@ -348,36 +412,53 @@ export default function RecommendationsPanel({
   }
 
   return (
-    <div className="card card-hover anim-fade-up mb-5">
-      {/* ── Card header ── */}
-      <div className="card-header pb-2 border-b-0 flex flex-wrap gap-3 justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Sparkles size={17} color="var(--amber)" />
-          <div className="card-title text-[15px]">AI Revenue Recommendations</div>
+    <div className="card card-hover anim-fade-up mb-5" style={{
+      background: 'linear-gradient(160deg,var(--bg-active),var(--bg-card))',
+    }}>
+      {/* ── Header (always visible, doubles as the expand/collapse trigger) ── */}
+      <div
+        onClick={() => setExpanded((v) => !v)}
+        className="flex flex-wrap gap-3 justify-between items-center"
+        style={{ padding: '14px 18px', cursor: 'pointer' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <AiBadge />
+          <div className="card-title text-[14px]" style={{ margin: 0 }}>AI recommendations</div>
           {!isLoading && visible.length > 0 && (
             <span style={{
               fontSize: 11, fontWeight: 700,
-              color: 'var(--amber)', background: 'rgba(245,158,11,0.12)',
+              color: 'var(--blue)', background: 'var(--blue-dim)',
               padding: '2px 8px', borderRadius: 999,
             }}>
               {visible.length} insight{visible.length !== 1 ? 's' : ''}
             </span>
           )}
         </div>
-        <button
-          className="btn btn-secondary btn-sm flex items-center gap-1.5"
-          onClick={() => refetch()}
-          disabled={isFetching}
-        >
-          <RefreshCw
-            size={13}
-            style={{ animation: isFetching ? 'spin 1s linear infinite' : 'none' }}
-          />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {headerExtra}
+          <button
+            className="btn btn-secondary btn-sm flex items-center gap-1.5"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            <RefreshCw
+              size={13}
+              style={{ animation: isFetching ? 'spin 1s linear infinite' : 'none' }}
+            />
+            Refresh
+          </button>
+          <button
+            className="btn btn-secondary btn-sm flex items-center justify-center"
+            style={{ width: 30, padding: 0 }}
+            onClick={() => setExpanded((v) => !v)}
+            title={expanded ? 'Collapse' : 'Expand full view'}
+          >
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
       </div>
 
-      <div className="card-body">
+      <div className="card-body" style={{ paddingTop: 0 }}>
         {/* ── API error banner ── */}
         {isError && (
           <div style={{
@@ -392,23 +473,11 @@ export default function RecommendationsPanel({
 
         {/* ── Loading skeletons ── */}
         {isLoading ? (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 14,
-          }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} style={{
-                display: 'flex', flexDirection: 'column', gap: 10,
-                padding: 18, background: 'var(--bg-card)',
-                border: '1px solid var(--bd)', borderLeft: '3px solid var(--bd)',
-                borderRadius: 'var(--r-md)',
-              }}>
-                <Skeleton h={18} />
-                <Skeleton h={44} />
-                <Skeleton h={34} />
-                <Skeleton h={20} />
-                <Skeleton h={34} />
+              <div key={i} style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <Skeleton h={16} />
+                <Skeleton h={16} />
               </div>
             ))}
           </div>
@@ -421,8 +490,11 @@ export default function RecommendationsPanel({
               All recommendations have been dismissed. Click Refresh to check for new insights.
             </div>
           </div>
+        ) : !expanded ? (
+          /* ── Compact one-line-per-insight strip ── */
+          <CompactStrip visible={visible} />
         ) : (
-          /* ── Recommendation cards grid ── */
+          /* ── Full recommendation cards grid ── */
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',

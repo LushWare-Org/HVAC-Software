@@ -10,6 +10,8 @@ import { PaymentsModule } from './payments/payments.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { QuickBooksModule } from './quickbooks/quickbooks.module';
 import { CompanySettingsModule } from './company-settings/company-settings.module';
+import { DocumentTemplatesModule } from './document-templates/document-templates.module';
+import { DocumentRenderModule } from './document-render/document-render.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -23,6 +25,8 @@ import appConfig from './config/app.config';
     PrismaModule,
     HealthModule,
     CompanySettingsModule,
+    DocumentTemplatesModule,
+    DocumentRenderModule,
     PdfModule,
     QuotesModule,
     InvoicesModule,

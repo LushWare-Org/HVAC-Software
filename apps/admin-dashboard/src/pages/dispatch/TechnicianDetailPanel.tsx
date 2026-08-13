@@ -4,7 +4,8 @@ import {
   Zap, Navigation, Award, Clock, CheckCircle2,
 } from "lucide-react";
 import type { Technician, DispatchAssignment, Job } from "../../types/api";
-import { getTechAvailability, AVAIL_META } from "./DispatchBoard";
+import { getTechAvailability, AVAIL_META } from "../scheduling/availability";
+import Avatar from "../../components/Avatar";
 
 interface Props {
   technician: Technician;
@@ -121,15 +122,8 @@ export default function TechnicianDetailPanel({ technician: t, assignments, jobs
           {/* Top row: avatar + identity + close */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 16, position: "relative" }}>
             {/* Avatar */}
-            <div style={{
-              width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-              background: "#2563eb",
-              border: "2px solid rgba(255,255,255,0.2)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#fff", fontWeight: 700, fontSize: 18,
-              opacity: t.isActive ? 1 : 0.55,
-            }}>
-              {t.name.charAt(0).toUpperCase()}
+            <div style={{ border: "2px solid rgba(255,255,255,0.2)", borderRadius: "50%", opacity: t.isActive ? 1 : 0.55, flexShrink: 0 }}>
+              <Avatar name={t.name} avatarUrl={t.avatarUrl} size={44} radius={22} fontSize={18} />
             </div>
 
             {/* Name + status + phone */}

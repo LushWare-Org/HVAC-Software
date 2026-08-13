@@ -5,9 +5,11 @@ import { PdfModule } from '../pdf/pdf.module';
 import { NotificationClientModule } from '../notification-client/notification-client.module';
 import { QuickBooksModule } from '../quickbooks/quickbooks.module';
 import { CompanySettingsModule } from '../company-settings/company-settings.module';
+import { DocumentTemplatesModule } from '../document-templates/document-templates.module';
+import { CrmModule } from '../crm/crm.module';
 
 @Module({
-  imports: [PdfModule, NotificationClientModule, QuickBooksModule, CompanySettingsModule],
+  imports: [PdfModule, NotificationClientModule, QuickBooksModule, CompanySettingsModule, DocumentTemplatesModule, CrmModule],
   controllers: [InvoicesController, StripeWebhookController],
   providers: [InvoicesService],
   exports: [InvoicesService],

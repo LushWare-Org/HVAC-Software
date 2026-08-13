@@ -288,12 +288,12 @@ export default function Offers() {
           </span>
         </div>
         <h1 style={{
-          margin: '0 0 6px', fontSize: 28, fontWeight: 900, color: 'var(--t1)',
+          margin: '0 0 6px', fontSize: 28, fontWeight: 900, color: 'var(--canvas-t1)',
           letterSpacing: '-0.03em', lineHeight: 1.1,
         }}>
           Offers & Memberships
         </h1>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--t3)', lineHeight: 1.5 }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--canvas-t2)', lineHeight: 1.5 }}>
           Special deals and service plans available just for you.
         </p>
       </div>

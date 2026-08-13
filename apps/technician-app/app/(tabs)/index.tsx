@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Linking,
+  Image,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -14,7 +15,7 @@ import { Colors, Spacing, FontSize, FontWeight, BorderRadius, Shadow } from '@/c
 import { useAuth } from '@/contexts/AuthContext'
 import { useMyJobs } from '@/hooks/useJobs'
 import { useMyAssignments } from '@/hooks/useSchedule'
-import { useTechnicianProfile } from '@/hooks/useProfile'
+import { useTechnicianProfile, useUserProfile } from '@/hooks/useProfile'
 import { useGPSTracking } from '@/hooks/useGPS'
 import { uploadPendingAvatarIfAny } from '@/hooks/useAvatar'
 import { AvatarReminderBanner } from '@/components/AvatarReminderBanner'
@@ -34,6 +35,7 @@ export default function HomeScreen() {
   const { data: jobsData, isLoading: jobsLoading, refetch: refetchJobs } = useMyJobs({ limit: 50 })
   const { data: assignments, refetch: refetchAssignments } = useMyAssignments('ASSIGNED,EN_ROUTE,ON_SITE')
   const { data: techProfile } = useTechnicianProfile()
+  const { data: me } = useUserProfile()
 
   // Filter today's jobs — only show truly today's work + in-progress jobs
   const todayStr = new Date().toISOString().slice(0, 10)
@@ -74,13 +76,12 @@ export default function HomeScreen() {
   // Completed today count
   const completedToday = todaysJobs.filter((j) => j.status === 'COMPLETED').length
 
-  // GPS tracking: active when there's an EN_ROUTE or ON_SITE job
+  // GPS tracking: ALWAYS on while logged in, so dispatchers see every
+  // technician's live position (and whether they're moving) from the moment
+  // they open the app — not only once they're en route. Cadence adapts:
+  // high accuracy/30s while driving to a job, balanced/60s otherwise.
   const hasActiveRoute = todaysJobs.some((j) => j.status === 'EN_ROUTE')
-  const hasOnSite = todaysJobs.some((j) => j.status === 'ON_SITE')
-  useGPSTracking(
-    hasActiveRoute || hasOnSite,
-    hasActiveRoute ? 'high' : 'balanced',
-  )
+  useGPSTracking(true, hasActiveRoute ? 'high' : 'balanced')
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours()
@@ -126,7 +127,11 @@ export default function HomeScreen() {
             style={styles.avatar}
             onPress={() => router.push('/(tabs)/profile')}
           >
-            <Text style={styles.avatarText}>{getInitials(user?.name)}</Text>
+            {me?.avatarUrl ? (
+              <Image source={{ uri: me.avatarUrl }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{getInitials(user?.name)}</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -285,6 +290,11 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
+  },
+  avatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   dateText: {
     fontSize: FontSize.sm,

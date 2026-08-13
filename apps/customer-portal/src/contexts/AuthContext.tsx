@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import api from '../lib/api'
+import { clearPersistedQueryCache } from '../lib/queryClient'
 
 // ─── JWT expiry check (no library needed) ────────────────────────────────────
 function isTokenExpired(token: string): boolean {
@@ -87,6 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token])
 
   const logout = useCallback(() => {
+    // Otherwise the next login on this browser (any account) would rehydrate
+    // this session's persisted query results under the same unscoped-by-login
+    // keys until each query's own refetch resolves — same risk _setSession
+    // guards against on the way in.
+    clearPersistedQueryCache()
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
     setToken(null)
@@ -114,6 +120,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token, logout])
 
   const _setSession = useCallback((access_token: string, userData: PortalUser) => {
+    // The query cache is persisted to localStorage keyed by generic query names
+    // (['my-houses'], ['my-projects'], ...) with no customerId in the key — if a
+    // different account previously logged into this same browser, its cached
+    // (and momentarily still-rendered, via placeholderData) results would
+    // otherwise bleed into this session until each query's own refetch resolves.
+    // login()/register() never hard-reload the page (unlike logout()), so this
+    // is the one place that must clear it explicitly.
+    clearPersistedQueryCache()
     localStorage.setItem(TOKEN_KEY, access_token)
     localStorage.setItem(USER_KEY, JSON.stringify(userData))
     setToken(access_token)

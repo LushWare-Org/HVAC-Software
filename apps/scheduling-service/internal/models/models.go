@@ -196,12 +196,25 @@ const (
 	WSTypeAssigned         WSMessageType = "ASSIGNMENT_CREATED"
 	WSTypeStatusChanged    WSMessageType = "ASSIGNMENT_STATUS_CHANGED"
 	WSTypeTechnicianOnline WSMessageType = "TECHNICIAN_ONLINE"
+
+	// Published by job-service (not this service) whenever a job's own data
+	// changes — status, schedule, assignment name, reschedule state. The
+	// dispatch board's data is mostly jobs, so without these the board can
+	// only ever see assignment and GPS activity.
+	WSTypeJobChanged WSMessageType = "JOB_CHANGED"
 )
 
 type WSMessage struct {
 	Type      WSMessageType `json:"type"`
 	CompanyID string        `json:"companyId"`
 	Payload   interface{}   `json:"payload"`
+
+	// Origin identifies the pod that produced this message. Set automatically by
+	// BroadcastMessage. A pod delivers its own messages to its own sockets
+	// immediately and then skips them when they arrive back over Redis, so local
+	// clients see events with no pub/sub round trip — and still see them when
+	// Redis is unreachable. Clients ignore this field.
+	Origin string `json:"origin,omitempty"`
 }
 
 // GPSUpdatePayload is the payload inside WSTypeGPSUpdate messages.

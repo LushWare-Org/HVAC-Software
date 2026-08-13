@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   X, Edit2, Save, FileText, Calendar, Mail,
-  DollarSign, Ban, AlertCircle, Loader2, Download, Briefcase, ExternalLink,
+  DollarSign, Ban, AlertCircle, Loader2, Download, Briefcase, ExternalLink, Receipt, Eye,
 } from "lucide-react";
 import {
   useUpdateInvoice, useSendInvoice, useRecordPayment, useVoidInvoice, useInvoice, decimalToNumber,
@@ -139,7 +139,12 @@ export default function InvoiceDetailModal({
           setPayAmount("");
           setPayReference("");
           setError("");
-          showSuccess("Payment recorded successfully.", "Payment Captured");
+          showSuccess(
+            inv?.customerEmail
+              ? `Payment recorded — a receipt was emailed to ${inv.customerEmail}.`
+              : "Payment recorded successfully.",
+            "Payment Captured",
+          );
         },
         onError: (err: any) => {
           const message = err?.response?.data?.message ?? "Failed to record payment.";
@@ -204,6 +209,19 @@ export default function InvoiceDetailModal({
     }
   };
 
+  const handleViewReceipt = async (paymentId: string) => {
+    setDownloading(true);
+    try {
+      const res = await api.get(`/finance/invoices/${inv!.id}/payments/${paymentId}/receipt.pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+    } catch (err: any) {
+      showError('Failed to open receipt.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const statusCSS = INV_CSS[inv!.status] ?? "badge-neutral";
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
@@ -222,8 +240,8 @@ export default function InvoiceDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl max-w-3xl w-full flex flex-col shadow-2xl admin-modal-box"
-        style={{ height: 700 }}
+        className="bg-white rounded-xl max-w-5xl w-full flex flex-col shadow-2xl admin-modal-box"
+        style={{ height: '88vh', maxHeight: 880 }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -367,6 +385,23 @@ export default function InvoiceDetailModal({
                     className={`${!isEditMode ? inputView : inputEdit} resize-none`}
                   />
                 </div>
+                {inv!.quoteId && (
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Converted From Quote</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, background: 'var(--bg-card-2, #f8fafc)', border: '1px solid var(--bd, #e2e8f0)' }}>
+                      <FileText size={14} style={{ color: 'var(--green, #16a34a)', flexShrink: 0 }} />
+                      <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--t1, #1e293b)', fontFamily: 'ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {inv!.quote?.quoteNumber || inv!.quoteId}
+                      </span>
+                      <button
+                        onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('open-quote-detail', { detail: { id: inv!.quoteId, quoteNumber: inv!.quote?.quoteNumber } })); }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: 'var(--green, #16a34a)', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      >
+                        <ExternalLink size={10} /> View Quote →
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {inv!.jobId && (
                   <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Job Reference</label>
@@ -417,8 +452,8 @@ export default function InvoiceDetailModal({
                         <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} disabled={isBusy} className={inputEdit}>
                           <option value="CASH">Cash</option>
                           <option value="CARD">Card</option>
-                          <option value="BANK_TRANSFER">Bank Transfer</option>
-                          <option value="CHEQUE">Cheque</option>
+                          <option value="ACH">ACH / Bank Transfer</option>
+                          <option value="CHECK">Check</option>
                           <option value="OTHER">Other</option>
                         </select>
                       </div>
@@ -444,6 +479,48 @@ export default function InvoiceDetailModal({
                     </button>
                   </>
                 )}
+
+                {/* Payment history — every recorded payment has its own receipt, the
+                    proof of payment kept on file for both the customer and the company. */}
+                <div className="pt-2">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Payment History
+                  </label>
+                  {!inv?.payments?.length ? (
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-500">
+                      No payments recorded yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {[...inv.payments]
+                        .sort((a, b) => new Date(b.paidAt ?? b.createdAt).getTime() - new Date(a.paidAt ?? a.createdAt).getTime())
+                        .map((p) => (
+                          <div key={p.id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white">
+                            <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+                              <Receipt size={16} className="text-green-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-800">
+                                {formatMoney(decimalToNumber(p.amount))}
+                                {p.receiptNumber && <span className="text-gray-400 font-normal font-mono text-xs ml-2">{p.receiptNumber}</span>}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                {p.paidAt ? new Date(p.paidAt).toLocaleString() : new Date(p.createdAt).toLocaleString()} · {p.paymentMethod}
+                                {p.notes ? ` · ${p.notes}` : ''}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleViewReceipt(p.id)}
+                              disabled={downloading}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-60 shrink-0"
+                            >
+                              <Eye size={12} /> View Receipt
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

@@ -5,13 +5,14 @@
  */
 import { useEffect, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Loader2, Search, AlertCircle, FileSignature } from 'lucide-react'
+import { X, Loader2, Search, AlertCircle, FileSignature, DollarSign, CalendarClock, Settings2 } from 'lucide-react'
 import { useCustomers } from '../../hooks/useCustomers'
 import {
   useCreateAgreement, useUpdateAgreement,
   type Agreement, type AgreementInput,
 } from '../../hooks/useAgreements'
-import { INTERVAL_LABELS } from './shared'
+import { useDocumentTemplates } from '../finance/documentTemplatesApi'
+import { INTERVAL_LABELS, SectionLabel } from './shared'
 
 const BILLING_CYCLES = [
   { value: 'UPFRONT', label: 'Paid upfront' },
@@ -22,23 +23,25 @@ const BILLING_CYCLES = [
 
 const toDateInput = (d?: string | null) => (d ? d.slice(0, 10) : '')
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{
-      fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase',
-      letterSpacing: '0.06em', margin: '4px 0 0',
-    }}>
-      {children}
-    </p>
-  )
+const sectionCardStyle: React.CSSProperties = {
+  padding: 16, borderRadius: 'var(--r-md)', border: '1px solid var(--bd)', background: 'var(--bg-card-2)',
+  display: 'flex', flexDirection: 'column', gap: 12,
+}
+
+const fieldRowStyle: React.CSSProperties = {
+  display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12,
 }
 
 export default function AgreementEditorModal({
-  agreement, presetCustomerId, presetCustomerName, onClose, onSaved,
+  agreement, presetCustomerId, presetCustomerName, presetProjectId, presetHouseId, onClose, onSaved,
 }: {
   agreement?: Agreement | null
   presetCustomerId?: string
   presetCustomerName?: string
+  /** Attaches the agreement to a project on create. */
+  presetProjectId?: string
+  /** Attaches the agreement to a specific house within a Housing Scheme project; projectId is auto-backfilled server-side if omitted. */
+  presetHouseId?: string
   onClose: () => void
   onSaved?: (a: Agreement) => void
 }) {
@@ -78,7 +81,10 @@ export default function AgreementEditorModal({
     autoCreateJobs: agreement?.autoCreateJobs ?? true,
     leadDays: String(agreement?.leadDays ?? 7),
     autoRenew: agreement?.autoRenew ?? false,
+    templateId: agreement?.templateId ?? '',
   })
+  const templatesQ = useDocumentTemplates('AGREEMENT')
+  const templates = templatesQ.data ?? []
 
   const customersQuery = useCustomers({ search: customerSearch, limit: 8 })
   const customerOptions = useMemo(
@@ -113,6 +119,7 @@ export default function AgreementEditorModal({
       autoCreateJobs: form.autoCreateJobs,
       leadDays: form.leadDays !== '' ? Number(form.leadDays) : undefined,
       autoRenew: form.autoRenew,
+      templateId: form.templateId || undefined,
     }
 
     const opts = {
@@ -120,14 +127,14 @@ export default function AgreementEditorModal({
       onError: (err: any) => setError(err?.response?.data?.message ?? 'Could not save the agreement.'),
     }
     if (isEdit) updateMut.mutate({ id: agreement!.id, ...payload }, opts)
-    else createMut.mutate({ ...payload, customerId: form.customerId }, opts)
+    else createMut.mutate({ ...payload, customerId: form.customerId, projectId: presetProjectId, houseId: presetHouseId }, opts)
   }
 
   return createPortal(
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', padding: '24px 16px',
+        position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', padding: 16,
       }}
       onClick={onClose}
     >
@@ -136,10 +143,10 @@ export default function AgreementEditorModal({
         role="dialog"
         aria-modal="true"
         style={{
-          width: 640, maxWidth: '95vw', padding: 0, overflow: 'hidden',
+          width: 900, maxWidth: '95vw', padding: 0, overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
-          // Lock to the viewport: header + footer stay pinned, only the body scrolls
-          height: 'min(720px, calc(100vh - 48px))',
+          // Grows to fit content; only scrolls internally once it would exceed 90% of the viewport
+          maxHeight: '90vh',
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -160,7 +167,7 @@ export default function AgreementEditorModal({
           <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X size={14} /></button>
         </div>
 
-        <div className="card-body" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="card-body" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {error && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
@@ -171,147 +178,171 @@ export default function AgreementEditorModal({
           )}
 
           {/* ── Basics ── */}
-          <SectionLabel>Agreement</SectionLabel>
+          <div style={sectionCardStyle}>
+            <SectionLabel icon={FileSignature}>Agreement</SectionLabel>
 
-          {!isEdit && !presetCustomerId && (
-            <div className="form-group" style={{ position: 'relative' }}>
-              <label className="form-label">Customer *</label>
-              <div style={{ position: 'relative' }}>
-                <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--t4)' }} />
-                <input
-                  className="form-input"
-                  style={{ paddingLeft: 30 }}
-                  placeholder="Search customers by name…"
-                  value={form.customerId ? form.customerLabel : customerSearch}
-                  onFocus={() => { setPickerOpen(true); if (form.customerId) { set({ customerId: '', customerLabel: '' }); setCustomerSearch('') } }}
-                  onChange={e => { setCustomerSearch(e.target.value); setPickerOpen(true) }}
-                />
-              </div>
-              {pickerOpen && customerOptions.length > 0 && (
-                <div style={{
-                  position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 40, marginTop: 2,
-                  background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 'var(--r-md)',
-                  boxShadow: 'var(--shadow-md)', overflow: 'hidden',
-                }}>
-                  {customerOptions.map((c: any) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      className="btn btn-ghost"
-                      style={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: 0, fontSize: 13 }}
-                      onClick={() => { set({ customerId: c.id, customerLabel: `${c.firstName} ${c.lastName}`.trim() }); setPickerOpen(false) }}
-                    >
-                      {c.firstName} {c.lastName}
-                      {c.email && <span style={{ color: 'var(--t4)', marginLeft: 8, fontSize: 12 }}>{c.email}</span>}
-                    </button>
-                  ))}
+            {!isEdit && !presetCustomerId && (
+              <div className="form-group" style={{ position: 'relative' }}>
+                <label className="form-label">Customer *</label>
+                <div style={{ position: 'relative' }}>
+                  <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--t4)' }} />
+                  <input
+                    className="form-input"
+                    style={{ paddingLeft: 30 }}
+                    placeholder="Search customers by name…"
+                    value={form.customerId ? form.customerLabel : customerSearch}
+                    onFocus={() => { setPickerOpen(true); if (form.customerId) { set({ customerId: '', customerLabel: '' }); setCustomerSearch('') } }}
+                    onChange={e => { setCustomerSearch(e.target.value); setPickerOpen(true) }}
+                  />
                 </div>
-              )}
+                {pickerOpen && customerOptions.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 40, marginTop: 2,
+                    background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 'var(--r-md)',
+                    boxShadow: 'var(--shadow-md)', overflow: 'hidden',
+                  }}>
+                    {customerOptions.map((c: any) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className="btn btn-ghost"
+                        style={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: 0, fontSize: 13 }}
+                        onClick={() => { set({ customerId: c.id, customerLabel: `${c.firstName} ${c.lastName}`.trim() }); setPickerOpen(false) }}
+                      >
+                        {c.firstName} {c.lastName}
+                        {c.email && <span style={{ color: 'var(--t4)', marginLeft: 8, fontSize: 12 }}>{c.email}</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {(presetCustomerName || (isEdit && form.customerLabel)) && (
+              <p style={{ fontSize: 13, color: 'var(--t2)', margin: 0 }}>
+                Customer: <strong style={{ color: 'var(--t1)' }}>{form.customerLabel || presetCustomerName}</strong>
+              </p>
+            )}
+
+            <div style={fieldRowStyle}>
+              <div className="form-group">
+                <label className="form-label">Agreement name *</label>
+                <input className="form-input" placeholder="e.g. Annual AC Care Plan" value={form.name} onChange={e => set({ name: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Starts *</label>
+                <input type="date" className="form-input" value={form.startDate} onChange={e => set({ startDate: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Ends</label>
+                <input type="date" className="form-input" value={form.endDate} onChange={e => set({ endDate: e.target.value })} />
+              </div>
             </div>
-          )}
-          {(presetCustomerName || (isEdit && form.customerLabel)) && (
-            <p style={{ fontSize: 13, color: 'var(--t2)', margin: 0 }}>
-              Customer: <strong style={{ color: 'var(--t1)' }}>{form.customerLabel || presetCustomerName}</strong>
-            </p>
-          )}
 
-          <div className="form-group">
-            <label className="form-label">Agreement name *</label>
-            <input className="form-input" placeholder="e.g. Annual AC Care Plan" value={form.name} onChange={e => set({ name: e.target.value })} />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Terms & scope</label>
-            <textarea
-              className="form-input" rows={3} style={{ resize: 'vertical' }}
-              placeholder="What's covered, response times, exclusions — the customer sees this in the confirmation email"
-              value={form.description} onChange={e => set({ description: e.target.value })}
-            />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div className="form-group">
-              <label className="form-label">Starts *</label>
-              <input type="date" className="form-input" value={form.startDate} onChange={e => set({ startDate: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Ends</label>
-              <input type="date" className="form-input" value={form.endDate} onChange={e => set({ endDate: e.target.value })} />
+              <label className="form-label">Terms & scope</label>
+              <textarea
+                className="form-input" rows={3} style={{ resize: 'vertical' }}
+                placeholder="What's covered, response times, exclusions — the customer sees this in the confirmation email"
+                value={form.description} onChange={e => set({ description: e.target.value })}
+              />
             </div>
           </div>
 
           {/* ── Pricing ── */}
-          <SectionLabel>Pricing</SectionLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div className="form-group">
-              <label className="form-label">Total value ($)</label>
-              <input type="number" min="0" step="0.01" className="form-input" placeholder="1200.00" value={form.value} onChange={e => set({ value: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Billing</label>
-              <select className="form-input" value={form.billingCycle} onChange={e => set({ billingCycle: e.target.value })}>
-                <option value="">Not set</option>
-                {BILLING_CYCLES.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
-              </select>
+          <div style={sectionCardStyle}>
+            <SectionLabel icon={DollarSign}>Pricing</SectionLabel>
+            <div style={fieldRowStyle}>
+              <div className="form-group">
+                <label className="form-label">Total value ($)</label>
+                <input type="number" min="0" step="0.01" className="form-input" placeholder="1200.00" value={form.value} onChange={e => set({ value: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Billing</label>
+                <select className="form-input" value={form.billingCycle} onChange={e => set({ billingCycle: e.target.value })}>
+                  <option value="">Not set</option>
+                  {BILLING_CYCLES.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
+                </select>
+              </div>
+              {form.billingCycle && form.billingCycle !== 'UPFRONT' && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Amount per period ($)</label>
+                    <input type="number" min="0" step="0.01" className="form-input" placeholder="100.00" value={form.billingAmount} onChange={e => set({ billingAmount: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Next billing date</label>
+                    <input type="date" className="form-input" value={form.nextBillingDate} onChange={e => set({ nextBillingDate: e.target.value })} />
+                  </div>
+                </>
+              )}
             </div>
           </div>
-          {form.billingCycle && form.billingCycle !== 'UPFRONT' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div className="form-group">
-                <label className="form-label">Amount per period ($)</label>
-                <input type="number" min="0" step="0.01" className="form-input" placeholder="100.00" value={form.billingAmount} onChange={e => set({ billingAmount: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Next billing date</label>
-                <input type="date" className="form-input" value={form.nextBillingDate} onChange={e => set({ nextBillingDate: e.target.value })} />
-              </div>
-            </div>
-          )}
 
           {/* ── Service schedule ── */}
-          <SectionLabel>Service schedule</SectionLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div className="form-group">
-              <label className="form-label">Service type</label>
-              <input className="form-input" placeholder="e.g. AC Full Service" value={form.serviceType} onChange={e => set({ serviceType: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">How often</label>
-              <select className="form-input" value={form.serviceInterval} onChange={e => set({ serviceInterval: e.target.value })}>
-                <option value="">Not scheduled</option>
-                {Object.entries(INTERVAL_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            {form.serviceInterval === 'CUSTOM' && (
+          <div style={sectionCardStyle}>
+            <SectionLabel icon={CalendarClock}>Service schedule</SectionLabel>
+            <div style={fieldRowStyle}>
               <div className="form-group">
-                <label className="form-label">Days between visits *</label>
-                <input type="number" min="1" className="form-input" placeholder="45" value={form.serviceIntervalDays} onChange={e => set({ serviceIntervalDays: e.target.value })} />
+                <label className="form-label">Service type</label>
+                <input className="form-input" placeholder="e.g. AC Full Service" value={form.serviceType} onChange={e => set({ serviceType: e.target.value })} />
               </div>
-            )}
-            <div className="form-group">
-              <label className="form-label">Visits included</label>
-              <input type="number" min="1" className="form-input" placeholder="Leave empty for unlimited" value={form.visitsIncluded} onChange={e => set({ visitsIncluded: e.target.value })} />
+              <div className="form-group">
+                <label className="form-label">How often</label>
+                <select className="form-input" value={form.serviceInterval} onChange={e => set({ serviceInterval: e.target.value })}>
+                  <option value="">Not scheduled</option>
+                  {Object.entries(INTERVAL_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+              {form.serviceInterval === 'CUSTOM' && (
+                <div className="form-group">
+                  <label className="form-label">Days between visits *</label>
+                  <input type="number" min="1" className="form-input" placeholder="45" value={form.serviceIntervalDays} onChange={e => set({ serviceIntervalDays: e.target.value })} />
+                </div>
+              )}
+              <div className="form-group">
+                <label className="form-label">Visits included</label>
+                <input type="number" min="1" className="form-input" placeholder="Leave empty for unlimited" value={form.visitsIncluded} onChange={e => set({ visitsIncluded: e.target.value })} />
+              </div>
             </div>
           </div>
 
           {/* ── Automation ── */}
-          <SectionLabel>Automation</SectionLabel>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--t2)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={form.autoCreateJobs} onChange={e => set({ autoCreateJobs: e.target.checked })} />
-            Create service jobs automatically when a visit comes due
-          </label>
-          {form.autoCreateJobs && (
-            <div className="form-group" style={{ maxWidth: 220 }}>
-              <label className="form-label">Create job this many days ahead</label>
-              <input type="number" min="0" className="form-input" value={form.leadDays} onChange={e => set({ leadDays: e.target.value })} />
+          <div style={sectionCardStyle}>
+            <SectionLabel icon={Settings2}>Automation</SectionLabel>
+            <div style={fieldRowStyle}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--t2)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.autoCreateJobs} onChange={e => set({ autoCreateJobs: e.target.checked })} />
+                  Create service jobs automatically when a visit comes due
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--t2)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.autoRenew} onChange={e => set({ autoRenew: e.target.checked })} />
+                  Auto-renew when the agreement ends
+                </label>
+              </div>
+              {form.autoCreateJobs && (
+                <div className="form-group">
+                  <label className="form-label">Create job this many days ahead</label>
+                  <input type="number" min="0" className="form-input" value={form.leadDays} onChange={e => set({ leadDays: e.target.value })} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {templates.length > 1 && (
+            <div style={sectionCardStyle}>
+              <SectionLabel icon={FileSignature}>Document</SectionLabel>
+              <div className="form-group">
+                <label className="form-label">Template</label>
+                <select className="form-input" value={form.templateId} onChange={e => set({ templateId: e.target.value })}>
+                  <option value="">Use default</option>
+                  {templates.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}{t.isDefault ? ' (default)' : ''}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--t2)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={form.autoRenew} onChange={e => set({ autoRenew: e.target.checked })} />
-            Auto-renew when the agreement ends
-          </label>
         </div>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '12px 20px', borderTop: '1px solid var(--bd)', flexShrink: 0 }}>

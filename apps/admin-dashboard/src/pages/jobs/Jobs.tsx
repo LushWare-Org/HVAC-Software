@@ -4,11 +4,16 @@ import {
   Wrench, Clock, CheckCircle, FileText, Search, AlertTriangle,
   Maximize2, Minimize2, Edit2,
   ChevronLeft, ChevronRight, RefreshCw, AlertCircle,
-  Zap, CalendarDays, Shield, Trash2, Sparkles, X,
+  Zap, CalendarDays, Shield, Trash2, FolderKanban,Sparkles, X,
 } from "lucide-react";
 import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
+import { useTechnicians } from "../../hooks/useScheduling";
+import { useProjectsFull } from "../projects/projectsApi";
+import { useHouse } from "../projects/housesApi";
 import type { Job } from "../../types/api";
+import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
+import Avatar from "../../components/Avatar";
 
 const STATUS: Record<string, { label: string; css: string }> = {
   PENDING:     { label: "Pending",     css: "badge-amber" },
@@ -54,6 +59,16 @@ function Skeleton({ h = 14 }: { h?: number }) {
   return <div style={{ width: "100%", height: h, background: "var(--bg-hover)", borderRadius: 4 }} />;
 }
 
+function TechAvatar({ name, avatarUrl }: { name?: string | null; avatarUrl?: string | null }) {
+  if (!name) return <span className="text-sm text-4">Unassigned</span>;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+      <Avatar name={name} avatarUrl={avatarUrl} size={24} radius={7} fontSize={9} />
+      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--t2)" }}>{name}</span>
+    </div>
+  );
+}
+
 function SortArrow() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ display: "inline-block", marginLeft: 3, verticalAlign: "middle" }}>
@@ -62,9 +77,25 @@ function SortArrow() {
   );
 }
 
-function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
+/** Resolves the house label lazily (per-row, cheap — only fires when the job has a houseId). */
+function JobProjectCell({ job, projectNameById }: { job: Job; projectNameById: Map<string, string> }) {
+  const { data: house } = useHouse(job.houseId);
+  if (!job.projectId) return <span className="text-xs text-4">—</span>;
+  const projectName = projectNameById.get(job.projectId) ?? "Project";
+  return (
+    <div className="flex items-center gap-1.5" style={{ fontSize: 12, color: "var(--t2)" }}>
+      <FolderKanban size={11} style={{ color: "var(--blue)", flexShrink: 0 }} />
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
+        {projectName}{house ? ` — ${house.label}` : ""}
+      </span>
+    </div>
+  );
+}
+
+function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId, projectNameById }: {
   jobs: Job[]; loading: boolean; onView: (j: Job) => void; onDelete: (j: Job) => void;
-  sortMode?: 'priority' | 'date';
+  sortMode?: 'priority' | 'date'; avatarByUserId: Record<string, string | undefined>;
+  projectNameById: Map<string, string>;
 }) {
   return (
     <table className="data-table">
@@ -73,6 +104,7 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
           <th>Job ID</th>
           <th>Customer</th>
           <th>Service</th>
+          <th>Project / House</th>
           <th>Technician</th>
           <th style={sortMode === 'date' ? { color: "var(--blue)", fontWeight: 700 } : undefined}>
             Scheduled {sortMode === 'date' && <SortArrow />}
@@ -87,10 +119,10 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
       </thead>
       <tbody>
         {loading && Array.from({ length: 5 }).map((_, i) => (
-          <tr key={i}>{Array.from({ length: 9 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
+          <tr key={i}>{Array.from({ length: 10 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
         ))}
         {!loading && jobs.length === 0 && (
-          <tr><td colSpan={9}>
+          <tr><td colSpan={10}>
             <div className="empty-state">
               <div className="empty-icon"><Wrench size={22} /></div>
               <div className="empty-title">No jobs found</div>
@@ -126,7 +158,8 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
                   <div className="text-xs text-4 mt-0.5 truncate" style={{ maxWidth: 160 }}>{j.description}</div>
                 )}
               </td>
-              <td>{j.assignedToName ?? "—"}</td>
+              <td><JobProjectCell job={j} projectNameById={projectNameById} /></td>
+              <td><TechAvatar name={j.assignedToName} avatarUrl={j.assignedToId ? avatarByUserId[j.assignedToId] : undefined} /></td>
               <td>
                 {j.scheduledStart ? (
                   <>
@@ -144,7 +177,7 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode }: {
                   {(j.priority ?? "NORMAL").toLowerCase()}
                 </span>
               </td>
-              <td className="text-center"><span className={`badge ${s.css}`}>{s.label}</span></td>
+              <td className="text-center"><span className={`badge ${s.css}`}>{s.label}</span>{j.rescheduleState && <div style={{ marginTop: 3 }}><RescheduleBadge state={j.rescheduleState} size="sm" /></div>}</td>
               <td className="text-right td-primary font-600">${Number(amount).toLocaleString()}</td>
               <td className="sticky-actions">
                 <div className="flex items-center gap-0.5 justify-center">
@@ -178,6 +211,7 @@ export default function Jobs() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterAgreement, setFilterAgreement] = useState(false);
+  const [filterProjectId, setFilterProjectId] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [pastPage, setPastPage] = useState(1);
   const [pastStatusFilter, setPastStatusFilter] = useState("all");
@@ -212,9 +246,27 @@ export default function Jobs() {
   const statsQuery = useJobStats();
   const jobsQuery = useJobs({ limit: 200, search: search || undefined });
   const deleteJob = useDeleteJob();
+  const techniciansQuery = useTechnicians();
+  const { projects: allProjects } = useProjectsFull();
+  const projectNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of allProjects) map.set(p.id, p.name);
+    return map;
+  }, [allProjects]);
+  // Only projects that actually have a job here get listed — avoids a giant
+  // dropdown of every project in the company when most have no jobs yet.
+  const projectsWithJobs = useMemo(() => {
+    const ids = new Set((jobsQuery.data?.data ?? []).map(j => j.projectId).filter(Boolean) as string[]);
+    return [...ids].map(id => ({ id, name: projectNameById.get(id) ?? 'Project' })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [jobsQuery.data, projectNameById]);
 
   const stats = statsQuery.data;
   const allJobs: Job[] = jobsQuery.data?.data ?? [];
+  const avatarByUserId = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const t of techniciansQuery.data ?? []) if (t.userId) map[t.userId] = t.avatarUrl;
+    return map;
+  }, [techniciansQuery.data]);
 
   const { activeJobs, pastJobs, activeStatusCounts, activePriorityCounts } = useMemo(() => {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -259,6 +311,7 @@ export default function Jobs() {
         return t >= now.getTime() && t < windowEnd.getTime();
       });
     }
+    if (filterProjectId) filtered = filtered.filter(j => j.projectId === filterProjectId);
 
     const active = [...filtered].sort((a, b) => {
       if (sortMode === 'date') {
@@ -287,7 +340,9 @@ export default function Jobs() {
     });
 
     return { activeJobs: active, pastJobs: past, activeStatusCounts: statusCounts, activePriorityCounts: priorityCounts };
-  }, [allJobs, filterStatus, filterPriority, filterAgreement, sortMode, utilizationFilterActive, forecastDays]);
+
+  }, [allJobs, filterStatus, filterPriority, filterAgreement, sortMode, utilizationFilterActive, filterProjectId, forecastDays]);
+
 
   const filteredPastJobs = pastStatusFilter === "all"
     ? pastJobs
@@ -331,38 +386,38 @@ export default function Jobs() {
             { icon: FileText, v: stats ? stats.invoiced.toString() : "—", l: "Awaiting Invoice", loading: statsQuery.isLoading, onClick: () => navigate('/finance') },
             { icon: Clock, v: "—", l: "Avg Job Duration", loading: false, onClick: undefined },
           ].map((k) => (
-            <div key={k.l} className="kpi-card" style={{ padding: "16px 20px", borderRadius: "var(--r-md)", cursor: k.onClick ? "pointer" : "default" }} onClick={k.onClick}>
-              <div className="kpi-card-top" style={{ marginBottom: 12, alignItems: "center", justifyContent: "space-between" }}>
-                <div className="kpi-label" style={{ fontSize: 13, color: "var(--t3)", fontWeight: 500, margin: 0 }}>{k.l}</div>
-                <k.icon size={16} strokeWidth={1.5} color="var(--t3)" />
+            <div key={k.l} className="kpi-card" style={{ padding: "14px 16px", borderRadius: "var(--r-lg)", cursor: k.onClick ? "pointer" : "default" }} onClick={k.onClick}>
+              <div className="kpi-card-top" style={{ marginBottom: 10, alignItems: "center", justifyContent: "space-between" }}>
+                <div className="kpi-label" style={{ fontSize: 11.5, color: "var(--t3)", fontWeight: 500, margin: 0 }}>{k.l}</div>
+                <k.icon size={15} strokeWidth={1.7} color="var(--t4)" />
               </div>
-              {k.loading ? <Skeleton h={28} /> : <div className="kpi-value" style={{ fontSize: 26, fontWeight: 700, color: "var(--t1)" }}>{k.v}</div>}
+              {k.loading ? <Skeleton h={26} /> : <div className="kpi-value" style={{ fontSize: 24, fontWeight: 700, color: "var(--t1)" }}>{k.v}</div>}
             </div>
           ))}
         </div>
       )}
 
       {!isExpanded && (
-        <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--t3)', fontWeight: 500 }}>Forecast window:</span>
-            {[7, 14, 30].map(d => (
-              <button
-                key={d}
-                onClick={() => setForecastDays(d)}
-                style={{
-                  padding: '3px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)',
-                  background: forecastDays === d ? 'var(--blue)' : 'var(--bg-card)',
-                  color: forecastDays === d ? '#fff' : 'var(--t2)',
-                }}
-              >{d}d</button>
-            ))}
-          </div>
-          <RecommendationsPanel
-            filterActions={['discount_20', 'same_day_offer', 'increase_price']}
-            forecastDays={forecastDays}
-          />
-        </>
+        <RecommendationsPanel
+          filterActions={['discount_20', 'same_day_offer', 'increase_price']}
+          forecastDays={forecastDays}
+          headerExtra={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 11, color: 'var(--t3)', fontWeight: 500 }}>Forecast:</span>
+              {[7, 14, 30].map(d => (
+                <button
+                  key={d}
+                  onClick={() => setForecastDays(d)}
+                  style={{
+                    padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid var(--border)',
+                    background: forecastDays === d ? 'var(--blue)' : 'var(--bg-card)',
+                    color: forecastDays === d ? '#fff' : 'var(--t2)',
+                  }}
+                >{d}d</button>
+              ))}
+            </div>
+          }
+        />
       )}
 
       {/* AI recommendation deep-link banner */}
@@ -446,13 +501,28 @@ export default function Jobs() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div className="filter-search" style={{ maxWidth: 320 }}>
-              <Search size={13} color="var(--t4)" />
-              <input
-                placeholder="Search jobs, customers, services…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <div className="filter-search" style={{ maxWidth: 320 }}>
+                <Search size={13} color="var(--t4)" />
+                <input
+                  placeholder="Search jobs, customers, services…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              {projectsWithJobs.length > 0 && (
+                <select
+                  className="select"
+                  style={{ maxWidth: 220, fontSize: 12.5 }}
+                  value={filterProjectId}
+                  onChange={e => setFilterProjectId(e.target.value)}
+                >
+                  <option value="">All projects</option>
+                  {projectsWithJobs.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
             {/* Status chips */}
             <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
@@ -541,7 +611,7 @@ export default function Jobs() {
 
         <div className="card-body-flush">
           <div className="table-container jobs-table-container">
-            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} />
+            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} avatarByUserId={avatarByUserId} projectNameById={projectNameById} />
           </div>
         </div>
       </div>
@@ -610,7 +680,7 @@ export default function Jobs() {
             </div>
           ) : (
             <div className="table-container jobs-table-container">
-              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} />
+              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} avatarByUserId={avatarByUserId} projectNameById={projectNameById} />
             </div>
           )}
         </div>

@@ -194,8 +194,8 @@ export default function QuoteDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl max-w-3xl w-full flex flex-col shadow-2xl admin-modal-box"
-        style={{ height: 680 }}
+        className="bg-white rounded-xl max-w-5xl w-full flex flex-col shadow-2xl admin-modal-box"
+        style={{ height: '88vh', maxHeight: 860 }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -378,6 +378,25 @@ export default function QuoteDetailModal({
                     className={`${!isEditMode ? inputView : inputEdit} resize-none`}
                   />
                 </div>
+                {q!.invoices && q!.invoices.length > 0 && (
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Converted To Invoice
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, background: 'var(--bg-card-2, #f8fafc)', border: '1px solid var(--bd, #e2e8f0)' }}>
+                      <FileText size={14} style={{ color: 'var(--blue, #3b82f6)', flexShrink: 0 }} />
+                      <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--t1, #1e293b)', fontFamily: 'ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {q!.invoices[0].invoiceNumber}
+                      </span>
+                      <button
+                        onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('open-invoice-detail', { detail: { id: q!.invoices![0].id, invoiceNumber: q!.invoices![0].invoiceNumber } })); }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: 'var(--blue, #3b82f6)', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      >
+                        <ExternalLink size={10} /> View Invoice →
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {q!.jobId && (
                   <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">

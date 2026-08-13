@@ -11,10 +11,12 @@ import {
 import { ProjectsService } from './projects.service';
 
 class CreateProjectDto {
-  @IsString() customerId!: string;
+  @IsOptional() @IsString() customerId?: string;
   @IsString() @MaxLength(160) name!: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsString() @MaxLength(60) category?: string;
+  // Immutable after creation — omitted entirely from UpdateProjectDto below.
+  @IsOptional() @IsString() templateType?: string;
   @IsOptional() @IsString() status?: string;
   @IsOptional() @IsString() startDate?: string;
   @IsOptional() @IsString() targetEndDate?: string;
@@ -29,6 +31,7 @@ class CreateProjectDto {
 }
 
 class UpdateProjectDto {
+  @IsOptional() @IsString() customerId?: string;
   @IsOptional() @IsString() @MaxLength(160) name?: string;
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsString() @MaxLength(60) category?: string;

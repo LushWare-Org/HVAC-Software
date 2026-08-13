@@ -81,6 +81,7 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
           client.userName = userName;
           client.userRole = userRole;
           client.join(`user:${userId}`);
+          this.joinCompanyRoomIfStaff(client);
           this.logger.log(`[dev] Client ${client.id} connected as ${userName} (${userRole})`);
           return;
         }
@@ -101,6 +102,7 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
 
       // Join a personal room for direct notifications
       client.join(`user:${client.userId}`);
+      this.joinCompanyRoomIfStaff(client);
 
       this.logger.log(`Client ${client.id} authenticated as ${client.userName}`);
     } catch (err: any) {
@@ -176,6 +178,10 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
         unreadCount: updatedThread.unreadCount,
       });
 
+      // Company-wide signal so staff clients NOT in this thread's room
+      // refresh their threads list / unread badge without polling.
+      this.broadcastToCompany(client.companyId, 'threads_changed', { threadId: data.threadId });
+
       return { success: true, message: newMessage };
     } catch (err: any) {
       this.logger.error(`Send message error: ${err.message}`);
@@ -227,5 +233,22 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   broadcastToUser(userId: string, event: string, payload: any) {
     this.server.to(`user:${userId}`).emit(event, payload);
+  }
+
+  /**
+   * Company-wide staff broadcast. Lets the admin threads list + unread badge
+   * update by push instead of tight polling — customers never join this room,
+   * so nothing tenant-internal leaks to portal sockets.
+   */
+  broadcastToCompany(companyId: string, event: string, payload: any) {
+    this.server.to(`company:${companyId}`).emit(event, payload);
+  }
+
+  /** Staff sockets join their company room; customer sockets never do. */
+  private joinCompanyRoomIfStaff(client: AuthSocket) {
+    const role = (client.userRole ?? '').toLowerCase();
+    if (client.companyId && role !== 'customer' && !client.customerId) {
+      client.join(`company:${client.companyId}`);
+    }
   }
 }

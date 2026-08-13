@@ -1,7 +1,8 @@
 import {
   Controller, Get, Post, Patch, Param, Body, Query, UseGuards,
-  ForbiddenException,
+  ForbiddenException, Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
@@ -16,6 +17,8 @@ const SERVICE_INTERVALS = ['MONTHLY', 'BI_MONTHLY', 'QUARTERLY', 'BI_ANNUAL', 'A
 
 class CreateAgreementDto {
   @IsString() customerId!: string;
+  @IsOptional() @IsString() projectId?: string;
+  @IsOptional() @IsString() houseId?: string;
   @IsString() name!: string;
   @IsOptional() @IsString() description?: string;
   @IsDateString() startDate!: string;
@@ -36,6 +39,7 @@ class CreateAgreementDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) leadDays?: number;
   @IsOptional() @IsString() jobTemplateId?: string;
   @IsOptional() @IsBoolean() autoRenew?: boolean;
+  @IsOptional() @IsString() templateId?: string;
 }
 
 class UpdateAgreementDto {
@@ -59,6 +63,7 @@ class UpdateAgreementDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) leadDays?: number;
   @IsOptional() @IsString() jobTemplateId?: string;
   @IsOptional() @IsBoolean() autoRenew?: boolean;
+  @IsOptional() @IsString() templateId?: string;
 }
 
 class ConfirmAgreementDto {
@@ -81,12 +86,16 @@ export class AgreementsController {
     @CurrentUser() user: AuthUser,
     @Query('status') status?: string,
     @Query('customerId') customerId?: string,
+    @Query('projectId') projectId?: string,
+    @Query('houseId') houseId?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
     return this.agreements.findAll(user.companyId, {
       status,
       customerId,
+      projectId,
+      houseId,
       page: page ? parseInt(page, 10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
     });
@@ -105,6 +114,20 @@ export class AgreementsController {
   @ApiOperation({ summary: 'Get one agreement with amendment history' })
   findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.agreements.findOne(user.companyId, id);
+  }
+
+  @Get(':id/pdf')
+  @Roles(...STAFF)
+  @ApiOperation({ summary: 'Download the agreement as PDF (generates + stores it)' })
+  async downloadPdf(@CurrentUser() user: AuthUser, @Param('id') id: string, @Res() res: Response) {
+    const agreement = await this.agreements.findOne(user.companyId, id);
+    const pdf = await this.agreements.generatePdf(user.companyId, id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="agreement-${agreement.name.replace(/[^a-z0-9]+/gi, '-')}.pdf"`,
+      'Content-Length': pdf.length,
+    });
+    res.end(pdf);
   }
 
   @Post()

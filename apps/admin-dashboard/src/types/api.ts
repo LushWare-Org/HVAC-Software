@@ -55,6 +55,10 @@ export interface Customer {
   totalJobs?: number
   totalRevenue?: number
   lastServiceDate?: string
+  // portal account status (merged from CompanyUser via auth0UserId)
+  auth0UserId?: string
+  mustResetPassword?: boolean
+  lastLoginAt?: string
   // nested relations
   addresses?: Address[]
   equipment?: EquipmentRecord[]
@@ -313,12 +317,74 @@ export interface Job {
   agreementId?: string
   isAgreementJob?: boolean
   projectId?: string
+  houseId?: string
+  equipmentId?: string
   cancellationReason?: string
   hasPartShortage?: boolean
   partShortageNote?: string
+  /**
+   * Non-null while a reschedule negotiation is open on this job, saying whose
+   * move it is. Denormalized by job-service so any job list can render a status
+   * badge with no extra query — see RescheduleBadge.
+   */
+  rescheduleState?: RescheduleStateValue | null
   createdAt: string
   updatedAt: string
   statusHistory?: { id: string; fromStatus?: string; toStatus: string; changedById?: string; notes?: string; createdAt: string }[]
+}
+
+// ── Rescheduling ────────────────────────────────────────────────────────────
+
+export type RescheduleStateValue = 'AWAITING_CUSTOMER' | 'AWAITING_ADMIN' | 'READY_TO_APPLY'
+
+export interface RescheduleSlot {
+  id: string
+  startAt: string
+  endAt: string
+  window?: string | null
+}
+
+export interface RescheduleRequest {
+  id: string
+  companyId: string
+  jobId: string
+  openedBy: 'ADMIN' | 'CUSTOMER'
+  openedByName?: string | null
+  mode: 'PROPOSE_SLOTS' | 'OPEN_ASK'
+  reasonCode: string
+  reason?: string | null
+  slots: RescheduleSlot[]
+  status: 'AWAITING_RESPONSE' | 'SLOT_PICKED' | 'DECLINED' | 'SUPERSEDED' | 'APPLIED' | 'CANCELLED'
+  pickedSlotId?: string | null
+  responseNote?: string | null
+  respondedAt?: string | null
+  respondedByName?: string | null
+  appliedAt?: string | null
+  createdAt: string
+}
+
+export interface RescheduleInboxRow {
+  request: RescheduleRequest
+  job: {
+    id: string
+    jobNumber: string
+    title: string
+    customerName?: string | null
+    customerEmail?: string | null
+    scheduledStart?: string | null
+    status: string
+    assignedToName?: string | null
+  }
+  /** No reply in over 5 days — rendered red so it cannot be scrolled past. */
+  isStale: boolean
+}
+
+export interface RescheduleStats {
+  byReason: Record<string, number>
+  byActor: Record<string, number>
+  applied: number
+  declined: number
+  total: number
 }
 
 export interface JobTemplate {
@@ -353,6 +419,18 @@ export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PARTIALLY_PAID' | 'PAID' | 'OVER
 export type QuoteStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'CONVERTED'
 export type ExpenseStatus = 'PENDING' | 'APPROVED' | 'PAID' | 'REJECTED'
 
+export interface Payment {
+  id: string
+  invoiceId: string
+  amount: string        // Prisma Decimal serialised as string
+  paymentMethod: string // CARD | ACH | CASH | CHECK | OTHER
+  status: string        // PENDING | SUCCEEDED | FAILED | REFUNDED
+  receiptNumber?: string
+  paidAt?: string
+  notes?: string
+  createdAt: string
+}
+
 export interface Invoice {
   id: string
   companyId: string
@@ -362,6 +440,10 @@ export interface Invoice {
   customerEmail?: string
   jobId?: string
   jobTitle?: string
+  projectId?: string
+  houseId?: string
+  quoteId?: string
+  quote?: { quoteNumber: string }
   status: InvoiceStatus
   total: string        // Prisma Decimal serialised as string
   balanceDue: string
@@ -370,6 +452,7 @@ export interface Invoice {
   paidAt?: string
   notes?: string
   quickbooksId?: string
+  payments?: Payment[]
   createdAt: string
   updatedAt: string
 }
@@ -384,11 +467,14 @@ export interface Quote {
   customerEmail?: string
   jobId?: string
   jobTitle?: string
+  projectId?: string
+  houseId?: string
   status: QuoteStatus
   total: string        // Prisma Decimal serialised as string
   taxRate?: number
   validUntil?: string
   notes?: string
+  invoices?: { id: string; invoiceNumber: string; status: string }[]
   createdAt: string
   updatedAt: string
 }

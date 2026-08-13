@@ -5,6 +5,7 @@ import { useCreateQuote } from "../../hooks/useFinance";
 import { useCustomers } from "../../hooks/useCustomers";
 import { useJobs } from "../../hooks/useJobs";
 import { useToast } from "../../contexts/ToastContext";
+import { useDocumentTemplates } from "./documentTemplatesApi";
 import { customerName as fmtCustomerName } from "../../types/api";
 import type { Customer, Job } from "../../types/api";
 import { formatMoney } from '../../lib/format'
@@ -31,6 +32,8 @@ interface AddQuoteModalProps {
   presetCustomer?: PresetCustomer | null;
   /** Attaches the quote to a project on create (finance-service accepts an optional projectId). */
   projectId?: string;
+  /** Attaches the quote to a specific house within a Housing Scheme project; projectId is auto-backfilled server-side if omitted. */
+  houseId?: string;
   contextLabel?: string;
   onCreated?: (quote: any) => void;
   onBack?: () => void;
@@ -55,7 +58,7 @@ const CATEGORIES = [
 const inputClass =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none";
 
-export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCustomer, projectId, contextLabel, onCreated, onBack }: AddQuoteModalProps) {
+export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCustomer, projectId, houseId, contextLabel, onCreated, onBack }: AddQuoteModalProps) {
   const { showError, showSuccess, showInfo } = useToast();
   const [error, setError] = useState("");
   const [title, setTitle] = useState("");
@@ -70,9 +73,22 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
   const [taxRate, setTaxRate] = useState("10");
   const [validUntil, setValidUntil] = useState("");
   const [notes, setNotes] = useState("");
+  const [templateId, setTemplateId] = useState("");
+  const templatesQ = useDocumentTemplates('QUOTE');
+  const templates = templatesQ.data ?? [];
   const [lineItems, setLineItems] = useState<LineItem[]>([
     { description: "", category: "LABOUR", quantity: 1, unitPrice: 0 },
   ]);
+
+  // Default the template dropdown to whichever template is marked active, so
+  // it's visibly selected rather than silently falling back server-side.
+  useEffect(() => {
+    if (isOpen && !templateId) {
+      const active = templates.find((t) => t.isDefault);
+      if (active) setTemplateId(active.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, templates.length]);
 
   // Fetch existing customers and jobs for dropdowns
   const customersQuery = useCustomers({ limit: 100, search: customerSearch || undefined });
@@ -148,9 +164,11 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
         customerId,
         jobId: jobId || undefined,
         projectId: projectId || undefined,
+        houseId: houseId || undefined,
         taxRate: (parseFloat(taxRate) || 0) / 100,
         validUntil: validUntil || undefined,
         notes: notes || undefined,
+        templateId: templateId || undefined,
         lineItems: lineItems.filter(li => li.description).map((li, i) => ({
           description: li.description,
           category: li.category,
@@ -166,7 +184,7 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
           showSuccess("Quote created successfully.", "Quote Ready");
           onClose();
           setTitle(""); setCustomerNameVal(""); setCustomerEmail(""); setCustomerId("");
-          setJobId(""); setNotes(""); setValidUntil(""); setJobSearch("");
+          setJobId(""); setNotes(""); setValidUntil(""); setJobSearch(""); setTemplateId("");
           setLineItems([{ description: "", category: "LABOUR", quantity: 1, unitPrice: 0 }]);
         },
         onError: (err: any) => {
@@ -180,7 +198,7 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 admin-modal-backdrop" onClick={onClose}>
-      <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl admin-modal-box" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl admin-modal-box" onClick={e => e.stopPropagation()}>
         <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-5 flex items-center justify-between rounded-t-xl shrink-0">
           <div className="text-white">
             {onBack && (
@@ -371,6 +389,18 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
             <label className="block text-xs font-semibold text-gray-400 uppercase">Notes</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Additional notes…" className={`${inputClass} resize-none`} />
           </div>
+
+          {templates.length > 1 && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-400 uppercase">Template</label>
+              <select value={templateId} onChange={e => setTemplateId(e.target.value)} className={inputClass}>
+                {!templates.some((t) => t.isDefault) && <option value="">Use default</option>}
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}{t.isDefault ? ' (active)' : ''}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 rounded-b-xl flex justify-end gap-3 shrink-0">

@@ -32,6 +32,8 @@ export interface Agreement {
   name: string
   description?: string | null
   status: AgreementStatus
+  projectId?: string | null
+  houseId?: string | null
   startDate: string
   endDate?: string | null
   value?: string | number | null
@@ -52,6 +54,7 @@ export interface Agreement {
   signedAt?: string | null
   signedByName?: string | null
   renewedFromId?: string | null
+  templateId?: string | null
   createdAt: string
   updatedAt: string
   amendments?: AgreementAmendment[]
@@ -59,6 +62,8 @@ export interface Agreement {
 
 export interface AgreementInput {
   customerId?: string
+  projectId?: string
+  houseId?: string
   name?: string
   description?: string
   startDate?: string
@@ -75,26 +80,52 @@ export interface AgreementInput {
   autoCreateJobs?: boolean
   leadDays?: number
   autoRenew?: boolean
+  templateId?: string
 }
 
-const invalidate = () => queryClient.invalidateQueries({ queryKey: ['service-agreements'] })
+// Agreements render in three namespaces: the Agreements page
+// ('service-agreements'), the customer sidebar's agreements tab
+// ('agreements'), and the customer status-summary ('customers' prefix,
+// which counts active agreements). Refresh all of them on any write.
+const invalidate = () => {
+  queryClient.invalidateQueries({ queryKey: ['service-agreements'] })
+  queryClient.invalidateQueries({ queryKey: ['agreements'] })
+  queryClient.invalidateQueries({ queryKey: ['customers'] })
+}
 
-export function useServiceAgreements(filters: { status?: string; customerId?: string; page?: number; limit?: number } = {}) {
+type AgreementFilters = { status?: string; customerId?: string; projectId?: string; houseId?: string; page?: number; limit?: number }
+
+async function fetchAgreements(filters: AgreementFilters) {
+  const params: Record<string, unknown> = {
+    page: filters.page ?? 1,
+    limit: filters.limit ?? 50,
+  }
+  if (filters.status && filters.status !== 'ALL') params.status = filters.status
+  if (filters.customerId) params.customerId = filters.customerId
+  if (filters.projectId) params.projectId = filters.projectId
+  if (filters.houseId) params.houseId = filters.houseId
+  const res = await api.get('/crm/agreements', { params })
+  const raw = res.data
+  if (raw.meta) return { data: raw.data, ...raw.meta }
+  return raw
+}
+
+export function useServiceAgreements(filters: AgreementFilters = {}) {
   return useQuery<{ data: Agreement[]; total: number; page: number; limit: number; totalPages: number }>({
     queryKey: ['service-agreements', filters],
-    queryFn: async () => {
-      const params: Record<string, unknown> = {
-        page: filters.page ?? 1,
-        limit: filters.limit ?? 50,
-      }
-      if (filters.status && filters.status !== 'ALL') params.status = filters.status
-      if (filters.customerId) params.customerId = filters.customerId
-      const res = await api.get('/crm/agreements', { params })
-      const raw = res.data
-      if (raw.meta) return { data: raw.data, ...raw.meta }
-      return raw
-    },
+    queryFn: () => fetchAgreements(filters),
   })
+}
+
+/**
+ * Warm both queries Agreements.tsx mounts with: the ALL-status list and the
+ * unfiltered list (used for the stat strip). Same endpoint response, two keys.
+ */
+export function prefetchAgreementsPage(): Promise<unknown> {
+  return Promise.allSettled([
+    queryClient.prefetchQuery({ queryKey: ['service-agreements', { status: 'ALL', limit: 100 }], queryFn: () => fetchAgreements({ status: 'ALL', limit: 100 }) }),
+    queryClient.prefetchQuery({ queryKey: ['service-agreements', { limit: 100 }], queryFn: () => fetchAgreements({ limit: 100 }) }),
+  ])
 }
 
 export function useServiceAgreement(id?: string | null) {
@@ -102,6 +133,14 @@ export function useServiceAgreement(id?: string | null) {
     queryKey: ['service-agreements', 'detail', id],
     queryFn: async () => (await api.get(`/crm/agreements/${id}`)).data,
     enabled: !!id,
+  })
+}
+
+/** Warm one agreement's detail — called on row hover so the drawer opens instantly. */
+export function prefetchAgreementDetail(id: string): Promise<unknown> {
+  return queryClient.prefetchQuery({
+    queryKey: ['service-agreements', 'detail', id],
+    queryFn: async () => (await api.get(`/crm/agreements/${id}`)).data,
   })
 }
 
@@ -138,5 +177,14 @@ export function useCancelAgreement() {
   return useMutation({
     mutationFn: async (id: string) => (await api.post(`/crm/agreements/${id}/cancel`)).data,
     onSuccess: invalidate,
+  })
+}
+
+export function useDownloadAgreementPdf() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.get(`/crm/agreements/${id}/pdf`, { responseType: 'blob' })
+      return res.data as Blob
+    },
   })
 }

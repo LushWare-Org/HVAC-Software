@@ -37,7 +37,7 @@ export class CompanySettingsClient {
       this.logger.warn(
         `settings fetch failed for ${companyId}, using defaults: ${(err as Error).message}`,
       );
-      return { id: companyId, name: '', logoUrl: null, ...DEFAULT_COMPANY_SETTINGS };
+      return { id: companyId, name: '', address: null, logoUrl: null, ...DEFAULT_COMPANY_SETTINGS };
     }
   }
 

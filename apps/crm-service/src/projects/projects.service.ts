@@ -14,6 +14,8 @@ import { clampPagination } from '@tscrm/types';
 import {
   effectiveRoster, toDateStr, isValidDateStr, WEEKDAYS,
 } from './roster.util';
+import { isValidTemplateType, PROJECT_TEMPLATES } from './project-templates';
+import { EmailService, renderEmailCard, emailInfoBox } from '../email/email.service';
 
 const PROJECT_STATUSES = ['PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'CANCELLED'];
 
@@ -23,6 +25,7 @@ export interface UpsertProjectInput {
   description?: string | null;
   category?: string | null;
   status?: string;
+  templateType?: string;
   startDate?: string | null;
   targetEndDate?: string | null;
   budget?: number | null;
@@ -37,7 +40,10 @@ export interface UpsertProjectInput {
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly email: EmailService,
+  ) {}
 
   // ── CRUD ──────────────────────────────────────────────────────────────────
 
@@ -75,31 +81,42 @@ export class ProjectsService {
       where: { companyId, projectId: id },
       select: {
         id: true, name: true, serviceType: true, serviceInterval: true,
-        nextServiceDate: true, status: true,
+        nextServiceDate: true, status: true, houseId: true,
       },
     });
-    return { ...decorated, agreements };
+    // Housing Scheme: rolled-up open-issue count across all houses (Houses tab badge).
+    const openIssueCount = project.templateType === 'HOUSING_SCHEME'
+      ? await this.prisma.houseIssueReport.count({
+          where: { companyId, status: { not: 'RESOLVED' }, house: { projectId: id } },
+        })
+      : 0;
+    return { ...decorated, agreements, openIssueCount };
   }
 
   async create(companyId: string, input: UpsertProjectInput) {
-    if (!input.customerId) throw new BadRequestException('customerId is required');
     if (!input.name?.trim()) throw new BadRequestException('name is required');
     this.validateStatus(input.status);
     this.validateWorkingDays(input.workingDays);
+    if (input.templateType !== undefined && !isValidTemplateType(input.templateType)) {
+      throw new BadRequestException(`templateType must be one of ${PROJECT_TEMPLATES.join(', ')}`);
+    }
 
-    const customer = await this.prisma.customer.findFirst({
-      where: { id: input.customerId, companyId },
-      select: { id: true },
-    });
-    if (!customer) throw new BadRequestException('Customer not found in this company');
+    if (input.customerId) {
+      const customer = await this.prisma.customer.findFirst({
+        where: { id: input.customerId, companyId },
+        select: { id: true },
+      });
+      if (!customer) throw new BadRequestException('Customer not found in this company');
+    }
 
-    return this.prisma.project.create({
+    const project = await this.prisma.project.create({
       data: {
         companyId,
-        customerId: input.customerId,
+        customerId: input.customerId ?? null,
         name: input.name.trim(),
         description: input.description ?? null,
         category: input.category ?? null,
+        templateType: input.templateType ?? 'STANDARD',
         status: input.status ?? 'PLANNING',
         startDate: input.startDate ? new Date(input.startDate) : null,
         targetEndDate: input.targetEndDate ? new Date(input.targetEndDate) : null,
@@ -113,16 +130,31 @@ export class ProjectsService {
         notes: input.notes ?? null,
       },
     });
+
+    if (project.customerId) {
+      void this.notifyCustomerAddedToProject(companyId, project.customerId, project.name);
+    }
+
+    return project;
   }
 
   async update(companyId: string, id: string, input: UpsertProjectInput) {
-    await this.assertExists(companyId, id);
+    const existing = await this.prisma.project.findFirst({ where: { id, companyId } });
+    if (!existing) throw new NotFoundException('Project not found');
     this.validateStatus(input.status);
     this.validateWorkingDays(input.workingDays);
 
+    if (input.customerId) {
+      const customer = await this.prisma.customer.findFirst({
+        where: { id: input.customerId, companyId },
+        select: { id: true },
+      });
+      if (!customer) throw new BadRequestException('Customer not found in this company');
+    }
+
     const data: any = {};
     for (const key of [
-      'name', 'description', 'category', 'status', 'budget', 'requiredHeadcount',
+      'customerId', 'name', 'description', 'category', 'status', 'budget', 'requiredHeadcount',
       'siteAddress', 'latitude', 'longitude', 'workingDays', 'baseTeamUserIds', 'notes',
     ] as const) {
       if (input[key] !== undefined) data[key] = input[key];
@@ -131,7 +163,15 @@ export class ProjectsService {
     if (input.targetEndDate !== undefined) data.targetEndDate = input.targetEndDate ? new Date(input.targetEndDate) : null;
     if (typeof data.name === 'string') data.name = data.name.trim();
 
-    return this.prisma.project.update({ where: { id }, data });
+    const updated = await this.prisma.project.update({ where: { id }, data });
+
+    // Only notify when a customer is newly attached or swapped — not on every
+    // unrelated field edit, and not when re-saving the same customerId.
+    if (updated.customerId && updated.customerId !== existing.customerId) {
+      void this.notifyCustomerAddedToProject(companyId, updated.customerId, updated.name);
+    }
+
+    return updated;
   }
 
   /** Soft delete → CANCELLED (frees all rosters via the status gate). */
@@ -279,6 +319,49 @@ export class ProjectsService {
     return { success: true };
   }
 
+  // ── Notifications ─────────────────────────────────────────────────────────
+
+  /** Best-effort email — a notification failure must never block project save. */
+  private async notifyCustomerAddedToProject(companyId: string, customerId: string, projectName: string): Promise<void> {
+    try {
+      const [customer, company] = await Promise.all([
+        this.prisma.customer.findFirst({ where: { id: customerId, companyId }, select: { firstName: true, email: true } }),
+        this.prisma.company.findFirst({ where: { id: companyId }, select: { name: true } }),
+      ]);
+      if (!customer?.email) return;
+
+      const companyName = company?.name || 'HVACtor.ai';
+      const portalUrl = process.env.CUSTOMER_PORTAL_URL ?? 'http://localhost:5174';
+      const body = `
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi <strong>${customer.firstName}</strong>,</p>
+        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
+          You've been added to a new project with ${companyName}. You can track its progress, jobs, and billing from your customer portal.
+        </p>
+        ${emailInfoBox({ accent: 'blue', label: 'Project', html: `<p style="margin:0;font-size:16px;font-weight:700;color:#111827;">${projectName}</p>` })}
+        <p style="margin:0;font-size:13.5px;line-height:1.7;color:#4B5563;">
+          Visit your portal any time at <a href="${portalUrl}" style="color:#2563EB;font-weight:600;">${portalUrl}</a>.
+        </p>
+      `;
+      const html = renderEmailCard({
+        accent: 'blue',
+        eyebrow: 'Project update',
+        title: "You've been added to a project",
+        subtitle: projectName,
+        bodyHtml: body,
+        companyName,
+      });
+
+      await this.email.sendMail({
+        to: customer.email,
+        subject: `You've been added to "${projectName}" — ${companyName}`,
+        html,
+        companyName,
+      });
+    } catch {
+      // Never let a notification failure affect the project write path.
+    }
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   private async assertExists(companyId: string, id: string) {
@@ -302,12 +385,14 @@ export class ProjectsService {
   /** Attach customerName so lists render without extra round-trips. */
   private async decorate(companyId: string, projects: any[]) {
     if (projects.length === 0) return [];
-    const customerIds = [...new Set(projects.map((p) => p.customerId))];
-    const customers = await this.prisma.customer.findMany({
-      where: { companyId, id: { in: customerIds } },
-      select: { id: true, firstName: true, lastName: true },
-    });
+    const customerIds = [...new Set(projects.map((p) => p.customerId).filter(Boolean))] as string[];
+    const customers = customerIds.length
+      ? await this.prisma.customer.findMany({
+          where: { companyId, id: { in: customerIds } },
+          select: { id: true, firstName: true, lastName: true },
+        })
+      : [];
     const names = new Map(customers.map((c) => [c.id, `${c.firstName} ${c.lastName}`.trim()]));
-    return projects.map((p) => ({ ...p, customerName: names.get(p.customerId) ?? '—' }));
+    return projects.map((p) => ({ ...p, customerName: p.customerId ? (names.get(p.customerId) ?? '—') : null }));
   }
 }

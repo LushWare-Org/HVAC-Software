@@ -1,0 +1,12 @@
+<div class="totals-wrap">
+  <div class="totals-card">
+    <table>
+      <tbody>
+        <tr><td class="label">Subtotal</td><td class="value">{{subtotalFmt}}</td></tr>
+        {{#if hasDiscount}}<tr class="discount-row"><td class="label">Discount {{discountLabel}}</td><td class="value">−{{discountAmountFmt}}</td></tr>{{/if}}
+        <tr><td class="label">Tax ({{taxRatePct}}%)</td><td class="value">{{taxAmountFmt}}</td></tr>
+        <tr class="grand-total-row"><td>Quoted total</td><td class="value">{{totalFmt}}</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

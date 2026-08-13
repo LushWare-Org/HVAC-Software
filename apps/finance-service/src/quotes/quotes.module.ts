@@ -4,9 +4,11 @@ import { QuotesService } from './quotes.service';
 import { PdfModule } from '../pdf/pdf.module';
 import { NotificationClientModule } from '../notification-client/notification-client.module';
 import { CompanySettingsModule } from '../company-settings/company-settings.module';
+import { DocumentTemplatesModule } from '../document-templates/document-templates.module';
+import { CrmModule } from '../crm/crm.module';
 
 @Module({
-  imports: [PdfModule, NotificationClientModule, CompanySettingsModule],
+  imports: [PdfModule, NotificationClientModule, CompanySettingsModule, DocumentTemplatesModule, CrmModule],
   controllers: [QuotesController],
   providers: [QuotesService],
   exports: [QuotesService],

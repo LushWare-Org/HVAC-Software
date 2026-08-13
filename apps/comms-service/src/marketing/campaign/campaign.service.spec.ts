@@ -31,7 +31,7 @@ function makeService(template = SMS_TEMPLATE, members = MEMBERS) {
   const templates = { get: jest.fn().mockResolvedValue(template) };
   const queue = { add: jest.fn().mockResolvedValue({}) };
 
-  const svc = new CampaignService(db as any, audiences as any, templates as any, queue as any);
+  const svc = new CampaignService(db as any, audiences as any, templates as any, { getSettings: async () => ({ name: "HVACtor.ai" }) } as any, queue as any);
   return { svc, db, audiences, templates, queue };
 }
 
@@ -78,7 +78,7 @@ describe('CampaignService', () => {
     templates.get.mockResolvedValue(EMAIL_TEMPLATE);
     audiences.resolveMembers.mockResolvedValue([MEMBERS[0]]);
 
-    const svc = new CampaignService(db as any, audiences as any, templates as any, queue as any);
+    const svc = new CampaignService(db as any, audiences as any, templates as any, { getSettings: async () => ({ name: "HVACtor.ai" }) } as any, queue as any);
     await svc.launch('co-1', 'camp-2');
 
     const payload = (queue.add as jest.Mock).mock.calls[0][1];
@@ -104,7 +104,7 @@ describe('CampaignService', () => {
       Promise.resolve({ id: args.where.id, companyId: 'co-1', status: 'SCHEDULED', channel: 'SMS', templateId: 'tmpl-1', audienceId: 'aud-1' })
     );
 
-    const svc = new CampaignService(db as any, audiences as any, templates as any, queue as any);
+    const svc = new CampaignService(db as any, audiences as any, templates as any, { getSettings: async () => ({ name: "HVACtor.ai" }) } as any, queue as any);
     await svc.dispatchScheduledCampaigns();
     expect(queue.add).toHaveBeenCalled();
   });

@@ -14,15 +14,19 @@ import AnnouncementBanner from '../components/AnnouncementBanner'
 import {
   CheckCircle, Clock, DollarSign, FileText, ChevronRight, Calendar,
   AlertCircle, ArrowRight, Star, Lightbulb, Video, Plus, MapPin,
-  MessageSquare, Send, Wrench, Tag, Settings,
+  MessageSquare, Send, Wrench, Tag, Settings, Home,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useCustomerDashboard, useJobTechnicianNames, useCompanyReviewStats } from '../hooks/useCustomerPortal'
+import { useCustomerDashboard, useJobTechnicians, useCompanyReviewStats } from '../hooks/useCustomerPortal'
 import { useMyEquipment } from '../hooks/useMyEquipment'
+import { useMyHouses, useMyIssueReports } from '../hooks/useMyHouse'
 import ReviewModal from '../components/ReviewModal'
 import { useLatestTip, usePosts } from '../hooks/usePosts'
 import type { Job } from '../types/api'
 import { formatMoney } from '../lib/format'
+
+import RescheduleBanner from '../components/reschedule/RescheduleBanner'
+import TechAvatar from '../components/TechAvatar'
 
 const BookServiceModal = lazy(() => import('./jobs/BookServiceModal'))
 
@@ -80,13 +84,10 @@ function fmtTime(iso?: string) {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 }
 
-function initials(name?: string) {
-  if (!name) return '—'
-  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-}
-
 /** Hero card — the active (en-route / on-site) job, else the next appointment. */
-function NextVisitHero({ job, techName, onBook }: { job: Job | null; techName?: string; onBook: () => void }) {
+function NextVisitHero({ job, techName, techAvatarUrl, onBook }: {
+  job: Job | null; techName?: string; techAvatarUrl?: string | null; onBook: () => void
+}) {
   const navigate = useNavigate()
 
   if (!job) {
@@ -169,14 +170,7 @@ function NextVisitHero({ job, techName, onBook }: { job: Job | null; techName?: 
           display: 'flex', alignItems: 'center', gap: 12, marginTop: 16, padding: 12,
           background: 'var(--bg-card-2)', border: '1px solid var(--bd)', borderRadius: 12,
         }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-            background: 'linear-gradient(135deg, var(--cyan), var(--blue))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            font: '700 14px inherit', color: '#fff', fontWeight: 700, fontSize: 14,
-          }}>
-            {initials(techName)}
-          </div>
+          <TechAvatar name={techName} avatarUrl={techAvatarUrl} size={44} fontSize={14} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)' }}>
               {techName || 'Technician to be assigned'}
@@ -246,10 +240,14 @@ export default function Dashboard() {
   const { data: latestTip } = useLatestTip()
   const { data: offers = [] } = usePosts('OFFER')
   const { data: equipment = [] } = useMyEquipment()
+  const { data: myHouses = [] } = useMyHouses()
+  const { data: myIssues = [] } = useMyIssueReports()
+  const myHouse = myHouses[0]
+  const myHouseOpenIssues = myHouse ? myIssues.filter(i => i.houseId === myHouse.id && i.status !== 'RESOLVED').length : 0
 
   const recentJobs = data?.recentJobs ?? []
   const pendingInvoices = data?.pendingInvoiceItems ?? []
-  const technicianNames = useJobTechnicianNames(recentJobs)
+  const technicians = useJobTechnicians(recentJobs)
 
   // Hero: an active (en-route / on-site) job wins; otherwise the next appointment.
   const activeJob = recentJobs.find(j => ['EN_ROUTE', 'ON_SITE', 'IN_PROGRESS'].includes(j.status)) ?? null
@@ -285,6 +283,15 @@ export default function Dashboard() {
       <style>{PULSE_CSS}</style>
 
       <AnnouncementBanner />
+
+      {/* Above the invoice strip on purpose: an unanswered reschedule becomes a
+          missed appointment, which costs more than a late payment. Renders
+          nothing unless the ball is with the customer. */}
+      {(data?.allJobs?.length ?? 0) > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <RescheduleBanner jobs={data!.allJobs} />
+        </div>
+      )}
 
       {/* One consolidated "needs attention" strip — pay first, review later */}
       {pendingInvoices.length > 0 ? (
@@ -368,7 +375,8 @@ export default function Dashboard() {
         ) : (
           <NextVisitHero
             job={heroJob}
-            techName={heroJob ? (technicianNames[heroJob.id] ?? heroJob.assignedToName ?? undefined) : undefined}
+            techName={heroJob ? (technicians[heroJob.id]?.name ?? heroJob.assignedToName ?? undefined) : undefined}
+            techAvatarUrl={heroJob ? technicians[heroJob.id]?.avatarUrl : undefined}
             onBook={() => setShowBook(true)}
           />
         )}
@@ -422,7 +430,7 @@ export default function Dashboard() {
               const s = JOB_STATUS[job.status] || { label: job.status, css: 'badge-neutral' }
               const a = ACTIVITY_ICON[job.status] ?? { icon: Wrench, color: 'var(--t3)', dim: 'var(--bg-card-2)' }
               const AIcon = a.icon
-              const who = technicianNames[job.id] ?? job.assignedToName
+              const who = technicians[job.id]?.name ?? job.assignedToName
               return (
                 <Link key={job.id} to="/jobs" className="dash-row" style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px',
@@ -474,6 +482,37 @@ export default function Dashboard() {
               </div>
             </div>
           </button>
+
+          {/* My House — easy access when this customer owns a house on a Housing Scheme project */}
+          {myHouse && (
+            <Link to="/my-house" style={{
+              textDecoration: 'none', background: 'var(--bg-card)',
+              border: `1px solid ${myHouseOpenIssues > 0 ? 'var(--red)' : 'var(--bd)'}`,
+              borderRadius: 14, overflow: 'hidden', display: 'block',
+            }}>
+              <div style={{ height: 3, background: `linear-gradient(90deg, ${myHouseOpenIssues > 0 ? 'var(--red)' : 'var(--cyan)'}, transparent)` }} />
+              <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                  background: 'linear-gradient(135deg, var(--cyan), var(--blue))',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Home size={16} color="#fff" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {myHouse.label}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: myHouseOpenIssues > 0 ? 'var(--red)' : 'var(--t3)', marginTop: 1, fontWeight: myHouseOpenIssues > 0 ? 700 : 500 }}>
+                    {myHouseOpenIssues > 0
+                      ? `${myHouseOpenIssues} report${myHouseOpenIssues === 1 ? '' : 's'} in progress`
+                      : 'Equipment, service history & reports'}
+                  </div>
+                </div>
+                <ChevronRight size={15} style={{ color: 'var(--t4)', flexShrink: 0 }} />
+              </div>
+            </Link>
+          )}
 
           {/* Latest offer */}
           {latestOffer && (

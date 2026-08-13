@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { NotificationClientService } from '../notification-client/notification-client.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
+import { DocumentTemplateClient } from '../document-templates/document-template.client';
 import { InvoiceStatus, PaymentStatus } from '../prisma/generated';
 
 // ── Mock Stripe ───────────────────────────────────────────────────────────
@@ -84,8 +85,10 @@ const mockPrisma = {
   },
   payment: {
     create: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
   },
-  $transaction: jest.fn((args: any) => {
+  $queryRaw: jest.fn().mockResolvedValue([{ maxNumber: 0 }]),
+  $transaction: jest.fn((args: any, _opts?: any) => {
     if (Array.isArray(args)) return Promise.all(args);
     return args(); // for callback form
   }),
@@ -93,7 +96,11 @@ const mockPrisma = {
 
 // ── Suite ─────────────────────────────────────────────────────────────────
 
-const mockPdfService = { generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')), generateQuotePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')) };
+const mockPdfService = {
+  generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')),
+  generateQuotePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')),
+  generatePaymentReceiptPdf: jest.fn().mockResolvedValue(Buffer.from('pdf')),
+};
 const mockNotificationClient = { sendEmail: jest.fn().mockResolvedValue(undefined), sendSms: jest.fn().mockResolvedValue(undefined) };
 const mockSettingsClient = {
   getSettings: jest.fn().mockResolvedValue({
@@ -101,6 +108,7 @@ const mockSettingsClient = {
     currency: 'USD', timezone: 'America/New_York', features: {},
   }),
 };
+const mockDocumentTemplateClient = { resolve: jest.fn().mockResolvedValue(null) };
 
 describe('InvoicesService', () => {
   let service: InvoicesService;
@@ -119,6 +127,7 @@ describe('InvoicesService', () => {
         { provide: PdfService, useValue: mockPdfService },
         { provide: NotificationClientService, useValue: mockNotificationClient },
         { provide: CompanySettingsClient, useValue: mockSettingsClient },
+        { provide: DocumentTemplateClient, useValue: mockDocumentTemplateClient },
         {
           provide: ConfigService,
           useValue: {
@@ -179,28 +188,53 @@ describe('InvoicesService', () => {
   // ── create ──────────────────────────────────────────────────────────────
 
   describe('create', () => {
-    it('calculates totals correctly and generates invoice number', async () => {
-      mockPrisma.invoice.count.mockResolvedValue(2);
+    const dto = {
+      customerId: 'c', customerName: 'C', customerEmail: 'c@c.com',
+      taxRate: 0.1,
+      lineItems: [
+        { description: 'A', quantity: 3, unitPrice: 50, taxable: true },
+      ],
+    };
+
+    beforeEach(() => {
       mockPrisma.invoice.create.mockImplementation(({ data }: any) =>
         Promise.resolve({ ...data, id: INV_ID }),
       );
+    });
 
-      const dto = {
-        customerId: 'c', customerName: 'C', customerEmail: 'c@c.com',
-        taxRate: 0.1,
-        lineItems: [
-          { description: 'A', quantity: 3, unitPrice: 50, taxable: true },
-        ],
-      };
-
+    it('calculates totals correctly', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([{ maxNumber: 2 }]);
       await service.create(COMPANY_ID, USER_ID, dto);
 
       const callData = mockPrisma.invoice.create.mock.calls[0][0].data;
-      expect(callData.subtotal).toBe(150);       // 3 × 50
+      expect(callData.subtotal).toBe(150);        // 3 × 50
       expect(callData.taxAmount).toBeCloseTo(15); // 150 × 0.10
       expect(callData.total).toBeCloseTo(165);    // 150 + 15
       expect(callData.balanceDue).toBeCloseTo(165);
-      expect(callData.invoiceNumber).toMatch(/INV-\d{4}-0003/);
+    });
+
+    it('numbers the invoice from the highest existing number, not a row count', async () => {
+      // The count-based version broke as soon as an invoice was deleted: 3 rows
+      // with the latest numbered 0009 would produce 0004, colliding with a live
+      // invoice and tripping @@unique([companyId, invoiceNumber]).
+      mockPrisma.$queryRaw.mockResolvedValue([{ maxNumber: 9 }]);
+      await service.create(COMPANY_ID, USER_ID, dto);
+      expect(mockPrisma.invoice.create.mock.calls[0][0].data.invoiceNumber)
+        .toMatch(/^INV-\d{4}-0010$/);
+    });
+
+    it('starts at 0001 for a company with no invoices yet', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([{ maxNumber: 0 }]);
+      await service.create(COMPANY_ID, USER_ID, dto);
+      expect(mockPrisma.invoice.create.mock.calls[0][0].data.invoiceNumber)
+        .toMatch(/^INV-\d{4}-0001$/);
+    });
+
+    it('handles the bigint COUNT/MAX Postgres can return', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([{ maxNumber: BigInt(41) }]);
+      await service.create(COMPANY_ID, USER_ID, dto);
+      expect(mockPrisma.invoice.create.mock.calls[0][0].data.invoiceNumber)
+        .toMatch(/^INV-\d{4}-0042$/);
     });
   });
 

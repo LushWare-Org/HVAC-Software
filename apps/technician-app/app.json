@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "HomePulse Field",
+    "name": "HVACtor.ai Field",
     "slug": "ts-technician",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -48,14 +48,14 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow HomePulse Field to use your location for route tracking and job dispatch.",
+          "locationAlwaysAndWhenInUsePermission": "Allow HVACtor.ai Field to use your location for route tracking and job dispatch.",
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow HomePulse Field to take photos for job documentation."
+          "cameraPermission": "Allow HVACtor.ai Field to take photos for job documentation."
         }
       ],
       [

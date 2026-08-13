@@ -6,7 +6,7 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "../src/prisma/generated"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -137,6 +137,8 @@ model Customer {
   retentionRecommendations RetentionRecommendation[]
   revenueRecommendations   RevenueRecommendation[]
   iotConnections           CustomerIotConnection[]
+  ownedHouses              House[]                   @relation("HouseOwner")
+  issueReports             HouseIssueReport[]
 
   @@index([companyId])
   @@index([companyId, email])
@@ -200,6 +202,7 @@ model Lead {
 
   @@index([companyId])
   @@index([companyId, status])
+  @@index([companyId, createdAt])
   @@index([leadgenId])
   @@map("leads")
 }
@@ -239,6 +242,7 @@ model ServiceAgreement {
   signedAt     DateTime?
   signedByName String?
   documentUrl  String? // S3 key for signed PDF
+  templateId   String? // cross-schema ref to crm.document_templates (same schema — soft ref, no FK)
 
   // Pricing
   billingAmount   Decimal?  @db.Decimal(10, 2) // per-billing-period amount
@@ -260,6 +264,11 @@ model ServiceAgreement {
 
   // Projects link — agreement-generated jobs inherit this
   projectId String?
+  // Housing Scheme: which house this agreement is for. customerId stays whoever
+  // was picked at creation (often the project's own top-level customer, not the
+  // individual house owner) — houseId is the authoritative visibility link, same
+  // pattern as Job.houseId.
+  houseId   String?
 
   // Customer confirmation & renewal
   customerConfirmedAt DateTime?
@@ -276,6 +285,7 @@ model ServiceAgreement {
   @@index([customerId])
   @@index([companyId, status])
   @@index([companyId, nextServiceDate])
+  @@index([houseId])
   @@map("service_agreements")
 }
 
@@ -327,6 +337,7 @@ model Booking {
 
   @@index([companyId])
   @@index([companyId, status])
+  @@index([companyId, preferredDate])
   @@map("bookings")
 }
 
@@ -408,6 +419,12 @@ model Equipment {
   companyId     String
   customerId    String
   customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  // Housing Scheme projects: which house this equipment belongs to. customerId above
+  // stays required and is kept in sync with house.ownerCustomerId (denormalized mirror —
+  // see House model comment) so the existing portal "My Equipment" query (by customerId)
+  // keeps working unmodified.
+  houseId       String?
+  house         House?    @relation(fields: [houseId], references: [id], onDelete: SetNull)
   type          String    @default("Boiler") // Boiler, AC Unit, Heat Pump, etc.
   brand         String?
   model         String?
@@ -419,11 +436,66 @@ model Equipment {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  consumables EquipmentConsumable[]
-  manualUrl   String?               @map("manual_url")
+  consumables  EquipmentConsumable[]
+  issueReports HouseIssueReport[]
+  manualUrl    String?               @map("manual_url")
+
+  imageUrl        String?              @map("image_url")
+  imageScanStatus String               @default("NONE") @map("image_scan_status") // NONE | SCANNING | DONE | FAILED
+  imageScanResult Json?                @map("image_scan_result")
+  imageScanError  String?              @map("image_scan_error")
+  errorCodes      EquipmentErrorCode[]
 
   @@index([customerId])
+  @@index([houseId])
   @@map("equipment")
+}
+
+model EquipmentErrorCode {
+  id          String    @id @default(uuid())
+  companyId   String
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  code        String
+  meaning     String?
+  source      String    @default("MANUAL") // MANUAL | AI_SCAN
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([equipmentId])
+  @@index([companyId])
+  @@map("equipment_error_codes")
+}
+
+model DocumentTemplate {
+  id           String  @id @default(uuid())
+  companyId    String
+  documentType String // INVOICE | QUOTE | AGREEMENT
+  name         String
+  isDefault    Boolean @default(false)
+  mode         String  @default("BUILDER") // BUILDER | LETTERHEAD
+
+  companyName     String? // overrides the tenant's Company.name on this document, when set
+  companyAddress  String? // overrides the tenant's Company.address on this document, when set
+  logoUrl         String?
+  logoPosition    String? @default("LEFT") // LEFT | CENTER | RIGHT
+  accentColor     String?
+  headerText      String?
+  footerText      String?
+  bankDetails     String?
+  showPageNumbers Boolean @default(true)
+  rows            Json? // custom row/block arrangement from the drag-positioned slot layout builder; null = use the document type's default arrangement
+
+  letterheadImageUrl       String?
+  letterheadTopMarginPx    Int?    @default(140)
+  letterheadBottomMarginPx Int?    @default(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, documentType, name])
+  @@index([companyId, documentType])
+  @@map("document_templates")
 }
 
 model EquipmentConsumable {
@@ -735,11 +807,14 @@ model IotDeviceHistory {
 model Project {
   id                String    @id @default(uuid())
   companyId         String
-  customerId        String
+  customerId        String?
   name              String
   description       String?
   category          String? // free text, reporting only
   status            String    @default("PLANNING") // PLANNING | ACTIVE | ON_HOLD | COMPLETED | CANCELLED
+  // Project template — validated against a backend registry (see projects/project-templates.ts),
+  // not a DB enum, so new templates are a code change, not a migration. Immutable after creation.
+  templateType      String    @default("STANDARD") // STANDARD | HOUSING_SCHEME
   startDate         DateTime?
   targetEndDate     DateTime?
   budget            Decimal?  @db.Decimal(12, 2)
@@ -754,6 +829,7 @@ model Project {
   updatedAt         DateTime  @updatedAt
 
   rosterDays ProjectRosterDay[]
+  houses     House[]
 
   @@index([companyId, status])
   @@index([companyId, customerId])
@@ -776,4 +852,54 @@ model ProjectRosterDay {
   @@unique([projectId, date])
   @@index([companyId, date])
   @@map("project_roster_days")
+}
+
+// ─── Housing Scheme template (spec: docs/superpowers/specs/2026-07-13-project-templates-housing-scheme-design.md) ──
+
+// A single unit within a HOUSING_SCHEME project. Can exist before an owner is assigned
+// (builder adds houses up front; owner attached later as units sell/occupy). One current
+// owner at a time — no ownership history in v1.
+model House {
+  id              String    @id @default(uuid())
+  companyId       String
+  projectId       String    @db.Uuid // projects.id is a native uuid column (pre-existing, unlike newer text-id tables)
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label           String // "House 12", "Lot 4B" — free text identifier
+  address         String?
+  ownerCustomerId String?
+  owner           Customer? @relation("HouseOwner", fields: [ownerCustomerId], references: [id], onDelete: SetNull)
+  tags            String[]  @default([])
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  equipment    Equipment[]
+  issueReports HouseIssueReport[]
+
+  @@index([companyId, projectId])
+  @@index([ownerCustomerId])
+  @@map("houses")
+}
+
+// Manual self-report from the customer portal (e.g. a thermostat error code) — NOT
+// linked to the separate real IoT device integration (CustomerIotConnection/CustomerIotDevice).
+model HouseIssueReport {
+  id                   String     @id @default(uuid())
+  companyId            String
+  houseId              String
+  house                House      @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  equipmentId          String? // which piece of equipment (e.g. the thermostat), optional
+  equipment            Equipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  reportedByCustomerId String
+  reportedBy           Customer   @relation(fields: [reportedByCustomerId], references: [id])
+  errorCode            String? // freeform — codes vary by thermostat brand
+  description          String?
+  status               String     @default("OPEN") // OPEN | ACKNOWLEDGED | RESOLVED
+  resolvedNote         String?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  @@index([companyId, status])
+  @@index([houseId])
+  @@map("house_issue_reports")
 }

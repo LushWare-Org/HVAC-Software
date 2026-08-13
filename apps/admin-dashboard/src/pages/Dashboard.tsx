@@ -1,19 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import {
     DollarSign, Briefcase, Users, CheckCircle,
     ArrowRight, Clock, ChevronLeft, ChevronRight, Eye, AlertCircle, RefreshCw
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, PieChart, Pie, Cell
-} from 'recharts'
 import { useDashboardKpis, useRecentJobs, useUpcomingAppointments } from '../hooks/useDashboard'
 import { useRevenueSeries, useJobsByStatus } from '../hooks/useAnalytics'
 import { useCompany } from '../hooks/useSettings'
 import RecommendationsPanel from '../components/RecommendationsPanel'
+import HouseIssuesAlert from '../components/HouseIssuesAlert'
 import type { Job, Appointment } from '../types/api'
 import { formatMoneyCompact } from '../lib/format'
+
+// recharts (~120KB gzip) is kept out of Dashboard's own chunk — Dashboard is
+// the post-login landing page and loads eagerly, so pulling the chart lib in
+// directly would put it on the critical path for every login.
+const RevenueAreaChart = lazy(() => import('../components/DashboardCharts').then(m => ({ default: m.RevenueAreaChart })))
+const JobStatusPieChart = lazy(() => import('../components/DashboardCharts').then(m => ({ default: m.JobStatusPieChart })))
 
 function getGreeting() {
     const h = new Date().getHours()
@@ -47,22 +50,6 @@ const JOB_STATUS_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#6b7280', '#ef4444'
 
 function fmt(n: number) {
     return formatMoneyCompact(n)
-}
-
-// ─── Chart tooltip ────────────────────────────────────────────────────────────
-
-const ChartTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null
-    return (
-        <div style={{ background: 'var(--bg-card-2)', border: '1px solid var(--bd-md)', borderRadius: 8, padding: '10px 14px', boxShadow: 'var(--shadow-md)' }}>
-            <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 6, fontWeight: 600 }}>{label}</div>
-            {payload.map((p: any) => (
-                <div key={p.dataKey} style={{ fontSize: 12, color: p.color, fontWeight: 600, marginBottom: 2 }}>
-                    {p.name}: {p.dataKey === 'revenue' ? formatMoneyCompact(p.value, 0) : p.value}
-                </div>
-            ))}
-        </div>
-    )
 }
 
 // ─── Small loading skeleton ────────────────────────────────────────────────────
@@ -219,7 +206,7 @@ export default function Dashboard() {
                         {getGreeting()}
                     </div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', lineHeight: 1.2 }}>
-                        {company?.name ?? 'HomePulse'}
+                        {company?.name ?? 'HVACtor.ai'}
                     </div>
                     {company?.city && (
                         <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>
@@ -242,6 +229,8 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            <HouseIssuesAlert />
 
             {/* KPI Cards */}
             <div className="kpi-grid mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
@@ -281,37 +270,9 @@ export default function Dashboard() {
                             {mounted && (
                                 revenueQuery.isLoading
                                     ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={180} /></div>
-                                    : <ResponsiveContainer width="100%" height={260} minWidth={0}>
-                                        <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
-                                            <defs>
-                                                <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#635bff" stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor="#635bff" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
-                                            <XAxis dataKey="month" tick={{ fill: 'var(--t4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <YAxis
-                                                tick={{ fill: 'var(--t4)', fontSize: 11 }}
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tickFormatter={(v) => formatMoneyCompact(v, 0)}
-                                                domain={[0, 'auto']}
-                                            />
-                                            <Tooltip content={<ChartTooltip />} />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="revenue"
-                                                name="Revenue"
-                                                stroke="#635bff"
-                                                strokeWidth={2}
-                                                fillOpacity={1}
-                                                fill="url(#gradRevenue)"
-                                                dot={false}
-                                                activeDot={{ r: 4, fill: '#635bff' }}
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
+                                    : <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={180} /></div>}>
+                                        <RevenueAreaChart data={revenueData} />
+                                    </Suspense>
                             )}
                         </div>
                     </div>
@@ -330,33 +291,9 @@ export default function Dashboard() {
                             {mounted && (
                                 jobStatusQuery.isLoading
                                     ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={120} /></div>
-                                    : <ResponsiveContainer width="100%" height={180} minWidth={0}>
-                                        <PieChart>
-                                            <Pie
-                                                data={jobStatusData.length > 0 ? jobStatusData : [{ name: 'No data', value: 1 }]}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={52}
-                                                outerRadius={72}
-                                                paddingAngle={5}
-                                                dataKey="value"
-                                                strokeWidth={2}
-                                                stroke="var(--bg-card)"
-                                            >
-                                                {(jobStatusData.length > 0 ? jobStatusData : [{ name: 'No data', value: 1 }]).map((_entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={JOB_STATUS_COLORS[index % JOB_STATUS_COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip
-                                                contentStyle={{
-                                                    background: 'var(--bg-card-2)',
-                                                    border: '1px solid var(--bd-md)',
-                                                    borderRadius: 8,
-                                                    fontSize: 12,
-                                                }}
-                                            />
-                                        </PieChart>
-                                    </ResponsiveContainer>
+                                    : <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={120} /></div>}>
+                                        <JobStatusPieChart data={jobStatusData} />
+                                    </Suspense>
                             )}
                         </div>
                         <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', marginTop: 12 }}>
@@ -491,7 +428,7 @@ export default function Dashboard() {
                         <button
                             className="btn btn-ghost btn-sm"
                             style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--blue)' }}
-                            onClick={() => navigate('/dispatch?view=calendar')}
+                            onClick={() => navigate('/scheduling?view=calendar')}
                         >
                             View Calendar <ArrowRight size={12} />
                         </button>

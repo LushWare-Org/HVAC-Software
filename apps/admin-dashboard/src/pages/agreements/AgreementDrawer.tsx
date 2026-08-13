@@ -6,22 +6,24 @@
 import { useState } from 'react'
 import {
   Loader2, Send, RefreshCw, XCircle, Pencil, X, CheckCircle2, AlarmClock, History,
+  FileSignature, CalendarClock, Download,
 } from 'lucide-react'
 import {
-  useServiceAgreement, useSendAgreement, useRenewAgreement, useCancelAgreement,
+  useServiceAgreement, useSendAgreement, useRenewAgreement, useCancelAgreement, useDownloadAgreementPdf,
   type Agreement,
 } from '../../hooks/useAgreements'
 import { useToast } from '../../contexts/ToastContext'
-import { AgreementStatusBadge, VisitMeter, intervalLabel, fmtDate, fmtMoney, daysUntil } from './shared'
+import { AgreementStatusBadge, VisitMeter, intervalLabel, fmtDate, fmtMoney, daysUntil, SectionLabel } from './shared'
 
-function AmendmentHistory({ agreement }: { agreement: Agreement }) {
+function AmendmentHistory({ agreement, expanded, onExpand }: { agreement: Agreement; expanded: boolean; onExpand: () => void }) {
   const amendments = agreement.amendments ?? []
   if (amendments.length === 0) {
     return <p style={{ fontSize: 12, color: 'var(--t4)' }}>No changes since the agreement was created.</p>
   }
+  const visible = expanded ? amendments : amendments.slice(0, 3)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {amendments.map(a => (
+      {visible.map(a => (
         <div key={a.id} style={{ padding: '10px 12px', background: 'var(--bg-card-2)', borderRadius: 'var(--r-md)', border: '1px solid var(--bd)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t2)' }}>
@@ -42,6 +44,16 @@ function AmendmentHistory({ agreement }: { agreement: Agreement }) {
           </p>
         </div>
       ))}
+      {!expanded && amendments.length > 3 && (
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          style={{ alignSelf: 'flex-start' }}
+          onClick={onExpand}
+        >
+          Show all {amendments.length} changes
+        </button>
+      )}
     </div>
   )
 }
@@ -64,8 +76,10 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
   const sendMut = useSendAgreement()
   const renewMut = useRenewAgreement()
   const cancelMut = useCancelAgreement()
+  const downloadPdf = useDownloadAgreementPdf()
   const toast = useToast()
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [showAllAmendments, setShowAllAmendments] = useState(false)
 
   const act = (mut: any, id: string, success: string) =>
     mut.mutate(id, {
@@ -73,24 +87,56 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
       onError: (e: any) => toast.showError(e?.response?.data?.message ?? 'Something went wrong'),
     })
 
+  const onDownloadPdf = async () => {
+    try {
+      const blob = await downloadPdf.mutateAsync(agreement!.id)
+      const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `agreement-${agreement!.name}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (e: any) {
+      toast.showError(e?.response?.data?.message ?? 'Could not download the PDF', 'Download failed')
+    }
+  }
+
   const content = (
     <>
         {isLoading || !agreement ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Loader2 size={22} className="spin" style={{ color: 'var(--t3)' }} /></div>
+          <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ width: '60%', height: 18, borderRadius: 4, background: 'var(--bg-card-2)' }} />
+              <div style={{ width: '40%', height: 13, borderRadius: 4, background: 'var(--bg-card-2)' }} />
+              <div style={{ width: 90, height: 20, borderRadius: 'var(--r-full)', background: 'var(--bg-card-2)' }} />
+            </div>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} style={{ width: '100%', height: 64, borderRadius: 'var(--r-md)', background: 'var(--bg-card-2)' }} />
+            ))}
+          </div>
         ) : (
           <>
-            <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--bd)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-              <div>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{agreement.name}</h2>
-                <p style={{ fontSize: 13, color: 'var(--t3)', margin: '4px 0 8px' }}>
-                  {agreement.customer ? `${agreement.customer.firstName} ${agreement.customer.lastName}` : agreement.customerId}
-                </p>
-                <AgreementStatusBadge status={agreement.status} />
+            <div className="card-header" style={{ flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--blue-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FileSignature size={16} style={{ color: 'var(--blue)' }} />
+                </div>
+                <div>
+                  <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {agreement.name}
+                    <AgreementStatusBadge status={agreement.status} />
+                  </div>
+                  <div className="card-subtitle">
+                    {agreement.customer ? `${agreement.customer.firstName} ${agreement.customer.lastName}` : agreement.customerId}
+                  </div>
+                </div>
               </div>
               <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X size={14} /></button>
             </div>
 
-            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1, minHeight: 0, overflowY: 'auto' }}>
               {/* Actions */}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {onEdit && (
@@ -111,12 +157,15 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
                     <XCircle size={12} /> Cancel
                   </button>
                 )}
+                <button className="btn btn-secondary btn-sm" onClick={onDownloadPdf} disabled={downloadPdf.isPending}>
+                  {downloadPdf.isPending ? <Loader2 size={12} className="spin" /> : <Download size={12} />} Download PDF
+                </button>
               </div>
 
               {/* Visits */}
               {(agreement.serviceInterval || agreement.visitsIncluded != null) && (
                 <div style={{ padding: '12px 14px', background: 'var(--bg-card-2)', borderRadius: 'var(--r-md)', border: '1px solid var(--bd)' }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Service visits</p>
+                  <div style={{ marginBottom: 8 }}><SectionLabel icon={CalendarClock}>Service visits</SectionLabel></div>
                   <VisitMeter agreement={agreement} size={12} />
                   <div style={{ marginTop: 10 }}>
                     <DetailRow label="Frequency">{intervalLabel(agreement)}</DetailRow>
@@ -136,18 +185,20 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
               )}
 
               {/* Terms */}
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Terms</p>
-                <DetailRow label="Service">{agreement.serviceType || '—'}</DetailRow>
-                <DetailRow label="Period">{fmtDate(agreement.startDate)} → {fmtDate(agreement.endDate)}</DetailRow>
-                <DetailRow label="Total value">{fmtMoney(agreement.value)}</DetailRow>
-                <DetailRow label="Billing">
-                  {agreement.billingCycle
-                    ? `${agreement.billingCycle.toLowerCase()}${agreement.billingAmount != null ? ` — ${fmtMoney(agreement.billingAmount)}/period` : ''}`
-                    : '—'}
-                </DetailRow>
-                {agreement.nextBillingDate && <DetailRow label="Next billing">{fmtDate(agreement.nextBillingDate)}</DetailRow>}
-                <DetailRow label="Auto-renew">{agreement.autoRenew ? 'Yes' : 'No'}</DetailRow>
+              <div style={{ padding: '12px 14px', background: 'var(--bg-card-2)', borderRadius: 'var(--r-md)', border: '1px solid var(--bd)' }}>
+                <div style={{ marginBottom: 8 }}><SectionLabel icon={FileSignature}>Terms</SectionLabel></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', columnGap: 24 }}>
+                  <DetailRow label="Service">{agreement.serviceType || '—'}</DetailRow>
+                  <DetailRow label="Period">{fmtDate(agreement.startDate)} → {fmtDate(agreement.endDate)}</DetailRow>
+                  <DetailRow label="Total value">{fmtMoney(agreement.value)}</DetailRow>
+                  <DetailRow label="Billing">
+                    {agreement.billingCycle
+                      ? `${agreement.billingCycle.toLowerCase()}${agreement.billingAmount != null ? ` — ${fmtMoney(agreement.billingAmount)}/period` : ''}`
+                      : '—'}
+                  </DetailRow>
+                  {agreement.nextBillingDate && <DetailRow label="Next billing">{fmtDate(agreement.nextBillingDate)}</DetailRow>}
+                  <DetailRow label="Auto-renew">{agreement.autoRenew ? 'Yes' : 'No'}</DetailRow>
+                </div>
                 {agreement.description && (
                   <p style={{ fontSize: 13, color: 'var(--t2)', whiteSpace: 'pre-wrap', borderLeft: '3px solid var(--bd)', paddingLeft: 10, marginTop: 8 }}>
                     {agreement.description}
@@ -156,6 +207,7 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
               </div>
 
               {/* Confirmation state */}
+              <div style={{ marginBottom: -6 }}><SectionLabel icon={CheckCircle2}>Confirmation</SectionLabel></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                 {agreement.customerConfirmedAt ? (
                   <><CheckCircle2 size={14} style={{ color: 'var(--green)' }} />
@@ -170,10 +222,8 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
 
               {/* Amendments */}
               <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <History size={12} /> Change history
-                </p>
-                <AmendmentHistory agreement={agreement} />
+                <div style={{ marginBottom: 8 }}><SectionLabel icon={History}>Change history</SectionLabel></div>
+                <AmendmentHistory agreement={agreement} expanded={showAllAmendments} onExpand={() => setShowAllAmendments(true)} />
               </div>
             </div>
 
@@ -209,7 +259,9 @@ export default function AgreementDrawer({ id, onClose, onEdit, variant = 'drawer
       >
         <div
           className="card anim-fade-up"
-          style={{ width: 560, maxWidth: '95vw', maxHeight: '90vh', padding: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}
+          role="dialog"
+          aria-modal="true"
+          style={{ width: 700, maxWidth: '95vw', maxHeight: '90vh', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
           onClick={e => e.stopPropagation()}
         >
           {content}

@@ -1,0 +1,26 @@
+<div class="section-title">Invoice details</div>
+<div class="section-subtitle">Services and charges for your work order. Retain this document for your financial records.</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:40%">Description</th>
+      <th style="width:16%">Category</th>
+      <th style="width:8%;text-align:right">Qty</th>
+      <th style="width:16%;text-align:right">Unit price</th>
+      <th style="width:8%;text-align:right">Tax</th>
+      <th style="width:12%;text-align:right">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each lineItems}}
+    <tr>
+      <td><div class="item-title">{{description}}</div></td>
+      <td><div class="item-category">{{category}}</div></td>
+      <td class="td-right">{{quantity}}</td>
+      <td class="td-right">{{unitPriceFmt}}</td>
+      <td class="td-right">{{#if taxable}}Yes{{else}}No{{/if}}</td>
+      <td class="td-right">{{lineTotalFmt}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>

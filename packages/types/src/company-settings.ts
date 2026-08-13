@@ -2,6 +2,7 @@
 export interface CompanySettings {
   id: string;
   name: string;
+  address: string | null;
   logoUrl: string | null;
   /** ISO 4217, e.g. "USD" | "LKR". */
   currency: string;
@@ -11,7 +12,7 @@ export interface CompanySettings {
   features: Record<string, unknown>;
 }
 
-export const DEFAULT_COMPANY_SETTINGS: Omit<CompanySettings, 'id' | 'name' | 'logoUrl'> = {
+export const DEFAULT_COMPANY_SETTINGS: Omit<CompanySettings, 'id' | 'name' | 'address' | 'logoUrl'> = {
   currency: 'USD',
   timezone: 'America/New_York',
   features: {},

@@ -3,7 +3,7 @@
  * Compact cards with visit meters; create/edit via the shared editor modal.
  */
 import { useState } from 'react'
-import { ShieldCheck, Plus, Loader2, Send, RefreshCw, Pencil } from 'lucide-react'
+import { ShieldCheck, Plus, Send, RefreshCw, Pencil } from 'lucide-react'
 import {
   useServiceAgreements, useSendAgreement, useRenewAgreement,
   type Agreement,
@@ -36,8 +36,10 @@ export default function CustomerAgreementsTab({ customerId, customerName }: {
       </div>
 
       {isLoading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
-          <Loader2 size={20} className="spin" style={{ color: 'var(--t3)' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} style={{ height: 96, borderRadius: 'var(--r-md)', background: 'var(--bg-card-2)', opacity: 1 - i * 0.2 }} />
+          ))}
         </div>
       ) : agreements.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--t3)' }}>

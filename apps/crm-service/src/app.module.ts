@@ -2,6 +2,7 @@
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from '@tscrm/auth-client';
 import { PrismaModule } from './prisma/prisma.module';
+import { CacheModule } from './cache/cache.module';
 import { CustomersModule } from './customers/customers.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { LeadsModule } from './leads/leads.module';
@@ -22,6 +23,8 @@ import { MetaModule } from './meta/meta.module';
 import { ImportModule } from './import/import.module';
 import { IotModule } from './iot/iot.module';
 import { ProjectsModule } from './projects/projects.module';
+import { HousesModule } from './houses/houses.module';
+import { DocumentTemplatesModule } from './document-templates/document-templates.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -33,6 +36,7 @@ import appConfig from './config/app.config';
     }),
     AuthModule,
     PrismaModule,
+    CacheModule,
     HealthModule,
     LocalAuthModule,
     CustomersModule,
@@ -53,6 +57,8 @@ import appConfig from './config/app.config';
     ImportModule,
     IotModule,
     ProjectsModule,
+    HousesModule,
+    DocumentTemplatesModule,
   ],
 })
 export class AppModule {}

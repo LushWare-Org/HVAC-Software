@@ -13,7 +13,7 @@ import { EmailService } from '../email/email.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
 const JWT_EXPIRES_IN = '24h';
-const APP_NAME = process.env.APP_NAME ?? 'T&S Services';
+const APP_NAME = process.env.APP_NAME ?? 'HVACtor.ai';
 
 /** Generate a readable temporary password: 3 groups of 4 alphanumeric chars, e.g. "aX3k-Rm9p-Q2wZ" */
 function generateTempPassword(): string {
@@ -29,15 +29,28 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
+  /**
+   * The same email can have a separate CompanyUser row in more than one company
+   * (e.g. a customer with accounts at two different service providers) — email is
+   * only unique per-company (@@unique([companyId, email])), not globally. Since each
+   * tenant's account has its own password, the password itself disambiguates which
+   * company to log into: try every row for this email and use whichever one's hash
+   * actually matches, instead of grabbing an arbitrary first row and only checking
+   * that one (which made every account but one effectively unusable once an email
+   * was reused across tenants).
+   */
   async login(email: string, password: string) {
-    const user = await this.prisma.companyUser.findFirst({ where: { email } });
+    const candidates = await this.prisma.companyUser.findMany({ where: { email: email.toLowerCase() } });
 
-    if (!user || !user.passwordHash) {
-      throw new UnauthorizedException('Invalid email or password');
+    let user: (typeof candidates)[number] | undefined;
+    for (const candidate of candidates) {
+      if (candidate.passwordHash && await bcrypt.compare(password, candidate.passwordHash)) {
+        user = candidate;
+        break;
+      }
     }
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
+    if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
@@ -174,36 +187,51 @@ export class AuthService {
   }
 
   /**
-   * Admin provisions a customer portal account when adding a lead.
-   * - Checks for duplicate email.
-   * - Creates CompanyUser (customer role) + Customer record + links lead.
-   * - Generates a temp password and emails it to the customer.
+   * Shared portal-account provisioning: creates/reactivates a CompanyUser(role=customer)
+   * for a given Customer row, sends the temp-password welcome email. Used by both
+   * provisionLeadAccount (which additionally creates a Lead) and
+   * provisionHouseOwnerAccount (which does not — house owners aren't sales leads).
+   *
+   * Idempotent per-customer: if this exact Customer already has an active linked
+   * CompanyUser, returns it as-is rather than erroring — the caller may be re-triggering
+   * account generation for a person who already has portal access under another
+   * house/context (e.g. owns two houses, or is also a project's developer client).
+   * Only throws when the email collides with a DIFFERENT customer's active account,
+   * since CompanyUser email is unique per company.
    */
-  async provisionLeadAccount(dto: {
-    companyId: string;
-    leadId?: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string;
-    source?: string;
-    serviceInterest?: string;
-  }) {
-    // Check for an ACTIVE account — block re-provisioning if the user is still live
+  private async provisionPortalAccountForCustomer(
+    companyId: string,
+    customer: {
+      id: string; firstName: string; lastName: string; email: string;
+      phone?: string | null; auth0UserId?: string | null;
+    },
+  ): Promise<{ user: { id: string }; alreadyProvisioned: boolean }> {
+    const email = customer.email.toLowerCase();
+
+    // Customer already linked to an active CompanyUser — nothing to do.
+    if (customer.auth0UserId) {
+      const linked = await this.prisma.companyUser.findFirst({
+        where: { id: customer.auth0UserId, companyId, isActive: true },
+      });
+      if (linked) return { user: { id: linked.id }, alreadyProvisioned: true };
+    }
+
+    // Email collision with a DIFFERENT customer's active account is a real conflict
+    // (companyId+email is unique on CompanyUser).
     const existingActive = await this.prisma.companyUser.findFirst({
-      where: { companyId: dto.companyId, email: dto.email.toLowerCase(), isActive: true },
+      where: { companyId, email, isActive: true },
     });
-    if (existingActive) {
-      throw new ConflictException('A customer account already exists for this email address');
+    if (existingActive && existingActive.id !== customer.auth0UserId) {
+      throw new ConflictException('A portal account already exists for this email address');
     }
 
     const tempPassword = generateTempPassword();
     const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-    // If a previously-deleted (isActive=false) account exists, reactivate it rather than
-    // trying to INSERT a new row — this avoids the unique-constraint violation on (companyId, email).
+    // Reactivate a previously-deleted (isActive=false) account rather than inserting a
+    // new row — avoids the unique-constraint violation on (companyId, email).
     const existingInactive = await this.prisma.companyUser.findFirst({
-      where: { companyId: dto.companyId, email: dto.email.toLowerCase(), isActive: false },
+      where: { companyId, email, isActive: false },
     });
 
     let user: { id: string };
@@ -211,21 +239,20 @@ export class AuthService {
       user = await this.prisma.companyUser.update({
         where: { id: existingInactive.id },
         data: {
-          name: `${dto.firstName} ${dto.lastName}`.trim(),
-          phone: dto.phone,
+          name: `${customer.firstName} ${customer.lastName}`.trim(),
+          phone: customer.phone ?? undefined,
           passwordHash,
           isActive: true,
           mustResetPassword: true,
         },
       });
     } else {
-      // Fresh account
       user = await this.prisma.companyUser.create({
         data: {
-          companyId: dto.companyId,
-          name: `${dto.firstName} ${dto.lastName}`.trim(),
-          email: dto.email.toLowerCase(),
-          phone: dto.phone,
+          companyId,
+          name: `${customer.firstName} ${customer.lastName}`.trim(),
+          email,
+          phone: customer.phone ?? undefined,
           passwordHash,
           role: 'customer',
           isActive: true,
@@ -234,44 +261,73 @@ export class AuthService {
       });
     }
 
+    await this.prisma.customer.update({ where: { id: customer.id }, data: { auth0UserId: user.id } });
+
+    const company = await this.prisma.company.findUnique({ where: { id: companyId }, select: { name: true } });
+    await this.emailService.sendWelcomeCustomer({
+      to: customer.email,
+      name: `${customer.firstName} ${customer.lastName}`.trim(),
+      tempPassword,
+      companyName: company?.name ?? APP_NAME,
+    });
+
+    return { user: { id: user.id }, alreadyProvisioned: false };
+  }
+
+  /**
+   * Admin provisions a customer portal account when adding a lead.
+   * - Creates/links Customer + CompanyUser (customer role) + Lead.
+   * - Generates a temp password and emails it to the customer.
+   */
+  async provisionLeadAccount(companyId: string, dto: {
+    leadId?: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    source?: string;
+    serviceInterest?: string;
+  }) {
     // Create Customer record linked to this user.
     // If a soft-deleted Customer row already exists for this email, reactivate it.
     const existingCustomer = await this.prisma.customer.findFirst({
-      where: { companyId: dto.companyId, email: dto.email.toLowerCase() },
+      where: { companyId, email: dto.email.toLowerCase() },
     });
 
-    let customer: { id: string };
+    let customer: { id: string; firstName: string; lastName: string; email: string; phone: string | null; auth0UserId: string | null };
     if (existingCustomer) {
-      customer = await this.prisma.customer.update({
+      if (existingCustomer.auth0UserId) {
+        const linked = await this.prisma.companyUser.findFirst({
+          where: { id: existingCustomer.auth0UserId, companyId, isActive: true },
+        });
+        if (linked) throw new ConflictException('A customer account already exists for this email address');
+      }
+      const updated = await this.prisma.customer.update({
         where: { id: existingCustomer.id },
-        data: {
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          phone: dto.phone,
-          auth0UserId: user.id,
-          isActive: true,
-        },
+        data: { firstName: dto.firstName, lastName: dto.lastName, phone: dto.phone, isActive: true },
       });
+      customer = { ...updated, email: updated.email ?? dto.email.toLowerCase() };
     } else {
-      customer = await this.prisma.customer.create({
+      const created = await this.prisma.customer.create({
         data: {
-          companyId: dto.companyId,
+          companyId,
           firstName: dto.firstName,
           lastName: dto.lastName,
           email: dto.email.toLowerCase(),
           phone: dto.phone,
-          auth0UserId: user.id,
           source: dto.source ?? 'admin',
           tags: ['admin-created'],
           engagementStatus: 'ACTIVE',
         },
       });
+      customer = { ...created, email: created.email ?? dto.email.toLowerCase() };
     }
 
-    // Create lead record
+    const { user } = await this.provisionPortalAccountForCustomer(companyId, customer);
+
     const lead = await this.prisma.lead.create({
       data: {
-        companyId: dto.companyId,
+        companyId,
         customerId: customer.id,
         firstName: dto.firstName,
         lastName: dto.lastName,
@@ -284,17 +340,6 @@ export class AuthService {
       },
     });
 
-    // Fetch company name for email
-    const company = await this.prisma.company.findUnique({ where: { id: dto.companyId }, select: { name: true } });
-
-    // Send welcome email (non-blocking — failure logged but doesn't fail the request)
-    await this.emailService.sendWelcomeCustomer({
-      to: dto.email,
-      name: `${dto.firstName} ${dto.lastName}`.trim(),
-      tempPassword,
-      companyName: company?.name ?? APP_NAME,
-    });
-
     return {
       success: true,
       userId: user.id,
@@ -305,13 +350,97 @@ export class AuthService {
   }
 
   /**
+   * Admin creates a brand-new Customer + portal account in one step, for a Housing
+   * Scheme house owner who doesn't exist in the system yet. Mirrors
+   * provisionLeadAccount's Customer creation/reactivation, but — like
+   * provisionHouseOwnerAccount — never creates a Lead, since house owners aren't
+   * sales leads.
+   */
+  async provisionHouseOwner(companyId: string, dto: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  }) {
+    const existingCustomer = await this.prisma.customer.findFirst({
+      where: { companyId, email: dto.email.toLowerCase() },
+    });
+
+    let customer: { id: string; firstName: string; lastName: string; email: string; phone: string | null; auth0UserId: string | null };
+    if (existingCustomer) {
+      if (existingCustomer.auth0UserId) {
+        const linked = await this.prisma.companyUser.findFirst({
+          where: { id: existingCustomer.auth0UserId, companyId, isActive: true },
+        });
+        if (linked) throw new ConflictException('A customer account already exists for this email address');
+      }
+      const updated = await this.prisma.customer.update({
+        where: { id: existingCustomer.id },
+        data: { firstName: dto.firstName, lastName: dto.lastName, phone: dto.phone, isActive: true },
+      });
+      customer = { ...updated, email: updated.email ?? dto.email.toLowerCase() };
+    } else {
+      const created = await this.prisma.customer.create({
+        data: {
+          companyId,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          email: dto.email.toLowerCase(),
+          phone: dto.phone,
+          source: 'admin',
+          tags: ['house-owner'],
+          engagementStatus: 'ACTIVE',
+        },
+      });
+      customer = { ...created, email: created.email ?? dto.email.toLowerCase() };
+    }
+
+    const { user } = await this.provisionPortalAccountForCustomer(companyId, customer);
+
+    return {
+      success: true,
+      userId: user.id,
+      customerId: customer.id,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      message: `Account created and welcome email sent to ${dto.email}`,
+    };
+  }
+
+  /**
+   * Admin provisions a portal account for an existing house owner (Housing Scheme
+   * projects). No Lead is created — house owners aren't sales leads. Idempotent: if
+   * the owner already has active portal access (e.g. they own another house too),
+   * returns success without re-sending the welcome email.
+   */
+  async provisionHouseOwnerAccount(companyId: string, customerId: string) {
+    const customer = await this.prisma.customer.findFirst({ where: { id: customerId, companyId } });
+    if (!customer) throw new BadRequestException('Owner not found in this company');
+    if (!customer.email) throw new BadRequestException('Add an email address for this owner before generating an account');
+
+    const { user, alreadyProvisioned } = await this.provisionPortalAccountForCustomer(
+      companyId,
+      { ...customer, email: customer.email },
+    );
+
+    return {
+      success: true,
+      userId: user.id,
+      customerId: customer.id,
+      alreadyProvisioned,
+      message: alreadyProvisioned
+        ? `${customer.firstName} ${customer.lastName} already has portal access.`
+        : `Account created and welcome email sent to ${customer.email}`,
+    };
+  }
+
+  /**
    * Admin provisions a technician account (from the Dispatch > Add Technician modal).
    * - Checks for duplicate email.
    * - Creates CompanyUser (technician role, APPROVED).
    * - Generates a temp password and emails it.
    */
-  async provisionTechnicianAccount(dto: {
-    companyId: string;
+  async provisionTechnicianAccount(companyId: string, dto: {
     name: string;
     email: string;
     phone?: string;
@@ -323,7 +452,7 @@ export class AuthService {
     // Only block if an ACTIVE account already exists — deactivated rows must not
     // prevent re-provisioning the same email after a delete.
     const existingActive = await this.prisma.companyUser.findFirst({
-      where: { companyId: dto.companyId, email: dto.email.toLowerCase(), isActive: true },
+      where: { companyId, email: dto.email.toLowerCase(), isActive: true },
     });
     if (existingActive) {
       throw new ConflictException('An account already exists for this email address');
@@ -335,7 +464,7 @@ export class AuthService {
     // If a previously-deleted (isActive=false) row exists, reactivate it instead of
     // inserting — avoids hitting the unique constraint on (companyId, email).
     const existingInactive = await this.prisma.companyUser.findFirst({
-      where: { companyId: dto.companyId, email: dto.email.toLowerCase(), isActive: false },
+      where: { companyId, email: dto.email.toLowerCase(), isActive: false },
     });
 
     let user: { id: string };
@@ -358,7 +487,7 @@ export class AuthService {
     } else {
       user = await this.prisma.companyUser.create({
         data: {
-          companyId: dto.companyId,
+          companyId,
           name: dto.name,
           email: dto.email.toLowerCase(),
           phone: dto.phone,
@@ -374,7 +503,7 @@ export class AuthService {
       });
     }
 
-    const company = await this.prisma.company.findUnique({ where: { id: dto.companyId }, select: { name: true } });
+    const company = await this.prisma.company.findUnique({ where: { id: companyId }, select: { name: true } });
 
     await this.emailService.sendWelcomeTechnician({
       to: dto.email,
@@ -410,7 +539,57 @@ export class AuthService {
       data: { passwordHash: newHash, mustResetPassword: false },
     });
 
+    const company = await this.prisma.company.findUnique({ where: { id: companyId }, select: { name: true } });
+    // Best-effort confirmation email — never blocks the password change itself.
+    this.emailService
+      .sendPasswordResetConfirmation({
+        to: user.email,
+        name: user.name,
+        companyName: company?.name ?? APP_NAME,
+      })
+      .catch(() => undefined);
+
     return { success: true, message: 'Password updated successfully' };
+  }
+
+  /**
+   * Admin resends portal login credentials to a customer who never completed
+   * their first login (mustResetPassword still true / lastLoginAt still null) —
+   * e.g. the original welcome email was missed, filtered as spam, or expired.
+   * Issues a fresh temp password (the original was never persisted in plaintext,
+   * so it cannot be recovered) and re-sends the welcome email.
+   */
+  async resendWelcomeEmail(companyId: string, customerId: string) {
+    const customer = await this.prisma.customer.findFirst({ where: { id: customerId, companyId } });
+    if (!customer) throw new BadRequestException('Customer not found');
+    if (!customer.auth0UserId) {
+      throw new BadRequestException('This customer does not have a portal account yet');
+    }
+    if (!customer.email) {
+      throw new BadRequestException('Customer has no email address on file');
+    }
+
+    const user = await this.prisma.companyUser.findFirst({
+      where: { id: customer.auth0UserId, companyId, isActive: true },
+    });
+    if (!user) throw new BadRequestException('Portal account not found for this customer');
+
+    const tempPassword = generateTempPassword();
+    const passwordHash = await bcrypt.hash(tempPassword, 12);
+    await this.prisma.companyUser.update({
+      where: { id: user.id },
+      data: { passwordHash, mustResetPassword: true },
+    });
+
+    const company = await this.prisma.company.findUnique({ where: { id: companyId }, select: { name: true } });
+    await this.emailService.sendWelcomeCustomer({
+      to: customer.email,
+      name: `${customer.firstName} ${customer.lastName}`.trim(),
+      tempPassword,
+      companyName: company?.name ?? APP_NAME,
+    });
+
+    return { success: true, message: `Welcome email resent to ${customer.email}` };
   }
 
   /**

@@ -1801,6 +1801,8 @@ export namespace Prisma {
     quoteNumber: string | null
     jobId: string | null
     projectId: string | null
+    houseId: string | null
+    templateId: string | null
     customerId: string | null
     customerName: string | null
     customerEmail: string | null
@@ -1835,6 +1837,8 @@ export namespace Prisma {
     quoteNumber: string | null
     jobId: string | null
     projectId: string | null
+    houseId: string | null
+    templateId: string | null
     customerId: string | null
     customerName: string | null
     customerEmail: string | null
@@ -1869,6 +1873,8 @@ export namespace Prisma {
     quoteNumber: number
     jobId: number
     projectId: number
+    houseId: number
+    templateId: number
     customerId: number
     customerName: number
     customerEmail: number
@@ -1923,6 +1929,8 @@ export namespace Prisma {
     quoteNumber?: true
     jobId?: true
     projectId?: true
+    houseId?: true
+    templateId?: true
     customerId?: true
     customerName?: true
     customerEmail?: true
@@ -1957,6 +1965,8 @@ export namespace Prisma {
     quoteNumber?: true
     jobId?: true
     projectId?: true
+    houseId?: true
+    templateId?: true
     customerId?: true
     customerName?: true
     customerEmail?: true
@@ -1991,6 +2001,8 @@ export namespace Prisma {
     quoteNumber?: true
     jobId?: true
     projectId?: true
+    houseId?: true
+    templateId?: true
     customerId?: true
     customerName?: true
     customerEmail?: true
@@ -2112,6 +2124,8 @@ export namespace Prisma {
     quoteNumber: string
     jobId: string | null
     projectId: string | null
+    houseId: string | null
+    templateId: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -2165,6 +2179,8 @@ export namespace Prisma {
     quoteNumber?: boolean
     jobId?: boolean
     projectId?: boolean
+    houseId?: boolean
+    templateId?: boolean
     customerId?: boolean
     customerName?: boolean
     customerEmail?: boolean
@@ -2202,6 +2218,8 @@ export namespace Prisma {
     quoteNumber?: boolean
     jobId?: boolean
     projectId?: boolean
+    houseId?: boolean
+    templateId?: boolean
     customerId?: boolean
     customerName?: boolean
     customerEmail?: boolean
@@ -2236,6 +2254,8 @@ export namespace Prisma {
     quoteNumber?: boolean
     jobId?: boolean
     projectId?: boolean
+    houseId?: boolean
+    templateId?: boolean
     customerId?: boolean
     customerName?: boolean
     customerEmail?: boolean
@@ -2283,6 +2303,8 @@ export namespace Prisma {
       quoteNumber: string
       jobId: string | null
       projectId: string | null
+      houseId: string | null
+      templateId: string | null
       customerId: string
       customerName: string
       customerEmail: string
@@ -2709,6 +2731,8 @@ export namespace Prisma {
     readonly quoteNumber: FieldRef<"Quote", 'String'>
     readonly jobId: FieldRef<"Quote", 'String'>
     readonly projectId: FieldRef<"Quote", 'String'>
+    readonly houseId: FieldRef<"Quote", 'String'>
+    readonly templateId: FieldRef<"Quote", 'String'>
     readonly customerId: FieldRef<"Quote", 'String'>
     readonly customerName: FieldRef<"Quote", 'String'>
     readonly customerEmail: FieldRef<"Quote", 'String'>
@@ -4171,7 +4195,9 @@ export namespace Prisma {
     quoteId: string | null
     jobId: string | null
     projectId: string | null
+    houseId: string | null
     workOrderId: string | null
+    templateId: string | null
     customerId: string | null
     customerName: string | null
     customerEmail: string | null
@@ -4214,7 +4240,9 @@ export namespace Prisma {
     quoteId: string | null
     jobId: string | null
     projectId: string | null
+    houseId: string | null
     workOrderId: string | null
+    templateId: string | null
     customerId: string | null
     customerName: string | null
     customerEmail: string | null
@@ -4257,7 +4285,9 @@ export namespace Prisma {
     quoteId: number
     jobId: number
     projectId: number
+    houseId: number
     workOrderId: number
+    templateId: number
     customerId: number
     customerName: number
     customerEmail: number
@@ -4324,7 +4354,9 @@ export namespace Prisma {
     quoteId?: true
     jobId?: true
     projectId?: true
+    houseId?: true
     workOrderId?: true
+    templateId?: true
     customerId?: true
     customerName?: true
     customerEmail?: true
@@ -4367,7 +4399,9 @@ export namespace Prisma {
     quoteId?: true
     jobId?: true
     projectId?: true
+    houseId?: true
     workOrderId?: true
+    templateId?: true
     customerId?: true
     customerName?: true
     customerEmail?: true
@@ -4410,7 +4444,9 @@ export namespace Prisma {
     quoteId?: true
     jobId?: true
     projectId?: true
+    houseId?: true
     workOrderId?: true
+    templateId?: true
     customerId?: true
     customerName?: true
     customerEmail?: true
@@ -4540,7 +4576,9 @@ export namespace Prisma {
     quoteId: string | null
     jobId: string | null
     projectId: string | null
+    houseId: string | null
     workOrderId: string | null
+    templateId: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -4602,7 +4640,9 @@ export namespace Prisma {
     quoteId?: boolean
     jobId?: boolean
     projectId?: boolean
+    houseId?: boolean
     workOrderId?: boolean
+    templateId?: boolean
     customerId?: boolean
     customerName?: boolean
     customerEmail?: boolean
@@ -4650,7 +4690,9 @@ export namespace Prisma {
     quoteId?: boolean
     jobId?: boolean
     projectId?: boolean
+    houseId?: boolean
     workOrderId?: boolean
+    templateId?: boolean
     customerId?: boolean
     customerName?: boolean
     customerEmail?: boolean
@@ -4695,7 +4737,9 @@ export namespace Prisma {
     quoteId?: boolean
     jobId?: boolean
     projectId?: boolean
+    houseId?: boolean
     workOrderId?: boolean
+    templateId?: boolean
     customerId?: boolean
     customerName?: boolean
     customerEmail?: boolean
@@ -4758,7 +4802,9 @@ export namespace Prisma {
       quoteId: string | null
       jobId: string | null
       projectId: string | null
+      houseId: string | null
       workOrderId: string | null
+      templateId: string | null
       customerId: string
       customerName: string
       customerEmail: string
@@ -5195,7 +5241,9 @@ export namespace Prisma {
     readonly quoteId: FieldRef<"Invoice", 'String'>
     readonly jobId: FieldRef<"Invoice", 'String'>
     readonly projectId: FieldRef<"Invoice", 'String'>
+    readonly houseId: FieldRef<"Invoice", 'String'>
     readonly workOrderId: FieldRef<"Invoice", 'String'>
+    readonly templateId: FieldRef<"Invoice", 'String'>
     readonly customerId: FieldRef<"Invoice", 'String'>
     readonly customerName: FieldRef<"Invoice", 'String'>
     readonly customerEmail: FieldRef<"Invoice", 'String'>
@@ -6685,6 +6733,7 @@ export namespace Prisma {
     amount: Decimal | null
     paymentMethod: $Enums.PaymentMethod | null
     status: $Enums.PaymentStatus | null
+    receiptNumber: string | null
     stripePaymentIntentId: string | null
     stripeChargeId: string | null
     quickbooksId: string | null
@@ -6701,6 +6750,7 @@ export namespace Prisma {
     amount: Decimal | null
     paymentMethod: $Enums.PaymentMethod | null
     status: $Enums.PaymentStatus | null
+    receiptNumber: string | null
     stripePaymentIntentId: string | null
     stripeChargeId: string | null
     quickbooksId: string | null
@@ -6717,6 +6767,7 @@ export namespace Prisma {
     amount: number
     paymentMethod: number
     status: number
+    receiptNumber: number
     stripePaymentIntentId: number
     stripeChargeId: number
     quickbooksId: number
@@ -6743,6 +6794,7 @@ export namespace Prisma {
     amount?: true
     paymentMethod?: true
     status?: true
+    receiptNumber?: true
     stripePaymentIntentId?: true
     stripeChargeId?: true
     quickbooksId?: true
@@ -6759,6 +6811,7 @@ export namespace Prisma {
     amount?: true
     paymentMethod?: true
     status?: true
+    receiptNumber?: true
     stripePaymentIntentId?: true
     stripeChargeId?: true
     quickbooksId?: true
@@ -6775,6 +6828,7 @@ export namespace Prisma {
     amount?: true
     paymentMethod?: true
     status?: true
+    receiptNumber?: true
     stripePaymentIntentId?: true
     stripeChargeId?: true
     quickbooksId?: true
@@ -6878,6 +6932,7 @@ export namespace Prisma {
     amount: Decimal
     paymentMethod: $Enums.PaymentMethod
     status: $Enums.PaymentStatus
+    receiptNumber: string | null
     stripePaymentIntentId: string | null
     stripeChargeId: string | null
     quickbooksId: string | null
@@ -6913,6 +6968,7 @@ export namespace Prisma {
     amount?: boolean
     paymentMethod?: boolean
     status?: boolean
+    receiptNumber?: boolean
     stripePaymentIntentId?: boolean
     stripeChargeId?: boolean
     quickbooksId?: boolean
@@ -6930,6 +6986,7 @@ export namespace Prisma {
     amount?: boolean
     paymentMethod?: boolean
     status?: boolean
+    receiptNumber?: boolean
     stripePaymentIntentId?: boolean
     stripeChargeId?: boolean
     quickbooksId?: boolean
@@ -6947,6 +7004,7 @@ export namespace Prisma {
     amount?: boolean
     paymentMethod?: boolean
     status?: boolean
+    receiptNumber?: boolean
     stripePaymentIntentId?: boolean
     stripeChargeId?: boolean
     quickbooksId?: boolean
@@ -6975,6 +7033,7 @@ export namespace Prisma {
       amount: Prisma.Decimal
       paymentMethod: $Enums.PaymentMethod
       status: $Enums.PaymentStatus
+      receiptNumber: string | null
       stripePaymentIntentId: string | null
       stripeChargeId: string | null
       quickbooksId: string | null
@@ -7382,6 +7441,7 @@ export namespace Prisma {
     readonly amount: FieldRef<"Payment", 'Decimal'>
     readonly paymentMethod: FieldRef<"Payment", 'PaymentMethod'>
     readonly status: FieldRef<"Payment", 'PaymentStatus'>
+    readonly receiptNumber: FieldRef<"Payment", 'String'>
     readonly stripePaymentIntentId: FieldRef<"Payment", 'String'>
     readonly stripeChargeId: FieldRef<"Payment", 'String'>
     readonly quickbooksId: FieldRef<"Payment", 'String'>
@@ -11635,6 +11695,8 @@ export namespace Prisma {
     quoteNumber: 'quoteNumber',
     jobId: 'jobId',
     projectId: 'projectId',
+    houseId: 'houseId',
+    templateId: 'templateId',
     customerId: 'customerId',
     customerName: 'customerName',
     customerEmail: 'customerEmail',
@@ -11688,7 +11750,9 @@ export namespace Prisma {
     quoteId: 'quoteId',
     jobId: 'jobId',
     projectId: 'projectId',
+    houseId: 'houseId',
     workOrderId: 'workOrderId',
+    templateId: 'templateId',
     customerId: 'customerId',
     customerName: 'customerName',
     customerEmail: 'customerEmail',
@@ -11749,6 +11813,7 @@ export namespace Prisma {
     amount: 'amount',
     paymentMethod: 'paymentMethod',
     status: 'status',
+    receiptNumber: 'receiptNumber',
     stripePaymentIntentId: 'stripePaymentIntentId',
     stripeChargeId: 'stripeChargeId',
     quickbooksId: 'quickbooksId',
@@ -12055,6 +12120,8 @@ export namespace Prisma {
     quoteNumber?: StringFilter<"Quote"> | string
     jobId?: StringNullableFilter<"Quote"> | string | null
     projectId?: StringNullableFilter<"Quote"> | string | null
+    houseId?: StringNullableFilter<"Quote"> | string | null
+    templateId?: StringNullableFilter<"Quote"> | string | null
     customerId?: StringFilter<"Quote"> | string
     customerName?: StringFilter<"Quote"> | string
     customerEmail?: StringFilter<"Quote"> | string
@@ -12091,6 +12158,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     jobId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
+    houseId?: SortOrderInput | SortOrder
+    templateId?: SortOrderInput | SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -12132,6 +12201,8 @@ export namespace Prisma {
     quoteNumber?: StringFilter<"Quote"> | string
     jobId?: StringNullableFilter<"Quote"> | string | null
     projectId?: StringNullableFilter<"Quote"> | string | null
+    houseId?: StringNullableFilter<"Quote"> | string | null
+    templateId?: StringNullableFilter<"Quote"> | string | null
     customerId?: StringFilter<"Quote"> | string
     customerName?: StringFilter<"Quote"> | string
     customerEmail?: StringFilter<"Quote"> | string
@@ -12167,6 +12238,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     jobId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
+    houseId?: SortOrderInput | SortOrder
+    templateId?: SortOrderInput | SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -12209,6 +12282,8 @@ export namespace Prisma {
     quoteNumber?: StringWithAggregatesFilter<"Quote"> | string
     jobId?: StringNullableWithAggregatesFilter<"Quote"> | string | null
     projectId?: StringNullableWithAggregatesFilter<"Quote"> | string | null
+    houseId?: StringNullableWithAggregatesFilter<"Quote"> | string | null
+    templateId?: StringNullableWithAggregatesFilter<"Quote"> | string | null
     customerId?: StringWithAggregatesFilter<"Quote"> | string
     customerName?: StringWithAggregatesFilter<"Quote"> | string
     customerEmail?: StringWithAggregatesFilter<"Quote"> | string
@@ -12324,7 +12399,9 @@ export namespace Prisma {
     quoteId?: StringNullableFilter<"Invoice"> | string | null
     jobId?: StringNullableFilter<"Invoice"> | string | null
     projectId?: StringNullableFilter<"Invoice"> | string | null
+    houseId?: StringNullableFilter<"Invoice"> | string | null
     workOrderId?: StringNullableFilter<"Invoice"> | string | null
+    templateId?: StringNullableFilter<"Invoice"> | string | null
     customerId?: StringFilter<"Invoice"> | string
     customerName?: StringFilter<"Invoice"> | string
     customerEmail?: StringFilter<"Invoice"> | string
@@ -12371,7 +12448,9 @@ export namespace Prisma {
     quoteId?: SortOrderInput | SortOrder
     jobId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
+    houseId?: SortOrderInput | SortOrder
     workOrderId?: SortOrderInput | SortOrder
+    templateId?: SortOrderInput | SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -12422,7 +12501,9 @@ export namespace Prisma {
     quoteId?: StringNullableFilter<"Invoice"> | string | null
     jobId?: StringNullableFilter<"Invoice"> | string | null
     projectId?: StringNullableFilter<"Invoice"> | string | null
+    houseId?: StringNullableFilter<"Invoice"> | string | null
     workOrderId?: StringNullableFilter<"Invoice"> | string | null
+    templateId?: StringNullableFilter<"Invoice"> | string | null
     customerId?: StringFilter<"Invoice"> | string
     customerName?: StringFilter<"Invoice"> | string
     customerEmail?: StringFilter<"Invoice"> | string
@@ -12469,7 +12550,9 @@ export namespace Prisma {
     quoteId?: SortOrderInput | SortOrder
     jobId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
+    houseId?: SortOrderInput | SortOrder
     workOrderId?: SortOrderInput | SortOrder
+    templateId?: SortOrderInput | SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -12520,7 +12603,9 @@ export namespace Prisma {
     quoteId?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     jobId?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     projectId?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
+    houseId?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     workOrderId?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
+    templateId?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     customerId?: StringWithAggregatesFilter<"Invoice"> | string
     customerName?: StringWithAggregatesFilter<"Invoice"> | string
     customerEmail?: StringWithAggregatesFilter<"Invoice"> | string
@@ -12643,6 +12728,7 @@ export namespace Prisma {
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
+    receiptNumber?: StringNullableFilter<"Payment"> | string | null
     stripePaymentIntentId?: StringNullableFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableFilter<"Payment"> | string | null
     quickbooksId?: StringNullableFilter<"Payment"> | string | null
@@ -12660,6 +12746,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrderInput | SortOrder
     stripePaymentIntentId?: SortOrderInput | SortOrder
     stripeChargeId?: SortOrderInput | SortOrder
     quickbooksId?: SortOrderInput | SortOrder
@@ -12680,6 +12767,7 @@ export namespace Prisma {
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
+    receiptNumber?: StringNullableFilter<"Payment"> | string | null
     stripePaymentIntentId?: StringNullableFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableFilter<"Payment"> | string | null
     quickbooksId?: StringNullableFilter<"Payment"> | string | null
@@ -12697,6 +12785,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrderInput | SortOrder
     stripePaymentIntentId?: SortOrderInput | SortOrder
     stripeChargeId?: SortOrderInput | SortOrder
     quickbooksId?: SortOrderInput | SortOrder
@@ -12721,6 +12810,7 @@ export namespace Prisma {
     amount?: DecimalWithAggregatesFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodWithAggregatesFilter<"Payment"> | $Enums.PaymentMethod
     status?: EnumPaymentStatusWithAggregatesFilter<"Payment"> | $Enums.PaymentStatus
+    receiptNumber?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     stripePaymentIntentId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     quickbooksId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
@@ -13052,6 +13142,8 @@ export namespace Prisma {
     quoteNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -13088,6 +13180,8 @@ export namespace Prisma {
     quoteNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -13124,6 +13218,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -13160,6 +13256,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -13196,6 +13294,8 @@ export namespace Prisma {
     quoteNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -13230,6 +13330,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -13264,6 +13366,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -13381,7 +13485,9 @@ export namespace Prisma {
     invoiceNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -13427,7 +13533,9 @@ export namespace Prisma {
     quoteId?: string | null
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -13471,7 +13579,9 @@ export namespace Prisma {
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -13517,7 +13627,9 @@ export namespace Prisma {
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -13562,7 +13674,9 @@ export namespace Prisma {
     quoteId?: string | null
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -13604,7 +13718,9 @@ export namespace Prisma {
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -13646,7 +13762,9 @@ export namespace Prisma {
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -13771,6 +13889,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -13788,6 +13907,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -13803,6 +13923,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13820,6 +13941,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13836,6 +13958,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -13851,6 +13974,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13867,6 +13991,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14368,6 +14493,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     jobId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
+    templateId?: SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -14411,6 +14538,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     jobId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
+    templateId?: SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -14445,6 +14574,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     jobId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
+    templateId?: SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -14759,7 +14890,9 @@ export namespace Prisma {
     quoteId?: SortOrder
     jobId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
     workOrderId?: SortOrder
+    templateId?: SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -14813,7 +14946,9 @@ export namespace Prisma {
     quoteId?: SortOrder
     jobId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
     workOrderId?: SortOrder
+    templateId?: SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -14856,7 +14991,9 @@ export namespace Prisma {
     quoteId?: SortOrder
     jobId?: SortOrder
     projectId?: SortOrder
+    houseId?: SortOrder
     workOrderId?: SortOrder
+    templateId?: SortOrder
     customerId?: SortOrder
     customerName?: SortOrder
     customerEmail?: SortOrder
@@ -14989,6 +15126,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripeChargeId?: SortOrder
     quickbooksId?: SortOrder
@@ -15009,6 +15147,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripeChargeId?: SortOrder
     quickbooksId?: SortOrder
@@ -15025,6 +15164,7 @@ export namespace Prisma {
     amount?: SortOrder
     paymentMethod?: SortOrder
     status?: SortOrder
+    receiptNumber?: SortOrder
     stripePaymentIntentId?: SortOrder
     stripeChargeId?: SortOrder
     quickbooksId?: SortOrder
@@ -16033,7 +16173,9 @@ export namespace Prisma {
     invoiceNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -16077,7 +16219,9 @@ export namespace Prisma {
     invoiceNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -16182,7 +16326,9 @@ export namespace Prisma {
     quoteId?: StringNullableFilter<"Invoice"> | string | null
     jobId?: StringNullableFilter<"Invoice"> | string | null
     projectId?: StringNullableFilter<"Invoice"> | string | null
+    houseId?: StringNullableFilter<"Invoice"> | string | null
     workOrderId?: StringNullableFilter<"Invoice"> | string | null
+    templateId?: StringNullableFilter<"Invoice"> | string | null
     customerId?: StringFilter<"Invoice"> | string
     customerName?: StringFilter<"Invoice"> | string
     customerEmail?: StringFilter<"Invoice"> | string
@@ -16224,6 +16370,8 @@ export namespace Prisma {
     quoteNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -16259,6 +16407,8 @@ export namespace Prisma {
     quoteNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -16310,6 +16460,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -16345,6 +16497,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -16380,6 +16534,8 @@ export namespace Prisma {
     quoteNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -16415,6 +16571,8 @@ export namespace Prisma {
     quoteNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -16526,6 +16684,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -16541,6 +16700,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -16577,6 +16737,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -16612,6 +16774,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -16743,6 +16907,7 @@ export namespace Prisma {
     amount?: DecimalFilter<"Payment"> | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFilter<"Payment"> | $Enums.PaymentMethod
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
+    receiptNumber?: StringNullableFilter<"Payment"> | string | null
     stripePaymentIntentId?: StringNullableFilter<"Payment"> | string | null
     stripeChargeId?: StringNullableFilter<"Payment"> | string | null
     quickbooksId?: StringNullableFilter<"Payment"> | string | null
@@ -16758,7 +16923,9 @@ export namespace Prisma {
     invoiceNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -16803,7 +16970,9 @@ export namespace Prisma {
     quoteId?: string | null
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -16862,7 +17031,9 @@ export namespace Prisma {
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -16907,7 +17078,9 @@ export namespace Prisma {
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -16950,7 +17123,9 @@ export namespace Prisma {
     invoiceNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -16995,7 +17170,9 @@ export namespace Prisma {
     quoteId?: string | null
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -17054,7 +17231,9 @@ export namespace Prisma {
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -17099,7 +17278,9 @@ export namespace Prisma {
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -17142,7 +17323,9 @@ export namespace Prisma {
     invoiceNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -17187,7 +17370,9 @@ export namespace Prisma {
     quoteId?: string | null
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -17267,7 +17452,9 @@ export namespace Prisma {
     invoiceNumber: string
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -17342,7 +17529,9 @@ export namespace Prisma {
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -17386,7 +17575,9 @@ export namespace Prisma {
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -17430,7 +17621,9 @@ export namespace Prisma {
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -17483,6 +17676,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     paymentMethod?: $Enums.PaymentMethod
     status?: $Enums.PaymentStatus
+    receiptNumber?: string | null
     stripePaymentIntentId?: string | null
     stripeChargeId?: string | null
     quickbooksId?: string | null
@@ -17531,6 +17725,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17546,6 +17741,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17561,6 +17757,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    receiptNumber?: NullableStringFieldUpdateOperationsInput | string | null
     stripePaymentIntentId?: NullableStringFieldUpdateOperationsInput | string | null
     stripeChargeId?: NullableStringFieldUpdateOperationsInput | string | null
     quickbooksId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17577,7 +17774,9 @@ export namespace Prisma {
     quoteId?: string | null
     jobId?: string | null
     projectId?: string | null
+    houseId?: string | null
     workOrderId?: string | null
+    templateId?: string | null
     customerId: string
     customerName: string
     customerEmail: string
@@ -17618,7 +17817,9 @@ export namespace Prisma {
     invoiceNumber?: StringFieldUpdateOperationsInput | string
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -17663,7 +17864,9 @@ export namespace Prisma {
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string
@@ -17707,7 +17910,9 @@ export namespace Prisma {
     quoteId?: NullableStringFieldUpdateOperationsInput | string | null
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
     workOrderId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     customerName?: StringFieldUpdateOperationsInput | string
     customerEmail?: StringFieldUpdateOperationsInput | string

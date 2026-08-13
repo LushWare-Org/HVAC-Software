@@ -7,16 +7,25 @@
  * readable (the old 0.65-opacity rows failed contrast). Data layer is
  * unchanged — same hooks, same detail / booking / cancel modals.
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Briefcase, CheckCircle, ChevronLeft, ChevronRight, Plus, Search, X,
   Calendar, MapPin, Send, Wrench, XCircle, FileText, DollarSign, Clock,
+  CalendarClock,
 } from 'lucide-react'
-import { useJobTechnicianNames, useMyJobs } from '../../hooks/useCustomerPortal'
+import { useJobTechnicians, useMyJobs } from '../../hooks/useCustomerPortal'
+import { useMyProjects } from '../../hooks/useMyProjects'
+import { useMyHouses } from '../../hooks/useMyHouse'
 import JobDetailModal from './JobDetailModal.tsx'
 import BookServiceModal from './BookServiceModal.tsx'
 import CancelJobModal from './CancelJobModal.tsx'
 import type { Job } from '../../types/api'
+import { useSearchParams } from 'react-router-dom'
+import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
+import TechAvatar from '../../components/TechAvatar'
+import RescheduleModal from '../../components/reschedule/RescheduleModal'
+import EditPreferredTimeModal from './EditPreferredTimeModal.tsx'
+import { CUSTOMER_RESCHEDULABLE_STATUSES } from '../../lib/reschedule'
 
 const STATUS_MAP: Record<string, { label: string; css: string }> = {
   PENDING: { label: 'Pending', css: 'badge-amber' },
@@ -115,6 +124,9 @@ export default function MyJobs() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [showDetail, setShowDetail] = useState(false)
   const [showBook, setShowBook] = useState(false)
+  const [rescheduleJob, setRescheduleJob] = useState<Job | null>(null)
+  const [editTimeJob, setEditTimeJob] = useState<Job | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
   const [showCancel, setShowCancel] = useState(false)
   const [jobToCancel, setJobToCancel] = useState<Job | null>(null)
 
@@ -127,7 +139,35 @@ export default function MyJobs() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
   const allJobs = data?.data ?? []
-  const technicianNames = useJobTechnicianNames(allJobs)
+  const technicians = useJobTechnicians(allJobs)
+
+  // Reschedule emails link to /jobs?reschedule=<jobId>. Open that job's modal
+  // directly — someone who clicked "Choose a time" should not have to hunt for
+  // the right card. The param is cleared so a refresh doesn't reopen it.
+  useEffect(() => {
+    const target = searchParams.get('reschedule')
+    if (!target || rescheduleJob) return
+    const match = allJobs.find(j => j.id === target)
+    if (!match) return
+    setRescheduleJob(match)
+    // Copy rather than mutating the instance the hook handed us — mutating it
+    // in place can leave React Router's internal state disagreeing with the URL.
+    const next = new URLSearchParams(searchParams)
+    next.delete('reschedule')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, allJobs, rescheduleJob, setSearchParams])
+
+  // A portal customer has at most a handful of projects/houses — cheap to map once
+  // rather than resolve per-row, unlike the admin Jobs page's much larger scale.
+  const { data: myProjects } = useMyProjects()
+  const { data: myHouses } = useMyHouses()
+  const jobContext = (job: Job): string | null => {
+    if (!job.projectId) return null
+    const projectName = myProjects?.find(p => p.id === job.projectId)?.name
+    const houseLabel = job.houseId ? myHouses?.find(h => h.id === job.houseId)?.label : undefined
+    if (!projectName) return null
+    return houseLabel ? `${projectName} — ${houseLabel}` : projectName
+  }
 
   const grouped = useMemo(() => {
     const active = allJobs
@@ -155,7 +195,7 @@ export default function MyJobs() {
 
   const filtered = useMemo(() => {
     return tabJobs.filter(job => {
-      const who = technicianNames[job.id] ?? job.assignedToName ?? ''
+      const who = technicians[job.id]?.name ?? job.assignedToName ?? ''
       const text = `${job.title} ${job.jobNumber} ${who} ${job.description ?? ''}`.toLowerCase()
       if (searchQuery && !text.includes(searchQuery.toLowerCase())) return false
       if (dateFilter !== 'all') {
@@ -167,7 +207,7 @@ export default function MyJobs() {
       }
       return true
     })
-  }, [tabJobs, searchQuery, dateFilter, technicianNames])
+  }, [tabJobs, searchQuery, dateFilter, technicians])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
   const safePage = Math.min(page, totalPages)
@@ -192,8 +232,8 @@ export default function MyJobs() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.01em' }}>My Jobs</h1>
-          <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--t3)' }}>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--canvas-t1)', letterSpacing: '-0.01em' }}>My Jobs</h1>
+          <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--canvas-t2)' }}>
             Every visit — live, scheduled and completed
           </p>
         </div>
@@ -284,7 +324,8 @@ export default function MyJobs() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {paginated.map(job => {
             const s = STATUS_MAP[job.status] ?? { label: job.status, css: 'badge-neutral' }
-            const who = technicianNames[job.id] ?? job.assignedToName
+            const who = technicians[job.id]?.name ?? job.assignedToName
+            const whoAvatar = technicians[job.id]?.avatarUrl
             const isLive = LIVE_STATUSES.includes(job.status)
             const isOpen = OPEN_STATUSES.includes(job.status)
             const startT = fmtTime(job.scheduledStart)
@@ -301,6 +342,11 @@ export default function MyJobs() {
                       <span className={`badge ${s.css}`}>{s.label}</span>
                       <span style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--t1)' }}>{job.title}</span>
                       {who && <span style={{ fontSize: 12, color: 'var(--t3)' }}>· {who}</span>}
+                      {jobContext(job) && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--blue)' }}>
+                          <Briefcase size={11} /> {jobContext(job)}
+                        </span>
+                      )}
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--blue)', whiteSpace: 'nowrap' }}>Details ›</span>
                   </div>
@@ -338,17 +384,39 @@ export default function MyJobs() {
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         <Calendar size={11} /> {fmtDate(job.scheduledStart)}{startT ? ` · ${startT}` : ''}
                       </span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <Wrench size={11} /> {who ?? 'Technician TBD'}
+                      <RescheduleBadge state={job.rescheduleState} size="sm" />
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                        {who
+                          ? <><TechAvatar name={who} avatarUrl={whoAvatar} size={18} /> {who}</>
+                          : <><Wrench size={11} /> Technician TBD</>}
                       </span>
                       {job.serviceAddress && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                           <MapPin size={11} /> {job.serviceAddress}
                         </span>
                       )}
+                      {jobContext(job) && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--blue)' }}>
+                          <Briefcase size={11} /> {jobContext(job)}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <span className={`badge ${s.css}`} style={{ flexShrink: 0 }}>{s.label}</span>
+                  {/* Nobody has committed to this slot yet — the customer can just
+                      change it. Once a technician is on it, the same button becomes a
+                      reschedule request that we confirm. */}
+                  {job.status === 'PENDING' && !job.assignedToId ? (
+                    <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0 }}
+                      onClick={e => { e.stopPropagation(); setEditTimeJob(job) }}>
+                      <CalendarClock size={12} /> Change time
+                    </button>
+                  ) : CUSTOMER_RESCHEDULABLE_STATUSES.includes(job.status) && (
+                    <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0 }}
+                      onClick={e => { e.stopPropagation(); setRescheduleJob(job) }}>
+                      <CalendarClock size={12} /> Reschedule
+                    </button>
+                  )}
                   {['PENDING', 'SCHEDULED'].includes(job.status) && (
                     <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0 }}
                       onClick={e => { e.stopPropagation(); openCancel(job) }}>
@@ -377,7 +445,7 @@ export default function MyJobs() {
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t2)' }}>{job.title}</div>
                   <div style={{ fontSize: 11.5, color: 'var(--t4)', marginTop: 2 }}>
-                    {fmtDate(job.scheduledStart ?? job.createdAt)}{who ? ` · ${who}` : ''}
+                    {fmtDate(job.scheduledStart ?? job.createdAt)}{who ? ` · ${who}` : ''}{jobContext(job) ? ` · ${jobContext(job)}` : ''}
                   </div>
                 </div>
                 <span className={`badge ${s.css}`} style={{ flexShrink: 0 }}>{s.label}</span>
@@ -421,6 +489,25 @@ export default function MyJobs() {
         />
       )}
       {showBook && <BookServiceModal onClose={() => { setShowBook(false); refetch() }} />}
+
+      {editTimeJob && (
+        <EditPreferredTimeModal
+          job={{ id: editTimeJob.id, title: editTimeJob.title, scheduledStart: editTimeJob.scheduledStart }}
+          onClose={() => { setEditTimeJob(null); refetch() }}
+        />
+      )}
+
+      {rescheduleJob && (
+        <RescheduleModal
+          job={{
+            id: rescheduleJob.id, title: rescheduleJob.title,
+            scheduledStart: rescheduleJob.scheduledStart, status: rescheduleJob.status,
+            rescheduleState: rescheduleJob.rescheduleState,
+          }}
+          isOpen
+          onClose={() => { setRescheduleJob(null); refetch() }}
+        />
+      )}
       {showCancel && jobToCancel && (
         <CancelJobModal
           job={jobToCancel}

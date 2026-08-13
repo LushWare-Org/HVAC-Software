@@ -1,47 +1,89 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Wrench, Calendar, Loader2, AlertCircle } from "lucide-react";
-import { useCreateJob, useJobTypes } from "../../hooks/useJobs";
+import { X, Wrench, Hammer, PackagePlus, Search, AlertTriangle, Calendar, Loader2, AlertCircle, Link2, Lock, FolderKanban, Home } from "lucide-react";
+import { useCreateJob } from "../../hooks/useJobs";
 import { useCustomers } from "../../hooks/useCustomers";
+import { useCustomerEquipment } from "../../hooks/useEquipment";
 import MapPicker from "../../components/MapPickerLazy";
+import ProjectJobLinkPicker, { type ProjectJobLink } from "../../components/ProjectJobLinkPicker";
+import { useHouses } from "../projects/housesApi";
+import type { ProjectTemplateType } from "../projects/projectsApi";
 
 interface AddJobModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreated?: (job: any) => void;
   preselectedCustomer?: { id: string; name: string; address?: string };
+  /** Locks the customer to a fixed record (e.g. a house owner) — shown as a non-editable chip instead of the search/select. */
+  lockedCustomer?: { id: string; name: string; address?: string; lat?: number; lng?: number };
+  /** Locks the job to this project — hides the project picker and shows a fixed chip instead. */
+  lockedProject?: { id: string; name: string; templateType?: ProjectTemplateType };
+  /** Narrows a locked Housing Scheme project down to one house (hides the "which house?" picker). */
+  lockedHouseId?: string;
+  lockedHouseLabel?: string;
+  /** Locks the job to one specific piece of equipment — hides the equipment picker. */
+  lockedEquipmentId?: string;
+  lockedEquipmentLabel?: string;
+  /** Extra context shown under the title, e.g. the project/house name. */
+  contextLabel?: string;
 }
 
 type TabType = "basic" | "scheduling";
+
+// Same service-type taxonomy as the customer portal's "Request a service" modal
+// (BookServiceModal) — keeps the vocabulary customers and admins see in sync.
+const SERVICE_TYPES: { value: string; label: string; icon: React.ElementType; danger?: boolean }[] = [
+  { value: "Maintenance", label: "Maintenance", icon: Wrench },
+  { value: "Repair", label: "Repair", icon: Hammer },
+  { value: "Installation", label: "Installation", icon: PackagePlus },
+  { value: "Inspection", label: "Inspection", icon: Search },
+  { value: "Emergency", label: "Emergency", icon: AlertTriangle, danger: true },
+];
 
 export default function AddJobModal({
   isOpen,
   onClose,
   onCreated,
   preselectedCustomer,
+  lockedCustomer,
+  lockedProject,
+  lockedHouseId,
+  lockedHouseLabel,
+  lockedEquipmentId,
+  lockedEquipmentLabel,
+  contextLabel,
 }: AddJobModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>("basic");
   const [error, setError]         = useState<string>('');
   const [customerSearch, setCustomerSearch] = useState('');
+  const [projectLink, setProjectLink] = useState<ProjectJobLink>({});
+  const [equipmentId, setEquipmentId] = useState('');
   const [formData, setFormData]   = useState({
     title: "",
     description: "",
     priority: "NORMAL",
-    jobTypeId: "",
-    customerId: "",
-    customerName: "",
-    serviceAddress: "",
+    serviceType: "Maintenance",
+    customerId: lockedCustomer?.id ?? "",
+    customerName: lockedCustomer?.name ?? "",
+    serviceAddress: lockedCustomer?.address ?? "",
     date: new Date().toISOString().split("T")[0],
     time: "09:00",
-    lat: 6.9271,
-    lng: 79.8612,
+    lat: lockedCustomer?.lat ?? 6.9271,
+    lng: lockedCustomer?.lng ?? 79.8612,
   });
 
+  // Housing Scheme project locked without a specific house — offer a lightweight
+  // "which house?" narrow-down, same idea as ProjectJobLinkPicker's cascading select.
+  const showHouseSelect = !!lockedProject && lockedProject.templateType === 'HOUSING_SCHEME' && !lockedHouseId;
+  const [selectedHouseId, setSelectedHouseId] = useState('');
+  const lockedHousesQuery = useHouses(showHouseSelect ? lockedProject!.id : undefined);
+
   const createJob = useCreateJob();
-  const jobTypesQuery = useJobTypes();
-  const jobTypes = jobTypesQuery.data ?? [];
   const customersQuery = useCustomers({ page: 1, limit: 50, search: customerSearch || undefined });
   const customers = customersQuery.data?.data ?? [];
+  const equipmentQuery = useCustomerEquipment(!lockedEquipmentId ? (formData.customerId || undefined) : undefined);
+  const customerEquipment = equipmentQuery.data ?? [];
+  const selectedEquipment = customerEquipment.find((eq) => eq.id === equipmentId);
 
   // Pre-fill customer when opened from customer detail
   useEffect(() => {
@@ -54,6 +96,21 @@ export default function AddJobModal({
       }));
     }
   }, [isOpen, preselectedCustomer]);
+
+  // Re-seed the locked customer each time the modal opens (props may change between opens)
+  useEffect(() => {
+    if (isOpen && lockedCustomer) {
+      setFormData(prev => ({
+        ...prev,
+        customerId: lockedCustomer.id,
+        customerName: lockedCustomer.name,
+        serviceAddress: lockedCustomer.address || prev.serviceAddress,
+        lat: lockedCustomer.lat ?? prev.lat,
+        lng: lockedCustomer.lng ?? prev.lng,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, lockedCustomer?.id]);
 
   // Lock the dashboard behind the modal — without this, wheel/trackpad input
   // over the backdrop scrolls the page underneath instead of staying put.
@@ -84,8 +141,18 @@ export default function AddJobModal({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleServiceTypeSelect = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      serviceType: value,
+      // Emergency jumps priority automatically, mirroring the portal wizard — still overridable below.
+      priority: value === "Emergency" ? "EMERGENCY" : prev.priority === "EMERGENCY" ? "NORMAL" : prev.priority,
+    }));
+  };
+
   const handleCustomerSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
+    setEquipmentId(''); // equipment belongs to the previous customer — clear on switch
     if (!id) {
       setFormData(prev => ({ ...prev, customerId: '', customerName: '', serviceAddress: '' }));
       return;
@@ -126,13 +193,16 @@ export default function AddJobModal({
         title:              formData.title.trim(),
         description:        formData.description.trim() || undefined,
         priority:           formData.priority.toUpperCase() as any,
-        jobTypeId:          formData.jobTypeId || undefined,
+        tags:               [formData.serviceType.toLowerCase()],
         customerId:         formData.customerId,
         customerName:       formData.customerName,
         serviceAddress:     formData.serviceAddress,
         scheduledStart,
         serviceLatitude:    formData.lat,
         serviceLongitude:   formData.lng,
+        projectId:          lockedProject?.id ?? projectLink.projectId ?? undefined,
+        houseId:            lockedHouseId ?? projectLink.houseId ?? selectedHouseId ?? undefined,
+        equipmentId:        lockedEquipmentId ?? equipmentId ?? undefined,
       } as any,
       {
         onSuccess: (newJob) => {
@@ -142,15 +212,18 @@ export default function AddJobModal({
             title: "",
             description: "",
             priority: "NORMAL",
-            jobTypeId: "",
-            customerId: "",
-            customerName: "",
-            serviceAddress: "",
+            serviceType: "Maintenance",
+            customerId: lockedCustomer?.id ?? "",
+            customerName: lockedCustomer?.name ?? "",
+            serviceAddress: lockedCustomer?.address ?? "",
             date: new Date().toISOString().split("T")[0],
             time: "09:00",
-            lat: 6.9271,
-            lng: 79.8612,
+            lat: lockedCustomer?.lat ?? 6.9271,
+            lng: lockedCustomer?.lng ?? 79.8612,
           });
+          setProjectLink({});
+          setEquipmentId('');
+          setSelectedHouseId('');
           setActiveTab("basic");
           setError('');
         },
@@ -189,16 +262,17 @@ export default function AddJobModal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Create New Job"
-        className="bg-white rounded-xl max-w-2xl w-full flex flex-col shadow-2xl admin-modal-box overflow-hidden"
-        style={{ height: "min(660px, calc(100vh - 48px))" }}
+        aria-label={contextLabel ? `Create Job — ${contextLabel}` : "Create New Job"}
+        className="bg-white rounded-xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl admin-modal-box overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5 flex items-center justify-between rounded-t-xl shrink-0">
           <div className="text-white">
-            <h2 className="text-2xl font-bold">Create New Job</h2>
-            <p className="text-blue-100 text-sm mt-0.5">
+            <h2 className="text-2xl font-bold">{contextLabel ? `Create Job — ${contextLabel}` : "Create New Job"}</h2>
+            <p className="text-blue-100 text-sm mt-0.5 flex items-center gap-1.5">
+              {lockedProject && <FolderKanban size={12} />}
               Step {activeTab === "basic" ? "1" : "2"} of 2 — {activeTab === "basic" ? "Job Details" : "Schedule & Cost"}
+              {lockedProject && ` · linked to ${lockedProject.name}${lockedHouseLabel ? ` — ${lockedHouseLabel}` : ''}`}
             </p>
           </div>
           <button
@@ -251,35 +325,83 @@ export default function AddJobModal({
 
             {activeTab === "basic" && (
               <>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    What kind of service is this?
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                    {SERVICE_TYPES.map((t) => {
+                      const active = formData.serviceType === t.value;
+                      const Icon = t.icon;
+                      return (
+                        <button
+                          key={t.value}
+                          type="button"
+                          onClick={() => handleServiceTypeSelect(t.value)}
+                          disabled={isLoading}
+                          className={`flex flex-col items-center text-center rounded-xl px-3 py-3.5 border transition-colors cursor-pointer ${
+                            active
+                              ? t.danger
+                                ? "border-2 border-red-500 bg-red-50"
+                                : "border-2 border-blue-600 bg-blue-50"
+                              : "border-gray-200 bg-white hover:bg-gray-50"
+                          }`}
+                        >
+                          <span
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2 ${
+                              active ? (t.danger ? "text-red-600 bg-red-100" : "text-blue-600 bg-blue-100") : "text-gray-400 bg-gray-100"
+                            }`}
+                          >
+                            <Icon size={17} strokeWidth={1.8} />
+                          </span>
+                          <span className={`text-xs font-bold ${active ? (t.danger ? "text-red-600" : "text-blue-600") : "text-gray-600"}`}>
+                            {t.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5 md:col-span-2">
+                  <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Customer <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      placeholder="Search customers…"
-                      value={customerSearch}
-                      onChange={e => setCustomerSearch(e.target.value)}
-                      disabled={isLoading}
-                      className={`${inputCls} mb-1.5`}
-                      style={{ marginBottom: 6 }}
-                    />
-                    <select
-                      value={formData.customerId}
-                      onChange={handleCustomerSelect}
-                      disabled={isLoading}
-                      className={inputCls}
-                    >
-                      <option value="">— Select Customer —</option>
-                      {customers.map((c: any) => (
-                        <option key={c.id} value={c.id}>
-                          {c.firstName} {c.lastName}{c.email ? ` (${c.email})` : ''}
-                        </option>
-                      ))}
-                    </select>
+                    {lockedCustomer ? (
+                      <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-blue-50 border border-blue-100 text-sm text-blue-900">
+                        <Lock size={12} className="text-blue-400 shrink-0" />
+                        <span className="font-medium">{formData.customerName}</span>
+                        <span className="text-blue-400 text-xs ml-auto">Set by the house</span>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Search customers…"
+                          value={customerSearch}
+                          onChange={e => setCustomerSearch(e.target.value)}
+                          disabled={isLoading}
+                          className={`${inputCls} mb-1.5`}
+                          style={{ marginBottom: 6 }}
+                        />
+                        <select
+                          value={formData.customerId}
+                          onChange={handleCustomerSelect}
+                          disabled={isLoading}
+                          className={inputCls}
+                        >
+                          <option value="">— Select Customer —</option>
+                          {customers.map((c: any) => (
+                            <option key={c.id} value={c.id}>
+                              {c.firstName} {c.lastName}{c.email ? ` (${c.email})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </>
+                    )}
                   </div>
-                  <div className="space-y-1.5 md:col-span-2">
+                  <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Service Address <span className="text-red-500">*</span>
                     </label>
@@ -293,6 +415,78 @@ export default function AddJobModal({
                       className={inputCls}
                     />
                   </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      {lockedProject ? "Project" : "Link to a project (optional)"}
+                    </label>
+                    {lockedProject ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-blue-50 border border-blue-100 text-sm text-blue-900">
+                          <FolderKanban size={13} className="text-blue-400 shrink-0" />
+                          <span className="font-medium">{lockedProject.name}</span>
+                          {lockedHouseLabel && <span className="text-blue-700 text-xs">· {lockedHouseLabel}</span>}
+                          <span className="text-blue-400 text-xs ml-auto">Set by this page</span>
+                        </div>
+                        {showHouseSelect && (
+                          <select
+                            value={selectedHouseId}
+                            onChange={(e) => setSelectedHouseId(e.target.value)}
+                            disabled={isLoading}
+                            className={inputCls}
+                          >
+                            <option value="">Which house? (optional)</option>
+                            {(lockedHousesQuery.data ?? []).map((h) => (
+                              <option key={h.id} value={h.id}>{h.label}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    ) : (
+                      <ProjectJobLinkPicker value={projectLink} onChange={setProjectLink} customerId={formData.customerId || undefined} />
+                    )}
+                  </div>
+                  {lockedEquipmentId ? (
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Equipment
+                      </label>
+                      <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-blue-50 border border-blue-100 text-sm text-blue-900">
+                        <Home size={13} className="text-blue-400 shrink-0" />
+                        <span className="font-medium">{lockedEquipmentLabel ?? 'This unit'}</span>
+                        <span className="text-blue-400 text-xs ml-auto">This visit will be logged against that unit</span>
+                      </div>
+                    </div>
+                  ) : formData.customerId && customerEquipment.length > 0 && (
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Related equipment (optional)
+                      </label>
+                      <select
+                        value={equipmentId}
+                        onChange={(e) => setEquipmentId(e.target.value)}
+                        disabled={isLoading}
+                        className={inputCls}
+                      >
+                        <option value="">— None / not applicable —</option>
+                        {customerEquipment.map((eq: any) => (
+                          <option key={eq.id} value={eq.id}>
+                            {[eq.brand, eq.type, eq.model].filter(Boolean).join(' ')}
+                            {eq.serialNo ? ` (S/N: ${eq.serialNo})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedEquipment && (
+                        <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg">
+                          <Link2 size={13} className="text-blue-500 shrink-0" />
+                          <span className="text-xs font-medium text-gray-700">
+                            Linked to <b className="text-gray-900">
+                              {[selectedEquipment.brand, selectedEquipment.model].filter(Boolean).join(' ') || selectedEquipment.type}
+                            </b> — this visit will be logged against that unit
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Job Title <span className="text-red-500">*</span>
@@ -321,7 +515,7 @@ export default function AddJobModal({
                       className={`${inputCls} resize-none`}
                     />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                       Priority
                     </label>
@@ -336,25 +530,6 @@ export default function AddJobModal({
                       <option value="NORMAL">Normal</option>
                       <option value="HIGH">High</option>
                       <option value="EMERGENCY">Emergency</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      Job Type
-                    </label>
-                    <select
-                      name="jobTypeId"
-                      value={formData.jobTypeId}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={inputCls}
-                    >
-                      <option value="">— Select Type —</option>
-                      {jobTypes.map((jt: any) => (
-                        <option key={jt.id} value={jt.id}>
-                          {jt.name} ({jt.trade})
-                        </option>
-                      ))}
                     </select>
                   </div>
                 </div>

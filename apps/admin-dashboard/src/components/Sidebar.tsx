@@ -1,11 +1,14 @@
 import { useLocation, Link } from 'react-router-dom'
 import { ROUTE_LOADERS } from '../App'
+import { prefetchRouteData } from '../lib/prefetchRoutes'
 
-// Warm the lazy-loaded chunk for a route before the user clicks. Called on
-// hover/focus — by the time they release the mouse the JS is usually in the
-// module cache, so navigation feels instant.
+// Warm a route before the user clicks. Called on hover/focus — by the time
+// they release the mouse the JS chunk is usually in the module cache AND the
+// page's data is in the React Query cache (prefetchRouteData respects
+// staleTime, so hovering repeatedly costs nothing while data is fresh).
 const prefetched = new Set<string>()
 function prefetchRoute(path: string) {
+  prefetchRouteData(path)
   if (prefetched.has(path)) return
   const loader = ROUTE_LOADERS[path]
   if (!loader) return
@@ -14,11 +17,13 @@ function prefetchRoute(path: string) {
   loader().catch(() => prefetched.delete(path))
 }
 import {
-    LayoutDashboard, Users, Wrench, /* CalendarDays, */ Zap,
+    LayoutDashboard, Users, Wrench, CalendarDays,
     DollarSign, MessageSquare, BarChart3, Settings,
-    Menu, X, LogOut, Shield, Package, Megaphone, Upload, FileSignature, Route, FolderKanban,
+    Menu, X, LogOut, Shield, Package, Megaphone, Upload, FileSignature, FolderKanban,
+    ChevronLeft, Plus,
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
+import { useAuth } from '../contexts/AuthContext'
 import { usePendingTechnicians } from '../hooks/useTeam'
 import { useUnreadThreadsCount } from '../hooks/useComms'
 import { useCompany } from '../hooks/useSettings'
@@ -28,11 +33,18 @@ interface Props { collapsed: boolean; onToggle: () => void; mobileOpen?: boolean
 export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     const loc = useLocation()
     const { theme } = useTheme()
+    const { user: authUser, logout } = useAuth()
     const pendingQuery = usePendingTechnicians()
     const pendingCount = pendingQuery.data?.total ?? 0
     const unreadMessages = useUnreadThreadsCount()
     const companyQuery = useCompany()
     const company = companyQuery.data
+
+    const currentUser = {
+        name: authUser?.name ?? 'User',
+        role: (authUser?.role ?? 'admin').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        initials: (authUser?.name ?? 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+    }
 
     const isLight = theme === 'light'
     const isMobileMode = mobileOpen !== undefined
@@ -66,33 +78,39 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
 
     const NAV = [
         {
+            label: 'Home',
             items: [
                 { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
             ],
         },
         {
+            label: 'Operations',
             items: [
-                { icon: Users, label: 'Customers & CRM', path: '/customers' },
                 { icon: Wrench, label: 'Jobs', path: '/jobs', badge: 0 },
+                { icon: CalendarDays, label: 'Scheduling', path: '/scheduling' },
                 { icon: FolderKanban, label: 'Projects', path: '/projects' },
-                /* Scheduling page is temporarily disabled — re-enable when Go scheduling service is verified */
-                // { icon: CalendarDays, label: 'Scheduling', path: '/scheduling' },
-                { icon: Zap, label: 'Dispatch Board', path: '/dispatch' },
-                { icon: Route, label: 'Day Planner', path: '/planner' },
                 { icon: FileSignature, label: 'Agreements', path: '/agreements' },
             ],
         },
         {
+            label: 'Sales & customers',
             items: [
-                { icon: DollarSign, label: 'Finance', path: '/finance' },
-                { icon: MessageSquare, label: 'Communications', path: '/communications', badge: unreadMessages },
+                { icon: Users, label: 'Customers & CRM', path: '/customers' },
                 { icon: Megaphone, label: 'Marketing', path: '/marketing' },
-                { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-                // { icon: Brain, label: 'Bandit AI', path: '/bandit-dashboard' },
-                { icon: Package, label: 'Inventory', path: '/inventory' },
+                { icon: MessageSquare, label: 'Communications', path: '/communications', badge: unreadMessages },
             ],
         },
         {
+            label: 'Money',
+            items: [
+                { icon: DollarSign, label: 'Finance', path: '/finance' },
+                { icon: Package, label: 'Inventory', path: '/inventory' },
+                { icon: BarChart3, label: 'Analytics', path: '/analytics' },
+                // { icon: Brain, label: 'Bandit AI', path: '/bandit-dashboard' },
+            ],
+        },
+        {
+            label: 'Workspace',
             items: [
                 { icon: Upload, label: 'Integrations', path: '/import' },
                 { icon: Shield, label: 'Team', path: '/team', pendingDot: pendingCount > 0 },
@@ -101,38 +119,76 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
         },
     ]
 
+    const groupLabelClass = isLight ? 'text-slate-500' : 'text-[var(--t4)]'
+    const createBtnClass = isLight
+        ? 'bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white shadow-lg shadow-blue-900/30'
+        : 'bg-gradient-to-r from-[var(--blue)] to-blue-400 hover:brightness-110 text-white shadow-md'
+
     return (
         <aside className={sidebarClasses}>
-            <div className={`flex items-center flex-shrink-0 h-20 border-b ${headerBorder} ${collapsed ? 'justify-center px-0' : 'justify-start px-5 gap-3.5'}`}>
-                {/* Company logo or initial avatar */}
-                {company?.logoUrl ? (
-                    <img
-                        src={company.logoUrl}
-                        alt={company.name ?? 'Company'}
-                        className="w-11 h-11 rounded-xl object-contain flex-shrink-0 shadow-lg"
-                        style={{ background: 'var(--bg-card-2)', padding: 2 }}
-                    />
-                ) : (
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0 font-bold text-white text-xl overflow-hidden shadow-lg">
-                        {(company?.name ?? 'H')[0].toUpperCase()}
-                    </div>
-                )}
+            <div className={`flex items-center flex-shrink-0 h-20 border-b ${headerBorder} ${collapsed ? 'justify-center px-0' : 'justify-between px-5 gap-2'}`}>
+                <div className={`flex items-center min-w-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                    {/* Company logo or initial avatar */}
+                    {company?.logoUrl ? (
+                        <img
+                            src={company.logoUrl}
+                            alt={company.name ?? 'Company'}
+                            className="w-11 h-11 rounded-xl object-contain flex-shrink-0 shadow-lg"
+                            style={{ background: 'var(--bg-card-2)', padding: 2 }}
+                        />
+                    ) : (
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0 font-bold text-white text-xl overflow-hidden shadow-lg">
+                            {(company?.name ?? 'H')[0].toUpperCase()}
+                        </div>
+                    )}
+                    {!collapsed && (
+                        <div className="min-w-0">
+                            <h2 className={`text-lg font-bold leading-tight truncate ${isLight ? 'text-white' : 'text-[var(--t1)]'}`}>
+                                {company?.name ?? 'HVACtor.ai'}
+                            </h2>
+                            <p className={`text-[11px] leading-tight mt-0.5 truncate ${isLight ? 'text-slate-400' : 'text-[var(--t3)]'}`}>
+                                Management Dashboard
+                            </p>
+                        </div>
+                    )}
+                </div>
                 {!collapsed && (
-                    <div className="min-w-0">
-                        <h2 className={`text-lg font-bold leading-tight truncate ${isLight ? 'text-white' : 'text-[var(--t1)]'}`}>
-                            {company?.name ?? 'HomePulse'}
-                        </h2>
-                        <p className={`text-[11px] leading-tight mt-0.5 truncate ${isLight ? 'text-slate-400' : 'text-[var(--t3)]'}`}>
-                            Management Dashboard
-                        </p>
-                    </div>
+                    <button
+                        onClick={onToggle}
+                        title={isMobileMode ? 'Close menu' : 'Collapse sidebar'}
+                        className={[
+                            'flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150 cursor-pointer flex-shrink-0',
+                            collapseBtn,
+                        ].join(' ')}
+                    >
+                        {isMobileMode ? <X size={15} /> : <ChevronLeft size={15} />}
+                    </button>
                 )}
             </div>
 
+            {!collapsed && (
+                <div className="px-3 pt-4 flex-shrink-0">
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-add-job'))}
+                        className={[
+                            'w-full flex items-center justify-center gap-2 rounded-xl h-11 text-sm font-semibold cursor-pointer border-0 transition-all duration-150',
+                            createBtnClass,
+                        ].join(' ')}
+                    >
+                        <Plus size={16} strokeWidth={2.5} /> Create job
+                    </button>
+                </div>
+            )}
+
             {/* Navigation */}
-            <nav className={`flex-1 overflow-y-auto flex flex-col gap-1.5 ${collapsed ? 'px-1 py-5' : 'px-2 py-5'}`}>
+            <nav className={`flex-1 overflow-y-auto flex flex-col gap-4 ${collapsed ? 'px-1 py-5' : 'px-2 py-5'}`}>
                 {NAV.map((group, index) => (
                     <div key={index} className="flex flex-col gap-1">
+                        {!collapsed && (
+                            <div className={`px-3 pb-1 text-[10px] font-bold uppercase tracking-wider ${groupLabelClass}`}>
+                                {group.label}
+                            </div>
+                        )}
                         {group.items.map((item: any) => {
                             const Icon = item.icon
                             const active = loc.pathname === item.path
@@ -184,11 +240,12 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                 {!collapsed && (
                     <div className={loggedInCard}>
                         <p className={loggedInLabel}>Logged in as</p>
-                        <p className={loggedInName}>Name</p>
-                        <p className={loggedInRole}>Super Admin</p>
+                        <p className={loggedInName}>{currentUser.name}</p>
+                        <p className={loggedInRole}>{currentUser.role}</p>
                     </div>
                 )}
                 <button
+                    onClick={logout}
                     title="Logout"
                     className={[
                         'flex items-center justify-center gap-2.5 rounded-lg bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-medium h-10 transition-colors duration-150 cursor-pointer border-0 flex-shrink-0',
@@ -198,18 +255,19 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                     <LogOut size={16} className="flex-shrink-0" />
                     {!collapsed && <span>Logout</span>}
                 </button>
-                <button
-                    onClick={onToggle}
-                    title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                    id="btn-sidebar-toggle"
-                    className={[
-                        'flex items-center justify-center rounded-lg transition-all duration-150 cursor-pointer h-9 flex-shrink-0',
-                        collapseBtn,
-                        collapsed ? 'w-9 mx-auto' : 'w-full',
-                    ].join(' ')}
-                >
-                    {collapsed ? <Menu size={18} /> : <X size={16} />}
-                </button>
+                {collapsed && (
+                    <button
+                        onClick={onToggle}
+                        title="Expand sidebar"
+                        id="btn-sidebar-toggle"
+                        className={[
+                            'flex items-center justify-center rounded-lg transition-all duration-150 cursor-pointer h-9 w-9 mx-auto flex-shrink-0',
+                            collapseBtn,
+                        ].join(' ')}
+                    >
+                        <Menu size={18} />
+                    </button>
+                )}
             </div>
         </aside>
     )

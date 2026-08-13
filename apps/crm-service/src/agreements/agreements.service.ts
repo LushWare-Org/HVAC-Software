@@ -4,8 +4,11 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+import { TtlCacheService } from '../cache/ttl-cache.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { FinanceRenderClient } from '../finance-render/finance-render.client';
+import { StorageService } from '../storage/storage.service';
 import { clampPagination } from '@tscrm/types';
 
 const INTERVAL_MONTHS: Record<string, number> = {
@@ -46,17 +49,22 @@ export class AgreementsService {
   constructor(
     private prisma: PrismaService,
     private email: EmailService,
+    private ttlCache: TtlCacheService,
+    private financeRender: FinanceRenderClient,
+    private storage: StorageService,
   ) {}
 
   async findAll(
     companyId: string,
-    opts: { status?: string; customerId?: string; page?: number; limit?: number } = {},
+    opts: { status?: string; customerId?: string; projectId?: string; houseId?: string; page?: number; limit?: number } = {},
   ) {
     const { page, limit } = clampPagination({ page: opts.page, limit: opts.limit });
     const where = {
       companyId,
       ...(opts.status && { status: opts.status as any }),
       ...(opts.customerId && { customerId: opts.customerId }),
+      ...(opts.projectId && { projectId: opts.projectId }),
+      ...(opts.houseId && { houseId: opts.houseId }),
     };
     const [data, total] = await Promise.all([
       this.prisma.serviceAgreement.findMany({
@@ -73,12 +81,27 @@ export class AgreementsService {
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
-  /** Customer-portal listing — always scoped to the caller's customerId. */
+  /**
+   * Customer-portal listing — an agreement's own customerId may be the project's
+   * top-level customer (e.g. the developer) rather than the individual house
+   * owner, same mismatch already solved for jobs — so this returns agreements
+   * that are either directly theirs OR tied to a house they own.
+   */
   async findMine(companyId: string, customerId: string) {
+    const ownedHouses = await this.prisma.house.findMany({
+      where: { companyId, ownerCustomerId: customerId },
+      select: { id: true },
+    });
+    const houseIds = ownedHouses.map((h) => h.id);
+
     const data = await this.prisma.serviceAgreement.findMany({
-      where: { companyId, customerId },
-      include: { amendments: { orderBy: { createdAt: 'desc' } } },
+      where: {
+        companyId,
+        OR: [{ customerId }, ...(houseIds.length ? [{ houseId: { in: houseIds } }] : [])],
+      },
+      include: { amendments: { orderBy: { createdAt: 'desc' }, take: 20 } },
       orderBy: { createdAt: 'desc' },
+      take: 100,
     });
     return { data };
   }
@@ -95,12 +118,61 @@ export class AgreementsService {
     return agreement;
   }
 
+  async generatePdf(companyId: string, id: string): Promise<Buffer> {
+    const agreement = await this.findOne(companyId, id);
+    const company = await this.prisma.company.findFirst({ where: { id: companyId } });
+
+    const pdf = await this.financeRender.renderAgreement({
+      companyId,
+      templateId: (agreement as any).templateId ?? undefined,
+      companyName: company?.name ?? 'HVACtor.ai',
+      companyAddress: company?.address ?? '',
+      context: {
+        name: agreement.name,
+        description: agreement.description ?? undefined,
+        customerName: `${agreement.customer.firstName} ${agreement.customer.lastName}`.trim(),
+        customerEmail: agreement.customer.email ?? '',
+        startDate: agreement.startDate.toISOString(),
+        endDate: agreement.endDate?.toISOString(),
+        serviceType: agreement.serviceType ?? undefined,
+        serviceInterval: agreement.serviceInterval ?? undefined,
+        visitsIncluded: agreement.visitsIncluded ?? undefined,
+        visitsUsed: agreement.visitsUsed,
+        billingAmount: agreement.billingAmount ? parseFloat(agreement.billingAmount.toString()) : undefined,
+        billingCycle: agreement.billingCycle ?? undefined,
+        nextBillingDate: agreement.nextBillingDate?.toISOString(),
+        signedByName: agreement.signedByName ?? undefined,
+        signedAt: agreement.signedAt?.toISOString(),
+      },
+    });
+
+    const key = `documents/${companyId}/agreement-${id}.pdf`;
+    const documentUrl = await this.storage.putPublicObject(key, pdf, 'application/pdf');
+    await this.prisma.serviceAgreement.update({ where: { id }, data: { documentUrl } });
+
+    return pdf;
+  }
+
   async create(companyId: string, data: any) {
     const customer = await this.prisma.customer.findFirst({
       where: { id: data.customerId, companyId },
       select: { id: true },
     });
     if (!customer) throw new BadRequestException('Customer not found in this company');
+
+    // Housing Scheme: an agreement created for a specific house auto-inherits
+    // that house's project (same fix already applied to Job.projectId) — a
+    // house-linked agreement with no projectId would otherwise never show up
+    // in that project's own Agreements tab.
+    let projectId = data.projectId ?? null;
+    if (data.houseId) {
+      const house = await this.prisma.house.findFirst({
+        where: { id: data.houseId, companyId },
+        select: { id: true, projectId: true },
+      });
+      if (!house) throw new BadRequestException('House not found in this company');
+      if (!projectId) projectId = house.projectId;
+    }
 
     const startDate = new Date(data.startDate);
     const nextServiceDate =
@@ -112,6 +184,8 @@ export class AgreementsService {
       data: {
         companyId,
         customerId: data.customerId,
+        projectId,
+        houseId: data.houseId ?? null,
         name: data.name,
         description: data.description,
         startDate,
@@ -129,7 +203,11 @@ export class AgreementsService {
         leadDays: data.leadDays ?? 7,
         jobTemplateId: data.jobTemplateId,
         autoRenew: data.autoRenew ?? false,
+        templateId: data.templateId ?? null,
       },
+    }).then((created) => {
+      this.ttlCache.del(`status-summary:${companyId}:${created.customerId}`);
+      return created;
     });
   }
 
@@ -188,6 +266,7 @@ export class AgreementsService {
       await this.notifyAmendment(updated).catch(() => undefined);
     }
 
+    this.ttlCache.del(`status-summary:${companyId}:${updated.customerId}`);
     return updated;
   }
 
@@ -296,11 +375,13 @@ export class AgreementsService {
       });
     }
 
+    this.ttlCache.del(`status-summary:${companyId}:${renewed.customerId}`);
     return renewed;
   }
 
   async cancel(companyId: string, id: string) {
-    await this.findOne(companyId, id);
+    const existing = await this.findOne(companyId, id);
+    this.ttlCache.del(`status-summary:${companyId}:${existing.customerId}`);
     return this.prisma.serviceAgreement.update({
       where: { id },
       data: { status: 'CANCELLED' },

@@ -4,13 +4,13 @@
  */
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Check, MapPin, Loader2 } from 'lucide-react'
+import { X, Check, MapPin, Loader2, Home, User, UserCheck, Briefcase, FileSignature, Receipt, CalendarClock } from 'lucide-react'
 import MapPicker from '../../components/MapPickerLazy'
 import {
   WEEKDAYS, useTechDirectory, useCreateProject, useUpdateProject,
-  type Project, type ProjectStatus, type Weekday,
+  PROJECT_TEMPLATE_META, type Project, type ProjectStatus, type ProjectTemplateType, type Weekday,
 } from './projectsApi'
-import { useCustomers } from '../../hooks/useCustomers'
+import CustomerPickerWithCreate, { type PickedCustomer } from '../../components/CustomerPickerWithCreate'
 import { TechAvatar } from './shared'
 
 const inp: React.CSSProperties = {
@@ -52,13 +52,15 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
   const createProject = useCreateProject()
   const updateProject = useUpdateProject()
   const { data: techs } = useTechDirectory()
-  const [customerSearch, setCustomerSearch] = useState('')
-  const customersQ = useCustomers({ limit: 50, search: customerSearch || undefined })
-  const customers = customersQ.data?.data ?? []
+  // Seeded from the project being edited (if it already has a customer) so the
+  // same picker UI handles "assign for the first time" and "change" alike.
+  const [pickedCustomer, setPickedCustomer] = useState<PickedCustomer | null>(
+    project?.customerId ? { id: project.customerId, firstName: project.customerName ?? 'Customer', lastName: '' } : null
+  )
+  const [showCustomerPicker, setShowCustomerPicker] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     name: project?.name ?? '',
-    customerId: project?.customerId ?? '',
     category: project?.category ?? '',
     status: project?.status ?? 'PLANNING' as ProjectStatus,
     description: project?.description ?? '',
@@ -72,6 +74,7 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
     workingDays: project?.workingDays ?? (['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as Weekday[]),
     baseTeamUserIds: project?.baseTeamUserIds ?? [],
     notes: project?.notes ?? '',
+    templateType: (project?.templateType ?? 'STANDARD') as ProjectTemplateType,
   })
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm(f => ({ ...f, [k]: v }))
@@ -86,7 +89,7 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
       ? form.baseTeamUserIds.filter(x => x !== id)
       : [...form.baseTeamUserIds, id])
 
-  const valid = form.name.trim() && (project ? true : !!form.customerId)
+  const valid = !!form.name.trim()
   const saving = createProject.isPending || updateProject.isPending
 
   const save = async () => {
@@ -107,10 +110,11 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
       workingDays: form.workingDays,
       baseTeamUserIds: form.baseTeamUserIds,
       notes: form.notes.trim() || undefined,
+      customerId: pickedCustomer?.id,
     }
     try {
       if (project) await updateProject.mutateAsync({ id: project.id, ...payload })
-      else await createProject.mutateAsync({ ...payload, customerId: form.customerId })
+      else await createProject.mutateAsync({ ...payload, templateType: form.templateType })
       onClose()
     } catch (e: any) {
       const msg = e?.response?.data?.message
@@ -132,10 +136,10 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
         aria-modal="true"
         aria-label={project ? 'Edit project' : 'New project'}
         style={{
-          width: 680, maxWidth: '100%', padding: 0, overflow: 'hidden',
+          width: 980, maxWidth: '96vw', padding: 0, overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
           // Lock to the viewport: header + footer stay pinned, only the body scrolls
-          height: 'min(760px, calc(100vh - 48px))',
+          height: 'min(860px, calc(100vh - 48px))',
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -152,6 +156,25 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
 
         {/* Scrollable body */}
         <div className="card-body" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* At a glance — only meaningful once the project has linked entities to summarize */}
+          {project && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+              {[
+                { icon: Briefcase, label: 'Jobs', value: project.jobs.length },
+                { icon: FileSignature, label: 'Agreements', value: project.agreements.length },
+                { icon: Receipt, label: 'Quotes / Invoices', value: project.quotes.length + project.invoices.length },
+                { icon: CalendarClock, label: 'Created', value: new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
+              ].map(s => (
+                <div key={s.label} style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--bg-card-2)', border: '1px solid var(--bd)' }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <s.icon size={11} /> {s.label}
+                  </p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', margin: '4px 0 0' }}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
           <SectionLabel>Project</SectionLabel>
           {/* Identity */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -160,22 +183,33 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
               <input style={inp} value={form.name} placeholder="Lotus Tower — HVAC Modernization"
                 onChange={e => set('name', e.target.value)} />
             </div>
-            <div>
-              <label style={lbl}>Customer *</label>
-              {project ? (
-                <input style={{ ...inp, opacity: 0.7 }} value={project.customerName} disabled />
+            <div style={{ gridColumn: pickedCustomer || showCustomerPicker ? '1 / -1' : undefined }}>
+              <label style={lbl}>Customer</label>
+              {showCustomerPicker ? (
+                <CustomerPickerWithCreate
+                  autoFocus
+                  onPick={c => { setPickedCustomer(c); setShowCustomerPicker(false) }}
+                  onCancel={() => setShowCustomerPicker(false)}
+                />
+              ) : pickedCustomer ? (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px',
+                  borderRadius: 9, border: '1px solid var(--green)', background: 'var(--green-dim)',
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>
+                    <UserCheck size={14} style={{ color: 'var(--green)' }} /> {`${pickedCustomer.firstName} ${pickedCustomer.lastName}`.trim()}
+                  </span>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowCustomerPicker(true)}>Change</button>
+                </div>
               ) : (
-                <>
-                  <input style={{ ...inp, marginBottom: 6 }} value={customerSearch} placeholder="Search customers…"
-                    onChange={e => setCustomerSearch(e.target.value)} />
-                  <select className="select" style={{ width: '100%' }} value={form.customerId}
-                    onChange={e => set('customerId', e.target.value)}>
-                    <option value="">Select a customer…</option>
-                    {customers.map((c: any) => (
-                      <option key={c.id} value={c.id}>{c.firstName} {c.lastName}{c.companyName ? ` — ${c.companyName}` : ''}</option>
-                    ))}
-                  </select>
-                </>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowCustomerPicker(true)}>
+                  <User size={12} /> Select or create a customer
+                </button>
+              )}
+              {!pickedCustomer && !showCustomerPicker && (
+                <p style={{ fontSize: 10.5, color: 'var(--t4)', margin: '6px 0 0' }}>
+                  Optional — you can add or change the customer any time from here.
+                </p>
               )}
             </div>
             <div>
@@ -190,6 +224,39 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
                 onChange={e => set('description', e.target.value)} />
             </div>
           </div>
+
+          {/* Template — only choosable at creation, locked in afterward */}
+          {!project && (
+            <div>
+              <label style={lbl}>Project template</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {(Object.keys(PROJECT_TEMPLATE_META) as ProjectTemplateType[]).map(key => {
+                  const meta = PROJECT_TEMPLATE_META[key]
+                  const on = form.templateType === key
+                  return (
+                    <button key={key} onClick={() => set('templateType', key)} style={{
+                      display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left', cursor: 'pointer',
+                      padding: '12px 14px', borderRadius: 10, fontFamily: 'inherit',
+                      border: `1px solid ${on ? 'var(--blue)' : 'var(--bd)'}`,
+                      background: on ? 'var(--blue-dim)' : 'var(--bg-card)',
+                    }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                        {key === 'HOUSING_SCHEME' && <Home size={13} style={{ color: on ? 'var(--blue)' : 'var(--t3)' }} />}
+                        <span style={{ fontSize: 13, fontWeight: 700, color: on ? 'var(--blue)' : 'var(--t1)' }}>{meta.label}</span>
+                        {on && <Check size={13} style={{ color: 'var(--blue)', marginLeft: 'auto' }} />}
+                      </span>
+                      <span style={{ fontSize: 11.5, color: 'var(--t3)', lineHeight: 1.4 }}>{meta.description}</span>
+                    </button>
+                  )
+                })}
+              </div>
+              {form.templateType === 'HOUSING_SCHEME' && (
+                <p style={{ fontSize: 11, color: 'var(--t4)', margin: '6px 0 0' }}>
+                  Can't be changed after the project is created.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Schedule & sizing */}
           <SectionLabel>Schedule &amp; budget</SectionLabel>

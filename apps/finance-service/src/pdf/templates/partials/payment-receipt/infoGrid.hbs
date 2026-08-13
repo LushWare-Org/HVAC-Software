@@ -1,0 +1,18 @@
+<div class="info-grid">
+  <div class="info-card">
+    <div class="info-label">Payment date</div>
+    <div class="info-value">{{paidAtFmt}}</div>
+  </div>
+  <div class="info-card">
+    <div class="info-label">Payment method</div>
+    <div class="info-value">{{paymentMethod}}</div>
+  </div>
+  <div class="info-card">
+    <div class="info-label">Invoice reference</div>
+    <div class="info-value">{{invoiceNumber}}</div>
+  </div>
+  <div class="info-card">
+    <div class="info-label">Remaining balance</div>
+    <div class="info-value">{{#if balanceDue}}{{balanceDueFmt}}{{else}}Paid in full{{/if}}</div>
+  </div>
+</div>

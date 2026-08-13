@@ -2,8 +2,9 @@
  * My Service Plans — the customer's agreements: what's included, visits used,
  * next scheduled service, and renewal state.
  */
-import { ShieldCheck, CalendarDays, Loader2, CheckCircle2, Clock, RefreshCw, Infinity as InfinityIcon } from 'lucide-react'
+import { ShieldCheck, CalendarDays, Loader2, CheckCircle2, Clock, RefreshCw, Infinity as InfinityIcon, Home } from 'lucide-react'
 import { useMyAgreements, type MyAgreement } from '../hooks/useMyAgreements'
+import { useMyHouses } from '../hooks/useMyHouse'
 import { formatMoney } from '../lib/format'
 
 const fmtDate = (iso?: string | null) =>
@@ -59,7 +60,7 @@ function VisitBar({ a }: { a: MyAgreement }) {
   )
 }
 
-function AgreementCard({ a }: { a: MyAgreement }) {
+function AgreementCard({ a, houseLabel }: { a: MyAgreement; houseLabel?: string }) {
   const meta = STATUS_META[a.status]
   const freq = frequencyText(a)
   const money = fmtMoney(a.value)
@@ -69,11 +70,17 @@ function AgreementCard({ a }: { a: MyAgreement }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
         <div>
           <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{a.name}</h3>
-          {a.serviceType && (
-            <p style={{ fontSize: 13, color: 'var(--t3)', margin: '3px 0 0' }}>
-              {a.serviceType}{freq ? ` — ${freq}` : ''}
-            </p>
-          )}
+          <p style={{ fontSize: 13, color: 'var(--t3)', margin: '3px 0 0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {a.serviceType && <span>{a.serviceType}{freq ? ` — ${freq}` : ''}</span>}
+            {houseLabel && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700,
+                color: 'var(--blue)', background: 'var(--blue-dim)', padding: '1px 7px', borderRadius: 999,
+              }}>
+                <Home size={9} /> {houseLabel}
+              </span>
+            )}
+          </p>
         </div>
         <span style={{
           padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600,
@@ -162,14 +169,16 @@ function AgreementCard({ a }: { a: MyAgreement }) {
 export default function Agreements() {
   const { data, isLoading } = useMyAgreements()
   const agreements = (data?.data ?? []).filter(a => a.status !== 'DRAFT' && a.status !== 'RENEWED')
+  const { data: houses } = useMyHouses()
+  const houseLabelById = new Map((houses ?? []).map(h => [h.id, h.label]))
 
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--canvas-t1)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
           <ShieldCheck size={20} style={{ color: 'var(--blue)' }} /> My Service Plans
         </h1>
-        <p style={{ fontSize: 13, color: 'var(--t3)', margin: '4px 0 0' }}>
+        <p style={{ fontSize: 13, color: 'var(--canvas-t2)', margin: '4px 0 0' }}>
           Your maintenance agreements — coverage, visits, and upcoming service
         </p>
       </div>
@@ -188,7 +197,7 @@ export default function Agreements() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 720 }}>
-          {agreements.map(a => <AgreementCard key={a.id} a={a} />)}
+          {agreements.map(a => <AgreementCard key={a.id} a={a} houseLabel={a.houseId ? houseLabelById.get(a.houseId) : undefined} />)}
         </div>
       )}
     </div>

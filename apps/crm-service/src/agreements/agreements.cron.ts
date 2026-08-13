@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
-import { EmailService } from '../email/email.service';
+import { EmailService, renderEmailCard, emailInfoBox } from '../email/email.service';
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 const JOBS_URL = process.env.JOBS_SERVICE_URL ?? 'http://localhost:3002';
@@ -27,6 +27,17 @@ export class AgreementsCron implements OnModuleInit, OnModuleDestroy {
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
   ) {}
+
+  /** Small per-run cache so a batch of reminders for the same tenant doesn't re-query the company row each time. */
+  private readonly companyNameCache = new Map<string, string>();
+  private async companyName(companyId: string): Promise<string> {
+    const cached = this.companyNameCache.get(companyId);
+    if (cached) return cached;
+    const company = await this.prisma.company.findFirst({ where: { id: companyId } });
+    const name = company?.name || 'HVACtor.ai';
+    this.companyNameCache.set(companyId, name);
+    return name;
+  }
 
   onModuleInit(): void {
     this.intervalHandle = setInterval(() => void this.runOnce(), TWELVE_HOURS_MS);
@@ -113,19 +124,29 @@ export class AgreementsCron implements OnModuleInit, OnModuleDestroy {
         created += 1;
         // Let the customer know their visit is coming up
         if (customer.email) {
+          const companyName = await this.companyName(agreement.companyId);
+          const body = `
+            <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi <strong>${customer.firstName}</strong>,</p>
+            <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
+              As part of your plan <strong>${agreement.name}</strong>, your next ${agreement.serviceType ?? 'service'} visit is due around:
+            </p>
+            ${emailInfoBox({ accent: 'amber', label: 'Upcoming visit', html: `<p style="margin:0;font-size:16px;font-weight:700;color:#111827;">${due.toLocaleDateString()}</p>` })}
+            <p style="margin:0;font-size:13.5px;line-height:1.7;color:#4B5563;">Our team will confirm the exact time with you. You can also track this from your customer portal.</p>
+          `;
+          const html = renderEmailCard({
+            accent: 'amber',
+            eyebrow: 'Service reminder',
+            title: 'Your service visit is coming up',
+            subtitle: agreement.name,
+            bodyHtml: body,
+            companyName,
+          });
           await this.email
             .sendMail({
               to: customer.email,
               subject: `Your ${agreement.serviceType ?? 'service'} visit is coming up`,
-              html: `
-<div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
-  <h2>Service visit scheduled</h2>
-  <p>Hi ${customer.firstName},</p>
-  <p>As part of your plan <strong>${agreement.name}</strong>, your next
-     ${agreement.serviceType ?? 'service'} visit is due around
-     <strong>${due.toLocaleDateString()}</strong>.</p>
-  <p>Our team will confirm the exact time with you. You can also see this in your customer portal.</p>
-</div>`,
+              html,
+              companyName,
             })
             .catch(() => undefined);
         }
@@ -160,19 +181,29 @@ export class AgreementsCron implements OnModuleInit, OnModuleDestroy {
     let sent = 0;
     for (const agreement of dueForReminder) {
       if (agreement.customer.email) {
+        const companyName = await this.companyName(agreement.companyId);
+        const body = `
+          <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi <strong>${agreement.customer.firstName}</strong>,</p>
+          <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
+            Your plan <strong>${agreement.name}</strong> is expiring soon. Renew to keep your scheduled maintenance and priority service going.
+          </p>
+          ${emailInfoBox({ accent: 'red', label: 'Expires on', html: `<p style="margin:0;font-size:16px;font-weight:700;color:#111827;">${agreement.endDate!.toLocaleDateString()}</p>` })}
+          <p style="margin:0;font-size:13.5px;line-height:1.7;color:#4B5563;">Reply to this email or call our office and we'll get it renewed.</p>
+        `;
+        const html = renderEmailCard({
+          accent: 'red',
+          eyebrow: 'Renewal reminder',
+          title: 'Time to renew your service plan',
+          subtitle: agreement.name,
+          bodyHtml: body,
+          companyName,
+        });
         await this.email
           .sendMail({
             to: agreement.customer.email,
             subject: `Your service plan "${agreement.name}" expires soon`,
-            html: `
-<div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
-  <h2>Time to renew</h2>
-  <p>Hi ${agreement.customer.firstName},</p>
-  <p>Your plan <strong>${agreement.name}</strong> expires on
-     <strong>${agreement.endDate!.toLocaleDateString()}</strong>.
-     Renew to keep your scheduled maintenance and priority service going.</p>
-  <p>Reply to this email or call our office and we'll set it up.</p>
-</div>`,
+            html,
+            companyName,
           })
           .catch(() => undefined);
       }

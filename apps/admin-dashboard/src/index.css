@@ -1002,6 +1002,12 @@ img {
 .jobs-table-container .data-table th,
 .jobs-table-container .data-table td {
   border-bottom: 1px solid var(--bd);
+  padding: 12px 16px;
+}
+
+.jobs-table-container .data-table tbody tr {
+  transition: background var(--dur-fast);
+  cursor: pointer;
 }
 
 .jobs-table-container .data-table tbody tr:last-child td {

@@ -511,7 +511,7 @@ function DataImportCard() {
                         <span style={{ color: 'var(--t3)' }}>{new Date(lastBatch.createdAt).toLocaleDateString()}</span>
                     </div>
                 ) : (
-                    <div style={{ fontSize: 13, color: 'var(--t3)' }}>No imports yet — get your existing data into HomePulse in minutes.</div>
+                    <div style={{ fontSize: 13, color: 'var(--t3)' }}>No imports yet — get your existing data into HVACtor.ai in minutes.</div>
                 )}
                 <div style={{ display: 'flex', gap: 8 }}>
                     {canRollback && (

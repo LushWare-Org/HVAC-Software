@@ -1,0 +1,13 @@
+{{#if payments.length}}
+<div class="payment-section">
+  <div class="section-heading">Payment history</div>
+  <table>
+    <thead><tr><th>Date</th><th>Method</th><th style="text-align:right">Amount</th><th>Status</th></tr></thead>
+    <tbody>
+      {{#each payments}}
+      <tr><td>{{paidAtFmt}}</td><td>{{paymentMethod}}</td><td class="td-right">{{amountFmt}}</td><td>{{status}}</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+{{/if}}

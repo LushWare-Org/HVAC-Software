@@ -5,33 +5,45 @@
  *
  * DEMO: reads/writes the mock store; roster edits update live.
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, Suspense, lazy } from 'react'
+import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft, Pencil, MapPin, CalendarRange, Users2, FileSignature,
   Wrench, Wallet, LayoutList, HardHat, Plus, RotateCcw, X, Moon,
-  AlertTriangle, StickyNote, CalendarClock, Loader2, Link2, Unlink, UserPlus,
+  AlertTriangle, StickyNote, CalendarClock, Loader2, Link2, Unlink, UserPlus, Home, ChevronRight,
+  User, Mail, ExternalLink,
 } from 'lucide-react'
 import api from '../../lib/api'
 import { useToast } from '../../contexts/ToastContext'
 import { useCustomer } from '../../hooks/useCustomers'
+import CustomerPickerWithCreate from '../../components/CustomerPickerWithCreate'
 import {
   useProjectFull, useProjectRoster, useSetRosterDay, useTechDirectory,
   useLinkJobToProject, useLinkAgreement, useUpdateProject, projectProgress, projectFinances,
   invalidateProjectLinks, toDateKey, addDays, techById,
-  STATUS_META, WEEKDAYS, type Project, type RosterDay,
+  STATUS_META, WEEKDAYS, type Project, type ProjectJob, type RosterDay,
 } from './projectsApi'
+import { useHouses, ACCOUNT_STATUS_META, type House } from './housesApi'
 import { AvatarStack, TechAvatar, ProjectStatusBadge, ProgressBar, fmtMoney, fmtDate } from './shared'
 import ProjectEditorModal from './ProjectEditorModal'
 import AddTechnicianModal from '../../components/AddTechnicianModal'
-import CreateJobModal from '../dispatch/CreateJobModal'
+import AddJobModal from '../jobs/AddJobModal'
 import AddQuoteModal from '../finance/AddQuoteModal'
 import AddInvoiceModal from '../finance/AddInvoiceModal'
 import AgreementEditorModal from '../agreements/AgreementEditorModal'
 import type { Agreement } from '../../hooks/useAgreements'
+import type { Job } from '../../types/api'
+import HousesTab from './HousesTab'
+import HouseIssuesAlert from '../../components/HouseIssuesAlert'
+import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 
-type Tab = 'overview' | 'roster' | 'jobs' | 'agreements' | 'finances'
+// Consistent with every other consumer of this modal (DayPlanner, Finance,
+// AgreementDrawer, Topbar) — lazy-loaded, same component app-wide.
+const JobDetailModal = lazy(() => import('../jobs/JobDetailModal'))
+
+type Tab = 'overview' | 'roster' | 'jobs' | 'agreements' | 'finances' | 'houses'
 
 const JOB_BADGE: Record<string, string> = {
   PENDING: 'badge-amber', SCHEDULED: 'badge-violet', EN_ROUTE: 'badge-blue',
@@ -42,9 +54,19 @@ const JOB_BADGE: Record<string, string> = {
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { project, isLoading } = useProjectFull(id)
   useTechDirectory() // primes avatar names/colors
-  const [tab, setTab] = useState<Tab>('overview')
+  // Warm the Houses tab's data while the user is still on Overview, so
+  // switching tabs never shows a loading state.
+  useEffect(() => {
+    if (id) import('./housesApi').then(m => m.prefetchHousesForProject(id))
+  }, [id])
+  // Deep link from the alert banners: ?house=<id> opens the Houses tab with
+  // that house's detail modal already open, instead of dropping you on the
+  // project and making you find it yourself.
+  const deepLinkHouseId = searchParams.get('house')
+  const [tab, setTab] = useState<Tab>(deepLinkHouseId ? 'houses' : 'overview')
   const [showEditor, setShowEditor] = useState(false)
 
   if (isLoading) {
@@ -72,6 +94,9 @@ export default function ProjectDetail() {
 
   const tabs: { key: Tab; label: string; icon: React.ElementType; count?: number }[] = [
     { key: 'overview', label: 'Overview', icon: LayoutList },
+    ...(project.templateType === 'HOUSING_SCHEME'
+      ? [{ key: 'houses' as Tab, label: 'Houses', icon: Home }]
+      : []),
     { key: 'roster', label: 'Crew roster', icon: Users2 },
     { key: 'jobs', label: 'Jobs', icon: Wrench, count: project.jobs.length },
     { key: 'agreements', label: 'Agreements', icon: FileSignature, count: project.agreements.length },
@@ -91,7 +116,11 @@ export default function ProjectDetail() {
             <ProjectStatusBadge status={project.status} />
           </div>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 5, fontSize: 12.5, color: '#94A3B8' }}>
-            <span>{project.customerName}</span>
+            {project.customerName ? (
+              <span>{project.customerName}</span>
+            ) : (
+              <ProjectCustomerPicker project={project} />
+            )}
             {project.siteAddress && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <MapPin size={11} /> {project.siteAddress}
@@ -106,6 +135,8 @@ export default function ProjectDetail() {
           <Pencil size={12} /> Edit
         </button>
       </div>
+
+      {project.templateType === 'HOUSING_SCHEME' && <HouseIssuesAlert projectId={project.id} />}
 
       {/* Progress + money strip */}
       <div className="card" style={{ padding: '14px 18px' }}>
@@ -137,24 +168,80 @@ export default function ProjectDetail() {
         {tabs.map(t => {
           const Icon = t.icon
           const active = tab === t.key
+          const showAlert = t.key === 'houses' && (project.openIssueCount ?? 0) > 0
           return (
             <button key={t.key} className="btn btn-sm" onClick={() => setTab(t.key)}
               style={active
                 ? { background: 'var(--blue)', color: '#fff', border: '1px solid var(--blue)', display: 'inline-flex', alignItems: 'center', gap: 6 }
                 : { background: 'var(--bg-card)', color: 'var(--t2)', border: '1px solid var(--bd)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <Icon size={13} /> {t.label}{t.count != null ? ` · ${t.count}` : ''}
+              {showAlert && (
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: active ? '#fff' : 'var(--red)' }} />
+              )}
             </button>
           )
         })}
       </div>
 
       {tab === 'overview' && <OverviewTab project={project} />}
+      {tab === 'houses' && (
+        <HousesTab
+          projectId={project.id}
+          projectName={project.name}
+          initialOpenHouseId={deepLinkHouseId}
+          onInitialHouseConsumed={() => setSearchParams(prev => { prev.delete('house'); return prev }, { replace: true })}
+        />
+      )}
       {tab === 'roster' && <RosterTab project={project} />}
       {tab === 'jobs' && <JobsTab project={project} />}
       {tab === 'agreements' && <AgreementsTab project={project} />}
       {tab === 'finances' && <FinancesTab project={project} />}
 
       {showEditor && <ProjectEditorModal project={project} onClose={() => setShowEditor(false)} />}
+    </div>
+  )
+}
+
+// ── Add customer (header, when a project has none) ──────────────────────────
+function ProjectCustomerPicker({ project }: { project: Project }) {
+  const updateProject = useUpdateProject()
+  const [picking, setPicking] = useState(false)
+  const { showSuccess, showError } = useToast()
+
+  const pick = async (c: { id: string; firstName: string; lastName: string }) => {
+    try {
+      await updateProject.mutateAsync({ id: project.id, customerId: c.id })
+      showSuccess(`${project.name} is now linked to ${c.firstName} ${c.lastName}.`.trim(), 'Customer added')
+      setPicking(false)
+    } catch (e: any) {
+      showError(e?.response?.data?.message ?? 'Could not set this customer', 'Add customer failed')
+    }
+  }
+
+  if (!picking) {
+    return (
+      <button
+        onClick={() => setPicking(true)}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12.5,
+          color: 'var(--amber)', background: 'none', border: 'none', cursor: 'pointer',
+          fontFamily: 'inherit', padding: 0,
+        }}
+      >
+        <UserPlus size={12} /> No customer assigned — Add customer
+      </button>
+    )
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{
+        position: 'absolute', top: 0, left: 0, width: 320, padding: 12, zIndex: 20,
+        background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 10,
+        boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+      }}>
+        <CustomerPickerWithCreate autoFocus onPick={pick} onCancel={() => setPicking(false)} />
+      </div>
     </div>
   )
 }
@@ -509,11 +596,27 @@ function RosterDayEditor({ project: p, dateKey, day: r, onClose }: { project: Pr
   )
 }
 
+const PRIORITY_CSS: Record<string, string> = {
+  LOW: 'badge-neutral', NORMAL: 'badge-neutral', HIGH: 'badge-amber',
+  URGENT: 'badge-red', EMERGENCY: 'badge-red',
+}
+
 // ── Jobs ─────────────────────────────────────────────────────────────────────
 function JobsTab({ project: p }: { project: Project }) {
   const [showLinker, setShowLinker] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
+  const [viewJob, setViewJob] = useState<ProjectJob | null>(null)
+  const [openFullJob, setOpenFullJob] = useState(false)
   const linkJob = useLinkJobToProject()
+
+  // Housing Scheme: resolve each job's houseId to a label + owner for display,
+  // fetched once for the whole project rather than per job row.
+  const housesQ = useHouses(p.templateType === 'HOUSING_SCHEME' ? p.id : undefined)
+  const houseById = useMemo(() => {
+    const map = new Map<string, House>()
+    for (const h of housesQ.data ?? []) map.set(h.id, h)
+    return map
+  }, [housesQ.data])
 
   // Customer's jobs not yet in any project — candidates for linking
   const candidatesQ = useQuery({
@@ -534,7 +637,8 @@ function JobsTab({ project: p }: { project: Project }) {
           <div className="card-subtitle">Discrete billable visits — each still flows through dispatch as usual</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowLinker(v => !v)}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowLinker(v => !v)} disabled={!p.customerId}
+            title={!p.customerId ? 'Add a customer to this project first' : undefined}>
             <Link2 size={12} /> {showLinker ? 'Close' : 'Link existing'}
           </button>
           <button className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
@@ -546,7 +650,7 @@ function JobsTab({ project: p }: { project: Project }) {
       {showLinker && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--bd)', background: 'var(--bg-card-2)' }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>
-            {p.customerName}'s jobs not in a project
+            {p.customerName ?? 'This customer'}'s jobs not in a project
           </p>
           {candidatesQ.isLoading ? (
             <Loader2 size={14} className="animate-spin" style={{ color: 'var(--t3)' }} />
@@ -573,8 +677,13 @@ function JobsTab({ project: p }: { project: Project }) {
         </p>
       ) : (
         <div>
-          {p.jobs.map(j => (
-            <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderTop: '1px solid var(--bd)' }}>
+          {p.jobs.map(j => {
+            const house = j.houseId ? houseById.get(j.houseId) : undefined
+            return (
+            <button key={j.id} onClick={() => setViewJob(j)} style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderTop: '1px solid var(--bd)',
+              width: '100%', textAlign: 'left', background: 'none', cursor: 'pointer', fontFamily: 'inherit',
+            }}>
               <div style={{
                 width: 34, height: 34, borderRadius: 9, background: 'var(--bg-card-2)', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -582,31 +691,182 @@ function JobsTab({ project: p }: { project: Project }) {
                 <Wrench size={14} style={{ color: 'var(--t3)' }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{j.title}</p>
-                <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0' }}>
-                  {fmtDate(j.scheduledStart)}{j.assignedToName ? ` · ${j.assignedToName}` : ' · Unassigned'}
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', margin: 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  {j.title}
+                  <RescheduleBadge state={j.rescheduleState} size="sm" />
+                </p>
+                <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span>{fmtDate(j.scheduledStart)}{j.assignedToName ? ` · ${j.assignedToName}` : ' · Unassigned'}</span>
+                  {house && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700,
+                      color: 'var(--blue)', background: 'var(--blue-dim)', padding: '1px 7px', borderRadius: 999,
+                    }}>
+                      <Home size={9} /> House {house.label}{house.ownerName ? ` · ${house.ownerName}` : ''}
+                    </span>
+                  )}
                 </p>
               </div>
               <span className={`badge ${JOB_BADGE[j.status] ?? 'badge-neutral'}`}>{j.status.replace('_', ' ')}</span>
-              <button className="btn btn-ghost btn-sm" title="Unlink from project"
-                disabled={linkJob.isPending}
-                onClick={() => linkJob.mutate({ jobId: j.id, projectId: null })}>
+              <span title="Unlink from project" onClick={e => { e.stopPropagation(); linkJob.mutate({ jobId: j.id, projectId: null }) }}
+                style={{ padding: 6, borderRadius: 8, display: 'flex', opacity: linkJob.isPending ? 0.5 : 1 }}>
                 <Unlink size={12} style={{ color: 'var(--t4)' }} />
-              </button>
-            </div>
-          ))}
+              </span>
+              <ChevronRight size={13} style={{ color: 'var(--t4)', flexShrink: 0 }} />
+            </button>
+            )
+          })}
         </div>
       )}
 
-      <CreateJobModal
+      {viewJob && (
+        <ProjectJobDetailModal
+          job={viewJob}
+          house={viewJob.houseId ? houseById.get(viewJob.houseId) : undefined}
+          projectName={p.name}
+          onClose={() => setViewJob(null)}
+          onOpenFull={() => setOpenFullJob(true)}
+          onUnlink={() => { linkJob.mutate({ jobId: viewJob.id, projectId: null }); setViewJob(null) }}
+          unlinking={linkJob.isPending}
+        />
+      )}
+
+      {openFullJob && viewJob && (
+        <Suspense fallback={null}>
+          <JobDetailModal isOpen={openFullJob} onClose={() => setOpenFullJob(false)} job={viewJob as unknown as Job} />
+        </Suspense>
+      )}
+
+      <AddJobModal
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
-        presetCustomer={{ id: p.customerId, name: p.customerName, address: p.siteAddress, lat: p.latitude, lng: p.longitude }}
-        projectId={p.id}
+        lockedCustomer={p.customerId ? { id: p.customerId, name: p.customerName ?? '—', address: p.siteAddress, lat: p.latitude, lng: p.longitude } : undefined}
+        lockedProject={{ id: p.id, name: p.name, templateType: p.templateType }}
         contextLabel={p.name}
         onCreated={() => invalidateProjectLinks(p.id)}
       />
     </div>
+  )
+}
+
+/** A job's full context at a glance — schedule, customer, and (Housing Scheme) which
+ * house and owner it's for — with a path into the full generic job modal for actual
+ * management (status changes, work orders) rather than duplicating that here. */
+function ProjectJobDetailModal({ job, house, projectName, onClose, onOpenFull, onUnlink, unlinking }: {
+  job: ProjectJob
+  house?: House
+  projectName: string
+  onClose: () => void
+  onOpenFull: () => void
+  onUnlink: () => void
+  unlinking: boolean
+}) {
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1001, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', padding: '24px 20px' }} onClick={onClose}>
+      <div className="card anim-fade-up" role="dialog" aria-modal="true" aria-label={job.title}
+        style={{ width: 620, maxWidth: '100%', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 48px)' }}
+        onClick={e => e.stopPropagation()}>
+        <div className="card-header" style={{ flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--blue-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Wrench size={16} style={{ color: 'var(--blue)' }} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div className="card-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.title}</div>
+              <div className="card-subtitle">{projectName}{job.jobNumber ? ` · ${job.jobNumber}` : ''}</div>
+            </div>
+          </div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X size={14} /></button>
+        </div>
+
+        <div className="card-body" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <span className={`badge ${JOB_BADGE[job.status] ?? 'badge-neutral'}`}>{job.status.replace('_', ' ')}</span>
+            {job.priority && <span className={`badge ${PRIORITY_CSS[job.priority] ?? 'badge-neutral'}`}>{job.priority.toLowerCase()}</span>}
+          </div>
+
+          <div style={{ padding: 14, borderRadius: 'var(--r-md)', border: '1px solid var(--bd)', background: 'var(--bg-card-2)' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <CalendarClock size={11} /> Schedule
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--t3)' }}>Date</span>
+                <span style={{ color: 'var(--t1)', fontWeight: 600 }}>{fmtDate(job.scheduledStart)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--t3)' }}>Technician</span>
+                <span style={{ color: 'var(--t1)', fontWeight: 600 }}>{job.assignedToName ?? 'Unassigned'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ padding: 14, borderRadius: 'var(--r-md)', border: '1px solid var(--bd)', background: 'var(--bg-card-2)' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <User size={11} /> Customer
+            </p>
+            <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{job.customerName ?? '—'}</p>
+            {job.serviceAddress && (
+              <p style={{ fontSize: 12, color: 'var(--t3)', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <MapPin size={11} /> {job.serviceAddress}
+              </p>
+            )}
+          </div>
+
+          {house && (
+            <div style={{ padding: 14, borderRadius: 'var(--r-md)', border: '1px solid var(--blue)', background: 'var(--blue-dim)' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Home size={11} /> House
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <div>
+                  <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{house.label}</p>
+                  {house.address && <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0' }}>{house.address}</p>}
+                </div>
+                {house.accountStatus && (() => {
+                  const m = ACCOUNT_STATUS_META[house.accountStatus]
+                  return (
+                    <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: m.dim, color: m.color, whiteSpace: 'nowrap' }}>
+                      {m.label}
+                    </span>
+                  )
+                })()}
+              </div>
+              {house.ownerName && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--bd)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <User size={12} style={{ color: 'var(--t3)', flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{house.ownerName}</p>
+                    {house.ownerEmail && (
+                      <p style={{ fontSize: 11, color: 'var(--t3)', margin: '1px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Mail size={10} /> {house.ownerEmail}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {job.description && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px' }}>Description</p>
+              <p style={{ fontSize: 12.5, color: 'var(--t2)', margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{job.description}</p>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', padding: '12px 20px', borderTop: '1px solid var(--bd)', flexShrink: 0 }}>
+          <button className="btn btn-ghost btn-sm" onClick={onUnlink} disabled={unlinking} style={{ color: 'var(--red)' }}>
+            <Unlink size={12} /> {unlinking ? 'Unlinking…' : 'Unlink from project'}
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={onOpenFull}>
+            <ExternalLink size={12} /> Open full job
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -615,6 +875,14 @@ function AgreementsTab({ project: p }: { project: Project }) {
   const [showLinker, setShowLinker] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const linkAgreement = useLinkAgreement()
+
+  // Housing Scheme: resolve each agreement's houseId to a label + owner for display.
+  const housesQ = useHouses(p.templateType === 'HOUSING_SCHEME' ? p.id : undefined)
+  const houseById = useMemo(() => {
+    const map = new Map<string, House>()
+    for (const h of housesQ.data ?? []) map.set(h.id, h)
+    return map
+  }, [housesQ.data])
 
   const candidatesQ = useQuery({
     queryKey: ['projects', p.id, 'agreement-candidates'],
@@ -635,10 +903,12 @@ function AgreementsTab({ project: p }: { project: Project }) {
           <div className="card-subtitle">Recurring maintenance stays in Agreements — visits auto-join this project</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowLinker(v => !v)}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowLinker(v => !v)} disabled={!p.customerId}
+            title={!p.customerId ? 'Add a customer to this project first' : undefined}>
             <Link2 size={12} /> {showLinker ? 'Close' : 'Link existing'}
           </button>
-          <button className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)} disabled={!p.customerId}
+            title={!p.customerId ? 'Add a customer to this project first' : undefined}>
             <Plus size={12} /> Create agreement
           </button>
         </div>
@@ -670,7 +940,9 @@ function AgreementsTab({ project: p }: { project: Project }) {
         </p>
       ) : (
         <div>
-          {p.agreements.map(a => (
+          {p.agreements.map(a => {
+            const house = a.houseId ? houseById.get(a.houseId) : undefined
+            return (
             <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 18px', borderTop: '1px solid var(--bd)' }}>
               <div style={{
                 width: 34, height: 34, borderRadius: 9, background: 'var(--green-dim)', flexShrink: 0,
@@ -680,8 +952,16 @@ function AgreementsTab({ project: p }: { project: Project }) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{a.name}</p>
-                <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0' }}>
-                  {a.serviceType} · {a.interval}{a.nextVisit ? ` · next visit ${fmtDate(a.nextVisit)}` : ''}
+                <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span>{a.serviceType} · {a.interval}{a.nextVisit ? ` · next visit ${fmtDate(a.nextVisit)}` : ''}</span>
+                  {house && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700,
+                      color: 'var(--blue)', background: 'var(--blue-dim)', padding: '1px 7px', borderRadius: 999,
+                    }}>
+                      <Home size={9} /> House {house.label}{house.ownerName ? ` · ${house.ownerName}` : ''}
+                    </span>
+                  )}
                 </p>
               </div>
               <span className={`badge ${a.status === 'ACTIVE' ? 'badge-green' : 'badge-amber'}`}>{a.status}</span>
@@ -691,14 +971,15 @@ function AgreementsTab({ project: p }: { project: Project }) {
                 <Unlink size={12} style={{ color: 'var(--t4)' }} />
               </button>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
       {showCreate && (
         <AgreementEditorModal
-          presetCustomerId={p.customerId}
-          presetCustomerName={p.customerName}
+          presetCustomerId={p.customerId ?? undefined}
+          presetCustomerName={p.customerName ?? undefined}
           onClose={() => setShowCreate(false)}
           onSaved={(a: Agreement) => {
             linkAgreement.mutate({ projectId: p.id, agreementId: a.id, link: true })
@@ -717,11 +998,19 @@ function FinancesTab({ project: p }: { project: Project }) {
   const overBudget = budget > 0 && fin.invoiced > budget
   const budgetPct = budget > 0 ? Math.round((fin.invoiced / budget) * 100) : 0
 
-  const { data: customer } = useCustomer(p.customerId)
-  const presetCustomer = { id: p.customerId, name: p.customerName, email: customer?.email }
+  const { data: customer } = useCustomer(p.customerId ?? '')
+  const presetCustomer = p.customerId ? { id: p.customerId, name: p.customerName ?? '—', email: customer?.email } : undefined
 
   const [showCreateQuote, setShowCreateQuote] = useState(false)
   const [showCreateInvoice, setShowCreateInvoice] = useState(false)
+
+  // Housing Scheme: resolve each quote/invoice's houseId to a label + owner for display.
+  const housesQ = useHouses(p.templateType === 'HOUSING_SCHEME' ? p.id : undefined)
+  const houseById = useMemo(() => {
+    const map = new Map<string, House>()
+    for (const h of housesQ.data ?? []) map.set(h.id, h)
+    return map
+  }, [housesQ.data])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -754,8 +1043,8 @@ function FinancesTab({ project: p }: { project: Project }) {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
-        <FinanceList title="Quotes" docs={p.quotes} paidStatus="ACCEPTED" actionLabel="New quote" onAction={() => setShowCreateQuote(true)} />
-        <FinanceList title="Invoices" docs={p.invoices} paidStatus="PAID" actionLabel="New invoice" onAction={() => setShowCreateInvoice(true)} />
+        <FinanceList title="Quotes" docs={p.quotes} paidStatus="ACCEPTED" actionLabel="New quote" onAction={() => setShowCreateQuote(true)} disabled={!p.customerId} houseById={houseById} />
+        <FinanceList title="Invoices" docs={p.invoices} paidStatus="PAID" actionLabel="New invoice" onAction={() => setShowCreateInvoice(true)} disabled={!p.customerId} houseById={houseById} />
       </div>
 
       <AddQuoteModal
@@ -778,30 +1067,45 @@ function FinancesTab({ project: p }: { project: Project }) {
   )
 }
 
-function FinanceList({ title, docs, paidStatus, actionLabel, onAction }: {
-  title: string; docs: Project['quotes']; paidStatus: string; actionLabel: string; onAction: () => void
+function FinanceList({ title, docs, paidStatus, actionLabel, onAction, disabled, houseById }: {
+  title: string; docs: Project['quotes']; paidStatus: string; actionLabel: string; onAction: () => void; disabled?: boolean
+  houseById?: Map<string, House>
 }) {
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
       <div className="card-header">
         <div className="card-title">{title}</div>
-        <button className="btn btn-primary btn-sm" onClick={onAction}>
+        <button className="btn btn-primary btn-sm" onClick={onAction} disabled={disabled}
+          title={disabled ? 'Add a customer to this project first' : undefined}>
           <Plus size={12} /> {actionLabel}
         </button>
       </div>
       {docs.length === 0 ? (
         <p style={{ padding: '22px 18px', fontSize: 12.5, color: 'var(--t4)', textAlign: 'center' }}>None yet.</p>
       ) : (
-        docs.map(d => (
+        docs.map(d => {
+          const house = d.houseId ? houseById?.get(d.houseId) : undefined
+          return (
           <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderTop: '1px solid var(--bd)' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{d.title}</p>
-              <p style={{ fontSize: 10.5, color: 'var(--t4)', margin: '2px 0 0' }}>{d.number} · {fmtDate(d.date)}</p>
+              <p style={{ fontSize: 10.5, color: 'var(--t4)', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span>{d.number} · {fmtDate(d.date)}</span>
+                {house && (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700,
+                    color: 'var(--blue)', background: 'var(--blue-dim)', padding: '1px 6px', borderRadius: 999,
+                  }}>
+                    <Home size={8} /> House {house.label}
+                  </span>
+                )}
+              </p>
             </div>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>{fmtMoney(d.total)}</span>
             <span className={`badge ${d.status === paidStatus ? 'badge-green' : 'badge-amber'}`}>{d.status}</span>
           </div>
-        ))
+          )
+        })
       )}
     </div>
   )

@@ -73,11 +73,21 @@ export function useTechnician(technicianId: string | null) {
   })
 }
 
-export function useJobTechnicianNames(jobs: Array<Pick<Job, 'id' | 'assignedToName'>>) {
+export interface JobTechnician { name: string | null; avatarUrl: string | null }
+
+/**
+ * Resolves the technician actually on each job — name *and* photo.
+ *
+ * A job row only carries `assignedToName`; the photo lives on the technician
+ * record, so this walks assignments → technician. Showing the customer a face
+ * for whoever is coming to their house is the point, so the avatar is fetched
+ * even when the assignment already supplies a name.
+ */
+export function useJobTechnicians(jobs: Array<Pick<Job, 'id' | 'assignedToName'>>) {
   const queries = useQueries({
     queries: jobs.map((job) => ({
-      queryKey: ['customer', 'job-technician-name', job.id, job.assignedToName ?? ''],
-      queryFn: async () => {
+      queryKey: ['customer', 'job-technician', job.id, job.assignedToName ?? ''],
+      queryFn: async (): Promise<JobTechnician> => {
         const { data: assignmentResponse } = await api.get(`/scheduling/dispatch/assignments/job/${job.id}`)
         const assignments = Array.isArray(assignmentResponse?.data) ? assignmentResponse.data : []
         const latestAssignment = assignments
@@ -90,18 +100,20 @@ export function useJobTechnicianNames(jobs: Array<Pick<Job, 'id' | 'assignedToNa
 
         const technicianId = latestAssignment?.technicianId
         if (!technicianId) {
-          return job.assignedToName ?? null
-        }
-
-        if (latestAssignment?.technicianName) {
-          return latestAssignment.technicianName
+          return { name: job.assignedToName ?? null, avatarUrl: null }
         }
 
         try {
           const { data: technician } = await api.get(`/scheduling/technicians/${technicianId}`)
-          return technician?.name ?? latestAssignment?.technicianName ?? job.assignedToName ?? null
+          return {
+            name: technician?.name ?? latestAssignment?.technicianName ?? job.assignedToName ?? null,
+            avatarUrl: technician?.avatarUrl ?? null,
+          }
         } catch {
-          return latestAssignment?.technicianName ?? job.assignedToName ?? null
+          return {
+            name: latestAssignment?.technicianName ?? job.assignedToName ?? null,
+            avatarUrl: null,
+          }
         }
       },
       enabled: !!job.id,
@@ -109,10 +121,55 @@ export function useJobTechnicianNames(jobs: Array<Pick<Job, 'id' | 'assignedToNa
     })),
   })
 
-  return jobs.reduce<Record<string, string | null>>((acc, job, index) => {
-    acc[job.id] = queries[index]?.data ?? job.assignedToName ?? null
+  return jobs.reduce<Record<string, JobTechnician>>((acc, job, index) => {
+    const data = queries[index]?.data
+    acc[job.id] = {
+      name: data?.name ?? job.assignedToName ?? null,
+      avatarUrl: data?.avatarUrl ?? null,
+    }
     return acc
   }, {})
+}
+
+/**
+ * Names only — a thin projection of useJobTechnicians. Same query keys, so
+ * mounting both costs one set of requests, not two.
+ */
+export function useJobTechnicianNames(jobs: Array<Pick<Job, 'id' | 'assignedToName'>>) {
+  const techs = useJobTechnicians(jobs)
+  return Object.fromEntries(
+    Object.entries(techs).map(([jobId, t]) => [jobId, t.name]),
+  ) as Record<string, string | null>
+}
+
+/**
+ * Change the time you asked for, on a booking nobody has committed to yet.
+ *
+ * Distinct from the reschedule negotiation: while a job is PENDING and
+ * unassigned there is nothing to negotiate — the time is only the customer's own
+ * stated preference. job-service rejects this with a pointer to reschedule the
+ * moment a technician is assigned or the job is scheduled.
+ */
+export function useUpdatePreferredTime() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (vars: {
+      jobId: string
+      preferredStart: string
+      preferredEnd?: string
+      window?: string
+      note?: string
+    }) => {
+      const { jobId, ...body } = vars
+      const { data } = await api.patch(`/jobs/jobs/${jobId}/preferred-time`, body)
+      return data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['customer', 'jobs'] })
+      qc.invalidateQueries({ queryKey: ['customer', 'job'] })
+      qc.invalidateQueries({ queryKey: ['customer-dashboard'] })
+    },
+  })
 }
 
 export function useCancelJob() {
@@ -186,6 +243,9 @@ export function useSubmitJobRequest() {
       notes?: string
       tags?: string[]
       scheduledStart?: string
+      /** Booking from "My Projects" / "My House" — job-service verifies this project/house is actually theirs. */
+      projectId?: string
+      houseId?: string
     }) => {
       if (!user?.customerId) throw new Error('Customer account is not linked')
 
@@ -203,6 +263,8 @@ export function useSubmitJobRequest() {
         notes: dto.notes,
         tags: dto.tags ?? ['portal-request'],
         scheduledStart: dto.scheduledStart,
+        projectId: dto.projectId,
+        houseId: dto.houseId,
       }
 
       const { data } = await api.post('/jobs/jobs', payload)

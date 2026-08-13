@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bell, Search, Sun, Moon, Monitor, ChevronDown, User, Settings as SettingsIcon, LogOut, Calendar, Plus, ArrowRight, Download, RefreshCw, LayoutDashboard, CalendarDays, MapPin, Menu } from 'lucide-react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Bell, Search, Sun, Moon, Monitor, ChevronDown, ChevronLeft, ChevronRight, User, Settings as SettingsIcon, LogOut, Calendar, CalendarDays, Plus, ArrowRight, Download, RefreshCw, Menu, UserPlus } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import AddJobModal from '../pages/jobs/AddJobModal'
@@ -11,7 +11,6 @@ import QuoteDetailModal from '../pages/finance/QuoteDetailModal'
 import ExpenseDetailModal from '../pages/finance/ExpenseDetailModal'
 import AddInvoiceModal from '../pages/finance/AddInvoiceModal'
 import AddQuoteModal from '../pages/finance/AddQuoteModal'
-import SchedulingDetailModal from '../pages/scheduling/SchedulingDetailModal'
 import TechnicianDetailModal from '../pages/scheduling/TechnicianDetailModal'
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '../hooks/useComms'
 
@@ -39,8 +38,6 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     const { theme, toggleTheme } = useTheme()
     const notif = useDropdown()
     const user = useDropdown()
-    const [searchParams, setSearchParams] = useSearchParams()
-    const currentView = searchParams.get('view') || 'dispatch'
     const notificationsQuery = useNotifications(8)
     const markNotificationRead = useMarkNotificationRead()
     const markAllNotificationsRead = useMarkAllNotificationsRead()
@@ -56,9 +53,28 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     const [selectedQuote, setSelectedQuote] = useState<any>(null)
     const [isExpenseDetailOpen, setIsExpenseDetailOpen] = useState(false)
     const [selectedExpense, setSelectedExpense] = useState<any>(null)
-    const [isSchedulingDetailOpen, setIsSchedulingDetailOpen] = useState(false)
-    const [selectedScheduling, setSelectedScheduling] = useState<any>(null)
     const [isTechnicianDetailOpen, setIsTechnicianDetailOpen] = useState(false)
+    const [schedulingWsStatus, setSchedulingWsStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected')
+    const [schedulingScope, setSchedulingScope] = useState<'live' | 'plan'>('live')
+    const [schedulingSubTab, setSchedulingSubTab] = useState('board')
+    const [schedulingDateLabel, setSchedulingDateLabel] = useState('Today')
+
+    useEffect(() => {
+        const handler = (e: Event) => setSchedulingWsStatus((e as CustomEvent).detail)
+        window.addEventListener('scheduling-ws-status', handler)
+        return () => window.removeEventListener('scheduling-ws-status', handler)
+    }, [])
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const { scope, subTab, dateLabel } = (e as CustomEvent).detail
+            setSchedulingScope(scope)
+            setSchedulingSubTab(subTab)
+            setSchedulingDateLabel(dateLabel)
+        }
+        window.addEventListener('scheduling-nav-state', handler)
+        return () => window.removeEventListener('scheduling-nav-state', handler)
+    }, [])
     const [selectedTechnician, setSelectedTechnician] = useState<any>(null)
 
     // Customer detail (opened from job view or anywhere via event)
@@ -82,6 +98,12 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
         }
         window.addEventListener('open-job-detail', handler)
         return () => window.removeEventListener('open-job-detail', handler)
+    }, [])
+
+    useEffect(() => {
+        const handler = () => setIsAddJobOpen(true)
+        window.addEventListener('open-add-job', handler)
+        return () => window.removeEventListener('open-add-job', handler)
     }, [])
 
     useEffect(() => {
@@ -129,21 +151,6 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
 
     useEffect(() => {
         const handler = (e: Event) => {
-            const schedule = (e as CustomEvent).detail
-            setSelectedScheduling(schedule)
-            setIsSchedulingDetailOpen(true)
-        }
-        window.addEventListener('open-scheduling-detail', handler)
-        return () => window.removeEventListener('open-scheduling-detail', handler)
-    }, [])
-
-    const handleCloseSchedulingDetail = () => {
-        setIsSchedulingDetailOpen(false);
-        window.dispatchEvent(new CustomEvent('scheduling-detail-closed'));
-    };
-
-    useEffect(() => {
-        const handler = (e: Event) => {
             const technician = (e as CustomEvent).detail
             setSelectedTechnician(technician)
             setIsTechnicianDetailOpen(true)
@@ -179,10 +186,8 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
             case '/': return { title: 'Dashboard', sub: '' }
             case '/customers': return { title: 'Customers & CRM', sub: 'Manage customers and leads' }
             case '/jobs': return { title: 'Jobs', sub: 'Manage and track all your service work orders' }
-            case '/scheduling': return { title: 'Scheduling & Dispatch', sub: 'Assign jobs and track field operations' }
-            case '/dispatch': return { title: 'Dispatch', sub: 'Smart technician assignment and live field tracking' }
+            case '/scheduling': return { title: 'Scheduling', sub: 'Assign jobs and track field operations' }
             case '/agreements': return { title: 'Service Agreements', sub: 'Maintenance plans and recurring service contracts' }
-            case '/planner': return { title: 'Day Planner', sub: 'Plan and assign a full day of jobs on the map' }
             case '/projects': return { title: 'Projects', sub: 'Long-running engagements with dedicated crews' }
             case '/marketing': return { title: 'Marketing', sub: 'Campaigns, templates and automations' }
             case '/inventory': return { title: 'Inventory', sub: 'Items, stock levels and purchase orders' }
@@ -228,6 +233,18 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                 </>
             )
             case '/jobs': return <button className={`${btnPrimary} ${btnSm}`} id="btn-create-job" onClick={() => setIsAddJobOpen(true)}><Plus size={13} /> Create Job</button>
+            case '/scheduling': return (
+                <>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 h-[28px] rounded-full text-[11px] font-semibold ${
+                        schedulingWsStatus === 'connected' ? 'bg-emerald-50 text-emerald-700' : schedulingWsStatus === 'connecting' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                    }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${schedulingWsStatus === 'connected' ? 'bg-emerald-500' : schedulingWsStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`} />
+                        {schedulingWsStatus === 'connected' ? 'Live' : schedulingWsStatus === 'connecting' ? 'Connecting…' : 'Offline'}
+                    </span>
+                    <button className={`${btnSecondary} ${btnSm}`} onClick={() => window.dispatchEvent(new CustomEvent('scheduling-open-add-technician'))}><UserPlus size={13} /> Add Technician</button>
+                    <button className={`${btnPrimary} ${btnSm}`} onClick={() => window.dispatchEvent(new CustomEvent('scheduling-open-create-job'))}><Plus size={13} /> Create Job</button>
+                </>
+            )
             case '/finance': return (
                 <>
                     <button className={`${btnSecondary} ${btnSm}`} onClick={() => window.dispatchEvent(new CustomEvent('finance-export'))}><Download size={13} /> Export CSV</button>
@@ -255,7 +272,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     return (
         <>
             <header className={`admin-topbar h-20 border-b flex items-center justify-between px-6 gap-6 flex-shrink-0 sticky top-0 z-30 transition-colors duration-300 ${topbarBg}`}>
-                <div className="flex-1 min-w-0 flex items-center gap-3">
+                <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
                     {showMenu && (
                         <button
                             className="topbar-hamburger"
@@ -265,7 +282,15 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                             <Menu size={20} />
                         </button>
                     )}
-                    <div className="min-w-0">
+                    {/* min-w-0 lets this block shrink, but flex items with no
+                        min-width default to their content size — so when the
+                        scope switch + date stepper (Scheduling, Plan a day)
+                        both sit on this row, the title used to be squeezed
+                        to zero width first and its truncated text vanished
+                        entirely. flex-wrap above lets those controls drop to
+                        their own row instead of fighting the title for space,
+                        and this floor keeps "Scheduling" legible either way. */}
+                    <div className="min-w-0" style={{ minWidth: 140 }}>
                     <h2 className={`text-2xl font-bold tracking-tight truncate ${isLight ? 'text-slate-900' : 'text-[var(--t1)]'}`}>
                         {headerParams.title}
                     </h2>
@@ -274,49 +299,72 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                         <span>{dateStr}</span>
                     </div>
                     </div>
+
+                    {pathname === '/scheduling' && schedulingSubTab === 'board' && (
+                        <div className={`flex items-center gap-1 rounded-xl p-1 ml-6 flex-shrink-0 ${isLight ? 'bg-slate-100' : 'bg-[var(--bg-input)]'}`}>
+                            <button
+                                onClick={() => window.dispatchEvent(new CustomEvent('scheduling-set-scope', { detail: 'live' }))}
+                                className={`flex items-center gap-2 px-3.5 h-[34px] rounded-lg text-[13px] font-semibold transition-all duration-150 ${
+                                    schedulingScope === 'live'
+                                        ? 'bg-[var(--blue)] text-white shadow-sm'
+                                        : (isLight ? 'text-slate-500 hover:text-slate-900' : 'text-[var(--t3)] hover:text-[var(--t1)]')
+                                }`}
+                            >
+                                <span className={`w-1.5 h-1.5 rounded-full ${schedulingScope === 'live' ? 'bg-white' : 'bg-emerald-500'}`} />
+                                See all jobs
+                            </button>
+                            <button
+                                onClick={() => window.dispatchEvent(new CustomEvent('scheduling-set-scope', { detail: 'plan' }))}
+                                className={`flex items-center gap-2 px-3.5 h-[34px] rounded-lg text-[13px] font-semibold transition-all duration-150 ${
+                                    schedulingScope === 'plan'
+                                        ? 'bg-[var(--blue)] text-white shadow-sm'
+                                        : (isLight ? 'text-slate-500 hover:text-slate-900' : 'text-[var(--t3)] hover:text-[var(--t1)]')
+                                }`}
+                            >
+                                <CalendarDays size={14} />
+                                Plan a day
+                            </button>
+                        </div>
+                    )}
+
+                    {pathname === '/scheduling' && schedulingSubTab === 'board' && schedulingScope === 'plan' && (
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button
+                                onClick={() => window.dispatchEvent(new CustomEvent('scheduling-date-step', { detail: -1 }))}
+                                aria-label="Previous day"
+                                className={`flex items-center justify-center w-[34px] h-[34px] rounded-lg border ${btnClass}`}
+                            >
+                                <ChevronLeft size={15} />
+                            </button>
+                            <div className={`flex items-center gap-2 px-3.5 h-[34px] rounded-lg text-[13px] font-semibold whitespace-nowrap ${isLight ? 'bg-blue-50 text-blue-700' : 'bg-[var(--blue-glow)] text-[var(--blue)]'}`}>
+                                <CalendarDays size={14} />
+                                {schedulingDateLabel}
+                            </div>
+                            <button
+                                onClick={() => window.dispatchEvent(new CustomEvent('scheduling-date-step', { detail: 1 }))}
+                                aria-label="Next day"
+                                className={`flex items-center justify-center w-[34px] h-[34px] rounded-lg border ${btnClass}`}
+                            >
+                                <ChevronRight size={15} />
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-4">
-                    {!['/analytics', '/settings', '/communications', '/finance',].includes(pathname) && (
+                    {!['/analytics', '/settings', '/communications', '/finance', '/scheduling',].includes(pathname) && (
                         <div className="flex items-center gap-4">
-                            {pathname === '/scheduling' && (
-                                <div className="flex items-center gap-1 rounded-xl p-1 border border-[var(--bd)] bg-[var(--bg-input)]">
-                                    {[
-                                        { id: 'dispatch', label: 'Dispatch Board', icon: LayoutDashboard },
-                                        { id: 'calendar', label: 'Full Calendar', icon: CalendarDays },
-                                        { id: 'map', label: 'Live Map', icon: MapPin }
-                                    ].map(tab => (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => {
-                                                setSearchParams({ view: tab.id });
-                                                const event = new CustomEvent('changeSchedulingView', { detail: tab.id });
-                                                window.dispatchEvent(event);
-                                            }}
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${currentView === tab.id
-                                                ? (isLight ? 'bg-blue-600 text-white shadow-md' : 'bg-[var(--primary)] text-white shadow-sm')
-                                                : (isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100' : 'text-[var(--t3)] hover:text-[var(--t1)] hover:bg-[var(--bg-hover)]')
-                                                }`}
-                                        >
-                                            <tab.icon size={14} />
-                                            <span className="whitespace-nowrap">{tab.label}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                            {pathname !== '/scheduling' && (
-                                <div className={`hidden md:flex items-center gap-3 border rounded-xl px-4 py-2.5 w-[280px] lg:w-[320px] transition-colors duration-300 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[var(--bg-input)] border-[var(--bd)]'}`}>
-                                    <Search size={16} className={`flex-shrink-0 ${searchIconColor}`} />
-                                    <input
-                                        type="text"
-                                        placeholder={getSearchPlaceholder()}
-                                        value={search}
-                                        onChange={e => setSearch(e.target.value)}
-                                        className={`flex-1 bg-transparent border-none outline-none text-[14px] font-medium ${isLight ? 'text-slate-700 placeholder-slate-400' : 'text-[var(--t1)] placeholder-[var(--t4)]'}`}
-                                    />
-                                </div>
-                            )}
+                            <div className={`hidden md:flex items-center gap-3 border rounded-xl px-4 py-2.5 w-[280px] lg:w-[320px] transition-colors duration-300 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[var(--bg-input)] border-[var(--bd)]'}`}>
+                                <Search size={16} className={`flex-shrink-0 ${searchIconColor}`} />
+                                <input
+                                    type="text"
+                                    placeholder={getSearchPlaceholder()}
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                    className={`flex-1 bg-transparent border-none outline-none text-[14px] font-medium ${isLight ? 'text-slate-700 placeholder-slate-400' : 'text-[var(--t1)] placeholder-[var(--t4)]'}`}
+                                />
+                            </div>
                         </div>
                     )}
 
@@ -496,11 +544,6 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                 isOpen={isExpenseDetailOpen}
                 onClose={() => setIsExpenseDetailOpen(false)}
                 expense={selectedExpense}
-            />
-            <SchedulingDetailModal
-                isOpen={isSchedulingDetailOpen}
-                onClose={handleCloseSchedulingDetail}
-                schedule={selectedScheduling}
             />
             <TechnicianDetailModal
                 isOpen={isTechnicianDetailOpen}

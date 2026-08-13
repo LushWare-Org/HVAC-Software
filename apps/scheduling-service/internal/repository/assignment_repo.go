@@ -108,6 +108,54 @@ func (r *AssignmentRepository) FindByJob(ctx context.Context, companyID, jobID s
 }
 
 // FindByTechnician returns assignments for a technician, with optional status filter.
+// FindAllForCompany returns every assignment in the company, optionally
+// filtered by status. Powers the dispatch board's single bulk fetch —
+// replaces the old pattern of one HTTP request per technician.
+func (r *AssignmentRepository) FindAllForCompany(
+	ctx context.Context,
+	companyID string,
+	statusFilter []models.AssignmentStatus,
+) ([]*models.DispatchAssignment, error) {
+	if len(statusFilter) == 0 {
+		rows, err := r.db.Query(ctx, `
+			SELECT id, company_id, job_id, work_order_id, technician_id, status,
+			       score, distance_km, assigned_by, assigned_at,
+			       en_route_at, on_site_at, completed_at,
+			       scheduled_start, scheduled_end, notes,
+			       created_at, updated_at
+			FROM scheduling.dispatch_assignments
+			WHERE company_id = $1
+			ORDER BY created_at DESC
+			LIMIT 1000`, companyID)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		return collectAssignments(rows)
+	}
+
+	statuses := make([]string, len(statusFilter))
+	for i, s := range statusFilter {
+		statuses[i] = string(s)
+	}
+	rows, err := r.db.Query(ctx, `
+		SELECT id, company_id, job_id, work_order_id, technician_id, status,
+		       score, distance_km, assigned_by, assigned_at,
+		       en_route_at, on_site_at, completed_at,
+		       scheduled_start, scheduled_end, notes,
+		       created_at, updated_at
+		FROM scheduling.dispatch_assignments
+		WHERE company_id = $1
+		  AND status = ANY($2::scheduling.assignment_status[])
+		ORDER BY scheduled_start ASC NULLS LAST
+		LIMIT 1000`, companyID, statuses)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return collectAssignments(rows)
+}
+
 func (r *AssignmentRepository) FindByTechnician(
 	ctx context.Context,
 	companyID, technicianID string,

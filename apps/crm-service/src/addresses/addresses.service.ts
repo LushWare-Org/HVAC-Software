@@ -9,6 +9,7 @@ export class AddressesService {
     return this.prisma.address.findMany({
       where: { companyId, customerId },
       orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      take: 200,
     });
   }
 
@@ -16,6 +17,7 @@ export class AddressesService {
     return this.prisma.address.findMany({
       where: { companyId, leadId },
       orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      take: 200,
     });
   }
 

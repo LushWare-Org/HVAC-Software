@@ -6,7 +6,8 @@
  * finance queries per the spec; money arrives as Decimal strings → Number().
  */
 import { useMemo } from 'react'
-import { useQuery, useQueries, useMutation } from '@tanstack/react-query'
+import type { RescheduleStateValue } from '../../types/api'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { queryClient } from '../../lib/queryClient'
 import api from '../../lib/api'
 
@@ -16,12 +17,38 @@ export type ProjectStatus = 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'C
 export type Weekday = 'SUN' | 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT'
 export const WEEKDAYS: Weekday[] = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
+// Project templates — extensible registry, mirrors crm-service's project-templates.ts.
+// Immutable after creation.
+export type ProjectTemplateType = 'STANDARD' | 'HOUSING_SCHEME'
+export const PROJECT_TEMPLATE_META: Record<ProjectTemplateType, { label: string; description: string }> = {
+  STANDARD: { label: 'Standard', description: 'A single client with jobs, agreements, and finances.' },
+  HOUSING_SCHEME: {
+    label: 'Housing Scheme',
+    description: 'A development with many houses, each with its own owner, equipment, and portal access.',
+  },
+}
+
 export interface ProjectJob {
   id: string
   title: string
   status: string
+  priority?: string
   scheduledStart?: string
   assignedToName?: string
+  /** Open reschedule negotiation, if any — drives the RescheduleBadge on job rows. */
+  rescheduleState?: RescheduleStateValue | null
+  // Carried through so JobDetailModal's first render (before its own useJob
+  // refetch resolves) has what it reads directly off the passed-in job.
+  customerId?: string
+  customerName?: string
+  description?: string
+  serviceAddress?: string
+  jobNumber?: string
+  // Housing Scheme: which house (and, optionally, which specific unit) this
+  // job is for — resolved to a label/owner client-side via the project's own
+  // house list, since the job row itself only carries the raw id.
+  houseId?: string
+  equipmentId?: string
 }
 
 export interface ProjectAgreement {
@@ -31,6 +58,8 @@ export interface ProjectAgreement {
   interval: string
   nextVisit?: string
   status: string
+  /** Housing Scheme: which house this agreement is for, if any. */
+  houseId?: string
 }
 
 export interface FinanceDoc {
@@ -40,6 +69,8 @@ export interface FinanceDoc {
   total: number // dollars
   status: string
   date: string
+  /** Housing Scheme: which house this quote/invoice is for, if any. */
+  houseId?: string
 }
 
 export interface RosterDay {
@@ -52,12 +83,13 @@ export interface RosterDay {
 export interface Project {
   id: string
   companyId: string
-  customerId: string
-  customerName: string
+  customerId: string | null
+  customerName: string | null
   name: string
   description?: string
   category?: string
   status: ProjectStatus
+  templateType: ProjectTemplateType
   startDate?: string
   targetEndDate?: string
   budget?: number // dollars
@@ -76,6 +108,8 @@ export interface Project {
   invoices: FinanceDoc[]
   /** Effective roster for today (list page / cards). */
   rosterToday: { techUserIds: string[]; isOverride: boolean; isOff: boolean }
+  /** Housing Scheme only: rolled-up open issue-report count across all houses. */
+  openIssueCount?: number
 }
 
 export interface ProjectRosterBandRow {
@@ -165,12 +199,13 @@ function mapApiProject(raw: any): ProjectBase {
   return {
     id: raw.id,
     companyId: raw.companyId,
-    customerId: raw.customerId,
-    customerName: raw.customerName ?? '—',
+    customerId: raw.customerId ?? null,
+    customerName: raw.customerName ?? null,
     name: raw.name,
     description: raw.description ?? undefined,
     category: raw.category ?? undefined,
     status: raw.status as ProjectStatus,
+    templateType: (raw.templateType as ProjectTemplateType) ?? 'STANDARD',
     startDate: raw.startDate ? String(raw.startDate).slice(0, 10) : undefined,
     targetEndDate: raw.targetEndDate ? String(raw.targetEndDate).slice(0, 10) : undefined,
     budget: raw.budget != null ? Number(raw.budget) : undefined,
@@ -182,6 +217,7 @@ function mapApiProject(raw: any): ProjectBase {
     baseTeamUserIds: raw.baseTeamUserIds ?? [],
     notes: raw.notes ?? undefined,
     createdAt: raw.createdAt,
+    openIssueCount: raw.openIssueCount ?? undefined,
   }
 }
 
@@ -190,8 +226,19 @@ function mapJob(j: any): ProjectJob {
     id: j.id,
     title: j.title,
     status: j.status,
+    priority: j.priority ?? undefined,
     scheduledStart: j.scheduledStart ?? undefined,
     assignedToName: j.assignedToName ?? undefined,
+    // Explicit mapper, so this must be carried through or the reschedule badge
+    // silently never appears on project/house job rows.
+    rescheduleState: j.rescheduleState ?? null,
+    customerId: j.customerId ?? undefined,
+    customerName: j.customerName ?? undefined,
+    description: j.description ?? undefined,
+    serviceAddress: j.serviceAddress ?? undefined,
+    jobNumber: j.jobNumber ?? undefined,
+    houseId: j.houseId ?? undefined,
+    equipmentId: j.equipmentId ?? undefined,
   }
 }
 
@@ -203,6 +250,7 @@ function mapQuote(q: any): FinanceDoc {
     total: Number(q.total ?? 0),
     status: q.status,
     date: String(q.createdAt ?? q.date ?? '').slice(0, 10),
+    houseId: q.houseId ?? undefined,
   }
 }
 
@@ -214,6 +262,7 @@ function mapInvoice(i: any): FinanceDoc {
     total: Number(i.total ?? 0),
     status: i.status,
     date: String(i.issuedAt ?? i.createdAt ?? '').slice(0, 10),
+    houseId: i.houseId ?? undefined,
   }
 }
 
@@ -225,6 +274,7 @@ function mapAgreement(a: any): ProjectAgreement {
     interval: a.serviceInterval ?? '—',
     nextVisit: a.nextServiceDate ? String(a.nextServiceDate).slice(0, 10) : undefined,
     status: a.status,
+    houseId: a.houseId ?? undefined,
   }
 }
 
@@ -248,6 +298,50 @@ const EMPTY_ROSTER = { techUserIds: [] as string[], isOverride: false, isOff: fa
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
+type ProjectLinksBatch = {
+  jobs: Record<string, ProjectJob[]>
+  quotes: Record<string, FinanceDoc[]>
+  invoices: Record<string, FinanceDoc[]>
+}
+
+/**
+ * One request per service for ALL projects' links (`?projectIds=a,b,c`)
+ * instead of 3 requests per project — 3 round-trips total regardless of
+ * project count. Also seeds the per-project query keys so ProjectDetail
+ * renders instantly from cache after visiting the list.
+ */
+async function fetchProjectLinksBatch(projectIds: string[]): Promise<ProjectLinksBatch> {
+  const empty = (): Record<string, any[]> => Object.fromEntries(projectIds.map(id => [id, []]))
+  if (projectIds.length === 0) return { jobs: {}, quotes: {}, invoices: {} }
+  const idsCsv = projectIds.join(',')
+  const [jobsRes, quotesRes, invoicesRes] = await Promise.all([
+    api.get('/jobs/jobs', { params: { projectIds: idsCsv, limit: 500 } }),
+    api.get('/finance/quotes', { params: { projectIds: idsCsv, limit: 500 } }),
+    api.get('/finance/invoices', { params: { projectIds: idsCsv, limit: 500 } }),
+  ])
+  const group = <T,>(rows: any[], map: (r: any) => T): Record<string, T[]> => {
+    const by = empty() as Record<string, T[]>
+    for (const r of rows) {
+      const pid = r?.projectId
+      if (pid && by[pid]) by[pid].push(map(r))
+    }
+    return by
+  }
+  const batch: ProjectLinksBatch = {
+    jobs: group(jobsRes.data?.data ?? [], mapJob),
+    quotes: group(quotesRes.data?.data ?? quotesRes.data?.items ?? [], mapQuote),
+    invoices: group(invoicesRes.data?.data ?? invoicesRes.data?.items ?? [], mapInvoice),
+  }
+  // Seed per-project caches (same keys useProjectFull reads) so opening any
+  // project's detail after the list needs zero link fetches.
+  for (const id of projectIds) {
+    queryClient.setQueryData(['projects', id, 'jobs'], batch.jobs[id] ?? [])
+    queryClient.setQueryData(['projects', id, 'quotes'], batch.quotes[id] ?? [])
+    queryClient.setQueryData(['projects', id, 'invoices'], batch.invoices[id] ?? [])
+  }
+  return batch
+}
+
 /** All projects with roster-today + per-project jobs/quotes/invoices attached. */
 export function useProjectsFull() {
   const listQ = useQuery<ProjectBase[]>({
@@ -263,31 +357,31 @@ export function useProjectsFull() {
   const rostersQ = useRostersByDate(todayKey)
 
   const bases = listQ.data ?? []
-  const linkQs = useQueries({
-    queries: bases.flatMap(p => [
-      { queryKey: ['projects', p.id, 'jobs'], queryFn: () => fetchProjectJobs(p.id), staleTime: 30_000 },
-      { queryKey: ['projects', p.id, 'quotes'], queryFn: () => fetchProjectQuotes(p.id), staleTime: 30_000 },
-      { queryKey: ['projects', p.id, 'invoices'], queryFn: () => fetchProjectInvoices(p.id), staleTime: 30_000 },
-    ]),
+  const projectIds = bases.map(p => p.id)
+  const linksQ = useQuery<ProjectLinksBatch>({
+    queryKey: ['projects', 'links-batch', projectIds.join(',')],
+    queryFn: () => fetchProjectLinksBatch(projectIds),
+    enabled: projectIds.length > 0,
+    staleTime: 30_000,
   })
 
   const projects: Project[] = useMemo(() => {
     const rosterByProject = new Map((rostersQ.data ?? []).map(r => [r.projectId, r]))
-    return bases.map((p, i) => {
+    const links = linksQ.data
+    return bases.map(p => {
       const roster = rosterByProject.get(p.id)
       return {
         ...p,
-        jobs: (linkQs[i * 3]?.data as ProjectJob[]) ?? [],
-        quotes: (linkQs[i * 3 + 1]?.data as FinanceDoc[]) ?? [],
-        invoices: (linkQs[i * 3 + 2]?.data as FinanceDoc[]) ?? [],
+        jobs: links?.jobs[p.id] ?? [],
+        quotes: links?.quotes[p.id] ?? [],
+        invoices: links?.invoices[p.id] ?? [],
         agreements: [],
         rosterToday: roster
           ? { techUserIds: roster.techUserIds, isOverride: roster.isOverride, isOff: roster.isOff }
           : EMPTY_ROSTER,
       }
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bases, rostersQ.data, linkQs.map(q => q.dataUpdatedAt).join(',')])
+  }, [bases, rostersQ.data, linksQ.data])
 
   return { projects, isLoading: listQ.isLoading, isError: listQ.isError, refetch: listQ.refetch }
 }
@@ -372,6 +466,8 @@ export interface UpsertProjectInput {
   name?: string
   description?: string
   category?: string
+  /** Only meaningful on create — immutable server-side afterward. */
+  templateType?: ProjectTemplateType
   status?: ProjectStatus
   startDate?: string
   targetEndDate?: string
@@ -503,6 +599,62 @@ export function invalidateProjectLinks(projectId: string) {
   queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'quotes'] })
   queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'invoices'] })
   queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'detail'] })
+  queryClient.invalidateQueries({ queryKey: ['projects', 'links-batch'] })
   queryClient.invalidateQueries({ queryKey: ['projects', 'tech-directory'] })
   queryClient.invalidateQueries({ queryKey: ['projects', 'rosters'] })
+}
+
+// ── Prefetch ──────────────────────────────────────────────────────────────────
+
+/**
+ * Warm the Projects page: the project list + today's rosters first, then the
+ * batched links query (one request per service for every project's
+ * jobs/quotes/invoices) so the cards show their finances instantly.
+ */
+export async function prefetchProjectsPage(): Promise<void> {
+  const todayKey = toDateKey(new Date())
+  const listPromise = queryClient.prefetchQuery({
+    queryKey: ['projects', 'list'],
+    queryFn: async () => {
+      const res = await api.get('/crm/projects', { params: { limit: 100 } })
+      return ((res.data?.data ?? []) as any[]).map(mapApiProject)
+    },
+    staleTime: 30 * 1000,
+  })
+  await Promise.allSettled([
+    listPromise,
+    queryClient.prefetchQuery({
+      queryKey: ['projects', 'rosters', todayKey],
+      queryFn: async () => (await api.get('/crm/projects/rosters', { params: { date: todayKey } })).data,
+      staleTime: 15 * 1000,
+    }),
+  ])
+  const bases = queryClient.getQueryData<ProjectBase[]>(['projects', 'list']) ?? []
+  const projectIds = bases.map(p => p.id)
+  if (projectIds.length) {
+    await queryClient.prefetchQuery({
+      queryKey: ['projects', 'links-batch', projectIds.join(',')],
+      queryFn: () => fetchProjectLinksBatch(projectIds),
+      staleTime: 30_000,
+    })
+  }
+}
+
+/**
+ * Warm one project's detail + houses — called on card hover/press so the
+ * detail page opens with everything already in cache (jobs/quotes/invoices
+ * are usually warm already from the list page's queries).
+ */
+export function prefetchProjectDetail(id: string): Promise<unknown> {
+  return Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: ['projects', id, 'detail'],
+      queryFn: async () => (await api.get(`/crm/projects/${id}`)).data,
+      staleTime: 15 * 1000,
+    }),
+    queryClient.prefetchQuery({ queryKey: ['projects', id, 'jobs'], queryFn: () => fetchProjectJobs(id), staleTime: 30_000 }),
+    queryClient.prefetchQuery({ queryKey: ['projects', id, 'quotes'], queryFn: () => fetchProjectQuotes(id), staleTime: 30_000 }),
+    queryClient.prefetchQuery({ queryKey: ['projects', id, 'invoices'], queryFn: () => fetchProjectInvoices(id), staleTime: 30_000 }),
+    import('./housesApi').then(m => m.prefetchHousesForProject(id)),
+  ])
 }

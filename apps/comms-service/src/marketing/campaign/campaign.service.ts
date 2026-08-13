@@ -8,6 +8,7 @@ import { TemplatesService } from '../templates/templates.service';
 import { MarketingChannel } from '../prisma/generated';
 import type { MarketingSendPayload } from '../send/marketing-send.worker';
 import { signMarketingToken } from '../common/marketing-token.util';
+import { CompanySettingsClient } from '../../company-settings/company-settings.client';
 
 const CLICK_BASE = process.env.MARKETING_CLICK_BASE_URL ?? 'http://localhost:3000';
 const CUSTOMER_PORTAL_URL = process.env.CUSTOMER_PORTAL_URL ?? 'https://tscrm-demo-customer.web.app';
@@ -32,6 +33,7 @@ export class CampaignService {
     private readonly db: MarketingPrismaService,
     private readonly audiences: AudienceService,
     private readonly templates: TemplatesService,
+    private readonly companySettings: CompanySettingsClient,
     @InjectQueue(QueueName.MARKETING_SEND) private readonly sendQueue: Queue,
   ) {}
 
@@ -70,10 +72,12 @@ export class CampaignService {
     if (!campaign.templateId) throw new BadRequestException('Campaign has no template');
     if (campaign.status === 'SENT') throw new BadRequestException('Campaign already sent');
 
-    const [template, members] = await Promise.all([
+    const [template, members, settings] = await Promise.all([
       this.templates.get(companyId, campaign.templateId),
       this.audiences.resolveMembers(companyId, campaign.audienceId),
+      this.companySettings.getSettings(companyId),
     ]);
+    const companyName = settings.name || 'HVACtor.ai';
 
     await this.db.campaign.update({ where: { id }, data: { status: 'SENDING' } });
 
@@ -110,7 +114,7 @@ export class CampaignService {
       const vars: Record<string, string> = {
         'customer.firstName': member.firstName,
         'customer.lastName': member.lastName ?? '',
-        'company.name': 'T&S Services',
+        'company.name': companyName,
         trackedLink,
         unsubLink,
       };

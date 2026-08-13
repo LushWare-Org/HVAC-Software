@@ -103,6 +103,18 @@ export function useSocket() {
     [],
   )
 
+  // Company-wide push fired on any new message in the tenant — lets the
+  // threads list + unread badge refresh instantly without tight polling.
+  const onThreadsChanged = useCallback(
+    (cb: (data: { threadId: string }) => void) => {
+      const sock = socketRef.current
+      if (!sock) return () => {}
+      sock.on('threads_changed', cb)
+      return () => { sock.off('threads_changed', cb) }
+    },
+    [],
+  )
+
   return {
     isConnected,
     socket: socketRef,
@@ -112,5 +124,6 @@ export function useSocket() {
     sendTyping,
     onNewMessage,
     onTyping,
+    onThreadsChanged,
   }
 }

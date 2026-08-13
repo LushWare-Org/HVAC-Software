@@ -2,6 +2,7 @@
  * Shared building blocks for service-agreement UI (page + customer sidebar tab).
  */
 import { Infinity as InfinityIcon } from 'lucide-react'
+import type { ComponentType } from 'react'
 import type { Agreement, AgreementStatus } from '../../hooks/useAgreements'
 import { formatMoney } from '../../lib/format'
 
@@ -76,6 +77,19 @@ export function intervalLabel(a: Pick<Agreement, 'serviceInterval' | 'serviceInt
   if (!a.serviceInterval) return '—'
   if (a.serviceInterval === 'CUSTOM') return a.serviceIntervalDays ? `Every ${a.serviceIntervalDays} days` : 'Custom'
   return INTERVAL_LABELS[a.serviceInterval] ?? a.serviceInterval
+}
+
+export function SectionLabel({ icon: Icon, children }: { icon?: ComponentType<{ size?: number }>; children: React.ReactNode }) {
+  return (
+    <p style={{
+      display: 'flex', alignItems: 'center', gap: 6,
+      fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase',
+      letterSpacing: '0.06em', margin: '4px 0 0',
+    }}>
+      {Icon && <Icon size={12} />}
+      {children}
+    </p>
+  )
 }
 
 export const fmtDate = (d?: string | null) =>

@@ -329,7 +329,7 @@ export default function PayInvoiceModal({ onClose, invoice }: PayInvoiceModalPro
                 Transfer the exact amount to the following account:
               </p>
               {[
-                { label: 'Account Name', value: 'HomePulse Services Ltd' },
+                { label: 'Account Name', value: 'HVACtor.ai Services Ltd' },
                 { label: 'Account Number', value: '**** **** 1234' },
                 { label: 'Sort Code', value: '12-34-56' },
                 { label: 'Reference', value: invoice.invoiceNumber },

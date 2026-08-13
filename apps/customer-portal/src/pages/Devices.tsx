@@ -425,11 +425,15 @@ export default function Devices() {
         }
       `}</style>
 
-      {/* Page header */}
+      {/* Page header — this h1/p sits directly on the dark page canvas (no card
+          wrapper), so it needs the canvas-safe text colors rather than the
+          shared .topbar-title/.topbar-subtitle color (var(--t1)/var(--t3),
+          tuned for card backgrounds). Scoped to this instance only — not
+          touching the shared class, which the real sticky Topbar also uses. */}
       <div className="page-header">
         <div className="topbar-left">
-          <h1 className="topbar-title">My Devices</h1>
-          <p className="topbar-subtitle">
+          <h1 className="topbar-title" style={{ color: 'var(--canvas-t1)' }}>My Devices</h1>
+          <p className="topbar-subtitle" style={{ color: 'var(--canvas-t2)' }}>
             {isLoading ? 'Loading…' : totalDevices === 0
               ? 'No thermostats connected'
               : `${onlineCount} of ${totalDevices} thermostat${totalDevices !== 1 ? 's' : ''} online`}

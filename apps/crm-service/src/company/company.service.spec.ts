@@ -26,6 +26,7 @@ describe('CompanyService settings', () => {
     prismaMock.company.findUnique.mockResolvedValue({
       id: 'co-1',
       name: 'KASE Engineering',
+      address: '123 Galle Rd',
       logoUrl: null,
       currency: 'LKR',
       timezone: 'Asia/Colombo',
@@ -35,6 +36,7 @@ describe('CompanyService settings', () => {
     expect(s).toEqual({
       id: 'co-1',
       name: 'KASE Engineering',
+      address: '123 Galle Rd',
       logoUrl: null,
       currency: 'LKR',
       timezone: 'Asia/Colombo',
@@ -50,6 +52,7 @@ describe('CompanyService settings', () => {
     prismaMock.company.findUnique.mockResolvedValue({
       id: 'co-1',
       name: 'Demo',
+      address: null,
       logoUrl: null,
       currency: 'USD',
       timezone: 'America/New_York',

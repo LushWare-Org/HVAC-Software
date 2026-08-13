@@ -1,12 +1,9 @@
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:20-bullseye-slim AS builder
 WORKDIR /repo
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Prisma needs the openssl CLI available to detect the correct engine target.
-RUN apk add --no-cache openssl
 
 # Copy workspace manifests (for layer caching — only reinstall when these change)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
@@ -28,14 +25,24 @@ RUN pnpm --filter=crm-service build
 RUN cd apps/crm-service && npx prisma generate
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:20-bullseye-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Keep the runtime image able to detect the Alpine OpenSSL version for Prisma.
-RUN apk add --no-cache openssl
+# Shared runtime libraries the prebuilt `canvas` binary dynamically links against
+# (pulled in via pdf-to-img, used by document-templates). Without these the
+# process crashes on boot the moment anything require()s canvas, since it's an
+# eager NestJS provider import, not a lazily-loaded one.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcairo2 \
+    libpango-1.0-0 \
+    libjpeg62-turbo \
+    libgif7 \
+    librsvg2-2 \
+    libpixman-1-0 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY tsconfig.base.json ./

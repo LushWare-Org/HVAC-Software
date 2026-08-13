@@ -130,6 +130,7 @@ func main() {
 			dispatchH.ManualAssign,
 		)
 		// Querying
+		dispatch.GET("/assignments", dispatchH.GetAllForCompany)
 		dispatch.GET("/assignments/:id", dispatchH.GetOne)
 		dispatch.GET("/assignments/job/:jobId", dispatchH.GetByJob)
 		dispatch.GET("/assignments/technician/:techId", dispatchH.GetByTechnician)

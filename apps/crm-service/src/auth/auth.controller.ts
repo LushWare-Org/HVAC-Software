@@ -1,9 +1,11 @@
-import { Body, Controller, Post, Get, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength, IsOptional, IsArray, IsNumber } from 'class-validator';
-import { CurrentUser, JwtAuthGuard } from '@tscrm/auth-client';
-import { AuthUser } from '@tscrm/types';
+import { CurrentUser, JwtAuthGuard, RolesGuard, Roles } from '@tscrm/auth-client';
+import { AuthUser, Role } from '@tscrm/types';
 import { AuthService } from './auth.service';
+
+const STAFF_WRITE = [Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER];
 
 // ─── DTOs ──────────────────────────────────────────────────────────────────────
 
@@ -46,7 +48,6 @@ class ForceResetPasswordDto {
 }
 
 class ProvisionLeadDto {
-  @IsString() companyId!: string;
   @IsString() firstName!: string;
   @IsString() lastName!: string;
   @IsEmail() email!: string;
@@ -55,8 +56,14 @@ class ProvisionLeadDto {
   @IsOptional() @IsString() serviceInterest?: string;
 }
 
+class ProvisionHouseOwnerDto {
+  @IsString() firstName!: string;
+  @IsString() lastName!: string;
+  @IsEmail() email!: string;
+  @IsOptional() @IsString() phone?: string;
+}
+
 class ProvisionTechnicianDto {
-  @IsString() companyId!: string;
   @IsString() @MinLength(2) name!: string;
   @IsEmail() email!: string;
   @IsOptional() @IsString() phone?: string;
@@ -133,11 +140,25 @@ export class AuthController {
    * Creates CompanyUser + Customer + Lead, sends welcome email with temp password.
    */
   @Post('provision-lead')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_WRITE)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Admin: create lead + customer portal account with temp password' })
-  provisionLead(@Body() dto: ProvisionLeadDto) {
-    return this.authService.provisionLeadAccount(dto);
+  provisionLead(@CurrentUser() user: AuthUser, @Body() dto: ProvisionLeadDto) {
+    return this.authService.provisionLeadAccount(user.companyId, dto);
+  }
+
+  /**
+   * Admin creates a brand-new customer + portal account for a Housing Scheme house
+   * owner in one step (no Lead created — house owners aren't sales leads).
+   */
+  @Post('provision-house-owner')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_WRITE)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Admin: create a new customer + portal account for a house owner (no Lead)' })
+  provisionHouseOwner(@CurrentUser() user: AuthUser, @Body() dto: ProvisionHouseOwnerDto) {
+    return this.authService.provisionHouseOwner(user.companyId, dto);
   }
 
   /**
@@ -145,10 +166,25 @@ export class AuthController {
    * Creates CompanyUser (approved), sends welcome email with temp password.
    */
   @Post('provision-technician')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_WRITE)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Admin: create approved technician account with temp password' })
-  provisionTechnician(@Body() dto: ProvisionTechnicianDto) {
-    return this.authService.provisionTechnicianAccount(dto);
+  provisionTechnician(@CurrentUser() user: AuthUser, @Body() dto: ProvisionTechnicianDto) {
+    return this.authService.provisionTechnicianAccount(user.companyId, dto);
+  }
+
+  /**
+   * Admin resends portal login credentials to a customer whose welcome email
+   * was missed or never actioned (mustResetPassword still true — pending first login).
+   * Issues a new temp password since the original cannot be recovered.
+   */
+  @Post('customers/:customerId/resend-welcome-email')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF_WRITE)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Admin: resend customer portal welcome email with a fresh temp password' })
+  resendWelcomeEmail(@CurrentUser() user: AuthUser, @Param('customerId') customerId: string) {
+    return this.authService.resendWelcomeEmail(user.companyId, customerId);
   }
 }

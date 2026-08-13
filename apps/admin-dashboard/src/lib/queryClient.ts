@@ -6,17 +6,21 @@
  *     when filters change or a page re-mounts, the UI keeps showing the last
  *     known data instead of flashing a spinner. The refetch still happens in
  *     the background; the user just doesn't see the flicker.
- *   - `staleTime: 60s` keeps a query fresh long enough to survive route
- *     navigation without re-hitting the network. CRM data doesn't churn so
- *     fast that a one-minute stale window misleads anyone.
- *   - `gcTime: 30 min` means when you leave a page and come back within
- *     half an hour the data is still there — instant render.
+ *   - `staleTime: 5 min` keeps a query fresh long enough to survive route
+ *     navigation without re-hitting the network. All in-app edits go through
+ *     mutations that invalidate their keys, so this never shows stale data
+ *     the user themselves changed.
+ *   - `gcTime: 1 h` means when you leave a page and come back the data is
+ *     still there — instant render.
  *   - `structuralSharing: true` (default) + `placeholderData` together give
  *     us "stale-while-revalidate" semantics: old data on screen, fresh data
  *     swaps in silently once the network call completes.
  *   - `refetchOnWindowFocus: false` — CRM tabs are long-lived; we don't want
  *     focus events to trigger dozens of refetches across all subscribed hooks.
  *   - `refetchOnReconnect: true` — on network recovery, pull fresh data once.
+ *   - `refetchOnMount: true` — only refetch on mount if the data is past
+ *     staleTime. Combined with placeholderData, revisiting a page within the
+ *     1-minute window renders instantly from cache with zero network call.
  *
  * Persistence:
  *   A lightweight localStorage layer saves the query cache, throttled, so
@@ -37,9 +41,12 @@ const PERSIST_FLUSH_MS = 2000
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Core staleness / cache sizing
-      staleTime:   60 * 1000,                    // 1 minute "fresh"
-      gcTime:      30 * 60 * 1000,               // 30 minutes retained after unmount
+      // Core staleness / cache sizing. 5-minute default freshness: every
+      // mutation in the app invalidates its own keys, so within-app edits
+      // still show instantly — the window only affects out-of-band changes
+      // (another user / another tab), which a background refetch picks up.
+      staleTime:   5 * 60 * 1000,                // 5 minutes "fresh"
+      gcTime:      60 * 60 * 1000,               // 1 hour retained after unmount
 
       // Keep showing prior data while background refetching — no spinner flash
       placeholderData: (prev: unknown) => prev,
@@ -48,7 +55,10 @@ export const queryClient = new QueryClient({
       retry:                 1,
       refetchOnWindowFocus:  false,              // CRMs stay open all day — don't spam
       refetchOnReconnect:    true,               // but do refresh on reconnect
-      refetchOnMount:        'always',           // mount triggers a background refetch
+      refetchOnMount:        true,               // refetch only if data is past staleTime —
+                                                  // 'always' was firing a network round-trip on
+                                                  // every remount (e.g. tab-switching pages),
+                                                  // even for data fetched a second ago
     },
     mutations: {
       retry: 0,

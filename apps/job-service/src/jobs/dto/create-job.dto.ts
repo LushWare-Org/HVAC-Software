@@ -46,6 +46,10 @@ export class CreateJobDto {
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isAgreementJob?: boolean;
   @ApiPropertyOptional({ description: 'crm.projects id — reserved crew capacity + roll-up filtering' })
   @IsOptional() @IsString() projectId?: string;
+  @ApiPropertyOptional({ description: 'crm.houses id — Housing Scheme template: which house this job is for' })
+  @IsOptional() @IsString() houseId?: string;
+  @ApiPropertyOptional({ description: 'crm.equipment id — optional: which specific unit was serviced (service log)' })
+  @IsOptional() @IsString() equipmentId?: string;
 
   @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() internalNotes?: string;

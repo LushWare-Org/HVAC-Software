@@ -92,6 +92,31 @@ func (h *DispatchHandler) GetByJob(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": assignments})
 }
 
+// GET /dispatch/assignments
+// Returns every assignment in the caller's company. Optionally filter by
+// status (comma-separated). One bulk call for the dispatch board instead of
+// one request per technician.
+func (h *DispatchHandler) GetAllForCompany(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+
+	var statusFilter []models.AssignmentStatus
+	if statusParam := c.Query("status"); statusParam != "" {
+		for _, s := range splitComma(statusParam) {
+			statusFilter = append(statusFilter, models.AssignmentStatus(s))
+		}
+	}
+
+	assignments, err := h.assignRepo.FindAllForCompany(
+		c.Request.Context(), claims.CompanyID, statusFilter,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": assignments})
+}
+
 // GET /dispatch/assignments/technician/:techId
 // Returns a technician's schedule. Optionally filter by status (comma-separated).
 // e.g. GET /dispatch/assignments/technician/abc?status=ASSIGNED,EN_ROUTE

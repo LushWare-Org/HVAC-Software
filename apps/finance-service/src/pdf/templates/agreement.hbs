@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #f0f2f5; }
+    .page { width: 100%; max-width: 860px; margin: 0 auto; padding: 28px; }
+    .sheet { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.12); }
+
+    .hero { background: #0f172a; color: #ffffff; padding: 36px 40px 32px; position: relative; overflow: hidden; min-height: 380px; }
+    .hero::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: 0; pointer-events: none;
+    }
+    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; position: relative; z-index: 1; }
+    .eyebrow { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #6366f1; margin-bottom: 10px; font-weight: 700; }
+    .brand-name { font-size: 26px; font-weight: 800; line-height: 1.1; color: #ffffff; letter-spacing: -0.02em; }
+    .brand-address { margin-top: 10px; max-width: 300px; font-size: 11px; line-height: 1.7; color: #94a3b8; white-space: pre-line; }
+    .doc-card {
+      min-width: 210px; padding: 18px 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+    }
+    .doc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
+    .doc-number { margin-top: 6px; font-size: 20px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
+
+    .body { padding: 32px 40px 40px; }
+    .section { margin-top: 24px; }
+    .section:first-child { margin-top: 0; }
+    .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 10px; }
+    .kv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 24px; }
+    .kv-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
+    .kv-label { color: #64748b; }
+    .kv-value { font-weight: 600; color: #0f172a; }
+    .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 40px; }
+    .sig-line { border-top: 1px solid #0f172a; padding-top: 8px; font-size: 11px; color: #64748b; }
+    .sig-name { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 24px; min-height: 20px; }
+
+    .footer {
+      margin-top: 28px; padding: 16px 20px;
+      background: #0f172a; border-radius: 8px;
+      display: flex; justify-content: space-between; gap: 10px;
+      font-size: 10px; color: #64748b;
+    }
+    .footer strong { color: #94a3b8; }
+
+    /* ── Template-driven overrides ── */
+    .brand-logo { max-height: 44px; max-width: 160px; object-fit: contain; }
+    .brand-tagline { margin-top: 4px; font-size: 10.5px; color: #94a3b8; }
+
+    /* ── Slot layout system: rows stack vertically (auto height), blocks sit side-by-side ── */
+    .tpl-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+    .tpl-row:first-child { margin-top: 0; }
+    .tpl-block { box-sizing: border-box; }
+    .tpl-block--free { z-index: 1; }
+    .body .tpl-row:last-child { margin-top: 32px; }
+  </style>
+</head>
+<body>
+  <style>
+    {{#if template.isLetterhead}}
+    .sheet { box-shadow: none; }
+    {{/if}}
+    {{#if template.accentColor}}
+    .hero { background: {{template.accentColor}} !important; }
+    {{/if}}
+  </style>
+  <div class="page">
+    <div class="sheet">
+      {{#if template.isLetterhead}}
+      {{! Only the top band of the uploaded artwork is used as the letterhead — see
+          invoice.hbs for the full explanation of why the image lives on this
+          fixed-height container instead of as the whole-page .sheet background. }}
+      <div style="height: {{template.letterheadTopMarginPx}}px; background-image: url('{{template.letterheadImageUrl}}'); background-size: 100% auto; background-repeat: no-repeat; background-position: top center; overflow: hidden;" data-field="letterheadImageUrl"></div>
+      <div style="padding: 0 40px; display: flex; justify-content: flex-end;">
+        <div class="doc-card" style="background: #f1f5f9; border-color: #e2e8f0;">
+          <div class="doc-label" style="color:#64748b;">Service Agreement</div>
+        </div>
+      </div>
+      {{else}}
+      <div class="hero" data-field="accentColor">
+        {{#each rows}}
+        {{#if (eq section "hero")}}
+        {{#each blocks}}
+        {{{blockStyleOverride id style}}}
+        <div class="tpl-block tpl-block--free" data-block-id="{{id}}" data-slot="{{slot}}" style="{{heroBlockStyle this}}">
+          {{> (lookup this "slot") @root}}
+        </div>
+        {{/each}}
+        {{/if}}
+        {{/each}}
+      </div>
+      {{/if}}
+
+      <div class="body">
+        {{#each rows}}
+        {{#if (eq section "body")}}
+        <div class="tpl-row" data-row-id="{{id}}">
+          {{#each blocks}}
+          {{{blockStyleOverride id style}}}
+          <div class="tpl-block" data-block-id="{{id}}" data-slot="{{slot}}" style="width:{{widthPct}}%; {{blockStyle style}}">
+            {{> (lookup this "slot") @root}}
+          </div>
+          {{/each}}
+        </div>
+        {{/if}}
+        {{/each}}
+        {{#if template.isLetterhead}}
+        <div style="height: {{template.letterheadBottomMarginPx}}px;"></div>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

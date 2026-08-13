@@ -20,4 +20,5 @@ export const keys = {
   thread:         (id: string) => ['customer', 'thread', id] as const,
   notifications:  () => ['customer', 'notifications'] as const,
   bookings:       () => ['customer', 'bookings'] as const,
+  reschedule:     (jobId: string) => ['customer', 'reschedule', jobId] as const,
 }

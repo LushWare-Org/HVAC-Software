@@ -1,15 +1,25 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { TtlCacheService } from '../cache/ttl-cache.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class BookingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private ttlCache: TtlCacheService,
+  ) {}
 
-  async findAll(companyId: string, status?: string) {
+  async findAll(companyId: string, status?: string, limit?: number) {
+    // Bounded by default — the dashboard only shows a handful of upcoming
+    // appointments; fetching every booking ever made grows unbounded.
+    const take = Number.isFinite(Number(limit)) && Number(limit) > 0
+      ? Math.min(500, Math.trunc(Number(limit)))
+      : 200;
     const data = await this.prisma.booking.findMany({
       where: { companyId, ...(status && { status: status as any }) },
       include: { customer: { select: { id: true, firstName: true, lastName: true, phone: true } } },
       orderBy: { preferredDate: 'asc' },
+      take,
     });
     // Map to include customerName for frontend compatibility
     const mapped = data.map((b: any) => ({
@@ -44,12 +54,15 @@ export class BookingsService {
       }
     }
 
+    // Bookings feed the customer status-summary (service cadence) — bust it.
+    if (data.customerId) this.ttlCache.del(`status-summary:${companyId}:${data.customerId}`);
     return booking;
   }
 
   async confirm(companyId: string, id: string) {
     const booking = await this.prisma.booking.findFirst({ where: { id, companyId } });
     if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.customerId) this.ttlCache.del(`status-summary:${companyId}:${booking.customerId}`);
     return this.prisma.booking.update({ where: { id }, data: { status: 'CONFIRMED' } });
   }
 

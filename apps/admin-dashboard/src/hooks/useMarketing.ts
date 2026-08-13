@@ -466,3 +466,22 @@ export function useDeleteCustomerMarketingData() {
     },
   })
 }
+
+// ── Prefetch ──────────────────────────────────────────────────────────────────
+
+/**
+ * Warm everything the Marketing page's Overview and Campaigns tabs mount
+ * with (kpis / campaign-stats / attribution at the default 30d range, plus
+ * campaigns, templates, and audiences), so tab switches render instantly.
+ */
+export function prefetchMarketingPage(): Promise<unknown> {
+  const get = (url: string) => async () => (await api.get(url)).data
+  return Promise.allSettled([
+    queryClient.prefetchQuery({ queryKey: ['marketing', 'kpis', '30d'], queryFn: get('/comms/m/stats/kpis?range=30d'), staleTime: 2 * 60_000 }),
+    queryClient.prefetchQuery({ queryKey: ['marketing', 'campaign-stats', '30d'], queryFn: get('/comms/m/stats/campaigns?range=30d'), staleTime: 2 * 60_000 }),
+    queryClient.prefetchQuery({ queryKey: ['marketing', 'attribution', '30d'], queryFn: get('/comms/m/stats/attribution?range=30d'), staleTime: 2 * 60_000 }),
+    queryClient.prefetchQuery({ queryKey: ['marketing', 'campaigns'], queryFn: get('/comms/m/campaigns'), staleTime: 30_000 }),
+    queryClient.prefetchQuery({ queryKey: ['marketing', 'templates'], queryFn: get('/comms/m/templates'), staleTime: 5 * 60_000 }),
+    queryClient.prefetchQuery({ queryKey: ['marketing', 'audiences'], queryFn: get('/comms/m/audiences'), staleTime: 2 * 60_000 }),
+  ])
+}

@@ -4,12 +4,34 @@
  * The sidebar entry only appears when the customer has ≥1 project.
  */
 import { useState } from 'react'
+import RescheduleBadge from '../components/reschedule/RescheduleBadge'
+import { useNavigate } from 'react-router-dom'
 import {
   FolderKanban, MapPin, CalendarRange, ChevronDown, ChevronUp,
-  Wrench, Wallet, CheckCircle2, Clock,
+  Wrench, Wallet, CheckCircle2, Clock, Plus, FileText, FileSignature,
 } from 'lucide-react'
-import { useMyProjects, useMyProjectJobs, useMyProjectMoney, type MyProject } from '../hooks/useMyProjects'
+import { useMyProjects, useMyProjectJobs, useMyProjectMoney, useMyProjectQuotes, type MyProject } from '../hooks/useMyProjects'
+import { useMyAgreements } from '../hooks/useMyAgreements'
 import { formatMoney } from '../lib/format'
+import BookServiceModal from './jobs/BookServiceModal'
+
+const QUOTE_STATUS_META: Record<string, { label: string; color: string; dim: string }> = {
+  DRAFT: { label: 'Draft', color: 'var(--t3)', dim: 'var(--bg-card-2)' },
+  SENT: { label: 'Awaiting your review', color: 'var(--amber)', dim: 'var(--amber-dim)' },
+  APPROVED: { label: 'Approved', color: 'var(--green)', dim: 'var(--green-dim)' },
+  DECLINED: { label: 'Declined', color: 'var(--red)', dim: 'var(--red-dim)' },
+  EXPIRED: { label: 'Expired', color: 'var(--t3)', dim: 'var(--bg-card-2)' },
+}
+
+const AGREEMENT_STATUS_META: Record<string, { label: string; color: string; dim: string }> = {
+  DRAFT: { label: 'Draft', color: 'var(--t3)', dim: 'var(--bg-card-2)' },
+  SENT: { label: 'Awaiting your signature', color: 'var(--amber)', dim: 'var(--amber-dim)' },
+  ACTIVE: { label: 'Active', color: 'var(--green)', dim: 'var(--green-dim)' },
+  PENDING_RENEWAL: { label: 'Renewal due', color: 'var(--amber)', dim: 'var(--amber-dim)' },
+  RENEWED: { label: 'Renewed', color: 'var(--green)', dim: 'var(--green-dim)' },
+  EXPIRED: { label: 'Expired', color: 'var(--t3)', dim: 'var(--bg-card-2)' },
+  CANCELLED: { label: 'Cancelled', color: 'var(--red)', dim: 'var(--red-dim)' },
+}
 
 const STATUS_META: Record<MyProject['status'], { label: string; color: string; dim: string }> = {
   PLANNING: { label: 'Planning', color: 'var(--violet, #7c3aed)', dim: 'var(--violet-dim, rgba(124,58,237,0.12))' },
@@ -61,9 +83,14 @@ export default function MyProjects() {
 }
 
 function ProjectCard({ project: p, open, onToggle }: { project: MyProject; open: boolean; onToggle: () => void }) {
+  const navigate = useNavigate()
   const meta = STATUS_META[p.status] ?? STATUS_META.PLANNING
   const jobsQ = useMyProjectJobs(open ? p.id : null)
   const moneyQ = useMyProjectMoney(open ? p.id : null)
+  const quotesQ = useMyProjectQuotes(open ? p.id : null)
+  const { data: agreementsData } = useMyAgreements()
+  const agreements = (agreementsData?.data ?? []).filter(a => a.projectId === p.id)
+  const [showBook, setShowBook] = useState(false)
 
   const jobs = jobsQ.data ?? []
   const done = jobs.filter(j => DONE_STATUSES.includes(j.status)).length
@@ -146,11 +173,75 @@ function ProjectCard({ project: p, open, onToggle }: { project: MyProject; open:
             })}
           </div>
 
+          {/* Agreements */}
+          {agreements.length > 0 && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>
+                Agreements
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {agreements.map(a => {
+                  const am = AGREEMENT_STATUS_META[a.status] ?? { label: a.status, color: 'var(--t3)', dim: 'var(--bg-card-2)' }
+                  return (
+                    <button key={a.id} onClick={() => navigate('/agreements')} style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 10,
+                      background: 'var(--bg-card-2, rgba(148,163,184,0.08))', border: '1px solid var(--bd)',
+                      cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', width: '100%',
+                    }}>
+                      <FileSignature size={13} style={{ color: 'var(--t3)', flexShrink: 0 }} />
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {a.name}
+                      </span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, whiteSpace: 'nowrap', background: am.dim, color: am.color }}>
+                        {am.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Quotes */}
+          {(quotesQ.data ?? []).length > 0 && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>
+                Quotes
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {(quotesQ.data ?? []).map(q => {
+                  const qm = QUOTE_STATUS_META[q.status] ?? { label: q.status, color: 'var(--t3)', dim: 'var(--bg-card-2)' }
+                  return (
+                    <button key={q.id} onClick={() => navigate('/quotes')} style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 10,
+                      background: 'var(--bg-card-2, rgba(148,163,184,0.08))', border: '1px solid var(--bd)',
+                      cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', width: '100%',
+                    }}>
+                      <FileText size={13} style={{ color: 'var(--t3)', flexShrink: 0 }} />
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--t1)' }}>
+                        {q.quoteNumber ?? 'Quote'}
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)' }}>{formatMoney(q.total, { decimals: 0 })}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, whiteSpace: 'nowrap', background: qm.dim, color: qm.color }}>
+                        {qm.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Visits */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>
-              Visits
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                Visits
+              </p>
+              <button className="btn btn-primary btn-sm" onClick={() => setShowBook(true)}>
+                <Plus size={12} /> Book a service
+              </button>
+            </div>
             {jobs.length === 0 ? (
               <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: 0 }}>No visits scheduled yet.</p>
             ) : (
@@ -164,6 +255,7 @@ function ProjectCard({ project: p, open, onToggle }: { project: MyProject; open:
                         {j.title}
                       </span>
                       <span style={{ fontSize: 11, color: 'var(--t3)', whiteSpace: 'nowrap' }}>{fmtDate(j.scheduledStart)}</span>
+                      <RescheduleBadge state={j.rescheduleState} size="sm" />
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, whiteSpace: 'nowrap',
                         background: isDone ? 'var(--green-dim, rgba(22,163,74,0.12))' : 'var(--blue-dim, rgba(37,99,235,0.12))',
@@ -178,6 +270,10 @@ function ProjectCard({ project: p, open, onToggle }: { project: MyProject; open:
             )}
           </div>
         </div>
+      )}
+
+      {showBook && (
+        <BookServiceModal onClose={() => setShowBook(false)} projectId={p.id} projectName={p.name} />
       )}
     </div>
   )

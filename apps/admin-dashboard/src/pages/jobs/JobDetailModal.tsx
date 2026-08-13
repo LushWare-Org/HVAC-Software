@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../contexts/ToastContext";
 import {
   X, Edit2, Save, Wrench, MapPin, User, Calendar,
   DollarSign, FileText, Clock, AlertCircle, Loader2, ArrowRight,
-  Send, Receipt, Truck, Package, CheckSquare, ClipboardList,
+  Send, Receipt, Truck, Package, CheckSquare, ClipboardList, CalendarClock,
   Plus, Trash2, MessageSquare, Phone, Mail, Home,
   FolderKanban,
 } from "lucide-react";
@@ -29,6 +30,12 @@ import {
 import type { Job, EquipmentRecord } from "../../types/api";
 import JobActivityTab from "./JobActivityTab";
 import { formatMoney } from '../../lib/format'
+import { useTechnicians } from "../../hooks/useScheduling";
+import Avatar from "../../components/Avatar";
+import JobStatusOverrideMenu from "../../components/JobStatusOverrideMenu";
+import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
+import RescheduleModal from "../../components/reschedule/RescheduleModal";
+import { STAFF_RESCHEDULABLE_STATUSES } from "../../lib/reschedule";
 
 interface JobDetailModalProps {
   isOpen: boolean;
@@ -81,6 +88,7 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
 
   // J4: Cancellation reason
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelReasonOther, setCancelReasonOther] = useState("");
 
@@ -91,6 +99,7 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
   // Customer data for the Customer tab
   const customerQuery = useCustomer(propJob?.customerId ?? "");
   const customer = customerQuery.data;
+  const techniciansQuery = useTechnicians();
 
   // Mutations
   const navigate = useNavigate();
@@ -161,6 +170,24 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
           const msg = err?.response?.data?.message ?? "Status change failed.";
           setError(msg);
           showError(msg, 'Status update failed');
+        },
+      },
+    );
+  };
+
+  // Admin correction — bypasses the state machine (job-service re-checks the
+  // role independently; see JobStatusOverrideMenu).
+  const handleForceStatus = (newStatus: string) => {
+    setError("");
+    const label = newStatus.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    updateStatus.mutate(
+      { id: job.id, status: newStatus, force: true },
+      {
+        onSuccess: () => showSuccess(`Status corrected to ${label}.`, 'Status corrected'),
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message ?? "Status correction failed.";
+          setError(msg);
+          showError(msg, 'Status correction failed');
         },
       },
     );
@@ -319,7 +346,7 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
     return actions;
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 admin-modal-backdrop"
       onClick={onClose}
@@ -351,6 +378,7 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
                   <Package size={9} /> PARTS SHORT
                 </span>
               )}
+              <RescheduleBadge state={job.rescheduleState} />
             </div>
             <h2 className="text-lg font-bold leading-tight truncate">{job.title}</h2>
             <p className="text-blue-100 text-xs mt-0.5 truncate">
@@ -458,7 +486,16 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
                       <User size={11} /> Technician
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
+                      {job.assignedToId && job.assignedToName && (
+                        <Avatar
+                          name={job.assignedToName}
+                          avatarUrl={techniciansQuery.data?.find(t => t.userId === job.assignedToId)?.avatarUrl}
+                          size={34}
+                          radius={17}
+                          fontSize={13}
+                        />
+                      )}
                       <input value={job.assignedToName ?? "Unassigned"} disabled className={`${inputView} flex-1`} />
                       {job.assignedToId && job.assignedToName && (
                         <button
@@ -1214,13 +1251,37 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
                 <X size={14} /> Cancel Job
               </button>
             )}
+            {STAFF_RESCHEDULABLE_STATUSES.includes(job.status) && (
+              <button
+                onClick={() => setShowReschedule(true)}
+                disabled={isBusy}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer disabled:opacity-60"
+              >
+                <CalendarClock size={14} /> Reschedule
+              </button>
+            )}
+            <JobStatusOverrideMenu currentStatus={job.status} isPending={isBusy} onSelect={handleForceStatus} />
           </div>
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
             Close
           </button>
         </div>
+
+        {showReschedule && (
+          <RescheduleModal
+            job={{
+              id: job.id, title: job.title, jobNumber: job.jobNumber,
+              customerName: job.customerName, scheduledStart: job.scheduledStart,
+              status: job.status, rescheduleState: job.rescheduleState,
+              assignedToName: job.assignedToName,
+            }}
+            isOpen={showReschedule}
+            onClose={() => setShowReschedule(false)}
+          />
+        )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

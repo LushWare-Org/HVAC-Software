@@ -3,12 +3,17 @@ import { createPortal } from "react-dom";
 import {
   X, MapPin, User, Calendar, Clock, DollarSign, FileText,
   Briefcase, Wrench, Loader2, AlertCircle, Send, Receipt,
-  Star, RefreshCw, Phone, Navigation,
+  Star, RefreshCw, Phone, Navigation, CalendarClock,
 } from "lucide-react";
 import { useJob, useUpdateJobStatus } from "../../hooks/useJobs";
 import { useTechnicians, useManualAssign } from "../../hooks/useScheduling";
 import type { Job, DispatchAssignment, Technician } from "../../types/api";
 import { formatMoney } from '../../lib/format'
+import JobStatusOverrideMenu from "../../components/JobStatusOverrideMenu";
+import TechAvatar from "../../components/TechAvatar";
+import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
+import RescheduleModal from "../../components/reschedule/RescheduleModal";
+import { STAFF_RESCHEDULABLE_STATUSES } from "../../lib/reschedule";
 
 interface JobDetailPanelProps {
   jobId: string;
@@ -51,6 +56,7 @@ export default function JobDetailPanel({
   const manualAssign = useManualAssign();
   const [error, setError] = useState("");
   const [showReassign, setShowReassign] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
 
   if (!isOpen) return null;
 
@@ -59,6 +65,16 @@ export default function JobDetailPanel({
     updateJobStatus.mutate(
       { id: jobId, status: newStatus, statusNote: note },
       { onError: (err: any) => setError(err?.response?.data?.message ?? "Status change failed.") },
+    );
+  };
+
+  // Admin correction — bypasses the state machine (job-service re-checks the
+  // role independently; see JobStatusOverrideMenu).
+  const handleForceStatus = (newStatus: string) => {
+    setError("");
+    updateJobStatus.mutate(
+      { id: jobId, status: newStatus, force: true },
+      { onError: (err: any) => setError(err?.response?.data?.message ?? "Status correction failed.") },
     );
   };
 
@@ -143,6 +159,7 @@ export default function JobDetailPanel({
                         {pm.label}
                       </span>
                     )}
+                    <RescheduleBadge state={job.rescheduleState} />
                     <span style={{ fontSize: 10, color: "var(--t4)", fontFamily: "monospace" }}>#{jobId.slice(0, 10)}…</span>
                   </div>
                   <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--t1)", lineHeight: 1.3, margin: "0 0 5px 0" }}>
@@ -152,7 +169,16 @@ export default function JobDetailPanel({
                     <User size={11} />
                     {job.customerName ?? "No customer"}
                     {assignedTechName !== "Unassigned" && (
-                      <><span style={{ color: "var(--bd)" }}>·</span><Wrench size={11} />{assignedTechName}</>
+                      <>
+                        <span style={{ color: "var(--bd)" }}>·</span>
+                        <TechAvatar
+                          id={technician?.id ?? assignment?.technicianId ?? job.assignedToId}
+                          name={assignedTechName}
+                          avatarUrl={technician?.avatarUrl}
+                          size={18}
+                        />
+                        {assignedTechName}
+                      </>
                     )}
                   </p>
                 </>
@@ -204,7 +230,15 @@ export default function JobDetailPanel({
                   <InfoCell icon={User} label="Customer"
                     value={job.customerName ?? "—"} />
                   <InfoCell icon={Wrench} label="Technician"
-                    value={assignedTechName} />
+                    value={assignedTechName}
+                    avatar={assignedTechName !== "Unassigned" ? (
+                      <TechAvatar
+                        id={technician?.id ?? assignment?.technicianId ?? job.assignedToId}
+                        name={assignedTechName}
+                        avatarUrl={technician?.avatarUrl}
+                        size={18}
+                      />
+                    ) : undefined} />
                   <InfoCell icon={Calendar} label="Scheduled"
                     value={job.scheduledStart
                       ? new Date(job.scheduledStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })
@@ -457,6 +491,15 @@ export default function JobDetailPanel({
                   <X size={13} /> Cancel
                 </FooterBtn>
               )}
+              {STAFF_RESCHEDULABLE_STATUSES.includes(job.status) && (
+                <FooterBtn
+                  color="#2563eb" bg="rgba(37,99,235,0.08)" border="rgba(37,99,235,0.25)"
+                  onClick={() => setShowReschedule(true)}
+                >
+                  <CalendarClock size={13} /> Reschedule
+                </FooterBtn>
+              )}
+              <JobStatusOverrideMenu currentStatus={job.status} isPending={updateJobStatus.isPending} onSelect={handleForceStatus} />
               <div style={{ flex: 1 }} />
               <FooterBtn
                 color="var(--t2)" bg="var(--bg-card)" border="var(--bd)"
@@ -468,19 +511,35 @@ export default function JobDetailPanel({
           </div>
         )}
       </div>
+
+      {showReschedule && job && (
+        <RescheduleModal
+          job={{
+            id: job.id, title: job.title, jobNumber: job.jobNumber,
+            customerName: job.customerName, scheduledStart: job.scheduledStart,
+            status: job.status, rescheduleState: job.rescheduleState,
+            assignedToName: job.assignedToName,
+          }}
+          isOpen={showReschedule}
+          onClose={() => setShowReschedule(false)}
+        />
+      )}
     </>,
     document.body,
   );
 }
 
-function InfoCell({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function InfoCell({ icon: Icon, label, value, avatar }: {
+  icon: any; label: string; value: string; avatar?: React.ReactNode;
+}) {
   return (
     <div style={{ padding: "10px 12px", background: "var(--bg-hover)", borderRadius: 8, minWidth: 0 }}>
       <div style={{ fontSize: 10, fontWeight: 600, color: "var(--t4)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3, display: "flex", alignItems: "center", gap: 4 }}>
         <Icon size={10} /> {label}
       </div>
-      <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {value || "—"}
+      <div style={{ fontSize: 12, color: "var(--t1)", fontWeight: 600, lineHeight: 1.3, display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+        {avatar}
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value || "—"}</span>
       </div>
     </div>
   );

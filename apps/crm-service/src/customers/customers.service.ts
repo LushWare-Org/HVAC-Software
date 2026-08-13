@@ -12,6 +12,7 @@ import { RevenueAgent } from '../agents/revenue.agent';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomersEquipmentService, type EquipmentInput } from './customers-equipment.service';
+import { TtlCacheService } from '../cache/ttl-cache.service';
 import { PaginatedResponse, clampPagination } from '@tscrm/types';
 
 interface ChurnPredictionInput {
@@ -51,6 +52,7 @@ export class CustomersService {
     private retentionAgent: RetentionAgent,
     private revenueAgent: RevenueAgent,
     private equipment: CustomersEquipmentService,
+    private ttlCache: TtlCacheService,
   ) {}
 
   private provisionalPortalSignupFilter = {
@@ -132,17 +134,19 @@ export class CustomersService {
       }
     })();
 
-    const data = await this.prisma.customer.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy,
-      include: { _count: { select: { contacts: true, equipment: true } } },
-    });
-    const total = await this.prisma.customer.count({ where });
+    const [data, total] = await Promise.all([
+      this.prisma.customer.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: { _count: { select: { contacts: true, equipment: true } } },
+      }),
+      this.prisma.customer.count({ where }),
+    ]);
 
     return {
-      data,
+      data: await this.attachPortalStatus(data),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
@@ -197,6 +201,25 @@ export class CustomersService {
     }
 
     return atRiskIds;
+   * Customer.auth0UserId is a plain string (not a Prisma relation) pointing at
+   * CompanyUser.id, so the portal-account status ("pending first login") has to
+   * be batch-fetched and merged in manually rather than via `include`.
+   */
+  private async attachPortalStatus<T extends { auth0UserId: string | null }>(
+    customers: T[],
+  ): Promise<(T & { mustResetPassword: boolean; lastLoginAt: Date | null })[]> {
+    const userIds = customers.map((c) => c.auth0UserId).filter((id): id is string => !!id);
+    const users = userIds.length
+      ? await this.prisma.companyUser.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, mustResetPassword: true, lastLoginAt: true },
+        })
+      : [];
+    const byId = new Map(users.map((u) => [u.id, u]));
+    return customers.map((c) => {
+      const u = c.auth0UserId ? byId.get(c.auth0UserId) : undefined;
+      return { ...c, mustResetPassword: u?.mustResetPassword ?? false, lastLoginAt: u?.lastLoginAt ?? null };
+    });
   }
 
   private async findAllRawSorted(
@@ -254,7 +277,7 @@ export class CustomersService {
     data.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
 
     return {
-      data,
+      data: await this.attachPortalStatus(data),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
@@ -280,7 +303,8 @@ export class CustomersService {
       throw new NotFoundException(`Customer ${id} not found`);
     }
 
-    return customer;
+    const [withPortalStatus] = await this.attachPortalStatus([customer]);
+    return withPortalStatus;
   }
 
   async update(companyId: string, id: string, dto: UpdateCustomerDto) {
@@ -291,6 +315,7 @@ export class CustomersService {
       data: dto,
     });
 
+    this.ttlCache.del(`status-summary:${companyId}:${id}`);
     void this.upsellAgent.processCustomerProfileUpdate(companyId, id);
     return customer;
   }
@@ -353,6 +378,18 @@ export class CustomersService {
   }
 
   async getStatusSummary(companyId: string, id: string) {
+    // Hot path: opened on every customer-row hover/click in the admin UI, and
+    // each compute costs a 5-relation query PLUS an HTTP call to the churn
+    // ML service. Short-TTL cache; derived scores being ≤30s stale is fine.
+    const cacheKey = `status-summary:${companyId}:${id}`;
+    const cached = this.ttlCache.get<Awaited<ReturnType<CustomersService['computeStatusSummary']>>>(cacheKey);
+    if (cached) return cached;
+    const summary = await this.computeStatusSummary(companyId, id);
+    this.ttlCache.set(cacheKey, summary, 30_000);
+    return summary;
+  }
+
+  private async computeStatusSummary(companyId: string, id: string) {
     const customer = await this.prisma.customer.findFirst({
       where: { id, companyId },
       include: {

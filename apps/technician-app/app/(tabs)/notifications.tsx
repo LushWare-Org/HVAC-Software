@@ -50,11 +50,14 @@ export default function NotificationsScreen() {
       markRead.mutate(notification.id)
     }
 
-    // Deep link
+    // Deep link straight to the referenced entity when there is one;
+    // otherwise open the notification's own detail view (full text + back).
     if (notification.referenceType === 'JOB' && notification.referenceId) {
       router.push(`/job/${notification.referenceId}`)
     } else if (notification.referenceType === 'THREAD' && notification.referenceId) {
       router.push(`/message/${notification.referenceId}`)
+    } else {
+      router.push(`/notification/${notification.id}`)
     }
   }
 

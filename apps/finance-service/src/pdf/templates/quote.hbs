@@ -9,13 +9,14 @@
     .sheet { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.12); }
 
     /* ── Dark executive header (indigo accent) ── */
-    .hero { background: #0f172a; color: #ffffff; padding: 36px 40px 32px; position: relative; overflow: hidden; }
+    .hero { background: #0f172a; color: #ffffff; padding: 36px 40px 32px; position: relative; overflow: hidden; min-height: 380px; }
     .hero::before {
       content: '';
       position: absolute; top: -80px; right: -40px;
       width: 280px; height: 280px;
       background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
       border-radius: 50%;
+      z-index: 0; pointer-events: none;
     }
     .hero::after {
       content: '';
@@ -23,6 +24,7 @@
       width: 200px; height: 200px;
       background: radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 70%);
       border-radius: 50%;
+      z-index: 0; pointer-events: none;
     }
     .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; position: relative; z-index: 1; }
     .eyebrow { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #34d399; margin-bottom: 10px; font-weight: 700; }
@@ -35,7 +37,7 @@
       border-radius: 10px;
     }
     .doc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
-    .doc-number { margin-top: 6px; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #ffffff; }
+    .doc-number { margin-top: 6px; font-size: 22px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
     .status-badge {
       display: inline-block; margin-top: 10px; padding: 4px 10px;
       border-radius: 999px; font-size: 9px; font-weight: 700;
@@ -107,141 +109,73 @@
       font-size: 10px; color: #64748b;
     }
     .footer strong { color: #94a3b8; }
+
+    /* ── Template-driven overrides ── */
+    .brand-logo { max-height: 44px; max-width: 160px; object-fit: contain; }
+    .brand-tagline { margin-top: 4px; font-size: 10.5px; color: #94a3b8; }
+    .payment-details-card { background: #f0fdf4; border-color: #bbf7d0; }
+
+    /* ── Slot layout system: rows stack vertically (auto height), blocks sit side-by-side ── */
+    .tpl-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+    .tpl-row:first-child { margin-top: 0; }
+    .tpl-block { box-sizing: border-box; }
+    .tpl-block--free { z-index: 1; }
   </style>
 </head>
 <body>
+  <style>
+    {{#if template.isLetterhead}}
+    .sheet { box-shadow: none; }
+    {{/if}}
+    {{#if template.accentColor}}
+    .hero { background: {{template.accentColor}} !important; }
+    {{/if}}
+  </style>
   <div class="page">
     <div class="sheet">
-      <div class="hero">
-        <div class="hero-top">
-          <div>
-            <div class="eyebrow">Service proposal</div>
-            <div class="brand-name">{{companyName}}</div>
-            <div class="brand-address">{{companyAddress}}</div>
-          </div>
-          <div class="doc-card">
-            <div class="doc-label">Quote</div>
-            <div class="doc-number">{{quoteNumber}}</div>
-            <span class="status-badge status-{{status}}">{{status}}</span>
-          </div>
-        </div>
-        <div class="hero-summary">
-          <div class="summary-card">
-            <div class="summary-label">Scope of work</div>
-            <div class="summary-value">{{title}}</div>
-            <div class="summary-copy">{{description}}</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Quoted total</div>
-            <div class="summary-value total-accent">{{totalFmt}}</div>
-            <div class="summary-copy">Valid until {{validUntil}}</div>
-          </div>
+      {{#if template.isLetterhead}}
+      {{! Only the top band of the uploaded artwork is used as the letterhead — see
+          invoice.hbs for the full explanation of why the image lives on this
+          fixed-height container instead of as the whole-page .sheet background. }}
+      <div style="height: {{template.letterheadTopMarginPx}}px; background-image: url('{{template.letterheadImageUrl}}'); background-size: 100% auto; background-repeat: no-repeat; background-position: top center; overflow: hidden;" data-field="letterheadImageUrl"></div>
+      <div style="padding: 0 40px; display: flex; justify-content: flex-end;">
+        <div class="doc-card" style="background: #f1f5f9; border-color: #e2e8f0;">
+          <div class="doc-label" style="color:#64748b;">Quote</div>
+          <div class="doc-number" style="color:#0f172a;">{{quoteNumber}}</div>
+          <span class="status-badge status-{{status}}">{{status}}</span>
         </div>
       </div>
+      {{else}}
+      <div class="hero" data-field="accentColor">
+        {{#each rows}}
+        {{#if (eq section "hero")}}
+        {{#each blocks}}
+        {{{blockStyleOverride id style}}}
+        <div class="tpl-block tpl-block--free" data-block-id="{{id}}" data-slot="{{slot}}" style="{{heroBlockStyle this}}">
+          {{> (lookup this "slot") @root}}
+        </div>
+        {{/each}}
+        {{/if}}
+        {{/each}}
+      </div>
+      {{/if}}
 
       <div class="body">
-        <div class="info-grid">
-          <div class="info-card">
-            <div class="info-label">Prepared for</div>
-            <div class="info-value">{{customerName}}<br/>{{customerEmail}}</div>
+        {{#each rows}}
+        {{#if (eq section "body")}}
+        <div class="tpl-row" data-row-id="{{id}}">
+          {{#each blocks}}
+          {{{blockStyleOverride id style}}}
+          <div class="tpl-block" data-block-id="{{id}}" data-slot="{{slot}}" style="width:{{widthPct}}%; {{blockStyle style}}">
+            {{> (lookup this "slot") @root}}
           </div>
-          <div class="info-card">
-            <div class="info-label">Quote date</div>
-            <div class="info-value">{{quoteDate}}</div>
-          </div>
-          <div class="info-card">
-            <div class="info-label">Valid until</div>
-            <div class="info-value">{{validUntil}}</div>
-          </div>
-          <div class="info-card">
-            <div class="info-label">Job reference</div>
-            <div class="info-value">{{#if jobId}}{{jobId}}{{else}}Not linked{{/if}}</div>
-          </div>
-        </div>
-
-        <div class="section-title">Quote details</div>
-        <div class="section-subtitle">Review scope, pricing, and terms below. This proposal is formatted for approval, record keeping, and client sharing.</div>
-
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40%">Description</th>
-              <th style="width:16%">Category</th>
-              <th style="width:8%;text-align:right">Qty</th>
-              <th style="width:16%;text-align:right">Unit price</th>
-              <th style="width:8%;text-align:right">Tax</th>
-              <th style="width:12%;text-align:right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{#each lineItems}}
-            <tr>
-              <td>
-                <div class="item-title">{{description}}</div>
-              </td>
-              <td><div class="item-category">{{category}}</div></td>
-              <td class="td-right">{{quantity}}</td>
-              <td class="td-right">{{unitPriceFmt}}</td>
-              <td class="td-right">{{#if taxable}}Yes{{else}}No{{/if}}</td>
-              <td class="td-right">{{lineTotalFmt}}</td>
-            </tr>
-            {{/each}}
-          </tbody>
-        </table>
-
-        <div class="totals-wrap">
-          <div class="totals-card">
-            <table>
-              <tbody>
-                <tr>
-                  <td class="label">Subtotal</td>
-                  <td class="value">{{subtotalFmt}}</td>
-                </tr>
-                {{#if hasDiscount}}
-                <tr class="discount-row">
-                  <td class="label">Discount {{discountLabel}}</td>
-                  <td class="value">−{{discountAmountFmt}}</td>
-                </tr>
-                {{/if}}
-                <tr>
-                  <td class="label">Tax ({{taxRatePct}}%)</td>
-                  <td class="value">{{taxAmountFmt}}</td>
-                </tr>
-                <tr class="grand-total-row">
-                  <td>Quoted total</td>
-                  <td class="value">{{totalFmt}}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {{#if approvedAt}}
-        <div class="approval-block">
-          <div class="approval-title">Customer approval recorded</div>
-          <div class="approval-detail">Approved by <strong>{{approvedByName}}</strong> ({{approvedByEmail}}) on {{approvedAtFmt}}.</div>
+          {{/each}}
         </div>
         {{/if}}
-
-        <div class="notes-grid">
-          {{#if notes}}
-          <div class="note-card">
-            <div class="note-label">Notes</div>
-            <div class="note-text">{{notes}}</div>
-          </div>
-          {{/if}}
-          {{#if terms}}
-          <div class="note-card">
-            <div class="note-label">Terms &amp; conditions</div>
-            <div class="note-text">{{terms}}</div>
-          </div>
-          {{/if}}
-        </div>
-
-        <div class="footer">
-          <div>Generated {{generatedAt}} · T&amp;S CRM</div>
-          <div><strong>Valid until {{validUntil}}</strong></div>
-        </div>
+        {{/each}}
+        {{#if template.isLetterhead}}
+        <div style="height: {{template.letterheadBottomMarginPx}}px;"></div>
+        {{/if}}
       </div>
     </div>
   </div>

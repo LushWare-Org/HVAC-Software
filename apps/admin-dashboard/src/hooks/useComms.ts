@@ -43,8 +43,10 @@ export function useThreads(filters: ThreadFilters = {}) {
       const res = await api.get('/comms/messaging/threads', { params })
       return res.data
     },
-    staleTime: 10 * 1000,
-    refetchInterval: 10 * 1000, // Poll for updates
+    staleTime: 25 * 1000,
+    // Fallback only — real-time updates arrive via the socket's
+    // new_message / threads_changed events (see Communications.tsx).
+    refetchInterval: 30 * 1000,
   })
 }
 
@@ -74,7 +76,9 @@ export function useThread(threadId: string | null) {
     },
     enabled: !!threadId,
     staleTime: 0,
-    refetchInterval: 5 * 1000, // Poll for new messages
+    // Fallback only — messages in the open thread arrive via the socket's
+    // new_message event, which patches this query's cache directly.
+    refetchInterval: 15 * 1000,
   })
 }
 

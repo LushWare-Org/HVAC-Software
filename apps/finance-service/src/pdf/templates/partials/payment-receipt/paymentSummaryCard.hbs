@@ -1,0 +1,17 @@
+<div class="payment-section">
+  <div class="section-heading">Payment summary</div>
+  <p class="summary-statement">
+    This receipt confirms <strong>{{companyName}}</strong> received <strong>{{amountFmt}}</strong>
+    from <strong>{{customerName}}</strong> on {{paidAtFmt}}, via {{paymentMethod}},
+    applied to invoice <strong>{{invoiceNumber}}</strong>.
+  </p>
+  <div class="totals-card">
+    <table>
+      <tbody>
+        <tr><td class="label">Invoice total</td><td class="value">{{invoiceTotalFmt}}</td></tr>
+        <tr class="paid-row"><td class="label">This payment</td><td class="value">−{{amountFmt}}</td></tr>
+        <tr class="balance-row"><td class="label">{{#if balanceDue}}Balance remaining{{else}}Status{{/if}}</td><td class="value">{{#if balanceDue}}{{balanceDueFmt}}{{else}}Paid in full{{/if}}</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

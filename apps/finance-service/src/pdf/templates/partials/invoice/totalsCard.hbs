@@ -1,0 +1,23 @@
+<div class="totals-wrap">
+  <div>
+    {{#if stripePaymentUrl}}
+    <div class="pay-card">
+      <div class="pay-card-title">Pay online</div>
+      <div class="pay-card-text">A secure payment link is available for this invoice. Pay the outstanding balance safely online.</div>
+      <a class="pay-button" href="{{stripePaymentUrl}}">Pay {{#if balanceDue}}{{balanceDueFmt}}{{else}}{{totalFmt}}{{/if}} →</a>
+    </div>
+    {{/if}}
+  </div>
+  <div class="totals-card">
+    <table>
+      <tbody>
+        <tr><td class="label">Subtotal</td><td class="value">{{subtotalFmt}}</td></tr>
+        {{#if hasDiscount}}<tr><td class="label">Discount</td><td class="value">−{{discountAmountFmt}}</td></tr>{{/if}}
+        <tr><td class="label">Tax ({{taxRatePct}}%)</td><td class="value">{{taxAmountFmt}}</td></tr>
+        <tr class="grand-total-row"><td>Invoice total</td><td class="value">{{totalFmt}}</td></tr>
+        {{#if amountPaid}}<tr class="paid-row"><td class="label">Amount paid</td><td class="value">−{{amountPaidFmt}}</td></tr>{{/if}}
+        {{#if balanceDue}}<tr class="balance-row"><td class="label">Balance due</td><td class="value">{{balanceDueFmt}}</td></tr>{{/if}}
+      </tbody>
+    </table>
+  </div>
+</div>

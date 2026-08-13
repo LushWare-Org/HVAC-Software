@@ -9,6 +9,7 @@ import { CrmClient, WinbackCandidate } from '../automation/crm.client';
 import { ChurnGateService } from '../review/churn-gate.service';
 import { signMarketingToken } from '../common/marketing-token.util';
 import { step1Sms } from './winback-templates';
+import { CompanySettingsClient } from '../../company-settings/company-settings.client';
 
 // Churn score threshold to trigger win-back
 const CHURN_THRESHOLD = 0.7;
@@ -43,6 +44,7 @@ export class WinbackService {
     private readonly sms: SmsService,
     private readonly crmClient: CrmClient,
     private readonly churnGate: ChurnGateService,
+    private readonly companySettings: CompanySettingsClient,
     @InjectQueue(QueueName.MARKETING_SEND) private readonly sendQueue: Queue,
   ) {}
 
@@ -95,6 +97,7 @@ export class WinbackService {
     const { companyId } = candidate;
     const customerName = `${candidate.firstName} ${candidate.lastName}`;
     const phone = candidate.mobile ?? candidate.phone;
+    const companyName = (await this.companySettings.getSettings(companyId)).name || 'HVACtor.ai';
     const result: WinbackScanResult = {
       companyId,
       customerId: candidate.id,
@@ -113,7 +116,7 @@ export class WinbackService {
         const trackedLink = `${CLICK_BASE}/m/r/${token}?dest=${encodeURIComponent(CLICK_BASE + '/book')}`;
 
         try {
-          await this.sms.send(phone, step1Sms({ customerName, companyName: 'T&S Services', trackedLink, unsubLink: '' }), companyId);
+          await this.sms.send(phone, step1Sms({ customerName, companyName, trackedLink, unsubLink: '' }), companyId);
           await this.recordSend(companyId, candidate.id, phone, 'SMS', 'winback-step1');
           result.step1SmsSent = true;
         } catch (err) {
