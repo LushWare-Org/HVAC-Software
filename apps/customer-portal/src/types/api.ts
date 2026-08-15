@@ -121,6 +121,7 @@ export interface Job {
   workOrders?: WorkOrder[]
   projectId?: string
   houseId?: string
+  componentId?: string
   /**
    * Non-null while a reschedule negotiation is open, saying whose move it is.
    * Denormalized by job-service so any job list can show status with no extra
@@ -276,6 +277,7 @@ export interface Invoice {
   jobId?: string
   projectId?: string
   houseId?: string
+  componentId?: string
   status: InvoiceStatus
   issueDate: string
   dueDate?: string
@@ -328,6 +330,7 @@ export interface Quote {
   jobId?: string
   projectId?: string
   houseId?: string
+  componentId?: string
   status: QuoteStatus
   subtotal: string | number
   discountAmount: string | number

@@ -27,6 +27,7 @@ const Agreements      = lazy(() => import('./pages/agreements/Agreements'))
 const Scheduling      = lazy(() => import('./pages/scheduling/Scheduling'))
 const Projects        = lazy(() => import('./pages/projects/ProjectsLayoutGate').then(m => ({ default: m.ProjectsPage })))
 const ProjectDetail   = lazy(() => import('./pages/projects/ProjectsLayoutGate').then(m => ({ default: m.ProjectDetailPage })))
+const TemplatesPage   = lazy(() => import('./pages/projects/TemplatesPage'))
 const Communications  = lazy(() => import('./pages/Communications'))
 const Marketing       = lazy(() => import('./pages/marketing/Marketing'))
 const Analytics       = lazy(() => import('./pages/Analytics'))
@@ -36,6 +37,7 @@ const Team            = lazy(() => import('./pages/Team'))
 const Profile         = lazy(() => import('./pages/Profile'))
 const ImportWizard    = lazy(() => import('./pages/import/Import'))
 const AdminImports    = lazy(() => import('./pages/import/AdminImports'))
+const SystemActivity  = lazy(() => import('./pages/system-activity/SystemActivity'))
 
 // Map each path to its dynamic importer so we can warm up chunks on hover
 // (see Sidebar). Keys match react-router paths.
@@ -46,6 +48,7 @@ export const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   '/agreements':     () => import('./pages/agreements/Agreements'),
   '/scheduling':     () => import('./pages/scheduling/Scheduling'),
   '/projects':       () => import('./pages/projects/Projects'),
+  '/projects/templates': () => import('./pages/projects/TemplatesPage'),
   '/communications': () => import('./pages/Communications'),
   '/marketing':      () => import('./pages/marketing/Marketing'),
   '/analytics':      () => import('./pages/Analytics'),
@@ -54,6 +57,7 @@ export const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   '/import':         () => import('./pages/import/Import'),
   '/team':           () => import('./pages/Team'),
   '/profile':        () => import('./pages/Profile'),
+  '/system-activity': () => import('./pages/system-activity/SystemActivity'),
 }
 
 /**
@@ -118,6 +122,7 @@ function AuthenticatedApp() {
   const [collapsed, setCollapsed] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+  const { user } = useAuth()
 
   // Prime tenant currency/timezone for the format helpers (once per session).
   useCompanySettings()
@@ -171,6 +176,7 @@ function AuthenticatedApp() {
               <Route path="/scheduling" element={<Scheduling />} />
               <Route path="/agreements" element={<Agreements />} />
               <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/templates" element={<TemplatesPage />} />
               <Route path="/projects/:id" element={<ProjectDetail />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/communications" element={<Communications />} />
@@ -183,6 +189,10 @@ function AuthenticatedApp() {
               <Route path="/import/admin" element={<AdminImports />} />
               <Route path="/team" element={<Team />} />
               <Route path="/profile" element={<Profile />} />
+              <Route
+                path="/system-activity"
+                element={user?.role === 'super_admin' ? <SystemActivity /> : <Navigate to="/" replace />}
+              />
               <Route path="/login" element={<Navigate to="/" replace />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

@@ -1,25 +1,27 @@
 /**
- * HousesTab — the "Housing Scheme" project template's signature surface: a grid of
- * houses, each with an owner, equipment, service history, and issue reports.
- * Spec: docs/superpowers/specs/2026-07-13-project-templates-housing-scheme-design.md
+ * ComponentsTab — the generic replacement for HousesTab: a grid of components
+ * (any type defined by the project's template), each optionally with an
+ * owner, equipment, service history, and issue reports. Spec:
+ * docs/superpowers/specs/2026-08-14-project-component-templates-design.md
  */
 import { useEffect, useState, Suspense, lazy } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Home, Plus, X, Check, Loader2, Wrench, AlertTriangle, Mail,
-  MapPin, Tag, User, Wind, CalendarClock, ShieldCheck, MessageSquareWarning, ChevronRight,
-  Image as ImageIcon, RefreshCw, Sparkles, UserCheck, Trash2, FileSignature, Receipt, FileText,
+  Layers, Plus, X, Check, Loader2, Wrench, AlertTriangle, Mail,
+  Tag, User, Wind, CalendarClock, ShieldCheck, MessageSquareWarning, ChevronRight,
+  Image as ImageIcon, RefreshCw, Sparkles, UserCheck, UserX, Trash2, FileSignature, Receipt, FileText,
 } from 'lucide-react'
 import { useCustomer } from '../../hooks/useCustomers'
 import { useToast } from '../../contexts/ToastContext'
 import {
-  useHouses, useHouse, useCreateHouse, useUpdateHouse, useAssignOwner, useDeleteHouse,
-  useGenerateOwnerAccount, useHouseEquipment, useAddHouseEquipment, useHouseIssues,
-  useUpdateIssueStatus, useHouseServiceLog, invalidateHouseServiceLog, prefetchHouseDetail,
-  useUploadEquipmentImage, useAddErrorCode, useDeleteErrorCode, useUpdateHouseEquipment,
+  useComponents, useComponent, useCreateComponent, useUpdateComponent, useAssignOwner, useDeleteComponent,
+  useGenerateOwnerAccount, useComponentEquipment, useAddComponentEquipment, useComponentIssues,
+  useUpdateIssueStatus, useComponentServiceLog, invalidateComponentServiceLog, prefetchComponentDetail,
+  useUploadEquipmentImage, useAddErrorCode, useDeleteErrorCode, useUpdateComponentEquipment,
   ACCOUNT_STATUS_META, ISSUE_STATUS_META,
-  type House, type HouseAccountStatus, type IssueStatus, type HouseEquipment, type HouseIssueReport,
-} from './housesApi'
+  type ProjectComponent, type ComponentAccountStatus, type IssueStatus, type ComponentEquipment, type ComponentIssueReport,
+} from './componentsApi'
+import type { ComponentTypeMeta } from './projectsApi'
 import { fmtDate } from './shared'
 import { SectionLabel, AgreementStatusBadge, fmtMoney as fmtAgreementMoney } from '../agreements/shared'
 import { useServiceAgreements, type Agreement } from '../../hooks/useAgreements'
@@ -38,8 +40,7 @@ import CustomerPickerWithCreate, { type PickedCustomer } from '../../components/
 // DayPlanner, Finance, AgreementDrawer, Topbar).
 const JobDetailModal = lazy(() => import('../jobs/JobDetailModal'))
 
-// Matches AgreementEditorModal's card language — the design being standardized
-// across every modal in the app, starting here and in Projects/Equipment next.
+// Matches AgreementEditorModal's card language.
 const sectionCardStyle: React.CSSProperties = {
   padding: 16, borderRadius: 'var(--r-md)', border: '1px solid var(--bd)', background: 'var(--bg-card-2)',
   display: 'flex', flexDirection: 'column', gap: 12,
@@ -59,7 +60,7 @@ const lbl: React.CSSProperties = {
   display: 'block', marginBottom: 6,
 }
 
-function AccountStatusBadge({ status }: { status: HouseAccountStatus }) {
+function AccountStatusBadge({ status }: { status: ComponentAccountStatus }) {
   const m = ACCOUNT_STATUS_META[status]
   return (
     <span style={{
@@ -77,9 +78,20 @@ function IssueStatusBadge({ status }: { status: IssueStatus }) {
   return <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: m.dim, color: m.color }}>{m.label}</span>
 }
 
-// Shown in place of Agreements/Billing/Equipment when a house has no owner yet —
+/** Is this component's type allowed to carry an owner on THIS project — both the
+ * template's own ceiling and this project's own narrower setting must agree. */
+function isOwnerAllowed(componentTypeKey: string, componentTypes: ComponentTypeMeta[], customerSettings: Record<string, boolean>): boolean {
+  const type = componentTypes.find(t => t.key === componentTypeKey)
+  return !!type?.customerAssignable && customerSettings[componentTypeKey] === true
+}
+
+function typeLabel(key: string, componentTypes: ComponentTypeMeta[]): string {
+  return componentTypes.find(t => t.key === key)?.label ?? key
+}
+
+// Shown in place of Agreements/Billing/Equipment when a component has no owner yet —
 // lets the admin assign one right there instead of dead-ending on "go to Overview".
-function AssignOwnerPrompt({ house, projectId, description }: { house: House; projectId: string; description: string }) {
+function AssignOwnerPrompt({ component, projectId, description }: { component: ProjectComponent; projectId: string; description: string }) {
   const assignOwner = useAssignOwner(projectId)
   const { showSuccess, showError } = useToast()
   const [picking, setPicking] = useState(false)
@@ -88,8 +100,8 @@ function AssignOwnerPrompt({ house, projectId, description }: { house: House; pr
   const pickOwner = async (c: PickedCustomer) => {
     setAssigning(true)
     try {
-      await assignOwner.mutateAsync({ houseId: house.id, customerId: c.id })
-      showSuccess(`${house.label} is now owned by ${c.firstName} ${c.lastName}.`.trim(), 'Owner assigned')
+      await assignOwner.mutateAsync({ componentId: component.id, customerId: c.id })
+      showSuccess(`${component.label} is now owned by ${c.firstName} ${c.lastName}.`.trim(), 'Owner assigned')
       setPicking(false)
     } catch (e: any) {
       showError(e?.response?.data?.message ?? 'Could not assign this owner', 'Assign owner failed')
@@ -125,63 +137,83 @@ function AssignOwnerPrompt({ house, projectId, description }: { house: House; pr
 
 // ── Tab entry point ──────────────────────────────────────────────────────────
 
-export default function HousesTab({ projectId, projectName, initialOpenHouseId, onInitialHouseConsumed }: {
+export default function ComponentsTab({ projectId, projectName, componentTypes, customerSettings, initialOpenComponentId, onInitialComponentConsumed }: {
   projectId: string
   projectName: string
-  /** Deep-link from an alert row — opens this house's detail modal on mount. */
-  initialOpenHouseId?: string | null
-  onInitialHouseConsumed?: () => void
+  componentTypes: ComponentTypeMeta[]
+  customerSettings: Record<string, boolean>
+  /** Deep-link from an alert row — opens this component's detail modal on mount. */
+  initialOpenComponentId?: string | null
+  onInitialComponentConsumed?: () => void
 }) {
-  const housesQ = useHouses(projectId)
-  const houses = housesQ.data ?? []
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const componentsQ = useComponents(projectId, typeFilter === 'all' ? undefined : typeFilter)
+  const components = componentsQ.data ?? []
   const [showAdd, setShowAdd] = useState(false)
-  const [openHouseId, setOpenHouseId] = useState<string | null>(initialOpenHouseId ?? null)
+  const [openComponentId, setOpenComponentId] = useState<string | null>(initialOpenComponentId ?? null)
 
   useEffect(() => {
-    if (initialOpenHouseId) {
-      setOpenHouseId(initialOpenHouseId)
-      onInitialHouseConsumed?.()
+    if (initialOpenComponentId) {
+      setOpenComponentId(initialOpenComponentId)
+      onInitialComponentConsumed?.()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialOpenHouseId])
+  }, [initialOpenComponentId])
 
-  const totalOpenIssues = houses.reduce((s, h) => s + (h.openIssueCount ?? 0), 0)
+  const totalOpenIssues = components.reduce((s, c) => s + (c.openIssueCount ?? 0), 0)
 
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
       <div className="card-header">
         <div>
           <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Home size={15} style={{ color: 'var(--blue)' }} /> Houses
+            <Layers size={15} style={{ color: 'var(--blue)' }} /> Components
           </div>
           <div className="card-subtitle">
-            Each house has its own owner, equipment, and portal login
+            Each component can have its own owner, equipment, and portal login
             {totalOpenIssues > 0 && (
               <span style={{ color: 'var(--red)', fontWeight: 600 }}> · {totalOpenIssues} open issue{totalOpenIssues === 1 ? '' : 's'}</span>
             )}
           </div>
         </div>
         <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>
-          <Plus size={12} /> Add house
+          <Plus size={12} /> Add component
         </button>
       </div>
 
-      {housesQ.isLoading ? (
+      {componentTypes.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '12px 16px 0' }}>
+          <button className="btn btn-sm" onClick={() => setTypeFilter('all')} style={typeFilter === 'all'
+            ? { background: 'var(--blue)', color: '#fff', border: '1px solid var(--blue)' }
+            : { background: 'var(--bg-card)', color: 'var(--t2)', border: '1px solid var(--bd)' }}>
+            All
+          </button>
+          {componentTypes.map(t => (
+            <button key={t.key} className="btn btn-sm" onClick={() => setTypeFilter(t.key)} style={typeFilter === t.key
+              ? { background: 'var(--blue)', color: '#fff', border: '1px solid var(--blue)' }
+              : { background: 'var(--bg-card)', color: 'var(--t2)', border: '1px solid var(--bd)' }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {componentsQ.isLoading ? (
         <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
           <Loader2 size={18} className="animate-spin" style={{ color: 'var(--t3)' }} />
         </div>
-      ) : houses.length === 0 ? (
+      ) : components.length === 0 ? (
         <div style={{ padding: '36px 20px', textAlign: 'center' }}>
-          <Home size={22} style={{ color: 'var(--t4)', marginBottom: 8 }} />
-          <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t2)', margin: 0 }}>No houses yet</p>
-          <p style={{ fontSize: 12, color: 'var(--t4)', margin: '4px 0 0' }}>Add the first house to start assigning owners and equipment.</p>
+          <Layers size={22} style={{ color: 'var(--t4)', marginBottom: 8 }} />
+          <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t2)', margin: 0 }}>No components yet</p>
+          <p style={{ fontSize: 12, color: 'var(--t4)', margin: '4px 0 0' }}>Add the first one to start assigning owners and equipment.</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12, padding: 16 }}>
-          {houses.map(h => {
-            const hasOpenIssue = (h.openIssueCount ?? 0) > 0
+          {components.map(c => {
+            const hasOpenIssue = (c.openIssueCount ?? 0) > 0
             return (
-            <button key={h.id} onClick={() => setOpenHouseId(h.id)} onMouseEnter={() => prefetchHouseDetail(h.id)} onFocus={() => prefetchHouseDetail(h.id)} style={{
+            <button key={c.id} onClick={() => setOpenComponentId(c.id)} onMouseEnter={() => prefetchComponentDetail(c.id)} onFocus={() => prefetchComponentDetail(c.id)} style={{
               textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
               padding: '14px 16px', borderRadius: 12,
               border: `1px solid ${hasOpenIssue ? 'var(--red)' : 'var(--bd)'}`,
@@ -191,34 +223,36 @@ export default function HousesTab({ projectId, projectName, initialOpenHouseId, 
               display: 'flex', flexDirection: 'column', gap: 8, transition: 'transform 0.15s ease',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)' }}>{h.label}</span>
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)' }}>{c.label}</span>
                 {hasOpenIssue && (
-                  <span title={`${h.openIssueCount} open issue${h.openIssueCount === 1 ? '' : 's'}`}
+                  <span title={`${c.openIssueCount} open issue${c.openIssueCount === 1 ? '' : 's'}`}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10.5, fontWeight: 700,
                       color: 'var(--red)', background: 'var(--red-dim)', padding: '2px 7px', borderRadius: 999,
                     }}>
-                    <MessageSquareWarning size={11} /> {h.openIssueCount}
+                    <MessageSquareWarning size={11} /> {c.openIssueCount}
                   </span>
                 )}
               </div>
-              {h.address && (
-                <span style={{ fontSize: 11.5, color: 'var(--t4)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <MapPin size={10} /> {h.address}
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--blue)', background: 'var(--blue-dim)', alignSelf: 'flex-start', padding: '2px 8px', borderRadius: 999 }}>
+                {typeLabel(c.componentTypeKey, componentTypes)}
+              </span>
+              {isOwnerAllowed(c.componentTypeKey, componentTypes, customerSettings) && (
+                <span style={{ fontSize: 12, color: c.ownerName ? 'var(--t2)' : 'var(--t4)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <User size={11} /> {c.ownerName ?? 'No owner assigned'}
                 </span>
               )}
-              <span style={{ fontSize: 12, color: h.ownerName ? 'var(--t2)' : 'var(--t4)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <User size={11} /> {h.ownerName ?? 'No owner assigned'}
-              </span>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
-                <AccountStatusBadge status={h.accountStatus} />
+                {isOwnerAllowed(c.componentTypeKey, componentTypes, customerSettings)
+                  ? <AccountStatusBadge status={c.accountStatus} />
+                  : <span />}
                 <span style={{ fontSize: 10.5, color: 'var(--t4)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Wind size={10} /> {h.equipmentCount ?? 0}
+                  <Wind size={10} /> {c.equipmentCount ?? 0}
                 </span>
               </div>
-              {h.tags.length > 0 && (
+              {c.tags.length > 0 && (
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                  {h.tags.map(t => (
+                  {c.tags.map(t => (
                     <span key={t} style={{
                       fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 999,
                       background: 'var(--bg-card)', border: '1px solid var(--bd)', color: 'var(--t3)',
@@ -235,40 +269,55 @@ export default function HousesTab({ projectId, projectName, initialOpenHouseId, 
         </div>
       )}
 
-      {showAdd && <AddHouseModal projectId={projectId} onClose={() => setShowAdd(false)} />}
-      {openHouseId && (
-        <HouseDetailModal houseId={openHouseId} projectId={projectId} projectName={projectName} onClose={() => setOpenHouseId(null)} />
+      {showAdd && <AddComponentModal projectId={projectId} componentTypes={componentTypes} customerSettings={customerSettings} onClose={() => setShowAdd(false)} />}
+      {openComponentId && (
+        <ComponentDetailModal componentId={openComponentId} projectId={projectId} projectName={projectName} componentTypes={componentTypes} customerSettings={customerSettings} onClose={() => setOpenComponentId(null)} />
       )}
     </div>
   )
 }
 
-// ── Add house ─────────────────────────────────────────────────────────────
+// ── Add component ─────────────────────────────────────────────────────────
 
-function AddHouseModal({ projectId, onClose }: { projectId: string; onClose: () => void }) {
-  const createHouse = useCreateHouse(projectId)
+function AddComponentModal({ projectId, componentTypes, customerSettings, onClose }: {
+  projectId: string; componentTypes: ComponentTypeMeta[]; customerSettings: Record<string, boolean>; onClose: () => void
+}) {
+  const createComponent = useCreateComponent(projectId)
+  const [typeInput, setTypeInput] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [label, setLabel] = useState('')
-  const [address, setAddress] = useState('')
   const [tagsInput, setTagsInput] = useState('')
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
+  const [newTypeAssignable, setNewTypeAssignable] = useState(true)
+
+  const matchedType = componentTypes.find(t => t.label.toLowerCase() === typeInput.trim().toLowerCase())
+  const isNewType = typeInput.trim().length > 0 && !matchedType
+  const suggestions = componentTypes.filter(t =>
+    typeInput.trim() && t.label.toLowerCase().includes(typeInput.trim().toLowerCase()) && t.label.toLowerCase() !== typeInput.trim().toLowerCase()
+  ).slice(0, 6)
 
   // ── Owner: either pick an existing customer, or create a brand-new one ──
   const [owner, setOwner] = useState<PickedCustomer | null>(null)
+  const ownerAllowed = matchedType
+    ? isOwnerAllowed(matchedType.key, componentTypes, customerSettings)
+    : newTypeAssignable
 
   const save = async () => {
-    if (!label.trim()) { setError('Give this house a name or unit number.'); return }
+    if (!typeInput.trim()) { setError('Give this component a type — Room, Lobby, anything.'); return }
+    if (!label.trim()) { setError('Give this component a name.'); return }
     try {
-      await createHouse.mutateAsync({
+      await createComponent.mutateAsync({
+        typeLabel: typeInput.trim(),
+        typeAssignable: isNewType ? newTypeAssignable : undefined,
         label: label.trim(),
-        address: address.trim() || undefined,
         tags: tagsInput.split(',').map(t => t.trim()).filter(Boolean),
         notes: notes.trim() || undefined,
-        ownerCustomerId: owner?.id,
+        ownerCustomerId: ownerAllowed ? owner?.id : undefined,
       })
       onClose()
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Could not add this house')
+      setError(e?.response?.data?.message ?? 'Could not add this component')
     }
   }
 
@@ -284,7 +333,7 @@ function AddHouseModal({ projectId, onClose }: { projectId: string; onClose: () 
         className="card anim-fade-up"
         role="dialog"
         aria-modal="true"
-        aria-label="Add house"
+        aria-label="Add component"
         style={{
           width: 900, maxWidth: '95vw', padding: 0, overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
@@ -295,11 +344,11 @@ function AddHouseModal({ projectId, onClose }: { projectId: string; onClose: () 
         <div className="card-header" style={{ flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--blue-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Home size={16} style={{ color: 'var(--blue)' }} />
+              <Layers size={16} style={{ color: 'var(--blue)' }} />
             </div>
             <div>
-              <div className="card-title">Add a house</div>
-              <div className="card-subtitle">Set up the unit, and optionally assign or create its owner</div>
+              <div className="card-title">Add a component</div>
+              <div className="card-subtitle">Pick its type, and optionally assign or create its owner</div>
             </div>
           </div>
           <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X size={14} /></button>
@@ -315,17 +364,65 @@ function AddHouseModal({ projectId, onClose }: { projectId: string; onClose: () 
             </div>
           )}
 
-          {/* ── House details ── */}
+          {/* ── Component details ── */}
           <div style={sectionCardStyle}>
-            <SectionLabel icon={Home}>House details</SectionLabel>
+            <SectionLabel icon={Layers}>Component details</SectionLabel>
             <div style={fieldRowStyle}>
-              <div className="form-group">
-                <label className="form-label">House / unit *</label>
-                <input className="form-input" placeholder="House 12, Lot 4B, Unit 201…" value={label} onChange={e => setLabel(e.target.value)} autoFocus />
+              <div className="form-group" style={{ position: 'relative' }}>
+                <label className="form-label">Type *</label>
+                <input
+                  className="form-input"
+                  placeholder="Room, Lobby, Pool Deck… type anything"
+                  value={typeInput}
+                  onChange={e => setTypeInput(e.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                  autoFocus
+                />
+                {showSuggestions && suggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, zIndex: 10,
+                    background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 9,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)', overflow: 'hidden',
+                  }}>
+                    {suggestions.map(t => (
+                      <button key={t.key} type="button" onClick={() => { setTypeInput(t.label); setShowSuggestions(false) }} style={{
+                        display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', fontSize: 13,
+                        background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--t1)',
+                      }}>
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {isNewType && (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 11, color: 'var(--t4)' }}>New type — can it have an owner?</span>
+                    <button
+                      type="button"
+                      onClick={() => setNewTypeAssignable(v => !v)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 7,
+                        border: `1px solid ${newTypeAssignable ? 'var(--green)' : 'var(--bd)'}`,
+                        background: newTypeAssignable ? 'var(--green-dim)' : 'var(--bg-card-2)',
+                        color: newTypeAssignable ? 'var(--green)' : 'var(--t4)',
+                        fontSize: 10.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      {newTypeAssignable ? <User size={11} /> : <UserX size={11} />}
+                      {newTypeAssignable ? 'Owner OK' : 'No owner'}
+                    </button>
+                  </div>
+                )}
+                {matchedType && (
+                  <p style={{ fontSize: 10.5, color: 'var(--t4)', margin: '6px 0 0' }}>
+                    Existing type — {matchedType.customerAssignable ? 'can have an owner' : 'never has an owner'} (set in the template/project settings).
+                  </p>
+                )}
               </div>
               <div className="form-group">
-                <label className="form-label">Address</label>
-                <input className="form-input" placeholder="Optional — street address or plot number" value={address} onChange={e => setAddress(e.target.value)} />
+                <label className="form-label">Name *</label>
+                <input className="form-input" placeholder="House 12, Room 301, Lobby…" value={label} onChange={e => setLabel(e.target.value)} autoFocus />
               </div>
               <div className="form-group">
                 <label className="form-label">Tags</label>
@@ -338,30 +435,32 @@ function AddHouseModal({ projectId, onClose }: { projectId: string; onClose: () 
             </div>
           </div>
 
-          {/* ── Owner ── */}
-          <div style={sectionCardStyle}>
-            <SectionLabel icon={User}>Owner (optional)</SectionLabel>
+          {/* ── Owner — only rendered when this type allows it ── */}
+          {ownerAllowed && (
+            <div style={sectionCardStyle}>
+              <SectionLabel icon={User}>Owner (optional)</SectionLabel>
 
-            {owner ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--green)', background: 'var(--green-dim)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>
-                  <UserCheck size={14} style={{ color: 'var(--green)' }} /> {owner.firstName} {owner.lastName}
-                </span>
-                <button className="btn btn-ghost btn-sm" onClick={() => setOwner(null)}>Remove</button>
-              </div>
-            ) : (
-              <CustomerPickerWithCreate onPick={setOwner} />
-            )}
-            <p style={{ fontSize: 11.5, color: 'var(--t4)', margin: 0 }}>
-              {owner ? 'You can change the owner or add equipment after creating the house.' : "Optional — skip this and assign an owner later from the house's Overview tab."}
-            </p>
-          </div>
+              {owner ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--green)', background: 'var(--green-dim)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>
+                    <UserCheck size={14} style={{ color: 'var(--green)' }} /> {owner.firstName} {owner.lastName}
+                  </span>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setOwner(null)}>Remove</button>
+                </div>
+              ) : (
+                <CustomerPickerWithCreate onPick={setOwner} />
+              )}
+              <p style={{ fontSize: 11.5, color: 'var(--t4)', margin: 0 }}>
+                {owner ? 'You can change the owner or add equipment after creating the component.' : "Optional — skip this and assign an owner later from the component's Overview tab."}
+              </p>
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '12px 20px', borderTop: '1px solid var(--bd)', flexShrink: 0 }}>
           <button className="btn btn-secondary btn-sm" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary btn-sm" onClick={save} disabled={createHouse.isPending}>
-            {createHouse.isPending ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Add house
+          <button className="btn btn-primary btn-sm" onClick={save} disabled={createComponent.isPending}>
+            {createComponent.isPending ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Add component
           </button>
         </div>
       </div>
@@ -370,12 +469,12 @@ function AddHouseModal({ projectId, onClose }: { projectId: string; onClose: () 
   )
 }
 
-// ── House detail ──────────────────────────────────────────────────────────
+// ── Component detail ──────────────────────────────────────────────────────
 
 type DetailTab = 'overview' | 'equipment' | 'servicelog' | 'issues' | 'agreements' | 'billing'
 
-function HouseDetailModal({ houseId, projectId, projectName, onClose }: {
-  houseId: string; projectId: string; projectName: string; onClose: () => void
+function ComponentDetailModal({ componentId, projectId, projectName, componentTypes, customerSettings, onClose }: {
+  componentId: string; projectId: string; projectName: string; componentTypes: ComponentTypeMeta[]; customerSettings: Record<string, boolean>; onClose: () => void
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -384,26 +483,28 @@ function HouseDetailModal({ houseId, projectId, projectName, onClose }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const houseQ = useHouse(houseId)
-  const equipmentQ = useHouseEquipment(houseId)
-  const issuesQ = useHouseIssues(houseId)
-  const deleteHouse = useDeleteHouse(projectId)
+  const componentQ = useComponent(componentId)
+  const equipmentQ = useComponentEquipment(componentId)
+  const issuesQ = useComponentIssues(componentId)
+  const deleteComponent = useDeleteComponent(projectId)
   const { showSuccess, showError } = useToast()
   const [tab, setTab] = useState<DetailTab>('overview')
 
+  const component = componentQ.data
+  const ownerAllowed = component ? isOwnerAllowed(component.componentTypeKey, componentTypes, customerSettings) : false
+
   const handleDelete = () => {
-    if (!house) return
-    const equipmentNote = (house.equipmentCount ?? 0) > 0
-      ? ` Its ${house.equipmentCount} equipment record${house.equipmentCount === 1 ? '' : 's'} will stay on file, unlinked from this house.`
+    if (!component) return
+    const equipmentNote = (component.equipmentCount ?? 0) > 0
+      ? ` Its ${component.equipmentCount} equipment record${component.equipmentCount === 1 ? '' : 's'} will stay on file, unlinked from this component.`
       : ''
-    if (!confirm(`Delete ${house.label}? This also removes its issue reports.${equipmentNote}`)) return
-    deleteHouse.mutate(houseId, {
-      onSuccess: () => { showSuccess(`${house.label} was removed`, 'House deleted'); onClose() },
-      onError: (e: any) => showError(e?.response?.data?.message ?? 'Could not delete this house', 'Delete failed'),
+    if (!confirm(`Delete ${component.label}? This also removes its issue reports.${equipmentNote}`)) return
+    deleteComponent.mutate(componentId, {
+      onSuccess: () => { showSuccess(`${component.label} was removed`, 'Component deleted'); onClose() },
+      onError: (e: any) => showError(e?.response?.data?.message ?? 'Could not delete this component', 'Delete failed'),
     })
   }
 
-  const house = houseQ.data
   const equipment = equipmentQ.data ?? []
   const issues = issuesQ.data ?? []
   const openIssues = issues.filter(i => i.status !== 'RESOLVED').length
@@ -413,25 +514,27 @@ function HouseDetailModal({ houseId, projectId, projectName, onClose }: {
     { key: 'equipment', label: 'Equipment', count: equipment.length },
     { key: 'servicelog', label: 'Service log' },
     { key: 'issues', label: 'Issues', count: openIssues || undefined },
-    { key: 'agreements', label: 'Agreements' },
-    { key: 'billing', label: 'Billing' },
+    ...(ownerAllowed ? [
+      { key: 'agreements' as DetailTab, label: 'Agreements' },
+      { key: 'billing' as DetailTab, label: 'Billing' },
+    ] : []),
   ]
 
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', padding: '24px 20px' }} onClick={onClose}>
-      <div className="card anim-fade-up" role="dialog" aria-modal="true" aria-label={house?.label ?? 'House'}
+      <div className="card anim-fade-up" role="dialog" aria-modal="true" aria-label={component?.label ?? 'Component'}
         style={{ width: 980, maxWidth: '100%', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: 'min(840px, calc(100vh - 48px))' }}
         onClick={e => e.stopPropagation()}>
         <div className="card-header" style={{ flexShrink: 0 }}>
           <div>
             <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Home size={15} style={{ color: 'var(--blue)' }} /> {house?.label ?? 'Loading…'}
+              <Layers size={15} style={{ color: 'var(--blue)' }} /> {component?.label ?? 'Loading…'}
             </div>
-            <div className="card-subtitle">{projectName}{house?.address ? ` · ${house.address}` : ''}</div>
+            <div className="card-subtitle">{projectName}{component ? ` · ${typeLabel(component.componentTypeKey, componentTypes)}` : ''}</div>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button className="btn btn-ghost btn-sm" onClick={handleDelete} disabled={!house || deleteHouse.isPending} aria-label="Delete house" title="Delete house" style={{ color: 'var(--red)' }}>
-              {deleteHouse.isPending ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+            <button className="btn btn-ghost btn-sm" onClick={handleDelete} disabled={!component || deleteComponent.isPending} aria-label="Delete component" title="Delete component" style={{ color: 'var(--red)' }}>
+              {deleteComponent.isPending ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
             </button>
             <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Close"><X size={14} /></button>
           </div>
@@ -461,25 +564,25 @@ function HouseDetailModal({ houseId, projectId, projectName, onClose }: {
           }}>
             <MessageSquareWarning size={13} style={{ color: 'var(--red)', flexShrink: 0 }} />
             <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--red)', flex: 1 }}>
-              {openIssues} unresolved issue{openIssues === 1 ? '' : 's'} reported on this house — view details
+              {openIssues} unresolved issue{openIssues === 1 ? '' : 's'} reported on this component — view details
             </span>
             <ChevronRight size={13} style={{ color: 'var(--red)', flexShrink: 0 }} />
           </button>
         )}
 
         <div className="card-body" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-          {!house ? (
+          {!component ? (
             <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
               <Loader2 size={18} className="animate-spin" style={{ color: 'var(--t3)' }} />
             </div>
           ) : (
             <>
-              {tab === 'overview' && <OverviewSection house={house} projectId={projectId} projectName={projectName} equipment={equipment} onViewAllJobs={() => setTab('servicelog')} />}
-              {tab === 'equipment' && <EquipmentSection house={house} equipment={equipment} projectId={projectId} projectName={projectName} />}
-              {tab === 'servicelog' && <ServiceLogSection house={house} equipment={equipment} projectId={projectId} projectName={projectName} />}
-              {tab === 'issues' && <IssuesSection house={house} issues={issues} />}
-              {tab === 'agreements' && <HouseAgreementsSection house={house} projectId={projectId} />}
-              {tab === 'billing' && <HouseBillingSection house={house} projectId={projectId} projectName={projectName} />}
+              {tab === 'overview' && <OverviewSection component={component} projectId={projectId} projectName={projectName} equipment={equipment} ownerAllowed={ownerAllowed} onViewAllJobs={() => setTab('servicelog')} />}
+              {tab === 'equipment' && <EquipmentSection component={component} equipment={equipment} projectId={projectId} projectName={projectName} ownerAllowed={ownerAllowed} />}
+              {tab === 'servicelog' && <ServiceLogSection component={component} equipment={equipment} projectId={projectId} projectName={projectName} />}
+              {tab === 'issues' && <IssuesSection component={component} issues={issues} />}
+              {tab === 'agreements' && <ComponentAgreementsSection component={component} projectId={projectId} />}
+              {tab === 'billing' && <ComponentBillingSection component={component} projectId={projectId} projectName={projectName} />}
             </>
           )}
         </div>
@@ -491,17 +594,17 @@ function HouseDetailModal({ houseId, projectId, projectName, onClose }: {
 
 // ── Overview ──────────────────────────────────────────────────────────────
 
-function OverviewSection({ house, projectId, projectName, equipment, onViewAllJobs }: {
-  house: House; projectId: string; projectName: string; equipment: HouseEquipment[]; onViewAllJobs: () => void
+function OverviewSection({ component, projectId, projectName, equipment, ownerAllowed, onViewAllJobs }: {
+  component: ProjectComponent; projectId: string; projectName: string; equipment: ComponentEquipment[]; ownerAllowed: boolean; onViewAllJobs: () => void
 }) {
   const assignOwner = useAssignOwner(projectId)
   const generateAccount = useGenerateOwnerAccount(projectId)
-  const updateHouse = useUpdateHouse(projectId)
+  const updateComponent = useUpdateComponent(projectId)
   const { showSuccess, showError } = useToast()
   const [pickingOwner, setPickingOwner] = useState(false)
-  const { data: owner } = useCustomer(house.ownerCustomerId ?? '')
+  const { data: owner } = useCustomer(component.ownerCustomerId ?? '')
   const [assigning, setAssigning] = useState(false)
-  const { jobs, isLoading: jobsLoading } = useHouseServiceLog(house.id, equipment.map(e => e.id))
+  const { jobs, isLoading: jobsLoading } = useComponentServiceLog(component.id, equipment.map(e => e.id))
   const [visitFor, setVisitFor] = useState<{ id?: string } | null>(null)
   const techniciansQuery = useTechnicians()
   const recentJobs = [...jobs]
@@ -510,7 +613,7 @@ function OverviewSection({ house, projectId, projectName, equipment, onViewAllJo
 
   const generate = async () => {
     try {
-      const res = await generateAccount.mutateAsync(house.id)
+      const res = await generateAccount.mutateAsync(component.id)
       showSuccess(res.message, res.alreadyProvisioned ? 'Already has access' : 'Account generated')
     } catch (e: any) {
       showError(e?.response?.data?.message ?? 'Could not generate an account', 'Generate account failed')
@@ -520,8 +623,8 @@ function OverviewSection({ house, projectId, projectName, equipment, onViewAllJo
   const pickOwner = async (c: PickedCustomer) => {
     setAssigning(true)
     try {
-      await assignOwner.mutateAsync({ houseId: house.id, customerId: c.id })
-      showSuccess(`${house.label} is now owned by ${c.firstName} ${c.lastName}.`.trim(), 'Owner assigned')
+      await assignOwner.mutateAsync({ componentId: component.id, customerId: c.id })
+      showSuccess(`${component.label} is now owned by ${c.firstName} ${c.lastName}.`.trim(), 'Owner assigned')
       setPickingOwner(false)
     } catch (e: any) {
       showError(e?.response?.data?.message ?? 'Could not assign this owner', 'Assign owner failed')
@@ -535,8 +638,8 @@ function OverviewSection({ house, projectId, projectName, equipment, onViewAllJo
       {/* At-a-glance stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
         {[
-          { label: 'Equipment', value: house.equipmentCount ?? equipment.length, icon: Wind, tone: 'var(--blue)' },
-          { label: 'Open issues', value: house.openIssueCount ?? 0, icon: MessageSquareWarning, tone: (house.openIssueCount ?? 0) > 0 ? 'var(--red)' : 'var(--t3)' },
+          { label: 'Equipment', value: component.equipmentCount ?? equipment.length, icon: Wind, tone: 'var(--blue)' },
+          { label: 'Open issues', value: component.openIssueCount ?? 0, icon: MessageSquareWarning, tone: (component.openIssueCount ?? 0) > 0 ? 'var(--red)' : 'var(--t3)' },
           { label: 'Total visits', value: jobsLoading ? '…' : jobs.length, icon: Wrench, tone: 'var(--t2)' },
         ].map(s => (
           <div key={s.label} style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--bg-card-2)', border: '1px solid var(--bd)' }}>
@@ -548,51 +651,53 @@ function OverviewSection({ house, projectId, projectName, equipment, onViewAllJo
         ))}
       </div>
 
-      <div className="card" style={{ padding: '14px 16px' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 5 }}>
-          <User size={11} /> Owner
-        </p>
-        {house.ownerCustomerId ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-              <div>
-                <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{house.ownerName}</p>
-                <p style={{ fontSize: 12, color: 'var(--t4)', margin: '2px 0 0' }}>{house.ownerEmail ?? owner?.email ?? '—'}</p>
+      {ownerAllowed && (
+        <div className="card" style={{ padding: '14px 16px' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <User size={11} /> Owner
+          </p>
+          {component.ownerCustomerId ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <div>
+                  <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{component.ownerName}</p>
+                  <p style={{ fontSize: 12, color: 'var(--t4)', margin: '2px 0 0' }}>{component.ownerEmail ?? owner?.email ?? '—'}</p>
+                </div>
+                <AccountStatusBadge status={component.accountStatus} />
               </div>
-              <AccountStatusBadge status={house.accountStatus} />
-            </div>
-            {house.accountStatus === 'NO_ACCOUNT' && (
-              <button className="btn btn-primary btn-sm" onClick={generate} disabled={generateAccount.isPending} style={{ alignSelf: 'flex-start' }}>
-                {generateAccount.isPending ? <Loader2 size={12} className="animate-spin" /> : <Mail size={12} />}
-                {generateAccount.isPending ? 'Generating…' : 'Generate client account'}
+              {component.accountStatus === 'NO_ACCOUNT' && (
+                <button className="btn btn-primary btn-sm" onClick={generate} disabled={generateAccount.isPending} style={{ alignSelf: 'flex-start' }}>
+                  {generateAccount.isPending ? <Loader2 size={12} className="animate-spin" /> : <Mail size={12} />}
+                  {generateAccount.isPending ? 'Generating…' : 'Generate client account'}
+                </button>
+              )}
+              <button className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setPickingOwner(v => !v)}>
+                Change owner
               </button>
-            )}
-            <button className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setPickingOwner(v => !v)}>
-              Change owner
-            </button>
-          </div>
-        ) : (
-          <div>
-            <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: '0 0 10px' }}>No owner assigned yet.</p>
-            <button className="btn btn-secondary btn-sm" onClick={() => setPickingOwner(v => !v)}>
-              <User size={12} /> Assign owner
-            </button>
-          </div>
-        )}
+            </div>
+          ) : (
+            <div>
+              <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: '0 0 10px' }}>No owner assigned yet.</p>
+              <button className="btn btn-secondary btn-sm" onClick={() => setPickingOwner(v => !v)}>
+                <User size={12} /> Assign owner
+              </button>
+            </div>
+          )}
 
-        {pickingOwner && (
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--bd)' }}>
-            {assigning ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 2px' }}>
-                <Loader2 size={13} className="animate-spin" style={{ color: 'var(--t3)' }} />
-                <span style={{ fontSize: 12, color: 'var(--t4)' }}>Assigning…</span>
-              </div>
-            ) : (
-              <CustomerPickerWithCreate autoFocus onPick={pickOwner} onCancel={() => setPickingOwner(false)} />
-            )}
-          </div>
-        )}
-      </div>
+          {pickingOwner && (
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--bd)' }}>
+              {assigning ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 2px' }}>
+                  <Loader2 size={13} className="animate-spin" style={{ color: 'var(--t3)' }} />
+                  <span style={{ fontSize: 12, color: 'var(--t4)' }}>Assigning…</span>
+                </div>
+              ) : (
+                <CustomerPickerWithCreate autoFocus onPick={pickOwner} onCancel={() => setPickingOwner(false)} />
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="card" style={{ padding: '14px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -616,7 +721,7 @@ function OverviewSection({ house, projectId, projectName, equipment, onViewAllJo
           </div>
         ) : recentJobs.length === 0 ? (
           <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: 0, textAlign: 'center', padding: '8px 0' }}>
-            No service visits logged for this house yet.
+            No service visits logged for this component yet.
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -650,27 +755,27 @@ function OverviewSection({ house, projectId, projectName, equipment, onViewAllJo
         <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 5 }}>
           <Tag size={11} /> Tags &amp; notes
         </p>
-        <TagsAndNotesEditor house={house} onSave={(patch) => updateHouse.mutate({ id: house.id, ...patch })} saving={updateHouse.isPending} />
+        <TagsAndNotesEditor component={component} onSave={(patch) => updateComponent.mutate({ id: component.id, ...patch })} saving={updateComponent.isPending} />
       </div>
 
       <AddJobModal
         isOpen={!!visitFor}
         onClose={() => setVisitFor(null)}
-        lockedCustomer={house.ownerCustomerId ? { id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined } : undefined}
-        lockedProject={{ id: projectId, name: projectName, templateType: 'HOUSING_SCHEME' }}
-        lockedHouseId={house.id}
-        lockedHouseLabel={house.label}
-        contextLabel={house.label}
-        onCreated={() => invalidateHouseServiceLog(house.id, projectId)}
+        lockedCustomer={component.ownerCustomerId ? { id: component.ownerCustomerId, name: component.ownerName ?? 'Owner' } : undefined}
+        lockedProject={{ id: projectId, name: projectName }}
+        lockedComponentId={component.id}
+        lockedComponentLabel={component.label}
+        contextLabel={component.label}
+        onCreated={() => invalidateComponentServiceLog(component.id, projectId)}
       />
     </div>
   )
 }
 
-function TagsAndNotesEditor({ house, onSave, saving }: { house: House; onSave: (patch: { tags?: string[]; notes?: string }) => void; saving: boolean }) {
-  const [tagsInput, setTagsInput] = useState(house.tags.join(', '))
-  const [notes, setNotes] = useState(house.notes ?? '')
-  const dirty = tagsInput !== house.tags.join(', ') || notes !== (house.notes ?? '')
+function TagsAndNotesEditor({ component, onSave, saving }: { component: ProjectComponent; onSave: (patch: { tags?: string[]; notes?: string }) => void; saving: boolean }) {
+  const [tagsInput, setTagsInput] = useState(component.tags.join(', '))
+  const [notes, setNotes] = useState(component.notes ?? '')
+  const dirty = tagsInput !== component.tags.join(', ') || notes !== (component.notes ?? '')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -694,13 +799,13 @@ function TagsAndNotesEditor({ house, onSave, saving }: { house: House; onSave: (
 
 // ── Agreements ────────────────────────────────────────────────────────────
 
-function HouseAgreementsSection({ house, projectId }: { house: House; projectId: string }) {
-  const agreementsQ = useServiceAgreements({ houseId: house.id, limit: 100 })
+function ComponentAgreementsSection({ component, projectId }: { component: ProjectComponent; projectId: string }) {
+  const agreementsQ = useServiceAgreements({ componentId: component.id, limit: 100 })
   const agreements = agreementsQ.data?.data ?? []
   const [showCreate, setShowCreate] = useState(false)
 
-  if (!house.ownerCustomerId) {
-    return <AssignOwnerPrompt house={house} projectId={projectId} description="Agreements belong to the house's owner." />
+  if (!component.ownerCustomerId) {
+    return <AssignOwnerPrompt component={component} projectId={projectId} description="Agreements belong to the component's owner." />
   }
 
   return (
@@ -708,7 +813,7 @@ function HouseAgreementsSection({ house, projectId }: { house: House; projectId:
       <div className="card-header">
         <div>
           <div className="card-title">Agreements</div>
-          <div className="card-subtitle">Recurring maintenance for {house.label}</div>
+          <div className="card-subtitle">Recurring maintenance for {component.label}</div>
         </div>
         <button className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
           <Plus size={12} /> Add agreement
@@ -721,7 +826,7 @@ function HouseAgreementsSection({ house, projectId }: { house: House; projectId:
         </div>
       ) : agreements.length === 0 ? (
         <p style={{ padding: '28px 20px', fontSize: 13, color: 'var(--t4)', textAlign: 'center' }}>
-          No agreements for this house yet.
+          No agreements for this component yet.
         </p>
       ) : (
         <div>
@@ -750,10 +855,10 @@ function HouseAgreementsSection({ house, projectId }: { house: House; projectId:
 
       {showCreate && (
         <AgreementEditorModal
-          presetCustomerId={house.ownerCustomerId ?? undefined}
-          presetCustomerName={house.ownerName ?? undefined}
+          presetCustomerId={component.ownerCustomerId ?? undefined}
+          presetCustomerName={component.ownerName ?? undefined}
           presetProjectId={projectId}
-          presetHouseId={house.id}
+          presetComponentId={component.id}
           onClose={() => setShowCreate(false)}
           onSaved={() => setShowCreate(false)}
         />
@@ -764,29 +869,29 @@ function HouseAgreementsSection({ house, projectId }: { house: House; projectId:
 
 // ── Billing ───────────────────────────────────────────────────────────────
 
-function HouseBillingSection({ house, projectId, projectName }: { house: House; projectId: string; projectName: string }) {
-  const quotesQ = useQuotes({ houseId: house.id, limit: 100 })
-  const invoicesQ = useInvoices({ houseId: house.id, limit: 100 })
+function ComponentBillingSection({ component, projectId, projectName }: { component: ProjectComponent; projectId: string; projectName: string }) {
+  const quotesQ = useQuotes({ componentId: component.id, limit: 100 })
+  const invoicesQ = useInvoices({ componentId: component.id, limit: 100 })
   const quotes = quotesQ.data?.data ?? []
   const invoices = invoicesQ.data?.data ?? []
   const [showCreateQuote, setShowCreateQuote] = useState(false)
   const [showCreateInvoice, setShowCreateInvoice] = useState(false)
 
-  if (!house.ownerCustomerId) {
-    return <AssignOwnerPrompt house={house} projectId={projectId} description="Quotes and invoices belong to the house's owner." />
+  if (!component.ownerCustomerId) {
+    return <AssignOwnerPrompt component={component} projectId={projectId} description="Quotes and invoices belong to the component's owner." />
   }
 
-  const presetCustomer = { id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', email: house.ownerEmail ?? undefined }
+  const presetCustomer = { id: component.ownerCustomerId, name: component.ownerName ?? 'Owner', email: component.ownerEmail ?? undefined }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
-        <HouseBillingList
+        <ComponentBillingList
           title="Quotes" icon={FileText} loading={quotesQ.isLoading}
           docs={quotes.map((q: any) => ({ id: q.id, title: q.title ?? q.quoteNumber, number: q.quoteNumber, date: q.createdAt, total: q.total, status: q.status }))}
           paidStatus="ACCEPTED" actionLabel="New quote" onAction={() => setShowCreateQuote(true)}
         />
-        <HouseBillingList
+        <ComponentBillingList
           title="Invoices" icon={Receipt} loading={invoicesQ.isLoading}
           docs={invoices.map((i: any) => ({ id: i.id, title: i.invoiceNumber, number: i.invoiceNumber, date: i.createdAt, total: i.total, status: i.status }))}
           paidStatus="PAID" actionLabel="New invoice" onAction={() => setShowCreateInvoice(true)}
@@ -798,8 +903,8 @@ function HouseBillingSection({ house, projectId, projectName }: { house: House; 
         onClose={() => setShowCreateQuote(false)}
         presetCustomer={presetCustomer}
         projectId={projectId}
-        houseId={house.id}
-        contextLabel={`${projectName} — ${house.label}`}
+        componentId={component.id}
+        contextLabel={`${projectName} — ${component.label}`}
         onCreated={() => { quotesQ.refetch() }}
       />
       <AddInvoiceModal
@@ -807,15 +912,15 @@ function HouseBillingSection({ house, projectId, projectName }: { house: House; 
         onClose={() => setShowCreateInvoice(false)}
         presetCustomer={presetCustomer}
         projectId={projectId}
-        houseId={house.id}
-        contextLabel={`${projectName} — ${house.label}`}
+        componentId={component.id}
+        contextLabel={`${projectName} — ${component.label}`}
         onCreated={() => { invoicesQ.refetch() }}
       />
     </div>
   )
 }
 
-function HouseBillingList({ title, icon: Icon, loading, docs, paidStatus, actionLabel, onAction }: {
+function ComponentBillingList({ title, icon: Icon, loading, docs, paidStatus, actionLabel, onAction }: {
   title: string; icon: typeof FileText; loading: boolean
   docs: { id: string; title: string; number: string; date: string; total: string | number; status: string }[]
   paidStatus: string; actionLabel: string; onAction: () => void
@@ -854,19 +959,19 @@ function HouseBillingList({ title, icon: Icon, loading, docs, paidStatus, action
 
 // ── Equipment ─────────────────────────────────────────────────────────────
 
-function EquipmentSection({ house, equipment, projectId, projectName }: {
-  house: House; equipment: HouseEquipment[]
-  projectId: string; projectName: string
+function EquipmentSection({ component, equipment, projectId, projectName, ownerAllowed }: {
+  component: ProjectComponent; equipment: ComponentEquipment[]
+  projectId: string; projectName: string; ownerAllowed: boolean
 }) {
-  const addEquipment = useAddHouseEquipment(house.id)
+  const addEquipment = useAddComponentEquipment(component.id)
   const [showAdd, setShowAdd] = useState(false)
   const [visitFor, setVisitFor] = useState<{ id?: string } | null>(null)
   const [viewingId, setViewingId] = useState<string | null>(null)
   const viewing = equipment.find(e => e.id === viewingId) ?? null
   const visitForEquipment = visitFor?.id ? equipment.find(e => e.id === visitFor.id) : undefined
 
-  if (!house.ownerCustomerId) {
-    return <AssignOwnerPrompt house={house} projectId={projectId} description="Equipment belongs to the house's owner." />
+  if (ownerAllowed && !component.ownerCustomerId) {
+    return <AssignOwnerPrompt component={component} projectId={projectId} description="Equipment belongs to the component's owner." />
   }
 
   return (
@@ -915,7 +1020,7 @@ function EquipmentSection({ house, equipment, projectId, projectName }: {
 
       {showAdd && (
         <AddEquipmentModal
-          houseId={house.id}
+          componentId={component.id}
           onSubmit={(input) => addEquipment.mutateAsync(input)}
           onClose={() => setShowAdd(false)}
           saving={addEquipment.isPending}
@@ -924,7 +1029,7 @@ function EquipmentSection({ house, equipment, projectId, projectName }: {
 
       {viewing && (
         <EquipmentDetailModal
-          houseId={house.id}
+          componentId={component.id}
           equipment={viewing}
           onClose={() => setViewingId(null)}
           onServiceVisit={() => { setVisitFor({ id: viewing.id }); setViewingId(null) }}
@@ -934,26 +1039,26 @@ function EquipmentSection({ house, equipment, projectId, projectName }: {
       <AddJobModal
         isOpen={!!visitFor}
         onClose={() => setVisitFor(null)}
-        lockedCustomer={{ id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined }}
-        lockedProject={{ id: projectId, name: projectName, templateType: 'HOUSING_SCHEME' }}
-        lockedHouseId={house.id}
-        lockedHouseLabel={house.label}
+        lockedCustomer={component.ownerCustomerId ? { id: component.ownerCustomerId, name: component.ownerName ?? 'Owner' } : undefined}
+        lockedProject={{ id: projectId, name: projectName }}
+        lockedComponentId={component.id}
+        lockedComponentLabel={component.label}
         lockedEquipmentId={visitFor?.id}
         lockedEquipmentLabel={visitForEquipment ? [visitForEquipment.brand, visitForEquipment.type, visitForEquipment.model].filter(Boolean).join(' ') : undefined}
-        contextLabel={`${projectName} — ${house.label}`}
-        onCreated={() => invalidateHouseServiceLog(house.id, projectId)}
+        contextLabel={`${projectName} — ${component.label}`}
+        onCreated={() => invalidateComponentServiceLog(component.id, projectId)}
       />
     </div>
   )
 }
 
-function AddEquipmentModal({ houseId, onSubmit, onClose, saving }: {
-  houseId: string
+function AddEquipmentModal({ componentId, onSubmit, onClose, saving }: {
+  componentId: string
   onSubmit: (input: { type?: string; brand?: string; model?: string; serialNo?: string; installDate?: string; warrantyEnd?: string; notes?: string }) => Promise<{ id: string }>
   onClose: () => void
   saving: boolean
 }) {
-  const uploadImage = useUploadEquipmentImage(houseId)
+  const uploadImage = useUploadEquipmentImage(componentId)
   const { showError } = useToast()
   const [form, setForm] = useState({ type: 'Thermostat', brand: '', model: '', serialNo: '', installDate: '', warrantyEnd: '', notes: '' })
   const set = <K extends keyof typeof form>(k: K, v: string) => setForm(f => ({ ...f, [k]: v }))
@@ -1103,16 +1208,16 @@ function AddEquipmentModal({ houseId, onSubmit, onClose, saving }: {
   )
 }
 
-function EquipmentDetailModal({ houseId, equipment, onClose, onServiceVisit }: {
-  houseId: string
-  equipment: HouseEquipment
+function EquipmentDetailModal({ componentId, equipment, onClose, onServiceVisit }: {
+  componentId: string
+  equipment: ComponentEquipment
   onClose: () => void
   onServiceVisit: () => void
 }) {
-  const uploadImage = useUploadEquipmentImage(houseId)
-  const updateEquipment = useUpdateHouseEquipment(houseId)
-  const addErrorCode = useAddErrorCode(houseId)
-  const deleteErrorCode = useDeleteErrorCode(houseId)
+  const uploadImage = useUploadEquipmentImage(componentId)
+  const updateEquipment = useUpdateComponentEquipment(componentId)
+  const addErrorCode = useAddErrorCode(componentId)
+  const deleteErrorCode = useDeleteErrorCode(componentId)
   const { showSuccess, showError } = useToast()
   const [manualCode, setManualCode] = useState('')
   const [manualMeaning, setManualMeaning] = useState('')
@@ -1151,7 +1256,7 @@ function EquipmentDetailModal({ houseId, equipment, onClose, onServiceVisit }: {
 
   // Per-code status, tracked independently so the UI reflects each code's own
   // request as it resolves — not the batch as a whole. Combined with the cache-patch
-  // mutations in housesApi.ts (no full-list refetch per add), this is what makes
+  // mutations in componentsApi.ts (no full-list refetch per add), this is what makes
   // both "Add" and "Add all" feel instant instead of blocking on a network round-trip.
   const [addedCodes, setAddedCodes] = useState<Set<string>>(new Set())
   const [pendingCodes, setPendingCodes] = useState<Set<string>>(new Set())
@@ -1387,10 +1492,10 @@ const JOB_BADGE: Record<string, string> = {
   PAID: 'badge-green', CANCELLED: 'badge-red',
 }
 
-function ServiceLogSection({ house, equipment, projectId, projectName }: {
-  house: House; equipment: HouseEquipment[]; projectId: string; projectName: string
+function ServiceLogSection({ component, equipment, projectId, projectName }: {
+  component: ProjectComponent; equipment: ComponentEquipment[]; projectId: string; projectName: string
 }) {
-  const { jobs, isLoading } = useHouseServiceLog(house.id, equipment.map(e => e.id))
+  const { jobs, isLoading } = useComponentServiceLog(component.id, equipment.map(e => e.id))
   const [viewJob, setViewJob] = useState<Job | null>(null)
   const [visitFor, setVisitFor] = useState<{ id?: string } | null>(null)
   const [visitEquipmentId, setVisitEquipmentId] = useState('')
@@ -1428,18 +1533,18 @@ function ServiceLogSection({ house, equipment, projectId, projectName }: {
     return (
       <div>
         {header}
-        <p style={{ padding: '28px 0', fontSize: 12.5, color: 'var(--t4)', textAlign: 'center' }}>No service visits logged for this house yet.</p>
+        <p style={{ padding: '28px 0', fontSize: 12.5, color: 'var(--t4)', textAlign: 'center' }}>No service visits logged for this component yet.</p>
         <AddJobModal
           isOpen={!!visitFor}
           onClose={() => setVisitFor(null)}
-          lockedCustomer={house.ownerCustomerId ? { id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined } : undefined}
-          lockedProject={{ id: projectId, name: projectName, templateType: 'HOUSING_SCHEME' }}
-          lockedHouseId={house.id}
-          lockedHouseLabel={house.label}
+          lockedCustomer={component.ownerCustomerId ? { id: component.ownerCustomerId, name: component.ownerName ?? 'Owner' } : undefined}
+          lockedProject={{ id: projectId, name: projectName }}
+          lockedComponentId={component.id}
+          lockedComponentLabel={component.label}
           lockedEquipmentId={visitFor?.id}
           lockedEquipmentLabel={visitForEquipment ? [visitForEquipment.brand, visitForEquipment.type, visitForEquipment.model].filter(Boolean).join(' ') : undefined}
-          contextLabel={`${projectName} — ${house.label}`}
-          onCreated={() => invalidateHouseServiceLog(house.id, projectId)}
+          contextLabel={`${projectName} — ${component.label}`}
+          onCreated={() => invalidateComponentServiceLog(component.id, projectId)}
         />
       </div>
     )
@@ -1487,14 +1592,14 @@ function ServiceLogSection({ house, equipment, projectId, projectName }: {
       <AddJobModal
         isOpen={!!visitFor}
         onClose={() => setVisitFor(null)}
-        lockedCustomer={house.ownerCustomerId ? { id: house.ownerCustomerId, name: house.ownerName ?? 'Owner', address: house.address ?? undefined } : undefined}
-        lockedProject={{ id: projectId, name: projectName, templateType: 'HOUSING_SCHEME' }}
-        lockedHouseId={house.id}
-        lockedHouseLabel={house.label}
+        lockedCustomer={component.ownerCustomerId ? { id: component.ownerCustomerId, name: component.ownerName ?? 'Owner' } : undefined}
+        lockedProject={{ id: projectId, name: projectName }}
+        lockedComponentId={component.id}
+        lockedComponentLabel={component.label}
         lockedEquipmentId={visitFor?.id}
         lockedEquipmentLabel={visitForEquipment ? [visitForEquipment.brand, visitForEquipment.type, visitForEquipment.model].filter(Boolean).join(' ') : undefined}
-        contextLabel={`${projectName} — ${house.label}`}
-        onCreated={() => invalidateHouseServiceLog(house.id, projectId)}
+        contextLabel={`${projectName} — ${component.label}`}
+        onCreated={() => invalidateComponentServiceLog(component.id, projectId)}
       />
     </div>
   )
@@ -1502,8 +1607,8 @@ function ServiceLogSection({ house, equipment, projectId, projectName }: {
 
 // ── Issues ────────────────────────────────────────────────────────────────
 
-function IssuesSection({ house, issues }: { house: House; issues: HouseIssueReport[] }) {
-  const updateStatus = useUpdateIssueStatus(house.id)
+function IssuesSection({ component, issues }: { component: ProjectComponent; issues: ComponentIssueReport[] }) {
+  const updateStatus = useUpdateIssueStatus(component.id)
 
   if (issues.length === 0) {
     return <p style={{ padding: '28px 0', fontSize: 12.5, color: 'var(--t4)', textAlign: 'center' }}>No issues reported by the owner.</p>

@@ -7,7 +7,6 @@ import {
   DollarSign, FileText, Clock, AlertCircle, Loader2, ArrowRight,
   Send, Receipt, Truck, Package, CheckSquare, ClipboardList, CalendarClock,
   Plus, Trash2, MessageSquare, Phone, Mail, Home,
-  FolderKanban,
 } from "lucide-react";
 import {
   useUpdateJobStatus, useUpdateJobFields, useJob, useWorkOrdersByJob,
@@ -16,7 +15,7 @@ import {
 } from "../../hooks/useJobs";
 import { useInvoices, useQuotes, useSendInvoice, useSendQuote, decimalToNumber } from "../../hooks/useFinance";
 import { useCustomer } from "../../hooks/useCustomers";
-import { useProjectName } from "../projects/projectsApi";
+import ProjectComponentTag from "../projects/ProjectComponentTag";
 import {
   useCustomerEquipment,
   useAddEquipmentItem,
@@ -385,7 +384,7 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
               {job.customerName ?? "No customer"}
               {job.assignedToName && ` · Tech: ${job.assignedToName}`}
             </p>
-            {job.projectId && <JobProjectChip projectId={job.projectId} />}
+            {job.projectId && <ProjectComponentTag projectId={job.projectId} componentId={job.componentId} tone="hero" />}
           </div>
           <div className="flex items-center gap-2 ml-3 shrink-0">
             <button onClick={onClose} className="text-blue-100 hover:text-white transition-colors p-1.5 hover:bg-blue-500 rounded-lg cursor-pointer bg-transparent border-0">
@@ -1569,22 +1568,3 @@ function InventoryTab({ job }: { job: Job }) {
 }
 
 
-// ── Project chip — shown when the job belongs to a project ────────────────────
-function JobProjectChip({ projectId }: { projectId: string }) {
-  const { data: name } = useProjectName(projectId)
-  const navigate = useNavigate()
-  return (
-    <button
-      onClick={() => navigate(`/projects/${projectId}`)}
-      title="Open project"
-      style={{
-        marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 5,
-        fontSize: 10.5, fontWeight: 700, padding: '2px 9px', borderRadius: 999,
-        background: 'rgba(255,255,255,0.16)', color: '#fff', border: '1px solid rgba(255,255,255,0.28)',
-        cursor: 'pointer',
-      }}
-    >
-      <FolderKanban size={10} /> {name ?? 'Project'}
-    </button>
-  )
-}

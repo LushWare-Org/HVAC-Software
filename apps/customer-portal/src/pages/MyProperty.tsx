@@ -1,22 +1,24 @@
 /**
- * MyHouse — hero-card home for a Housing Scheme home owner: equipment, service
- * history, self-service "Add equipment," issue reporting, and the status of
- * any reports already filed. Leads with a hero card (never bare text directly
- * on the page background) so it reads correctly in every theme, matching the
+ * MyProperty — hero-card home for a customer who owns a project component
+ * (a house, a room, any templated unit): equipment, service history,
+ * self-service "Add equipment," issue reporting, and the status of any
+ * reports already filed. Leads with a hero card (never bare text directly on
+ * the page background) so it reads correctly in every theme, matching the
  * pattern established by Dashboard.tsx's "Live Visit" hero.
+ * Spec: docs/superpowers/specs/2026-08-14-project-component-templates-design.md
  */
 import { useState } from 'react'
 import RescheduleBadge from '../components/reschedule/RescheduleBadge'
 import {
-  Home, MapPin, Wind, CalendarClock, ShieldCheck, Wrench,
+  Home, Wind, CalendarClock, ShieldCheck, Wrench,
   AlertTriangle, Send, Loader2, ChevronDown, ChevronUp, ChevronRight, Tag, Plus, X, Check,
   FileSignature, Receipt, FileText,
 } from 'lucide-react'
 import {
-  useMyHouses, useMyHouseEquipment, useMyHouseServiceLog, useMyIssueReports, useReportIssue,
-  useAddMyEquipment, type MyHouse as MyHouseType, type MyIssueStatus, type AddMyEquipmentInput,
-  type MyHouseEquipment as MyHouseEquipmentType,
-} from '../hooks/useMyHouse'
+  useMyComponents, useMyComponentEquipment, useMyComponentServiceLog, useMyIssueReports, useReportIssue,
+  useAddMyEquipment, type MyComponent as MyComponentType, type MyIssueStatus, type AddMyEquipmentInput,
+  type MyComponentEquipment as MyComponentEquipmentType,
+} from '../hooks/useMyComponent'
 import { useMyAgreements } from '../hooks/useMyAgreements'
 import { useMyQuotes, useMyInvoices } from '../hooks/useMyFinance'
 import { formatMoney } from '../lib/format'
@@ -51,11 +53,11 @@ const JOB_STATUS_META: Record<string, { label: string; done: boolean }> = {
   PAID: { label: 'Completed', done: true }, CANCELLED: { label: 'Cancelled', done: false },
 }
 
-export default function MyHouse() {
-  const { data: houses, isLoading } = useMyHouses()
+export default function MyProperty() {
+  const { data: components, isLoading } = useMyComponents()
   const [activeId, setActiveId] = useState<string | null>(null)
 
-  const active = activeId ?? houses?.[0]?.id ?? null
+  const active = activeId ?? components?.[0]?.id ?? null
 
   if (isLoading) {
     return (
@@ -63,7 +65,7 @@ export default function MyHouse() {
     )
   }
 
-  if (!houses || houses.length === 0) {
+  if (!components || components.length === 0) {
     return (
       <div style={{
         borderRadius: 16, border: '1px solid var(--bd)', background: 'var(--bg-card)',
@@ -75,40 +77,40 @@ export default function MyHouse() {
         }}>
           <Home size={20} style={{ color: 'var(--t4)' }} />
         </div>
-        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>No house on file yet</p>
+        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>Nothing on file yet</p>
         <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: '4px 0 0' }}>
-          Once your service company links you to a house, it'll show up here.
+          Once your service company links you to a property, it'll show up here.
         </p>
       </div>
     )
   }
 
-  const house = houses.find(h => h.id === active) ?? houses[0]
+  const component = components.find(c => c.id === active) ?? components[0]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="anim-fade-up">
-      {houses.length > 1 && (
+      {components.length > 1 && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {houses.map(h => (
-            <button key={h.id} onClick={() => setActiveId(h.id)}
-              className={`btn btn-sm ${active === h.id ? 'btn-primary' : 'btn-secondary'}`}>
-              <Home size={12} /> {h.label}
+          {components.map(c => (
+            <button key={c.id} onClick={() => setActiveId(c.id)}
+              className={`btn btn-sm ${active === c.id ? 'btn-primary' : 'btn-secondary'}`}>
+              <Home size={12} /> {c.label}
             </button>
           ))}
         </div>
       )}
-      <HouseHero house={house} />
-      <HouseSection house={house} />
+      <ComponentHero component={component} />
+      <ComponentSection component={component} />
     </div>
   )
 }
 
 // ── Hero ──────────────────────────────────────────────────────────────────
 
-function HouseHero({ house }: { house: MyHouseType }) {
+function ComponentHero({ component }: { component: MyComponentType }) {
   const [showReport, setShowReport] = useState(false)
   const [showBook, setShowBook] = useState(false)
-  const equipmentQ = useMyHouseEquipment(house.id)
+  const equipmentQ = useMyComponentEquipment(component.id)
 
   return (
     <div style={{
@@ -128,20 +130,15 @@ function HouseHero({ house }: { house: MyHouseType }) {
             display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--blue-dim)', color: 'var(--blue)',
             fontSize: 10.5, fontWeight: 800, letterSpacing: '0.06em', padding: '3px 9px', borderRadius: 99, marginBottom: 8,
           }}>
-            YOUR HOUSE
+            YOUR PROPERTY
           </span>
-          <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>{house.label}</div>
+          <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>{component.label}</div>
           <div style={{ display: 'flex', gap: 16, marginTop: 6, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--t3)' }}>{house.projectName}</span>
-            {house.address && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 500, color: 'var(--t3)' }}>
-                <MapPin size={12} /> {house.address}
-              </span>
-            )}
+            <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--t3)' }}>{component.projectName}</span>
           </div>
-          {house.tags.length > 0 && (
+          {component.tags.length > 0 && (
             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 10 }}>
-              {house.tags.map(t => (
+              {component.tags.map(t => (
                 <span key={t} style={{
                   fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 999,
                   background: 'var(--bg-card-2)', border: '1px solid var(--bd)', color: 'var(--t3)',
@@ -166,16 +163,16 @@ function HouseHero({ house }: { house: MyHouseType }) {
       </div>
 
       {showReport && (
-        <ReportIssueModal houseId={house.id} equipment={equipmentQ.data} onClose={() => setShowReport(false)} />
+        <ReportIssueModal componentId={component.id} equipment={equipmentQ.data} onClose={() => setShowReport(false)} />
       )}
 
       {showBook && (
         <BookServiceModal
           onClose={() => setShowBook(false)}
-          projectId={house.projectId}
-          projectName={house.projectName}
-          houseId={house.id}
-          houseLabel={house.label}
+          projectId={component.projectId}
+          projectName={component.projectName}
+          componentId={component.id}
+          componentLabel={component.label}
         />
       )}
     </div>
@@ -184,17 +181,17 @@ function HouseHero({ house }: { house: MyHouseType }) {
 
 // ── Body ──────────────────────────────────────────────────────────────────
 
-function HouseSection({ house }: { house: MyHouseType }) {
-  const equipmentQ = useMyHouseEquipment(house.id)
-  const serviceLogQ = useMyHouseServiceLog(house.id)
+function ComponentSection({ component }: { component: MyComponentType }) {
+  const equipmentQ = useMyComponentEquipment(component.id)
+  const serviceLogQ = useMyComponentServiceLog(component.id)
   const issuesQ = useMyIssueReports()
-  const addEquipment = useAddMyEquipment(house.id)
+  const addEquipment = useAddMyEquipment(component.id)
   const [showAddEquipment, setShowAddEquipment] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [viewingEquipment, setViewingEquipment] = useState<MyHouseEquipmentType | null>(null)
+  const [viewingEquipment, setViewingEquipment] = useState<MyComponentEquipmentType | null>(null)
 
   const equipment = equipmentQ.data ?? []
-  const myIssues = (issuesQ.data ?? []).filter(i => i.houseId === house.id)
+  const myIssues = (issuesQ.data ?? []).filter(i => i.componentId === component.id)
   const openIssues = myIssues.filter(i => i.status !== 'RESOLVED')
 
   return (
@@ -323,10 +320,10 @@ function HouseSection({ house }: { house: MyHouseType }) {
       </div>
 
       {/* Agreements */}
-      <HouseAgreementsSection houseId={house.id} />
+      <ComponentAgreementsSection componentId={component.id} />
 
       {/* Billing */}
-      <HouseBillingSection houseId={house.id} />
+      <ComponentBillingSection componentId={component.id} />
 
       {showAddEquipment && (
         <AddEquipmentModal
@@ -373,10 +370,10 @@ function DocStatusBadge({ status }: { status: string }) {
   )
 }
 
-function HouseAgreementsSection({ houseId }: { houseId: string }) {
+function ComponentAgreementsSection({ componentId }: { componentId: string }) {
   const [open, setOpen] = useState(false)
   const agreementsQ = useMyAgreements()
-  const agreements = (agreementsQ.data?.data ?? []).filter(a => a.houseId === houseId)
+  const agreements = (agreementsQ.data?.data ?? []).filter(a => a.componentId === componentId)
 
   return (
     <div style={{ borderRadius: 16, border: '1px solid var(--bd)', background: 'var(--bg-card)', overflow: 'hidden' }}>
@@ -395,7 +392,7 @@ function HouseAgreementsSection({ houseId }: { houseId: string }) {
           {agreementsQ.isLoading ? (
             <Loader2 size={14} className="animate-spin" style={{ color: 'var(--t3)' }} />
           ) : agreements.length === 0 ? (
-            <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: 0 }}>No agreements for this house yet.</p>
+            <p style={{ fontSize: 12.5, color: 'var(--t4)', margin: 0 }}>No agreements for this property yet.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {agreements.map(a => (
@@ -419,10 +416,10 @@ function HouseAgreementsSection({ houseId }: { houseId: string }) {
 
 // ── Billing ───────────────────────────────────────────────────────────────
 
-function HouseBillingSection({ houseId }: { houseId: string }) {
+function ComponentBillingSection({ componentId }: { componentId: string }) {
   const [open, setOpen] = useState(false)
-  const quotesQ = useMyQuotes({ houseId, limit: 50 })
-  const invoicesQ = useMyInvoices({ houseId, limit: 50 })
+  const quotesQ = useMyQuotes({ componentId, limit: 50 })
+  const invoicesQ = useMyInvoices({ componentId, limit: 50 })
   const quotes = quotesQ.data?.data ?? []
   const invoices = invoicesQ.data?.data ?? []
   const total = quotes.length + invoices.length
@@ -495,7 +492,7 @@ function HouseBillingSection({ houseId }: { houseId: string }) {
 
 // ── Equipment detail (view-only) ─────────────────────────────────────────
 
-function EquipmentDetailModal({ equipment, onClose }: { equipment: MyHouseEquipmentType; onClose: () => void }) {
+function EquipmentDetailModal({ equipment, onClose }: { equipment: MyComponentEquipmentType; onClose: () => void }) {
   const rows: [string, string | null | undefined][] = [
     ['Brand', equipment.brand],
     ['Model', equipment.model],
@@ -588,12 +585,12 @@ function AddEquipmentModal({ onSubmit, onClose, saving }: {
 
 // ── Report an issue ───────────────────────────────────────────────────────
 
-function ReportIssueModal({ houseId, equipment, onClose }: {
-  houseId: string
-  equipment: ReturnType<typeof useMyHouseEquipment>['data']
+function ReportIssueModal({ componentId, equipment, onClose }: {
+  componentId: string
+  equipment: ReturnType<typeof useMyComponentEquipment>['data']
   onClose: () => void
 }) {
-  const reportIssue = useReportIssue(houseId)
+  const reportIssue = useReportIssue(componentId)
   const [equipmentId, setEquipmentId] = useState('')
   const [errorCode, setErrorCode] = useState('')
   const [description, setDescription] = useState('')

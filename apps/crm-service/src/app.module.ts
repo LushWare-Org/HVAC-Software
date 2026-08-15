@@ -23,8 +23,12 @@ import { MetaModule } from './meta/meta.module';
 import { ImportModule } from './import/import.module';
 import { IotModule } from './iot/iot.module';
 import { ProjectsModule } from './projects/projects.module';
-import { HousesModule } from './houses/houses.module';
 import { DocumentTemplatesModule } from './document-templates/document-templates.module';
+import { ProjectTemplatesModule } from './project-templates/project-templates.module';
+import { ProjectComponentsModule } from './project-components/project-components.module';
+// HousesModule intentionally not imported/registered — superseded by
+// ProjectComponentsModule (spec: docs/superpowers/specs/2026-08-14-project-component-templates-design.md).
+// Files kept on disk until the Task 9 cleanup pass; not loaded here.
 import appConfig from './config/app.config';
 
 @Module({
@@ -57,8 +61,9 @@ import appConfig from './config/app.config';
     ImportModule,
     IotModule,
     ProjectsModule,
-    HousesModule,
     DocumentTemplatesModule,
+    ProjectTemplatesModule,
+    ProjectComponentsModule,
   ],
 })
 export class AppModule {}

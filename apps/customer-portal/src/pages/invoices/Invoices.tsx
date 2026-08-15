@@ -16,7 +16,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useApproveMyInvoice, useDeclineMyInvoice, useMyInvoices } from '../../hooks/useCustomerPortal'
-import { useMyHouses } from '../../hooks/useMyHouse'
+import { useMyComponents } from '../../hooks/useMyComponent'
 import { useToast } from '../../contexts/ToastContext'
 import { downloadPdf, viewPdf } from '../../lib/pdf'
 import InvoiceDetailModal from './InvoiceDetailModal.tsx'
@@ -67,8 +67,8 @@ export default function Invoices() {
   const approveInvoice = useApproveMyInvoice()
   const declineInvoice = useDeclineMyInvoice()
   const invoices = data?.data ?? []
-  const { data: houses } = useMyHouses()
-  const houseLabelById = new Map((houses ?? []).map(h => [h.id, h.label]))
+  const { data: components } = useMyComponents()
+  const componentLabelById = new Map((components ?? []).map(c => [c.id, c.label]))
 
   const invoicesView = useMemo(
     () => invoices.map(inv => ({ ...inv, status: invoiceStatusOverrides[inv.id] ?? inv.status })),
@@ -275,7 +275,7 @@ export default function Invoices() {
                             <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>+{invoice.lineItems.length - 1} more</div>
                           )}
                         </td>
-                        <td style={{ fontSize: 12, color: 'var(--t3)' }}>{invoice.houseId ? (houseLabelById.get(invoice.houseId) ?? '—') : '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--t3)' }}>{invoice.componentId ? (componentLabelById.get(invoice.componentId) ?? '—') : '—'}</td>
                         <td style={{ fontSize: 12, color: 'var(--t3)' }}>{fmtDate(invoice.issueDate)}</td>
                         <td style={{ fontSize: 12, color: invoice.status === 'OVERDUE' ? 'var(--red)' : 'var(--t3)' }}>{fmtDate(invoice.dueDate)}</td>
                         <td className="td-primary font-600">{fmtMoney(outstanding > 0 ? outstanding : invoice.total)}</td>

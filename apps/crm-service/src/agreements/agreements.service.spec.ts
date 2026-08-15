@@ -48,6 +48,10 @@ function prismaMock(over: any = {}) {
       findFirst: jest.fn().mockResolvedValue('house' in over ? over.house : { id: 'house-1', projectId: 'proj-from-house' }),
       findMany: jest.fn().mockResolvedValue('ownedHouses' in over ? over.ownedHouses : []),
     },
+    projectComponent: {
+      findFirst: jest.fn().mockResolvedValue('component' in over ? over.component : null),
+      findMany: jest.fn().mockResolvedValue('ownedComponents' in over ? over.ownedComponents : []),
+    },
   } as any
 }
 

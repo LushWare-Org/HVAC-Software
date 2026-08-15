@@ -22,11 +22,11 @@ import MapPicker from '../../components/MapPickerLazy'
 
 interface BookServiceModalProps {
   onClose: () => void
-  /** Launched from "My Projects" or "My House" — locks the request to that project/house. */
+  /** Launched from "My Projects" or "My Property" — locks the request to that project/component. */
   projectId?: string
   projectName?: string
-  houseId?: string
-  houseLabel?: string
+  componentId?: string
+  componentLabel?: string
 }
 
 type Step = 1 | 2 | 3
@@ -65,7 +65,7 @@ function toDateInput(d: Date) {
   return `${y}-${m}-${day}`
 }
 
-export default function BookServiceModal({ onClose, projectId, projectName, houseId, houseLabel }: BookServiceModalProps) {
+export default function BookServiceModal({ onClose, projectId, projectName, componentId, componentLabel }: BookServiceModalProps) {
   const [step, setStep] = useState<Step>(1)
   const [submitted, setSubmitted] = useState(false)
   const { mutateAsync: bookService, isPending } = useBookService()
@@ -156,7 +156,7 @@ export default function BookServiceModal({ onClose, projectId, projectName, hous
       scheduledStart: preferredIso || undefined,
       tags: ['portal-request', serviceType.toLowerCase()],
       projectId,
-      houseId,
+      componentId,
     })
 
     setSubmitted(true)
@@ -257,14 +257,14 @@ export default function BookServiceModal({ onClose, projectId, projectName, hous
             </div>
           ) : step === 1 ? (
             <>
-              {(projectId || houseId) && (
+              {(projectId || componentId) && (
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16,
                   padding: '10px 13px', background: 'var(--blue-dim)', border: '1px solid var(--bd)', borderRadius: 10,
                 }}>
                   <Link2 size={14} style={{ color: 'var(--blue)', flexShrink: 0 }} />
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>
-                    Booking for {projectName}{houseLabel ? ` — ${houseLabel}` : ''}
+                    Booking for {projectName}{componentLabel ? ` — ${componentLabel}` : ''}
                   </span>
                 </div>
               )}

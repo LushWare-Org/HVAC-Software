@@ -4,12 +4,12 @@ import {
   Wrench, Clock, CheckCircle, FileText, Search, AlertTriangle,
   Maximize2, Minimize2, Edit2,
   ChevronLeft, ChevronRight, RefreshCw, AlertCircle,
-  Zap, CalendarDays, Shield, Trash2, FolderKanban,Sparkles, X,
+  Zap, CalendarDays, Shield, Trash2, Sparkles, X,
 } from "lucide-react";
 import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
 import { useTechnicians } from "../../hooks/useScheduling";
 import { useProjectsFull } from "../projects/projectsApi";
-import { useHouse } from "../projects/housesApi";
+import ProjectComponentTag from "../projects/ProjectComponentTag";
 import type { Job } from "../../types/api";
 import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
@@ -77,25 +77,14 @@ function SortArrow() {
   );
 }
 
-/** Resolves the house label lazily (per-row, cheap — only fires when the job has a houseId). */
-function JobProjectCell({ job, projectNameById }: { job: Job; projectNameById: Map<string, string> }) {
-  const { data: house } = useHouse(job.houseId);
+function JobProjectCell({ job }: { job: Job }) {
   if (!job.projectId) return <span className="text-xs text-4">—</span>;
-  const projectName = projectNameById.get(job.projectId) ?? "Project";
-  return (
-    <div className="flex items-center gap-1.5" style={{ fontSize: 12, color: "var(--t2)" }}>
-      <FolderKanban size={11} style={{ color: "var(--blue)", flexShrink: 0 }} />
-      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
-        {projectName}{house ? ` — ${house.label}` : ""}
-      </span>
-    </div>
-  );
+  return <ProjectComponentTag projectId={job.projectId} componentId={job.componentId} />;
 }
 
-function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId, projectNameById }: {
+function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId }: {
   jobs: Job[]; loading: boolean; onView: (j: Job) => void; onDelete: (j: Job) => void;
   sortMode?: 'priority' | 'date'; avatarByUserId: Record<string, string | undefined>;
-  projectNameById: Map<string, string>;
 }) {
   return (
     <table className="data-table">
@@ -158,7 +147,7 @@ function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId, p
                   <div className="text-xs text-4 mt-0.5 truncate" style={{ maxWidth: 160 }}>{j.description}</div>
                 )}
               </td>
-              <td><JobProjectCell job={j} projectNameById={projectNameById} /></td>
+              <td><JobProjectCell job={j} /></td>
               <td><TechAvatar name={j.assignedToName} avatarUrl={j.assignedToId ? avatarByUserId[j.assignedToId] : undefined} /></td>
               <td>
                 {j.scheduledStart ? (
@@ -611,7 +600,7 @@ export default function Jobs() {
 
         <div className="card-body-flush">
           <div className="table-container jobs-table-container">
-            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} avatarByUserId={avatarByUserId} projectNameById={projectNameById} />
+            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} avatarByUserId={avatarByUserId} />
           </div>
         </div>
       </div>
@@ -680,7 +669,7 @@ export default function Jobs() {
             </div>
           ) : (
             <div className="table-container jobs-table-container">
-              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} avatarByUserId={avatarByUserId} projectNameById={projectNameById} />
+              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} avatarByUserId={avatarByUserId} />
             </div>
           )}
         </div>

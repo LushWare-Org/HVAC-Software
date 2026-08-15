@@ -64,14 +64,14 @@ export class InvoicesService {
       jobId?: string;
       projectId?: string;
       projectIds?: string[];
-      houseId?: string;
+      componentId?: string;
       page?: number;
       limit?: number;
       dateFrom?: string;
       dateTo?: string;
     },
   ) {
-    const { status, customerId, jobId, projectId, projectIds, houseId, dateFrom, dateTo } = params;
+    const { status, customerId, jobId, projectId, projectIds, componentId, dateFrom, dateTo } = params;
     const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
     // 500 covers both the multi-project batch case and a full CSV export in one page.
     const maxLimit = 500;
@@ -86,7 +86,7 @@ export class InvoicesService {
       ...(customerId ? { customerId } : {}),
       ...(jobId ? { jobId } : {}),
       ...(projectId ? { projectId } : {}),
-      ...(houseId ? { houseId } : {}),
+      ...(componentId ? { componentId } : {}),
       // Batch form: one request for many projects' invoices (Projects page overview)
       ...(projectIds?.length ? { projectId: { in: projectIds } } : {}),
       ...(dateFrom || dateTo ? { createdAt: createdAtFilter } : {}),

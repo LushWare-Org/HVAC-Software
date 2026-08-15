@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ActivityLogInterceptor } from '@tscrm/activity-log';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
 
@@ -10,6 +11,7 @@ async function bootstrap() {
   const port = process.env.ANALYTICS_PORT ?? 3006;
   app.get(PrismaService).enableShutdownHooks(app);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalInterceptors(new ActivityLogInterceptor('analytics'));
   app.enableCors({
     origin: [
       'http://localhost:3000',

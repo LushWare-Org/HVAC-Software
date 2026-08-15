@@ -8775,6 +8775,7 @@ export namespace Prisma {
     templateId: string | null
     projectId: string | null
     houseId: string | null
+    componentId: string | null
     equipmentId: string | null
     title: string | null
     description: string | null
@@ -8823,6 +8824,7 @@ export namespace Prisma {
     templateId: string | null
     projectId: string | null
     houseId: string | null
+    componentId: string | null
     equipmentId: string | null
     title: string | null
     description: string | null
@@ -8871,6 +8873,7 @@ export namespace Prisma {
     templateId: number
     projectId: number
     houseId: number
+    componentId: number
     equipmentId: number
     title: number
     description: number
@@ -8938,6 +8941,7 @@ export namespace Prisma {
     templateId?: true
     projectId?: true
     houseId?: true
+    componentId?: true
     equipmentId?: true
     title?: true
     description?: true
@@ -8986,6 +8990,7 @@ export namespace Prisma {
     templateId?: true
     projectId?: true
     houseId?: true
+    componentId?: true
     equipmentId?: true
     title?: true
     description?: true
@@ -9034,6 +9039,7 @@ export namespace Prisma {
     templateId?: true
     projectId?: true
     houseId?: true
+    componentId?: true
     equipmentId?: true
     title?: true
     description?: true
@@ -9170,6 +9176,7 @@ export namespace Prisma {
     templateId: string | null
     projectId: string | null
     houseId: string | null
+    componentId: string | null
     equipmentId: string | null
     title: string
     description: string | null
@@ -9238,6 +9245,7 @@ export namespace Prisma {
     templateId?: boolean
     projectId?: boolean
     houseId?: boolean
+    componentId?: boolean
     equipmentId?: boolean
     title?: boolean
     description?: boolean
@@ -9295,6 +9303,7 @@ export namespace Prisma {
     templateId?: boolean
     projectId?: boolean
     houseId?: boolean
+    componentId?: boolean
     equipmentId?: boolean
     title?: boolean
     description?: boolean
@@ -9346,6 +9355,7 @@ export namespace Prisma {
     templateId?: boolean
     projectId?: boolean
     houseId?: boolean
+    componentId?: boolean
     equipmentId?: boolean
     title?: boolean
     description?: boolean
@@ -9421,6 +9431,7 @@ export namespace Prisma {
       templateId: string | null
       projectId: string | null
       houseId: string | null
+      componentId: string | null
       equipmentId: string | null
       title: string
       description: string | null
@@ -9867,6 +9878,7 @@ export namespace Prisma {
     readonly templateId: FieldRef<"Job", 'String'>
     readonly projectId: FieldRef<"Job", 'String'>
     readonly houseId: FieldRef<"Job", 'String'>
+    readonly componentId: FieldRef<"Job", 'String'>
     readonly equipmentId: FieldRef<"Job", 'String'>
     readonly title: FieldRef<"Job", 'String'>
     readonly description: FieldRef<"Job", 'String'>
@@ -17626,6 +17638,7 @@ export namespace Prisma {
     templateId: 'templateId',
     projectId: 'projectId',
     houseId: 'houseId',
+    componentId: 'componentId',
     equipmentId: 'equipmentId',
     title: 'title',
     description: 'description',
@@ -18612,6 +18625,7 @@ export namespace Prisma {
     templateId?: StringNullableFilter<"Job"> | string | null
     projectId?: StringNullableFilter<"Job"> | string | null
     houseId?: StringNullableFilter<"Job"> | string | null
+    componentId?: StringNullableFilter<"Job"> | string | null
     equipmentId?: StringNullableFilter<"Job"> | string | null
     title?: StringFilter<"Job"> | string
     description?: StringNullableFilter<"Job"> | string | null
@@ -18668,6 +18682,7 @@ export namespace Prisma {
     templateId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
     houseId?: SortOrderInput | SortOrder
+    componentId?: SortOrderInput | SortOrder
     equipmentId?: SortOrderInput | SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
@@ -18728,6 +18743,7 @@ export namespace Prisma {
     templateId?: StringNullableFilter<"Job"> | string | null
     projectId?: StringNullableFilter<"Job"> | string | null
     houseId?: StringNullableFilter<"Job"> | string | null
+    componentId?: StringNullableFilter<"Job"> | string | null
     equipmentId?: StringNullableFilter<"Job"> | string | null
     title?: StringFilter<"Job"> | string
     description?: StringNullableFilter<"Job"> | string | null
@@ -18784,6 +18800,7 @@ export namespace Prisma {
     templateId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
     houseId?: SortOrderInput | SortOrder
+    componentId?: SortOrderInput | SortOrder
     equipmentId?: SortOrderInput | SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
@@ -18841,6 +18858,7 @@ export namespace Prisma {
     templateId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     projectId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     houseId?: StringNullableWithAggregatesFilter<"Job"> | string | null
+    componentId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     equipmentId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     title?: StringWithAggregatesFilter<"Job"> | string
     description?: StringNullableWithAggregatesFilter<"Job"> | string | null
@@ -20066,6 +20084,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -20122,6 +20141,7 @@ export namespace Prisma {
     templateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -20174,6 +20194,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20230,6 +20251,7 @@ export namespace Prisma {
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20284,6 +20306,7 @@ export namespace Prisma {
     templateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -20331,6 +20354,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20380,6 +20404,7 @@ export namespace Prisma {
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21895,6 +21920,7 @@ export namespace Prisma {
     templateId?: SortOrder
     projectId?: SortOrder
     houseId?: SortOrder
+    componentId?: SortOrder
     equipmentId?: SortOrder
     title?: SortOrder
     description?: SortOrder
@@ -21952,6 +21978,7 @@ export namespace Prisma {
     templateId?: SortOrder
     projectId?: SortOrder
     houseId?: SortOrder
+    componentId?: SortOrder
     equipmentId?: SortOrder
     title?: SortOrder
     description?: SortOrder
@@ -22000,6 +22027,7 @@ export namespace Prisma {
     templateId?: SortOrder
     projectId?: SortOrder
     houseId?: SortOrder
+    componentId?: SortOrder
     equipmentId?: SortOrder
     title?: SortOrder
     description?: SortOrder
@@ -24108,6 +24136,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -24162,6 +24191,7 @@ export namespace Prisma {
     templateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -24312,6 +24342,7 @@ export namespace Prisma {
     templateId?: StringNullableFilter<"Job"> | string | null
     projectId?: StringNullableFilter<"Job"> | string | null
     houseId?: StringNullableFilter<"Job"> | string | null
+    componentId?: StringNullableFilter<"Job"> | string | null
     equipmentId?: StringNullableFilter<"Job"> | string | null
     title?: StringFilter<"Job"> | string
     description?: StringNullableFilter<"Job"> | string | null
@@ -24430,6 +24461,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -24484,6 +24516,7 @@ export namespace Prisma {
     jobTypeId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -24844,6 +24877,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -24899,6 +24933,7 @@ export namespace Prisma {
     templateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -25001,6 +25036,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25056,6 +25092,7 @@ export namespace Prisma {
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25707,6 +25744,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -25762,6 +25800,7 @@ export namespace Prisma {
     templateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -25829,6 +25868,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25884,6 +25924,7 @@ export namespace Prisma {
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25935,6 +25976,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -25990,6 +26032,7 @@ export namespace Prisma {
     templateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -26057,6 +26100,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26112,6 +26156,7 @@ export namespace Prisma {
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26163,6 +26208,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -26218,6 +26264,7 @@ export namespace Prisma {
     templateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -26353,6 +26400,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26408,6 +26456,7 @@ export namespace Prisma {
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26771,6 +26820,7 @@ export namespace Prisma {
     serviceLongitude?: Decimal | DecimalJsLike | number | string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -26826,6 +26876,7 @@ export namespace Prisma {
     templateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -26917,6 +26968,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26972,6 +27024,7 @@ export namespace Prisma {
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27178,6 +27231,7 @@ export namespace Prisma {
     templateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -27312,6 +27366,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27366,6 +27421,7 @@ export namespace Prisma {
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27419,6 +27475,7 @@ export namespace Prisma {
     templateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27479,6 +27536,7 @@ export namespace Prisma {
     jobTypeId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     equipmentId?: string | null
     title: string
     description?: string | null
@@ -27562,6 +27620,7 @@ export namespace Prisma {
     serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27616,6 +27675,7 @@ export namespace Prisma {
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27669,6 +27729,7 @@ export namespace Prisma {
     jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null

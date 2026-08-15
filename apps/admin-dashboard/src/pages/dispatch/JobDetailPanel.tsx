@@ -14,6 +14,7 @@ import TechAvatar from "../../components/TechAvatar";
 import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
 import RescheduleModal from "../../components/reschedule/RescheduleModal";
 import { STAFF_RESCHEDULABLE_STATUSES } from "../../lib/reschedule";
+import ProjectComponentTag from "../projects/ProjectComponentTag";
 
 interface JobDetailPanelProps {
   jobId: string;
@@ -181,6 +182,11 @@ export default function JobDetailPanel({
                       </>
                     )}
                   </p>
+                  {job.projectId && (
+                    <div style={{ marginTop: 6 }}>
+                      <ProjectComponentTag projectId={job.projectId} componentId={job.componentId} />
+                    </div>
+                  )}
                 </>
               ) : (
                 <p style={{ fontSize: 13, color: "var(--t4)" }}>Job not found</p>

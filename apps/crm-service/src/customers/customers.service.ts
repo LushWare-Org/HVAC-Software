@@ -201,6 +201,9 @@ export class CustomersService {
     }
 
     return atRiskIds;
+  }
+
+  /**
    * Customer.auth0UserId is a plain string (not a Prisma relation) pointing at
    * CompanyUser.id, so the portal-account status ("pending first login") has to
    * be batch-fetched and merged in manually rather than via `include`.

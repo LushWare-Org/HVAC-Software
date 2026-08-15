@@ -10,13 +10,14 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FolderKanban, Plus, Search, MapPin, CalendarRange, Users2, HardHat,
-  TrendingUp, Wallet, MessageSquareWarning,
+  TrendingUp, Wallet, MessageSquareWarning, Layers,
 } from 'lucide-react'
 import {
   useProjectsFull, useTechDirectory, projectProgress, projectFinances,
   toDateKey, STATUS_META, prefetchProjectDetail, type Project, type ProjectStatus,
 } from './projectsApi'
-import { useOpenHouseIssues } from './housesApi'
+import { useOpenComponentIssues } from './componentsApi'
+import { useProjectTemplates } from './templatesApi'
 import { AvatarStack, ProjectStatusBadge, ProgressBar, fmtMoney, fmtDate } from './shared'
 import ProjectEditorModal from './ProjectEditorModal'
 
@@ -33,7 +34,8 @@ export default function Projects() {
   const navigate = useNavigate()
   const { projects, isLoading } = useProjectsFull()
   useTechDirectory() // primes avatar names/colors
-  const { data: openIssues } = useOpenHouseIssues()
+  const { data: openIssues } = useOpenComponentIssues()
+  const { data: templates } = useProjectTemplates()
   const openIssueCountByProject = useMemo(() => {
     const map = new Map<string, number>()
     for (const issue of openIssues ?? []) map.set(issue.projectId, (map.get(issue.projectId) ?? 0) + 1)
@@ -76,9 +78,14 @@ export default function Projects() {
             Long-running engagements with dedicated crews — installations, retrofits, housing schemes
           </p>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => setShowEditor(true)}>
-          <Plus size={13} /> New project
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => navigate('/projects/templates')}>
+            <Layers size={13} /> Templates{templates && templates.length > 0 ? ` · ${templates.length}` : ''}
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowEditor(true)}>
+            <Plus size={13} /> New project
+          </button>
+        </div>
       </div>
 
       {/* KPI strip */}

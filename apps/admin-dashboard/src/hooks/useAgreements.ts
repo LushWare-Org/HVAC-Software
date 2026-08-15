@@ -34,6 +34,7 @@ export interface Agreement {
   status: AgreementStatus
   projectId?: string | null
   houseId?: string | null
+  componentId?: string | null
   startDate: string
   endDate?: string | null
   value?: string | number | null
@@ -64,6 +65,7 @@ export interface AgreementInput {
   customerId?: string
   projectId?: string
   houseId?: string
+  componentId?: string
   name?: string
   description?: string
   startDate?: string
@@ -93,7 +95,7 @@ const invalidate = () => {
   queryClient.invalidateQueries({ queryKey: ['customers'] })
 }
 
-type AgreementFilters = { status?: string; customerId?: string; projectId?: string; houseId?: string; page?: number; limit?: number }
+type AgreementFilters = { status?: string; customerId?: string; projectId?: string; houseId?: string; componentId?: string; page?: number; limit?: number }
 
 async function fetchAgreements(filters: AgreementFilters) {
   const params: Record<string, unknown> = {
@@ -104,6 +106,7 @@ async function fetchAgreements(filters: AgreementFilters) {
   if (filters.customerId) params.customerId = filters.customerId
   if (filters.projectId) params.projectId = filters.projectId
   if (filters.houseId) params.houseId = filters.houseId
+  if (filters.componentId) params.componentId = filters.componentId
   const res = await api.get('/crm/agreements', { params })
   const raw = res.data
   if (raw.meta) return { data: raw.data, ...raw.meta }

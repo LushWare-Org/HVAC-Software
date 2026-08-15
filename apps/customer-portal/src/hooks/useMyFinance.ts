@@ -13,6 +13,7 @@ import type { Invoice, Quote, PaymentIntent, PaginatedResponse } from '../types/
 export function useMyInvoices(filters?: {
   status?: string
   houseId?: string
+  componentId?: string
   page?: number
   limit?: number
 }) {
@@ -24,6 +25,7 @@ export function useMyInvoices(filters?: {
       if (user?.customerId) params.set('customerId', user.customerId)
       if (filters?.status) params.set('status', filters.status)
       if (filters?.houseId) params.set('houseId', filters.houseId)
+      if (filters?.componentId) params.set('componentId', filters.componentId)
       params.set('page', String(filters?.page ?? 1))
       params.set('limit', String(filters?.limit ?? 50))
       const { data: raw } = await api.get(`/finance/invoices?${params}`)
@@ -45,6 +47,7 @@ export function useMyInvoices(filters?: {
 export function useMyQuotes(filters?: {
   status?: string
   houseId?: string
+  componentId?: string
   page?: number
   limit?: number
 }) {
@@ -56,6 +59,7 @@ export function useMyQuotes(filters?: {
       if (user?.customerId) params.set('customerId', user.customerId)
       if (filters?.status) params.set('status', filters.status)
       if (filters?.houseId) params.set('houseId', filters.houseId)
+      if (filters?.componentId) params.set('componentId', filters.componentId)
       params.set('page', String(filters?.page ?? 1))
       params.set('limit', String(filters?.limit ?? 50))
       const { data: raw } = await api.get(`/finance/quotes?${params}`)

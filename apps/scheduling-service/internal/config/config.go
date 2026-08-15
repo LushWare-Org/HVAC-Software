@@ -26,6 +26,9 @@ type Config struct {
 	AutoAssignThreshold float64 // default 90.0 — auto-assign when top score ≥ this
 	MaxDistanceKm       float64 // default 50.0 — max radius considered "reachable"
 	MaxActiveJobs       int     // default 5  — used in workload scoring denominator
+
+	// Comms service (activity-log ingest)
+	CommsServiceURL string
 }
 
 // Load reads config from environment variables (set via .env + Docker).
@@ -40,6 +43,7 @@ func Load() *Config {
 		AutoAssignThreshold: 90.0,
 		MaxDistanceKm:       50.0,
 		MaxActiveJobs:       5,
+		CommsServiceURL:     getEnvOrDefault("COMMS_SERVICE_URL", "http://localhost:3005"),
 	}
 	return cfg
 }

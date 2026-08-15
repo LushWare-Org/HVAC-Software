@@ -33,6 +33,7 @@
     "@nestjs/swagger": "^7.0.0",
     "@nestjs/terminus": "^10.0.0",
     "@prisma/client": "^5.0.0",
+    "@tscrm/activity-log": "workspace:*",
     "@tscrm/auth-client": "workspace:*",
     "@tscrm/queue": "workspace:*",
     "@tscrm/types": "workspace:*",
@@ -98,7 +99,8 @@
     "moduleNameMapper": {
       "^@tscrm/auth-client$": "<rootDir>/../../../packages/auth-client/src/index.ts",
       "^@tscrm/types$": "<rootDir>/../../../packages/types/src/index.ts",
-      "^@tscrm/queue$": "<rootDir>/../../../packages/queue/src/index.ts"
+      "^@tscrm/queue$": "<rootDir>/../../../packages/queue/src/index.ts",
+      "^@tscrm/activity-log$": "<rootDir>/../../../packages/activity-log/src/index.ts"
     }
   }
 }

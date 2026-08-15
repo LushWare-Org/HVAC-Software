@@ -6,8 +6,8 @@ import { useCustomers } from "../../hooks/useCustomers";
 import { useCustomerEquipment } from "../../hooks/useEquipment";
 import MapPicker from "../../components/MapPickerLazy";
 import ProjectJobLinkPicker, { type ProjectJobLink } from "../../components/ProjectJobLinkPicker";
-import { useHouses } from "../projects/housesApi";
-import type { ProjectTemplateType } from "../projects/projectsApi";
+import { useComponents } from "../projects/componentsApi";
+import type { ProjectTemplateType, ComponentTypeMeta } from "../projects/projectsApi";
 
 interface AddJobModalProps {
   isOpen: boolean;
@@ -17,10 +17,10 @@ interface AddJobModalProps {
   /** Locks the customer to a fixed record (e.g. a house owner) — shown as a non-editable chip instead of the search/select. */
   lockedCustomer?: { id: string; name: string; address?: string; lat?: number; lng?: number };
   /** Locks the job to this project — hides the project picker and shows a fixed chip instead. */
-  lockedProject?: { id: string; name: string; templateType?: ProjectTemplateType };
-  /** Narrows a locked Housing Scheme project down to one house (hides the "which house?" picker). */
-  lockedHouseId?: string;
-  lockedHouseLabel?: string;
+  lockedProject?: { id: string; name: string; templateType?: ProjectTemplateType; templateId?: string | null; componentTypesSnapshot?: ComponentTypeMeta[] | null };
+  /** Narrows a locked templated project down to one component (hides the "which component?" picker). */
+  lockedComponentId?: string;
+  lockedComponentLabel?: string;
   /** Locks the job to one specific piece of equipment — hides the equipment picker. */
   lockedEquipmentId?: string;
   lockedEquipmentLabel?: string;
@@ -47,8 +47,8 @@ export default function AddJobModal({
   preselectedCustomer,
   lockedCustomer,
   lockedProject,
-  lockedHouseId,
-  lockedHouseLabel,
+  lockedComponentId,
+  lockedComponentLabel,
   lockedEquipmentId,
   lockedEquipmentLabel,
   contextLabel,
@@ -72,11 +72,11 @@ export default function AddJobModal({
     lng: lockedCustomer?.lng ?? 79.8612,
   });
 
-  // Housing Scheme project locked without a specific house — offer a lightweight
-  // "which house?" narrow-down, same idea as ProjectJobLinkPicker's cascading select.
-  const showHouseSelect = !!lockedProject && lockedProject.templateType === 'HOUSING_SCHEME' && !lockedHouseId;
-  const [selectedHouseId, setSelectedHouseId] = useState('');
-  const lockedHousesQuery = useHouses(showHouseSelect ? lockedProject!.id : undefined);
+  // Templated project locked without a specific component — offer a lightweight
+  // "which component?" narrow-down, same idea as ProjectJobLinkPicker's cascading select.
+  const showComponentSelect = lockedProject?.componentTypesSnapshot != null && !lockedComponentId;
+  const [selectedComponentId, setSelectedComponentId] = useState('');
+  const lockedComponentsQuery = useComponents(showComponentSelect ? lockedProject!.id : undefined);
 
   const createJob = useCreateJob();
   const customersQuery = useCustomers({ page: 1, limit: 50, search: customerSearch || undefined });
@@ -201,7 +201,7 @@ export default function AddJobModal({
         serviceLatitude:    formData.lat,
         serviceLongitude:   formData.lng,
         projectId:          lockedProject?.id ?? projectLink.projectId ?? undefined,
-        houseId:            lockedHouseId ?? projectLink.houseId ?? selectedHouseId ?? undefined,
+        componentId:        lockedComponentId ?? projectLink.componentId ?? selectedComponentId ?? undefined,
         equipmentId:        lockedEquipmentId ?? equipmentId ?? undefined,
       } as any,
       {
@@ -223,7 +223,7 @@ export default function AddJobModal({
           });
           setProjectLink({});
           setEquipmentId('');
-          setSelectedHouseId('');
+          setSelectedComponentId('');
           setActiveTab("basic");
           setError('');
         },
@@ -272,7 +272,7 @@ export default function AddJobModal({
             <p className="text-blue-100 text-sm mt-0.5 flex items-center gap-1.5">
               {lockedProject && <FolderKanban size={12} />}
               Step {activeTab === "basic" ? "1" : "2"} of 2 — {activeTab === "basic" ? "Job Details" : "Schedule & Cost"}
-              {lockedProject && ` · linked to ${lockedProject.name}${lockedHouseLabel ? ` — ${lockedHouseLabel}` : ''}`}
+              {lockedProject && ` · linked to ${lockedProject.name}${lockedComponentLabel ? ` — ${lockedComponentLabel}` : ''}`}
             </p>
           </div>
           <button
@@ -424,19 +424,19 @@ export default function AddJobModal({
                         <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-blue-50 border border-blue-100 text-sm text-blue-900">
                           <FolderKanban size={13} className="text-blue-400 shrink-0" />
                           <span className="font-medium">{lockedProject.name}</span>
-                          {lockedHouseLabel && <span className="text-blue-700 text-xs">· {lockedHouseLabel}</span>}
+                          {lockedComponentLabel && <span className="text-blue-700 text-xs">· {lockedComponentLabel}</span>}
                           <span className="text-blue-400 text-xs ml-auto">Set by this page</span>
                         </div>
-                        {showHouseSelect && (
+                        {showComponentSelect && (
                           <select
-                            value={selectedHouseId}
-                            onChange={(e) => setSelectedHouseId(e.target.value)}
+                            value={selectedComponentId}
+                            onChange={(e) => setSelectedComponentId(e.target.value)}
                             disabled={isLoading}
                             className={inputCls}
                           >
-                            <option value="">Which house? (optional)</option>
-                            {(lockedHousesQuery.data ?? []).map((h) => (
-                              <option key={h.id} value={h.id}>{h.label}</option>
+                            <option value="">Which component? (optional)</option>
+                            {(lockedComponentsQuery.data ?? []).map((c) => (
+                              <option key={c.id} value={c.id}>{c.label}</option>
                             ))}
                           </select>
                         )}

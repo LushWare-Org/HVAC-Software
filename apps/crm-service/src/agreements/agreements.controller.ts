@@ -19,6 +19,7 @@ class CreateAgreementDto {
   @IsString() customerId!: string;
   @IsOptional() @IsString() projectId?: string;
   @IsOptional() @IsString() houseId?: string;
+  @IsOptional() @IsString() componentId?: string;
   @IsString() name!: string;
   @IsOptional() @IsString() description?: string;
   @IsDateString() startDate!: string;
@@ -88,6 +89,7 @@ export class AgreementsController {
     @Query('customerId') customerId?: string,
     @Query('projectId') projectId?: string,
     @Query('houseId') houseId?: string,
+    @Query('componentId') componentId?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
@@ -96,6 +98,7 @@ export class AgreementsController {
       customerId,
       projectId,
       houseId,
+      componentId,
       page: page ? parseInt(page, 10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
     });

@@ -20,7 +20,7 @@ import {
     LayoutDashboard, Users, Wrench, CalendarDays,
     DollarSign, MessageSquare, BarChart3, Settings,
     Menu, X, LogOut, Shield, Package, Megaphone, Upload, FileSignature, FolderKanban,
-    ChevronLeft, Plus,
+    ChevronLeft, Plus, Radio,
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -117,6 +117,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                 { icon: Settings, label: 'Settings', path: '/settings' },
             ],
         },
+        // Super-admin-only monitoring surface — hidden from every other role,
+        // not just visually but at the route level too (see App.tsx).
+        ...(authUser?.role === 'super_admin' ? [{
+            label: 'System',
+            items: [
+                { icon: Radio, label: 'System Activity', path: '/system-activity' },
+            ],
+        }] : []),
     ]
 
     const groupLabelClass = isLight ? 'text-slate-500' : 'text-[var(--t4)]'

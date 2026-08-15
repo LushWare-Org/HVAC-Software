@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download, UploadCloud, Briefcase, FileSignature, FolderKanban } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { DollarSign, FileText, AlertCircle, TrendingUp, Plus, CreditCard, Maximize2, Minimize2, ChevronLeft, ChevronRight, Search, Mail, Edit2, Eye, CheckCircle, Trash2, Receipt, RefreshCw, Download, UploadCloud, Briefcase, FileSignature, Sparkles, X } from 'lucide-react'
 import { useInvoices, useQuotes, useExpenses, useFinanceKpis, decimalToNumber, useDeleteExpense, useSendInvoice, useQBStatus, useQBSyncInvoice } from '../../hooks/useFinance'
 import { useJobs } from '../../hooks/useJobs'
 import { useToast } from '../../contexts/ToastContext'
@@ -10,22 +11,11 @@ import AddExpenseModal from './AddExpenseModal'
 import RecommendationsPanel from '../../components/RecommendationsPanel'
 import DocumentTemplatesTab from './DocumentTemplatesTab'
 import { humanizeStatus, normalizeStatus, formatMoney } from '../../lib/format'
-import { useProjectsFull } from '../projects/projectsApi'
-import { useHouse } from '../projects/housesApi'
+import ProjectComponentTag from '../projects/ProjectComponentTag'
 
-/** Resolves a quote/invoice's project/house context lazily — cheap house lookup only fires when set. */
-function DocProjectCell({ projectId, houseId, projectNameById }: { projectId?: string; houseId?: string; projectNameById: Map<string, string> }) {
-  const { data: house } = useHouse(houseId)
+function DocProjectCell({ projectId, componentId }: { projectId?: string; componentId?: string }) {
   if (!projectId) return <span className="text-3">—</span>
-  const projectName = projectNameById.get(projectId) ?? 'Project'
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
-      <FolderKanban size={10} style={{ color: 'var(--blue)', flexShrink: 0 }} />
-      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
-        {projectName}{house ? ` — ${house.label}` : ''}
-      </span>
-    </div>
-  )
+  return <ProjectComponentTag projectId={projectId} componentId={componentId} />
 }
 
 // ─── Status CSS maps (backend UPPER_CASE = source of truth) ───────────────────
@@ -238,13 +228,6 @@ export default function Finance() {
   const totalExpenses = expensesQuery.data?.total ?? 0
   const totalExpPages = Math.max(1, expensesQuery.data?.totalPages ?? 1)
   const expensesTotalAmount = useMemo(() => (expensesAllQuery.data?.data ?? []).reduce((s, exp) => s + decimalToNumber(exp.amount), 0), [expensesAllQuery.data])
-
-  const { projects: allProjects } = useProjectsFull()
-  const projectNameById = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const p of allProjects) map.set(p.id, p.name)
-    return map
-  }, [allProjects])
 
   // Look up job titles for invoices/quotes/expenses
   const jobsLookupQuery = useJobs({ limit: 200 })
@@ -463,7 +446,7 @@ export default function Finance() {
                           </button>
                         ) : '—'}
                       </td>
-                      <td><DocProjectCell projectId={inv.projectId} houseId={inv.houseId} projectNameById={projectNameById} /></td>
+                      <td><DocProjectCell projectId={inv.projectId} componentId={inv.componentId} /></td>
                       <td><div className="cell-user"><span className="cell-name">{inv.customerName ?? '—'}</span></div></td>
                       <td className="td-primary font-600">{fmtDecimal(inv.total)}</td>
                       <td className="text-sm text-3">{new Date(inv.createdAt).toLocaleDateString()}</td>
@@ -615,7 +598,7 @@ export default function Finance() {
                           </button>
                         ) : '—'}
                       </td>
-                      <td><DocProjectCell projectId={q.projectId} houseId={q.houseId} projectNameById={projectNameById} /></td>
+                      <td><DocProjectCell projectId={q.projectId} componentId={q.componentId} /></td>
                       <td><div className="cell-user"><span className="cell-name">{q.customerName ?? '—'}</span></div></td>
                       <td>{q.title}</td>
                       <td className="td-primary font-600">{fmtDecimal(q.total)}</td>

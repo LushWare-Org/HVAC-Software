@@ -1,12 +1,11 @@
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useState, type ReactNode } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import {
   Lightbulb, DollarSign, TrendingUp, TrendingDown, Minus,
   RefreshCw, AlertCircle, Sparkles, Filter, HelpCircle, X,
-  Database, MessageSquare, Flag, Percent,
+  Database, MessageSquare, Flag, Percent, ChevronUp, ChevronDown,
 } from 'lucide-react'
 import { useRecommendations } from '../hooks/useAnalytics'
 import type { Recommendation } from '../types/api'

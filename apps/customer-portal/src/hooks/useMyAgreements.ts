@@ -19,6 +19,7 @@ export interface MyAgreement {
   name: string
   projectId?: string | null
   houseId?: string | null
+  componentId?: string | null
   description?: string | null
   status: 'DRAFT' | 'SENT' | 'ACTIVE' | 'PENDING_RENEWAL' | 'RENEWED' | 'EXPIRED' | 'CANCELLED'
   startDate: string

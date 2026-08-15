@@ -27,7 +27,7 @@ import CustomerDetailsSidebar from "./CustomerDetailsSidebar";
 import AddPersonModal from "./AddPersonModal";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import CustomerRecommendationsModal from "../../components/CustomerRecommendationsModal";
-import { useCustomers, useAgreements, useDeleteCustomer, useUpdateCustomer, useCustomerStatusSummary, useCustomerTags, useResendWelcomeEmail, prefetchCustomerDetail } from "../../hooks/useCustomers";
+import { useCustomers, useAgreements, useDeleteCustomer, useUpdateCustomer, useCustomerTags, useResendWelcomeEmail } from "../../hooks/useCustomers";
 import { customerName } from "../../types/api";
 import type { Customer } from "../../types/api";
 import { formatMoney } from '../../lib/format'
@@ -163,8 +163,6 @@ export default function Customers() {
       onSettled: () => setResendingId(null),
     });
   };
-  const hoveredSummaryQuery = useCustomerStatusSummary(hoveredCustomer?.id);
-
   // ── Derived ──────────────────────────────────────────────────────────────────
 
   const customers: Customer[] = customersQuery.data?.data ?? [];
@@ -502,8 +500,6 @@ export default function Customers() {
                         <td>
                           <div
                             className="flex items-center gap-1"
-                            onMouseEnter={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
-                            onMouseMove={(e) => { e.stopPropagation(); setHoveredCustomer(null); }}
                           >
                             {c.mustResetPassword && (
                               <button

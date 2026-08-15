@@ -12,8 +12,8 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft, Pencil, MapPin, CalendarRange, Users2, FileSignature,
   Wrench, Wallet, LayoutList, HardHat, Plus, RotateCcw, X, Moon,
-  AlertTriangle, StickyNote, CalendarClock, Loader2, Link2, Unlink, UserPlus, Home, ChevronRight,
-  User, Mail, ExternalLink,
+  AlertTriangle, StickyNote, CalendarClock, Loader2, Link2, Unlink, UserPlus, Layers, ChevronRight,
+  User, Mail, ExternalLink, Settings2, UserX,
 } from 'lucide-react'
 import api from '../../lib/api'
 import { useToast } from '../../contexts/ToastContext'
@@ -21,11 +21,11 @@ import { useCustomer } from '../../hooks/useCustomers'
 import CustomerPickerWithCreate from '../../components/CustomerPickerWithCreate'
 import {
   useProjectFull, useProjectRoster, useSetRosterDay, useTechDirectory,
-  useLinkJobToProject, useLinkAgreement, useUpdateProject, projectProgress, projectFinances,
+  useLinkJobToProject, useLinkAgreement, useUpdateProject, useUpdateCustomerSettings, projectProgress, projectFinances,
   invalidateProjectLinks, toDateKey, addDays, techById,
   STATUS_META, WEEKDAYS, type Project, type ProjectJob, type RosterDay,
 } from './projectsApi'
-import { useHouses, ACCOUNT_STATUS_META, type House } from './housesApi'
+import { useComponents, ACCOUNT_STATUS_META, type ProjectComponent } from './componentsApi'
 import { AvatarStack, TechAvatar, ProjectStatusBadge, ProgressBar, fmtMoney, fmtDate } from './shared'
 import ProjectEditorModal from './ProjectEditorModal'
 import AddTechnicianModal from '../../components/AddTechnicianModal'
@@ -35,15 +35,15 @@ import AddInvoiceModal from '../finance/AddInvoiceModal'
 import AgreementEditorModal from '../agreements/AgreementEditorModal'
 import type { Agreement } from '../../hooks/useAgreements'
 import type { Job } from '../../types/api'
-import HousesTab from './HousesTab'
-import HouseIssuesAlert from '../../components/HouseIssuesAlert'
+import ComponentsTab from './ComponentsTab'
+import ComponentIssuesAlert from '../../components/ComponentIssuesAlert'
 import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 
 // Consistent with every other consumer of this modal (DayPlanner, Finance,
 // AgreementDrawer, Topbar) — lazy-loaded, same component app-wide.
 const JobDetailModal = lazy(() => import('../jobs/JobDetailModal'))
 
-type Tab = 'overview' | 'roster' | 'jobs' | 'agreements' | 'finances' | 'houses'
+type Tab = 'overview' | 'roster' | 'jobs' | 'agreements' | 'finances' | 'components'
 
 const JOB_BADGE: Record<string, string> = {
   PENDING: 'badge-amber', SCHEDULED: 'badge-violet', EN_ROUTE: 'badge-blue',
@@ -57,16 +57,16 @@ export default function ProjectDetail() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { project, isLoading } = useProjectFull(id)
   useTechDirectory() // primes avatar names/colors
-  // Warm the Houses tab's data while the user is still on Overview, so
+  // Warm the Components tab's data while the user is still on Overview, so
   // switching tabs never shows a loading state.
   useEffect(() => {
-    if (id) import('./housesApi').then(m => m.prefetchHousesForProject(id))
+    if (id) import('./componentsApi').then(m => m.prefetchComponentsForProject(id))
   }, [id])
-  // Deep link from the alert banners: ?house=<id> opens the Houses tab with
-  // that house's detail modal already open, instead of dropping you on the
-  // project and making you find it yourself.
-  const deepLinkHouseId = searchParams.get('house')
-  const [tab, setTab] = useState<Tab>(deepLinkHouseId ? 'houses' : 'overview')
+  // Deep link from the alert banners: ?component=<id> opens the Components tab
+  // with that component's detail modal already open, instead of dropping you
+  // on the project and making you find it yourself.
+  const deepLinkComponentId = searchParams.get('component')
+  const [tab, setTab] = useState<Tab>(deepLinkComponentId ? 'components' : 'overview')
   const [showEditor, setShowEditor] = useState(false)
 
   if (isLoading) {
@@ -94,8 +94,8 @@ export default function ProjectDetail() {
 
   const tabs: { key: Tab; label: string; icon: React.ElementType; count?: number }[] = [
     { key: 'overview', label: 'Overview', icon: LayoutList },
-    ...(project.templateType === 'HOUSING_SCHEME'
-      ? [{ key: 'houses' as Tab, label: 'Houses', icon: Home }]
+    ...(project.componentTypesSnapshot != null
+      ? [{ key: 'components' as Tab, label: 'Components', icon: Layers, count: project.componentCount }]
       : []),
     { key: 'roster', label: 'Crew roster', icon: Users2 },
     { key: 'jobs', label: 'Jobs', icon: Wrench, count: project.jobs.length },
@@ -136,7 +136,7 @@ export default function ProjectDetail() {
         </button>
       </div>
 
-      {project.templateType === 'HOUSING_SCHEME' && <HouseIssuesAlert projectId={project.id} />}
+      {project.componentTypesSnapshot != null && <ComponentIssuesAlert projectId={project.id} />}
 
       {/* Progress + money strip */}
       <div className="card" style={{ padding: '14px 18px' }}>
@@ -168,7 +168,7 @@ export default function ProjectDetail() {
         {tabs.map(t => {
           const Icon = t.icon
           const active = tab === t.key
-          const showAlert = t.key === 'houses' && (project.openIssueCount ?? 0) > 0
+          const showAlert = t.key === 'components' && (project.openIssueCount ?? 0) > 0
           return (
             <button key={t.key} className="btn btn-sm" onClick={() => setTab(t.key)}
               style={active
@@ -184,12 +184,14 @@ export default function ProjectDetail() {
       </div>
 
       {tab === 'overview' && <OverviewTab project={project} />}
-      {tab === 'houses' && (
-        <HousesTab
+      {tab === 'components' && (
+        <ComponentsTab
           projectId={project.id}
           projectName={project.name}
-          initialOpenHouseId={deepLinkHouseId}
-          onInitialHouseConsumed={() => setSearchParams(prev => { prev.delete('house'); return prev }, { replace: true })}
+          componentTypes={project.componentTypesSnapshot ?? []}
+          customerSettings={project.componentCustomerSettings ?? {}}
+          initialOpenComponentId={deepLinkComponentId}
+          onInitialComponentConsumed={() => setSearchParams(prev => { prev.delete('component'); return prev }, { replace: true })}
         />
       )}
       {tab === 'roster' && <RosterTab project={project} />}
@@ -242,6 +244,53 @@ function ProjectCustomerPicker({ project }: { project: Project }) {
       }}>
         <CustomerPickerWithCreate autoFocus onPick={pick} onCancel={() => setPicking(false)} />
       </div>
+    </div>
+  )
+}
+
+// ── Component customer-assignment settings ───────────────────────────────────
+// Two-tier: the template's own customerAssignable is the ceiling (never
+// widened here); this toggle is the per-project narrowing. Only rendered when
+// at least one component type on this project's template allows an owner.
+function ComponentSettingsCard({ project: p }: { project: Project }) {
+  const updateSettings = useUpdateCustomerSettings(p.id)
+  const assignableTypes = (p.componentTypesSnapshot ?? []).filter(t => t.customerAssignable)
+  if (assignableTypes.length === 0) return null
+  const settings = p.componentCustomerSettings ?? {}
+
+  return (
+    <div className="card" style={{ padding: '16px 18px' }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 5 }}>
+        <Settings2 size={11} /> Customer assignment
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {assignableTypes.map(t => {
+          const on = settings[t.key] === true
+          return (
+            <div key={t.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <span style={{ fontSize: 13, color: 'var(--t2)' }}>{t.label}</span>
+              <button
+                type="button"
+                onClick={() => updateSettings.mutate({ [t.key]: !on })}
+                disabled={updateSettings.isPending}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 8,
+                  border: `1px solid ${on ? 'var(--green)' : 'var(--bd)'}`,
+                  background: on ? 'var(--green-dim)' : 'var(--bg-card-2)',
+                  color: on ? 'var(--green)' : 'var(--t4)',
+                  fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                {on ? <User size={11} /> : <UserX size={11} />}
+                {on ? 'Owners on' : 'Owners off'}
+              </button>
+            </div>
+          )
+        })}
+      </div>
+      <p style={{ fontSize: 10.5, color: 'var(--t4)', margin: '10px 0 0' }}>
+        When off, no owner can be assigned to that component type on this project.
+      </p>
     </div>
   )
 }
@@ -334,6 +383,8 @@ function OverviewTab({ project: p }: { project: Project }) {
             </p>
           )}
         </div>
+
+        <ComponentSettingsCard project={p} />
       </div>
     </div>
   )
@@ -609,14 +660,14 @@ function JobsTab({ project: p }: { project: Project }) {
   const [openFullJob, setOpenFullJob] = useState(false)
   const linkJob = useLinkJobToProject()
 
-  // Housing Scheme: resolve each job's houseId to a label + owner for display,
-  // fetched once for the whole project rather than per job row.
-  const housesQ = useHouses(p.templateType === 'HOUSING_SCHEME' ? p.id : undefined)
-  const houseById = useMemo(() => {
-    const map = new Map<string, House>()
-    for (const h of housesQ.data ?? []) map.set(h.id, h)
+  // Resolve each job's componentId to a label + owner for display, fetched
+  // once for the whole project rather than per job row.
+  const componentsQ = useComponents(p.componentTypesSnapshot != null ? p.id : undefined)
+  const componentById = useMemo(() => {
+    const map = new Map<string, ProjectComponent>()
+    for (const c of componentsQ.data ?? []) map.set(c.id, c)
     return map
-  }, [housesQ.data])
+  }, [componentsQ.data])
 
   // Customer's jobs not yet in any project — candidates for linking
   const candidatesQ = useQuery({
@@ -678,7 +729,7 @@ function JobsTab({ project: p }: { project: Project }) {
       ) : (
         <div>
           {p.jobs.map(j => {
-            const house = j.houseId ? houseById.get(j.houseId) : undefined
+            const component = j.componentId ? componentById.get(j.componentId) : undefined
             return (
             <button key={j.id} onClick={() => setViewJob(j)} style={{
               display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderTop: '1px solid var(--bd)',
@@ -697,12 +748,12 @@ function JobsTab({ project: p }: { project: Project }) {
                 </p>
                 <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span>{fmtDate(j.scheduledStart)}{j.assignedToName ? ` · ${j.assignedToName}` : ' · Unassigned'}</span>
-                  {house && (
+                  {component && (
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700,
                       color: 'var(--blue)', background: 'var(--blue-dim)', padding: '1px 7px', borderRadius: 999,
                     }}>
-                      <Home size={9} /> House {house.label}{house.ownerName ? ` · ${house.ownerName}` : ''}
+                      <Layers size={9} /> {component.label}{component.ownerName ? ` · ${component.ownerName}` : ''}
                     </span>
                   )}
                 </p>
@@ -722,7 +773,7 @@ function JobsTab({ project: p }: { project: Project }) {
       {viewJob && (
         <ProjectJobDetailModal
           job={viewJob}
-          house={viewJob.houseId ? houseById.get(viewJob.houseId) : undefined}
+          component={viewJob.componentId ? componentById.get(viewJob.componentId) : undefined}
           projectName={p.name}
           onClose={() => setViewJob(null)}
           onOpenFull={() => setOpenFullJob(true)}
@@ -741,7 +792,7 @@ function JobsTab({ project: p }: { project: Project }) {
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
         lockedCustomer={p.customerId ? { id: p.customerId, name: p.customerName ?? '—', address: p.siteAddress, lat: p.latitude, lng: p.longitude } : undefined}
-        lockedProject={{ id: p.id, name: p.name, templateType: p.templateType }}
+        lockedProject={{ id: p.id, name: p.name, templateType: p.templateType, templateId: p.templateId, componentTypesSnapshot: p.componentTypesSnapshot }}
         contextLabel={p.name}
         onCreated={() => invalidateProjectLinks(p.id)}
       />
@@ -749,12 +800,13 @@ function JobsTab({ project: p }: { project: Project }) {
   )
 }
 
-/** A job's full context at a glance — schedule, customer, and (Housing Scheme) which
- * house and owner it's for — with a path into the full generic job modal for actual
- * management (status changes, work orders) rather than duplicating that here. */
-function ProjectJobDetailModal({ job, house, projectName, onClose, onOpenFull, onUnlink, unlinking }: {
+/** A job's full context at a glance — schedule, customer, and (templated
+ * projects) which component and owner it's for — with a path into the full
+ * generic job modal for actual management (status changes, work orders)
+ * rather than duplicating that here. */
+function ProjectJobDetailModal({ job, component, projectName, onClose, onOpenFull, onUnlink, unlinking }: {
   job: ProjectJob
-  house?: House
+  component?: ProjectComponent
   projectName: string
   onClose: () => void
   onOpenFull: () => void
@@ -813,18 +865,17 @@ function ProjectJobDetailModal({ job, house, projectName, onClose, onOpenFull, o
             )}
           </div>
 
-          {house && (
+          {component && (
             <div style={{ padding: 14, borderRadius: 'var(--r-md)', border: '1px solid var(--blue)', background: 'var(--blue-dim)' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Home size={11} /> House
+                <Layers size={11} /> Component
               </p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                 <div>
-                  <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{house.label}</p>
-                  {house.address && <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0' }}>{house.address}</p>}
+                  <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{component.label}</p>
                 </div>
-                {house.accountStatus && (() => {
-                  const m = ACCOUNT_STATUS_META[house.accountStatus]
+                {component.accountStatus && (() => {
+                  const m = ACCOUNT_STATUS_META[component.accountStatus]
                   return (
                     <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: m.dim, color: m.color, whiteSpace: 'nowrap' }}>
                       {m.label}
@@ -832,14 +883,14 @@ function ProjectJobDetailModal({ job, house, projectName, onClose, onOpenFull, o
                   )
                 })()}
               </div>
-              {house.ownerName && (
+              {component.ownerName && (
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--bd)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <User size={12} style={{ color: 'var(--t3)', flexShrink: 0 }} />
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{house.ownerName}</p>
-                    {house.ownerEmail && (
+                    <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{component.ownerName}</p>
+                    {component.ownerEmail && (
                       <p style={{ fontSize: 11, color: 'var(--t3)', margin: '1px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Mail size={10} /> {house.ownerEmail}
+                        <Mail size={10} /> {component.ownerEmail}
                       </p>
                     )}
                   </div>
@@ -876,13 +927,13 @@ function AgreementsTab({ project: p }: { project: Project }) {
   const [showCreate, setShowCreate] = useState(false)
   const linkAgreement = useLinkAgreement()
 
-  // Housing Scheme: resolve each agreement's houseId to a label + owner for display.
-  const housesQ = useHouses(p.templateType === 'HOUSING_SCHEME' ? p.id : undefined)
-  const houseById = useMemo(() => {
-    const map = new Map<string, House>()
-    for (const h of housesQ.data ?? []) map.set(h.id, h)
+  // Resolve each agreement's componentId to a label + owner for display.
+  const componentsQ = useComponents(p.componentTypesSnapshot != null ? p.id : undefined)
+  const componentById = useMemo(() => {
+    const map = new Map<string, ProjectComponent>()
+    for (const c of componentsQ.data ?? []) map.set(c.id, c)
     return map
-  }, [housesQ.data])
+  }, [componentsQ.data])
 
   const candidatesQ = useQuery({
     queryKey: ['projects', p.id, 'agreement-candidates'],
@@ -941,7 +992,7 @@ function AgreementsTab({ project: p }: { project: Project }) {
       ) : (
         <div>
           {p.agreements.map(a => {
-            const house = a.houseId ? houseById.get(a.houseId) : undefined
+            const component = a.componentId ? componentById.get(a.componentId) : undefined
             return (
             <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 18px', borderTop: '1px solid var(--bd)' }}>
               <div style={{
@@ -954,12 +1005,12 @@ function AgreementsTab({ project: p }: { project: Project }) {
                 <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{a.name}</p>
                 <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span>{a.serviceType} · {a.interval}{a.nextVisit ? ` · next visit ${fmtDate(a.nextVisit)}` : ''}</span>
-                  {house && (
+                  {component && (
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700,
                       color: 'var(--blue)', background: 'var(--blue-dim)', padding: '1px 7px', borderRadius: 999,
                     }}>
-                      <Home size={9} /> House {house.label}{house.ownerName ? ` · ${house.ownerName}` : ''}
+                      <Layers size={9} /> {component.label}{component.ownerName ? ` · ${component.ownerName}` : ''}
                     </span>
                   )}
                 </p>
@@ -1004,13 +1055,13 @@ function FinancesTab({ project: p }: { project: Project }) {
   const [showCreateQuote, setShowCreateQuote] = useState(false)
   const [showCreateInvoice, setShowCreateInvoice] = useState(false)
 
-  // Housing Scheme: resolve each quote/invoice's houseId to a label + owner for display.
-  const housesQ = useHouses(p.templateType === 'HOUSING_SCHEME' ? p.id : undefined)
-  const houseById = useMemo(() => {
-    const map = new Map<string, House>()
-    for (const h of housesQ.data ?? []) map.set(h.id, h)
+  // Resolve each quote/invoice's componentId to a label + owner for display.
+  const componentsQ = useComponents(p.componentTypesSnapshot != null ? p.id : undefined)
+  const componentById = useMemo(() => {
+    const map = new Map<string, ProjectComponent>()
+    for (const c of componentsQ.data ?? []) map.set(c.id, c)
     return map
-  }, [housesQ.data])
+  }, [componentsQ.data])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1043,8 +1094,8 @@ function FinancesTab({ project: p }: { project: Project }) {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
-        <FinanceList title="Quotes" docs={p.quotes} paidStatus="ACCEPTED" actionLabel="New quote" onAction={() => setShowCreateQuote(true)} disabled={!p.customerId} houseById={houseById} />
-        <FinanceList title="Invoices" docs={p.invoices} paidStatus="PAID" actionLabel="New invoice" onAction={() => setShowCreateInvoice(true)} disabled={!p.customerId} houseById={houseById} />
+        <FinanceList title="Quotes" docs={p.quotes} paidStatus="ACCEPTED" actionLabel="New quote" onAction={() => setShowCreateQuote(true)} disabled={!p.customerId} componentById={componentById} />
+        <FinanceList title="Invoices" docs={p.invoices} paidStatus="PAID" actionLabel="New invoice" onAction={() => setShowCreateInvoice(true)} disabled={!p.customerId} componentById={componentById} />
       </div>
 
       <AddQuoteModal
@@ -1067,9 +1118,9 @@ function FinancesTab({ project: p }: { project: Project }) {
   )
 }
 
-function FinanceList({ title, docs, paidStatus, actionLabel, onAction, disabled, houseById }: {
+function FinanceList({ title, docs, paidStatus, actionLabel, onAction, disabled, componentById }: {
   title: string; docs: Project['quotes']; paidStatus: string; actionLabel: string; onAction: () => void; disabled?: boolean
-  houseById?: Map<string, House>
+  componentById?: Map<string, ProjectComponent>
 }) {
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -1084,19 +1135,19 @@ function FinanceList({ title, docs, paidStatus, actionLabel, onAction, disabled,
         <p style={{ padding: '22px 18px', fontSize: 12.5, color: 'var(--t4)', textAlign: 'center' }}>None yet.</p>
       ) : (
         docs.map(d => {
-          const house = d.houseId ? houseById?.get(d.houseId) : undefined
+          const component = d.componentId ? componentById?.get(d.componentId) : undefined
           return (
           <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', borderTop: '1px solid var(--bd)' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>{d.title}</p>
               <p style={{ fontSize: 10.5, color: 'var(--t4)', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <span>{d.number} · {fmtDate(d.date)}</span>
-                {house && (
+                {component && (
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700,
                     color: 'var(--blue)', background: 'var(--blue-dim)', padding: '1px 6px', borderRadius: 999,
                   }}>
-                    <Home size={8} /> House {house.label}
+                    <Layers size={8} /> {component.label}
                   </span>
                 )}
               </p>

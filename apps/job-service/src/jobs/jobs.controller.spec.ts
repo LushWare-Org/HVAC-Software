@@ -18,7 +18,7 @@ function makeUser(overrides: Partial<{ role: Role; customerId: string | null }> 
   } as any;
 }
 
-function makeDto(overrides: Partial<{ houseId: string; projectId: string }> = {}) {
+function makeDto(overrides: Partial<{ componentId: string; projectId: string }> = {}) {
   return {
     customerId: CUSTOMER_ID,
     customerName: 'Jane Doe',
@@ -28,36 +28,36 @@ function makeDto(overrides: Partial<{ houseId: string; projectId: string }> = {}
   } as any;
 }
 
-describe('JobsController.create — customer projectId/houseId ownership + projectId auto-backfill', () => {
+describe('JobsController.create — customer projectId/componentId ownership + projectId auto-backfill', () => {
   let controller: JobsController;
   let jobsService: { create: jest.Mock };
-  let crmClient: { getHouseDetails: jest.Mock; getProjectCustomerId: jest.Mock };
+  let crmClient: { getComponentDetails: jest.Mock; getProjectCustomerId: jest.Mock };
 
   beforeEach(() => {
     jobsService = { create: jest.fn().mockResolvedValue({ id: 'job-1' }) };
-    crmClient = { getHouseDetails: jest.fn(), getProjectCustomerId: jest.fn() };
+    crmClient = { getComponentDetails: jest.fn(), getProjectCustomerId: jest.fn() };
     controller = new JobsController(jobsService as unknown as JobsService, crmClient as unknown as CrmClient);
   });
 
-  it('rejects a houseId that does not belong to the calling customer', async () => {
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: OTHER_CUSTOMER_ID, projectId: 'proj-house-1' });
+  it('rejects a componentId that does not belong to the calling customer', async () => {
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: OTHER_CUSTOMER_ID, projectId: 'proj-house-1' });
     await expect(
-      controller.create(makeUser(), makeDto({ houseId: 'house-1' })),
+      controller.create(makeUser(), makeDto({ componentId: 'house-1' })),
     ).rejects.toThrow(ForbiddenException);
     expect(jobsService.create).not.toHaveBeenCalled();
   });
 
-  it('rejects a houseId that does not exist', async () => {
-    crmClient.getHouseDetails.mockResolvedValue(undefined);
+  it('rejects a componentId that does not exist', async () => {
+    crmClient.getComponentDetails.mockResolvedValue(undefined);
     await expect(
-      controller.create(makeUser(), makeDto({ houseId: 'missing-house' })),
+      controller.create(makeUser(), makeDto({ componentId: 'missing-house' })),
     ).rejects.toThrow(BadRequestException);
     expect(jobsService.create).not.toHaveBeenCalled();
   });
 
-  it('allows a houseId owned by the calling customer', async () => {
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-house-1' });
-    await controller.create(makeUser(), makeDto({ houseId: 'house-1' }));
+  it('allows a componentId owned by the calling customer', async () => {
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-house-1' });
+    await controller.create(makeUser(), makeDto({ componentId: 'house-1' }));
     expect(jobsService.create).toHaveBeenCalled();
   });
 
@@ -75,24 +75,24 @@ describe('JobsController.create — customer projectId/houseId ownership + proje
     expect(jobsService.create).toHaveBeenCalled();
   });
 
-  it('checks houseId (not projectId) when both are supplied — house is the more specific link', async () => {
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-1' });
-    await controller.create(makeUser(), makeDto({ houseId: 'house-1', projectId: 'proj-1' }));
-    expect(crmClient.getHouseDetails).toHaveBeenCalled();
+  it('checks componentId (not projectId) when both are supplied — house is the more specific link', async () => {
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-1' });
+    await controller.create(makeUser(), makeDto({ componentId: 'house-1', projectId: 'proj-1' }));
+    expect(crmClient.getComponentDetails).toHaveBeenCalled();
     expect(crmClient.getProjectCustomerId).not.toHaveBeenCalled();
     expect(jobsService.create).toHaveBeenCalled();
   });
 
   it('staff callers skip the ownership check but still get the house looked up (for projectId backfill)', async () => {
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: OTHER_CUSTOMER_ID, projectId: 'proj-house-1' });
-    await controller.create(makeUser({ role: Role.COMPANY_ADMIN, customerId: null }), makeDto({ houseId: 'house-1' }));
-    expect(crmClient.getHouseDetails).toHaveBeenCalled();
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: OTHER_CUSTOMER_ID, projectId: 'proj-house-1' });
+    await controller.create(makeUser({ role: Role.COMPANY_ADMIN, customerId: null }), makeDto({ componentId: 'house-1' }));
+    expect(crmClient.getComponentDetails).toHaveBeenCalled();
     expect(jobsService.create).toHaveBeenCalled();
   });
 
-  it('auto-backfills projectId from the house when the caller only supplied houseId — this is the actual bug: a job linked to a house but not its project never showed up in that project\'s Jobs tab', async () => {
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-from-house' });
-    const dto = makeDto({ houseId: 'house-1' });
+  it('auto-backfills projectId from the house when the caller only supplied componentId — this is the actual bug: a job linked to a house but not its project never showed up in that project\'s Jobs tab', async () => {
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-from-house' });
+    const dto = makeDto({ componentId: 'house-1' });
     expect(dto.projectId).toBeUndefined();
     await controller.create(makeUser(), dto);
     expect(dto.projectId).toBe('proj-from-house');
@@ -100,37 +100,37 @@ describe('JobsController.create — customer projectId/houseId ownership + proje
   });
 
   it('does not override an explicitly-supplied projectId even if it differs from the house\'s own project', async () => {
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-house-actual' });
-    const dto = makeDto({ houseId: 'house-1', projectId: 'proj-explicit' });
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-house-actual' });
+    const dto = makeDto({ componentId: 'house-1', projectId: 'proj-explicit' });
     await controller.create(makeUser(), dto);
     expect(dto.projectId).toBe('proj-explicit');
   });
 });
 
-describe('JobsController.findAll — customer houseId visibility', () => {
+describe('JobsController.findAll — customer componentId visibility', () => {
   let controller: JobsController;
   let jobsService: { findAll: jest.Mock };
-  let crmClient: { getHouseOwnerCustomerId: jest.Mock; getProjectCustomerId: jest.Mock };
+  let crmClient: { getComponentOwnerCustomerId: jest.Mock; getProjectCustomerId: jest.Mock };
 
   beforeEach(() => {
     jobsService = { findAll: jest.fn().mockResolvedValue({ data: [], page: 1, limit: 20, total: 0, totalPages: 0 }) };
-    crmClient = { getHouseOwnerCustomerId: jest.fn(), getProjectCustomerId: jest.fn() };
+    crmClient = { getComponentOwnerCustomerId: jest.fn(), getProjectCustomerId: jest.fn() };
     controller = new JobsController(jobsService as unknown as JobsService, crmClient as unknown as CrmClient);
   });
 
   it('drops the customerId filter for a house the customer actually owns — job.customerId may be the project\'s own customer, not theirs', async () => {
-    crmClient.getHouseOwnerCustomerId.mockResolvedValue(CUSTOMER_ID);
+    crmClient.getComponentOwnerCustomerId.mockResolvedValue(CUSTOMER_ID);
     await controller.findAll(
       makeUser(), 1, 20, undefined, undefined, undefined, undefined, undefined, undefined,
       undefined, undefined, undefined, undefined, 'house-1', undefined, undefined,
     );
     expect(jobsService.findAll).toHaveBeenCalledWith(
-      CO, 1, 20, expect.objectContaining({ customerId: undefined, houseId: 'house-1' }),
+      CO, 1, 20, expect.objectContaining({ customerId: undefined, componentId: 'house-1' }),
     );
   });
 
-  it('rejects a houseId query for a house the customer does not own', async () => {
-    crmClient.getHouseOwnerCustomerId.mockResolvedValue(OTHER_CUSTOMER_ID);
+  it('rejects a componentId query for a house the customer does not own', async () => {
+    crmClient.getComponentOwnerCustomerId.mockResolvedValue(OTHER_CUSTOMER_ID);
     await expect(
       controller.findAll(
         makeUser(), 1, 20, undefined, undefined, undefined, undefined, undefined, undefined,
@@ -140,7 +140,7 @@ describe('JobsController.findAll — customer houseId visibility', () => {
     expect(jobsService.findAll).not.toHaveBeenCalled();
   });
 
-  it('still force-filters by the caller\'s own customerId when no houseId is given', async () => {
+  it('still force-filters by the caller\'s own customerId when no componentId is given', async () => {
     await controller.findAll(
       makeUser(), 1, 20, undefined, undefined, undefined, undefined, undefined, undefined,
       undefined, undefined, undefined, undefined, undefined, undefined, undefined,
@@ -150,14 +150,14 @@ describe('JobsController.findAll — customer houseId visibility', () => {
     );
   });
 
-  it('staff callers querying by houseId are never ownership-checked', async () => {
+  it('staff callers querying by componentId are never ownership-checked', async () => {
     await controller.findAll(
       makeUser({ role: Role.COMPANY_ADMIN, customerId: null }), 1, 20, undefined, undefined, undefined,
       undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'house-1', undefined, undefined,
     );
-    expect(crmClient.getHouseOwnerCustomerId).not.toHaveBeenCalled();
+    expect(crmClient.getComponentOwnerCustomerId).not.toHaveBeenCalled();
     expect(jobsService.findAll).toHaveBeenCalledWith(
-      CO, 1, 20, expect.objectContaining({ customerId: undefined, houseId: 'house-1' }),
+      CO, 1, 20, expect.objectContaining({ customerId: undefined, componentId: 'house-1' }),
     );
   });
 });
@@ -226,7 +226,7 @@ describe('JobsController.patch — customer field whitelist', () => {
 
   it.each([
     'title', 'description', 'priority', 'scheduledEnd', 'notes',
-    'projectId', 'houseId', 'equipmentId', 'hasPartShortage',
+    'projectId', 'componentId', 'equipmentId', 'hasPartShortage',
     'partShortageNote', 'completedAt', 'gpsTrackingEnabled', 'force',
   ])('refuses a customer setting %s', async (field) => {
     await expect(

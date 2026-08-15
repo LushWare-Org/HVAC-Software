@@ -50,7 +50,7 @@ export class InvoicesController {
   @ApiQuery({ name: 'status', enum: InvoiceStatus, required: false })
   @ApiQuery({ name: 'customerId', required: false })
   @ApiQuery({ name: 'jobId', required: false })
-  @ApiQuery({ name: 'houseId', required: false })
+  @ApiQuery({ name: 'componentId', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date — filters by createdAt >= start of this day' })
@@ -62,29 +62,29 @@ export class InvoicesController {
     @Query('jobId') jobId?: string,
     @Query('projectId') projectId?: string,
     @Query('projectIds') projectIds?: string,
-    @Query('houseId') houseId?: string,
+    @Query('componentId') componentId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
     // Same security fix as quotes: enforce customerId server-side for the
-    // CUSTOMER role instead of trusting the query param, with a house-ownership
-    // carve-out (a house-linked invoice's own customerId may be the project's
-    // top-level customer, not the individual house owner).
+    // CUSTOMER role instead of trusting the query param, with a component-ownership
+    // carve-out (a component-linked invoice's own customerId may be the project's
+    // top-level customer, not the individual component owner).
     let effectiveCustomerId = user.role === Role.CUSTOMER ? user.customerId : customerId;
-    if (user.role === Role.CUSTOMER && houseId) {
-      const house = await this.crmClient.getHouseDetails(user.companyId, houseId);
-      if (!house) throw new BadRequestException('House not found');
-      if (house.ownerCustomerId === user.customerId) {
+    if (user.role === Role.CUSTOMER && componentId) {
+      const component = await this.crmClient.getComponentDetails(user.companyId, componentId);
+      if (!component) throw new BadRequestException('Component not found');
+      if (component.ownerCustomerId === user.customerId) {
         effectiveCustomerId = undefined;
       } else {
-        throw new ForbiddenException('You can only view invoices for your own house');
+        throw new ForbiddenException('You can only view invoices for your own component');
       }
     }
 
     return this.invoicesService.findAll(user.companyId, {
-      status, customerId: effectiveCustomerId, jobId, projectId, houseId,
+      status, customerId: effectiveCustomerId, jobId, projectId, componentId,
       projectIds: projectIds ? projectIds.split(',').filter(Boolean) : undefined,
       page, limit, dateFrom, dateTo,
     });
@@ -97,10 +97,10 @@ export class InvoicesController {
     const invoice = await this.invoicesService.findOne(user.companyId, id);
     if (user.role === Role.CUSTOMER) {
       const ownsDirectly = (invoice as any).customerId === user.customerId;
-      const ownsHouse = (invoice as any).houseId
-        ? (await this.crmClient.getHouseDetails(user.companyId, (invoice as any).houseId))?.ownerCustomerId === user.customerId
+      const ownsComponent = (invoice as any).componentId
+        ? (await this.crmClient.getComponentDetails(user.companyId, (invoice as any).componentId))?.ownerCustomerId === user.customerId
         : false;
-      if (!ownsDirectly && !ownsHouse) throw new ForbiddenException('Access denied');
+      if (!ownsDirectly && !ownsComponent) throw new ForbiddenException('Access denied');
     }
     return invoice;
   }
@@ -110,12 +110,12 @@ export class InvoicesController {
   @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new invoice' })
   async create(@CurrentUser() user: AuthUser, @Body() dto: CreateInvoiceDto) {
-    // Housing Scheme: an invoice created for a specific house auto-inherits
-    // that house's project, same fix as Job/Agreement/Quote.
-    if (dto.houseId && !dto.projectId) {
-      const house = await this.crmClient.getHouseDetails(user.companyId, dto.houseId);
-      if (!house) throw new BadRequestException('House not found');
-      dto.projectId = house.projectId;
+    // An invoice created for a specific component auto-inherits that
+    // component's project, same fix as Job/Agreement/Quote.
+    if (dto.componentId && !dto.projectId) {
+      const component = await this.crmClient.getComponentDetails(user.companyId, dto.componentId);
+      if (!component) throw new BadRequestException('Component not found');
+      dto.projectId = component.projectId;
     }
     return this.invoicesService.create(user.companyId, user.userId, dto);
   }

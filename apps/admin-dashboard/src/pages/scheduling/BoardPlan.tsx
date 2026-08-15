@@ -13,6 +13,7 @@ import {
 import { useJobs, useUpdateJobFields } from '../../hooks/useJobs'
 import { useTechnicians, useManualAssign } from '../../hooks/useScheduling'
 import { techOnProjectMessage, useRostersByDate, toDateKey } from '../projects/projectsApi'
+import ProjectComponentTag from '../projects/ProjectComponentTag'
 import { useServiceAgreements, type Agreement } from '../../hooks/useAgreements'
 import { useCreateThread, useSendThreadMessage } from '../../hooks/useComms'
 import { useToast } from '../../contexts/ToastContext'
@@ -559,6 +560,11 @@ export default function BoardPlan({
                               <RescheduleBadge state={p.job.rescheduleState} size="sm" />
                             </p>
                             <p style={{ fontSize: 11.5, color: 'var(--t4)', margin: '2px 0 0' }}>{p.job.customerName ?? ''} {p.job.serviceAddress ? `· ${p.job.serviceAddress}` : ''}</p>
+                            {p.job.projectId && (
+                              <div style={{ marginTop: 4 }}>
+                                <ProjectComponentTag projectId={p.job.projectId} componentId={p.job.componentId} />
+                              </div>
+                            )}
                           </td>
                           <td style={{ padding: '12px 16px', minWidth: 220 }}>
                             <select

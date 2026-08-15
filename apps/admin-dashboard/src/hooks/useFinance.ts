@@ -39,6 +39,7 @@ interface InvoiceFilters {
   customerId?: string
   projectId?: string
   houseId?: string
+  componentId?: string
   /** ISO date (YYYY-MM-DD) — inclusive start of range, filters on createdAt */
   dateFrom?: string
   /** ISO date (YYYY-MM-DD) — inclusive end of range, filters on createdAt */
@@ -84,6 +85,7 @@ export function useInvoices(filters: InvoiceFilters = {}) {
       if (filters.customerId) params.customerId = filters.customerId
       if (filters.projectId) params.projectId = filters.projectId
       if (filters.houseId) params.houseId = filters.houseId
+      if (filters.componentId) params.componentId = filters.componentId
       if (filters.dateFrom) params.dateFrom = filters.dateFrom
       if (filters.dateTo) params.dateTo = filters.dateTo
       const res = await api.get('/finance/invoices', { params })
@@ -117,6 +119,7 @@ interface QuoteFilters {
   pendingAging?: boolean
   projectId?: string
   houseId?: string
+  componentId?: string
   /** ISO date (YYYY-MM-DD) — inclusive start of range, filters on createdAt */
   dateFrom?: string
   /** ISO date (YYYY-MM-DD) — inclusive end of range, filters on createdAt */
@@ -140,6 +143,7 @@ export function useQuotes(filters: QuoteFilters = {}) {
       if (filters.customerId) params.customerId = filters.customerId
       if (filters.projectId) params.projectId = filters.projectId
       if (filters.houseId) params.houseId = filters.houseId
+      if (filters.componentId) params.componentId = filters.componentId
       if (filters.dateFrom) params.dateFrom = filters.dateFrom
       if (filters.dateTo) params.dateTo = filters.dateTo
       const res = await api.get('/finance/quotes', { params })

@@ -19,6 +19,7 @@ import { AutomationModule } from './automation/automation.module';
 import { MarketingModule } from './marketing/marketing.module';
 import { WebPushModule } from './web-push/web-push.module';
 import { CompanySettingsModule } from './company-settings/company-settings.module';
+import { ActivityLogModule } from './activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { CompanySettingsModule } from './company-settings/company-settings.modul
     HealthModule,
     PrismaModule,
     CompanySettingsModule,
+    ActivityLogModule,
 
     // ── Provider modules ───────────────────────────────────────────────────
     SmsModule,

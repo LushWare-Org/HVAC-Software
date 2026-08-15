@@ -33,7 +33,7 @@ interface AddQuoteModalProps {
   /** Attaches the quote to a project on create (finance-service accepts an optional projectId). */
   projectId?: string;
   /** Attaches the quote to a specific house within a Housing Scheme project; projectId is auto-backfilled server-side if omitted. */
-  houseId?: string;
+  componentId?: string;
   contextLabel?: string;
   onCreated?: (quote: any) => void;
   onBack?: () => void;
@@ -58,7 +58,7 @@ const CATEGORIES = [
 const inputClass =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none";
 
-export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCustomer, projectId, houseId, contextLabel, onCreated, onBack }: AddQuoteModalProps) {
+export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCustomer, projectId, componentId, contextLabel, onCreated, onBack }: AddQuoteModalProps) {
   const { showError, showSuccess, showInfo } = useToast();
   const [error, setError] = useState("");
   const [title, setTitle] = useState("");
@@ -164,7 +164,7 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
         customerId,
         jobId: jobId || undefined,
         projectId: projectId || undefined,
-        houseId: houseId || undefined,
+        componentId: componentId || undefined,
         taxRate: (parseFloat(taxRate) || 0) / 100,
         validUntil: validUntil || undefined,
         notes: notes || undefined,

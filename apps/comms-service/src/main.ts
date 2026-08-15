@@ -3,6 +3,7 @@ import * as express from 'express';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ActivityLogInterceptor } from '@tscrm/activity-log';
 import { AppModule } from './app.module';
 import { json, urlencoded } from 'express';
 
@@ -20,6 +21,7 @@ async function bootstrap() {
   app.use('/m/webhooks/', express.raw({ type: '*/*' }));
   const port = process.env.COMMS_PORT ?? 3005;
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalInterceptors(new ActivityLogInterceptor('comms'));
   app.enableCors({origin: [
     'http://localhost:3000',
     'http://localhost:5173',

@@ -57,11 +57,10 @@ export class QuotesController {
   @ApiQuery({ name: 'status', enum: QuoteStatus, required: false })
   @ApiQuery({ name: 'customerId', required: false })
   @ApiQuery({ name: 'jobId', required: false })
-  @ApiQuery({ name: 'houseId', required: false })
+  @ApiQuery({ name: 'componentId', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'pendingAging', required: false, type: Boolean, description: 'Restrict to SENT/VIEWED quotes older than 7 days — matches the "Pending Quotes at Risk" AI recommendation' })
-  findAll(
   @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date — filters by createdAt >= start of this day' })
   @ApiQuery({ name: 'dateTo', required: false, description: 'ISO date — filters by createdAt <= end of this day' })
   async findAll(
@@ -71,35 +70,34 @@ export class QuotesController {
     @Query('jobId') jobId?: string,
     @Query('projectId') projectId?: string,
     @Query('projectIds') projectIds?: string,
-    @Query('houseId') houseId?: string,
+    @Query('componentId') componentId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
     @Query('pendingAging') pendingAging?: string,
-  ) {
-    return this.quotesService.findAll(user.companyId, { status, customerId, jobId, projectId, page, limit, pendingAging: pendingAging === 'true' });
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
     // CUSTOMER role: force-filter to their own customerId for security — this
     // was previously NOT enforced at all (any customer JWT could pass an
     // arbitrary ?customerId= and see another customer's quotes). Same
-    // house-ownership carve-out as jobs: a house-linked quote's customerId may
-    // be the project's own top-level customer, not the individual house owner.
+    // component-ownership carve-out as jobs: a component-linked quote's
+    // customerId may be the project's own top-level customer, not the
+    // individual component owner.
     let effectiveCustomerId = user.role === Role.CUSTOMER ? user.customerId : customerId;
-    if (user.role === Role.CUSTOMER && houseId) {
-      const house = await this.crmClient.getHouseDetails(user.companyId, houseId);
-      if (!house) throw new BadRequestException('House not found');
-      if (house.ownerCustomerId === user.customerId) {
+    if (user.role === Role.CUSTOMER && componentId) {
+      const component = await this.crmClient.getComponentDetails(user.companyId, componentId);
+      if (!component) throw new BadRequestException('Component not found');
+      if (component.ownerCustomerId === user.customerId) {
         effectiveCustomerId = undefined;
       } else {
-        throw new ForbiddenException('You can only view quotes for your own house');
+        throw new ForbiddenException('You can only view quotes for your own component');
       }
     }
 
     return this.quotesService.findAll(user.companyId, {
-      status, customerId: effectiveCustomerId, jobId, projectId, houseId,
+      status, customerId: effectiveCustomerId, jobId, projectId, componentId,
       projectIds: projectIds ? projectIds.split(',').filter(Boolean) : undefined,
-      page, limit, dateFrom, dateTo,
+      page, limit, dateFrom, dateTo, pendingAging: pendingAging === 'true',
     });
   }
 
@@ -110,10 +108,10 @@ export class QuotesController {
     const quote = await this.quotesService.findOne(user.companyId, id);
     if (user.role === Role.CUSTOMER) {
       const ownsDirectly = (quote as any).customerId === user.customerId;
-      const ownsHouse = (quote as any).houseId
-        ? (await this.crmClient.getHouseDetails(user.companyId, (quote as any).houseId))?.ownerCustomerId === user.customerId
+      const ownsComponent = (quote as any).componentId
+        ? (await this.crmClient.getComponentDetails(user.companyId, (quote as any).componentId))?.ownerCustomerId === user.customerId
         : false;
-      if (!ownsDirectly && !ownsHouse) throw new ForbiddenException('Access denied');
+      if (!ownsDirectly && !ownsComponent) throw new ForbiddenException('Access denied');
     }
     return quote;
   }
@@ -123,13 +121,13 @@ export class QuotesController {
   @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Create a new quote' })
   async create(@CurrentUser() user: AuthUser, @Body() dto: CreateQuoteDto) {
-    // Housing Scheme: a quote created for a specific house auto-inherits that
-    // house's project — a house-linked quote with no projectId would otherwise
+    // A quote created for a specific component auto-inherits that component's
+    // project — a component-linked quote with no projectId would otherwise
     // never show up in that project's own Finances tab (same fix as Job/Agreement).
-    if (dto.houseId && !dto.projectId) {
-      const house = await this.crmClient.getHouseDetails(user.companyId, dto.houseId);
-      if (!house) throw new BadRequestException('House not found');
-      dto.projectId = house.projectId;
+    if (dto.componentId && !dto.projectId) {
+      const component = await this.crmClient.getComponentDetails(user.companyId, dto.componentId);
+      if (!component) throw new BadRequestException('Component not found');
+      dto.projectId = component.projectId;
     }
     return this.quotesService.create(user.companyId, user.userId, dto);
   }

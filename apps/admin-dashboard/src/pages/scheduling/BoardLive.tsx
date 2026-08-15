@@ -10,6 +10,7 @@ import type { Job, Technician, ScoredTechnician } from '../../types/api'
 import Avatar from '../../components/Avatar'
 import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 import { getTechAvailability, AVAIL_META, type AvailabilityTier } from './availability'
+import ProjectComponentTag from '../projects/ProjectComponentTag'
 
 const DispatchMap = lazy(() => import('../dispatch/DispatchMap'))
 
@@ -80,6 +81,11 @@ export default function BoardLive({
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t1)' }}>{job.title}</div>
               <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 3 }}>{job.customerName ?? '—'} · {job.serviceAddress ?? job.customerAddress ?? 'No address'}</div>
+              {job.projectId && (
+                <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>
+                  <ProjectComponentTag projectId={job.projectId} componentId={job.componentId} />
+                </div>
+              )}
               <button
                 onClick={e => { e.stopPropagation(); onSmartAssign(job) }}
                 disabled={isAssigning && smartAssigningJobId === job.id}

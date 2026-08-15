@@ -83,6 +83,64 @@ export class EquipmentService {
     });
   }
 
+  // ── Generic project components (spec: docs/superpowers/specs/2026-08-14-project-component-templates-design.md) ──
+  // Replaces the three methods above. Kept alongside them during the migration
+  // window; the House-based methods are removed in a later cleanup pass.
+
+  async findByComponent(companyId: string, componentId: string) {
+    const items = await this.prisma.equipment.findMany({
+      where: { companyId, componentId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return this.attachErrorCodes(companyId, items);
+  }
+
+  /**
+   * Add equipment to a ProjectComponent. Requires the component to already have an
+   * owner assigned — customerId is derived from component.ownerCustomerId and kept
+   * required/non-null, same rule House-based creation already enforced.
+   */
+  async createForComponent(
+    companyId: string,
+    componentId: string,
+    data: {
+      type?: string; brand?: string; model?: string; serialNo?: string;
+      installDate?: string; warrantyEnd?: string; notes?: string;
+    },
+  ) {
+    const component = await this.prisma.projectComponent.findFirst({ where: { id: componentId, companyId } });
+    if (!component) throw new NotFoundException('Component not found');
+    if (!component.ownerCustomerId) {
+      throw new BadRequestException('Assign an owner to this component before adding equipment');
+    }
+    return this.prisma.equipment.create({
+      data: {
+        companyId,
+        customerId: component.ownerCustomerId,
+        componentId,
+        type: data.type ?? 'Thermostat',
+        brand: data.brand,
+        model: data.model,
+        serialNo: data.serialNo,
+        installDate: data.installDate ? new Date(data.installDate) : undefined,
+        warrantyEnd: data.warrantyEnd ? new Date(data.warrantyEnd) : undefined,
+        notes: data.notes,
+      },
+    });
+  }
+
+  /**
+   * Re-point customerId on all of a component's equipment when its owner changes.
+   * ProjectComponent.ownerCustomerId is authoritative; Equipment.customerId is a
+   * denormalized mirror kept in sync here, same rule as resyncHouseEquipmentOwner.
+   */
+  async resyncComponentEquipmentOwner(companyId: string, componentId: string, customerId: string) {
+    await this.prisma.equipment.updateMany({
+      where: { companyId, componentId },
+      data: { customerId },
+    });
+  }
+
   async create(
     companyId: string,
     customerId: string,

@@ -64,9 +64,9 @@ export class QuotesService {
 
   async findAll(
     companyId: string,
-    params: { status?: QuoteStatus; customerId?: string; jobId?: string; projectId?: string; projectIds?: string[]; houseId?: string; page?: number; limit?: number; dateFrom?: string; dateTo?: string },
+    params: { status?: QuoteStatus; customerId?: string; jobId?: string; projectId?: string; projectIds?: string[]; componentId?: string; page?: number; limit?: number; dateFrom?: string; dateTo?: string; pendingAging?: boolean },
   ) {
-    const { status, customerId, jobId, projectId, projectIds, houseId, dateFrom, dateTo } = params;
+    const { status, customerId, jobId, projectId, projectIds, componentId, dateFrom, dateTo, pendingAging } = params;
     const page = Number.isFinite(Number(params.page)) ? Math.max(1, Math.trunc(Number(params.page))) : 1;
     // 500 covers both the multi-project batch case and a full CSV export in one page.
     const maxLimit = 500;
@@ -86,7 +86,7 @@ export class QuotesService {
       ...(customerId ? { customerId } : {}),
       ...(jobId ? { jobId } : {}),
       ...(projectId ? { projectId } : {}),
-      ...(houseId ? { houseId } : {}),
+      ...(componentId ? { componentId } : {}),
       // Batch form: one request for many projects' quotes (Projects page overview)
       ...(projectIds?.length ? { projectId: { in: projectIds } } : {}),
       ...(dateFrom || dateTo ? { createdAt: createdAtFilter } : {}),
@@ -483,6 +483,7 @@ export class QuotesService {
                 jobId: quote.jobId,
                 projectId: quote.projectId,
                 houseId: quote.houseId,
+                componentId: quote.componentId,
                 customerId: quote.customerId,
                 customerName: quote.customerName,
                 customerEmail: quote.customerEmail,
