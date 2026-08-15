@@ -9,6 +9,8 @@ import { customerName } from '../types/api'
 import type { Customer, CustomerStatusSummary } from '../types/api'
 import { formatMoney } from '../lib/format'
 
+const INACTIVE_ACTIONS = new Set(['no_action', 'no_upsell', 'no_opportunity'])
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const PRIORITY_CONFIG = {
@@ -34,9 +36,9 @@ function PriorityBadge({ priority }: { priority: Priority }) {
 
 function Skeleton() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12, padding: '20px 0' }}>
-      {[1, 2, 3].map(i => (
-        <div key={i} style={{ height: 320, background: 'var(--bg-hover)', borderRadius: 10, opacity: 0.6 + i * 0.1 }} />
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12, padding: '20px 0' }}>
+      {[1, 2, 3, 4].map(i => (
+        <div key={i} style={{ height: 150, background: 'var(--bg-hover)', borderRadius: 10, opacity: 0.6 + i * 0.05 }} />
       ))}
     </div>
   )
@@ -76,7 +78,7 @@ function Section({ icon, title, priority, children }: SectionProps) {
         overflow: 'hidden',
         borderTop: `3px solid ${cfg.border}`,
         background: 'var(--bg-card)',
-        minHeight: 360,
+        minHeight: 150,
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -139,6 +141,42 @@ function label(key: string) { return ACTION_LABELS[key] ?? key }
 
 const CHANNEL_LABELS: Record<string, string> = { whatsapp: 'WhatsApp', email: 'Email', call: 'Phone call' }
 
+function riskColor(level: 'High' | 'Medium' | 'Low') {
+  if (level === 'High') return 'var(--red)'
+  if (level === 'Medium') return 'var(--amber)'
+  return 'var(--green)'
+}
+
+// ─── Overview strip ───────────────────────────────────────────────────────────
+
+function RiskPill({ label, level, probability }: { label: string; level: 'High' | 'Medium' | 'Low'; probability: number }) {
+  const color = riskColor(level)
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      fontSize: 12, fontWeight: 600, color,
+      background: `color-mix(in srgb, ${color} 12%, transparent)`,
+      border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
+      borderRadius: 20, padding: '3px 10px',
+    }}>
+      {label}: {level} ({pct(probability)})
+    </span>
+  )
+}
+
+function OverviewStrip({ summary }: { summary: CustomerStatusSummary }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10,
+      marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--border)',
+    }}>
+      <span style={{ fontSize: 13, color: 'var(--t2)', flex: '1 1 auto' }}>{summary.currentStatus}</span>
+      <RiskPill label="Failure" level={summary.failurePrediction.level} probability={summary.failurePrediction.probability} />
+      <RiskPill label="Churn" level={summary.churnPrediction.level} probability={summary.churnPrediction.probability} />
+    </div>
+  )
+}
+
 // ─── Follow-up section ────────────────────────────────────────────────────────
 
 function FollowupSection({ summary, customerId }: { summary: CustomerStatusSummary; customerId: string }) {
@@ -169,10 +207,7 @@ function FollowupSection({ summary, customerId }: { summary: CustomerStatusSumma
         <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 10, lineHeight: 1.5 }}>
           {summary.proposedNextStep}
         </p>
-        <Detail label="Churn risk"         value={`${churn.level} (${pct(churn.probability)})`} />
         <Detail label="Recommended channel" value={CHANNEL_LABELS[channel] ?? channel} />
-        <Detail label="Current status"     value={summary.currentStatus} />
-        <Detail label="Data source"        value="Rule-based" />
       </div>
       {result && <ResultBanner success={result.success} message={result.message} />}
       <button
@@ -213,27 +248,32 @@ function RetentionSection({ summary, customerId }: { summary: CustomerStatusSumm
     }
   }
 
+  const isActionable = !INACTIVE_ACTIONS.has(ret.action)
+
   return (
     <Section icon={<ShieldCheck size={15} />} title="Retention Recommendation" priority={priority}>
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, flex: 1 }}>
-        <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 10, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: isActionable ? 10 : 0, lineHeight: 1.5 }}>
           {ret.reason}
         </p>
-        <Detail label="Action"             value={label(ret.action)} />
-        <Detail label="Offer type"         value={ret.offer.type} />
-        {ret.offer.discount > 0 && <Detail label="Discount" value={`${ret.offer.discount}%`} />}
-        <Detail label="Churn probability"  value={pct(ret.churnProbability)} />
-        <Detail label="Predicted LTV"      value={formatMoney(ret.ltv, { decimals: 0 })} />
-        <Detail label="Score"              value={ret.score.toFixed(0)} />
-        <Detail label="Recommended channel" value={CHANNEL_LABELS[ret.recommendedChannel] ?? ret.recommendedChannel} />
-        {ret.triggerImmediately && (
-          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--amber)', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <AlertCircle size={12} /> Immediate trigger recommended
-          </div>
+        {isActionable && (
+          <>
+            <Detail label="Action" value={label(ret.action)} />
+            <Detail
+              label="Offer"
+              value={ret.offer.discount > 0 ? `${ret.offer.type} (${ret.offer.discount}% off)` : ret.offer.type}
+            />
+            <Detail label="Channel" value={CHANNEL_LABELS[ret.recommendedChannel] ?? ret.recommendedChannel} />
+            {ret.triggerImmediately && (
+              <div style={{ marginTop: 8, fontSize: 12, color: 'var(--amber)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <AlertCircle size={12} /> Immediate trigger recommended
+              </div>
+            )}
+          </>
         )}
       </div>
       {result && <ResultBanner success={result.success} message={result.message} />}
-      {ret.action !== 'no_action' && (
+      {isActionable && (
         <button
           onClick={handleExecute}
           disabled={exec.isPending}
@@ -276,15 +316,13 @@ function UpsellSection({ summary, customerId }: { summary: CustomerStatusSummary
     }
   }
 
+  const isActionable = !INACTIVE_ACTIONS.has(up.recommendedOffer)
+
   return (
     <Section icon={<TrendingUp size={15} />} title="Upsell Recommendation" priority={priority}>
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, flex: 1 }}>
-        <Detail label="Recommended offer"  value={label(up.recommendedOffer)} />
-        <Detail label="Confidence"         value={pct(up.confidence)} />
-        {up.priorityScore != null && <Detail label="Priority score" value={up.priorityScore.toFixed(3)} />}
-        <Detail label="Status"             value={up.status} />
-        {up.triggerSource && <Detail label="Source" value={up.triggerSource} />}
-        <Detail label="Generated"          value={new Date(up.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />
+        <Detail label="Recommended offer" value={label(up.recommendedOffer)} />
+        {isActionable && <Detail label="Confidence" value={pct(up.confidence)} />}
       </div>
       {result && <ResultBanner success={result.success} message={result.message} />}
       <button
@@ -321,22 +359,20 @@ function RevenueSection({ summary, customerId }: { summary: CustomerStatusSummar
     }
   }
 
+  const isActionable = !INACTIVE_ACTIONS.has(rev.category)
+
   return (
     <Section icon={<DollarSign size={15} />} title="Revenue Recommendation" priority={priority}>
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, flex: 1 }}>
-        <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 10, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: isActionable ? 10 : 0, lineHeight: 1.5 }}>
           {rev.reason}
         </p>
-        <Detail label="Category"           value={label(rev.category)} />
-        {rev.action && <Detail label="Recommended action" value={rev.action} />}
-        {rev.expectedRevenueImpact != null && (
+        {isActionable && rev.expectedRevenueImpact != null && (
           <Detail label="Expected impact" value={formatMoney(rev.expectedRevenueImpact, { decimals: 0 })} />
         )}
-        {rev.channel && <Detail label="Recommended channel" value={CHANNEL_LABELS[rev.channel] ?? rev.channel} />}
-        {rev.confidence != null && <Detail label="Confidence" value={pct(rev.confidence)} />}
       </div>
       {result && <ResultBanner success={result.success} message={result.message} />}
-      {rev.category !== 'no_opportunity' && (
+      {isActionable && (
         <button
           onClick={handleExecute}
           disabled={exec.isPending}
@@ -409,7 +445,7 @@ export default function CustomerRecommendationsModal({ customer, onClose }: Prop
         <div style={{ overflowY: 'auto', padding: '16px 20px' }}>
           {statusQuery.isLoading && <Skeleton />}
 
-          {statusQuery.isError && (
+          {statusQuery.isError && !summary && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 16, color: 'var(--red)', fontSize: 13 }}>
               <AlertCircle size={15} />
               Failed to load recommendations. Please try again.
@@ -417,17 +453,20 @@ export default function CustomerRecommendationsModal({ customer, onClose }: Prop
           )}
 
           {summary && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-              gap: 12,
-              alignItems: 'stretch',
-            }}>
-              <FollowupSection   summary={summary} customerId={customer.id} />
-              <RetentionSection  summary={summary} customerId={customer.id} />
-              <UpsellSection     summary={summary} customerId={customer.id} />
-              <RevenueSection    summary={summary} customerId={customer.id} />
-            </div>
+            <>
+              <OverviewStrip summary={summary} />
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: 12,
+                alignItems: 'stretch',
+              }}>
+                <FollowupSection   summary={summary} customerId={customer.id} />
+                <RetentionSection  summary={summary} customerId={customer.id} />
+                <UpsellSection     summary={summary} customerId={customer.id} />
+                <RevenueSection    summary={summary} customerId={customer.id} />
+              </div>
+            </>
           )}
         </div>
       </div>

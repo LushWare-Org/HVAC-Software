@@ -5,7 +5,7 @@ import { FOLLOWUP_LLM_SYSTEM_PROMPT, buildFollowupLlmUserPrompt } from './follow
 
 const VALID_CHANNELS = new Set(['SMS', 'EMAIL']);
 const VALID_PRIORITIES = new Set(['Low', 'Medium', 'High']);
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 12000; // @google/genai rejects deadlines under 10s
 
 /**
  * Recommends channel/timing/message for a follow-up the rule engine has

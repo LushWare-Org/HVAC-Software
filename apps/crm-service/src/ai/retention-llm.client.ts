@@ -11,7 +11,7 @@ const VALID_ACTIONS = new Set([
   'maintenance_plan_offer',
   'no_action',
 ]);
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 12000; // @google/genai rejects deadlines under 10s
 
 /**
  * Recommends strategy/offer/channel/message for a retention action the rule

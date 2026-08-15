@@ -19,6 +19,8 @@ interface CustomerFilters {
   tags?: string[]
   sortBy?: string
   sortDir?: 'asc' | 'desc'
+  /** Restricts to customers matching an AI Revenue Recommendation segment (currently only 'retention_risk'). */
+  riskSegment?: string
 }
 
 async function fetchCustomers(filters: CustomerFilters): Promise<PaginatedResponse<Customer>> {
@@ -62,7 +64,30 @@ async function fetchCustomerStatusSummary(id: string): Promise<CustomerStatusSum
 export function useCustomers(filters: CustomerFilters = {}) {
   return useQuery<PaginatedResponse<Customer>>({
     queryKey: ['customers', filters],
+
+    queryFn: async () => {
+      const params: Record<string, unknown> = {
+        page: filters.page ?? 1,
+        limit: filters.limit ?? 50,
+      }
+      if (filters.search) params.search = filters.search
+      if (filters.type && filters.type !== 'All Types') params.type = filters.type.toUpperCase()
+      if (filters.isActive !== undefined) params.isActive = filters.isActive
+      if (filters.tags && filters.tags.length > 0) params.tags = filters.tags.join(',')
+      if (filters.sortBy) params.sortBy = filters.sortBy
+      if (filters.sortDir) params.sortDir = filters.sortDir
+      if (filters.riskSegment) params.riskSegment = filters.riskSegment
+      const res = await api.get('/crm/customers', { params })
+      const raw = res.data
+      // Normalize: backend returns { data, meta: {...} }, frontend expects flat shape
+      if (raw.meta) {
+        return { data: raw.data, ...raw.meta }
+      }
+      return raw
+    },
+
     queryFn: () => fetchCustomers(filters),
+
   })
 }
 

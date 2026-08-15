@@ -767,6 +767,18 @@ export interface RevenueAgentTrendPoint {
   sample_size: number
 }
 
+export interface RecommendationExplanation {
+  usedLlm: boolean
+  groundTruth: string
+  message: string
+  priority: string
+  expectedOutcome: string
+  action: string
+  impact: string
+  confidence: string
+  metrics: Record<string, number>
+}
+
 export interface Recommendation {
   id: string
   title: string
@@ -779,38 +791,8 @@ export interface Recommendation {
   reason: string
   trend: 'up' | 'down' | 'neutral'
   priorityScore: number
-}
-
-export interface ExecuteActionRequest {
-  action: string
-  params?: Record<string, unknown>
-}
-
-export interface ExecuteActionResponse {
-  success: boolean
-  action: string
-  executedAt: string
-  message: string
-  logId?: string
-  result?: {
-    summary: string
-    details: Record<string, unknown>
-    affectedCount?: number
-    estimatedRevenue?: number
-  }
-}
-
-export interface ExecutionLog {
-  id: string
-  companyId: string
-  action: string
-  params: Record<string, unknown>
-  status: 'executed' | 'failed'
-  timestamp: string
-  result_summary?: string
-  affected_count?: number
-  estimated_revenue?: number
-  error?: string
+  /** Optional: absent only if this recommendation came from a Redis cache entry written before the "Reason" feature shipped. */
+  explanation?: RecommendationExplanation
 }
 
 export interface RevenueAgentLog {

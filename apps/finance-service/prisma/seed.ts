@@ -270,6 +270,121 @@ async function main() {
   });
   console.log(`  ✅  Invoice  ${overdueInvoice.invoiceNumber}  (OVERDUE)`);
 
+  // ---- 3b. Overdue invoice for a real crm-service customer (Sarah Williams) --
+  // Drives the "AI Recommendations" Revenue card's payment_collection category
+  // for demo-customer-002 — see apps/crm-service/src/revenue/rules/revenue-rule-engine.ts.
+  const sarahOverdueInvoice = await prisma.invoice.upsert({
+    where: { companyId_invoiceNumber: { companyId: DEMO_COMPANY_ID, invoiceNumber: 'INV-2024-0003' } },
+    update: {},
+    create: {
+      companyId: DEMO_COMPANY_ID,
+      invoiceNumber: 'INV-2024-0003',
+      customerId: 'demo-customer-002',
+      customerName: 'Sarah Williams',
+      customerEmail: 'sarah.w@acmecorp.com',
+      status: InvoiceStatus.OVERDUE,
+      dueDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days overdue
+      subtotal: 1850.00,
+      taxRate: 0.0825,
+      taxAmount: 152.63,
+      total: 2002.63,
+      amountPaid: 0,
+      balanceDue: 2002.63,
+      sentAt: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000),
+      createdByUserId: DEMO_USER_ID,
+      lineItems: {
+        create: [
+          {
+            description: 'Compressor diagnosis & repair — rooftop unit',
+            category: 'LABOUR',
+            quantity: 1,
+            unitPrice: 1850.00,
+            lineTotal: 1850.00,
+            taxable: true,
+            sortOrder: 1,
+          },
+        ],
+      },
+    },
+  });
+  console.log(`  ✅  Invoice  ${sarahOverdueInvoice.invoiceNumber}  (OVERDUE — demo-customer-002)`);
+
+  // ---- 3c. Pending quote for a real crm-service customer (Camila Torres) -----
+  // Drives the Revenue card's quote_recovery category for demo-customer-015.
+  const camilaPendingQuote = await prisma.quote.upsert({
+    where: { companyId_quoteNumber: { companyId: DEMO_COMPANY_ID, quoteNumber: 'QUOTE-2024-0003' } },
+    update: {},
+    create: {
+      companyId: DEMO_COMPANY_ID,
+      quoteNumber: 'QUOTE-2024-0003',
+      customerId: 'demo-customer-015',
+      customerName: 'Camila Torres',
+      customerEmail: 'camila.torres@hotelverde.com',
+      title: 'Chiller renewal maintenance proposal',
+      status: QuoteStatus.SENT,
+      validUntil: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      subtotal: 3200.00,
+      taxRate: 0.0825,
+      taxAmount: 264.00,
+      total: 3464.00,
+      sentAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days pending
+      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      createdByUserId: DEMO_USER_ID,
+      lineItems: {
+        create: [
+          {
+            description: 'Annual chiller maintenance renewal',
+            category: 'LABOUR',
+            quantity: 1,
+            unitPrice: 3200.00,
+            lineTotal: 3200.00,
+            taxable: true,
+            sortOrder: 1,
+          },
+        ],
+      },
+    },
+  });
+  console.log(`  ✅  Quote  ${camilaPendingQuote.quoteNumber}  (SENT, pending — demo-customer-015)`);
+
+  // ---- 3d. Overdue invoice for a real crm-service customer (Grace Morgan) ----
+  // Drives the Revenue card's payment_collection category for demo-customer-017.
+  const graceOverdueInvoice = await prisma.invoice.upsert({
+    where: { companyId_invoiceNumber: { companyId: DEMO_COMPANY_ID, invoiceNumber: 'INV-2024-0004' } },
+    update: {},
+    create: {
+      companyId: DEMO_COMPANY_ID,
+      invoiceNumber: 'INV-2024-0004',
+      customerId: 'demo-customer-017',
+      customerName: 'Grace Morgan',
+      customerEmail: 'grace.morgan@oakridgeoffice.com',
+      status: InvoiceStatus.OVERDUE,
+      dueDate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000), // 40 days overdue
+      subtotal: 620.00,
+      taxRate: 0.0825,
+      taxAmount: 51.15,
+      total: 671.15,
+      amountPaid: 0,
+      balanceDue: 671.15,
+      sentAt: new Date(Date.now() - 70 * 24 * 60 * 60 * 1000),
+      createdByUserId: DEMO_USER_ID,
+      lineItems: {
+        create: [
+          {
+            description: 'Split system filter & belt service',
+            category: 'LABOUR',
+            quantity: 1,
+            unitPrice: 620.00,
+            lineTotal: 620.00,
+            taxable: true,
+            sortOrder: 1,
+          },
+        ],
+      },
+    },
+  });
+  console.log(`  ✅  Invoice  ${graceOverdueInvoice.invoiceNumber}  (OVERDUE — demo-customer-017)`);
+
   // ---- 4. Recurring Schedule --------------------------------------------------
   await prisma.recurringSchedule.upsert({
     where: { id: 'demo-recurring-001' },

@@ -26,6 +26,8 @@ const OFFER_POLICY: Record<RetentionAction, { type: string; discount: number }> 
 };
 
 export interface RetentionValidationInput {
+  /** The action the rule engine's matched reason code maps to — never overridden by the LLM. */
+  ruleAction: RetentionAction;
   hasContactChannel: boolean;
   recipientPhone?: string;
   recipientEmail?: string;
@@ -59,8 +61,11 @@ export class RetentionValidationService {
     if (!input.hasContactChannel) failedChecks.push('NO_CONTACT_CHANNEL');
     if (input.sameOfferRecentlySent) failedChecks.push('DUPLICATE_OFFER');
 
-    const requestedAction = llmRec?.action ?? null;
-    const actionAllowed = requestedAction === null || requestedAction in OFFER_POLICY;
+    // When the LLM responds, its action wins (still constrained to the offer catalog below);
+    // when it doesn't (call failed, quota exhausted), fall back to the rule engine's own
+    // action instead of forcing no_action — the message/offer-copy fields stay LLM-only below.
+    const requestedAction = llmRec?.action ?? input.ruleAction;
+    const actionAllowed = requestedAction in OFFER_POLICY;
     if (!actionAllowed) failedChecks.push('OFFER_NOT_ALLOWED');
 
     const requestedChannel = llmRec?.channel ?? null;

@@ -78,6 +78,7 @@ export class CustomersController {
   @ApiQuery({ name: 'tags', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String })
   @ApiQuery({ name: 'sortDir', required: false, type: String })
+  @ApiQuery({ name: 'riskSegment', required: false, type: String, description: 'Restrict to customers matching an AI Revenue Recommendation segment (currently only "retention_risk")' })
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -88,11 +89,12 @@ export class CustomersController {
     @Query('tags') tagsParam?: string,
     @Query('sortBy') sortBy?: string,
     @Query('sortDir') sortDir?: string,
+    @Query('riskSegment') riskSegment?: string,
   ) {
     const active = isActive === 'false' ? false : isActive === 'true' ? true : undefined;
     const tags = tagsParam ? tagsParam.split(',').map(t => t.trim()).filter(Boolean) : undefined;
     const dir = sortDir === 'asc' ? 'asc' : 'desc';
-    return this.customersService.findAll(user.companyId, page, limit, search, type, active, tags, sortBy, dir);
+    return this.customersService.findAll(user.companyId, page, limit, search, type, active, tags, sortBy, dir, riskSegment);
   }
 
   // ---- Unique tags for autocomplete ----

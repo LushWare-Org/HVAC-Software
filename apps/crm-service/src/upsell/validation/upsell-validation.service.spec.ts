@@ -84,12 +84,21 @@ describe('UpsellValidationService', () => {
     expect(result.finalCategory).toBe('no_upsell');
   });
 
-  it('falls back to a deliverable channel and no_upsell when there is no LLM recommendation', () => {
+  it('falls back to the rule-decided category (still no offer copy) when there is no LLM recommendation', () => {
     const result = service.validate(baseInput, null);
     expect(result.finalChannel).toBe('whatsapp');
-    expect(result.finalCategory).toBe('no_upsell');
+    expect(result.finalCategory).toBe('maintenance_plan');
     expect(result.finalMessage).toBeNull();
     expect(result.finalOffer).toBeNull();
+    expect(result.finalBundle).toBeNull();
+  });
+
+  it('still forces no_upsell when there is no LLM recommendation and no contact channel', () => {
+    const result = service.validate(
+      { ...baseInput, hasContactChannel: false, recipientPhone: undefined },
+      null,
+    );
+    expect(result.finalCategory).toBe('no_upsell');
   });
 
   it('rejects an oversized message but keeps the approved category', () => {

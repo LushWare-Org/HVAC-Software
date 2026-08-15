@@ -5,7 +5,7 @@ import { REVENUE_LLM_SYSTEM_PROMPT, buildRevenueLlmUserPrompt } from './revenue-
 
 const VALID_CHANNELS = new Set(['whatsapp', 'email', 'call']);
 const VALID_PRIORITIES = new Set(['Low', 'Medium', 'High']);
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 12000; // @google/genai rejects deadlines under 10s
 const MAX_MESSAGE_LENGTH = 320;
 
 /**

@@ -36,6 +36,11 @@ const QUOTE_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
   CONVERTED: [],                            // terminal
 };
 
+// Mirrors apps/analytics-service/src/recommendations/insights/insight-data.service.ts's
+// getPendingQuoteFacts aging window, so the "Filter" button on the Pending Quotes at Risk
+// recommendation surfaces precisely the quotes counted in that recommendation.
+const PENDING_QUOTE_AGING_DAYS = 7;
+
 // ── Sequential quote-number generator ────────────────────────────────────
 async function nextQuoteNumber(prisma: PrismaService, companyId: string): Promise<string> {
   const year = new Date().getFullYear();
@@ -72,7 +77,12 @@ export class QuotesService {
     if (dateTo) createdAtFilter.lte = new Date(`${dateTo}T23:59:59.999Z`);
     const where = {
       companyId,
-      ...(status ? { status } : {}),
+      ...(pendingAging
+        ? {
+            status: { in: [QuoteStatus.SENT, QuoteStatus.VIEWED] },
+            createdAt: { lt: new Date(Date.now() - PENDING_QUOTE_AGING_DAYS * 86_400_000) },
+          }
+        : status ? { status } : {}),
       ...(customerId ? { customerId } : {}),
       ...(jobId ? { jobId } : {}),
       ...(projectId ? { projectId } : {}),

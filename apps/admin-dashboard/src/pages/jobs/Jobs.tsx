@@ -1,10 +1,10 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Wrench, Clock, CheckCircle, FileText, Search, AlertTriangle,
   Maximize2, Minimize2, Edit2,
   ChevronLeft, ChevronRight, RefreshCw, AlertCircle,
-  Zap, CalendarDays, Shield, Trash2, FolderKanban,
+  Zap, CalendarDays, Shield, Trash2, FolderKanban,Sparkles, X,
 } from "lucide-react";
 import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
 import { useTechnicians } from "../../hooks/useScheduling";
@@ -218,7 +218,30 @@ export default function Jobs() {
   const [sortMode, setSortMode] = useState<'priority' | 'date'>('priority');
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
   const [forecastDays, setForecastDays] = useState<number>(7);
+  const [utilizationFilterActive, setUtilizationFilterActive] = useState(false);
   const PAST_PER_PAGE = 10;
+
+  // ── AI recommendation deep-link ─────────────────────────────────────────────
+  // "Filter" on the high-utilization recommendation lands here as
+  // ?filter=high_utilization&forecastDays=N — restricts to exactly the jobs
+  // scheduled in that forecast window (mirrors InsightDataService.getUtilizationFacts).
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('filter') === 'high_utilization') {
+      setUtilizationFilterActive(true);
+      const days = Number(searchParams.get('forecastDays'));
+      if (Number.isFinite(days) && days > 0) setForecastDays(days);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const clearUtilizationFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('filter');
+    next.delete('forecastDays');
+    setSearchParams(next);
+    setUtilizationFilterActive(false);
+  };
 
   const statsQuery = useJobStats();
   const jobsQuery = useJobs({ limit: 200, search: search || undefined });
@@ -279,6 +302,15 @@ export default function Jobs() {
     if (filterStatus !== "all") filtered = filtered.filter(j => j.status === filterStatus);
     if (filterPriority !== "all") filtered = filtered.filter(j => (j.priority ?? "NORMAL") === filterPriority);
     if (filterAgreement) filtered = filtered.filter(j => j.isAgreementJob);
+    if (utilizationFilterActive) {
+      const now = new Date();
+      const windowEnd = new Date(now.getTime() + forecastDays * 86_400_000);
+      filtered = filtered.filter(j => {
+        if (!j.scheduledStart) return false;
+        const t = new Date(j.scheduledStart).getTime();
+        return t >= now.getTime() && t < windowEnd.getTime();
+      });
+    }
     if (filterProjectId) filtered = filtered.filter(j => j.projectId === filterProjectId);
 
     const active = [...filtered].sort((a, b) => {
@@ -308,7 +340,9 @@ export default function Jobs() {
     });
 
     return { activeJobs: active, pastJobs: past, activeStatusCounts: statusCounts, activePriorityCounts: priorityCounts };
-  }, [allJobs, filterStatus, filterPriority, filterAgreement, filterProjectId, sortMode]);
+
+  }, [allJobs, filterStatus, filterPriority, filterAgreement, sortMode, utilizationFilterActive, filterProjectId, forecastDays]);
+
 
   const filteredPastJobs = pastStatusFilter === "all"
     ? pastJobs
@@ -384,6 +418,17 @@ export default function Jobs() {
             </div>
           }
         />
+      )}
+
+      {/* AI recommendation deep-link banner */}
+      {utilizationFilterActive && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "color-mix(in srgb, var(--amber) 10%, transparent)", borderRadius: 8, marginBottom: 12, color: "var(--amber)", fontSize: 13, fontWeight: 500 }}>
+          <Sparkles size={14} />
+          Showing jobs from the High Utilization recommendation — scheduled in the next {forecastDays} day{forecastDays !== 1 ? 's' : ''}.
+          <button onClick={clearUtilizationFilter} style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4, color: "var(--amber)", background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+            <X size={12} /> Clear filter
+          </button>
+        </div>
       )}
 
       {/* Urgent banner */}

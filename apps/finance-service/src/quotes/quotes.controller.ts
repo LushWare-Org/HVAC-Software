@@ -60,6 +60,8 @@ export class QuotesController {
   @ApiQuery({ name: 'houseId', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'pendingAging', required: false, type: Boolean, description: 'Restrict to SENT/VIEWED quotes older than 7 days — matches the "Pending Quotes at Risk" AI recommendation' })
+  findAll(
   @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date — filters by createdAt >= start of this day' })
   @ApiQuery({ name: 'dateTo', required: false, description: 'ISO date — filters by createdAt <= end of this day' })
   async findAll(
@@ -72,6 +74,9 @@ export class QuotesController {
     @Query('houseId') houseId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('pendingAging') pendingAging?: string,
+  ) {
+    return this.quotesService.findAll(user.companyId, { status, customerId, jobId, projectId, page, limit, pendingAging: pendingAging === 'true' });
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {

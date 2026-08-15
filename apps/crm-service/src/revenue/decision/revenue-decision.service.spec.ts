@@ -75,7 +75,7 @@ describe('RevenueDecisionService', () => {
     expect(decision.audit.validation.passed).toBe(true);
   });
 
-  it('falls back to a rule-only no_opportunity decision with canned reason when the LLM is unavailable', async () => {
+  it('falls back to the rule-decided category (still no action copy) when the LLM is unavailable', async () => {
     const llmRecommend = jest.fn().mockResolvedValue(null);
     const service = buildService(llmRecommend);
 
@@ -84,9 +84,11 @@ describe('RevenueDecisionService', () => {
       overdueInvoices: [{ id: 'inv-1', daysOverdue: 45, amount: 750 }],
     });
 
-    expect(decision.category).toBe('no_opportunity'); // no LLM proposal to validate against policy
+    expect(decision.category).toBe('payment_collection'); // OVERDUE_INVOICE rule category surfaces without the LLM
     expect(decision.channel).toBe('whatsapp'); // derived from recipientPhone, not the LLM
+    expect(decision.action).toBeNull(); // action copy still requires an LLM sign-off
     expect(decision.message).toBeNull();
+    expect(decision.priority).toBe('high'); // OVERDUE_INVOICE is a highPriority rule match
     expect(decision.audit.ruleResult.reasonCode).toBe('OVERDUE_INVOICE');
   });
 

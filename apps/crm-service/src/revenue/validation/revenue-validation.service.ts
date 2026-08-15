@@ -95,10 +95,11 @@ export class RevenueValidationService {
     const passed = failedChecks.length === 0;
 
     // Any blocking safety/policy check forces No Opportunity, regardless of what the LLM
-    // proposed. No LLM recommendation at all (e.g. the LLM call failed) also forces No
-    // Opportunity — the rule engine's category alone is never surfaced without the LLM's
-    // message/confidence sign-off.
-    const finalCategory: RevenueCategory = !blocked && llmRec ? input.ruleCategory : 'no_opportunity';
+    // proposed. When there's no LLM recommendation at all (call failed, quota exhausted),
+    // the rule engine's category still surfaces — it's the authoritative "is there an
+    // opportunity" signal — but finalAction/finalMessage stay null below, since only the
+    // LLM is trusted to write the customer-facing copy.
+    const finalCategory: RevenueCategory = !blocked ? input.ruleCategory : 'no_opportunity';
     const messageSafe = llmRec ? this.isMessageSafe(llmRec.message) : false;
 
     return {

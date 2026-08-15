@@ -113,6 +113,8 @@ interface QuoteFilters {
   search?: string
   status?: string
   customerId?: string
+  /** Restricts to SENT/VIEWED quotes older than 7 days — matches the "Pending Quotes at Risk" AI recommendation. Overrides `status` when true. */
+  pendingAging?: boolean
   projectId?: string
   houseId?: string
   /** ISO date (YYYY-MM-DD) — inclusive start of range, filters on createdAt */
@@ -130,7 +132,9 @@ export function useQuotes(filters: QuoteFilters = {}) {
         limit: filters.limit ?? 50,
       }
       if (filters.search) params.search = filters.search
-      if (filters.status && filters.status !== 'all') {
+      if (filters.pendingAging) {
+        params.pendingAging = true
+      } else if (filters.status && filters.status !== 'all') {
         params.status = filters.status.toUpperCase()
       }
       if (filters.customerId) params.customerId = filters.customerId

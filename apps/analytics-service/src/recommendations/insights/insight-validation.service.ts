@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { InsightCategory, InsightLlmRecommendation, InsightSignal } from './insight-types';
 
 /** Conservative confidence used when no LLM recommendation is available — mirrors upsell-agent.service.ts's RULE_ONLY_CONFIDENCE. */
-const RULE_ONLY_CONFIDENCE: Record<'Low' | 'Medium' | 'High', number> = {
+export const RULE_ONLY_CONFIDENCE: Record<'Low' | 'Medium' | 'High', number> = {
   High: 0.65,
   Medium: 0.5,
   Low: 0.2,

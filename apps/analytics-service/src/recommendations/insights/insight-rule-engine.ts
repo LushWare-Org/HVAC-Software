@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import type { InsightSignal, PendingQuoteFacts, RetentionFacts, UtilizationFacts } from './insight-types';
 
-const LOW_DEMAND_UTILIZATION_MAX = 0.6; // below this, capacity is going idle
-const HIGH_UTILIZATION_MIN = 0.85; // above this, demand exceeds comfortable capacity
-const PRICE_INCREASE_FRACTION = 0.12; // matches admin-dashboard's increase_price default (ACTION_PARAMS)
+// Exported so InsightExplanationService can describe these thresholds in the "Reason" breakdown
+// without duplicating the numbers.
+export const LOW_DEMAND_UTILIZATION_MAX = 0.6; // below this, capacity is going idle
+export const HIGH_UTILIZATION_MIN = 0.85; // above this, demand exceeds comfortable capacity
+export const PRICE_INCREASE_FRACTION = 0.12; // matches admin-dashboard's increase_price default (ACTION_PARAMS)
+export const HIGH_PRIORITY_RETENTION_RISK_COUNT = 5;
+export const HIGH_PRIORITY_PENDING_QUOTE_COUNT = 5;
 const MIN_RETENTION_RISK_COUNT = 1;
 const MIN_PENDING_QUOTE_COUNT = 1;
 
@@ -81,7 +85,7 @@ export class InsightRuleEngine {
         ...(facts.historicalSuccessRate != null ? { historicalSuccessRatePercent: Math.round(facts.historicalSuccessRate * 100) } : {}),
       },
       impact,
-      suggestedPriority: facts.atRiskHighValueCount >= 5 ? 'High' : 'Medium',
+      suggestedPriority: facts.atRiskHighValueCount >= HIGH_PRIORITY_RETENTION_RISK_COUNT ? 'High' : 'Medium',
     };
   }
 
@@ -104,7 +108,7 @@ export class InsightRuleEngine {
         ...(facts.historicalConversionRate != null ? { historicalConversionRatePercent: Math.round(facts.historicalConversionRate * 100) } : {}),
       },
       impact,
-      suggestedPriority: facts.agingPendingCount >= 5 ? 'High' : 'Medium',
+      suggestedPriority: facts.agingPendingCount >= HIGH_PRIORITY_PENDING_QUOTE_COUNT ? 'High' : 'Medium',
     };
   }
 }

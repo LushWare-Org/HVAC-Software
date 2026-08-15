@@ -2,6 +2,7 @@ import type { RetentionLlmRecommendation } from '@tscrm/types';
 import { RetentionValidationInput, RetentionValidationService } from './retention-validation.service';
 
 const baseInput: RetentionValidationInput = {
+  ruleAction: 'maintenance_plan_offer',
   hasContactChannel: true,
   recipientPhone: '+15551234567',
   recipientEmail: undefined,
@@ -82,11 +83,20 @@ describe('RetentionValidationService', () => {
     expect(result.finalAction).toBe('no_action');
   });
 
-  it('falls back to a deliverable channel and no_action when there is no LLM recommendation', () => {
+  it('falls back to the rule-decided action (still no message) when there is no LLM recommendation', () => {
     const result = service.validate(baseInput, null);
     expect(result.finalChannel).toBe('whatsapp');
-    expect(result.finalAction).toBe('no_action');
+    expect(result.finalAction).toBe('maintenance_plan_offer');
+    expect(result.finalOffer).toEqual({ type: 'standard', discount: 10 });
     expect(result.finalMessage).toBeNull();
+  });
+
+  it('still forces no_action when there is no LLM recommendation and no contact channel', () => {
+    const result = service.validate(
+      { ...baseInput, hasContactChannel: false, recipientPhone: undefined },
+      null,
+    );
+    expect(result.finalAction).toBe('no_action');
   });
 
   it('rejects an oversized message but keeps the approved action', () => {
