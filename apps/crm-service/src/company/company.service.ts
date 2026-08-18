@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { CompanySettings, CurrencySettings } from '@tscrm/types';
+import { CompanySettings, CurrencySettings, TaxRatePreset } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateTaxRatePresetDto, UpdateTaxRatePresetDto } from './dto/tax-rate-preset.dto';
 
 /** Seed-only tenant settings — never editable through PATCH /company. */
 const SETTINGS_KEYS = ['currency', 'timezone', 'features'] as const;
@@ -193,5 +194,73 @@ export class CompanyService {
       select: { currency: true, enabledCurrencies: true },
     });
     return { enabled: updated.enabledCurrencies, default: updated.currency };
+  }
+
+  async listTaxRates(companyId: string): Promise<TaxRatePreset[]> {
+    const rows = await this.prisma.taxRatePreset.findMany({
+      where: { companyId },
+      orderBy: { sortOrder: 'asc' },
+    });
+    return rows as unknown as TaxRatePreset[];
+  }
+
+  async createTaxRate(companyId: string, dto: CreateTaxRatePresetDto): Promise<TaxRatePreset> {
+    if (dto.isDefault) {
+      await this.prisma.taxRatePreset.updateMany({
+        where: { companyId, isDefault: true },
+        data: { isDefault: false },
+      });
+    }
+    const created = await this.prisma.taxRatePreset.create({
+      data: { companyId, name: dto.name, rate: dto.rate, isDefault: !!dto.isDefault },
+    });
+    return created as unknown as TaxRatePreset;
+  }
+
+  private async findTaxRateOrThrow(companyId: string, id: string) {
+    const preset = await this.prisma.taxRatePreset.findUnique({ where: { id } });
+    if (!preset || preset.companyId !== companyId) {
+      throw new NotFoundException('Tax rate preset not found');
+    }
+    return preset;
+  }
+
+  async updateTaxRate(companyId: string, id: string, dto: UpdateTaxRatePresetDto): Promise<TaxRatePreset> {
+    const existing = await this.findTaxRateOrThrow(companyId, id);
+
+    if (existing.isDefault && (dto.isActive === false || dto.isDefault === false)) {
+      throw new BadRequestException(
+        'Cannot deactivate or unset the default tax rate — set another preset as default first',
+      );
+    }
+
+    if (dto.isDefault === true) {
+      await this.prisma.taxRatePreset.updateMany({
+        where: { companyId, isDefault: true },
+        data: { isDefault: false },
+      });
+    }
+
+    const updated = await this.prisma.taxRatePreset.update({
+      where: { id },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.rate !== undefined ? { rate: dto.rate } : {}),
+        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+        ...(dto.isDefault !== undefined ? { isDefault: dto.isDefault } : {}),
+        ...(dto.sortOrder !== undefined ? { sortOrder: dto.sortOrder } : {}),
+      },
+    });
+    return updated as unknown as TaxRatePreset;
+  }
+
+  async deleteTaxRate(companyId: string, id: string): Promise<void> {
+    const existing = await this.findTaxRateOrThrow(companyId, id);
+    if (existing.isDefault) {
+      throw new BadRequestException(
+        'Cannot delete the default tax rate — set another preset as default first',
+      );
+    }
+    await this.prisma.taxRatePreset.delete({ where: { id } });
   }
 }

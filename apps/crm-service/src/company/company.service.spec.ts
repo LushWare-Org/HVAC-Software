@@ -6,6 +6,15 @@ const prismaMock = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  taxRatePreset: {
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    delete: jest.fn(),
+    findUnique: jest.fn(),
+  },
+  $transaction: jest.fn((fn: any) => fn(prismaMock)),
   tableExists: jest.fn().mockResolvedValue(true),
   columnExists: jest.fn().mockResolvedValue(true),
   tableRef: jest.fn().mockReturnValue('"crm"."companies"'),
@@ -126,5 +135,91 @@ describe('CompanyService currencies', () => {
       select: { currency: true, enabledCurrencies: true },
     });
     expect(result).toEqual({ enabled: ['USD', 'LKR'], default: 'LKR' });
+  });
+});
+
+describe('CompanyService tax rates', () => {
+  let service: CompanyService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    prismaMock.$transaction.mockImplementation((fn: any) => fn(prismaMock));
+    service = new CompanyService(prismaMock as never);
+  });
+
+  it('listTaxRates returns presets ordered by sortOrder', async () => {
+    prismaMock.taxRatePreset.findMany.mockResolvedValue([{ id: 't1', sortOrder: 0 }]);
+    const result = await service.listTaxRates('co-1');
+    expect(prismaMock.taxRatePreset.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'co-1' },
+      orderBy: { sortOrder: 'asc' },
+    });
+    expect(result).toEqual([{ id: 't1', sortOrder: 0 }]);
+  });
+
+  it('createTaxRate unsets the prior default when isDefault:true', async () => {
+    prismaMock.taxRatePreset.create.mockResolvedValue({ id: 't2', isDefault: true });
+    await service.createTaxRate('co-1', { name: 'VAT 15%', rate: 0.15, isDefault: true });
+    expect(prismaMock.taxRatePreset.updateMany).toHaveBeenCalledWith({
+      where: { companyId: 'co-1', isDefault: true },
+      data: { isDefault: false },
+    });
+    expect(prismaMock.taxRatePreset.create).toHaveBeenCalledWith({
+      data: { companyId: 'co-1', name: 'VAT 15%', rate: 0.15, isDefault: true },
+    });
+  });
+
+  it('createTaxRate does not touch other defaults when isDefault is falsy', async () => {
+    prismaMock.taxRatePreset.create.mockResolvedValue({ id: 't3', isDefault: false });
+    await service.createTaxRate('co-1', { name: 'No Tax', rate: 0 });
+    expect(prismaMock.taxRatePreset.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('updateTaxRate rejects deactivating the current default', async () => {
+    prismaMock.taxRatePreset.findUnique.mockResolvedValue({ id: 't1', companyId: 'co-1', isDefault: true });
+    await expect(
+      service.updateTaxRate('co-1', 't1', { isActive: false }),
+    ).rejects.toThrow(BadRequestException);
+    expect(prismaMock.taxRatePreset.update).not.toHaveBeenCalled();
+  });
+
+  it('updateTaxRate rejects unsetting isDefault with no replacement', async () => {
+    prismaMock.taxRatePreset.findUnique.mockResolvedValue({ id: 't1', companyId: 'co-1', isDefault: true });
+    await expect(
+      service.updateTaxRate('co-1', 't1', { isDefault: false }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('updateTaxRate promotes a new default and unsets the old one', async () => {
+    prismaMock.taxRatePreset.findUnique.mockResolvedValue({ id: 't2', companyId: 'co-1', isDefault: false });
+    prismaMock.taxRatePreset.update.mockResolvedValue({ id: 't2', isDefault: true });
+    await service.updateTaxRate('co-1', 't2', { isDefault: true });
+    expect(prismaMock.taxRatePreset.updateMany).toHaveBeenCalledWith({
+      where: { companyId: 'co-1', isDefault: true },
+      data: { isDefault: false },
+    });
+    expect(prismaMock.taxRatePreset.update).toHaveBeenCalledWith({
+      where: { id: 't2' },
+      data: { isDefault: true },
+    });
+  });
+
+  it('updateTaxRate throws NotFound for a preset outside the caller company', async () => {
+    prismaMock.taxRatePreset.findUnique.mockResolvedValue({ id: 't1', companyId: 'co-OTHER', isDefault: false });
+    await expect(
+      service.updateTaxRate('co-1', 't1', { name: 'x' }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('deleteTaxRate rejects deleting the current default', async () => {
+    prismaMock.taxRatePreset.findUnique.mockResolvedValue({ id: 't1', companyId: 'co-1', isDefault: true });
+    await expect(service.deleteTaxRate('co-1', 't1')).rejects.toThrow(BadRequestException);
+    expect(prismaMock.taxRatePreset.delete).not.toHaveBeenCalled();
+  });
+
+  it('deleteTaxRate deletes a non-default preset', async () => {
+    prismaMock.taxRatePreset.findUnique.mockResolvedValue({ id: 't2', companyId: 'co-1', isDefault: false });
+    await service.deleteTaxRate('co-1', 't2');
+    expect(prismaMock.taxRatePreset.delete).toHaveBeenCalledWith({ where: { id: 't2' } });
   });
 });
