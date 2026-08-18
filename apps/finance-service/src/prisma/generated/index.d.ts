@@ -1818,6 +1818,7 @@ export namespace Prisma {
     taxRate: Decimal | null
     taxAmount: Decimal | null
     total: Decimal | null
+    currency: string | null
     notes: string | null
     terms: string | null
     pdfUrl: string | null
@@ -1855,6 +1856,7 @@ export namespace Prisma {
     taxRate: Decimal | null
     taxAmount: Decimal | null
     total: Decimal | null
+    currency: string | null
     notes: string | null
     terms: string | null
     pdfUrl: string | null
@@ -1892,6 +1894,7 @@ export namespace Prisma {
     taxRate: number
     taxAmount: number
     total: number
+    currency: number
     notes: number
     terms: number
     pdfUrl: number
@@ -1949,6 +1952,7 @@ export namespace Prisma {
     taxRate?: true
     taxAmount?: true
     total?: true
+    currency?: true
     notes?: true
     terms?: true
     pdfUrl?: true
@@ -1986,6 +1990,7 @@ export namespace Prisma {
     taxRate?: true
     taxAmount?: true
     total?: true
+    currency?: true
     notes?: true
     terms?: true
     pdfUrl?: true
@@ -2023,6 +2028,7 @@ export namespace Prisma {
     taxRate?: true
     taxAmount?: true
     total?: true
+    currency?: true
     notes?: true
     terms?: true
     pdfUrl?: true
@@ -2147,6 +2153,7 @@ export namespace Prisma {
     taxRate: Decimal
     taxAmount: Decimal
     total: Decimal
+    currency: string
     notes: string | null
     terms: string | null
     pdfUrl: string | null
@@ -2203,6 +2210,7 @@ export namespace Prisma {
     taxRate?: boolean
     taxAmount?: boolean
     total?: boolean
+    currency?: boolean
     notes?: boolean
     terms?: boolean
     pdfUrl?: boolean
@@ -2243,6 +2251,7 @@ export namespace Prisma {
     taxRate?: boolean
     taxAmount?: boolean
     total?: boolean
+    currency?: boolean
     notes?: boolean
     terms?: boolean
     pdfUrl?: boolean
@@ -2280,6 +2289,7 @@ export namespace Prisma {
     taxRate?: boolean
     taxAmount?: boolean
     total?: boolean
+    currency?: boolean
     notes?: boolean
     terms?: boolean
     pdfUrl?: boolean
@@ -2330,6 +2340,7 @@ export namespace Prisma {
       taxRate: Prisma.Decimal
       taxAmount: Prisma.Decimal
       total: Prisma.Decimal
+      currency: string
       notes: string | null
       terms: string | null
       pdfUrl: string | null
@@ -2759,6 +2770,7 @@ export namespace Prisma {
     readonly taxRate: FieldRef<"Quote", 'Decimal'>
     readonly taxAmount: FieldRef<"Quote", 'Decimal'>
     readonly total: FieldRef<"Quote", 'Decimal'>
+    readonly currency: FieldRef<"Quote", 'String'>
     readonly notes: FieldRef<"Quote", 'String'>
     readonly terms: FieldRef<"Quote", 'String'>
     readonly pdfUrl: FieldRef<"Quote", 'String'>
@@ -4224,6 +4236,7 @@ export namespace Prisma {
     total: Decimal | null
     amountPaid: Decimal | null
     balanceDue: Decimal | null
+    currency: string | null
     notes: string | null
     terms: string | null
     pdfUrl: string | null
@@ -4270,6 +4283,7 @@ export namespace Prisma {
     total: Decimal | null
     amountPaid: Decimal | null
     balanceDue: Decimal | null
+    currency: string | null
     notes: string | null
     terms: string | null
     pdfUrl: string | null
@@ -4316,6 +4330,7 @@ export namespace Prisma {
     total: number
     amountPaid: number
     balanceDue: number
+    currency: number
     notes: number
     terms: number
     pdfUrl: number
@@ -4386,6 +4401,7 @@ export namespace Prisma {
     total?: true
     amountPaid?: true
     balanceDue?: true
+    currency?: true
     notes?: true
     terms?: true
     pdfUrl?: true
@@ -4432,6 +4448,7 @@ export namespace Prisma {
     total?: true
     amountPaid?: true
     balanceDue?: true
+    currency?: true
     notes?: true
     terms?: true
     pdfUrl?: true
@@ -4478,6 +4495,7 @@ export namespace Prisma {
     total?: true
     amountPaid?: true
     balanceDue?: true
+    currency?: true
     notes?: true
     terms?: true
     pdfUrl?: true
@@ -4611,6 +4629,7 @@ export namespace Prisma {
     total: Decimal
     amountPaid: Decimal
     balanceDue: Decimal
+    currency: string
     notes: string | null
     terms: string | null
     pdfUrl: string | null
@@ -4676,6 +4695,7 @@ export namespace Prisma {
     total?: boolean
     amountPaid?: boolean
     balanceDue?: boolean
+    currency?: boolean
     notes?: boolean
     terms?: boolean
     pdfUrl?: boolean
@@ -4727,6 +4747,7 @@ export namespace Prisma {
     total?: boolean
     amountPaid?: boolean
     balanceDue?: boolean
+    currency?: boolean
     notes?: boolean
     terms?: boolean
     pdfUrl?: boolean
@@ -4775,6 +4796,7 @@ export namespace Prisma {
     total?: boolean
     amountPaid?: boolean
     balanceDue?: boolean
+    currency?: boolean
     notes?: boolean
     terms?: boolean
     pdfUrl?: boolean
@@ -4841,6 +4863,7 @@ export namespace Prisma {
       total: Prisma.Decimal
       amountPaid: Prisma.Decimal
       balanceDue: Prisma.Decimal
+      currency: string
       notes: string | null
       terms: string | null
       pdfUrl: string | null
@@ -5281,6 +5304,7 @@ export namespace Prisma {
     readonly total: FieldRef<"Invoice", 'Decimal'>
     readonly amountPaid: FieldRef<"Invoice", 'Decimal'>
     readonly balanceDue: FieldRef<"Invoice", 'Decimal'>
+    readonly currency: FieldRef<"Invoice", 'String'>
     readonly notes: FieldRef<"Invoice", 'String'>
     readonly terms: FieldRef<"Invoice", 'String'>
     readonly pdfUrl: FieldRef<"Invoice", 'String'>
@@ -7837,6 +7861,7 @@ export namespace Prisma {
     frequency: $Enums.RecurringFrequency | null
     amount: Decimal | null
     taxRate: Decimal | null
+    currency: string | null
     nextBillingDate: Date | null
     isActive: boolean | null
     jobId: string | null
@@ -7854,6 +7879,7 @@ export namespace Prisma {
     frequency: $Enums.RecurringFrequency | null
     amount: Decimal | null
     taxRate: Decimal | null
+    currency: string | null
     nextBillingDate: Date | null
     isActive: boolean | null
     jobId: string | null
@@ -7871,6 +7897,7 @@ export namespace Prisma {
     frequency: number
     amount: number
     taxRate: number
+    currency: number
     nextBillingDate: number
     isActive: number
     jobId: number
@@ -7900,6 +7927,7 @@ export namespace Prisma {
     frequency?: true
     amount?: true
     taxRate?: true
+    currency?: true
     nextBillingDate?: true
     isActive?: true
     jobId?: true
@@ -7917,6 +7945,7 @@ export namespace Prisma {
     frequency?: true
     amount?: true
     taxRate?: true
+    currency?: true
     nextBillingDate?: true
     isActive?: true
     jobId?: true
@@ -7934,6 +7963,7 @@ export namespace Prisma {
     frequency?: true
     amount?: true
     taxRate?: true
+    currency?: true
     nextBillingDate?: true
     isActive?: true
     jobId?: true
@@ -8038,6 +8068,7 @@ export namespace Prisma {
     frequency: $Enums.RecurringFrequency
     amount: Decimal
     taxRate: Decimal
+    currency: string
     nextBillingDate: Date
     isActive: boolean
     jobId: string | null
@@ -8074,6 +8105,7 @@ export namespace Prisma {
     frequency?: boolean
     amount?: boolean
     taxRate?: boolean
+    currency?: boolean
     nextBillingDate?: boolean
     isActive?: boolean
     jobId?: boolean
@@ -8093,6 +8125,7 @@ export namespace Prisma {
     frequency?: boolean
     amount?: boolean
     taxRate?: boolean
+    currency?: boolean
     nextBillingDate?: boolean
     isActive?: boolean
     jobId?: boolean
@@ -8110,6 +8143,7 @@ export namespace Prisma {
     frequency?: boolean
     amount?: boolean
     taxRate?: boolean
+    currency?: boolean
     nextBillingDate?: boolean
     isActive?: boolean
     jobId?: boolean
@@ -8138,6 +8172,7 @@ export namespace Prisma {
       frequency: $Enums.RecurringFrequency
       amount: Prisma.Decimal
       taxRate: Prisma.Decimal
+      currency: string
       nextBillingDate: Date
       isActive: boolean
       jobId: string | null
@@ -8546,6 +8581,7 @@ export namespace Prisma {
     readonly frequency: FieldRef<"RecurringSchedule", 'RecurringFrequency'>
     readonly amount: FieldRef<"RecurringSchedule", 'Decimal'>
     readonly taxRate: FieldRef<"RecurringSchedule", 'Decimal'>
+    readonly currency: FieldRef<"RecurringSchedule", 'String'>
     readonly nextBillingDate: FieldRef<"RecurringSchedule", 'DateTime'>
     readonly isActive: FieldRef<"RecurringSchedule", 'Boolean'>
     readonly jobId: FieldRef<"RecurringSchedule", 'String'>
@@ -11736,6 +11772,7 @@ export namespace Prisma {
     taxRate: 'taxRate',
     taxAmount: 'taxAmount',
     total: 'total',
+    currency: 'currency',
     notes: 'notes',
     terms: 'terms',
     pdfUrl: 'pdfUrl',
@@ -11792,6 +11829,7 @@ export namespace Prisma {
     total: 'total',
     amountPaid: 'amountPaid',
     balanceDue: 'balanceDue',
+    currency: 'currency',
     notes: 'notes',
     terms: 'terms',
     pdfUrl: 'pdfUrl',
@@ -11862,6 +11900,7 @@ export namespace Prisma {
     frequency: 'frequency',
     amount: 'amount',
     taxRate: 'taxRate',
+    currency: 'currency',
     nextBillingDate: 'nextBillingDate',
     isActive: 'isActive',
     jobId: 'jobId',
@@ -12163,6 +12202,7 @@ export namespace Prisma {
     taxRate?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     total?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
+    currency?: StringFilter<"Quote"> | string
     notes?: StringNullableFilter<"Quote"> | string | null
     terms?: StringNullableFilter<"Quote"> | string | null
     pdfUrl?: StringNullableFilter<"Quote"> | string | null
@@ -12202,6 +12242,7 @@ export namespace Prisma {
     taxRate?: SortOrder
     taxAmount?: SortOrder
     total?: SortOrder
+    currency?: SortOrder
     notes?: SortOrderInput | SortOrder
     terms?: SortOrderInput | SortOrder
     pdfUrl?: SortOrderInput | SortOrder
@@ -12246,6 +12287,7 @@ export namespace Prisma {
     taxRate?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     total?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
+    currency?: StringFilter<"Quote"> | string
     notes?: StringNullableFilter<"Quote"> | string | null
     terms?: StringNullableFilter<"Quote"> | string | null
     pdfUrl?: StringNullableFilter<"Quote"> | string | null
@@ -12284,6 +12326,7 @@ export namespace Prisma {
     taxRate?: SortOrder
     taxAmount?: SortOrder
     total?: SortOrder
+    currency?: SortOrder
     notes?: SortOrderInput | SortOrder
     terms?: SortOrderInput | SortOrder
     pdfUrl?: SortOrderInput | SortOrder
@@ -12329,6 +12372,7 @@ export namespace Prisma {
     taxRate?: DecimalWithAggregatesFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalWithAggregatesFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     total?: DecimalWithAggregatesFilter<"Quote"> | Decimal | DecimalJsLike | number | string
+    currency?: StringWithAggregatesFilter<"Quote"> | string
     notes?: StringNullableWithAggregatesFilter<"Quote"> | string | null
     terms?: StringNullableWithAggregatesFilter<"Quote"> | string | null
     pdfUrl?: StringNullableWithAggregatesFilter<"Quote"> | string | null
@@ -12447,6 +12491,7 @@ export namespace Prisma {
     total?: DecimalFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
+    currency?: StringFilter<"Invoice"> | string
     notes?: StringNullableFilter<"Invoice"> | string | null
     terms?: StringNullableFilter<"Invoice"> | string | null
     pdfUrl?: StringNullableFilter<"Invoice"> | string | null
@@ -12497,6 +12542,7 @@ export namespace Prisma {
     total?: SortOrder
     amountPaid?: SortOrder
     balanceDue?: SortOrder
+    currency?: SortOrder
     notes?: SortOrderInput | SortOrder
     terms?: SortOrderInput | SortOrder
     pdfUrl?: SortOrderInput | SortOrder
@@ -12551,6 +12597,7 @@ export namespace Prisma {
     total?: DecimalFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
+    currency?: StringFilter<"Invoice"> | string
     notes?: StringNullableFilter<"Invoice"> | string | null
     terms?: StringNullableFilter<"Invoice"> | string | null
     pdfUrl?: StringNullableFilter<"Invoice"> | string | null
@@ -12601,6 +12648,7 @@ export namespace Prisma {
     total?: SortOrder
     amountPaid?: SortOrder
     balanceDue?: SortOrder
+    currency?: SortOrder
     notes?: SortOrderInput | SortOrder
     terms?: SortOrderInput | SortOrder
     pdfUrl?: SortOrderInput | SortOrder
@@ -12655,6 +12703,7 @@ export namespace Prisma {
     total?: DecimalWithAggregatesFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalWithAggregatesFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalWithAggregatesFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
+    currency?: StringWithAggregatesFilter<"Invoice"> | string
     notes?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     terms?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     pdfUrl?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
@@ -12869,6 +12918,7 @@ export namespace Prisma {
     frequency?: EnumRecurringFrequencyFilter<"RecurringSchedule"> | $Enums.RecurringFrequency
     amount?: DecimalFilter<"RecurringSchedule"> | Decimal | DecimalJsLike | number | string
     taxRate?: DecimalFilter<"RecurringSchedule"> | Decimal | DecimalJsLike | number | string
+    currency?: StringFilter<"RecurringSchedule"> | string
     nextBillingDate?: DateTimeFilter<"RecurringSchedule"> | Date | string
     isActive?: BoolFilter<"RecurringSchedule"> | boolean
     jobId?: StringNullableFilter<"RecurringSchedule"> | string | null
@@ -12887,6 +12937,7 @@ export namespace Prisma {
     frequency?: SortOrder
     amount?: SortOrder
     taxRate?: SortOrder
+    currency?: SortOrder
     nextBillingDate?: SortOrder
     isActive?: SortOrder
     jobId?: SortOrderInput | SortOrder
@@ -12908,6 +12959,7 @@ export namespace Prisma {
     frequency?: EnumRecurringFrequencyFilter<"RecurringSchedule"> | $Enums.RecurringFrequency
     amount?: DecimalFilter<"RecurringSchedule"> | Decimal | DecimalJsLike | number | string
     taxRate?: DecimalFilter<"RecurringSchedule"> | Decimal | DecimalJsLike | number | string
+    currency?: StringFilter<"RecurringSchedule"> | string
     nextBillingDate?: DateTimeFilter<"RecurringSchedule"> | Date | string
     isActive?: BoolFilter<"RecurringSchedule"> | boolean
     jobId?: StringNullableFilter<"RecurringSchedule"> | string | null
@@ -12926,6 +12978,7 @@ export namespace Prisma {
     frequency?: SortOrder
     amount?: SortOrder
     taxRate?: SortOrder
+    currency?: SortOrder
     nextBillingDate?: SortOrder
     isActive?: SortOrder
     jobId?: SortOrderInput | SortOrder
@@ -12951,6 +13004,7 @@ export namespace Prisma {
     frequency?: EnumRecurringFrequencyWithAggregatesFilter<"RecurringSchedule"> | $Enums.RecurringFrequency
     amount?: DecimalWithAggregatesFilter<"RecurringSchedule"> | Decimal | DecimalJsLike | number | string
     taxRate?: DecimalWithAggregatesFilter<"RecurringSchedule"> | Decimal | DecimalJsLike | number | string
+    currency?: StringWithAggregatesFilter<"RecurringSchedule"> | string
     nextBillingDate?: DateTimeWithAggregatesFilter<"RecurringSchedule"> | Date | string
     isActive?: BoolWithAggregatesFilter<"RecurringSchedule"> | boolean
     jobId?: StringNullableWithAggregatesFilter<"RecurringSchedule"> | string | null
@@ -13195,6 +13249,7 @@ export namespace Prisma {
     taxRate?: Decimal | DecimalJsLike | number | string
     taxAmount?: Decimal | DecimalJsLike | number | string
     total?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -13234,6 +13289,7 @@ export namespace Prisma {
     taxRate?: Decimal | DecimalJsLike | number | string
     taxAmount?: Decimal | DecimalJsLike | number | string
     total?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -13273,6 +13329,7 @@ export namespace Prisma {
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13312,6 +13369,7 @@ export namespace Prisma {
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13351,6 +13409,7 @@ export namespace Prisma {
     taxRate?: Decimal | DecimalJsLike | number | string
     taxAmount?: Decimal | DecimalJsLike | number | string
     total?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -13388,6 +13447,7 @@ export namespace Prisma {
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13425,6 +13485,7 @@ export namespace Prisma {
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13545,6 +13606,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -13594,6 +13656,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -13641,6 +13704,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13690,6 +13754,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13738,6 +13803,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -13783,6 +13849,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -13828,6 +13895,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14061,6 +14129,7 @@ export namespace Prisma {
     frequency?: $Enums.RecurringFrequency
     amount: Decimal | DecimalJsLike | number | string
     taxRate?: Decimal | DecimalJsLike | number | string
+    currency?: string
     nextBillingDate: Date | string
     isActive?: boolean
     jobId?: string | null
@@ -14079,6 +14148,7 @@ export namespace Prisma {
     frequency?: $Enums.RecurringFrequency
     amount: Decimal | DecimalJsLike | number | string
     taxRate?: Decimal | DecimalJsLike | number | string
+    currency?: string
     nextBillingDate: Date | string
     isActive?: boolean
     jobId?: string | null
@@ -14097,6 +14167,7 @@ export namespace Prisma {
     frequency?: EnumRecurringFrequencyFieldUpdateOperationsInput | $Enums.RecurringFrequency
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     nextBillingDate?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14115,6 +14186,7 @@ export namespace Prisma {
     frequency?: EnumRecurringFrequencyFieldUpdateOperationsInput | $Enums.RecurringFrequency
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     nextBillingDate?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14133,6 +14205,7 @@ export namespace Prisma {
     frequency?: $Enums.RecurringFrequency
     amount: Decimal | DecimalJsLike | number | string
     taxRate?: Decimal | DecimalJsLike | number | string
+    currency?: string
     nextBillingDate: Date | string
     isActive?: boolean
     jobId?: string | null
@@ -14150,6 +14223,7 @@ export namespace Prisma {
     frequency?: EnumRecurringFrequencyFieldUpdateOperationsInput | $Enums.RecurringFrequency
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     nextBillingDate?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14167,6 +14241,7 @@ export namespace Prisma {
     frequency?: EnumRecurringFrequencyFieldUpdateOperationsInput | $Enums.RecurringFrequency
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     nextBillingDate?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -14560,6 +14635,7 @@ export namespace Prisma {
     taxRate?: SortOrder
     taxAmount?: SortOrder
     total?: SortOrder
+    currency?: SortOrder
     notes?: SortOrder
     terms?: SortOrder
     pdfUrl?: SortOrder
@@ -14606,6 +14682,7 @@ export namespace Prisma {
     taxRate?: SortOrder
     taxAmount?: SortOrder
     total?: SortOrder
+    currency?: SortOrder
     notes?: SortOrder
     terms?: SortOrder
     pdfUrl?: SortOrder
@@ -14643,6 +14720,7 @@ export namespace Prisma {
     taxRate?: SortOrder
     taxAmount?: SortOrder
     total?: SortOrder
+    currency?: SortOrder
     notes?: SortOrder
     terms?: SortOrder
     pdfUrl?: SortOrder
@@ -14960,6 +15038,7 @@ export namespace Prisma {
     total?: SortOrder
     amountPaid?: SortOrder
     balanceDue?: SortOrder
+    currency?: SortOrder
     notes?: SortOrder
     terms?: SortOrder
     pdfUrl?: SortOrder
@@ -15017,6 +15096,7 @@ export namespace Prisma {
     total?: SortOrder
     amountPaid?: SortOrder
     balanceDue?: SortOrder
+    currency?: SortOrder
     notes?: SortOrder
     terms?: SortOrder
     pdfUrl?: SortOrder
@@ -15063,6 +15143,7 @@ export namespace Prisma {
     total?: SortOrder
     amountPaid?: SortOrder
     balanceDue?: SortOrder
+    currency?: SortOrder
     notes?: SortOrder
     terms?: SortOrder
     pdfUrl?: SortOrder
@@ -15271,6 +15352,7 @@ export namespace Prisma {
     frequency?: SortOrder
     amount?: SortOrder
     taxRate?: SortOrder
+    currency?: SortOrder
     nextBillingDate?: SortOrder
     isActive?: SortOrder
     jobId?: SortOrder
@@ -15293,6 +15375,7 @@ export namespace Prisma {
     frequency?: SortOrder
     amount?: SortOrder
     taxRate?: SortOrder
+    currency?: SortOrder
     nextBillingDate?: SortOrder
     isActive?: SortOrder
     jobId?: SortOrder
@@ -15310,6 +15393,7 @@ export namespace Prisma {
     frequency?: SortOrder
     amount?: SortOrder
     taxRate?: SortOrder
+    currency?: SortOrder
     nextBillingDate?: SortOrder
     isActive?: SortOrder
     jobId?: SortOrder
@@ -16246,6 +16330,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -16293,6 +16378,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -16401,6 +16487,7 @@ export namespace Prisma {
     total?: DecimalFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFilter<"Invoice"> | Decimal | DecimalJsLike | number | string
+    currency?: StringFilter<"Invoice"> | string
     notes?: StringNullableFilter<"Invoice"> | string | null
     terms?: StringNullableFilter<"Invoice"> | string | null
     pdfUrl?: StringNullableFilter<"Invoice"> | string | null
@@ -16446,6 +16533,7 @@ export namespace Prisma {
     taxRate?: Decimal | DecimalJsLike | number | string
     taxAmount?: Decimal | DecimalJsLike | number | string
     total?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -16484,6 +16572,7 @@ export namespace Prisma {
     taxRate?: Decimal | DecimalJsLike | number | string
     taxAmount?: Decimal | DecimalJsLike | number | string
     total?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -16538,6 +16627,7 @@ export namespace Prisma {
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16576,6 +16666,7 @@ export namespace Prisma {
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16614,6 +16705,7 @@ export namespace Prisma {
     taxRate?: Decimal | DecimalJsLike | number | string
     taxAmount?: Decimal | DecimalJsLike | number | string
     total?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -16652,6 +16744,7 @@ export namespace Prisma {
     taxRate?: Decimal | DecimalJsLike | number | string
     taxAmount?: Decimal | DecimalJsLike | number | string
     total?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -16682,6 +16775,7 @@ export namespace Prisma {
     frequency?: $Enums.RecurringFrequency
     amount: Decimal | DecimalJsLike | number | string
     taxRate?: Decimal | DecimalJsLike | number | string
+    currency?: string
     nextBillingDate: Date | string
     isActive?: boolean
     jobId?: string | null
@@ -16699,6 +16793,7 @@ export namespace Prisma {
     frequency?: $Enums.RecurringFrequency
     amount: Decimal | DecimalJsLike | number | string
     taxRate?: Decimal | DecimalJsLike | number | string
+    currency?: string
     nextBillingDate: Date | string
     isActive?: boolean
     jobId?: string | null
@@ -16819,6 +16914,7 @@ export namespace Prisma {
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16857,6 +16953,7 @@ export namespace Prisma {
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16893,6 +16990,7 @@ export namespace Prisma {
     frequency?: EnumRecurringFrequencyFieldUpdateOperationsInput | $Enums.RecurringFrequency
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     nextBillingDate?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16910,6 +17008,7 @@ export namespace Prisma {
     frequency?: EnumRecurringFrequencyFieldUpdateOperationsInput | $Enums.RecurringFrequency
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     taxRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     nextBillingDate?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     jobId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17007,6 +17106,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -17055,6 +17155,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -17117,6 +17218,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17165,6 +17267,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17211,6 +17314,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -17259,6 +17363,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -17321,6 +17426,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17369,6 +17475,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17415,6 +17522,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -17463,6 +17571,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -17546,6 +17655,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -17624,6 +17734,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17671,6 +17782,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17718,6 +17830,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17872,6 +17985,7 @@ export namespace Prisma {
     total?: Decimal | DecimalJsLike | number | string
     amountPaid?: Decimal | DecimalJsLike | number | string
     balanceDue?: Decimal | DecimalJsLike | number | string
+    currency?: string
     notes?: string | null
     terms?: string | null
     pdfUrl?: string | null
@@ -17916,6 +18030,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17964,6 +18079,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18011,6 +18127,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     amountPaid?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceDue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
     pdfUrl?: NullableStringFieldUpdateOperationsInput | string | null

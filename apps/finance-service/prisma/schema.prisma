@@ -129,6 +129,7 @@ model Quote {
   taxRate          Decimal     @db.Decimal(5, 4) @default(0)  // 0.0825 = 8.25%
   taxAmount        Decimal     @db.Decimal(10, 2) @default(0)
   total            Decimal     @db.Decimal(10, 2) @default(0)
+  currency         String      @default("USD")
 
   notes            String?
   terms            String?
@@ -208,6 +209,7 @@ model Invoice {
   total                 Decimal       @db.Decimal(10, 2) @default(0)
   amountPaid            Decimal       @db.Decimal(10, 2) @default(0)
   balanceDue            Decimal       @db.Decimal(10, 2) @default(0)
+  currency              String        @default("USD")
 
   notes                 String?
   terms                 String?
@@ -320,6 +322,7 @@ model RecurringSchedule {
   frequency            RecurringFrequency @default(ANNUALLY)
   amount               Decimal            @db.Decimal(10, 2)
   taxRate              Decimal            @db.Decimal(5, 4) @default(0)
+  currency             String             @default("USD")
   nextBillingDate      DateTime
   isActive             Boolean            @default(true)
   jobId                String?            // optional: re-creates a job on each cycle

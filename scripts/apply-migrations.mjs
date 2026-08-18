@@ -768,6 +768,36 @@ WHERE j."companyId" = c.id
   AND c.currency <> 'USD';
     `.trim(),
   },
+  {
+    schema: 'finance',
+    name: '20260818020000_add_finance_currency',
+    sql: `
+ALTER TABLE "finance"."Quote" ADD COLUMN IF NOT EXISTS "currency" TEXT NOT NULL DEFAULT 'USD';
+ALTER TABLE "finance"."Invoice" ADD COLUMN IF NOT EXISTS "currency" TEXT NOT NULL DEFAULT 'USD';
+ALTER TABLE "finance"."RecurringSchedule" ADD COLUMN IF NOT EXISTS "currency" TEXT NOT NULL DEFAULT 'USD';
+
+UPDATE "finance"."Quote" q
+SET "currency" = c.currency
+FROM "crm"."companies" c
+WHERE q."companyId" = c.id
+  AND q."currency" = 'USD'
+  AND c.currency <> 'USD';
+
+UPDATE "finance"."Invoice" i
+SET "currency" = c.currency
+FROM "crm"."companies" c
+WHERE i."companyId" = c.id
+  AND i."currency" = 'USD'
+  AND c.currency <> 'USD';
+
+UPDATE "finance"."RecurringSchedule" r
+SET "currency" = c.currency
+FROM "crm"."companies" c
+WHERE r."companyId" = c.id
+  AND r."currency" = 'USD'
+  AND c.currency <> 'USD';
+    `.trim(),
+  },
 
 ];
 
