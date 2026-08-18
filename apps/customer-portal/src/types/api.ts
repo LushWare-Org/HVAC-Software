@@ -299,6 +299,7 @@ export interface Invoice {
   updatedAt: string
   lineItems?: InvoiceLineItem[]
   payments?: InvoicePayment[]
+  currency?: string
 }
 
 export interface InvoiceLineItem {
@@ -315,6 +316,7 @@ export interface InvoicePayment {
   method: PaymentMethod
   paidAt: string
   notes?: string
+  currency?: string
 }
 
 export type QuoteStatus = 'DRAFT' | 'SENT' | 'VIEWED' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED' | 'CONVERTED'
@@ -346,6 +348,7 @@ export interface Quote {
   terms?: string
   createdAt: string
   updatedAt: string
+  currency?: string
   lineItems?: QuoteLineItem[]
 }
 

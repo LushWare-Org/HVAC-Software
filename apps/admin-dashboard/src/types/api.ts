@@ -430,6 +430,7 @@ export interface Payment {
   paidAt?: string
   notes?: string
   createdAt: string
+  currency?: string
 }
 
 export interface Invoice {
@@ -457,6 +458,7 @@ export interface Invoice {
   payments?: Payment[]
   createdAt: string
   updatedAt: string
+  currency?: string
 }
 
 export interface Quote {
@@ -480,6 +482,7 @@ export interface Quote {
   invoices?: { id: string; invoiceNumber: string; status: string }[]
   createdAt: string
   updatedAt: string
+  currency?: string
 }
 
 export interface Expense {
