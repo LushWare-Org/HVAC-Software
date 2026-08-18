@@ -310,6 +310,24 @@ describe('InvoicesService', () => {
   // ── recordManualPayment ───────────────────────────────────────────────
 
   describe('recordManualPayment', () => {
+    it("attaches the invoice currency to the returned payment", async () => {
+      const inv = makeInvoice({
+        status: InvoiceStatus.SENT,
+        total: makeDecimal(500),
+        amountPaid: makeDecimal(0),
+        balanceDue: makeDecimal(500),
+        currency: 'LKR',
+      });
+      mockPrisma.invoice.findFirst.mockResolvedValue(inv);
+      mockPrisma.payment.create.mockImplementation(({ data }: any) => Promise.resolve({ id: 'p1', ...data }));
+      mockPrisma.invoice.update.mockResolvedValue({});
+      mockPrisma.$transaction.mockImplementation((ops: any[]) => Promise.all(ops));
+
+      const [payment] = await service.recordManualPayment(COMPANY_ID, INV_ID, 200, 'CASH');
+
+      expect(payment.currency).toBe('LKR');
+    });
+
     it('marks invoice as PAID when full amount is recorded', async () => {
       const inv = makeInvoice({
         status: InvoiceStatus.SENT,

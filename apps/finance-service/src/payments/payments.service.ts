@@ -46,13 +46,17 @@ export class PaymentsService {
               invoiceNumber: true,
               customerName: true,
               customerEmail: true,
+              currency: true,
             },
           },
         },
       }),
       this.prisma.payment.count({ where }),
     ]);
-    return { items, total, page, limit };
+    return {
+      items: items.map((p: any) => ({ ...p, currency: p.invoice?.currency })),
+      total, page, limit,
+    };
   }
 
   // ── Single ────────────────────────────────────────────────────────────────
@@ -68,12 +72,13 @@ export class PaymentsService {
             customerEmail: true,
             total: true,
             balanceDue: true,
+            currency: true,
           },
         },
       },
     });
     if (!payment) throw new NotFoundException(`Payment ${id} not found`);
-    return payment;
+    return { ...payment, currency: (payment as any).invoice?.currency };
   }
 
   // ── Metrics ───────────────────────────────────────────────────────────────

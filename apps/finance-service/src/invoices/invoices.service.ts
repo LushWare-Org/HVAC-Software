@@ -644,7 +644,7 @@ export class InvoicesService {
       this.logger.warn(`Payment receipt ${receiptNumber} failed for invoice ${invoice.invoiceNumber}: ${(err as Error).message}`);
     });
 
-    return [payment];
+    return [{ ...payment, currency: invoice.currency }];
   }
 
   /** Generates the payment-receipt PDF and emails it to the customer. Best-effort — see caller. */

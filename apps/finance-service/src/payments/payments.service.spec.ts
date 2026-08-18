@@ -25,7 +25,7 @@ function makePayment(overrides: Partial<any> = {}): any {
     status: PaymentStatus.SUCCEEDED,
     paidAt: new Date(),
     createdAt: new Date(),
-    invoice: { invoiceNumber: 'INV-2024-0001', customerName: 'Test Corp', customerEmail: 'test@corp.com' },
+    invoice: { invoiceNumber: 'INV-2024-0001', customerName: 'Test Corp', customerEmail: 'test@corp.com', currency: 'USD' },
     ...overrides,
   };
 }
@@ -64,12 +64,18 @@ describe('PaymentsService', () => {
       const p = makePayment();
       mockPrisma.payment.findFirst.mockResolvedValue(p);
       const result = await service.findOne(COMPANY_ID, PAYMENT_ID);
-      expect(result).toEqual(p);
+      expect(result).toEqual({ ...p, currency: 'USD' });
     });
 
     it('throws NotFoundException when not found', async () => {
       mockPrisma.payment.findFirst.mockResolvedValue(null);
       await expect(service.findOne(COMPANY_ID, 'bad')).rejects.toThrow(NotFoundException);
+    });
+
+    it("includes the payment's invoice currency at the top level", async () => {
+      mockPrisma.payment.findFirst.mockResolvedValue(makePayment({ invoice: { invoiceNumber: 'INV-1', customerName: 'C', customerEmail: 'c@x.com', total: 100, balanceDue: 0, currency: 'EUR' } }));
+      const result = await service.findOne(COMPANY_ID, PAYMENT_ID);
+      expect(result.currency).toBe('EUR');
     });
   });
 
@@ -85,6 +91,22 @@ describe('PaymentsService', () => {
       expect(findCall.take).toBe(5);
       expect(result.total).toBe(15);
       expect(result.page).toBe(2);
+    });
+
+    it("includes each payment's invoice currency at the top level", async () => {
+      mockPrisma.payment.findMany.mockResolvedValue([
+        makePayment({ invoice: { invoiceNumber: 'INV-1', customerName: 'C', customerEmail: 'c@x.com', currency: 'LKR' } }),
+      ]);
+      mockPrisma.payment.count.mockResolvedValue(1);
+      const result = await service.findAll(COMPANY_ID, {});
+      expect(result.items[0].currency).toBe('LKR');
+      expect(mockPrisma.payment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({
+            invoice: expect.objectContaining({ select: expect.objectContaining({ currency: true }) }),
+          }),
+        }),
+      );
     });
   });
 
