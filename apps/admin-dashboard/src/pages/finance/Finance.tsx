@@ -40,9 +40,9 @@ function Skeleton({ h = 14 }: { h?: number }) {
   return <div style={{ width: '100%', height: h, background: 'var(--bg-hover)', borderRadius: 4 }} />
 }
 
-function fmtDecimal(val: string | number | undefined | null): string {
+function fmtDecimal(val: string | number | undefined | null, currency?: string): string {
   const n = decimalToNumber(val)
-  return formatMoney(n)
+  return formatMoney(n, { currency })
 }
 
 function PillGroup({ options, value, onChange }: {
@@ -448,7 +448,7 @@ export default function Finance() {
                       </td>
                       <td><DocProjectCell projectId={inv.projectId} componentId={inv.componentId} /></td>
                       <td><div className="cell-user"><span className="cell-name">{inv.customerName ?? '—'}</span></div></td>
-                      <td className="td-primary font-600">{fmtDecimal(inv.total)}</td>
+                      <td className="td-primary font-600">{fmtDecimal(inv.total, inv.currency)}</td>
                       <td className="text-sm text-3">{new Date(inv.createdAt).toLocaleDateString()}</td>
                       <td className="text-sm">{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '—'}</td>
                       <td>
@@ -601,7 +601,7 @@ export default function Finance() {
                       <td><DocProjectCell projectId={q.projectId} componentId={q.componentId} /></td>
                       <td><div className="cell-user"><span className="cell-name">{q.customerName ?? '—'}</span></div></td>
                       <td>{q.title}</td>
-                      <td className="td-primary font-600">{fmtDecimal(q.total)}</td>
+                      <td className="td-primary font-600">{fmtDecimal(q.total, q.currency)}</td>
                       <td className="text-sm text-3">{q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '—'}</td>
                       <td>
                         <span className={`badge ${QUO_CSS[normalizeStatus(q.status)] ?? 'badge-neutral'}`}>
