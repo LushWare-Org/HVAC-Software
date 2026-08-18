@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { CompanySettings } from '@tscrm/types';
+import { CompanySettings, CurrencySettings } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Seed-only tenant settings — never editable through PATCH /company. */
@@ -168,5 +168,30 @@ export class CompanyService {
     );
 
     return this.findOne(companyId);
+  }
+
+  async getCurrencies(companyId: string): Promise<CurrencySettings> {
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+      select: { currency: true, enabledCurrencies: true },
+    });
+    if (!company) throw new NotFoundException('Company not found');
+    return { enabled: company.enabledCurrencies, default: company.currency };
+  }
+
+  async updateCurrencies(companyId: string, data: CurrencySettings): Promise<CurrencySettings> {
+    if (!data.enabled || data.enabled.length === 0) {
+      throw new BadRequestException('enabledCurrencies cannot be empty');
+    }
+    if (!data.enabled.includes(data.default)) {
+      throw new BadRequestException('default currency must be one of the enabled currencies');
+    }
+
+    const updated = await this.prisma.company.update({
+      where: { id: companyId },
+      data: { currency: data.default, enabledCurrencies: data.enabled },
+      select: { currency: true, enabledCurrencies: true },
+    });
+    return { enabled: updated.enabledCurrencies, default: updated.currency };
   }
 }

@@ -4,6 +4,7 @@ import { CompanyService } from './company.service';
 const prismaMock = {
   company: {
     findUnique: jest.fn(),
+    update: jest.fn(),
   },
   tableExists: jest.fn().mockResolvedValue(true),
   columnExists: jest.fn().mockResolvedValue(true),
@@ -78,5 +79,52 @@ describe('CompanyService settings', () => {
       service.update('co-1', { timezone: 'Asia/Colombo' } as never),
     ).rejects.toThrow(BadRequestException);
     expect(prismaMock.$executeRawUnsafe).not.toHaveBeenCalled();
+  });
+});
+
+describe('CompanyService currencies', () => {
+  let service: CompanyService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    prismaMock.tableExists.mockResolvedValue(true);
+    prismaMock.columnExists.mockResolvedValue(true);
+    service = new CompanyService(prismaMock as never);
+  });
+
+  it('getCurrencies returns enabled list + default', async () => {
+    prismaMock.company.findUnique.mockResolvedValue({ currency: 'USD', enabledCurrencies: ['USD', 'LKR'] });
+    const result = await service.getCurrencies('co-1');
+    expect(result).toEqual({ enabled: ['USD', 'LKR'], default: 'USD' });
+  });
+
+  it('getCurrencies throws NotFound for unknown company', async () => {
+    prismaMock.company.findUnique.mockResolvedValue(null);
+    await expect(service.getCurrencies('nope')).rejects.toThrow(NotFoundException);
+  });
+
+  it('updateCurrencies rejects when enabled list is empty', async () => {
+    await expect(
+      service.updateCurrencies('co-1', { enabled: [], default: 'USD' }),
+    ).rejects.toThrow(BadRequestException);
+    expect(prismaMock.company.update).not.toHaveBeenCalled();
+  });
+
+  it('updateCurrencies rejects when default is not in enabled list', async () => {
+    await expect(
+      service.updateCurrencies('co-1', { enabled: ['USD'], default: 'LKR' }),
+    ).rejects.toThrow(BadRequestException);
+    expect(prismaMock.company.update).not.toHaveBeenCalled();
+  });
+
+  it('updateCurrencies saves and returns the new settings', async () => {
+    prismaMock.company.update.mockResolvedValue({ currency: 'LKR', enabledCurrencies: ['USD', 'LKR'] });
+    const result = await service.updateCurrencies('co-1', { enabled: ['USD', 'LKR'], default: 'LKR' });
+    expect(prismaMock.company.update).toHaveBeenCalledWith({
+      where: { id: 'co-1' },
+      data: { currency: 'LKR', enabledCurrencies: ['USD', 'LKR'] },
+      select: { currency: true, enabledCurrencies: true },
+    });
+    expect(result).toEqual({ enabled: ['USD', 'LKR'], default: 'LKR' });
   });
 });
