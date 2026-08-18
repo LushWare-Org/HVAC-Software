@@ -1,6 +1,6 @@
 import {
   IsString, IsOptional, IsNumber, IsBoolean,
-  IsArray, ValidateNested, IsEmail, IsDateString, Min, IsInt,
+  IsArray, ValidateNested, IsEmail, IsDateString, Min, IsInt, Length,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -20,6 +20,8 @@ export class CreateInvoiceDto {
   @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) dueDays?: number;
   @ApiPropertyOptional() @IsOptional() @IsDateString() dueDate?: string;
   @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) taxRate?: number;
+  @ApiPropertyOptional({ example: 'USD', description: 'ISO 4217 code; ignored when creating from a quote (inherits the quote\'s currency), defaults to the tenant currency otherwise' })
+  @IsOptional() @IsString() @Length(3, 3) currency?: string;
 
   @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() terms?: string;

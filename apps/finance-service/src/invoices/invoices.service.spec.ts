@@ -202,6 +202,21 @@ describe('InvoicesService', () => {
       );
     });
 
+    it('resolves currency from CompanySettingsClient when the DTO omits it', async () => {
+      mockSettingsClient.getSettings.mockResolvedValue({ id: COMPANY_ID, name: 'Demo', logoUrl: null, currency: 'LKR', timezone: 'Asia/Colombo', features: {} });
+      mockPrisma.$queryRaw.mockResolvedValue([{ maxNumber: 0 }]);
+      await service.create(COMPANY_ID, USER_ID, dto);
+      expect(mockPrisma.invoice.create.mock.calls[0][0].data.currency).toBe('LKR');
+    });
+
+    it('respects an explicit currency in the DTO without calling CompanySettingsClient', async () => {
+      mockSettingsClient.getSettings.mockClear();
+      mockPrisma.$queryRaw.mockResolvedValue([{ maxNumber: 0 }]);
+      await service.create(COMPANY_ID, USER_ID, { ...dto, currency: 'EUR' });
+      expect(mockSettingsClient.getSettings).not.toHaveBeenCalled();
+      expect(mockPrisma.invoice.create.mock.calls[0][0].data.currency).toBe('EUR');
+    });
+
     it('calculates totals correctly', async () => {
       mockPrisma.$queryRaw.mockResolvedValue([{ maxNumber: 2 }]);
       await service.create(COMPANY_ID, USER_ID, dto);

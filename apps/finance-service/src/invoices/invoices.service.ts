@@ -125,7 +125,8 @@ export class InvoicesService {
   // ── Create ────────────────────────────────────────────────────────────────
 
   async create(companyId: string, userId: string, dto: CreateInvoiceDto) {
-    const { lineItems = [], taxRate = 0, dueDate, dueDays = 30, ...rest } = dto;
+    const { lineItems = [], taxRate = 0, dueDate, dueDays = 30, currency, ...rest } = dto;
+    const resolvedCurrency = currency || (await this.companySettings.getSettings(companyId)).currency;
     // Default customer name/email when not provided (e.g. when creating from a quote reference)
     const customerName = rest.customerName ?? 'Unknown Customer';
     const customerEmail = rest.customerEmail ?? 'noreply@example.com';
@@ -156,6 +157,7 @@ export class InvoicesService {
         customerEmail,
         companyId,
         invoiceNumber,
+        currency: resolvedCurrency,
         createdByUserId: userId,
         subtotal,
         discountAmount: 0,
