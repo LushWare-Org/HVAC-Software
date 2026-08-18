@@ -8,6 +8,9 @@ export * from './pagination';
 // Per-tenant settings (currency, timezone, feature flags).
 export * from './company-settings';
 
+// Tenant-managed finance settings (currency list, tax-rate presets, payment-terms presets).
+export * from './finance-settings';
+
 // ---- RBAC Roles ----
 export enum Role {
   SUPER_ADMIN = 'super_admin',
