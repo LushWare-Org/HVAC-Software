@@ -36,8 +36,8 @@ const STATUS_MAP: Record<string, { label: string; css: string }> = {
 
 const ITEMS_PER_PAGE = 10
 
-function fmtMoney(val?: string | number) {
-  return formatMoney(val)
+function fmtMoney(val?: string | number, currency?: string) {
+  return formatMoney(val, { currency })
 }
 
 function fmtDate(iso?: string) {
@@ -278,7 +278,7 @@ export default function Invoices() {
                         <td style={{ fontSize: 12, color: 'var(--t3)' }}>{invoice.componentId ? (componentLabelById.get(invoice.componentId) ?? '—') : '—'}</td>
                         <td style={{ fontSize: 12, color: 'var(--t3)' }}>{fmtDate(invoice.issueDate)}</td>
                         <td style={{ fontSize: 12, color: invoice.status === 'OVERDUE' ? 'var(--red)' : 'var(--t3)' }}>{fmtDate(invoice.dueDate)}</td>
-                        <td className="td-primary font-600">{fmtMoney(outstanding > 0 ? outstanding : invoice.total)}</td>
+                        <td className="td-primary font-600">{fmtMoney(outstanding > 0 ? outstanding : invoice.total, invoice.currency)}</td>
                         <td><span className={`badge ${s.css}`}>{s.label}</span></td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>

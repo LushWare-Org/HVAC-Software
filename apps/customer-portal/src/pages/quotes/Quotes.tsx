@@ -20,8 +20,8 @@ const STATUS_MAP: Record<string, { label: string; css: string }> = {
 
 const ITEMS_PER_PAGE = 10
 
-function fmtMoney(val?: string | number) {
-  return formatMoney(val)
+function fmtMoney(val?: string | number, currency?: string) {
+  return formatMoney(val, { currency })
 }
 
 function fmtDate(iso?: string) {
@@ -201,7 +201,7 @@ export default function Quotes() {
                         <td style={{ fontSize: 12, color: 'var(--t3)' }}>{quote.componentId ? (componentLabelById.get(quote.componentId) ?? '—') : '—'}</td>
                         <td><span className={`badge ${s.css}`}>{s.label}</span></td>
                         <td style={{ fontSize: 12, color: 'var(--t3)' }}>{fmtDate(quote.createdAt)}</td>
-                        <td className="td-primary font-600">{fmtMoney(quote.total)}</td>
+                        <td className="td-primary font-600">{fmtMoney(quote.total, quote.currency)}</td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
                             {canDecide && (
