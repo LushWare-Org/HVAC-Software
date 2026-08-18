@@ -101,7 +101,10 @@ describe('QuotesService', () => {
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('') } },
         { provide: PdfService, useValue: { generateQuotePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')), generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')) } },
         { provide: NotificationClientService, useValue: { sendEmail: jest.fn().mockResolvedValue(undefined), sendSms: jest.fn().mockResolvedValue(undefined) } },
-        { provide: CompanySettingsClient, useValue: { getSettings: jest.fn().mockResolvedValue({ id: 'company-001', name: 'Demo', logoUrl: null, currency: 'USD', timezone: 'America/New_York', features: {} }) } },
+        { provide: CompanySettingsClient, useValue: {
+          getSettings: jest.fn().mockResolvedValue({ id: 'company-001', name: 'Demo', logoUrl: null, currency: 'USD', timezone: 'America/New_York', features: {} }),
+          getDefaultPaymentTermsDays: jest.fn().mockResolvedValue(30),
+        } },
       ],
     }).compile();
 
@@ -307,6 +310,26 @@ describe('QuotesService', () => {
   // ── convertToInvoice ─────────────────────────────────────────────────────
 
   describe('convertToInvoice', () => {
+    it("uses the tenant's default payment-terms days instead of a hardcoded 30", async () => {
+      const settingsMock = module.get(CompanySettingsClient) as any;
+      settingsMock.getDefaultPaymentTermsDays = jest.fn().mockResolvedValue(15);
+      const q = makeQuote({ status: QuoteStatus.ACCEPTED });
+      mockPrisma.quote.findFirst.mockResolvedValue(q);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null);
+      mockPrisma.invoice.count.mockResolvedValue(0);
+      mockPrisma.invoice.create.mockImplementation(({ data }: any) =>
+        Promise.resolve({ ...data, id: 'inv-001' }),
+      );
+
+      const before = Date.now();
+      await service.convertToInvoice(COMPANY_ID, QUOTE_ID, USER_ID);
+
+      const createCall = mockPrisma.invoice.create.mock.calls[0][0];
+      const daysUsed = Math.round((createCall.data.dueDate.getTime() - before) / (24 * 60 * 60 * 1000));
+      expect(daysUsed).toBe(15);
+      expect(settingsMock.getDefaultPaymentTermsDays).toHaveBeenCalledWith(COMPANY_ID);
+    });
+
     it('carries the quote currency forward, ignoring the current tenant default', async () => {
       const settingsMock = module.get(CompanySettingsClient) as any;
       // Tenant default is USD right now, but the quote itself was created in LKR —

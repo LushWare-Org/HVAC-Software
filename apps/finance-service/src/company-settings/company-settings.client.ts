@@ -41,6 +41,24 @@ export class CompanySettingsClient {
     }
   }
 
+  /** Tenant's default payment-terms days, for invoices created without an explicit due date. Fails open to 30. */
+  async getDefaultPaymentTermsDays(companyId: string): Promise<number> {
+    try {
+      const res = await fetch(`${CRM_SERVICE_URL}/company/payment-terms`, {
+        headers: this.authHeaders(companyId),
+        signal: AbortSignal.timeout(5_000),
+      });
+      if (!res.ok) throw new Error(`crm responded ${res.status}`);
+      const presets = (await res.json()) as Array<{ isDefault: boolean; days: number }>;
+      return presets.find((p) => p.isDefault)?.days ?? 30;
+    } catch (err) {
+      this.logger.warn(
+        `payment-terms fetch failed for ${companyId}, using 30 days: ${(err as Error).message}`,
+      );
+      return 30;
+    }
+  }
+
   private authHeaders(companyId: string): Record<string, string> {
     // Same service-to-service pattern as comms enroute → crm: dev bypass
     // headers when BYPASS_AUTH, otherwise a short-lived HS256 system token

@@ -58,4 +58,36 @@ describe('CompanySettingsClient', () => {
     const s = await client.getSettings('co-1');
     expect(s.currency).toBe('LKR');
   });
+
+  describe('getDefaultPaymentTermsDays', () => {
+    it("returns the default preset's days", async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => [
+          { isDefault: false, days: 15 },
+          { isDefault: true, days: 45 },
+        ],
+      });
+      const days = await client.getDefaultPaymentTermsDays('co-1');
+      expect(days).toBe(45);
+    });
+
+    it('falls back to 30 when no preset is marked default', async () => {
+      fetchMock.mockResolvedValue({ ok: true, json: async () => [{ isDefault: false, days: 15 }] });
+      const days = await client.getDefaultPaymentTermsDays('co-1');
+      expect(days).toBe(30);
+    });
+
+    it('falls back to 30 on HTTP error', async () => {
+      fetchMock.mockResolvedValue({ ok: false, status: 500 });
+      const days = await client.getDefaultPaymentTermsDays('co-1');
+      expect(days).toBe(30);
+    });
+
+    it('falls back to 30 on network error', async () => {
+      fetchMock.mockRejectedValue(new Error('ECONNREFUSED'));
+      const days = await client.getDefaultPaymentTermsDays('co-1');
+      expect(days).toBe(30);
+    });
+  });
 });

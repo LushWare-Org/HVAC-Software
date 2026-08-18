@@ -447,8 +447,9 @@ export class QuotesService {
       throw new BadRequestException(`Quote already converted to invoice ${existing.invoiceNumber}`);
     }
 
+    const defaultPaymentTermsDays = await this.companySettings.getDefaultPaymentTermsDays(companyId);
     const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 30);
+    dueDate.setDate(dueDate.getDate() + defaultPaymentTermsDays);
 
     /**
      * The transaction is deliberately as small as it can be — two writes and
