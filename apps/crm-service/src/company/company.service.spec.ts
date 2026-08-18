@@ -14,6 +14,14 @@ const prismaMock = {
     delete: jest.fn(),
     findUnique: jest.fn(),
   },
+  paymentTermsPreset: {
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    delete: jest.fn(),
+    findUnique: jest.fn(),
+  },
   $transaction: jest.fn((fn: any) => fn(prismaMock)),
   tableExists: jest.fn().mockResolvedValue(true),
   columnExists: jest.fn().mockResolvedValue(true),
@@ -221,5 +229,72 @@ describe('CompanyService tax rates', () => {
     prismaMock.taxRatePreset.findUnique.mockResolvedValue({ id: 't2', companyId: 'co-1', isDefault: false });
     await service.deleteTaxRate('co-1', 't2');
     expect(prismaMock.taxRatePreset.delete).toHaveBeenCalledWith({ where: { id: 't2' } });
+  });
+});
+
+describe('CompanyService payment terms', () => {
+  let service: CompanyService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    prismaMock.$transaction.mockImplementation((fn: any) => fn(prismaMock));
+    service = new CompanyService(prismaMock as never);
+  });
+
+  it('listPaymentTerms returns presets ordered by sortOrder', async () => {
+    prismaMock.paymentTermsPreset.findMany.mockResolvedValue([{ id: 'p1', sortOrder: 0 }]);
+    const result = await service.listPaymentTerms('co-1');
+    expect(prismaMock.paymentTermsPreset.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'co-1' },
+      orderBy: { sortOrder: 'asc' },
+    });
+    expect(result).toEqual([{ id: 'p1', sortOrder: 0 }]);
+  });
+
+  it('createPaymentTerms unsets the prior default when isDefault:true', async () => {
+    prismaMock.paymentTermsPreset.create.mockResolvedValue({ id: 'p2', isDefault: true });
+    await service.createPaymentTerms('co-1', { name: 'Net 15', days: 15, isDefault: true });
+    expect(prismaMock.paymentTermsPreset.updateMany).toHaveBeenCalledWith({
+      where: { companyId: 'co-1', isDefault: true },
+      data: { isDefault: false },
+    });
+    expect(prismaMock.paymentTermsPreset.create).toHaveBeenCalledWith({
+      data: { companyId: 'co-1', name: 'Net 15', days: 15, isDefault: true },
+    });
+  });
+
+  it('updatePaymentTerms rejects deactivating the current default', async () => {
+    prismaMock.paymentTermsPreset.findUnique.mockResolvedValue({ id: 'p1', companyId: 'co-1', isDefault: true });
+    await expect(
+      service.updatePaymentTerms('co-1', 'p1', { isActive: false }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('updatePaymentTerms promotes a new default and unsets the old one', async () => {
+    prismaMock.paymentTermsPreset.findUnique.mockResolvedValue({ id: 'p2', companyId: 'co-1', isDefault: false });
+    prismaMock.paymentTermsPreset.update.mockResolvedValue({ id: 'p2', isDefault: true });
+    await service.updatePaymentTerms('co-1', 'p2', { isDefault: true });
+    expect(prismaMock.paymentTermsPreset.updateMany).toHaveBeenCalledWith({
+      where: { companyId: 'co-1', isDefault: true },
+      data: { isDefault: false },
+    });
+  });
+
+  it('updatePaymentTerms throws NotFound for a preset outside the caller company', async () => {
+    prismaMock.paymentTermsPreset.findUnique.mockResolvedValue({ id: 'p1', companyId: 'co-OTHER', isDefault: false });
+    await expect(
+      service.updatePaymentTerms('co-1', 'p1', { name: 'x' }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('deletePaymentTerms rejects deleting the current default', async () => {
+    prismaMock.paymentTermsPreset.findUnique.mockResolvedValue({ id: 'p1', companyId: 'co-1', isDefault: true });
+    await expect(service.deletePaymentTerms('co-1', 'p1')).rejects.toThrow(BadRequestException);
+  });
+
+  it('deletePaymentTerms deletes a non-default preset', async () => {
+    prismaMock.paymentTermsPreset.findUnique.mockResolvedValue({ id: 'p2', companyId: 'co-1', isDefault: false });
+    await service.deletePaymentTerms('co-1', 'p2');
+    expect(prismaMock.paymentTermsPreset.delete).toHaveBeenCalledWith({ where: { id: 'p2' } });
   });
 });

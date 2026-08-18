@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { CompanySettings, CurrencySettings, TaxRatePreset } from '@tscrm/types';
+import { CompanySettings, CurrencySettings, PaymentTermsPreset, TaxRatePreset } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaxRatePresetDto, UpdateTaxRatePresetDto } from './dto/tax-rate-preset.dto';
+import { CreatePaymentTermsPresetDto, UpdatePaymentTermsPresetDto } from './dto/payment-terms-preset.dto';
 
 /** Seed-only tenant settings — never editable through PATCH /company. */
 const SETTINGS_KEYS = ['currency', 'timezone', 'features'] as const;
@@ -262,5 +263,73 @@ export class CompanyService {
       );
     }
     await this.prisma.taxRatePreset.delete({ where: { id } });
+  }
+
+  async listPaymentTerms(companyId: string): Promise<PaymentTermsPreset[]> {
+    const rows = await this.prisma.paymentTermsPreset.findMany({
+      where: { companyId },
+      orderBy: { sortOrder: 'asc' },
+    });
+    return rows as unknown as PaymentTermsPreset[];
+  }
+
+  async createPaymentTerms(companyId: string, dto: CreatePaymentTermsPresetDto): Promise<PaymentTermsPreset> {
+    if (dto.isDefault) {
+      await this.prisma.paymentTermsPreset.updateMany({
+        where: { companyId, isDefault: true },
+        data: { isDefault: false },
+      });
+    }
+    const created = await this.prisma.paymentTermsPreset.create({
+      data: { companyId, name: dto.name, days: dto.days, isDefault: !!dto.isDefault },
+    });
+    return created as unknown as PaymentTermsPreset;
+  }
+
+  private async findPaymentTermsOrThrow(companyId: string, id: string) {
+    const preset = await this.prisma.paymentTermsPreset.findUnique({ where: { id } });
+    if (!preset || preset.companyId !== companyId) {
+      throw new NotFoundException('Payment terms preset not found');
+    }
+    return preset;
+  }
+
+  async updatePaymentTerms(companyId: string, id: string, dto: UpdatePaymentTermsPresetDto): Promise<PaymentTermsPreset> {
+    const existing = await this.findPaymentTermsOrThrow(companyId, id);
+
+    if (existing.isDefault && (dto.isActive === false || dto.isDefault === false)) {
+      throw new BadRequestException(
+        'Cannot deactivate or unset the default payment terms — set another preset as default first',
+      );
+    }
+
+    if (dto.isDefault === true) {
+      await this.prisma.paymentTermsPreset.updateMany({
+        where: { companyId, isDefault: true },
+        data: { isDefault: false },
+      });
+    }
+
+    const updated = await this.prisma.paymentTermsPreset.update({
+      where: { id },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.days !== undefined ? { days: dto.days } : {}),
+        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+        ...(dto.isDefault !== undefined ? { isDefault: dto.isDefault } : {}),
+        ...(dto.sortOrder !== undefined ? { sortOrder: dto.sortOrder } : {}),
+      },
+    });
+    return updated as unknown as PaymentTermsPreset;
+  }
+
+  async deletePaymentTerms(companyId: string, id: string): Promise<void> {
+    const existing = await this.findPaymentTermsOrThrow(companyId, id);
+    if (existing.isDefault) {
+      throw new BadRequestException(
+        'Cannot delete the default payment terms — set another preset as default first',
+      );
+    }
+    await this.prisma.paymentTermsPreset.delete({ where: { id } });
   }
 }
