@@ -307,6 +307,25 @@ describe('QuotesService', () => {
   // ── convertToInvoice ─────────────────────────────────────────────────────
 
   describe('convertToInvoice', () => {
+    it('carries the quote currency forward, ignoring the current tenant default', async () => {
+      const settingsMock = module.get(CompanySettingsClient) as any;
+      // Tenant default is USD right now, but the quote itself was created in LKR —
+      // the invoice must inherit LKR, proving this is inheritance, not a fresh lookup.
+      settingsMock.getSettings.mockResolvedValue({ id: COMPANY_ID, name: 'Demo', logoUrl: null, currency: 'USD', timezone: 'America/New_York', features: {} });
+      const q = makeQuote({ status: QuoteStatus.ACCEPTED, currency: 'LKR' });
+      mockPrisma.quote.findFirst.mockResolvedValue(q);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null);
+      mockPrisma.invoice.count.mockResolvedValue(0);
+      mockPrisma.invoice.create.mockImplementation(({ data }: any) =>
+        Promise.resolve({ ...data, id: 'inv-001' }),
+      );
+
+      await service.convertToInvoice(COMPANY_ID, QUOTE_ID, USER_ID);
+
+      const createCall = mockPrisma.invoice.create.mock.calls[0][0];
+      expect(createCall.data.currency).toBe('LKR');
+    });
+
     it('creates an invoice from an ACCEPTED quote', async () => {
       const q = makeQuote({ status: QuoteStatus.ACCEPTED });
       mockPrisma.quote.findFirst.mockResolvedValue(q);

@@ -489,6 +489,7 @@ export class QuotesService {
                 customerId: quote.customerId,
                 customerName: quote.customerName,
                 customerEmail: quote.customerEmail,
+                currency: quote.currency,
                 subtotal: quote.subtotal,
                 discountAmount: quote.discountAmount,
                 taxRate: quote.taxRate,
