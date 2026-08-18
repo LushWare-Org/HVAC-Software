@@ -1,16 +1,17 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock, Loader2, AlertCircle, ClipboardList, ChevronDown, ChevronRight, Bot, Upload, RotateCcw, ArrowRight, Megaphone, Plug2, CheckCircle2, XCircle, RefreshCw, ExternalLink } from 'lucide-react'
+import { User, Building2, Bell, Shield, Palette, Mail, Smartphone, Save, Check, Moon, Sun, Monitor, Lock, Loader2, AlertCircle, ClipboardList, ChevronDown, ChevronRight, Bot, Upload, RotateCcw, ArrowRight, Megaphone, Plug2, CheckCircle2, XCircle, RefreshCw, ExternalLink, Landmark, Search, Star, X as XIcon, Trash2, Plus, GripVertical } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useToast } from '../contexts/ToastContext'
-import { useMyProfile, useUpdateMyProfile, useCompany, useUpdateCompany } from '../hooks/useSettings'
+import { useMyProfile, useUpdateMyProfile, useCompany, useUpdateCompany, useCurrencies, useUpdateCurrencies, useTaxRates, useCreateTaxRate, useUpdateTaxRate, useDeleteTaxRate, usePaymentTerms, useCreatePaymentTerms, useUpdatePaymentTerms, useDeletePaymentTerms } from '../hooks/useSettings'
 import { useJobTypes, useJobTemplates } from '../hooks/useJobs'
 import { useImportBatches, useImportRollback } from '../hooks/useImport'
 import { useQBStatus, useQBAuthUrl, useQBDisconnect } from '../hooks/useFinance'
+import { ISO_CURRENCIES, currencyInfo } from '../lib/currencies'
 import PortalBannerSettings from './settings/PortalBannerSettings'
 
 export default function Settings() {
-    const [tab, setTab] = useState<'profile' | 'company' | 'notifications' | 'appearance' | 'security' | 'templates' | 'portal' | 'ai-agents' | 'integrations'>('profile')
+    const [tab, setTab] = useState<'profile' | 'company' | 'finance' | 'notifications' | 'appearance' | 'security' | 'templates' | 'portal' | 'ai-agents' | 'integrations'>('profile')
     const [searchParams, setSearchParams] = useSearchParams()
     const { theme, setTheme } = useTheme()
     const { showSuccess, showError } = useToast()
@@ -187,6 +188,9 @@ export default function Settings() {
                 <button className={`tab-btn ${tab === 'company' ? 'active' : ''}`} onClick={() => setTab('company')}>
                     <Building2 size={14} /> Company
                 </button>
+                <button className={`tab-btn ${tab === 'finance' ? 'active' : ''}`} onClick={() => setTab('finance')}>
+                    <Landmark size={14} /> Finance
+                </button>
                 <button className={`tab-btn ${tab === 'notifications' ? 'active' : ''}`} onClick={() => setTab('notifications')}>
                     <Bell size={14} /> Notifications
                 </button>
@@ -352,6 +356,9 @@ export default function Settings() {
                     </div>
                 </div>
             )}
+
+            {/* Finance */}
+            {tab === 'finance' && <FinanceTab />}
 
             {/* Notifications */}
             {tab === 'notifications' && (
@@ -960,6 +967,407 @@ function IntegrationsTab() {
                     </div>
                 </div>
             ))}
+        </div>
+    )
+}
+
+// ─── FinanceTab ───────────────────────────────────────────────────────────────
+
+function FinanceTab() {
+    const { showSuccess, showError } = useToast()
+
+    // ---- Currencies ----
+    const currenciesQuery = useCurrencies()
+    const updateCurrencies = useUpdateCurrencies()
+    const [search, setSearch] = useState('')
+    const [highlight, setHighlight] = useState(0)
+    const searchRef = useRef<HTMLInputElement>(null)
+
+    const enabled = currenciesQuery.data?.enabled ?? []
+    const defaultCurrency = currenciesQuery.data?.default ?? ''
+
+    const searchResults = search.trim()
+        ? ISO_CURRENCIES.filter(c =>
+            !enabled.includes(c.code) &&
+            (c.code.toLowerCase().includes(search.toLowerCase()) || c.name.toLowerCase().includes(search.toLowerCase()))
+        ).slice(0, 6)
+        : []
+
+    const addCurrency = (code: string) => {
+        updateCurrencies.mutate(
+            { enabled: [...enabled, code], default: defaultCurrency },
+            {
+                onSuccess: () => { setSearch(''); setHighlight(0); showSuccess(`${code} added to your currency list.`) },
+                onError: () => showError('Could not add that currency. Try again.', 'Save failed'),
+            },
+        )
+    }
+
+    const removeCurrency = (code: string) => {
+        if (code === defaultCurrency) return
+        updateCurrencies.mutate(
+            { enabled: enabled.filter(c => c !== code), default: defaultCurrency },
+            { onError: () => showError('Could not remove that currency. Try again.', 'Save failed') },
+        )
+    }
+
+    const setDefault = (code: string) => {
+        updateCurrencies.mutate(
+            { enabled, default: code },
+            { onError: () => showError('Could not set that as your default currency. Try again.', 'Save failed') },
+        )
+    }
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (searchResults.length === 0) return
+        if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            setHighlight(h => (h + 1) % searchResults.length)
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            setHighlight(h => (h - 1 + searchResults.length) % searchResults.length)
+        } else if (e.key === 'Enter') {
+            e.preventDefault()
+            addCurrency(searchResults[highlight].code)
+        } else if (e.key === 'Escape') {
+            setSearch('')
+            searchRef.current?.blur()
+        }
+    }
+
+    // ---- Tax rates ----
+    const taxRatesQuery = useTaxRates()
+    const createTaxRate = useCreateTaxRate()
+    const updateTaxRate = useUpdateTaxRate()
+    const deleteTaxRate = useDeleteTaxRate()
+
+    // ---- Payment terms ----
+    const paymentTermsQuery = usePaymentTerms()
+    const createPaymentTerms = useCreatePaymentTerms()
+    const updatePaymentTerms = useUpdatePaymentTerms()
+    const deletePaymentTerms = useDeletePaymentTerms()
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div className="card anim-fade-in">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title">Currencies</div>
+                        <div className="card-subtitle">Choose which currencies your team can select when creating jobs, quotes, invoices, and payments</div>
+                    </div>
+                </div>
+                <div className="card-body">
+                    {currenciesQuery.isLoading ? (
+                        <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                            <Loader2 size={24} className="spin" style={{ color: 'var(--t3)' }} />
+                        </div>
+                    ) : (
+                        <>
+                            <div style={{ position: 'relative', marginBottom: 20 }}>
+                                <Search size={14} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--t3)', pointerEvents: 'none' }} />
+                                <input
+                                    ref={searchRef}
+                                    type="text"
+                                    role="combobox"
+                                    aria-expanded={searchResults.length > 0}
+                                    aria-autocomplete="list"
+                                    className="form-input"
+                                    style={{ paddingLeft: 34 }}
+                                    placeholder="Search to add a currency — try a code or a country…"
+                                    value={search}
+                                    onChange={e => { setSearch(e.target.value); setHighlight(0) }}
+                                    onKeyDown={handleSearchKeyDown}
+                                />
+                                {searchResults.length > 0 && (
+                                    <div
+                                        role="listbox"
+                                        style={{
+                                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, zIndex: 10,
+                                            background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 'var(--r-md)',
+                                            boxShadow: 'var(--shadow-md)', overflow: 'hidden',
+                                        }}
+                                    >
+                                        {searchResults.map((c, i) => (
+                                            <button
+                                                key={c.code}
+                                                role="option"
+                                                aria-selected={i === highlight}
+                                                onMouseDown={e => { e.preventDefault(); addCurrency(c.code) }}
+                                                onMouseEnter={() => setHighlight(i)}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px',
+                                                    background: i === highlight ? 'var(--bg-hover)' : 'none', border: 'none',
+                                                    cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                                                }}
+                                            >
+                                                <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--t1)', minWidth: 44 }}>{c.code}</span>
+                                                <span style={{ fontSize: 13, color: 'var(--t3)' }}>{c.name}</span>
+                                                <span style={{ marginLeft: 'auto', color: 'var(--t4)' }}>{c.symbol}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {enabled.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: 24, color: 'var(--t3)', fontSize: 13 }}>
+                                    No currencies enabled yet — search above to add your first one.
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                                    {enabled.map(code => {
+                                        const info = currencyInfo(code)
+                                        const isDefault = code === defaultCurrency
+                                        return (
+                                            <div key={code} className="anim-fade-in" style={{
+                                                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+                                                borderRadius: 999,
+                                                background: isDefault ? 'var(--blue-glow)' : 'var(--bg-card-2)',
+                                                border: `1px solid ${isDefault ? 'var(--blue)' : 'var(--bd)'}`,
+                                            }}>
+                                                <button
+                                                    onClick={() => !isDefault && setDefault(code)}
+                                                    title={isDefault ? 'Default currency' : 'Set as default'}
+                                                    style={{ display: 'flex', background: 'none', border: 'none', cursor: isDefault ? 'default' : 'pointer', padding: 0 }}
+                                                >
+                                                    <Star size={13} fill={isDefault ? 'var(--blue)' : 'none'} style={{ color: isDefault ? 'var(--blue)' : 'var(--t4)' }} />
+                                                </button>
+                                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{code}</span>
+                                                <span style={{ fontSize: 12, color: 'var(--t3)' }}>{info.symbol}</span>
+                                                {isDefault ? (
+                                                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Default</span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => removeCurrency(code)}
+                                                        title="Remove"
+                                                        style={{ display: 'flex', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--t4)' }}
+                                                    >
+                                                        <XIcon size={13} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </div>
+
+            <PresetListCard
+                title="Tax Rates"
+                subtitle="Named tax presets your team can pick from on quotes and invoices"
+                addLabel="Add tax rate"
+                valueLabel="rate"
+                valueSuffix="%"
+                valueStep="0.5"
+                toDisplay={v => Math.round(v * 10000) / 100}
+                fromDisplay={d => Math.round(d * 100) / 10000}
+                rows={(taxRatesQuery.data ?? []).map(r => ({ id: r.id, name: r.name, value: r.rate, isDefault: r.isDefault, isActive: r.isActive }))}
+                isLoading={taxRatesQuery.isLoading}
+                creating={createTaxRate.isPending}
+                onCreate={(name, value) => createTaxRate.mutate({ name, rate: value }, {
+                    onError: () => showError('Could not add that tax rate. Try again.', 'Save failed'),
+                })}
+                onUpdate={(id, patch) => updateTaxRate.mutate(
+                    { id, name: patch.name, rate: patch.value, isActive: patch.isActive, isDefault: patch.isDefault },
+                    { onError: (err: any) => showError(err?.response?.data?.message ?? 'Could not update that tax rate.', 'Save failed') },
+                )}
+                onDelete={id => deleteTaxRate.mutate(id, {
+                    onError: (err: any) => showError(err?.response?.data?.message ?? 'Could not delete that tax rate.', 'Delete failed'),
+                })}
+            />
+
+            <PresetListCard
+                title="Payment Terms"
+                subtitle="Named payment-terms presets your team can pick from on invoices"
+                addLabel="Add payment terms"
+                valueLabel="terms"
+                valueSuffix="days"
+                valueStep="1"
+                toDisplay={v => v}
+                fromDisplay={d => Math.round(d)}
+                rows={(paymentTermsQuery.data ?? []).map(r => ({ id: r.id, name: r.name, value: r.days, isDefault: r.isDefault, isActive: r.isActive }))}
+                isLoading={paymentTermsQuery.isLoading}
+                creating={createPaymentTerms.isPending}
+                onCreate={(name, value) => createPaymentTerms.mutate({ name, days: value }, {
+                    onError: () => showError('Could not add that payment terms preset. Try again.', 'Save failed'),
+                })}
+                onUpdate={(id, patch) => updatePaymentTerms.mutate(
+                    { id, name: patch.name, days: patch.value, isActive: patch.isActive, isDefault: patch.isDefault },
+                    { onError: (err: any) => showError(err?.response?.data?.message ?? 'Could not update that payment terms preset.', 'Save failed') },
+                )}
+                onDelete={id => deletePaymentTerms.mutate(id, {
+                    onError: (err: any) => showError(err?.response?.data?.message ?? 'Could not delete that payment terms preset.', 'Delete failed'),
+                })}
+            />
+        </div>
+    )
+}
+
+interface PresetRow {
+    id: string
+    name: string
+    value: number      // rate (0-1) for tax, days for terms
+    isDefault: boolean
+    isActive: boolean
+}
+
+function PresetListCard({
+    title, subtitle, addLabel, valueLabel, valueSuffix, valueStep, toDisplay, fromDisplay,
+    rows, isLoading, onCreate, onUpdate, onDelete, creating,
+}: {
+    title: string
+    subtitle: string
+    addLabel: string
+    valueLabel: string
+    valueSuffix: string
+    valueStep: string
+    toDisplay: (value: number) => number
+    fromDisplay: (display: number) => number
+    rows: PresetRow[]
+    isLoading: boolean
+    onCreate: (name: string, value: number) => void
+    onUpdate: (id: string, patch: Partial<{ name: string; value: number; isActive: boolean; isDefault: boolean }>) => void
+    onDelete: (id: string) => void
+    creating: boolean
+}) {
+    const [adding, setAdding] = useState(false)
+    const [newName, setNewName] = useState('')
+    const [newValue, setNewValue] = useState('')
+
+    const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+        <button
+            onClick={onChange}
+            style={{
+                width: 36, height: 20, borderRadius: 10, border: 'none',
+                background: checked ? 'var(--blue)' : 'var(--bd-md)',
+                cursor: 'pointer', transition: 'background-color var(--dur)',
+                display: 'flex', alignItems: 'center', padding: 2, flexShrink: 0, position: 'relative',
+            }}
+            type="button" aria-label="Toggle active"
+        >
+            <div style={{
+                width: 16, height: 16, borderRadius: '50%', background: 'white',
+                transition: 'transform var(--dur)',
+                transform: checked ? 'translateX(16px)' : 'translateX(0)',
+                boxShadow: 'var(--shadow-sm)',
+            }} />
+        </button>
+    )
+
+    const submitNew = () => {
+        if (!newName.trim()) return
+        const value = fromDisplay(parseFloat(newValue) || 0)
+        onCreate(newName.trim(), value)
+        setNewName('')
+        setNewValue('')
+        setAdding(false)
+    }
+
+    return (
+        <div className="card anim-fade-in">
+            <div className="card-header">
+                <div>
+                    <div className="card-title">{title}</div>
+                    <div className="card-subtitle">{subtitle}</div>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={() => setAdding(true)} disabled={adding}>
+                    <Plus size={13} /> {addLabel}
+                </button>
+            </div>
+            <div className="card-body" style={{ padding: 0 }}>
+                {isLoading ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                        <Loader2 size={24} className="spin" style={{ color: 'var(--t3)' }} />
+                    </div>
+                ) : (
+                    <>
+                        {rows.map((row, i) => (
+                            <div key={row.id} style={{
+                                display: 'flex', alignItems: 'center', gap: 14, padding: '14px 24px',
+                                borderBottom: i === rows.length - 1 && !adding ? 'none' : '1px solid var(--bd)',
+                                opacity: row.isActive ? 1 : 0.5,
+                            }}>
+                                <GripVertical size={14} style={{ color: 'var(--t4)', flexShrink: 0 }} />
+                                <input
+                                    className="form-input"
+                                    style={{ flex: 1 }}
+                                    defaultValue={row.name}
+                                    onBlur={e => e.target.value.trim() && e.target.value !== row.name && onUpdate(row.id, { name: e.target.value.trim() })}
+                                />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: 110, flexShrink: 0 }}>
+                                    <input
+                                        type="number"
+                                        step={valueStep}
+                                        min={0}
+                                        className="form-input"
+                                        defaultValue={toDisplay(row.value)}
+                                        onBlur={e => {
+                                            const v = fromDisplay(parseFloat(e.target.value) || 0)
+                                            if (v !== row.value) onUpdate(row.id, { value: v })
+                                        }}
+                                    />
+                                    <span style={{ fontSize: 12, color: 'var(--t3)' }}>{valueSuffix}</span>
+                                </div>
+                                <button
+                                    onClick={() => !row.isDefault && onUpdate(row.id, { isDefault: true })}
+                                    title={row.isDefault ? `Default ${valueLabel}` : `Set as default ${valueLabel}`}
+                                    style={{ display: 'flex', background: 'none', border: 'none', cursor: row.isDefault ? 'default' : 'pointer', padding: 0, flexShrink: 0 }}
+                                >
+                                    <Star size={14} fill={row.isDefault ? 'var(--blue)' : 'none'} style={{ color: row.isDefault ? 'var(--blue)' : 'var(--t4)' }} />
+                                </button>
+                                <Toggle checked={row.isActive} onChange={() => onUpdate(row.id, { isActive: !row.isActive })} />
+                                <button
+                                    onClick={() => onDelete(row.id)}
+                                    disabled={row.isDefault}
+                                    title={row.isDefault ? 'This is the default — set another as default first' : 'Delete'}
+                                    style={{ display: 'flex', background: 'none', border: 'none', cursor: row.isDefault ? 'not-allowed' : 'pointer', padding: 0, color: row.isDefault ? 'var(--t4)' : 'var(--red)', flexShrink: 0 }}
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
+                        ))}
+                        {adding && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 24px', background: 'var(--bg2)' }}>
+                                <div style={{ width: 14, flexShrink: 0 }} />
+                                <input
+                                    autoFocus
+                                    className="form-input"
+                                    style={{ flex: 1 }}
+                                    placeholder="Name"
+                                    value={newName}
+                                    onChange={e => setNewName(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && submitNew()}
+                                />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: 110, flexShrink: 0 }}>
+                                    <input
+                                        type="number"
+                                        step={valueStep}
+                                        min={0}
+                                        className="form-input"
+                                        placeholder="0"
+                                        value={newValue}
+                                        onChange={e => setNewValue(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && submitNew()}
+                                    />
+                                    <span style={{ fontSize: 12, color: 'var(--t3)' }}>{valueSuffix}</span>
+                                </div>
+                                <button className="btn btn-primary btn-sm" onClick={submitNew} disabled={creating || !newName.trim()}>
+                                    <Check size={13} />
+                                </button>
+                                <button className="btn btn-secondary btn-sm" onClick={() => { setAdding(false); setNewName(''); setNewValue('') }}>
+                                    <XIcon size={13} />
+                                </button>
+                            </div>
+                        )}
+                        {rows.length === 0 && !adding && (
+                            <div style={{ textAlign: 'center', padding: 32, color: 'var(--t3)', fontSize: 13 }}>None yet — add one to get started.</div>
+                        )}
+                    </>
+                )}
+            </div>
         </div>
     )
 }
