@@ -6,6 +6,7 @@ import { useCustomers } from "../../hooks/useCustomers";
 import { useJobs } from "../../hooks/useJobs";
 import { useToast } from "../../contexts/ToastContext";
 import { useDocumentTemplates } from "./documentTemplatesApi";
+import { useCurrencies, useTaxRates, usePaymentTerms } from "../../hooks/useSettings";
 import { customerName as fmtCustomerName } from "../../types/api";
 import type { Customer, Job } from "../../types/api";
 import { formatMoney } from '../../lib/format'
@@ -71,6 +72,12 @@ export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetC
   const [showJobDropdown, setShowJobDropdown] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [taxRate, setTaxRate] = useState("10");
+  const [taxRatePresetId, setTaxRatePresetId] = useState("");
+  const [paymentTermsPresetId, setPaymentTermsPresetId] = useState("");
+  const [currency, setCurrency] = useState("");
+  const currenciesQuery = useCurrencies();
+  const taxRatesQuery = useTaxRates();
+  const paymentTermsQuery = usePaymentTerms();
   const [notes, setNotes] = useState("");
   const [templateId, setTemplateId] = useState("");
   const templatesQ = useDocumentTemplates('INVOICE');
@@ -79,6 +86,36 @@ export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetC
     { description: "", category: "LABOUR", quantity: 1, unitPrice: 0 },
   ]);
   const [linkedQuoteId, setLinkedQuoteId] = useState("");
+
+  useEffect(() => {
+    if (isOpen && !currency && currenciesQuery.data?.default) {
+      setCurrency(currenciesQuery.data.default);
+    }
+  }, [isOpen, currency, currenciesQuery.data]);
+
+  useEffect(() => {
+    if (isOpen && !taxRatePresetId && taxRatesQuery.data) {
+      const def = taxRatesQuery.data.find((t) => t.isDefault && t.isActive);
+      if (def) {
+        setTaxRatePresetId(def.id);
+        setTaxRate(String(def.rate * 100));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, taxRatePresetId, taxRatesQuery.data]);
+
+  useEffect(() => {
+    if (isOpen && !paymentTermsPresetId && paymentTermsQuery.data) {
+      const def = paymentTermsQuery.data.find((t) => t.isDefault && t.isActive);
+      if (def) {
+        setPaymentTermsPresetId(def.id);
+        const d = new Date();
+        d.setDate(d.getDate() + def.days);
+        setDueDate(d.toISOString().split("T")[0]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, paymentTermsPresetId, paymentTermsQuery.data]);
 
   const customersQuery = useCustomers({ limit: 100, search: customerSearch || undefined });
   const customers: Customer[] = customersQuery.data?.data ?? [];
@@ -203,6 +240,7 @@ export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetC
     createInvoice.mutate(
       {
         customerId,
+        currency,
         customerName: customerNameVal || undefined,
         customerEmail: customerEmail || undefined,
         jobId: jobId || undefined,
@@ -404,12 +442,62 @@ export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetC
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-400 uppercase">Due Date</label>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
+              <label className="block text-xs font-semibold text-gray-400 uppercase">Currency</label>
+              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputClass}>
+                {(currenciesQuery.data?.enabled ?? []).map(code => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-400 uppercase">Tax Rate (%)</label>
-              <input type="number" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} min="0" step="0.5" className={inputClass} />
+              <label className="block text-xs font-semibold text-gray-400 uppercase">Payment Terms</label>
+              <select
+                value={paymentTermsPresetId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPaymentTermsPresetId(val);
+                  if (val !== "custom") {
+                    const preset = (paymentTermsQuery.data ?? []).find(t => t.id === val);
+                    if (preset) {
+                      const d = new Date();
+                      d.setDate(d.getDate() + preset.days);
+                      setDueDate(d.toISOString().split("T")[0]);
+                    }
+                  }
+                }}
+                className={inputClass}
+              >
+                {(paymentTermsQuery.data ?? []).filter(t => t.isActive).map(t => (
+                  <option key={t.id} value={t.id}>{t.name} ({t.days === 0 ? "Due on Receipt" : `${t.days} days`})</option>
+                ))}
+                <option value="custom">Custom date…</option>
+              </select>
+              {paymentTermsPresetId === "custom" && (
+                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} style={{ marginTop: 6 }} />
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-400 uppercase">Tax Rate</label>
+              <select
+                value={taxRatePresetId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTaxRatePresetId(val);
+                  if (val !== "custom") {
+                    const preset = (taxRatesQuery.data ?? []).find(t => t.id === val);
+                    if (preset) setTaxRate(String(preset.rate * 100));
+                  }
+                }}
+                className={inputClass}
+              >
+                {(taxRatesQuery.data ?? []).filter(t => t.isActive).map(t => (
+                  <option key={t.id} value={t.id}>{t.name} ({(t.rate * 100).toFixed(2)}%)</option>
+                ))}
+                <option value="custom">Custom…</option>
+              </select>
+              {taxRatePresetId === "custom" && (
+                <input type="number" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} min="0" step="0.5" className={inputClass} style={{ marginTop: 6 }} />
+              )}
             </div>
           </div>
 
