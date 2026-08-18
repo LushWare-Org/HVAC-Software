@@ -24,16 +24,17 @@ function toNumber(value: number | string | null | undefined): number {
   return Number.isFinite(n) ? n : 0
 }
 
-/** "$1,250.00" | "Rs 125,000.00" — tenant-currency money formatter. */
+/** "$1,250.00" | "Rs 125,000.00" — tenant-currency money formatter. Pass opts.currency to format a specific record's own currency instead of the tenant default. */
 export function formatMoney(
   value: number | string | null | undefined,
-  opts: { decimals?: number } = {},
+  opts: { decimals?: number; currency?: string } = {},
 ): string {
   const decimals = opts.decimals ?? 2
+  const currency = opts.currency || activeCurrency
   try {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: activeCurrency,
+      currency,
       currencyDisplay: 'narrowSymbol',
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
