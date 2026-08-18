@@ -28,6 +28,20 @@ export class CrmClient {
     }
   }
 
+  /** Tenant's current default currency, for jobs created without an explicit one. Fails open to USD. */
+  async getDefaultCurrency(companyId: string): Promise<string> {
+    try {
+      const res = await axios.get(`${CRM_URL}/company/settings`, {
+        timeout: 8_000,
+        headers: this.serviceHeaders(companyId),
+      });
+      return res.data?.currency ?? 'USD';
+    } catch (err: any) {
+      this.logger.warn(`Could not fetch default currency for ${companyId}, using USD: ${err.message}`);
+      return 'USD';
+    }
+  }
+
   /** Kept for the one-value call sites that only care about ownership. */
   async getComponentOwnerCustomerId(companyId: string, componentId: string): Promise<string | null | undefined> {
     const details = await this.getComponentDetails(companyId, componentId);
