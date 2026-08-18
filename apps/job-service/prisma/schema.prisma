@@ -219,6 +219,7 @@ model Job {
   // and updated by finance-service when a quote is converted. The billed
   // amount remains authoritative on the Invoice record.
   estimatedValue Decimal? @db.Decimal(10, 2)
+  currency       String   @default("USD")
 
   // Finance refs (set by finance-service)
   quoteId   String?

@@ -235,6 +235,7 @@ exports.Prisma.JobScalarFieldEnum = {
   estimatedDurationMins: 'estimatedDurationMins',
   travelDistanceKm: 'travelDistanceKm',
   estimatedValue: 'estimatedValue',
+  currency: 'currency',
   quoteId: 'quoteId',
   invoiceId: 'invoiceId',
   agreementId: 'agreementId',

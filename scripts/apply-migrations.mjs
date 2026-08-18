@@ -755,6 +755,19 @@ FROM "crm"."companies" c
 WHERE NOT EXISTS (SELECT 1 FROM "crm"."payment_terms_presets" p WHERE p."companyId" = c."id");
     `.trim(),
   },
+  {
+    schema: 'jobs',
+    name: '20260818010000_add_job_currency',
+    sql: `
+ALTER TABLE "jobs"."jobs" ADD COLUMN IF NOT EXISTS "currency" TEXT NOT NULL DEFAULT 'USD';
+UPDATE "jobs"."jobs" j
+SET "currency" = c.currency
+FROM "crm"."companies" c
+WHERE j."companyId" = c.id
+  AND j."currency" = 'USD'
+  AND c.currency <> 'USD';
+    `.trim(),
+  },
 
 ];
 
