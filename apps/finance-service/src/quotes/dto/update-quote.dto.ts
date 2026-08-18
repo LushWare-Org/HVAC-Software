@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEnum, IsNumber, IsBoolean, IsArray, ValidateNested } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsNumber, IsBoolean, IsArray, ValidateNested, Length } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { DiscountType, QuoteStatus } from '../../prisma/generated';
@@ -18,6 +18,7 @@ export class UpdateQuoteDto {
   @IsOptional() @IsEnum(DiscountType) discountType?: DiscountType;
   @ApiPropertyOptional() @IsOptional() @IsNumber() discountValue?: number;
   @ApiPropertyOptional() @IsOptional() @IsNumber() taxRate?: number;
+  @ApiPropertyOptional() @IsOptional() @IsString() @Length(3, 3) currency?: string;
 
   @ApiPropertyOptional({ type: [LineItemDto] })
   @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => LineItemDto)

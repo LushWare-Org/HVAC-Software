@@ -125,7 +125,8 @@ export class QuotesService {
 
   async create(companyId: string, userId: string, dto: CreateQuoteDto) {
     const quoteNumber = await nextQuoteNumber(this.prisma, companyId);
-    const { lineItems = [], taxRate = 0, discountType, discountValue, ...rest } = dto;
+    const { lineItems = [], taxRate = 0, discountType, discountValue, currency, ...rest } = dto;
+    const resolvedCurrency = currency || (await this.companySettings.getSettings(companyId)).currency;
 
     // Calculate totals
     const subtotal = lineItems.reduce((acc, li) => acc + li.quantity * li.unitPrice, 0);
@@ -143,6 +144,7 @@ export class QuotesService {
         ...rest,
         companyId,
         quoteNumber,
+        currency: resolvedCurrency,
         createdByUserId: userId,
         discountType: discountType ?? null,
         discountValue: discountValue ?? null,

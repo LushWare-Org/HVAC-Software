@@ -1,6 +1,6 @@
 import {
   IsString, IsOptional, IsEnum, IsNumber, IsBoolean,
-  IsArray, ValidateNested, IsEmail, IsDateString, Min, MaxLength,
+  IsArray, ValidateNested, IsEmail, IsDateString, Min, MaxLength, Length,
 } from 'class-validator';
 // Note: MaxLength is kept in import for the title field
 import { Transform, Type } from 'class-transformer';
@@ -47,6 +47,8 @@ export class CreateQuoteDto {
   @IsOptional() @IsEnum(DiscountType) discountType?: DiscountType;
   @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) discountValue?: number;
   @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) taxRate?: number;
+  @ApiPropertyOptional({ example: 'USD', description: 'ISO 4217 code; defaults to the tenant currency when omitted' })
+  @IsOptional() @IsString() @Length(3, 3) currency?: string;
 
   @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() terms?: string;

@@ -89,11 +89,12 @@ const mockPrisma: any = {
 
 describe('QuotesService', () => {
   let service: QuotesService;
+  let module: TestingModule;
 
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         QuotesService,
         { provide: PrismaService, useValue: mockPrisma },
@@ -129,6 +130,28 @@ describe('QuotesService', () => {
   // ── create ──────────────────────────────────────────────────────────────
 
   describe('create', () => {
+    it('resolves currency from CompanySettingsClient when the DTO omits it', async () => {
+      const settingsMock = module.get(CompanySettingsClient) as any;
+      settingsMock.getSettings.mockResolvedValue({ id: COMPANY_ID, name: 'Demo', logoUrl: null, currency: 'LKR', timezone: 'Asia/Colombo', features: {} });
+      mockPrisma.quote.count.mockResolvedValue(0);
+      mockPrisma.quote.create.mockImplementation(({ data }: any) => Promise.resolve({ ...data, id: 'q-new' }));
+      await service.create(COMPANY_ID, USER_ID, { customerId: 'c1', customerName: 'C', customerEmail: 'c@x.com', title: 'Q' } as any);
+      expect(mockPrisma.quote.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ currency: 'LKR' }) }),
+      );
+    });
+
+    it('respects an explicit currency in the DTO without calling CompanySettingsClient', async () => {
+      const settingsMock = module.get(CompanySettingsClient) as any;
+      mockPrisma.quote.count.mockResolvedValue(0);
+      mockPrisma.quote.create.mockImplementation(({ data }: any) => Promise.resolve({ ...data, id: 'q-new' }));
+      await service.create(COMPANY_ID, USER_ID, { customerId: 'c1', customerName: 'C', customerEmail: 'c@x.com', title: 'Q', currency: 'EUR' } as any);
+      expect(settingsMock.getSettings).not.toHaveBeenCalled();
+      expect(mockPrisma.quote.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ currency: 'EUR' }) }),
+      );
+    });
+
     it('calculates correct subtotal, taxAmount, and total', async () => {
       mockPrisma.quote.count.mockResolvedValue(0);
       mockPrisma.quote.create.mockImplementation(({ data }: any) => Promise.resolve({ ...data, id: QUOTE_ID }));
