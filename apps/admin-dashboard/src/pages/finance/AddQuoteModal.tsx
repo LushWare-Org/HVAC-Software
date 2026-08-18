@@ -6,6 +6,7 @@ import { useCustomers } from "../../hooks/useCustomers";
 import { useJobs } from "../../hooks/useJobs";
 import { useToast } from "../../contexts/ToastContext";
 import { useDocumentTemplates } from "./documentTemplatesApi";
+import { useCurrencies, useTaxRates } from "../../hooks/useSettings";
 import { customerName as fmtCustomerName } from "../../types/api";
 import type { Customer, Job } from "../../types/api";
 import { formatMoney } from '../../lib/format'
@@ -71,6 +72,10 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
   const [jobSearch, setJobSearch] = useState("");
   const [showJobDropdown, setShowJobDropdown] = useState(false);
   const [taxRate, setTaxRate] = useState("10");
+  const [taxRatePresetId, setTaxRatePresetId] = useState("");
+  const [currency, setCurrency] = useState("");
+  const currenciesQuery = useCurrencies();
+  const taxRatesQuery = useTaxRates();
   const [validUntil, setValidUntil] = useState("");
   const [notes, setNotes] = useState("");
   const [templateId, setTemplateId] = useState("");
@@ -89,6 +94,23 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, templates.length]);
+
+  useEffect(() => {
+    if (isOpen && !currency && currenciesQuery.data?.default) {
+      setCurrency(currenciesQuery.data.default);
+    }
+  }, [isOpen, currency, currenciesQuery.data]);
+
+  useEffect(() => {
+    if (isOpen && !taxRatePresetId && taxRatesQuery.data) {
+      const def = taxRatesQuery.data.find((t) => t.isDefault && t.isActive);
+      if (def) {
+        setTaxRatePresetId(def.id);
+        setTaxRate(String(def.rate * 100));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, taxRatePresetId, taxRatesQuery.data]);
 
   // Fetch existing customers and jobs for dropdowns
   const customersQuery = useCustomers({ limit: 100, search: customerSearch || undefined });
@@ -159,6 +181,7 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
     createQuote.mutate(
       {
         title,
+        currency,
         customerName: customerNameVal,
         customerEmail,
         customerId,
@@ -328,8 +351,35 @@ export default function AddQuoteModal({ isOpen, onClose, prefilledJob, presetCus
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-400 uppercase">Tax Rate (%)</label>
-              <input type="number" value={taxRate} onChange={e => setTaxRate(e.target.value)} min="0" step="0.5" className={inputClass} />
+              <label className="block text-xs font-semibold text-gray-400 uppercase">Currency</label>
+              <select value={currency} onChange={e => setCurrency(e.target.value)} className={inputClass}>
+                {(currenciesQuery.data?.enabled ?? []).map(code => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-400 uppercase">Tax Rate</label>
+              <select
+                value={taxRatePresetId}
+                onChange={e => {
+                  const val = e.target.value;
+                  setTaxRatePresetId(val);
+                  if (val !== "custom") {
+                    const preset = (taxRatesQuery.data ?? []).find(t => t.id === val);
+                    if (preset) setTaxRate(String(preset.rate * 100));
+                  }
+                }}
+                className={inputClass}
+              >
+                {(taxRatesQuery.data ?? []).filter(t => t.isActive).map(t => (
+                  <option key={t.id} value={t.id}>{t.name} ({(t.rate * 100).toFixed(2)}%)</option>
+                ))}
+                <option value="custom">Custom…</option>
+              </select>
+              {taxRatePresetId === "custom" && (
+                <input type="number" value={taxRate} onChange={e => setTaxRate(e.target.value)} min="0" step="0.5" className={inputClass} style={{ marginTop: 6 }} />
+              )}
             </div>
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-400 uppercase">Valid Until</label>
