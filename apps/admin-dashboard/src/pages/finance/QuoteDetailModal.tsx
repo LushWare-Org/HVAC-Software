@@ -49,6 +49,7 @@ export default function QuoteDetailModal({
   // Fetch live data so the modal auto-updates after status mutations
   const { data: liveQuote } = useQuote(quote?.id ?? undefined)
   const q = liveQuote ?? quote
+  const fmtMoney = (value: number) => formatMoney(value, { currency: q?.currency })
 
   const isBusy =
     updateQuote.isPending || sendQuote.isPending ||
@@ -335,7 +336,7 @@ export default function QuoteDetailModal({
                   </label>
                   <input
                     type="text"
-                    value={formatMoney(decimalToNumber(q!.total))}
+                    value={fmtMoney(decimalToNumber(q!.total))}
                     disabled
                     className={inputView}
                   />

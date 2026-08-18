@@ -52,6 +52,7 @@ export default function InvoiceDetailModal({
   // Fetch live data so the modal auto-updates after status mutations
   const { data: liveInvoice } = useInvoice(invoice?.id ?? undefined)
   const inv = liveInvoice ?? invoice
+  const fmtMoney = (value: number) => formatMoney(value, { currency: inv?.currency })
 
   const isBusy =
     updateInvoice.isPending || sendInvoice.isPending ||
@@ -352,11 +353,11 @@ export default function InvoiceDetailModal({
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Total</label>
-                  <input type="text" value={formatMoney(decimalToNumber(invoice.total))} disabled className={inputView} />
+                  <input type="text" value={fmtMoney(decimalToNumber(invoice.total))} disabled className={inputView} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Balance Due</label>
-                  <input type="text" value={formatMoney(decimalToNumber(invoice.balanceDue))} disabled className={inputView} />
+                  <input type="text" value={fmtMoney(decimalToNumber(invoice.balanceDue))} disabled className={inputView} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</label>
@@ -440,7 +441,7 @@ export default function InvoiceDetailModal({
                           type="number"
                           value={payAmount}
                           onChange={(e) => setPayAmount(e.target.value)}
-                          placeholder={`Max: ${formatMoney(decimalToNumber(inv!.balanceDue))}`}
+                          placeholder={`Max: ${fmtMoney(decimalToNumber(inv!.balanceDue))}`}
                           min="0.01"
                           step="0.01"
                           disabled={isBusy}
@@ -501,7 +502,7 @@ export default function InvoiceDetailModal({
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-gray-800">
-                                {formatMoney(decimalToNumber(p.amount))}
+                                {fmtMoney(decimalToNumber(p.amount))}
                                 {p.receiptNumber && <span className="text-gray-400 font-normal font-mono text-xs ml-2">{p.receiptNumber}</span>}
                               </p>
                               <p className="text-xs text-gray-400 mt-0.5">
@@ -544,7 +545,7 @@ export default function InvoiceDetailModal({
                   <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-sm text-green-700 flex items-center gap-2">
                       <DollarSign size={14} />
-                      Paid: {new Date(inv!.paidAt).toLocaleString()} · Amount Paid: {formatMoney(decimalToNumber(inv!.amountPaid))}
+                      Paid: {new Date(inv!.paidAt).toLocaleString()} · Amount Paid: {fmtMoney(decimalToNumber(inv!.amountPaid))}
                     </p>
                   </div>
                 )}
