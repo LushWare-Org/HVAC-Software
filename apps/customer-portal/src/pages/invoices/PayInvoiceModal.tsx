@@ -14,14 +14,11 @@ interface PayInvoiceModalProps {
 type PayMethod = 'card' | 'bank'
 type PayState = 'idle' | 'opening' | 'polling' | 'success' | 'cancelled' | 'bankConfirm'
 
-function fmtMoney(value?: string | number) {
-  return formatMoney(value)
-}
-
 const POLL_INTERVAL_MS = 3000
 const MAX_POLL_MS = 10 * 60 * 1000 // 10 minutes
 
 export default function PayInvoiceModal({ onClose, invoice }: PayInvoiceModalProps) {
+  const fmtMoney = (value?: string | number) => formatMoney(value, { currency: invoice.currency })
   const [payMethod, setPayMethod] = useState<PayMethod>('card')
   const [payState, setPayState] = useState<PayState>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)

@@ -37,10 +37,6 @@ const fieldStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
-function fmtMoney(value?: string | number) {
-  return formatMoney(value)
-}
-
 function fmtDate(iso?: string) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -50,6 +46,7 @@ export default function QuoteDetailModal({ quote: initialQuote, onClose }: Quote
   const [activeTab, setActiveTab] = useState<TabType>('details')
   const { data } = useMyQuote(initialQuote.id)
   const quote = data ?? initialQuote
+  const fmtMoney = (value?: string | number) => formatMoney(value, { currency: quote.currency })
   const { showError, showSuccess } = useToast()
 
   useEffect(() => {

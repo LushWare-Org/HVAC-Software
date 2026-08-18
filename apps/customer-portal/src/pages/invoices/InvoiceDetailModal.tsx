@@ -41,10 +41,6 @@ const fieldStyle: React.CSSProperties = {
   cursor: 'default',
 }
 
-function fmtMoney(value?: string | number) {
-  return formatMoney(value)
-}
-
 function fmtDate(iso?: string) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -54,6 +50,7 @@ export default function InvoiceDetailModal({ invoice: initialInvoice, onClose, o
   const [activeTab, setActiveTab] = useState<TabType>('details')
   const { data } = useMyInvoice(initialInvoice.id)
   const invoice = data ?? initialInvoice
+  const fmtMoney = (value?: string | number) => formatMoney(value, { currency: invoice.currency })
   const { showError, showSuccess } = useToast()
 
   useEffect(() => {
