@@ -13,6 +13,7 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
 import { AuthUser, PaginatedResponse, Role, clampPagination } from '@tscrm/types';
 import { JobEventsPublisher } from '../realtime/job-events.publisher';
+import { CrmClient } from './crm.client';
 
 // Roles allowed to correct a job's status outside the normal forward-moving
 // state machine (dto.force = true) — e.g. undoing a technician's mis-tap.
@@ -28,6 +29,7 @@ export class JobsService {
     private prisma: PrismaService,
     private cache: RedisCacheService,
     private readonly events: JobEventsPublisher,
+    private readonly crmClient: CrmClient,
   ) {}
 
   // ============================================================
@@ -35,7 +37,8 @@ export class JobsService {
   // ============================================================
 
   async create(user: AuthUser, dto: CreateJobDto) {
-    const { customFields, ...rest } = dto;
+    const { customFields, currency, ...rest } = dto;
+    const resolvedCurrency = currency || (await this.crmClient.getDefaultCurrency(user.companyId));
 
     for (let attempt = 1; attempt <= CREATE_JOB_MAX_ATTEMPTS; attempt += 1) {
       try {
@@ -47,6 +50,7 @@ export class JobsService {
               ...rest,
               companyId: user.companyId,
               jobNumber,
+              currency: resolvedCurrency,
               priority: (rest.priority ?? 'NORMAL') as any,
               scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
               scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
@@ -581,6 +585,7 @@ export class JobsService {
       projectId: string | null;
       componentId: string | null;
       equipmentId: string | null;
+      currency: string;
     }>,
   ) {
     await this.findOne(companyId, id);

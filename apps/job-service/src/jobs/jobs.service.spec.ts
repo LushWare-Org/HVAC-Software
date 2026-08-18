@@ -17,6 +17,9 @@ import { JobsService } from './jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JobEventsPublisher } from '../realtime/job-events.publisher';
 import { RedisCacheService } from '../redis-cache.service';
+import { CrmClient } from './crm.client';
+import { JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
+import { Role } from '@tscrm/types';
 
 const mockEvents = { publish: jest.fn() };
 
@@ -25,8 +28,13 @@ const mockCache = {
   set: jest.fn().mockResolvedValue(undefined),
   del: jest.fn().mockResolvedValue(undefined),
 };
-import { JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
-import { Role } from '@tscrm/types';
+
+const mockCrmClient = {
+  getDefaultCurrency: jest.fn().mockResolvedValue('USD'),
+  getProjectCustomerId: jest.fn(),
+  getComponentOwnerCustomerId: jest.fn(),
+  getComponentDetails: jest.fn(),
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -153,6 +161,7 @@ describe('JobsService — updateJobStatus', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JobEventsPublisher, useValue: mockEvents },
         { provide: RedisCacheService, useValue: mockCache },
+        { provide: CrmClient, useValue: mockCrmClient },
       ],
     }).compile();
 
@@ -388,6 +397,7 @@ describe('JobsService — create', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JobEventsPublisher, useValue: mockEvents },
         { provide: RedisCacheService, useValue: mockCache },
+        { provide: CrmClient, useValue: mockCrmClient },
       ],
     }).compile();
     service = module.get<JobsService>(JobsService);
@@ -425,6 +435,38 @@ describe('JobsService — create', () => {
     const createCall = mockPrisma.job.create.mock.calls[0][0];
     expect(createCall.data.statusHistory.create.toStatus).toBe('PENDING');
   });
+
+  it('resolves currency from CrmClient when the DTO omits it', async () => {
+    mockCrmClient.getDefaultCurrency.mockResolvedValue('LKR');
+    mockPrisma.job.create.mockImplementation(({ data }: any) =>
+      Promise.resolve({ ...makeJob(JobStatusDto.PENDING), ...data }),
+    );
+    mockPrisma.job.findFirst.mockResolvedValue(makeJob(JobStatusDto.PENDING));
+
+    await service.create(makeAuthUser() as any, {
+      customerId: 'c1', customerName: 'C', serviceAddress: '1 St', title: 'Job',
+    } as any);
+
+    expect(mockCrmClient.getDefaultCurrency).toHaveBeenCalledWith(COMPANY_ID);
+    const createCall = mockPrisma.job.create.mock.calls[0][0];
+    expect(createCall.data.currency).toBe('LKR');
+  });
+
+  it('respects an explicit currency in the DTO without calling CrmClient', async () => {
+    mockCrmClient.getDefaultCurrency.mockClear();
+    mockPrisma.job.create.mockImplementation(({ data }: any) =>
+      Promise.resolve({ ...makeJob(JobStatusDto.PENDING), ...data }),
+    );
+    mockPrisma.job.findFirst.mockResolvedValue(makeJob(JobStatusDto.PENDING));
+
+    await service.create(makeAuthUser() as any, {
+      customerId: 'c1', customerName: 'C', serviceAddress: '1 St', title: 'Job', currency: 'EUR',
+    } as any);
+
+    expect(mockCrmClient.getDefaultCurrency).not.toHaveBeenCalled();
+    const createCall = mockPrisma.job.create.mock.calls[0][0];
+    expect(createCall.data.currency).toBe('EUR');
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -441,6 +483,7 @@ describe('JobsService — findAll filters', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JobEventsPublisher, useValue: mockEvents },
         { provide: RedisCacheService, useValue: mockCache },
+        { provide: CrmClient, useValue: mockCrmClient },
       ],
     }).compile();
     service = module.get<JobsService>(JobsService);
@@ -498,6 +541,7 @@ describe('JobsService — updatePreferredTime', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JobEventsPublisher, useValue: mockEvents },
         { provide: RedisCacheService, useValue: mockCache },
+        { provide: CrmClient, useValue: mockCrmClient },
       ],
     }).compile();
     service = module.get(JobsService);

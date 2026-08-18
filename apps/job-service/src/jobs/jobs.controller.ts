@@ -28,6 +28,7 @@ class UpdateJobDto {
   @IsOptional() @IsString() projectId?: string;
   @IsOptional() @IsString() componentId?: string;
   @IsOptional() @IsString() equipmentId?: string;
+  @IsOptional() @IsString() currency?: string;
 }
 
 // Combined PATCH DTO — allows updating fields AND status in one request
