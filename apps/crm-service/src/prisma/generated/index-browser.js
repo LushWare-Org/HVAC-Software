@@ -135,11 +135,36 @@ exports.Prisma.CompanyScalarFieldEnum = {
   logoUrl: 'logoUrl',
   website: 'website',
   currency: 'currency',
+  enabledCurrencies: 'enabledCurrencies',
   timezone: 'timezone',
   features: 'features',
   isActive: 'isActive',
   automaticFollowupEnabled: 'automaticFollowupEnabled',
   trialEndsAt: 'trialEndsAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.TaxRatePresetScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  name: 'name',
+  rate: 'rate',
+  isDefault: 'isDefault',
+  isActive: 'isActive',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PaymentTermsPresetScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  name: 'name',
+  days: 'days',
+  isDefault: 'isDefault',
+  isActive: 'isActive',
+  sortOrder: 'sortOrder',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -799,6 +824,8 @@ exports.ImportStatus = exports.$Enums.ImportStatus = {
 
 exports.Prisma.ModelName = {
   Company: 'Company',
+  TaxRatePreset: 'TaxRatePreset',
+  PaymentTermsPreset: 'PaymentTermsPreset',
   CompanyUser: 'CompanyUser',
   UserLoginEvent: 'UserLoginEvent',
   Customer: 'Customer',

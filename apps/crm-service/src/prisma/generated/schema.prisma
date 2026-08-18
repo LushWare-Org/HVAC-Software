@@ -29,6 +29,7 @@ model Company {
   logoUrl                  String?
   website                  String?
   currency                 String    @default("USD")
+  enabledCurrencies        String[]  @default(["USD"])
   timezone                 String    @default("America/New_York")
   features                 Json      @default("{}")
   isActive                 Boolean   @default(true)
@@ -37,14 +38,50 @@ model Company {
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
 
-  customers  Customer[]
-  contacts   Contact[]
-  leads      Lead[]
-  agreements ServiceAgreement[]
-  bookings   Booking[]
-  users      CompanyUser[]
+  customers           Customer[]
+  contacts            Contact[]
+  leads               Lead[]
+  agreements          ServiceAgreement[]
+  bookings            Booking[]
+  users               CompanyUser[]
+  taxRatePresets      TaxRatePreset[]
+  paymentTermsPresets PaymentTermsPreset[]
 
   @@map("companies")
+}
+
+// ---- Tenant-managed tax rate presets (Settings > Finance) ----
+model TaxRatePreset {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  name      String
+  rate      Decimal  @db.Decimal(5, 4)
+  isDefault Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId, isActive])
+  @@map("tax_rate_presets")
+}
+
+// ---- Tenant-managed payment terms presets (Settings > Finance) ----
+model PaymentTermsPreset {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  name      String
+  days      Int
+  isDefault Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId, isActive])
+  @@map("payment_terms_presets")
 }
 
 // ---- Company Users (staff members with roles) ----

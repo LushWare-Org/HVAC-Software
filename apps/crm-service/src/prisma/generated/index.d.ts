@@ -19,6 +19,16 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type Company = $Result.DefaultSelection<Prisma.$CompanyPayload>
 /**
+ * Model TaxRatePreset
+ * 
+ */
+export type TaxRatePreset = $Result.DefaultSelection<Prisma.$TaxRatePresetPayload>
+/**
+ * Model PaymentTermsPreset
+ * 
+ */
+export type PaymentTermsPreset = $Result.DefaultSelection<Prisma.$PaymentTermsPresetPayload>
+/**
  * Model CompanyUser
  * 
  */
@@ -418,6 +428,26 @@ export class PrismaClient<
     * ```
     */
   get company(): Prisma.CompanyDelegate<ExtArgs>;
+
+  /**
+   * `prisma.taxRatePreset`: Exposes CRUD operations for the **TaxRatePreset** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TaxRatePresets
+    * const taxRatePresets = await prisma.taxRatePreset.findMany()
+    * ```
+    */
+  get taxRatePreset(): Prisma.TaxRatePresetDelegate<ExtArgs>;
+
+  /**
+   * `prisma.paymentTermsPreset`: Exposes CRUD operations for the **PaymentTermsPreset** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PaymentTermsPresets
+    * const paymentTermsPresets = await prisma.paymentTermsPreset.findMany()
+    * ```
+    */
+  get paymentTermsPreset(): Prisma.PaymentTermsPresetDelegate<ExtArgs>;
 
   /**
    * `prisma.companyUser`: Exposes CRUD operations for the **CompanyUser** model.
@@ -1180,6 +1210,8 @@ export namespace Prisma {
 
   export const ModelName: {
     Company: 'Company',
+    TaxRatePreset: 'TaxRatePreset',
+    PaymentTermsPreset: 'PaymentTermsPreset',
     CompanyUser: 'CompanyUser',
     UserLoginEvent: 'UserLoginEvent',
     Customer: 'Customer',
@@ -1227,7 +1259,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "company" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentErrorCode" | "documentTemplate" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "retentionRecommendation" | "revenueRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay" | "house" | "houseIssueReport" | "projectTemplate" | "projectComponent" | "componentIssueReport"
+      modelProps: "company" | "taxRatePreset" | "paymentTermsPreset" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentErrorCode" | "documentTemplate" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "retentionRecommendation" | "revenueRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay" | "house" | "houseIssueReport" | "projectTemplate" | "projectComponent" | "componentIssueReport"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1298,6 +1330,146 @@ export namespace Prisma {
           count: {
             args: Prisma.CompanyCountArgs<ExtArgs>
             result: $Utils.Optional<CompanyCountAggregateOutputType> | number
+          }
+        }
+      }
+      TaxRatePreset: {
+        payload: Prisma.$TaxRatePresetPayload<ExtArgs>
+        fields: Prisma.TaxRatePresetFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TaxRatePresetFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TaxRatePresetFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload>
+          }
+          findFirst: {
+            args: Prisma.TaxRatePresetFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TaxRatePresetFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload>
+          }
+          findMany: {
+            args: Prisma.TaxRatePresetFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload>[]
+          }
+          create: {
+            args: Prisma.TaxRatePresetCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload>
+          }
+          createMany: {
+            args: Prisma.TaxRatePresetCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TaxRatePresetCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload>[]
+          }
+          delete: {
+            args: Prisma.TaxRatePresetDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload>
+          }
+          update: {
+            args: Prisma.TaxRatePresetUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload>
+          }
+          deleteMany: {
+            args: Prisma.TaxRatePresetDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TaxRatePresetUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.TaxRatePresetUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaxRatePresetPayload>
+          }
+          aggregate: {
+            args: Prisma.TaxRatePresetAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTaxRatePreset>
+          }
+          groupBy: {
+            args: Prisma.TaxRatePresetGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TaxRatePresetGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TaxRatePresetCountArgs<ExtArgs>
+            result: $Utils.Optional<TaxRatePresetCountAggregateOutputType> | number
+          }
+        }
+      }
+      PaymentTermsPreset: {
+        payload: Prisma.$PaymentTermsPresetPayload<ExtArgs>
+        fields: Prisma.PaymentTermsPresetFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PaymentTermsPresetFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PaymentTermsPresetFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload>
+          }
+          findFirst: {
+            args: Prisma.PaymentTermsPresetFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PaymentTermsPresetFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload>
+          }
+          findMany: {
+            args: Prisma.PaymentTermsPresetFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload>[]
+          }
+          create: {
+            args: Prisma.PaymentTermsPresetCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload>
+          }
+          createMany: {
+            args: Prisma.PaymentTermsPresetCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PaymentTermsPresetCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload>[]
+          }
+          delete: {
+            args: Prisma.PaymentTermsPresetDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload>
+          }
+          update: {
+            args: Prisma.PaymentTermsPresetUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload>
+          }
+          deleteMany: {
+            args: Prisma.PaymentTermsPresetDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PaymentTermsPresetUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PaymentTermsPresetUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PaymentTermsPresetPayload>
+          }
+          aggregate: {
+            args: Prisma.PaymentTermsPresetAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePaymentTermsPreset>
+          }
+          groupBy: {
+            args: Prisma.PaymentTermsPresetGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PaymentTermsPresetGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PaymentTermsPresetCountArgs<ExtArgs>
+            result: $Utils.Optional<PaymentTermsPresetCountAggregateOutputType> | number
           }
         }
       }
@@ -3708,6 +3880,8 @@ export namespace Prisma {
     agreements: number
     bookings: number
     users: number
+    taxRatePresets: number
+    paymentTermsPresets: number
   }
 
   export type CompanyCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3717,6 +3891,8 @@ export namespace Prisma {
     agreements?: boolean | CompanyCountOutputTypeCountAgreementsArgs
     bookings?: boolean | CompanyCountOutputTypeCountBookingsArgs
     users?: boolean | CompanyCountOutputTypeCountUsersArgs
+    taxRatePresets?: boolean | CompanyCountOutputTypeCountTaxRatePresetsArgs
+    paymentTermsPresets?: boolean | CompanyCountOutputTypeCountPaymentTermsPresetsArgs
   }
 
   // Custom InputTypes
@@ -3770,6 +3946,20 @@ export namespace Prisma {
    */
   export type CompanyCountOutputTypeCountUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CompanyUserWhereInput
+  }
+
+  /**
+   * CompanyCountOutputType without action
+   */
+  export type CompanyCountOutputTypeCountTaxRatePresetsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TaxRatePresetWhereInput
+  }
+
+  /**
+   * CompanyCountOutputType without action
+   */
+  export type CompanyCountOutputTypeCountPaymentTermsPresetsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PaymentTermsPresetWhereInput
   }
 
 
@@ -4341,6 +4531,7 @@ export namespace Prisma {
     logoUrl: number
     website: number
     currency: number
+    enabledCurrencies: number
     timezone: number
     features: number
     isActive: number
@@ -4407,6 +4598,7 @@ export namespace Prisma {
     logoUrl?: true
     website?: true
     currency?: true
+    enabledCurrencies?: true
     timezone?: true
     features?: true
     isActive?: true
@@ -4502,6 +4694,7 @@ export namespace Prisma {
     logoUrl: string | null
     website: string | null
     currency: string
+    enabledCurrencies: string[]
     timezone: string
     features: JsonValue
     isActive: boolean
@@ -4541,6 +4734,7 @@ export namespace Prisma {
     logoUrl?: boolean
     website?: boolean
     currency?: boolean
+    enabledCurrencies?: boolean
     timezone?: boolean
     features?: boolean
     isActive?: boolean
@@ -4554,6 +4748,8 @@ export namespace Prisma {
     agreements?: boolean | Company$agreementsArgs<ExtArgs>
     bookings?: boolean | Company$bookingsArgs<ExtArgs>
     users?: boolean | Company$usersArgs<ExtArgs>
+    taxRatePresets?: boolean | Company$taxRatePresetsArgs<ExtArgs>
+    paymentTermsPresets?: boolean | Company$paymentTermsPresetsArgs<ExtArgs>
     _count?: boolean | CompanyCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["company"]>
 
@@ -4570,6 +4766,7 @@ export namespace Prisma {
     logoUrl?: boolean
     website?: boolean
     currency?: boolean
+    enabledCurrencies?: boolean
     timezone?: boolean
     features?: boolean
     isActive?: boolean
@@ -4592,6 +4789,7 @@ export namespace Prisma {
     logoUrl?: boolean
     website?: boolean
     currency?: boolean
+    enabledCurrencies?: boolean
     timezone?: boolean
     features?: boolean
     isActive?: boolean
@@ -4608,6 +4806,8 @@ export namespace Prisma {
     agreements?: boolean | Company$agreementsArgs<ExtArgs>
     bookings?: boolean | Company$bookingsArgs<ExtArgs>
     users?: boolean | Company$usersArgs<ExtArgs>
+    taxRatePresets?: boolean | Company$taxRatePresetsArgs<ExtArgs>
+    paymentTermsPresets?: boolean | Company$paymentTermsPresetsArgs<ExtArgs>
     _count?: boolean | CompanyCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CompanyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -4621,6 +4821,8 @@ export namespace Prisma {
       agreements: Prisma.$ServiceAgreementPayload<ExtArgs>[]
       bookings: Prisma.$BookingPayload<ExtArgs>[]
       users: Prisma.$CompanyUserPayload<ExtArgs>[]
+      taxRatePresets: Prisma.$TaxRatePresetPayload<ExtArgs>[]
+      paymentTermsPresets: Prisma.$PaymentTermsPresetPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4635,6 +4837,7 @@ export namespace Prisma {
       logoUrl: string | null
       website: string | null
       currency: string
+      enabledCurrencies: string[]
       timezone: string
       features: Prisma.JsonValue
       isActive: boolean
@@ -5012,6 +5215,8 @@ export namespace Prisma {
     agreements<T extends Company$agreementsArgs<ExtArgs> = {}>(args?: Subset<T, Company$agreementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServiceAgreementPayload<ExtArgs>, T, "findMany"> | Null>
     bookings<T extends Company$bookingsArgs<ExtArgs> = {}>(args?: Subset<T, Company$bookingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BookingPayload<ExtArgs>, T, "findMany"> | Null>
     users<T extends Company$usersArgs<ExtArgs> = {}>(args?: Subset<T, Company$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompanyUserPayload<ExtArgs>, T, "findMany"> | Null>
+    taxRatePresets<T extends Company$taxRatePresetsArgs<ExtArgs> = {}>(args?: Subset<T, Company$taxRatePresetsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "findMany"> | Null>
+    paymentTermsPresets<T extends Company$paymentTermsPresetsArgs<ExtArgs> = {}>(args?: Subset<T, Company$paymentTermsPresetsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5053,6 +5258,7 @@ export namespace Prisma {
     readonly logoUrl: FieldRef<"Company", 'String'>
     readonly website: FieldRef<"Company", 'String'>
     readonly currency: FieldRef<"Company", 'String'>
+    readonly enabledCurrencies: FieldRef<"Company", 'String[]'>
     readonly timezone: FieldRef<"Company", 'String'>
     readonly features: FieldRef<"Company", 'Json'>
     readonly isActive: FieldRef<"Company", 'Boolean'>
@@ -5494,6 +5700,46 @@ export namespace Prisma {
   }
 
   /**
+   * Company.taxRatePresets
+   */
+  export type Company$taxRatePresetsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    where?: TaxRatePresetWhereInput
+    orderBy?: TaxRatePresetOrderByWithRelationInput | TaxRatePresetOrderByWithRelationInput[]
+    cursor?: TaxRatePresetWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TaxRatePresetScalarFieldEnum | TaxRatePresetScalarFieldEnum[]
+  }
+
+  /**
+   * Company.paymentTermsPresets
+   */
+  export type Company$paymentTermsPresetsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    where?: PaymentTermsPresetWhereInput
+    orderBy?: PaymentTermsPresetOrderByWithRelationInput | PaymentTermsPresetOrderByWithRelationInput[]
+    cursor?: PaymentTermsPresetWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PaymentTermsPresetScalarFieldEnum | PaymentTermsPresetScalarFieldEnum[]
+  }
+
+  /**
    * Company without action
    */
   export type CompanyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5505,6 +5751,2044 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: CompanyInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TaxRatePreset
+   */
+
+  export type AggregateTaxRatePreset = {
+    _count: TaxRatePresetCountAggregateOutputType | null
+    _avg: TaxRatePresetAvgAggregateOutputType | null
+    _sum: TaxRatePresetSumAggregateOutputType | null
+    _min: TaxRatePresetMinAggregateOutputType | null
+    _max: TaxRatePresetMaxAggregateOutputType | null
+  }
+
+  export type TaxRatePresetAvgAggregateOutputType = {
+    rate: Decimal | null
+    sortOrder: number | null
+  }
+
+  export type TaxRatePresetSumAggregateOutputType = {
+    rate: Decimal | null
+    sortOrder: number | null
+  }
+
+  export type TaxRatePresetMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    name: string | null
+    rate: Decimal | null
+    isDefault: boolean | null
+    isActive: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TaxRatePresetMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    name: string | null
+    rate: Decimal | null
+    isDefault: boolean | null
+    isActive: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TaxRatePresetCountAggregateOutputType = {
+    id: number
+    companyId: number
+    name: number
+    rate: number
+    isDefault: number
+    isActive: number
+    sortOrder: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TaxRatePresetAvgAggregateInputType = {
+    rate?: true
+    sortOrder?: true
+  }
+
+  export type TaxRatePresetSumAggregateInputType = {
+    rate?: true
+    sortOrder?: true
+  }
+
+  export type TaxRatePresetMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    rate?: true
+    isDefault?: true
+    isActive?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TaxRatePresetMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    rate?: true
+    isDefault?: true
+    isActive?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TaxRatePresetCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    rate?: true
+    isDefault?: true
+    isActive?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TaxRatePresetAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TaxRatePreset to aggregate.
+     */
+    where?: TaxRatePresetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TaxRatePresets to fetch.
+     */
+    orderBy?: TaxRatePresetOrderByWithRelationInput | TaxRatePresetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TaxRatePresetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TaxRatePresets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TaxRatePresets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TaxRatePresets
+    **/
+    _count?: true | TaxRatePresetCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TaxRatePresetAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TaxRatePresetSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TaxRatePresetMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TaxRatePresetMaxAggregateInputType
+  }
+
+  export type GetTaxRatePresetAggregateType<T extends TaxRatePresetAggregateArgs> = {
+        [P in keyof T & keyof AggregateTaxRatePreset]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTaxRatePreset[P]>
+      : GetScalarType<T[P], AggregateTaxRatePreset[P]>
+  }
+
+
+
+
+  export type TaxRatePresetGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TaxRatePresetWhereInput
+    orderBy?: TaxRatePresetOrderByWithAggregationInput | TaxRatePresetOrderByWithAggregationInput[]
+    by: TaxRatePresetScalarFieldEnum[] | TaxRatePresetScalarFieldEnum
+    having?: TaxRatePresetScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TaxRatePresetCountAggregateInputType | true
+    _avg?: TaxRatePresetAvgAggregateInputType
+    _sum?: TaxRatePresetSumAggregateInputType
+    _min?: TaxRatePresetMinAggregateInputType
+    _max?: TaxRatePresetMaxAggregateInputType
+  }
+
+  export type TaxRatePresetGroupByOutputType = {
+    id: string
+    companyId: string
+    name: string
+    rate: Decimal
+    isDefault: boolean
+    isActive: boolean
+    sortOrder: number
+    createdAt: Date
+    updatedAt: Date
+    _count: TaxRatePresetCountAggregateOutputType | null
+    _avg: TaxRatePresetAvgAggregateOutputType | null
+    _sum: TaxRatePresetSumAggregateOutputType | null
+    _min: TaxRatePresetMinAggregateOutputType | null
+    _max: TaxRatePresetMaxAggregateOutputType | null
+  }
+
+  type GetTaxRatePresetGroupByPayload<T extends TaxRatePresetGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TaxRatePresetGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TaxRatePresetGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TaxRatePresetGroupByOutputType[P]>
+            : GetScalarType<T[P], TaxRatePresetGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TaxRatePresetSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    rate?: boolean
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    company?: boolean | CompanyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["taxRatePreset"]>
+
+  export type TaxRatePresetSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    rate?: boolean
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    company?: boolean | CompanyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["taxRatePreset"]>
+
+  export type TaxRatePresetSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    rate?: boolean
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type TaxRatePresetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    company?: boolean | CompanyDefaultArgs<ExtArgs>
+  }
+  export type TaxRatePresetIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    company?: boolean | CompanyDefaultArgs<ExtArgs>
+  }
+
+  export type $TaxRatePresetPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TaxRatePreset"
+    objects: {
+      company: Prisma.$CompanyPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      name: string
+      rate: Prisma.Decimal
+      isDefault: boolean
+      isActive: boolean
+      sortOrder: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["taxRatePreset"]>
+    composites: {}
+  }
+
+  type TaxRatePresetGetPayload<S extends boolean | null | undefined | TaxRatePresetDefaultArgs> = $Result.GetResult<Prisma.$TaxRatePresetPayload, S>
+
+  type TaxRatePresetCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<TaxRatePresetFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: TaxRatePresetCountAggregateInputType | true
+    }
+
+  export interface TaxRatePresetDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TaxRatePreset'], meta: { name: 'TaxRatePreset' } }
+    /**
+     * Find zero or one TaxRatePreset that matches the filter.
+     * @param {TaxRatePresetFindUniqueArgs} args - Arguments to find a TaxRatePreset
+     * @example
+     * // Get one TaxRatePreset
+     * const taxRatePreset = await prisma.taxRatePreset.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TaxRatePresetFindUniqueArgs>(args: SelectSubset<T, TaxRatePresetFindUniqueArgs<ExtArgs>>): Prisma__TaxRatePresetClient<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one TaxRatePreset that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {TaxRatePresetFindUniqueOrThrowArgs} args - Arguments to find a TaxRatePreset
+     * @example
+     * // Get one TaxRatePreset
+     * const taxRatePreset = await prisma.taxRatePreset.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TaxRatePresetFindUniqueOrThrowArgs>(args: SelectSubset<T, TaxRatePresetFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TaxRatePresetClient<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first TaxRatePreset that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxRatePresetFindFirstArgs} args - Arguments to find a TaxRatePreset
+     * @example
+     * // Get one TaxRatePreset
+     * const taxRatePreset = await prisma.taxRatePreset.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TaxRatePresetFindFirstArgs>(args?: SelectSubset<T, TaxRatePresetFindFirstArgs<ExtArgs>>): Prisma__TaxRatePresetClient<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first TaxRatePreset that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxRatePresetFindFirstOrThrowArgs} args - Arguments to find a TaxRatePreset
+     * @example
+     * // Get one TaxRatePreset
+     * const taxRatePreset = await prisma.taxRatePreset.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TaxRatePresetFindFirstOrThrowArgs>(args?: SelectSubset<T, TaxRatePresetFindFirstOrThrowArgs<ExtArgs>>): Prisma__TaxRatePresetClient<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more TaxRatePresets that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxRatePresetFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TaxRatePresets
+     * const taxRatePresets = await prisma.taxRatePreset.findMany()
+     * 
+     * // Get first 10 TaxRatePresets
+     * const taxRatePresets = await prisma.taxRatePreset.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const taxRatePresetWithIdOnly = await prisma.taxRatePreset.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TaxRatePresetFindManyArgs>(args?: SelectSubset<T, TaxRatePresetFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a TaxRatePreset.
+     * @param {TaxRatePresetCreateArgs} args - Arguments to create a TaxRatePreset.
+     * @example
+     * // Create one TaxRatePreset
+     * const TaxRatePreset = await prisma.taxRatePreset.create({
+     *   data: {
+     *     // ... data to create a TaxRatePreset
+     *   }
+     * })
+     * 
+     */
+    create<T extends TaxRatePresetCreateArgs>(args: SelectSubset<T, TaxRatePresetCreateArgs<ExtArgs>>): Prisma__TaxRatePresetClient<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many TaxRatePresets.
+     * @param {TaxRatePresetCreateManyArgs} args - Arguments to create many TaxRatePresets.
+     * @example
+     * // Create many TaxRatePresets
+     * const taxRatePreset = await prisma.taxRatePreset.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TaxRatePresetCreateManyArgs>(args?: SelectSubset<T, TaxRatePresetCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TaxRatePresets and returns the data saved in the database.
+     * @param {TaxRatePresetCreateManyAndReturnArgs} args - Arguments to create many TaxRatePresets.
+     * @example
+     * // Create many TaxRatePresets
+     * const taxRatePreset = await prisma.taxRatePreset.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TaxRatePresets and only return the `id`
+     * const taxRatePresetWithIdOnly = await prisma.taxRatePreset.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TaxRatePresetCreateManyAndReturnArgs>(args?: SelectSubset<T, TaxRatePresetCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a TaxRatePreset.
+     * @param {TaxRatePresetDeleteArgs} args - Arguments to delete one TaxRatePreset.
+     * @example
+     * // Delete one TaxRatePreset
+     * const TaxRatePreset = await prisma.taxRatePreset.delete({
+     *   where: {
+     *     // ... filter to delete one TaxRatePreset
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TaxRatePresetDeleteArgs>(args: SelectSubset<T, TaxRatePresetDeleteArgs<ExtArgs>>): Prisma__TaxRatePresetClient<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one TaxRatePreset.
+     * @param {TaxRatePresetUpdateArgs} args - Arguments to update one TaxRatePreset.
+     * @example
+     * // Update one TaxRatePreset
+     * const taxRatePreset = await prisma.taxRatePreset.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TaxRatePresetUpdateArgs>(args: SelectSubset<T, TaxRatePresetUpdateArgs<ExtArgs>>): Prisma__TaxRatePresetClient<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more TaxRatePresets.
+     * @param {TaxRatePresetDeleteManyArgs} args - Arguments to filter TaxRatePresets to delete.
+     * @example
+     * // Delete a few TaxRatePresets
+     * const { count } = await prisma.taxRatePreset.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TaxRatePresetDeleteManyArgs>(args?: SelectSubset<T, TaxRatePresetDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TaxRatePresets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxRatePresetUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TaxRatePresets
+     * const taxRatePreset = await prisma.taxRatePreset.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TaxRatePresetUpdateManyArgs>(args: SelectSubset<T, TaxRatePresetUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one TaxRatePreset.
+     * @param {TaxRatePresetUpsertArgs} args - Arguments to update or create a TaxRatePreset.
+     * @example
+     * // Update or create a TaxRatePreset
+     * const taxRatePreset = await prisma.taxRatePreset.upsert({
+     *   create: {
+     *     // ... data to create a TaxRatePreset
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TaxRatePreset we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TaxRatePresetUpsertArgs>(args: SelectSubset<T, TaxRatePresetUpsertArgs<ExtArgs>>): Prisma__TaxRatePresetClient<$Result.GetResult<Prisma.$TaxRatePresetPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of TaxRatePresets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxRatePresetCountArgs} args - Arguments to filter TaxRatePresets to count.
+     * @example
+     * // Count the number of TaxRatePresets
+     * const count = await prisma.taxRatePreset.count({
+     *   where: {
+     *     // ... the filter for the TaxRatePresets we want to count
+     *   }
+     * })
+    **/
+    count<T extends TaxRatePresetCountArgs>(
+      args?: Subset<T, TaxRatePresetCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TaxRatePresetCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TaxRatePreset.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxRatePresetAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TaxRatePresetAggregateArgs>(args: Subset<T, TaxRatePresetAggregateArgs>): Prisma.PrismaPromise<GetTaxRatePresetAggregateType<T>>
+
+    /**
+     * Group by TaxRatePreset.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaxRatePresetGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TaxRatePresetGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TaxRatePresetGroupByArgs['orderBy'] }
+        : { orderBy?: TaxRatePresetGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TaxRatePresetGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTaxRatePresetGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TaxRatePreset model
+   */
+  readonly fields: TaxRatePresetFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TaxRatePreset.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TaxRatePresetClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    company<T extends CompanyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CompanyDefaultArgs<ExtArgs>>): Prisma__CompanyClient<$Result.GetResult<Prisma.$CompanyPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TaxRatePreset model
+   */ 
+  interface TaxRatePresetFieldRefs {
+    readonly id: FieldRef<"TaxRatePreset", 'String'>
+    readonly companyId: FieldRef<"TaxRatePreset", 'String'>
+    readonly name: FieldRef<"TaxRatePreset", 'String'>
+    readonly rate: FieldRef<"TaxRatePreset", 'Decimal'>
+    readonly isDefault: FieldRef<"TaxRatePreset", 'Boolean'>
+    readonly isActive: FieldRef<"TaxRatePreset", 'Boolean'>
+    readonly sortOrder: FieldRef<"TaxRatePreset", 'Int'>
+    readonly createdAt: FieldRef<"TaxRatePreset", 'DateTime'>
+    readonly updatedAt: FieldRef<"TaxRatePreset", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TaxRatePreset findUnique
+   */
+  export type TaxRatePresetFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    /**
+     * Filter, which TaxRatePreset to fetch.
+     */
+    where: TaxRatePresetWhereUniqueInput
+  }
+
+  /**
+   * TaxRatePreset findUniqueOrThrow
+   */
+  export type TaxRatePresetFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    /**
+     * Filter, which TaxRatePreset to fetch.
+     */
+    where: TaxRatePresetWhereUniqueInput
+  }
+
+  /**
+   * TaxRatePreset findFirst
+   */
+  export type TaxRatePresetFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    /**
+     * Filter, which TaxRatePreset to fetch.
+     */
+    where?: TaxRatePresetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TaxRatePresets to fetch.
+     */
+    orderBy?: TaxRatePresetOrderByWithRelationInput | TaxRatePresetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TaxRatePresets.
+     */
+    cursor?: TaxRatePresetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TaxRatePresets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TaxRatePresets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TaxRatePresets.
+     */
+    distinct?: TaxRatePresetScalarFieldEnum | TaxRatePresetScalarFieldEnum[]
+  }
+
+  /**
+   * TaxRatePreset findFirstOrThrow
+   */
+  export type TaxRatePresetFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    /**
+     * Filter, which TaxRatePreset to fetch.
+     */
+    where?: TaxRatePresetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TaxRatePresets to fetch.
+     */
+    orderBy?: TaxRatePresetOrderByWithRelationInput | TaxRatePresetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TaxRatePresets.
+     */
+    cursor?: TaxRatePresetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TaxRatePresets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TaxRatePresets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TaxRatePresets.
+     */
+    distinct?: TaxRatePresetScalarFieldEnum | TaxRatePresetScalarFieldEnum[]
+  }
+
+  /**
+   * TaxRatePreset findMany
+   */
+  export type TaxRatePresetFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    /**
+     * Filter, which TaxRatePresets to fetch.
+     */
+    where?: TaxRatePresetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TaxRatePresets to fetch.
+     */
+    orderBy?: TaxRatePresetOrderByWithRelationInput | TaxRatePresetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TaxRatePresets.
+     */
+    cursor?: TaxRatePresetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TaxRatePresets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TaxRatePresets.
+     */
+    skip?: number
+    distinct?: TaxRatePresetScalarFieldEnum | TaxRatePresetScalarFieldEnum[]
+  }
+
+  /**
+   * TaxRatePreset create
+   */
+  export type TaxRatePresetCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    /**
+     * The data needed to create a TaxRatePreset.
+     */
+    data: XOR<TaxRatePresetCreateInput, TaxRatePresetUncheckedCreateInput>
+  }
+
+  /**
+   * TaxRatePreset createMany
+   */
+  export type TaxRatePresetCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TaxRatePresets.
+     */
+    data: TaxRatePresetCreateManyInput | TaxRatePresetCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * TaxRatePreset createManyAndReturn
+   */
+  export type TaxRatePresetCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many TaxRatePresets.
+     */
+    data: TaxRatePresetCreateManyInput | TaxRatePresetCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TaxRatePreset update
+   */
+  export type TaxRatePresetUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TaxRatePreset.
+     */
+    data: XOR<TaxRatePresetUpdateInput, TaxRatePresetUncheckedUpdateInput>
+    /**
+     * Choose, which TaxRatePreset to update.
+     */
+    where: TaxRatePresetWhereUniqueInput
+  }
+
+  /**
+   * TaxRatePreset updateMany
+   */
+  export type TaxRatePresetUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TaxRatePresets.
+     */
+    data: XOR<TaxRatePresetUpdateManyMutationInput, TaxRatePresetUncheckedUpdateManyInput>
+    /**
+     * Filter which TaxRatePresets to update
+     */
+    where?: TaxRatePresetWhereInput
+  }
+
+  /**
+   * TaxRatePreset upsert
+   */
+  export type TaxRatePresetUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    /**
+     * The filter to search for the TaxRatePreset to update in case it exists.
+     */
+    where: TaxRatePresetWhereUniqueInput
+    /**
+     * In case the TaxRatePreset found by the `where` argument doesn't exist, create a new TaxRatePreset with this data.
+     */
+    create: XOR<TaxRatePresetCreateInput, TaxRatePresetUncheckedCreateInput>
+    /**
+     * In case the TaxRatePreset was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TaxRatePresetUpdateInput, TaxRatePresetUncheckedUpdateInput>
+  }
+
+  /**
+   * TaxRatePreset delete
+   */
+  export type TaxRatePresetDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+    /**
+     * Filter which TaxRatePreset to delete.
+     */
+    where: TaxRatePresetWhereUniqueInput
+  }
+
+  /**
+   * TaxRatePreset deleteMany
+   */
+  export type TaxRatePresetDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TaxRatePresets to delete
+     */
+    where?: TaxRatePresetWhereInput
+  }
+
+  /**
+   * TaxRatePreset without action
+   */
+  export type TaxRatePresetDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaxRatePreset
+     */
+    select?: TaxRatePresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaxRatePresetInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PaymentTermsPreset
+   */
+
+  export type AggregatePaymentTermsPreset = {
+    _count: PaymentTermsPresetCountAggregateOutputType | null
+    _avg: PaymentTermsPresetAvgAggregateOutputType | null
+    _sum: PaymentTermsPresetSumAggregateOutputType | null
+    _min: PaymentTermsPresetMinAggregateOutputType | null
+    _max: PaymentTermsPresetMaxAggregateOutputType | null
+  }
+
+  export type PaymentTermsPresetAvgAggregateOutputType = {
+    days: number | null
+    sortOrder: number | null
+  }
+
+  export type PaymentTermsPresetSumAggregateOutputType = {
+    days: number | null
+    sortOrder: number | null
+  }
+
+  export type PaymentTermsPresetMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    name: string | null
+    days: number | null
+    isDefault: boolean | null
+    isActive: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PaymentTermsPresetMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    name: string | null
+    days: number | null
+    isDefault: boolean | null
+    isActive: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PaymentTermsPresetCountAggregateOutputType = {
+    id: number
+    companyId: number
+    name: number
+    days: number
+    isDefault: number
+    isActive: number
+    sortOrder: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type PaymentTermsPresetAvgAggregateInputType = {
+    days?: true
+    sortOrder?: true
+  }
+
+  export type PaymentTermsPresetSumAggregateInputType = {
+    days?: true
+    sortOrder?: true
+  }
+
+  export type PaymentTermsPresetMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    days?: true
+    isDefault?: true
+    isActive?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PaymentTermsPresetMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    days?: true
+    isDefault?: true
+    isActive?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PaymentTermsPresetCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    days?: true
+    isDefault?: true
+    isActive?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type PaymentTermsPresetAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PaymentTermsPreset to aggregate.
+     */
+    where?: PaymentTermsPresetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PaymentTermsPresets to fetch.
+     */
+    orderBy?: PaymentTermsPresetOrderByWithRelationInput | PaymentTermsPresetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PaymentTermsPresetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PaymentTermsPresets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PaymentTermsPresets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PaymentTermsPresets
+    **/
+    _count?: true | PaymentTermsPresetCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PaymentTermsPresetAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PaymentTermsPresetSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PaymentTermsPresetMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PaymentTermsPresetMaxAggregateInputType
+  }
+
+  export type GetPaymentTermsPresetAggregateType<T extends PaymentTermsPresetAggregateArgs> = {
+        [P in keyof T & keyof AggregatePaymentTermsPreset]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePaymentTermsPreset[P]>
+      : GetScalarType<T[P], AggregatePaymentTermsPreset[P]>
+  }
+
+
+
+
+  export type PaymentTermsPresetGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PaymentTermsPresetWhereInput
+    orderBy?: PaymentTermsPresetOrderByWithAggregationInput | PaymentTermsPresetOrderByWithAggregationInput[]
+    by: PaymentTermsPresetScalarFieldEnum[] | PaymentTermsPresetScalarFieldEnum
+    having?: PaymentTermsPresetScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PaymentTermsPresetCountAggregateInputType | true
+    _avg?: PaymentTermsPresetAvgAggregateInputType
+    _sum?: PaymentTermsPresetSumAggregateInputType
+    _min?: PaymentTermsPresetMinAggregateInputType
+    _max?: PaymentTermsPresetMaxAggregateInputType
+  }
+
+  export type PaymentTermsPresetGroupByOutputType = {
+    id: string
+    companyId: string
+    name: string
+    days: number
+    isDefault: boolean
+    isActive: boolean
+    sortOrder: number
+    createdAt: Date
+    updatedAt: Date
+    _count: PaymentTermsPresetCountAggregateOutputType | null
+    _avg: PaymentTermsPresetAvgAggregateOutputType | null
+    _sum: PaymentTermsPresetSumAggregateOutputType | null
+    _min: PaymentTermsPresetMinAggregateOutputType | null
+    _max: PaymentTermsPresetMaxAggregateOutputType | null
+  }
+
+  type GetPaymentTermsPresetGroupByPayload<T extends PaymentTermsPresetGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PaymentTermsPresetGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PaymentTermsPresetGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PaymentTermsPresetGroupByOutputType[P]>
+            : GetScalarType<T[P], PaymentTermsPresetGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PaymentTermsPresetSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    days?: boolean
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    company?: boolean | CompanyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["paymentTermsPreset"]>
+
+  export type PaymentTermsPresetSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    days?: boolean
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    company?: boolean | CompanyDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["paymentTermsPreset"]>
+
+  export type PaymentTermsPresetSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    days?: boolean
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type PaymentTermsPresetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    company?: boolean | CompanyDefaultArgs<ExtArgs>
+  }
+  export type PaymentTermsPresetIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    company?: boolean | CompanyDefaultArgs<ExtArgs>
+  }
+
+  export type $PaymentTermsPresetPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PaymentTermsPreset"
+    objects: {
+      company: Prisma.$CompanyPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      name: string
+      days: number
+      isDefault: boolean
+      isActive: boolean
+      sortOrder: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["paymentTermsPreset"]>
+    composites: {}
+  }
+
+  type PaymentTermsPresetGetPayload<S extends boolean | null | undefined | PaymentTermsPresetDefaultArgs> = $Result.GetResult<Prisma.$PaymentTermsPresetPayload, S>
+
+  type PaymentTermsPresetCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PaymentTermsPresetFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PaymentTermsPresetCountAggregateInputType | true
+    }
+
+  export interface PaymentTermsPresetDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PaymentTermsPreset'], meta: { name: 'PaymentTermsPreset' } }
+    /**
+     * Find zero or one PaymentTermsPreset that matches the filter.
+     * @param {PaymentTermsPresetFindUniqueArgs} args - Arguments to find a PaymentTermsPreset
+     * @example
+     * // Get one PaymentTermsPreset
+     * const paymentTermsPreset = await prisma.paymentTermsPreset.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PaymentTermsPresetFindUniqueArgs>(args: SelectSubset<T, PaymentTermsPresetFindUniqueArgs<ExtArgs>>): Prisma__PaymentTermsPresetClient<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PaymentTermsPreset that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PaymentTermsPresetFindUniqueOrThrowArgs} args - Arguments to find a PaymentTermsPreset
+     * @example
+     * // Get one PaymentTermsPreset
+     * const paymentTermsPreset = await prisma.paymentTermsPreset.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PaymentTermsPresetFindUniqueOrThrowArgs>(args: SelectSubset<T, PaymentTermsPresetFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PaymentTermsPresetClient<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PaymentTermsPreset that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PaymentTermsPresetFindFirstArgs} args - Arguments to find a PaymentTermsPreset
+     * @example
+     * // Get one PaymentTermsPreset
+     * const paymentTermsPreset = await prisma.paymentTermsPreset.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PaymentTermsPresetFindFirstArgs>(args?: SelectSubset<T, PaymentTermsPresetFindFirstArgs<ExtArgs>>): Prisma__PaymentTermsPresetClient<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PaymentTermsPreset that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PaymentTermsPresetFindFirstOrThrowArgs} args - Arguments to find a PaymentTermsPreset
+     * @example
+     * // Get one PaymentTermsPreset
+     * const paymentTermsPreset = await prisma.paymentTermsPreset.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PaymentTermsPresetFindFirstOrThrowArgs>(args?: SelectSubset<T, PaymentTermsPresetFindFirstOrThrowArgs<ExtArgs>>): Prisma__PaymentTermsPresetClient<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PaymentTermsPresets that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PaymentTermsPresetFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PaymentTermsPresets
+     * const paymentTermsPresets = await prisma.paymentTermsPreset.findMany()
+     * 
+     * // Get first 10 PaymentTermsPresets
+     * const paymentTermsPresets = await prisma.paymentTermsPreset.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const paymentTermsPresetWithIdOnly = await prisma.paymentTermsPreset.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PaymentTermsPresetFindManyArgs>(args?: SelectSubset<T, PaymentTermsPresetFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PaymentTermsPreset.
+     * @param {PaymentTermsPresetCreateArgs} args - Arguments to create a PaymentTermsPreset.
+     * @example
+     * // Create one PaymentTermsPreset
+     * const PaymentTermsPreset = await prisma.paymentTermsPreset.create({
+     *   data: {
+     *     // ... data to create a PaymentTermsPreset
+     *   }
+     * })
+     * 
+     */
+    create<T extends PaymentTermsPresetCreateArgs>(args: SelectSubset<T, PaymentTermsPresetCreateArgs<ExtArgs>>): Prisma__PaymentTermsPresetClient<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PaymentTermsPresets.
+     * @param {PaymentTermsPresetCreateManyArgs} args - Arguments to create many PaymentTermsPresets.
+     * @example
+     * // Create many PaymentTermsPresets
+     * const paymentTermsPreset = await prisma.paymentTermsPreset.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PaymentTermsPresetCreateManyArgs>(args?: SelectSubset<T, PaymentTermsPresetCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PaymentTermsPresets and returns the data saved in the database.
+     * @param {PaymentTermsPresetCreateManyAndReturnArgs} args - Arguments to create many PaymentTermsPresets.
+     * @example
+     * // Create many PaymentTermsPresets
+     * const paymentTermsPreset = await prisma.paymentTermsPreset.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PaymentTermsPresets and only return the `id`
+     * const paymentTermsPresetWithIdOnly = await prisma.paymentTermsPreset.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PaymentTermsPresetCreateManyAndReturnArgs>(args?: SelectSubset<T, PaymentTermsPresetCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PaymentTermsPreset.
+     * @param {PaymentTermsPresetDeleteArgs} args - Arguments to delete one PaymentTermsPreset.
+     * @example
+     * // Delete one PaymentTermsPreset
+     * const PaymentTermsPreset = await prisma.paymentTermsPreset.delete({
+     *   where: {
+     *     // ... filter to delete one PaymentTermsPreset
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PaymentTermsPresetDeleteArgs>(args: SelectSubset<T, PaymentTermsPresetDeleteArgs<ExtArgs>>): Prisma__PaymentTermsPresetClient<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PaymentTermsPreset.
+     * @param {PaymentTermsPresetUpdateArgs} args - Arguments to update one PaymentTermsPreset.
+     * @example
+     * // Update one PaymentTermsPreset
+     * const paymentTermsPreset = await prisma.paymentTermsPreset.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PaymentTermsPresetUpdateArgs>(args: SelectSubset<T, PaymentTermsPresetUpdateArgs<ExtArgs>>): Prisma__PaymentTermsPresetClient<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PaymentTermsPresets.
+     * @param {PaymentTermsPresetDeleteManyArgs} args - Arguments to filter PaymentTermsPresets to delete.
+     * @example
+     * // Delete a few PaymentTermsPresets
+     * const { count } = await prisma.paymentTermsPreset.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PaymentTermsPresetDeleteManyArgs>(args?: SelectSubset<T, PaymentTermsPresetDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PaymentTermsPresets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PaymentTermsPresetUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PaymentTermsPresets
+     * const paymentTermsPreset = await prisma.paymentTermsPreset.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PaymentTermsPresetUpdateManyArgs>(args: SelectSubset<T, PaymentTermsPresetUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PaymentTermsPreset.
+     * @param {PaymentTermsPresetUpsertArgs} args - Arguments to update or create a PaymentTermsPreset.
+     * @example
+     * // Update or create a PaymentTermsPreset
+     * const paymentTermsPreset = await prisma.paymentTermsPreset.upsert({
+     *   create: {
+     *     // ... data to create a PaymentTermsPreset
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PaymentTermsPreset we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PaymentTermsPresetUpsertArgs>(args: SelectSubset<T, PaymentTermsPresetUpsertArgs<ExtArgs>>): Prisma__PaymentTermsPresetClient<$Result.GetResult<Prisma.$PaymentTermsPresetPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PaymentTermsPresets.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PaymentTermsPresetCountArgs} args - Arguments to filter PaymentTermsPresets to count.
+     * @example
+     * // Count the number of PaymentTermsPresets
+     * const count = await prisma.paymentTermsPreset.count({
+     *   where: {
+     *     // ... the filter for the PaymentTermsPresets we want to count
+     *   }
+     * })
+    **/
+    count<T extends PaymentTermsPresetCountArgs>(
+      args?: Subset<T, PaymentTermsPresetCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PaymentTermsPresetCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PaymentTermsPreset.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PaymentTermsPresetAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PaymentTermsPresetAggregateArgs>(args: Subset<T, PaymentTermsPresetAggregateArgs>): Prisma.PrismaPromise<GetPaymentTermsPresetAggregateType<T>>
+
+    /**
+     * Group by PaymentTermsPreset.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PaymentTermsPresetGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PaymentTermsPresetGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PaymentTermsPresetGroupByArgs['orderBy'] }
+        : { orderBy?: PaymentTermsPresetGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PaymentTermsPresetGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPaymentTermsPresetGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PaymentTermsPreset model
+   */
+  readonly fields: PaymentTermsPresetFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PaymentTermsPreset.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PaymentTermsPresetClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    company<T extends CompanyDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CompanyDefaultArgs<ExtArgs>>): Prisma__CompanyClient<$Result.GetResult<Prisma.$CompanyPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PaymentTermsPreset model
+   */ 
+  interface PaymentTermsPresetFieldRefs {
+    readonly id: FieldRef<"PaymentTermsPreset", 'String'>
+    readonly companyId: FieldRef<"PaymentTermsPreset", 'String'>
+    readonly name: FieldRef<"PaymentTermsPreset", 'String'>
+    readonly days: FieldRef<"PaymentTermsPreset", 'Int'>
+    readonly isDefault: FieldRef<"PaymentTermsPreset", 'Boolean'>
+    readonly isActive: FieldRef<"PaymentTermsPreset", 'Boolean'>
+    readonly sortOrder: FieldRef<"PaymentTermsPreset", 'Int'>
+    readonly createdAt: FieldRef<"PaymentTermsPreset", 'DateTime'>
+    readonly updatedAt: FieldRef<"PaymentTermsPreset", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PaymentTermsPreset findUnique
+   */
+  export type PaymentTermsPresetFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    /**
+     * Filter, which PaymentTermsPreset to fetch.
+     */
+    where: PaymentTermsPresetWhereUniqueInput
+  }
+
+  /**
+   * PaymentTermsPreset findUniqueOrThrow
+   */
+  export type PaymentTermsPresetFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    /**
+     * Filter, which PaymentTermsPreset to fetch.
+     */
+    where: PaymentTermsPresetWhereUniqueInput
+  }
+
+  /**
+   * PaymentTermsPreset findFirst
+   */
+  export type PaymentTermsPresetFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    /**
+     * Filter, which PaymentTermsPreset to fetch.
+     */
+    where?: PaymentTermsPresetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PaymentTermsPresets to fetch.
+     */
+    orderBy?: PaymentTermsPresetOrderByWithRelationInput | PaymentTermsPresetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PaymentTermsPresets.
+     */
+    cursor?: PaymentTermsPresetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PaymentTermsPresets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PaymentTermsPresets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PaymentTermsPresets.
+     */
+    distinct?: PaymentTermsPresetScalarFieldEnum | PaymentTermsPresetScalarFieldEnum[]
+  }
+
+  /**
+   * PaymentTermsPreset findFirstOrThrow
+   */
+  export type PaymentTermsPresetFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    /**
+     * Filter, which PaymentTermsPreset to fetch.
+     */
+    where?: PaymentTermsPresetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PaymentTermsPresets to fetch.
+     */
+    orderBy?: PaymentTermsPresetOrderByWithRelationInput | PaymentTermsPresetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PaymentTermsPresets.
+     */
+    cursor?: PaymentTermsPresetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PaymentTermsPresets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PaymentTermsPresets.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PaymentTermsPresets.
+     */
+    distinct?: PaymentTermsPresetScalarFieldEnum | PaymentTermsPresetScalarFieldEnum[]
+  }
+
+  /**
+   * PaymentTermsPreset findMany
+   */
+  export type PaymentTermsPresetFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    /**
+     * Filter, which PaymentTermsPresets to fetch.
+     */
+    where?: PaymentTermsPresetWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PaymentTermsPresets to fetch.
+     */
+    orderBy?: PaymentTermsPresetOrderByWithRelationInput | PaymentTermsPresetOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PaymentTermsPresets.
+     */
+    cursor?: PaymentTermsPresetWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PaymentTermsPresets from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PaymentTermsPresets.
+     */
+    skip?: number
+    distinct?: PaymentTermsPresetScalarFieldEnum | PaymentTermsPresetScalarFieldEnum[]
+  }
+
+  /**
+   * PaymentTermsPreset create
+   */
+  export type PaymentTermsPresetCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PaymentTermsPreset.
+     */
+    data: XOR<PaymentTermsPresetCreateInput, PaymentTermsPresetUncheckedCreateInput>
+  }
+
+  /**
+   * PaymentTermsPreset createMany
+   */
+  export type PaymentTermsPresetCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PaymentTermsPresets.
+     */
+    data: PaymentTermsPresetCreateManyInput | PaymentTermsPresetCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PaymentTermsPreset createManyAndReturn
+   */
+  export type PaymentTermsPresetCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PaymentTermsPresets.
+     */
+    data: PaymentTermsPresetCreateManyInput | PaymentTermsPresetCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PaymentTermsPreset update
+   */
+  export type PaymentTermsPresetUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PaymentTermsPreset.
+     */
+    data: XOR<PaymentTermsPresetUpdateInput, PaymentTermsPresetUncheckedUpdateInput>
+    /**
+     * Choose, which PaymentTermsPreset to update.
+     */
+    where: PaymentTermsPresetWhereUniqueInput
+  }
+
+  /**
+   * PaymentTermsPreset updateMany
+   */
+  export type PaymentTermsPresetUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PaymentTermsPresets.
+     */
+    data: XOR<PaymentTermsPresetUpdateManyMutationInput, PaymentTermsPresetUncheckedUpdateManyInput>
+    /**
+     * Filter which PaymentTermsPresets to update
+     */
+    where?: PaymentTermsPresetWhereInput
+  }
+
+  /**
+   * PaymentTermsPreset upsert
+   */
+  export type PaymentTermsPresetUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PaymentTermsPreset to update in case it exists.
+     */
+    where: PaymentTermsPresetWhereUniqueInput
+    /**
+     * In case the PaymentTermsPreset found by the `where` argument doesn't exist, create a new PaymentTermsPreset with this data.
+     */
+    create: XOR<PaymentTermsPresetCreateInput, PaymentTermsPresetUncheckedCreateInput>
+    /**
+     * In case the PaymentTermsPreset was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PaymentTermsPresetUpdateInput, PaymentTermsPresetUncheckedUpdateInput>
+  }
+
+  /**
+   * PaymentTermsPreset delete
+   */
+  export type PaymentTermsPresetDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
+    /**
+     * Filter which PaymentTermsPreset to delete.
+     */
+    where: PaymentTermsPresetWhereUniqueInput
+  }
+
+  /**
+   * PaymentTermsPreset deleteMany
+   */
+  export type PaymentTermsPresetDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PaymentTermsPresets to delete
+     */
+    where?: PaymentTermsPresetWhereInput
+  }
+
+  /**
+   * PaymentTermsPreset without action
+   */
+  export type PaymentTermsPresetDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PaymentTermsPreset
+     */
+    select?: PaymentTermsPresetSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PaymentTermsPresetInclude<ExtArgs> | null
   }
 
 
@@ -40208,6 +42492,7 @@ export namespace Prisma {
     logoUrl: 'logoUrl',
     website: 'website',
     currency: 'currency',
+    enabledCurrencies: 'enabledCurrencies',
     timezone: 'timezone',
     features: 'features',
     isActive: 'isActive',
@@ -40218,6 +42503,36 @@ export namespace Prisma {
   };
 
   export type CompanyScalarFieldEnum = (typeof CompanyScalarFieldEnum)[keyof typeof CompanyScalarFieldEnum]
+
+
+  export const TaxRatePresetScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    name: 'name',
+    rate: 'rate',
+    isDefault: 'isDefault',
+    isActive: 'isActive',
+    sortOrder: 'sortOrder',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TaxRatePresetScalarFieldEnum = (typeof TaxRatePresetScalarFieldEnum)[keyof typeof TaxRatePresetScalarFieldEnum]
+
+
+  export const PaymentTermsPresetScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    name: 'name',
+    days: 'days',
+    isDefault: 'isDefault',
+    isActive: 'isActive',
+    sortOrder: 'sortOrder',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type PaymentTermsPresetScalarFieldEnum = (typeof PaymentTermsPresetScalarFieldEnum)[keyof typeof PaymentTermsPresetScalarFieldEnum]
 
 
   export const CompanyUserScalarFieldEnum: {
@@ -40983,6 +43298,34 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Decimal'
+   */
+  export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
+    
+
+
+  /**
+   * Reference to a field of type 'Decimal[]'
+   */
+  export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -41039,20 +43382,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Decimal'
-   */
-  export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
-    
-
-
-  /**
-   * Reference to a field of type 'Decimal[]'
-   */
-  export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
-    
-
-
-  /**
    * Reference to a field of type 'AgreementStatus'
    */
   export type EnumAgreementStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgreementStatus'>
@@ -41063,20 +43392,6 @@ export namespace Prisma {
    * Reference to a field of type 'AgreementStatus[]'
    */
   export type ListEnumAgreementStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgreementStatus[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int'
-   */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -41141,6 +43456,7 @@ export namespace Prisma {
     logoUrl?: StringNullableFilter<"Company"> | string | null
     website?: StringNullableFilter<"Company"> | string | null
     currency?: StringFilter<"Company"> | string
+    enabledCurrencies?: StringNullableListFilter<"Company">
     timezone?: StringFilter<"Company"> | string
     features?: JsonFilter<"Company">
     isActive?: BoolFilter<"Company"> | boolean
@@ -41154,6 +43470,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementListRelationFilter
     bookings?: BookingListRelationFilter
     users?: CompanyUserListRelationFilter
+    taxRatePresets?: TaxRatePresetListRelationFilter
+    paymentTermsPresets?: PaymentTermsPresetListRelationFilter
   }
 
   export type CompanyOrderByWithRelationInput = {
@@ -41169,6 +43487,7 @@ export namespace Prisma {
     logoUrl?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     currency?: SortOrder
+    enabledCurrencies?: SortOrder
     timezone?: SortOrder
     features?: SortOrder
     isActive?: SortOrder
@@ -41182,6 +43501,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementOrderByRelationAggregateInput
     bookings?: BookingOrderByRelationAggregateInput
     users?: CompanyUserOrderByRelationAggregateInput
+    taxRatePresets?: TaxRatePresetOrderByRelationAggregateInput
+    paymentTermsPresets?: PaymentTermsPresetOrderByRelationAggregateInput
   }
 
   export type CompanyWhereUniqueInput = Prisma.AtLeast<{
@@ -41200,6 +43521,7 @@ export namespace Prisma {
     logoUrl?: StringNullableFilter<"Company"> | string | null
     website?: StringNullableFilter<"Company"> | string | null
     currency?: StringFilter<"Company"> | string
+    enabledCurrencies?: StringNullableListFilter<"Company">
     timezone?: StringFilter<"Company"> | string
     features?: JsonFilter<"Company">
     isActive?: BoolFilter<"Company"> | boolean
@@ -41213,6 +43535,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementListRelationFilter
     bookings?: BookingListRelationFilter
     users?: CompanyUserListRelationFilter
+    taxRatePresets?: TaxRatePresetListRelationFilter
+    paymentTermsPresets?: PaymentTermsPresetListRelationFilter
   }, "id" | "email">
 
   export type CompanyOrderByWithAggregationInput = {
@@ -41228,6 +43552,7 @@ export namespace Prisma {
     logoUrl?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     currency?: SortOrder
+    enabledCurrencies?: SortOrder
     timezone?: SortOrder
     features?: SortOrder
     isActive?: SortOrder
@@ -41256,6 +43581,7 @@ export namespace Prisma {
     logoUrl?: StringNullableWithAggregatesFilter<"Company"> | string | null
     website?: StringNullableWithAggregatesFilter<"Company"> | string | null
     currency?: StringWithAggregatesFilter<"Company"> | string
+    enabledCurrencies?: StringNullableListFilter<"Company">
     timezone?: StringWithAggregatesFilter<"Company"> | string
     features?: JsonWithAggregatesFilter<"Company">
     isActive?: BoolWithAggregatesFilter<"Company"> | boolean
@@ -41263,6 +43589,160 @@ export namespace Prisma {
     trialEndsAt?: DateTimeNullableWithAggregatesFilter<"Company"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Company"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Company"> | Date | string
+  }
+
+  export type TaxRatePresetWhereInput = {
+    AND?: TaxRatePresetWhereInput | TaxRatePresetWhereInput[]
+    OR?: TaxRatePresetWhereInput[]
+    NOT?: TaxRatePresetWhereInput | TaxRatePresetWhereInput[]
+    id?: StringFilter<"TaxRatePreset"> | string
+    companyId?: StringFilter<"TaxRatePreset"> | string
+    name?: StringFilter<"TaxRatePreset"> | string
+    rate?: DecimalFilter<"TaxRatePreset"> | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFilter<"TaxRatePreset"> | boolean
+    isActive?: BoolFilter<"TaxRatePreset"> | boolean
+    sortOrder?: IntFilter<"TaxRatePreset"> | number
+    createdAt?: DateTimeFilter<"TaxRatePreset"> | Date | string
+    updatedAt?: DateTimeFilter<"TaxRatePreset"> | Date | string
+    company?: XOR<CompanyRelationFilter, CompanyWhereInput>
+  }
+
+  export type TaxRatePresetOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    rate?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    company?: CompanyOrderByWithRelationInput
+  }
+
+  export type TaxRatePresetWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: TaxRatePresetWhereInput | TaxRatePresetWhereInput[]
+    OR?: TaxRatePresetWhereInput[]
+    NOT?: TaxRatePresetWhereInput | TaxRatePresetWhereInput[]
+    companyId?: StringFilter<"TaxRatePreset"> | string
+    name?: StringFilter<"TaxRatePreset"> | string
+    rate?: DecimalFilter<"TaxRatePreset"> | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFilter<"TaxRatePreset"> | boolean
+    isActive?: BoolFilter<"TaxRatePreset"> | boolean
+    sortOrder?: IntFilter<"TaxRatePreset"> | number
+    createdAt?: DateTimeFilter<"TaxRatePreset"> | Date | string
+    updatedAt?: DateTimeFilter<"TaxRatePreset"> | Date | string
+    company?: XOR<CompanyRelationFilter, CompanyWhereInput>
+  }, "id">
+
+  export type TaxRatePresetOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    rate?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: TaxRatePresetCountOrderByAggregateInput
+    _avg?: TaxRatePresetAvgOrderByAggregateInput
+    _max?: TaxRatePresetMaxOrderByAggregateInput
+    _min?: TaxRatePresetMinOrderByAggregateInput
+    _sum?: TaxRatePresetSumOrderByAggregateInput
+  }
+
+  export type TaxRatePresetScalarWhereWithAggregatesInput = {
+    AND?: TaxRatePresetScalarWhereWithAggregatesInput | TaxRatePresetScalarWhereWithAggregatesInput[]
+    OR?: TaxRatePresetScalarWhereWithAggregatesInput[]
+    NOT?: TaxRatePresetScalarWhereWithAggregatesInput | TaxRatePresetScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TaxRatePreset"> | string
+    companyId?: StringWithAggregatesFilter<"TaxRatePreset"> | string
+    name?: StringWithAggregatesFilter<"TaxRatePreset"> | string
+    rate?: DecimalWithAggregatesFilter<"TaxRatePreset"> | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolWithAggregatesFilter<"TaxRatePreset"> | boolean
+    isActive?: BoolWithAggregatesFilter<"TaxRatePreset"> | boolean
+    sortOrder?: IntWithAggregatesFilter<"TaxRatePreset"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"TaxRatePreset"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"TaxRatePreset"> | Date | string
+  }
+
+  export type PaymentTermsPresetWhereInput = {
+    AND?: PaymentTermsPresetWhereInput | PaymentTermsPresetWhereInput[]
+    OR?: PaymentTermsPresetWhereInput[]
+    NOT?: PaymentTermsPresetWhereInput | PaymentTermsPresetWhereInput[]
+    id?: StringFilter<"PaymentTermsPreset"> | string
+    companyId?: StringFilter<"PaymentTermsPreset"> | string
+    name?: StringFilter<"PaymentTermsPreset"> | string
+    days?: IntFilter<"PaymentTermsPreset"> | number
+    isDefault?: BoolFilter<"PaymentTermsPreset"> | boolean
+    isActive?: BoolFilter<"PaymentTermsPreset"> | boolean
+    sortOrder?: IntFilter<"PaymentTermsPreset"> | number
+    createdAt?: DateTimeFilter<"PaymentTermsPreset"> | Date | string
+    updatedAt?: DateTimeFilter<"PaymentTermsPreset"> | Date | string
+    company?: XOR<CompanyRelationFilter, CompanyWhereInput>
+  }
+
+  export type PaymentTermsPresetOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    days?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    company?: CompanyOrderByWithRelationInput
+  }
+
+  export type PaymentTermsPresetWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PaymentTermsPresetWhereInput | PaymentTermsPresetWhereInput[]
+    OR?: PaymentTermsPresetWhereInput[]
+    NOT?: PaymentTermsPresetWhereInput | PaymentTermsPresetWhereInput[]
+    companyId?: StringFilter<"PaymentTermsPreset"> | string
+    name?: StringFilter<"PaymentTermsPreset"> | string
+    days?: IntFilter<"PaymentTermsPreset"> | number
+    isDefault?: BoolFilter<"PaymentTermsPreset"> | boolean
+    isActive?: BoolFilter<"PaymentTermsPreset"> | boolean
+    sortOrder?: IntFilter<"PaymentTermsPreset"> | number
+    createdAt?: DateTimeFilter<"PaymentTermsPreset"> | Date | string
+    updatedAt?: DateTimeFilter<"PaymentTermsPreset"> | Date | string
+    company?: XOR<CompanyRelationFilter, CompanyWhereInput>
+  }, "id">
+
+  export type PaymentTermsPresetOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    days?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: PaymentTermsPresetCountOrderByAggregateInput
+    _avg?: PaymentTermsPresetAvgOrderByAggregateInput
+    _max?: PaymentTermsPresetMaxOrderByAggregateInput
+    _min?: PaymentTermsPresetMinOrderByAggregateInput
+    _sum?: PaymentTermsPresetSumOrderByAggregateInput
+  }
+
+  export type PaymentTermsPresetScalarWhereWithAggregatesInput = {
+    AND?: PaymentTermsPresetScalarWhereWithAggregatesInput | PaymentTermsPresetScalarWhereWithAggregatesInput[]
+    OR?: PaymentTermsPresetScalarWhereWithAggregatesInput[]
+    NOT?: PaymentTermsPresetScalarWhereWithAggregatesInput | PaymentTermsPresetScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PaymentTermsPreset"> | string
+    companyId?: StringWithAggregatesFilter<"PaymentTermsPreset"> | string
+    name?: StringWithAggregatesFilter<"PaymentTermsPreset"> | string
+    days?: IntWithAggregatesFilter<"PaymentTermsPreset"> | number
+    isDefault?: BoolWithAggregatesFilter<"PaymentTermsPreset"> | boolean
+    isActive?: BoolWithAggregatesFilter<"PaymentTermsPreset"> | boolean
+    sortOrder?: IntWithAggregatesFilter<"PaymentTermsPreset"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"PaymentTermsPreset"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"PaymentTermsPreset"> | Date | string
   }
 
   export type CompanyUserWhereInput = {
@@ -44752,6 +47232,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -44765,6 +47246,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementCreateNestedManyWithoutCompanyInput
     bookings?: BookingCreateNestedManyWithoutCompanyInput
     users?: CompanyUserCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyUncheckedCreateInput = {
@@ -44780,6 +47263,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -44793,6 +47277,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCompanyInput
     bookings?: BookingUncheckedCreateNestedManyWithoutCompanyInput
     users?: CompanyUserUncheckedCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetUncheckedCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyUpdateInput = {
@@ -44808,6 +47294,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -44821,6 +47308,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUpdateManyWithoutCompanyNestedInput
   }
 
   export type CompanyUncheckedUpdateInput = {
@@ -44836,6 +47325,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -44849,6 +47339,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUncheckedUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUncheckedUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUncheckedUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUncheckedUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedUpdateManyWithoutCompanyNestedInput
   }
 
   export type CompanyCreateManyInput = {
@@ -44864,6 +47356,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -44886,6 +47379,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -44908,11 +47402,178 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
     automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
     trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaxRatePresetCreateInput = {
+    id?: string
+    name: string
+    rate: Decimal | DecimalJsLike | number | string
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutTaxRatePresetsInput
+  }
+
+  export type TaxRatePresetUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    name: string
+    rate: Decimal | DecimalJsLike | number | string
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TaxRatePresetUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    rate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutTaxRatePresetsNestedInput
+  }
+
+  export type TaxRatePresetUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    rate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaxRatePresetCreateManyInput = {
+    id?: string
+    companyId: string
+    name: string
+    rate: Decimal | DecimalJsLike | number | string
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TaxRatePresetUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    rate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaxRatePresetUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    rate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PaymentTermsPresetCreateInput = {
+    id?: string
+    name: string
+    days: number
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutPaymentTermsPresetsInput
+  }
+
+  export type PaymentTermsPresetUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    name: string
+    days: number
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PaymentTermsPresetUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    days?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutPaymentTermsPresetsNestedInput
+  }
+
+  export type PaymentTermsPresetUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    days?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PaymentTermsPresetCreateManyInput = {
+    id?: string
+    companyId: string
+    name: string
+    days: number
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PaymentTermsPresetUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    days?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PaymentTermsPresetUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    days?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -49027,6 +51688,14 @@ export namespace Prisma {
     mode?: QueryMode
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
+
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
   export type JsonFilter<$PrismaModel = never> = 
     | PatchUndefined<
         Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
@@ -49113,6 +51782,18 @@ export namespace Prisma {
     none?: CompanyUserWhereInput
   }
 
+  export type TaxRatePresetListRelationFilter = {
+    every?: TaxRatePresetWhereInput
+    some?: TaxRatePresetWhereInput
+    none?: TaxRatePresetWhereInput
+  }
+
+  export type PaymentTermsPresetListRelationFilter = {
+    every?: PaymentTermsPresetWhereInput
+    some?: PaymentTermsPresetWhereInput
+    none?: PaymentTermsPresetWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -49142,6 +51823,14 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type TaxRatePresetOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PaymentTermsPresetOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type CompanyCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
@@ -49155,6 +51844,7 @@ export namespace Prisma {
     logoUrl?: SortOrder
     website?: SortOrder
     currency?: SortOrder
+    enabledCurrencies?: SortOrder
     timezone?: SortOrder
     features?: SortOrder
     isActive?: SortOrder
@@ -49303,12 +51993,155 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type StringNullableListFilter<$PrismaModel = never> = {
-    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    has?: string | StringFieldRefInput<$PrismaModel> | null
-    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
-    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
+  export type DecimalFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
+  }
+
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type CompanyRelationFilter = {
+    is?: CompanyWhereInput
+    isNot?: CompanyWhereInput
+  }
+
+  export type TaxRatePresetCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    rate?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TaxRatePresetAvgOrderByAggregateInput = {
+    rate?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type TaxRatePresetMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    rate?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TaxRatePresetMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    rate?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TaxRatePresetSumOrderByAggregateInput = {
+    rate?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type DecimalWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedDecimalFilter<$PrismaModel>
+    _sum?: NestedDecimalFilter<$PrismaModel>
+    _min?: NestedDecimalFilter<$PrismaModel>
+    _max?: NestedDecimalFilter<$PrismaModel>
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type PaymentTermsPresetCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    days?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PaymentTermsPresetAvgOrderByAggregateInput = {
+    days?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type PaymentTermsPresetMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    days?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PaymentTermsPresetMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    days?: SortOrder
+    isDefault?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PaymentTermsPresetSumOrderByAggregateInput = {
+    days?: SortOrder
+    sortOrder?: SortOrder
   }
 
   export type FloatNullableFilter<$PrismaModel = never> = {
@@ -49320,11 +52153,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type CompanyRelationFilter = {
-    is?: CompanyWhereInput
-    isNot?: CompanyWhereInput
   }
 
   export type CompanyUserCompanyIdEmailCompoundUniqueInput = {
@@ -49872,17 +52700,6 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
-  }
-
   export type AgreementAmendmentListRelationFilter = {
     every?: AgreementAmendmentWhereInput
     some?: AgreementAmendmentWhereInput
@@ -50052,22 +52869,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type ServiceAgreementRelationFilter = {
@@ -51720,6 +54521,10 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type CompanyCreateenabledCurrenciesInput = {
+    set: string[]
+  }
+
   export type CustomerCreateNestedManyWithoutCompanyInput = {
     create?: XOR<CustomerCreateWithoutCompanyInput, CustomerUncheckedCreateWithoutCompanyInput> | CustomerCreateWithoutCompanyInput[] | CustomerUncheckedCreateWithoutCompanyInput[]
     connectOrCreate?: CustomerCreateOrConnectWithoutCompanyInput | CustomerCreateOrConnectWithoutCompanyInput[]
@@ -51760,6 +54565,20 @@ export namespace Prisma {
     connectOrCreate?: CompanyUserCreateOrConnectWithoutCompanyInput | CompanyUserCreateOrConnectWithoutCompanyInput[]
     createMany?: CompanyUserCreateManyCompanyInputEnvelope
     connect?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
+  }
+
+  export type TaxRatePresetCreateNestedManyWithoutCompanyInput = {
+    create?: XOR<TaxRatePresetCreateWithoutCompanyInput, TaxRatePresetUncheckedCreateWithoutCompanyInput> | TaxRatePresetCreateWithoutCompanyInput[] | TaxRatePresetUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: TaxRatePresetCreateOrConnectWithoutCompanyInput | TaxRatePresetCreateOrConnectWithoutCompanyInput[]
+    createMany?: TaxRatePresetCreateManyCompanyInputEnvelope
+    connect?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+  }
+
+  export type PaymentTermsPresetCreateNestedManyWithoutCompanyInput = {
+    create?: XOR<PaymentTermsPresetCreateWithoutCompanyInput, PaymentTermsPresetUncheckedCreateWithoutCompanyInput> | PaymentTermsPresetCreateWithoutCompanyInput[] | PaymentTermsPresetUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: PaymentTermsPresetCreateOrConnectWithoutCompanyInput | PaymentTermsPresetCreateOrConnectWithoutCompanyInput[]
+    createMany?: PaymentTermsPresetCreateManyCompanyInputEnvelope
+    connect?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
   }
 
   export type CustomerUncheckedCreateNestedManyWithoutCompanyInput = {
@@ -51804,12 +54623,31 @@ export namespace Prisma {
     connect?: CompanyUserWhereUniqueInput | CompanyUserWhereUniqueInput[]
   }
 
+  export type TaxRatePresetUncheckedCreateNestedManyWithoutCompanyInput = {
+    create?: XOR<TaxRatePresetCreateWithoutCompanyInput, TaxRatePresetUncheckedCreateWithoutCompanyInput> | TaxRatePresetCreateWithoutCompanyInput[] | TaxRatePresetUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: TaxRatePresetCreateOrConnectWithoutCompanyInput | TaxRatePresetCreateOrConnectWithoutCompanyInput[]
+    createMany?: TaxRatePresetCreateManyCompanyInputEnvelope
+    connect?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+  }
+
+  export type PaymentTermsPresetUncheckedCreateNestedManyWithoutCompanyInput = {
+    create?: XOR<PaymentTermsPresetCreateWithoutCompanyInput, PaymentTermsPresetUncheckedCreateWithoutCompanyInput> | PaymentTermsPresetCreateWithoutCompanyInput[] | PaymentTermsPresetUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: PaymentTermsPresetCreateOrConnectWithoutCompanyInput | PaymentTermsPresetCreateOrConnectWithoutCompanyInput[]
+    createMany?: PaymentTermsPresetCreateManyCompanyInputEnvelope
+    connect?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type CompanyUpdateenabledCurrenciesInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type BoolFieldUpdateOperationsInput = {
@@ -51908,6 +54746,34 @@ export namespace Prisma {
     deleteMany?: CompanyUserScalarWhereInput | CompanyUserScalarWhereInput[]
   }
 
+  export type TaxRatePresetUpdateManyWithoutCompanyNestedInput = {
+    create?: XOR<TaxRatePresetCreateWithoutCompanyInput, TaxRatePresetUncheckedCreateWithoutCompanyInput> | TaxRatePresetCreateWithoutCompanyInput[] | TaxRatePresetUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: TaxRatePresetCreateOrConnectWithoutCompanyInput | TaxRatePresetCreateOrConnectWithoutCompanyInput[]
+    upsert?: TaxRatePresetUpsertWithWhereUniqueWithoutCompanyInput | TaxRatePresetUpsertWithWhereUniqueWithoutCompanyInput[]
+    createMany?: TaxRatePresetCreateManyCompanyInputEnvelope
+    set?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+    disconnect?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+    delete?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+    connect?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+    update?: TaxRatePresetUpdateWithWhereUniqueWithoutCompanyInput | TaxRatePresetUpdateWithWhereUniqueWithoutCompanyInput[]
+    updateMany?: TaxRatePresetUpdateManyWithWhereWithoutCompanyInput | TaxRatePresetUpdateManyWithWhereWithoutCompanyInput[]
+    deleteMany?: TaxRatePresetScalarWhereInput | TaxRatePresetScalarWhereInput[]
+  }
+
+  export type PaymentTermsPresetUpdateManyWithoutCompanyNestedInput = {
+    create?: XOR<PaymentTermsPresetCreateWithoutCompanyInput, PaymentTermsPresetUncheckedCreateWithoutCompanyInput> | PaymentTermsPresetCreateWithoutCompanyInput[] | PaymentTermsPresetUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: PaymentTermsPresetCreateOrConnectWithoutCompanyInput | PaymentTermsPresetCreateOrConnectWithoutCompanyInput[]
+    upsert?: PaymentTermsPresetUpsertWithWhereUniqueWithoutCompanyInput | PaymentTermsPresetUpsertWithWhereUniqueWithoutCompanyInput[]
+    createMany?: PaymentTermsPresetCreateManyCompanyInputEnvelope
+    set?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
+    disconnect?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
+    delete?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
+    connect?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
+    update?: PaymentTermsPresetUpdateWithWhereUniqueWithoutCompanyInput | PaymentTermsPresetUpdateWithWhereUniqueWithoutCompanyInput[]
+    updateMany?: PaymentTermsPresetUpdateManyWithWhereWithoutCompanyInput | PaymentTermsPresetUpdateManyWithWhereWithoutCompanyInput[]
+    deleteMany?: PaymentTermsPresetScalarWhereInput | PaymentTermsPresetScalarWhereInput[]
+  }
+
   export type CustomerUncheckedUpdateManyWithoutCompanyNestedInput = {
     create?: XOR<CustomerCreateWithoutCompanyInput, CustomerUncheckedCreateWithoutCompanyInput> | CustomerCreateWithoutCompanyInput[] | CustomerUncheckedCreateWithoutCompanyInput[]
     connectOrCreate?: CustomerCreateOrConnectWithoutCompanyInput | CustomerCreateOrConnectWithoutCompanyInput[]
@@ -51990,6 +54856,78 @@ export namespace Prisma {
     update?: CompanyUserUpdateWithWhereUniqueWithoutCompanyInput | CompanyUserUpdateWithWhereUniqueWithoutCompanyInput[]
     updateMany?: CompanyUserUpdateManyWithWhereWithoutCompanyInput | CompanyUserUpdateManyWithWhereWithoutCompanyInput[]
     deleteMany?: CompanyUserScalarWhereInput | CompanyUserScalarWhereInput[]
+  }
+
+  export type TaxRatePresetUncheckedUpdateManyWithoutCompanyNestedInput = {
+    create?: XOR<TaxRatePresetCreateWithoutCompanyInput, TaxRatePresetUncheckedCreateWithoutCompanyInput> | TaxRatePresetCreateWithoutCompanyInput[] | TaxRatePresetUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: TaxRatePresetCreateOrConnectWithoutCompanyInput | TaxRatePresetCreateOrConnectWithoutCompanyInput[]
+    upsert?: TaxRatePresetUpsertWithWhereUniqueWithoutCompanyInput | TaxRatePresetUpsertWithWhereUniqueWithoutCompanyInput[]
+    createMany?: TaxRatePresetCreateManyCompanyInputEnvelope
+    set?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+    disconnect?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+    delete?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+    connect?: TaxRatePresetWhereUniqueInput | TaxRatePresetWhereUniqueInput[]
+    update?: TaxRatePresetUpdateWithWhereUniqueWithoutCompanyInput | TaxRatePresetUpdateWithWhereUniqueWithoutCompanyInput[]
+    updateMany?: TaxRatePresetUpdateManyWithWhereWithoutCompanyInput | TaxRatePresetUpdateManyWithWhereWithoutCompanyInput[]
+    deleteMany?: TaxRatePresetScalarWhereInput | TaxRatePresetScalarWhereInput[]
+  }
+
+  export type PaymentTermsPresetUncheckedUpdateManyWithoutCompanyNestedInput = {
+    create?: XOR<PaymentTermsPresetCreateWithoutCompanyInput, PaymentTermsPresetUncheckedCreateWithoutCompanyInput> | PaymentTermsPresetCreateWithoutCompanyInput[] | PaymentTermsPresetUncheckedCreateWithoutCompanyInput[]
+    connectOrCreate?: PaymentTermsPresetCreateOrConnectWithoutCompanyInput | PaymentTermsPresetCreateOrConnectWithoutCompanyInput[]
+    upsert?: PaymentTermsPresetUpsertWithWhereUniqueWithoutCompanyInput | PaymentTermsPresetUpsertWithWhereUniqueWithoutCompanyInput[]
+    createMany?: PaymentTermsPresetCreateManyCompanyInputEnvelope
+    set?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
+    disconnect?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
+    delete?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
+    connect?: PaymentTermsPresetWhereUniqueInput | PaymentTermsPresetWhereUniqueInput[]
+    update?: PaymentTermsPresetUpdateWithWhereUniqueWithoutCompanyInput | PaymentTermsPresetUpdateWithWhereUniqueWithoutCompanyInput[]
+    updateMany?: PaymentTermsPresetUpdateManyWithWhereWithoutCompanyInput | PaymentTermsPresetUpdateManyWithWhereWithoutCompanyInput[]
+    deleteMany?: PaymentTermsPresetScalarWhereInput | PaymentTermsPresetScalarWhereInput[]
+  }
+
+  export type CompanyCreateNestedOneWithoutTaxRatePresetsInput = {
+    create?: XOR<CompanyCreateWithoutTaxRatePresetsInput, CompanyUncheckedCreateWithoutTaxRatePresetsInput>
+    connectOrCreate?: CompanyCreateOrConnectWithoutTaxRatePresetsInput
+    connect?: CompanyWhereUniqueInput
+  }
+
+  export type DecimalFieldUpdateOperationsInput = {
+    set?: Decimal | DecimalJsLike | number | string
+    increment?: Decimal | DecimalJsLike | number | string
+    decrement?: Decimal | DecimalJsLike | number | string
+    multiply?: Decimal | DecimalJsLike | number | string
+    divide?: Decimal | DecimalJsLike | number | string
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type CompanyUpdateOneRequiredWithoutTaxRatePresetsNestedInput = {
+    create?: XOR<CompanyCreateWithoutTaxRatePresetsInput, CompanyUncheckedCreateWithoutTaxRatePresetsInput>
+    connectOrCreate?: CompanyCreateOrConnectWithoutTaxRatePresetsInput
+    upsert?: CompanyUpsertWithoutTaxRatePresetsInput
+    connect?: CompanyWhereUniqueInput
+    update?: XOR<XOR<CompanyUpdateToOneWithWhereWithoutTaxRatePresetsInput, CompanyUpdateWithoutTaxRatePresetsInput>, CompanyUncheckedUpdateWithoutTaxRatePresetsInput>
+  }
+
+  export type CompanyCreateNestedOneWithoutPaymentTermsPresetsInput = {
+    create?: XOR<CompanyCreateWithoutPaymentTermsPresetsInput, CompanyUncheckedCreateWithoutPaymentTermsPresetsInput>
+    connectOrCreate?: CompanyCreateOrConnectWithoutPaymentTermsPresetsInput
+    connect?: CompanyWhereUniqueInput
+  }
+
+  export type CompanyUpdateOneRequiredWithoutPaymentTermsPresetsNestedInput = {
+    create?: XOR<CompanyCreateWithoutPaymentTermsPresetsInput, CompanyUncheckedCreateWithoutPaymentTermsPresetsInput>
+    connectOrCreate?: CompanyCreateOrConnectWithoutPaymentTermsPresetsInput
+    upsert?: CompanyUpsertWithoutPaymentTermsPresetsInput
+    connect?: CompanyWhereUniqueInput
+    update?: XOR<XOR<CompanyUpdateToOneWithWhereWithoutPaymentTermsPresetsInput, CompanyUpdateWithoutPaymentTermsPresetsInput>, CompanyUncheckedUpdateWithoutPaymentTermsPresetsInput>
   }
 
   export type CompanyUserCreateskillsInput = {
@@ -52828,14 +55766,6 @@ export namespace Prisma {
 
   export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
     increment?: number
     decrement?: number
     multiply?: number
@@ -54138,6 +57068,60 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type NestedDecimalFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
+  }
+
+  export type NestedDecimalWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedDecimalFilter<$PrismaModel>
+    _sum?: NestedDecimalFilter<$PrismaModel>
+    _min?: NestedDecimalFilter<$PrismaModel>
+    _max?: NestedDecimalFilter<$PrismaModel>
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -54274,33 +57258,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type NestedFloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
   }
 
   export type NestedEnumBookingStatusFilter<$PrismaModel = never> = {
@@ -54802,6 +57759,70 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type TaxRatePresetCreateWithoutCompanyInput = {
+    id?: string
+    name: string
+    rate: Decimal | DecimalJsLike | number | string
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TaxRatePresetUncheckedCreateWithoutCompanyInput = {
+    id?: string
+    name: string
+    rate: Decimal | DecimalJsLike | number | string
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TaxRatePresetCreateOrConnectWithoutCompanyInput = {
+    where: TaxRatePresetWhereUniqueInput
+    create: XOR<TaxRatePresetCreateWithoutCompanyInput, TaxRatePresetUncheckedCreateWithoutCompanyInput>
+  }
+
+  export type TaxRatePresetCreateManyCompanyInputEnvelope = {
+    data: TaxRatePresetCreateManyCompanyInput | TaxRatePresetCreateManyCompanyInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PaymentTermsPresetCreateWithoutCompanyInput = {
+    id?: string
+    name: string
+    days: number
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PaymentTermsPresetUncheckedCreateWithoutCompanyInput = {
+    id?: string
+    name: string
+    days: number
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PaymentTermsPresetCreateOrConnectWithoutCompanyInput = {
+    where: PaymentTermsPresetWhereUniqueInput
+    create: XOR<PaymentTermsPresetCreateWithoutCompanyInput, PaymentTermsPresetUncheckedCreateWithoutCompanyInput>
+  }
+
+  export type PaymentTermsPresetCreateManyCompanyInputEnvelope = {
+    data: PaymentTermsPresetCreateManyCompanyInput | PaymentTermsPresetCreateManyCompanyInput[]
+    skipDuplicates?: boolean
+  }
+
   export type CustomerUpsertWithWhereUniqueWithoutCompanyInput = {
     where: CustomerWhereUniqueInput
     update: XOR<CustomerUpdateWithoutCompanyInput, CustomerUncheckedUpdateWithoutCompanyInput>
@@ -55061,6 +58082,340 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"CompanyUser"> | Date | string
   }
 
+  export type TaxRatePresetUpsertWithWhereUniqueWithoutCompanyInput = {
+    where: TaxRatePresetWhereUniqueInput
+    update: XOR<TaxRatePresetUpdateWithoutCompanyInput, TaxRatePresetUncheckedUpdateWithoutCompanyInput>
+    create: XOR<TaxRatePresetCreateWithoutCompanyInput, TaxRatePresetUncheckedCreateWithoutCompanyInput>
+  }
+
+  export type TaxRatePresetUpdateWithWhereUniqueWithoutCompanyInput = {
+    where: TaxRatePresetWhereUniqueInput
+    data: XOR<TaxRatePresetUpdateWithoutCompanyInput, TaxRatePresetUncheckedUpdateWithoutCompanyInput>
+  }
+
+  export type TaxRatePresetUpdateManyWithWhereWithoutCompanyInput = {
+    where: TaxRatePresetScalarWhereInput
+    data: XOR<TaxRatePresetUpdateManyMutationInput, TaxRatePresetUncheckedUpdateManyWithoutCompanyInput>
+  }
+
+  export type TaxRatePresetScalarWhereInput = {
+    AND?: TaxRatePresetScalarWhereInput | TaxRatePresetScalarWhereInput[]
+    OR?: TaxRatePresetScalarWhereInput[]
+    NOT?: TaxRatePresetScalarWhereInput | TaxRatePresetScalarWhereInput[]
+    id?: StringFilter<"TaxRatePreset"> | string
+    companyId?: StringFilter<"TaxRatePreset"> | string
+    name?: StringFilter<"TaxRatePreset"> | string
+    rate?: DecimalFilter<"TaxRatePreset"> | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFilter<"TaxRatePreset"> | boolean
+    isActive?: BoolFilter<"TaxRatePreset"> | boolean
+    sortOrder?: IntFilter<"TaxRatePreset"> | number
+    createdAt?: DateTimeFilter<"TaxRatePreset"> | Date | string
+    updatedAt?: DateTimeFilter<"TaxRatePreset"> | Date | string
+  }
+
+  export type PaymentTermsPresetUpsertWithWhereUniqueWithoutCompanyInput = {
+    where: PaymentTermsPresetWhereUniqueInput
+    update: XOR<PaymentTermsPresetUpdateWithoutCompanyInput, PaymentTermsPresetUncheckedUpdateWithoutCompanyInput>
+    create: XOR<PaymentTermsPresetCreateWithoutCompanyInput, PaymentTermsPresetUncheckedCreateWithoutCompanyInput>
+  }
+
+  export type PaymentTermsPresetUpdateWithWhereUniqueWithoutCompanyInput = {
+    where: PaymentTermsPresetWhereUniqueInput
+    data: XOR<PaymentTermsPresetUpdateWithoutCompanyInput, PaymentTermsPresetUncheckedUpdateWithoutCompanyInput>
+  }
+
+  export type PaymentTermsPresetUpdateManyWithWhereWithoutCompanyInput = {
+    where: PaymentTermsPresetScalarWhereInput
+    data: XOR<PaymentTermsPresetUpdateManyMutationInput, PaymentTermsPresetUncheckedUpdateManyWithoutCompanyInput>
+  }
+
+  export type PaymentTermsPresetScalarWhereInput = {
+    AND?: PaymentTermsPresetScalarWhereInput | PaymentTermsPresetScalarWhereInput[]
+    OR?: PaymentTermsPresetScalarWhereInput[]
+    NOT?: PaymentTermsPresetScalarWhereInput | PaymentTermsPresetScalarWhereInput[]
+    id?: StringFilter<"PaymentTermsPreset"> | string
+    companyId?: StringFilter<"PaymentTermsPreset"> | string
+    name?: StringFilter<"PaymentTermsPreset"> | string
+    days?: IntFilter<"PaymentTermsPreset"> | number
+    isDefault?: BoolFilter<"PaymentTermsPreset"> | boolean
+    isActive?: BoolFilter<"PaymentTermsPreset"> | boolean
+    sortOrder?: IntFilter<"PaymentTermsPreset"> | number
+    createdAt?: DateTimeFilter<"PaymentTermsPreset"> | Date | string
+    updatedAt?: DateTimeFilter<"PaymentTermsPreset"> | Date | string
+  }
+
+  export type CompanyCreateWithoutTaxRatePresetsInput = {
+    id?: string
+    name: string
+    email: string
+    phone?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    country?: string
+    logoUrl?: string | null
+    website?: string | null
+    currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
+    timezone?: string
+    features?: JsonNullValueInput | InputJsonValue
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    trialEndsAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customers?: CustomerCreateNestedManyWithoutCompanyInput
+    contacts?: ContactCreateNestedManyWithoutCompanyInput
+    leads?: LeadCreateNestedManyWithoutCompanyInput
+    agreements?: ServiceAgreementCreateNestedManyWithoutCompanyInput
+    bookings?: BookingCreateNestedManyWithoutCompanyInput
+    users?: CompanyUserCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CompanyUncheckedCreateWithoutTaxRatePresetsInput = {
+    id?: string
+    name: string
+    email: string
+    phone?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    country?: string
+    logoUrl?: string | null
+    website?: string | null
+    currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
+    timezone?: string
+    features?: JsonNullValueInput | InputJsonValue
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    trialEndsAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customers?: CustomerUncheckedCreateNestedManyWithoutCompanyInput
+    contacts?: ContactUncheckedCreateNestedManyWithoutCompanyInput
+    leads?: LeadUncheckedCreateNestedManyWithoutCompanyInput
+    agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCompanyInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutCompanyInput
+    users?: CompanyUserUncheckedCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CompanyCreateOrConnectWithoutTaxRatePresetsInput = {
+    where: CompanyWhereUniqueInput
+    create: XOR<CompanyCreateWithoutTaxRatePresetsInput, CompanyUncheckedCreateWithoutTaxRatePresetsInput>
+  }
+
+  export type CompanyUpsertWithoutTaxRatePresetsInput = {
+    update: XOR<CompanyUpdateWithoutTaxRatePresetsInput, CompanyUncheckedUpdateWithoutTaxRatePresetsInput>
+    create: XOR<CompanyCreateWithoutTaxRatePresetsInput, CompanyUncheckedCreateWithoutTaxRatePresetsInput>
+    where?: CompanyWhereInput
+  }
+
+  export type CompanyUpdateToOneWithWhereWithoutTaxRatePresetsInput = {
+    where?: CompanyWhereInput
+    data: XOR<CompanyUpdateWithoutTaxRatePresetsInput, CompanyUncheckedUpdateWithoutTaxRatePresetsInput>
+  }
+
+  export type CompanyUpdateWithoutTaxRatePresetsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: StringFieldUpdateOperationsInput | string
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
+    timezone?: StringFieldUpdateOperationsInput | string
+    features?: JsonNullValueInput | InputJsonValue
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customers?: CustomerUpdateManyWithoutCompanyNestedInput
+    contacts?: ContactUpdateManyWithoutCompanyNestedInput
+    leads?: LeadUpdateManyWithoutCompanyNestedInput
+    agreements?: ServiceAgreementUpdateManyWithoutCompanyNestedInput
+    bookings?: BookingUpdateManyWithoutCompanyNestedInput
+    users?: CompanyUserUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUpdateManyWithoutCompanyNestedInput
+  }
+
+  export type CompanyUncheckedUpdateWithoutTaxRatePresetsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: StringFieldUpdateOperationsInput | string
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
+    timezone?: StringFieldUpdateOperationsInput | string
+    features?: JsonNullValueInput | InputJsonValue
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customers?: CustomerUncheckedUpdateManyWithoutCompanyNestedInput
+    contacts?: ContactUncheckedUpdateManyWithoutCompanyNestedInput
+    leads?: LeadUncheckedUpdateManyWithoutCompanyNestedInput
+    agreements?: ServiceAgreementUncheckedUpdateManyWithoutCompanyNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutCompanyNestedInput
+    users?: CompanyUserUncheckedUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedUpdateManyWithoutCompanyNestedInput
+  }
+
+  export type CompanyCreateWithoutPaymentTermsPresetsInput = {
+    id?: string
+    name: string
+    email: string
+    phone?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    country?: string
+    logoUrl?: string | null
+    website?: string | null
+    currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
+    timezone?: string
+    features?: JsonNullValueInput | InputJsonValue
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    trialEndsAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customers?: CustomerCreateNestedManyWithoutCompanyInput
+    contacts?: ContactCreateNestedManyWithoutCompanyInput
+    leads?: LeadCreateNestedManyWithoutCompanyInput
+    agreements?: ServiceAgreementCreateNestedManyWithoutCompanyInput
+    bookings?: BookingCreateNestedManyWithoutCompanyInput
+    users?: CompanyUserCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CompanyUncheckedCreateWithoutPaymentTermsPresetsInput = {
+    id?: string
+    name: string
+    email: string
+    phone?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    country?: string
+    logoUrl?: string | null
+    website?: string | null
+    currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
+    timezone?: string
+    features?: JsonNullValueInput | InputJsonValue
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    trialEndsAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    customers?: CustomerUncheckedCreateNestedManyWithoutCompanyInput
+    contacts?: ContactUncheckedCreateNestedManyWithoutCompanyInput
+    leads?: LeadUncheckedCreateNestedManyWithoutCompanyInput
+    agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCompanyInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutCompanyInput
+    users?: CompanyUserUncheckedCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetUncheckedCreateNestedManyWithoutCompanyInput
+  }
+
+  export type CompanyCreateOrConnectWithoutPaymentTermsPresetsInput = {
+    where: CompanyWhereUniqueInput
+    create: XOR<CompanyCreateWithoutPaymentTermsPresetsInput, CompanyUncheckedCreateWithoutPaymentTermsPresetsInput>
+  }
+
+  export type CompanyUpsertWithoutPaymentTermsPresetsInput = {
+    update: XOR<CompanyUpdateWithoutPaymentTermsPresetsInput, CompanyUncheckedUpdateWithoutPaymentTermsPresetsInput>
+    create: XOR<CompanyCreateWithoutPaymentTermsPresetsInput, CompanyUncheckedCreateWithoutPaymentTermsPresetsInput>
+    where?: CompanyWhereInput
+  }
+
+  export type CompanyUpdateToOneWithWhereWithoutPaymentTermsPresetsInput = {
+    where?: CompanyWhereInput
+    data: XOR<CompanyUpdateWithoutPaymentTermsPresetsInput, CompanyUncheckedUpdateWithoutPaymentTermsPresetsInput>
+  }
+
+  export type CompanyUpdateWithoutPaymentTermsPresetsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: StringFieldUpdateOperationsInput | string
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
+    timezone?: StringFieldUpdateOperationsInput | string
+    features?: JsonNullValueInput | InputJsonValue
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customers?: CustomerUpdateManyWithoutCompanyNestedInput
+    contacts?: ContactUpdateManyWithoutCompanyNestedInput
+    leads?: LeadUpdateManyWithoutCompanyNestedInput
+    agreements?: ServiceAgreementUpdateManyWithoutCompanyNestedInput
+    bookings?: BookingUpdateManyWithoutCompanyNestedInput
+    users?: CompanyUserUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUpdateManyWithoutCompanyNestedInput
+  }
+
+  export type CompanyUncheckedUpdateWithoutPaymentTermsPresetsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: StringFieldUpdateOperationsInput | string
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
+    timezone?: StringFieldUpdateOperationsInput | string
+    features?: JsonNullValueInput | InputJsonValue
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    trialEndsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customers?: CustomerUncheckedUpdateManyWithoutCompanyNestedInput
+    contacts?: ContactUncheckedUpdateManyWithoutCompanyNestedInput
+    leads?: LeadUncheckedUpdateManyWithoutCompanyNestedInput
+    agreements?: ServiceAgreementUncheckedUpdateManyWithoutCompanyNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutCompanyNestedInput
+    users?: CompanyUserUncheckedUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUncheckedUpdateManyWithoutCompanyNestedInput
+  }
+
   export type CompanyCreateWithoutUsersInput = {
     id?: string
     name: string
@@ -55074,6 +58429,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -55086,6 +58442,8 @@ export namespace Prisma {
     leads?: LeadCreateNestedManyWithoutCompanyInput
     agreements?: ServiceAgreementCreateNestedManyWithoutCompanyInput
     bookings?: BookingCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyUncheckedCreateWithoutUsersInput = {
@@ -55101,6 +58459,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -55113,6 +58472,8 @@ export namespace Prisma {
     leads?: LeadUncheckedCreateNestedManyWithoutCompanyInput
     agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCompanyInput
     bookings?: BookingUncheckedCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetUncheckedCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyCreateOrConnectWithoutUsersInput = {
@@ -55144,6 +58505,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -55156,6 +58518,8 @@ export namespace Prisma {
     leads?: LeadUpdateManyWithoutCompanyNestedInput
     agreements?: ServiceAgreementUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUpdateManyWithoutCompanyNestedInput
   }
 
   export type CompanyUncheckedUpdateWithoutUsersInput = {
@@ -55171,6 +58535,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -55183,6 +58548,8 @@ export namespace Prisma {
     leads?: LeadUncheckedUpdateManyWithoutCompanyNestedInput
     agreements?: ServiceAgreementUncheckedUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUncheckedUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUncheckedUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedUpdateManyWithoutCompanyNestedInput
   }
 
   export type CompanyCreateWithoutCustomersInput = {
@@ -55198,6 +58565,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -55210,6 +58578,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementCreateNestedManyWithoutCompanyInput
     bookings?: BookingCreateNestedManyWithoutCompanyInput
     users?: CompanyUserCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyUncheckedCreateWithoutCustomersInput = {
@@ -55225,6 +58595,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -55237,6 +58608,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCompanyInput
     bookings?: BookingUncheckedCreateNestedManyWithoutCompanyInput
     users?: CompanyUserUncheckedCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetUncheckedCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyCreateOrConnectWithoutCustomersInput = {
@@ -56012,6 +59385,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -56024,6 +59398,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUpdateManyWithoutCompanyNestedInput
   }
 
   export type CompanyUncheckedUpdateWithoutCustomersInput = {
@@ -56039,6 +59415,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -56051,6 +59428,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUncheckedUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUncheckedUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUncheckedUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUncheckedUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedUpdateManyWithoutCompanyNestedInput
   }
 
   export type ContactUpsertWithWhereUniqueWithoutCustomerInput = {
@@ -56545,6 +59924,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -56557,6 +59937,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementCreateNestedManyWithoutCompanyInput
     bookings?: BookingCreateNestedManyWithoutCompanyInput
     users?: CompanyUserCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyUncheckedCreateWithoutContactsInput = {
@@ -56572,6 +59954,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -56584,6 +59967,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCompanyInput
     bookings?: BookingUncheckedCreateNestedManyWithoutCompanyInput
     users?: CompanyUserUncheckedCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetUncheckedCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyCreateOrConnectWithoutContactsInput = {
@@ -56698,6 +60083,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -56710,6 +60096,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUpdateManyWithoutCompanyNestedInput
   }
 
   export type CompanyUncheckedUpdateWithoutContactsInput = {
@@ -56725,6 +60113,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -56737,6 +60126,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUncheckedUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUncheckedUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUncheckedUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUncheckedUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedUpdateManyWithoutCompanyNestedInput
   }
 
   export type CustomerUpsertWithoutContactsInput = {
@@ -56841,6 +60232,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -56853,6 +60245,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementCreateNestedManyWithoutCompanyInput
     bookings?: BookingCreateNestedManyWithoutCompanyInput
     users?: CompanyUserCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyUncheckedCreateWithoutLeadsInput = {
@@ -56868,6 +60262,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -56880,6 +60275,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCompanyInput
     bookings?: BookingUncheckedCreateNestedManyWithoutCompanyInput
     users?: CompanyUserUncheckedCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetUncheckedCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyCreateOrConnectWithoutLeadsInput = {
@@ -57034,6 +60431,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -57046,6 +60444,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUpdateManyWithoutCompanyNestedInput
   }
 
   export type CompanyUncheckedUpdateWithoutLeadsInput = {
@@ -57061,6 +60461,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -57073,6 +60474,8 @@ export namespace Prisma {
     agreements?: ServiceAgreementUncheckedUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUncheckedUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUncheckedUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUncheckedUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedUpdateManyWithoutCompanyNestedInput
   }
 
   export type CustomerUpsertWithoutLeadsInput = {
@@ -57193,6 +60596,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -57205,6 +60609,8 @@ export namespace Prisma {
     leads?: LeadCreateNestedManyWithoutCompanyInput
     bookings?: BookingCreateNestedManyWithoutCompanyInput
     users?: CompanyUserCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyUncheckedCreateWithoutAgreementsInput = {
@@ -57220,6 +60626,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -57232,6 +60639,8 @@ export namespace Prisma {
     leads?: LeadUncheckedCreateNestedManyWithoutCompanyInput
     bookings?: BookingUncheckedCreateNestedManyWithoutCompanyInput
     users?: CompanyUserUncheckedCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetUncheckedCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyCreateOrConnectWithoutAgreementsInput = {
@@ -57376,6 +60785,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -57388,6 +60798,8 @@ export namespace Prisma {
     leads?: LeadUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUpdateManyWithoutCompanyNestedInput
   }
 
   export type CompanyUncheckedUpdateWithoutAgreementsInput = {
@@ -57403,6 +60815,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -57415,6 +60828,8 @@ export namespace Prisma {
     leads?: LeadUncheckedUpdateManyWithoutCompanyNestedInput
     bookings?: BookingUncheckedUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUncheckedUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUncheckedUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedUpdateManyWithoutCompanyNestedInput
   }
 
   export type CustomerUpsertWithoutAgreementsInput = {
@@ -57721,6 +61136,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -57733,6 +61149,8 @@ export namespace Prisma {
     leads?: LeadCreateNestedManyWithoutCompanyInput
     agreements?: ServiceAgreementCreateNestedManyWithoutCompanyInput
     users?: CompanyUserCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyUncheckedCreateWithoutBookingsInput = {
@@ -57748,6 +61166,7 @@ export namespace Prisma {
     logoUrl?: string | null
     website?: string | null
     currency?: string
+    enabledCurrencies?: CompanyCreateenabledCurrenciesInput | string[]
     timezone?: string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: boolean
@@ -57760,6 +61179,8 @@ export namespace Prisma {
     leads?: LeadUncheckedCreateNestedManyWithoutCompanyInput
     agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCompanyInput
     users?: CompanyUserUncheckedCreateNestedManyWithoutCompanyInput
+    taxRatePresets?: TaxRatePresetUncheckedCreateNestedManyWithoutCompanyInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedCreateNestedManyWithoutCompanyInput
   }
 
   export type CompanyCreateOrConnectWithoutBookingsInput = {
@@ -57874,6 +61295,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -57886,6 +61308,8 @@ export namespace Prisma {
     leads?: LeadUpdateManyWithoutCompanyNestedInput
     agreements?: ServiceAgreementUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUpdateManyWithoutCompanyNestedInput
   }
 
   export type CompanyUncheckedUpdateWithoutBookingsInput = {
@@ -57901,6 +61325,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     currency?: StringFieldUpdateOperationsInput | string
+    enabledCurrencies?: CompanyUpdateenabledCurrenciesInput | string[]
     timezone?: StringFieldUpdateOperationsInput | string
     features?: JsonNullValueInput | InputJsonValue
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -57913,6 +61338,8 @@ export namespace Prisma {
     leads?: LeadUncheckedUpdateManyWithoutCompanyNestedInput
     agreements?: ServiceAgreementUncheckedUpdateManyWithoutCompanyNestedInput
     users?: CompanyUserUncheckedUpdateManyWithoutCompanyNestedInput
+    taxRatePresets?: TaxRatePresetUncheckedUpdateManyWithoutCompanyNestedInput
+    paymentTermsPresets?: PaymentTermsPresetUncheckedUpdateManyWithoutCompanyNestedInput
   }
 
   export type CustomerUpsertWithoutBookingsInput = {
@@ -62356,6 +65783,28 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type TaxRatePresetCreateManyCompanyInput = {
+    id?: string
+    name: string
+    rate: Decimal | DecimalJsLike | number | string
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PaymentTermsPresetCreateManyCompanyInput = {
+    id?: string
+    name: string
+    days: number
+    isDefault?: boolean
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type CustomerUpdateWithoutCompanyInput = {
     id?: StringFieldUpdateOperationsInput | string
     type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -62803,6 +66252,72 @@ export namespace Prisma {
     pushToken?: NullableStringFieldUpdateOperationsInput | string | null
     pushPlatform?: NullableStringFieldUpdateOperationsInput | string | null
     pushTokenUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaxRatePresetUpdateWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    rate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaxRatePresetUncheckedUpdateWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    rate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaxRatePresetUncheckedUpdateManyWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    rate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PaymentTermsPresetUpdateWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    days?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PaymentTermsPresetUncheckedUpdateWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    days?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PaymentTermsPresetUncheckedUpdateManyWithoutCompanyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    days?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -64887,6 +68402,14 @@ export namespace Prisma {
      * @deprecated Use CompanyDefaultArgs instead
      */
     export type CompanyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CompanyDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use TaxRatePresetDefaultArgs instead
+     */
+    export type TaxRatePresetArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = TaxRatePresetDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PaymentTermsPresetDefaultArgs instead
+     */
+    export type PaymentTermsPresetArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PaymentTermsPresetDefaultArgs<ExtArgs>
     /**
      * @deprecated Use CompanyUserDefaultArgs instead
      */
