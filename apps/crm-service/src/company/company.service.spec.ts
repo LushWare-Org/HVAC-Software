@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CompanyService } from './company.service';
 
-const prismaMock = {
+const prismaMock: any = {
   company: {
     findUnique: jest.fn(),
     update: jest.fn(),
