@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module';
 import { TradeTemplatesModule } from './trade-templates/trade-templates.module';
 import { PriceBookModule } from './price-book/price-book.module';
 import { JobsModule } from './jobs/jobs.module';
+import { RemindersModule } from './reminders/reminders.module';
 import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { RescheduleModule } from './reschedule/reschedule.module';
 import { RealtimeModule } from './realtime/realtime.module';
@@ -25,6 +26,7 @@ import appConfig from './config/app.config';
     TradeTemplatesModule,
     PriceBookModule,
     JobsModule,
+    RemindersModule,
     WorkOrdersModule,
     RescheduleModule,
   ],
