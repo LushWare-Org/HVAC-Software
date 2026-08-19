@@ -8,6 +8,9 @@ module.exports = {
   roots: ['<rootDir>/src'],
   testMatch: ['**/*.spec.ts'],
   moduleNameMapper: {
+    // expo-constants ships ESM and needs a native runtime; unit tests here are
+    // pure logic, so a stub keeps them running without the RN jest preset.
+    '^expo-constants$': '<rootDir>/src/test/expo-constants-stub.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   transform: {
