@@ -121,13 +121,24 @@ Design choices:
 
 ### Appointment reminders
 
-A periodic worker following the existing `followup.worker.ts` pattern: on each run it finds jobs scheduled within the next 24h, sends a reminder push, and records it.
+A periodic worker that, on each run, finds jobs scheduled within the next 24h, sends a reminder push, and records it.
 
-Chosen over delayed BullMQ jobs deliberately: the worker **re-reads current job state every run**, so reschedules and cancellations are handled naturally with no cancellation bookkeeping. A delayed-job approach would have to track each queued job's id and revoke/replace it on every schedule change — more moving parts and more ways to leave a stale reminder queued.
+**Chosen over delayed BullMQ jobs deliberately:** the worker **re-reads current job state every run**, so reschedules and cancellations are handled naturally with no cancellation bookkeeping. A delayed-job approach would have to track each queued job's id and revoke/replace it on every schedule change — more moving parts and more ways to leave a stale reminder queued.
 
-Dedupe: before sending, query the `Notification` table for an existing reminder row for that `jobId`; skip if present. This makes the worker idempotent across runs and safe to run on multiple instances.
+**The worker lives in job-service, not comms.** It must sweep *every* tenant, and job-service can find all upcoming jobs across all companies in a single local Prisma query. Hosting it in comms would require enumerating companies and then making one company-scoped HTTP call per tenant per run — more moving parts, and slower as tenants grow. Instead each service does what it owns: job-service knows schedules, comms knows delivery and token resolution.
 
-Reading upcoming jobs requires a small jobs client in comms-service (service-to-service, following the auth-header pattern in `company-settings.client.ts`).
+job-service's worker POSTs each due reminder to a new internal comms endpoint:
+
+```
+POST /notifications/customer-push
+body: { companyId, customerId, title, body, data?, dedupeKey? }
+```
+
+which resolves the customer's `CompanyUser.pushToken`, applies dedupe, and calls the existing `sendPush`. This endpoint is also what the event-driven push triggers above call internally, so there is exactly one path for "notify a customer by push".
+
+**Dedupe** is owned by that endpoint via `dedupeKey` (e.g. `job-reminder:{jobId}:{scheduledStartISODate}`): if a `Notification` row already exists for that key, the send is skipped. Keying on the scheduled date means a *rescheduled* job legitimately earns a new reminder, while repeated worker runs for an unchanged booking do not. This makes the sweep idempotent and safe on multiple instances.
+
+job-service already POSTs to comms for job-confirmation emails (`jobs.service.ts`), so this cross-service direction is an established pattern.
 
 ## Testing
 
