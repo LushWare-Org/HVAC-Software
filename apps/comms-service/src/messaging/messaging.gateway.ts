@@ -75,12 +75,18 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
           (client.handshake.headers['x-test-user-role'] as string) ??
           (client.handshake.query?.userRole as string) ?? 'TECHNICIAN';
 
+        const customerId =
+          (client.handshake.headers['x-test-customer-id'] as string) ??
+          (client.handshake.query?.customerId as string);
+
         if (companyId && userId) {
           client.companyId = companyId;
           client.userId = userId;
           client.userName = userName;
           client.userRole = userRole;
+          client.customerId = customerId;
           client.join(`user:${userId}`);
+          this.joinCustomerRoomIfCustomer(client);
           this.joinCompanyRoomIfStaff(client);
           this.logger.log(`[dev] Client ${client.id} connected as ${userName} (${userRole})`);
           return;
@@ -102,6 +108,7 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
 
       // Join a personal room for direct notifications
       client.join(`user:${client.userId}`);
+      this.joinCustomerRoomIfCustomer(client);
       this.joinCompanyRoomIfStaff(client);
 
       this.logger.log(`Client ${client.id} authenticated as ${client.userName}`);
@@ -182,6 +189,17 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
       // refresh their threads list / unread badge without polling.
       this.broadcastToCompany(client.companyId, 'threads_changed', { threadId: data.threadId });
 
+      // The customer equivalent of the company-wide signal above: their app
+      // updates its unread badge even when it is not viewing this thread.
+      // Skipped when the customer is the sender — they already know.
+      const threadCustomerId = (updatedThread as { customerId?: string | null }).customerId;
+      if (threadCustomerId && client.customerId !== threadCustomerId) {
+        this.notifyCustomerOfMessage(threadCustomerId, {
+          threadId: data.threadId,
+          messageId: newMessage?.id,
+        });
+      }
+
       return { success: true, message: newMessage };
     } catch (err: any) {
       this.logger.error(`Send message error: ${err.message}`);
@@ -245,6 +263,30 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   /** Staff sockets join their company room; customer sockets never do. */
+  /**
+   * A customer's socket only ever occupies user:{id}, its joined thread rooms,
+   * and customer:{id}. Because every customer-scoped emit is addressed to a
+   * room only that one customer occupies, a mis-routed event cannot reach
+   * another customer.
+   */
+  private joinCustomerRoomIfCustomer(client: AuthSocket) {
+    if (client.customerId) {
+      client.join(`customer:${client.customerId}`);
+    }
+  }
+
+  /**
+   * Tells a customer a message landed somewhere, so unread badges update while
+   * they are not viewing that thread. Deliberately a different event name from
+   * the thread-room `new_message`, so a client listening to both can tell
+   * "arrived in the thread I'm reading" from "arrived elsewhere" without
+   * deduplicating identical events.
+   */
+  notifyCustomerOfMessage(customerId: string, body: { threadId: string; messageId: string }): void {
+    if (!customerId) return;
+    this.server?.to(`customer:${customerId}`).emit('message_new', body);
+  }
+
   private joinCompanyRoomIfStaff(client: AuthSocket) {
     const role = (client.userRole ?? '').toLowerCase();
     if (client.companyId && role !== 'customer' && !client.customerId) {
