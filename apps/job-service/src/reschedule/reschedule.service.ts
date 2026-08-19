@@ -41,12 +41,13 @@ export class RescheduleService {
    */
   private emitRescheduleChange(
     companyId: string,
-    job: { id: string; status: string; jobNumber?: string; title?: string; customerName?: string | null },
+    job: { id: string; status: string; jobNumber?: string; title?: string; customerName?: string | null; customerId?: string },
     rescheduleState: string | null,
     actorUserId?: string,
   ) {
     this.events.publish(companyId, {
       jobId: job.id, change: 'RESCHEDULE', status: job.status,
+      customerId: job.customerId,
       rescheduleState, jobNumber: job.jobNumber, title: job.title,
       customerName: job.customerName ?? null, actorUserId,
     });

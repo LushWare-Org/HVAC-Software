@@ -91,6 +91,7 @@ export class JobsService {
 
         this.events.publish(user.companyId, {
           jobId: job.id, change: 'CREATED', status: job.status,
+          customerId: job.customerId,
           scheduledStart: job.scheduledStart?.toISOString() ?? null,
           jobNumber: job.jobNumber, title: job.title,
           customerName: job.customerName, actorUserId: user.userId,
@@ -348,6 +349,7 @@ export class JobsService {
 
     this.events.publish(companyId, {
       jobId, change: 'STATUS', status: newStatus, previousStatus: currentStatus,
+      customerId: job.customerId,
       assignedToId: (updated as any).assignedToId ?? null,
       assignedToName: (updated as any).assignedToName ?? null,
       jobNumber: job.jobNumber, title: job.title,
@@ -516,6 +518,7 @@ export class JobsService {
     this.events.publish(user.companyId, {
       jobId, change: 'SCHEDULE',
       status: job.status,
+      customerId: job.customerId,
       scheduledStart: start.toISOString(),
       actorUserId: user.userId,
     });

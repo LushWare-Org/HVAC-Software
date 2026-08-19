@@ -131,6 +131,7 @@ export class RescheduleApplyService {
     this.events.publish(user.companyId, {
       jobId: job.id, change: 'RESCHEDULE',
       status: 'PENDING', previousStatus: job.status,
+      customerId: (job as any).customerId,
       scheduledStart: slot.startAt.toISOString(),
       assignedToId: null, assignedToName: null,
       rescheduleState: null,

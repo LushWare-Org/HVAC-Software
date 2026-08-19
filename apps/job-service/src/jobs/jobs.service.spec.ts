@@ -452,6 +452,22 @@ describe('JobsService — create', () => {
     expect(createCall.data.currency).toBe('LKR');
   });
 
+  it('publishes the customerId so comms can route the event to that customer', async () => {
+    mockPrisma.job.create.mockImplementation(({ data }: any) =>
+      Promise.resolve({ ...makeJob(JobStatusDto.PENDING), ...data, customerId: 'cust-77' }),
+    );
+    mockPrisma.job.findFirst.mockResolvedValue(makeJob(JobStatusDto.PENDING));
+
+    await service.create(makeAuthUser() as any, {
+      customerId: 'cust-77', customerName: 'C', serviceAddress: '1 St', title: 'Job',
+    } as any);
+
+    expect(mockEvents.publish).toHaveBeenCalledWith(
+      COMPANY_ID,
+      expect.objectContaining({ change: 'CREATED', customerId: 'cust-77' }),
+    );
+  });
+
   it('respects an explicit currency in the DTO without calling CrmClient', async () => {
     mockCrmClient.getDefaultCurrency.mockClear();
     mockPrisma.job.create.mockImplementation(({ data }: any) =>

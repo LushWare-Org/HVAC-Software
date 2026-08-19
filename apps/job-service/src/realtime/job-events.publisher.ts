@@ -15,6 +15,9 @@ export type JobEventType = 'JOB_CHANGED';
 
 export interface JobChangedPayload {
   jobId: string;
+  /** Which customer this job belongs to. Required for customer-scoped fan-out
+   *  in comms-service; an event without it is dropped rather than broadcast. */
+  customerId?: string;
   /** What changed, so the client can invalidate narrowly instead of everything. */
   change: 'STATUS' | 'CREATED' | 'SCHEDULE' | 'RESCHEDULE' | 'ASSIGNMENT' | 'DELETED';
   status?: string;
