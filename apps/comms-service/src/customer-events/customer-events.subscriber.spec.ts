@@ -21,7 +21,9 @@ describe('CustomerEventsSubscriber', () => {
     jest.clearAllMocks();
     emit = jest.fn();
     to = jest.fn().mockReturnValue({ emit });
-    const gateway = { server: { of: jest.fn().mockReturnValue({ to }) } } as never;
+    // `server` is the '/chat' Namespace — it exposes .to(), not .of(). Mocking
+    // a Server here (with .of()) would let a broken implementation pass.
+    const gateway = { server: { to } } as never;
     subscriber = new CustomerEventsSubscriber(config, gateway);
   });
 

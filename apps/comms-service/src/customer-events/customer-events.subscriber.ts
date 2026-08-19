@@ -43,6 +43,7 @@ export class CustomerEventsSubscriber implements OnModuleInit, OnModuleDestroy {
   private readonly client: Redis;
   private readonly listeners = new Set<Listener>();
   private warnedOnce = false;
+  private emitWarnedOnce = false;
 
   constructor(
     private readonly config: ConfigService,
@@ -136,9 +137,18 @@ export class CustomerEventsSubscriber implements OnModuleInit, OnModuleDestroy {
 
   private dispatch(eventName: string, customerId: string, body: unknown): void {
     try {
-      this.gateway.server?.of('/chat').to(`customer:${customerId}`).emit(eventName, body);
+      // `gateway.server` is the '/chat' NAMESPACE (that is what @WebSocketServer
+      // injects on a namespaced gateway), not the root Server — so address rooms
+      // directly here, exactly as MessagingGateway itself does. Calling .of()
+      // would throw, since Namespace has no such method.
+      this.gateway.server?.to(`customer:${customerId}`).emit(eventName, body);
     } catch (err) {
-      this.logger.debug?.(`customer emit skipped: ${(err as Error).message}`);
+      // Warn rather than debug: a persistent failure here means customers
+      // silently stop receiving realtime, which is invisible at debug level.
+      if (!this.emitWarnedOnce) {
+        this.emitWarnedOnce = true;
+        this.logger.warn(`customer emit failed: ${(err as Error).message}`);
+      }
     }
   }
 

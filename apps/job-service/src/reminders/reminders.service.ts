@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import axios, { type AxiosInstance } from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -25,7 +25,11 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly http: AxiosInstance = axios,
+    // @Optional() is required, not cosmetic: TypeScript emits `Function` as this
+    // parameter's design:type, so without it Nest tries to resolve an
+    // AxiosInstance provider at boot and the whole module fails to load. The
+    // default value alone does not stop that lookup.
+    @Optional() private readonly http: AxiosInstance = axios,
   ) {}
 
   onModuleInit() {
