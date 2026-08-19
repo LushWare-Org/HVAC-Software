@@ -10,12 +10,26 @@
  */
 import axios from 'axios'
 import Constants from 'expo-constants'
+import { devApiBaseUrl } from './devHost'
 
 const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.us-central1.run.app/api'
 
+/** The address Metro is served from — the machine running the local services. */
+export function expoHostUri(): string | undefined {
+  const c = Constants as any
+  return (
+    c.expoConfig?.hostUri ??
+    c.expoGoConfig?.debuggerHost ??
+    c.manifest2?.extra?.expoGo?.debuggerHost ??
+    c.manifest?.debuggerHost
+  )
+}
+
 function getDefaultApiBaseUrl(): string {
+  // In dev, talk to the machine serving Metro rather than "localhost", which on
+  // a device points at the device itself and fails with a bare Network Error.
   return typeof __DEV__ !== 'undefined' && __DEV__
-    ? 'http://localhost:80/api'
+    ? devApiBaseUrl(expoHostUri())
     : DEFAULT_API_BASE_URL
 }
 

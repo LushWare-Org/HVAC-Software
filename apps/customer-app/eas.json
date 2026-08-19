@@ -9,12 +9,15 @@
       "distribution": "internal",
       "env": {
         "npm_config_user_agent": "pnpm"
-      }
+      },
+      "channel": "development"
     },
     "preview-apk": {
       "distribution": "internal",
       "channel": "preview",
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app/api",
         "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app",
@@ -31,5 +34,7 @@
       }
     }
   },
-  "submit": { "production": {} }
+  "submit": {
+    "production": {}
+  }
 }

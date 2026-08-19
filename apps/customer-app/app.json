@@ -7,27 +7,51 @@
     "scheme": "tscustomer",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "runtimeVersion": { "policy": "fingerprint" },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.tscrm.customer",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Unlock HVACtor.ai with Face ID instead of typing your password.",
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
       "package": "com.tscrm.customer",
-      "permissions": ["VIBRATE", "USE_BIOMETRIC", "USE_FINGERPRINT"]
+      "permissions": [
+        "VIBRATE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      ["expo-notifications", { "color": "#2563EB" }],
+      [
+        "expo-notifications",
+        {
+          "color": "#2563EB"
+        }
+      ],
       "expo-local-authentication",
       "expo-updates"
     ],
-    "experiments": { "typedRoutes": true },
-    "extra": { "router": {} }
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "676976b5-812c-42ad-af93-47be2dce4eb6"
+      }
+    },
+    "owner": "ravishan12",
+    "updates": {
+      "url": "https://u.expo.dev/676976b5-812c-42ad-af93-47be2dce4eb6"
+    }
   }
 }

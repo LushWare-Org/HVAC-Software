@@ -42,3 +42,13 @@ export interface Invoice {
   customerId?: string
   currency?: string
 }
+
+export interface Quote {
+  id: string
+  quoteNumber: string
+  title?: string
+  status: string
+  total: string | number
+  customerId?: string
+  currency?: string
+}
