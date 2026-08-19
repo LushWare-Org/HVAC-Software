@@ -161,6 +161,16 @@ export class CustomersController {
     return this.customersService.getStatusSummary(user.companyId, id);
   }
 
+  // ---- Portal user (service-to-service: comms reads the push token) ----
+  // Declared before @Get(':id') so "portal-user" is not swallowed as an id.
+  @Get(':id/portal-user')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @ApiOperation({ summary: "Portal CompanyUser for a customer, including push token" })
+  @ApiParam({ name: 'id', type: String })
+  getPortalUser(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.customersService.getPortalUser(user.companyId, id);
+  }
+
   // ---- Get one ----
   @Get(':id')
   @ApiOperation({ summary: 'Get a single customer with contacts and history' })

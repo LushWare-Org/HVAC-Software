@@ -798,6 +798,14 @@ WHERE r."companyId" = c.id
   AND c.currency <> 'USD';
     `.trim(),
   },
+  {
+    schema: 'comms',
+    name: '20260819000000_add_notification_dedupe_key',
+    sql: `
+ALTER TABLE "comms"."Notification" ADD COLUMN IF NOT EXISTS "dedupeKey" TEXT;
+CREATE INDEX IF NOT EXISTS "Notification_companyId_dedupeKey_idx" ON "comms"."Notification"("companyId", "dedupeKey");
+    `.trim(),
+  },
 
 ];
 

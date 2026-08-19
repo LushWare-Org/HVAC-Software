@@ -1606,6 +1606,7 @@ export namespace Prisma {
     failedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
+    dedupeKey: string | null
   }
 
   export type NotificationMaxAggregateOutputType = {
@@ -1636,6 +1637,7 @@ export namespace Prisma {
     failedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
+    dedupeKey: string | null
   }
 
   export type NotificationCountAggregateOutputType = {
@@ -1666,6 +1668,7 @@ export namespace Prisma {
     failedAt: number
     createdAt: number
     updatedAt: number
+    dedupeKey: number
     _all: number
   }
 
@@ -1698,6 +1701,7 @@ export namespace Prisma {
     failedAt?: true
     createdAt?: true
     updatedAt?: true
+    dedupeKey?: true
   }
 
   export type NotificationMaxAggregateInputType = {
@@ -1728,6 +1732,7 @@ export namespace Prisma {
     failedAt?: true
     createdAt?: true
     updatedAt?: true
+    dedupeKey?: true
   }
 
   export type NotificationCountAggregateInputType = {
@@ -1758,6 +1763,7 @@ export namespace Prisma {
     failedAt?: true
     createdAt?: true
     updatedAt?: true
+    dedupeKey?: true
     _all?: true
   }
 
@@ -1861,6 +1867,7 @@ export namespace Prisma {
     failedAt: Date | null
     createdAt: Date
     updatedAt: Date
+    dedupeKey: string | null
     _count: NotificationCountAggregateOutputType | null
     _min: NotificationMinAggregateOutputType | null
     _max: NotificationMaxAggregateOutputType | null
@@ -1908,6 +1915,7 @@ export namespace Prisma {
     failedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    dedupeKey?: boolean
   }, ExtArgs["result"]["notification"]>
 
   export type NotificationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1938,6 +1946,7 @@ export namespace Prisma {
     failedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    dedupeKey?: boolean
   }, ExtArgs["result"]["notification"]>
 
   export type NotificationSelectScalar = {
@@ -1968,6 +1977,7 @@ export namespace Prisma {
     failedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    dedupeKey?: boolean
   }
 
 
@@ -2002,6 +2012,11 @@ export namespace Prisma {
       failedAt: Date | null
       createdAt: Date
       updatedAt: Date
+      /**
+       * Idempotency key for notifications that must fire at most once
+       * (e.g. "job-reminder:{jobId}:{scheduledDate}"). Null for ordinary sends.
+       */
+      dedupeKey: string | null
     }, ExtArgs["result"]["notification"]>
     composites: {}
   }
@@ -2422,6 +2437,7 @@ export namespace Prisma {
     readonly failedAt: FieldRef<"Notification", 'DateTime'>
     readonly createdAt: FieldRef<"Notification", 'DateTime'>
     readonly updatedAt: FieldRef<"Notification", 'DateTime'>
+    readonly dedupeKey: FieldRef<"Notification", 'String'>
   }
     
 
@@ -9810,7 +9826,8 @@ export namespace Prisma {
     deliveredAt: 'deliveredAt',
     failedAt: 'failedAt',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    dedupeKey: 'dedupeKey'
   };
 
   export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
@@ -10183,6 +10200,7 @@ export namespace Prisma {
     failedAt?: DateTimeNullableFilter<"Notification"> | Date | string | null
     createdAt?: DateTimeFilter<"Notification"> | Date | string
     updatedAt?: DateTimeFilter<"Notification"> | Date | string
+    dedupeKey?: StringNullableFilter<"Notification"> | string | null
   }
 
   export type NotificationOrderByWithRelationInput = {
@@ -10213,6 +10231,7 @@ export namespace Prisma {
     failedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    dedupeKey?: SortOrderInput | SortOrder
   }
 
   export type NotificationWhereUniqueInput = Prisma.AtLeast<{
@@ -10246,6 +10265,7 @@ export namespace Prisma {
     failedAt?: DateTimeNullableFilter<"Notification"> | Date | string | null
     createdAt?: DateTimeFilter<"Notification"> | Date | string
     updatedAt?: DateTimeFilter<"Notification"> | Date | string
+    dedupeKey?: StringNullableFilter<"Notification"> | string | null
   }, "id">
 
   export type NotificationOrderByWithAggregationInput = {
@@ -10276,6 +10296,7 @@ export namespace Prisma {
     failedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    dedupeKey?: SortOrderInput | SortOrder
     _count?: NotificationCountOrderByAggregateInput
     _max?: NotificationMaxOrderByAggregateInput
     _min?: NotificationMinOrderByAggregateInput
@@ -10312,6 +10333,7 @@ export namespace Prisma {
     failedAt?: DateTimeNullableWithAggregatesFilter<"Notification"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Notification"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Notification"> | Date | string
+    dedupeKey?: StringNullableWithAggregatesFilter<"Notification"> | string | null
   }
 
   export type MessageThreadWhereInput = {
@@ -11000,6 +11022,7 @@ export namespace Prisma {
     failedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    dedupeKey?: string | null
   }
 
   export type NotificationUncheckedCreateInput = {
@@ -11030,6 +11053,7 @@ export namespace Prisma {
     failedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    dedupeKey?: string | null
   }
 
   export type NotificationUpdateInput = {
@@ -11060,6 +11084,7 @@ export namespace Prisma {
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    dedupeKey?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type NotificationUncheckedUpdateInput = {
@@ -11090,6 +11115,7 @@ export namespace Prisma {
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    dedupeKey?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type NotificationCreateManyInput = {
@@ -11120,6 +11146,7 @@ export namespace Prisma {
     failedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    dedupeKey?: string | null
   }
 
   export type NotificationUpdateManyMutationInput = {
@@ -11150,6 +11177,7 @@ export namespace Prisma {
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    dedupeKey?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type NotificationUncheckedUpdateManyInput = {
@@ -11180,6 +11208,7 @@ export namespace Prisma {
     failedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    dedupeKey?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type MessageThreadCreateInput = {
@@ -12073,6 +12102,7 @@ export namespace Prisma {
     failedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    dedupeKey?: SortOrder
   }
 
   export type NotificationMaxOrderByAggregateInput = {
@@ -12103,6 +12133,7 @@ export namespace Prisma {
     failedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    dedupeKey?: SortOrder
   }
 
   export type NotificationMinOrderByAggregateInput = {
@@ -12133,6 +12164,7 @@ export namespace Prisma {
     failedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    dedupeKey?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {

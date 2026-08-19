@@ -41,6 +41,39 @@ export class CompanySettingsClient {
     }
   }
 
+  /**
+   * The customer's portal CompanyUser and push token, or null when they have
+   * never signed in on a device. Deliberately uncached: a token can be
+   * registered or cleared at any login/logout, and a stale one means a push
+   * silently goes nowhere.
+   */
+  async getCustomerPushRecipient(
+    companyId: string,
+    customerId: string,
+  ): Promise<{ recipientId: string; recipientName?: string; pushToken: string } | null> {
+    try {
+      const res = await fetch(`${CRM_SERVICE_URL}/customers/${customerId}/portal-user`, {
+        headers: this.authHeaders(companyId),
+        signal: AbortSignal.timeout(5_000),
+      });
+      if (!res.ok) return null;
+      const user = (await res.json()) as
+        | { id: string; name?: string | null; pushToken?: string | null }
+        | null;
+      if (!user?.pushToken) return null;
+      return {
+        recipientId: user.id,
+        recipientName: user.name ?? undefined,
+        pushToken: user.pushToken,
+      };
+    } catch (err) {
+      this.logger.warn(
+        `customer push recipient lookup failed for ${customerId}: ${(err as Error).message}`,
+      );
+      return null;
+    }
+  }
+
   private authHeaders(companyId: string): Record<string, string> {
     // Same service-to-service pattern as comms enroute → crm: dev bypass
     // headers when BYPASS_AUTH, otherwise a short-lived HS256 system token

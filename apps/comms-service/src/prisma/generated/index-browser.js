@@ -149,7 +149,8 @@ exports.Prisma.NotificationScalarFieldEnum = {
   deliveredAt: 'deliveredAt',
   failedAt: 'failedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  dedupeKey: 'dedupeKey'
 };
 
 exports.Prisma.MessageThreadScalarFieldEnum = {

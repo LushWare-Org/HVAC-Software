@@ -285,6 +285,26 @@ export class CustomersService {
     };
   }
 
+  /**
+   * The role=customer CompanyUser linked to this customer, or null.
+   *
+   * Customers are linked to their portal login by email (see the signup flow
+   * in auth: register creates CompanyUser(role=customer) + Customer sharing
+   * one email), so that is the join key here.
+   */
+  async getPortalUser(companyId: string, customerId: string) {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id: customerId, companyId },
+      select: { email: true },
+    });
+    if (!customer?.email) return null;
+
+    return this.prisma.companyUser.findFirst({
+      where: { companyId, email: customer.email, role: 'customer' },
+      select: { id: true, name: true, pushToken: true },
+    });
+  }
+
   async findOne(companyId: string, id: string) {
     const customer = await this.prisma.customer.findFirst({
       where: { id, companyId },

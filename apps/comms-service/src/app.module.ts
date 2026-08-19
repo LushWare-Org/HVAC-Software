@@ -16,6 +16,7 @@ import { JobAssignedModule } from './job-assigned/job-assigned.module';
 import { TemplatesModule } from './templates/templates.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { CustomerEventsModule } from './customer-events/customer-events.module';
+import { CustomerNotificationsModule } from './customer-notifications/customer-notifications.module';
 import { AutomationModule } from './automation/automation.module';
 import { MarketingModule } from './marketing/marketing.module';
 import { WebPushModule } from './web-push/web-push.module';
@@ -73,6 +74,7 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
     TemplatesModule,
     MessagingModule,
     CustomerEventsModule,
+    CustomerNotificationsModule,
     AutomationModule,
     MarketingModule,
     WebPushModule,

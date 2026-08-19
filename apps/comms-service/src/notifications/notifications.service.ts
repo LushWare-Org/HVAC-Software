@@ -94,6 +94,8 @@ export interface SendPushRequest {
   body: string;
   data?: Record<string, string>;
   scheduledAt?: Date;
+  /** Idempotency marker persisted on the Notification row; see CustomerNotificationsService. */
+  dedupeKey?: string;
 }
 
 export interface InAppRecipient {
@@ -288,6 +290,7 @@ export class NotificationsService {
         body: req.body,
         status: DeliveryStatus.QUEUED,
         scheduledAt: req.scheduledAt,
+        dedupeKey: req.dedupeKey,
       },
     });
 

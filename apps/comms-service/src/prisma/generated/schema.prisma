@@ -95,12 +95,16 @@ model Notification {
   failedAt           DateTime?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
+  /// Idempotency key for notifications that must fire at most once
+  /// (e.g. "job-reminder:{jobId}:{scheduledDate}"). Null for ordinary sends.
+  dedupeKey          String?
 
   @@index([companyId, status])
   @@index([companyId, isRead])
   @@index([companyId, customerId])
   @@index([companyId, jobId])
   @@index([scheduledAt])
+  @@index([companyId, dedupeKey])
 }
 
 // ── MessageThread — conversation between company and a customer, or staff ──
