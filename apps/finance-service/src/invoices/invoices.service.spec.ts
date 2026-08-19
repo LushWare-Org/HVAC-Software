@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { NotificationClientService } from '../notification-client/notification-client.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
+import { FinanceEventsPublisher } from '../realtime/finance-events.publisher';
 import { DocumentTemplateClient } from '../document-templates/document-template.client';
 import { InvoiceStatus, PaymentStatus } from '../prisma/generated';
 
@@ -109,6 +110,7 @@ const mockSettingsClient = {
   }),
 };
 const mockDocumentTemplateClient = { resolve: jest.fn().mockResolvedValue(null) };
+const mockFinanceEvents = { publish: jest.fn() };
 
 describe('InvoicesService', () => {
   let service: InvoicesService;
@@ -128,6 +130,7 @@ describe('InvoicesService', () => {
         { provide: NotificationClientService, useValue: mockNotificationClient },
         { provide: CompanySettingsClient, useValue: mockSettingsClient },
         { provide: DocumentTemplateClient, useValue: mockDocumentTemplateClient },
+        { provide: FinanceEventsPublisher, useValue: mockFinanceEvents },
         {
           provide: ConfigService,
           useValue: {
@@ -328,6 +331,50 @@ describe('InvoicesService', () => {
       expect(payment.currency).toBe('LKR');
     });
 
+    it('publishes INVOICE_CHANGED/PAID when a payment settles the invoice', async () => {
+      const inv = makeInvoice({
+        status: InvoiceStatus.SENT,
+        customerId: 'cust-4',
+        total: makeDecimal(500),
+        amountPaid: makeDecimal(0),
+        balanceDue: makeDecimal(500),
+      });
+      mockPrisma.invoice.findFirst.mockResolvedValue(inv);
+      mockPrisma.payment.count.mockResolvedValue(0);
+      mockPrisma.payment.create.mockImplementation(({ data }: any) => Promise.resolve({ id: 'p1', ...data }));
+      mockPrisma.invoice.update.mockResolvedValue({});
+      mockPrisma.$transaction.mockImplementation((ops: any[]) => Promise.all(ops));
+
+      await service.recordManualPayment(COMPANY_ID, INV_ID, 500, 'CASH');
+
+      expect(mockFinanceEvents.publish).toHaveBeenCalledWith(
+        COMPANY_ID,
+        expect.objectContaining({ type: 'INVOICE_CHANGED', change: 'PAID', customerId: 'cust-4' }),
+      );
+    });
+
+    it('publishes PARTIALLY_PAID rather than PAID for a partial payment', async () => {
+      const inv = makeInvoice({
+        status: InvoiceStatus.SENT,
+        customerId: 'cust-4',
+        total: makeDecimal(500),
+        amountPaid: makeDecimal(0),
+        balanceDue: makeDecimal(500),
+      });
+      mockPrisma.invoice.findFirst.mockResolvedValue(inv);
+      mockPrisma.payment.count.mockResolvedValue(0);
+      mockPrisma.payment.create.mockImplementation(({ data }: any) => Promise.resolve({ id: 'p1', ...data }));
+      mockPrisma.invoice.update.mockResolvedValue({});
+      mockPrisma.$transaction.mockImplementation((ops: any[]) => Promise.all(ops));
+
+      await service.recordManualPayment(COMPANY_ID, INV_ID, 200, 'CASH');
+
+      expect(mockFinanceEvents.publish).toHaveBeenCalledWith(
+        COMPANY_ID,
+        expect.objectContaining({ change: 'PARTIALLY_PAID' }),
+      );
+    });
+
     it('marks invoice as PAID when full amount is recorded', async () => {
       const inv = makeInvoice({
         status: InvoiceStatus.SENT,
@@ -378,15 +425,44 @@ describe('InvoicesService', () => {
   // ── markOverdueInvoices ──────────────────────────────────────────────
 
   describe('markOverdueInvoices', () => {
-    it('calls updateMany with correct filter', async () => {
-      mockPrisma.invoice.updateMany.mockResolvedValue({ count: 3 });
+    it('selects the now-overdue rows with the right filter, then updates them by id', async () => {
+      mockPrisma.invoice.findMany.mockResolvedValue([
+        { id: 'inv-a', companyId: 'co-1', customerId: 'cust-1', invoiceNumber: 'INV-1', total: makeDecimal(100), currency: 'USD' },
+        { id: 'inv-b', companyId: 'co-2', customerId: 'cust-2', invoiceNumber: 'INV-2', total: makeDecimal(200), currency: 'LKR' },
+      ]);
+      mockPrisma.invoice.updateMany.mockResolvedValue({ count: 2 });
+
       const result = await service.markOverdueInvoices();
 
-      expect(result.count).toBe(3);
-      const call = mockPrisma.invoice.updateMany.mock.calls[0][0];
-      expect(call.where.status.in).toContain(InvoiceStatus.SENT);
-      expect(call.where.status.in).toContain(InvoiceStatus.PARTIALLY_PAID);
-      expect(call.data.status).toBe(InvoiceStatus.OVERDUE);
+      expect(result.count).toBe(2);
+      const selectCall = mockPrisma.invoice.findMany.mock.calls[0][0];
+      expect(selectCall.where.status.in).toContain(InvoiceStatus.SENT);
+      expect(selectCall.where.status.in).toContain(InvoiceStatus.PARTIALLY_PAID);
+
+      const updateCall = mockPrisma.invoice.updateMany.mock.calls[0][0];
+      expect(updateCall.where).toEqual({ id: { in: ['inv-a', 'inv-b'] } });
+      expect(updateCall.data.status).toBe(InvoiceStatus.OVERDUE);
+    });
+
+    it('announces each newly-overdue invoice to its own company and customer', async () => {
+      mockPrisma.invoice.findMany.mockResolvedValue([
+        { id: 'inv-a', companyId: 'co-1', customerId: 'cust-1', invoiceNumber: 'INV-1', total: makeDecimal(100), currency: 'USD' },
+        { id: 'inv-b', companyId: 'co-2', customerId: 'cust-2', invoiceNumber: 'INV-2', total: makeDecimal(200), currency: 'LKR' },
+      ]);
+      mockPrisma.invoice.updateMany.mockResolvedValue({ count: 2 });
+
+      await service.markOverdueInvoices();
+
+      // A cross-tenant sweep: each event must carry its own row's companyId,
+      // never a single caller-supplied one.
+      expect(mockFinanceEvents.publish).toHaveBeenCalledWith(
+        'co-1',
+        expect.objectContaining({ documentId: 'inv-a', customerId: 'cust-1', change: 'OVERDUE' }),
+      );
+      expect(mockFinanceEvents.publish).toHaveBeenCalledWith(
+        'co-2',
+        expect.objectContaining({ documentId: 'inv-b', customerId: 'cust-2', change: 'OVERDUE' }),
+      );
     });
   });
 

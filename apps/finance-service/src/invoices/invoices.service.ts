@@ -21,6 +21,7 @@ import { PdfService } from '../pdf/pdf.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { NotificationClientService } from '../notification-client/notification-client.service';
 import { DocumentTemplateClient } from '../document-templates/document-template.client';
+import { FinanceEventsPublisher } from '../realtime/finance-events.publisher';
 import { QuickBooksSyncService } from '../quickbooks/quickbooks-sync.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceStatus, PaymentStatus } from '../prisma/generated';
@@ -47,6 +48,7 @@ export class InvoicesService {
     private readonly notificationClient: NotificationClientService,
     private readonly companySettings: CompanySettingsClient,
     private readonly documentTemplates: DocumentTemplateClient,
+    private readonly financeEvents: FinanceEventsPublisher,
     @Optional() private readonly qbSync: QuickBooksSyncService,
   ) {
     this.stripe = new Stripe(this.config.get<string>('stripe.secretKey') ?? '', {
@@ -387,6 +389,17 @@ export class InvoicesService {
       });
     }
 
+    this.financeEvents.publish(companyId, {
+      type: 'INVOICE_CHANGED',
+      documentId: id,
+      customerId: updated.customerId,
+      change: 'SENT',
+      status: updated.status,
+      documentNumber: updated.invoiceNumber,
+      total: updated.total?.toString(),
+      currency: updated.currency,
+    });
+
     return updated;
   }
 
@@ -568,13 +581,39 @@ export class InvoicesService {
   // ── Mark overdue (batch job / cron) ──────────────────────────────────────
 
   async markOverdueInvoices() {
-    const result = await this.prisma.invoice.updateMany({
+    // Select before updating so each newly-overdue invoice can be announced to
+    // its own customer. updateMany alone returns only a count, with no rows to
+    // address events to. This is a cross-tenant sweep, so companyId comes from
+    // each row rather than from a caller.
+    const nowDue = await this.prisma.invoice.findMany({
       where: {
         status: { in: [InvoiceStatus.SENT, InvoiceStatus.PARTIALLY_PAID] },
         dueDate: { lt: new Date() },
       },
+      select: {
+        id: true, companyId: true, customerId: true,
+        invoiceNumber: true, total: true, currency: true,
+      },
+    });
+
+    const result = await this.prisma.invoice.updateMany({
+      where: { id: { in: nowDue.map((i) => i.id) } },
       data: { status: InvoiceStatus.OVERDUE },
     });
+
+    for (const inv of nowDue) {
+      this.financeEvents.publish(inv.companyId, {
+        type: 'INVOICE_CHANGED',
+        documentId: inv.id,
+        customerId: inv.customerId,
+        change: 'OVERDUE',
+        status: InvoiceStatus.OVERDUE,
+        documentNumber: inv.invoiceNumber,
+        total: inv.total?.toString(),
+        currency: inv.currency,
+      });
+    }
+
     this.logger.log(`Marked ${result.count} invoice(s) as OVERDUE`);
     return result;
   }
@@ -628,6 +667,17 @@ export class InvoicesService {
         },
       }),
     ]);
+
+    this.financeEvents.publish(companyId, {
+      type: 'INVOICE_CHANGED',
+      documentId: invoiceId,
+      customerId: invoice.customerId,
+      change: newStatus === InvoiceStatus.PAID ? 'PAID' : 'PARTIALLY_PAID',
+      status: newStatus,
+      documentNumber: invoice.invoiceNumber,
+      total: invoice.total?.toString(),
+      currency: invoice.currency,
+    });
 
     // Fire-and-forget QB sync
     this.qbSync?.syncPayment(payment.id, companyId).catch((err: Error) =>
@@ -740,6 +790,17 @@ export class InvoicesService {
     const voided = await this.prisma.invoice.update({
       where: { id },
       data: { status: InvoiceStatus.VOID, voidedAt: new Date() },
+    });
+
+    this.financeEvents.publish(companyId, {
+      type: 'INVOICE_CHANGED',
+      documentId: id,
+      customerId: voided.customerId,
+      change: 'VOIDED',
+      status: InvoiceStatus.VOID,
+      documentNumber: voided.invoiceNumber,
+      total: voided.total?.toString(),
+      currency: voided.currency,
     });
 
     // Fire-and-forget QB void sync
