@@ -17,6 +17,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
+import { FinanceEventsPublisher } from '../realtime/finance-events.publisher';
 import { NotificationClientService } from '../notification-client/notification-client.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
@@ -58,6 +59,7 @@ export class QuotesService {
     private readonly pdfService: PdfService,
     private readonly notificationClient: NotificationClientService,
     private readonly companySettings: CompanySettingsClient,
+    private readonly financeEvents: FinanceEventsPublisher,
   ) {}
 
   // ── List ─────────────────────────────────────────────────────────────────
@@ -332,6 +334,17 @@ export class QuotesService {
       });
     }
 
+    this.financeEvents.publish(companyId, {
+      type: 'QUOTE_CHANGED',
+      documentId: id,
+      customerId: updated.customerId,
+      change: 'SENT',
+      status: updated.status,
+      documentNumber: updated.quoteNumber,
+      total: updated.total?.toString(),
+      currency: updated.currency,
+    });
+
     return updated;
   }
 
@@ -363,7 +376,7 @@ export class QuotesService {
     if (!([QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.VIEWED] as QuoteStatus[]).includes(quote.status)) {
       throw new BadRequestException(`Quote cannot be approved in status: ${quote.status}`);
     }
-    return this.prisma.quote.update({
+    const accepted = await this.prisma.quote.update({
       where: { id },
       data: {
         status: QuoteStatus.ACCEPTED,
@@ -373,6 +386,19 @@ export class QuotesService {
       },
       include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
     });
+
+    this.financeEvents.publish(companyId, {
+      type: 'QUOTE_CHANGED',
+      documentId: id,
+      customerId: accepted.customerId,
+      change: 'APPROVED',
+      status: accepted.status,
+      documentNumber: accepted.quoteNumber,
+      total: accepted.total?.toString(),
+      currency: accepted.currency,
+    });
+
+    return accepted;
   }
 
   // ── Decline by ID (portal/customer) ──────────────────────────────────────
@@ -397,7 +423,7 @@ export class QuotesService {
     const decisionLine = `Customer declined on ${new Date().toISOString()} by ${name} (${email})${reason ? ` — ${reason}` : ''}`;
     const existingNotes = quote.notes?.trim();
 
-    return this.prisma.quote.update({
+    const declined = await this.prisma.quote.update({
       where: { id },
       data: {
         status: QuoteStatus.DECLINED,
@@ -405,6 +431,19 @@ export class QuotesService {
       },
       include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
     });
+
+    this.financeEvents.publish(companyId, {
+      type: 'QUOTE_CHANGED',
+      documentId: id,
+      customerId: declined.customerId,
+      change: 'DECLINED',
+      status: declined.status,
+      documentNumber: declined.quoteNumber,
+      total: declined.total?.toString(),
+      currency: declined.currency,
+    });
+
+    return declined;
   }
 
   // ── Approve (customer clicks link with token) ─────────────────────────────
@@ -564,6 +603,17 @@ export class QuotesService {
         console.warn(`[finance] could not backfill job ${quote.jobId} estimatedValue:`, err);
       }
     }
+
+    this.financeEvents.publish(companyId, {
+      type: 'QUOTE_CHANGED',
+      documentId: id,
+      customerId: quote.customerId,
+      change: 'CONVERTED',
+      status: QuoteStatus.CONVERTED,
+      documentNumber: quote.quoteNumber,
+      total: quote.total?.toString(),
+      currency: quote.currency,
+    });
 
     // Fetch the full shape outside the transaction — the caller needs it, but
     // holding a transaction open for a read does nothing except burn budget.

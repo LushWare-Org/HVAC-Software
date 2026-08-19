@@ -16,6 +16,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { NotificationClientService } from '../notification-client/notification-client.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
+import { FinanceEventsPublisher } from '../realtime/finance-events.publisher';
 import { PrismaClientKnownRequestError } from '../prisma/generated/runtime/library';
 import { QuoteStatus } from '../prisma/generated';
 
@@ -105,6 +106,7 @@ describe('QuotesService', () => {
           getSettings: jest.fn().mockResolvedValue({ id: 'company-001', name: 'Demo', logoUrl: null, currency: 'USD', timezone: 'America/New_York', features: {} }),
           getDefaultPaymentTermsDays: jest.fn().mockResolvedValue(30),
         } },
+        { provide: FinanceEventsPublisher, useValue: { publish: jest.fn() } },
       ],
     }).compile();
 
@@ -308,6 +310,38 @@ describe('QuotesService', () => {
   });
 
   // ── convertToInvoice ─────────────────────────────────────────────────────
+
+  describe('finance events', () => {
+    it('publishes QUOTE_CHANGED/CONVERTED with the customerId on conversion', async () => {
+      const events = module.get(FinanceEventsPublisher) as any;
+      const q = makeQuote({ status: QuoteStatus.ACCEPTED, customerId: 'cust-9' });
+      mockPrisma.quote.findFirst.mockResolvedValue(q);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null);
+      mockPrisma.invoice.count.mockResolvedValue(0);
+      mockPrisma.invoice.create.mockImplementation(({ data }: any) => Promise.resolve({ ...data, id: 'inv-1' }));
+
+      await service.convertToInvoice(COMPANY_ID, QUOTE_ID, USER_ID);
+
+      expect(events.publish).toHaveBeenCalledWith(
+        COMPANY_ID,
+        expect.objectContaining({ type: 'QUOTE_CHANGED', change: 'CONVERTED', customerId: 'cust-9' }),
+      );
+    });
+
+    it('publishes QUOTE_CHANGED/DECLINED when a customer declines', async () => {
+      const events = module.get(FinanceEventsPublisher) as any;
+      const q = makeQuote({ status: QuoteStatus.SENT, customerId: 'cust-9' });
+      mockPrisma.quote.findFirst.mockResolvedValue(q);
+      mockPrisma.quote.update.mockResolvedValue({ ...q, status: QuoteStatus.DECLINED });
+
+      await service.declineById(COMPANY_ID, QUOTE_ID, 'Sam', 'sam@x.com');
+
+      expect(events.publish).toHaveBeenCalledWith(
+        COMPANY_ID,
+        expect.objectContaining({ type: 'QUOTE_CHANGED', change: 'DECLINED', customerId: 'cust-9' }),
+      );
+    });
+  });
 
   describe('convertToInvoice', () => {
     it("uses the tenant's default payment-terms days instead of a hardcoded 30", async () => {

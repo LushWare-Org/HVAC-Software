@@ -6,9 +6,10 @@ import { NotificationClientModule } from '../notification-client/notification-cl
 import { CompanySettingsModule } from '../company-settings/company-settings.module';
 import { DocumentTemplatesModule } from '../document-templates/document-templates.module';
 import { CrmModule } from '../crm/crm.module';
+import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
-  imports: [PdfModule, NotificationClientModule, CompanySettingsModule, DocumentTemplatesModule, CrmModule],
+  imports: [PdfModule, NotificationClientModule, CompanySettingsModule, DocumentTemplatesModule, CrmModule, RealtimeModule],
   controllers: [QuotesController],
   providers: [QuotesService],
   exports: [QuotesService],
