@@ -1,0 +1,35 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "npm_config_user_agent": "pnpm"
+      }
+    },
+    "preview-apk": {
+      "distribution": "internal",
+      "channel": "preview",
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app/api",
+        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app",
+        "npm_config_user_agent": "pnpm"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app/api",
+        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app",
+        "npm_config_user_agent": "pnpm"
+      }
+    }
+  },
+  "submit": { "production": {} }
+}
