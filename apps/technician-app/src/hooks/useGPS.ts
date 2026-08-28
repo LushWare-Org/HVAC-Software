@@ -1,26 +1,41 @@
 import { useEffect, useRef, useCallback } from 'react'
 import * as Location from 'expo-location'
-import { useSendGps } from './useSchedule'
+import {
+  startBackgroundLocation,
+  stopBackgroundLocation,
+  sendGpsPoint,
+  type GpsAccuracy,
+} from '@/lib/backgroundLocation'
 
 /**
- * Background GPS tracking hook
+ * GPS tracking hook
  *
- * Starts foreground GPS while `isActive` is true (tech is EN_ROUTE / ON_SITE).
+ * Two tiers, in preference order:
  *
- * Reliability design:
- *  - Uses a dedicated axios client with a 5s timeout (see gpsClient.ts) so a
- *    slow /scheduling/gps endpoint can't stall the main API queue.
- *  - Circuit breaker: after 3 consecutive timeouts we back off by 2× each
- *    failure up to 5 min — no more log spam, no more futile attempts when
- *    the backend is unreachable.
+ *  1. Background (preferred) — hands the schedule to the OS via
+ *     expo-location + expo-task-manager, so fixes keep arriving when the app
+ *     is backgrounded or the screen is locked. See lib/backgroundLocation.ts.
+ *
+ *  2. Foreground polling (fallback) — the original setTimeout loop, used only
+ *     when background tracking is unavailable: "Always" permission denied,
+ *     Expo Go, or an unsupported device. It stops when the app leaves the
+ *     foreground, which is precisely the limitation tier 1 exists to remove.
+ *
+ * Only one tier runs at a time, so the server never receives duplicate fixes
+ * for the same moment.
+ *
+ * Fallback reliability design (unchanged from the original):
+ *  - Dedicated axios client with a 5s timeout (see gpsClient.ts) so a slow
+ *    /scheduling/gps endpoint can't stall the main API queue.
+ *  - Circuit breaker: after 3 consecutive timeouts back off by 2x each
+ *    failure up to 5 min.
  *  - Auto-resumes at normal cadence on the first successful ping.
- *  - All warnings are gated by __DEV__ so prod builds stay quiet.
+ *  - Warnings gated by __DEV__ so prod builds stay quiet.
  *
- * @param isActive - track when true (tech has an EN_ROUTE or ON_SITE job)
- * @param accuracy - 'high' while driving, 'balanced' on-site
+ * @param isActive - track when true (tech is on duty)
+ * @param accuracy - 'high' while driving, 'balanced' otherwise
  */
-export function useGPSTracking(isActive: boolean, accuracy: 'high' | 'balanced' = 'high') {
-  const sendGps = useSendGps()
+export function useGPSTracking(isActive: boolean, accuracy: GpsAccuracy = 'high') {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const consecutiveFailuresRef = useRef(0)
   const canceledRef = useRef(false)
@@ -36,18 +51,12 @@ export function useGPSTracking(isActive: boolean, accuracy: 'high' | 'balanced' 
           : Location.Accuracy.Balanced,
       })
 
-      await sendGps.mutateAsync({
-        lat: location.coords.latitude,
-        lng: location.coords.longitude,
-        accuracyM:  location.coords.accuracy ?? undefined,
-        speedKmh:   location.coords.speed ? location.coords.speed * 3.6 : undefined,
-        headingDeg: location.coords.heading ?? undefined,
-      })
+      await sendGpsPoint(location.coords)
 
       // Success — reset failure count
       consecutiveFailuresRef.current = 0
       return true
-    } catch (err: any) {
+    } catch {
       consecutiveFailuresRef.current += 1
       // Only warn once every 3 failures in dev; never in prod
       if (__DEV__ && consecutiveFailuresRef.current % 3 === 1) {
@@ -57,7 +66,7 @@ export function useGPSTracking(isActive: boolean, accuracy: 'high' | 'balanced' 
       }
       return false
     }
-  }, [accuracy, sendGps])
+  }, [accuracy])
 
   const scheduleNext = useCallback(() => {
     if (canceledRef.current) return
@@ -73,35 +82,56 @@ export function useGPSTracking(isActive: boolean, accuracy: 'high' | 'balanced' 
     }, delay)
   }, [baseIntervalMs, sendLocation])
 
+  const clearTimer = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+  }, [])
+
   useEffect(() => {
     canceledRef.current = false
 
     if (!isActive) {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-        timeoutRef.current = null
-      }
+      clearTimer()
       consecutiveFailuresRef.current = 0
+      void stopBackgroundLocation()
       return
     }
 
     ;(async () => {
+      // Tier 1: let the OS drive it, so a locked screen keeps reporting.
+      const backgroundStarted = await startBackgroundLocation(accuracy)
+      if (canceledRef.current) {
+        // isActive flipped off (or we unmounted) while permission prompts were
+        // up — don't leave an orphaned OS task running.
+        if (backgroundStarted) void stopBackgroundLocation()
+        return
+      }
+      if (backgroundStarted) {
+        // Send one fix immediately so the dispatcher sees the technician
+        // without waiting for the first OS-scheduled update.
+        void sendLocation()
+        return
+      }
+
+      // Tier 2: foreground-only polling.
+      if (__DEV__) {
+        console.warn('[GPS] Background tracking unavailable — foreground polling only')
+      }
       const { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== 'granted') {
         if (__DEV__) console.warn('[GPS] Foreground permission denied')
         return
       }
-      // Fire immediately, then schedule the next tick
+      if (canceledRef.current) return
       await sendLocation()
       scheduleNext()
     })()
 
     return () => {
       canceledRef.current = true
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-        timeoutRef.current = null
-      }
+      clearTimer()
     }
   }, [isActive, accuracy]) // eslint-disable-line react-hooks/exhaustive-deps
 }

@@ -10,6 +10,11 @@ import { SocketProvider, useSocketContext } from '@/contexts/SocketContext'
 import { queryClient } from '@/lib/queryClient'
 import { setupQueryPersistence } from '@/lib/queryPersistence'
 import { Colors } from '@/constants/theme'
+// Side-effect import: registers the background location task with TaskManager.
+// This MUST happen during module evaluation — the OS can wake the task on a
+// cold start before any component renders, and an unregistered task is
+// dropped. Do not make this lazy or move it inside a component.
+import '@/lib/backgroundLocation'
 
 /**
  * AppState foreground-refetch — when the user backgrounds and re-opens the

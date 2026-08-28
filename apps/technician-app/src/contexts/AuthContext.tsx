@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import api, { setAuthHeader } from '@/lib/api'
 import { setGpsAuthHeader } from '@/lib/gpsClient'
 import { clearPersistedQueryCache } from '@/lib/queryPersistence'
+import { stopBackgroundLocation } from '@/lib/backgroundLocation'
 import * as storage from '@/lib/storage'
 import type { TechUser, LoginResponse } from '@/types/api'
 
@@ -100,6 +101,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setAuthHeader(null)
     setGpsAuthHeader(null)
+    // The OS task outlives the React tree, so signing out has to tear it down
+    // explicitly — otherwise a signed-out phone keeps reporting its position.
+    await stopBackgroundLocation()
     clearPersistedQueryCache()
     await storage.clearAll()
   }
