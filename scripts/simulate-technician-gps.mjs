@@ -40,6 +40,27 @@
  *   --kmh <n>          Driving speed along the route in km/h      (default 32)
  *   --loop             Restart at the beginning on arrival
  *   --dry-run          Print the points without sending them
+ *
+ * Trial mode (live demo)
+ * ----------------------
+ * Waits for the technician to tap "En Route" in the app, then drives them to
+ * that job's address along real roads while the operator watches the map.
+ *
+ *   --watch-tech <id>  CompanyUser id of the technician to watch. Polls their
+ *                      jobs and starts driving when one turns EN_ROUTE.
+ *   --to-job <jobId>   Skip waiting; drive to this job now.
+ *   --to <lat,lng>     Skip waiting; drive to a fixed point now.
+ *   --from <lat,lng>   Where to start (default: the tech's last known
+ *                      position, else Colombo Fort).
+ *   --poll <s>         Seconds between EN_ROUTE checks           (default 5)
+ *   --hold             After arriving, keep sending the final position every
+ *                      30s so the marker does not go stale during the demo.
+ *   --osrm <url>       OSRM base URL      (default router.project-osrm.org)
+ *
+ *   node scripts/simulate-technician-gps.mjs \
+ *     --api https://nginx-gateway-2ohuhmktua-uc.a.run.app/api \
+ *     --email tech@kase.lk --password ... \
+ *     --watch-tech user-tech-001 --hold
  */
 
 import { readFileSync } from 'node:fs'
@@ -306,9 +327,251 @@ async function sendPoint(headers, point) {
   return { ok: res.ok, status: res.status, body }
 }
 
+// ── Trial mode: drive to a real job when the technician goes EN_ROUTE ────────
+//
+// During a live demo nobody knows the job id in advance — the customer creates
+// it minutes earlier. So instead of naming a job, name the technician and wait
+// for one of their jobs to flip to EN_ROUTE, then drive to wherever it is.
+
+async function apiGet(headers, path) {
+  const res = await fetch(`${API}${path}`, { headers: { 'Content-Type': 'application/json', ...headers } })
+  const text = await res.text()
+  if (!res.ok) throw new Error(`GET ${path} → HTTP ${res.status} ${text.slice(0, 200)}`)
+  try { return JSON.parse(text) } catch { throw new Error(`GET ${path} returned non-JSON`) }
+}
+
+function jobCoords(job) {
+  const lat = job?.serviceLatitude != null ? Number(job.serviceLatitude) : NaN
+  const lng = job?.serviceLongitude != null ? Number(job.serviceLongitude) : NaN
+  // 0,0 is the Gulf of Guinea, not Colombo — treat it as unset like the
+  // dashboard's own parseCoords does.
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) return null
+  return [lat, lng]
+}
+
+/** Poll until one of this technician's jobs is EN_ROUTE. Returns that job. */
+async function waitForEnRoute(headers, techUserId, pollSeconds) {
+  console.log(`  Waiting for a job of ${techUserId} to go EN_ROUTE (checking every ${pollSeconds}s)...`)
+  console.log('  Ctrl-C to stop.\n')
+  let announcedNoCoords = null
+  for (;;) {
+    let jobs = []
+    try {
+      const res = await apiGet(headers, `/jobs/jobs?status=EN_ROUTE&assignedToId=${encodeURIComponent(techUserId)}&limit=5`)
+      jobs = Array.isArray(res?.data) ? res.data : []
+    } catch (err) {
+      console.log(`  poll failed: ${err.message}`)
+    }
+
+    const withCoords = jobs.find((j) => jobCoords(j))
+    if (withCoords) return withCoords
+
+    if (jobs.length && announcedNoCoords !== jobs[0].id) {
+      // A job went EN_ROUTE but has no pin. Say so loudly: the operator's map
+      // shows no job marker and no route line either, so this looks like a
+      // tracking failure when it is really missing job data.
+      announcedNoCoords = jobs[0].id
+      console.log(`  ${jobs[0].jobNumber ?? jobs[0].id} is EN_ROUTE but has NO service coordinates.`)
+      console.log('  The dashboard cannot draw a job pin or a route line for it. Set a map')
+      console.log('  pin on the job, or pass --to <lat,lng> to drive to a fixed point.\n')
+    }
+    await sleep(pollSeconds * 1000)
+  }
+}
+
+/**
+ * Road-following route between two points via OSRM.
+ *
+ * A straight line between two Colombo points cuts across the lake and the
+ * rail yard, which reads as obviously fake on the operator's map. OSRM returns
+ * the actual driving geometry. Falls back to the straight line if the service
+ * is unreachable, because a demo that still runs beats one that aborts.
+ */
+async function roadRoute(from, to) {
+  const base = (args.osrm && args.osrm !== true ? String(args.osrm) : 'https://router.project-osrm.org')
+    .replace(/\/$/, '')
+  const url = `${base}/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(15000) })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const j = await res.json()
+    const coords = j?.routes?.[0]?.geometry?.coordinates
+    if (!Array.isArray(coords) || coords.length < 2) throw new Error('no geometry in response')
+    return { points: coords.map(([lng, lat]) => [lat, lng]), source: 'OSRM road route' }
+  } catch (err) {
+    console.log(`  OSRM unavailable (${err.message}) — falling back to a straight line.`)
+    return { points: [from, to], source: 'straight line (OSRM unavailable)' }
+  }
+}
+
+function parseLatLng(value, label) {
+  const m = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/.exec(String(value))
+  if (!m) fail(`${label} must be "lat,lng", got "${value}"`)
+  return [Number(m[1]), Number(m[2])]
+}
+
+/** Where the technician starts from: --from, else their last known position. */
+async function resolveStart(headers, techUserId) {
+  if (args.from && args.from !== true) return parseLatLng(args.from, '--from')
+  try {
+    const res = await apiGet(headers, '/scheduling/technicians')
+    const list = Array.isArray(res?.data) ? res.data : []
+    const tech = list.find((t) => t.userId === techUserId || t.id === techUserId)
+    const loc = tech?.currentLocation
+    if (loc && Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lng))) {
+      return [Number(loc.lat), Number(loc.lng)]
+    }
+  } catch { /* fall through to the default */ }
+  // Colombo Fort — a sane default so the demo never stalls on a missing start.
+  return [6.9344, 79.8428]
+}
+
+/**
+ * Drive a densified track, sending one fix per step. Shared by both modes.
+ * Returns { sent, failed }.
+ */
+async function driveTrack(track, headers, opts = {}) {
+  const wallGapMs = (INTERVAL_S / SPEED_MULT) * 1000
+  let sent = 0
+  let failed = 0
+
+  for (let i = 0; i < track.length; i++) {
+    if (opts.isStopping?.()) break
+    const { pos, heading } = track[i]
+    const point = {
+      lat: Number(pos[0].toFixed(6)),
+      lng: Number(pos[1].toFixed(6)),
+      accuracyM: 5 + Math.random() * 8,
+      speedKmh: KMH + (Math.random() * 8 - 4),
+      headingDeg: heading,
+      batteryPct: Math.max(15, Math.round(95 - (i / track.length) * 40)),
+    }
+
+    const label = `${String(i + 1).padStart(3)}/${track.length}  ${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}  ${Math.round(point.headingDeg)}deg`
+
+    if (DRY_RUN) {
+      console.log(`  ${label}`)
+    } else {
+      const res = await sendPoint(headers, point)
+      if (res.ok) {
+        sent++
+        console.log(`  ${label}  ok`)
+      } else {
+        failed++
+        console.log(`  ${label}  HTTP ${res.status} ${res.body.slice(0, 160)}`)
+        if ([401, 403, 404].includes(res.status)) {
+          console.error('\n  Stopping: that status will not recover.\n')
+          process.exit(1)
+        }
+      }
+    }
+    if (i < track.length - 1 && !opts.isStopping?.()) await sleep(wallGapMs)
+  }
+  return { sent, failed }
+}
+
+/**
+ * Trial mode — the live-demo path.
+ *
+ * Waits for the technician to tap "En Route" in the app, then drives them to
+ * that job's address along real roads while the operator watches the map.
+ */
+async function trialMode() {
+  const auth = DRY_RUN ? { headers: {}, who: 'dry run' } : await buildAuth()
+  const pollSeconds = Number(args.poll ?? 5)
+
+  console.log('')
+  console.log(`  Mode       trial (waiting for En Route)`)
+  console.log(`  Technician ${auth.who}`)
+  console.log(`  Endpoint   ${API}${GPS_PATH}`)
+  console.log('')
+
+  let stopping = false
+  process.on('SIGINT', () => { stopping = true; console.log('\n  Stopping.') })
+
+  // Destination: an explicit point, a named job, or whatever the technician
+  // goes en route to.
+  let destination
+  let label
+  if (args.to && args.to !== true) {
+    destination = parseLatLng(args.to, '--to')
+    label = `fixed point ${destination[0]}, ${destination[1]}`
+  } else if (args['to-job'] && args['to-job'] !== true) {
+    const job = await apiGet(auth.headers, `/jobs/jobs/${args['to-job']}`)
+    destination = jobCoords(job)
+    if (!destination) fail(`Job ${args['to-job']} has no service coordinates to drive to.`)
+    label = `${job.jobNumber ?? job.id} — ${job.serviceAddress ?? 'no address'}`
+  } else {
+    const techUserId = String(args['watch-tech'])
+    const job = await waitForEnRoute(auth.headers, techUserId, pollSeconds)
+    destination = jobCoords(job)
+    label = `${job.jobNumber ?? job.id} — ${job.serviceAddress ?? 'no address'}`
+    console.log(`  EN ROUTE detected: ${label}`)
+  }
+
+  const techUserId = args['watch-tech'] && args['watch-tech'] !== true
+    ? String(args['watch-tech']) : null
+  const start = await resolveStart(auth.headers, techUserId)
+
+  // Sanity check before generating a track. Seeded demo jobs carry US
+  // coordinates (Austin, TX), so an unlucky pick would silently start a
+  // 15,000 km drive with 60,000 fixes. A real service call is not 300 km.
+  const directKm = haversineM(start, destination) / 1000
+  const MAX_SANE_KM = Number(args['max-km'] ?? 300)
+  if (directKm > MAX_SANE_KM) {
+    fail(
+      `Destination is ${directKm.toFixed(0)} km from the start — that is not a service call.\n` +
+      `    start:       ${start[0]}, ${start[1]}\n` +
+      `    destination: ${destination[0]}, ${destination[1]}\n` +
+      `    ${label}\n\n` +
+      '  Most likely the job carries seeded US coordinates rather than real ones.\n' +
+      '  Fix the job\'s map pin, pass --to <lat,lng>, or raise --max-km to override.',
+    )
+  }
+
+  const route = await roadRoute(start, destination)
+  const stepM = (KMH * 1000 / 3600) * INTERVAL_S
+  const track = densify(route.points, stepM)
+  const km = (route.points.slice(1)
+    .reduce((s, p, i) => s + haversineM(route.points[i], p), 0) / 1000).toFixed(1)
+
+  console.log('')
+  console.log(`  Destination ${label}`)
+  console.log(`  Start       ${start[0].toFixed(5)}, ${start[1].toFixed(5)}`)
+  console.log(`  Path        ${route.source}, ${km} km`)
+  console.log(`  Driving     ${track.length} fixes at ${KMH} km/h, ${SPEED_MULT}x real time`)
+  console.log('')
+
+  const { sent, failed } = await driveTrack(track, auth.headers, { isStopping: () => stopping })
+
+  console.log(`\n  Arrived. ${sent} sent, ${failed} failed.`)
+  console.log('  The technician can now tap "Arrived" in the app.\n')
+
+  // Hold position so the marker does not go stale mid-demo while the operator
+  // is still looking at it.
+  if (args.hold && !stopping) {
+    console.log('  Holding position (Ctrl-C to stop)...')
+    const last = track.at(-1).pos
+    while (!stopping) {
+      await sleep(30000)
+      if (stopping) break
+      await sendPoint(auth.headers, {
+        lat: Number(last[0].toFixed(6)), lng: Number(last[1].toFixed(6)),
+        accuracyM: 6, speedKmh: 0, headingDeg: 0, batteryPct: 55,
+      })
+      console.log(`  holding ${last[0].toFixed(5)}, ${last[1].toFixed(5)}`)
+    }
+  }
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
+  // Trial mode short-circuits the built-in routes entirely.
+  if (args['watch-tech'] || args['to-job'] || args.to) {
+    return trialMode()
+  }
+
   const route = loadRoute(args.route === true ? undefined : args.route)
 
   // Metres covered between fixes at the configured driving speed.
