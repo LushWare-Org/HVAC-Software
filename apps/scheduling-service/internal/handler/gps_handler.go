@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -58,8 +59,13 @@ func (h *GPSHandler) RecordGPS(c *gin.Context) {
 
 	// 1. Insert into gps_tracking time-series (async — we don't need the result)
 	go func() {
-		// Use a fresh context since the request context will be cancelled
-		ctx := c.Request.Context()
+		// A detached context, NOT c.Request.Context(): Gin cancels the request
+		// context as soon as the handler returns, and this goroutine outlives
+		// the response. Deriving from the request context made the insert race
+		// its own teardown and silently drop points — measured at roughly one
+		// in five under load, which is how route history grew holes.
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 		if err := h.assignRepo.InsertGPSPoint(
 			ctx, tech.ID, claims.CompanyID,
 			req.Lat, req.Lng, req.AccuracyM, req.SpeedKmh, req.HeadingDeg, req.BatteryPct,
