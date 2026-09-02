@@ -147,6 +147,7 @@ assignedToId      String?    // now: THE LEAD's CompanyUser id
 assignedToName    String?    // now: THE LEAD's name
 crewUserIds       String[]   @default([])   // all crew, lead included
 requiredTechCount Int?                      // optional target
+crewEvents        JobCrewEvent[]            // audit trail, see Lead handover
 ```
 
 `assignedToId` is redefined rather than replaced, so the customer portal,
@@ -240,10 +241,92 @@ Removing the lead without naming a replacement is rejected with a clear error.
 The partial unique index makes a headless crew impossible at the database
 level, and the API surfaces it as a validation message rather than a 500.
 
-Job completion stays the lead's action. A job whose lead marks it complete
-while another member's work order is still open surfaces a warning in the
-dashboard; it is not blocked, because the office often knows the remaining
-work was cancelled.
+### Lead handover
+
+A lead can hand over mid-job — they go home sick, or a senior technician
+arrives later and takes over.
+
+```
+PATCH /scheduling/dispatch/jobs/:jobId/lead   { technicianId, reason? }
+```
+
+Permitted to the **current lead** and to any dispatcher or admin. Not to other
+crew members: a handover is a decision, not a self-service action.
+
+The new lead must already be on the crew. Handing over to someone who is not
+assigned is rejected with "Add them to the crew first" rather than silently
+adding them, because a lead who is not on site is worse than no change.
+
+**Implementation note.** The two rows must be updated as *unset old, then set
+new*, in a transaction. A partial unique index cannot be deferred in Postgres,
+so a single `UPDATE` touching both rows can transiently violate
+`uq_assignment_job_lead` depending on row order. Two statements inside one
+transaction never do.
+
+Handover is auditable — "who was in charge at 14:00" is exactly the question
+asked after something goes wrong. It cannot reuse `JobStatusHistory`, whose
+`toStatus` is a required `JobStatus` enum; a handover is not a status change
+and forcing it in would corrupt that table's meaning. A new record covers crew
+history generally:
+
+```prisma
+model JobCrewEvent {
+  id            String   @id @default(uuid())
+  companyId     String
+  jobId         String
+  job           Job      @relation(fields: [jobId], references: [id])
+  event         JobCrewEventType   // ADDED, REMOVED, LEAD_CHANGED, CHECKED_OUT
+  technicianId  String             // subject of the event
+  technicianName String
+  previousLeadId String?           // set only for LEAD_CHANGED
+  actorId       String             // who did it
+  actorName     String
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  @@index([companyId, jobId])
+  @@map("job_crew_events")
+}
+```
+
+This also gives crew additions and removals an audit trail, which the job
+detail view renders as a timeline beside the existing status history.
+
+`Job.assignedToId` and `assignedToName` update to the new lead in the same
+transaction.
+
+**Customer notification:** only when the job is already `EN_ROUTE` or later.
+Before then the customer has not been told who is coming, so there is nothing
+to correct. After, they have a name and a photo that are now wrong, and they
+get a short "David Chen has handed over to Rachel Kim" message with the new
+lead's photo. A handover on a job the customer has never been notified about
+stays silent.
+
+### Leaving before the job ends
+
+A non-lead completes their own work order and leaves while the job continues.
+Their `WorkOrder.status` becomes `COMPLETED` with `checkoutAt` set and their
+signature captured if the tenant requires one; their assignment status becomes
+`COMPLETED`. `Job.status` is untouched — only the lead moves that.
+
+They stay in `crewUserIds` and on the job's crew list permanently. The crew is
+who worked the job, not who is currently standing on site. The dashboard
+distinguishes the two: a departed member is shown greyed with their checkout
+time, so "Rachel left at 11:00" is visible rather than inferred from an absence.
+
+The job's own GPS and route line follow the **lead**, so a departed member's
+position stops being drawn for this job even though live tracking continues for
+their next one.
+
+Job completion stays the lead's action. Two orderings need handling:
+
+- **Lead completes while others are still open.** Allowed with a warning naming
+  who is still working. Not blocked: the office often knows the remaining work
+  was cancelled. Their open work orders are left open for the office to close.
+- **Lead tries to complete their own work order but others are still working.**
+  The dashboard and app prompt "Hand over lead before you leave?" and offer the
+  handover action inline. Also not blocked — a lead can legitimately leave a
+  helper to finish tidying — but the prompt makes the better path the easy one.
 
 ## Customer communications
 
@@ -303,6 +386,13 @@ the same site.
 - Removing the last member: allowed, leaves the job unassigned and clears
   `assignedToId`. This is how a dispatcher undoes a mistake.
 - Removing the lead with others remaining: rejected, "Choose a new lead first".
+- Handing over to someone not on the crew: rejected, "Add them to the crew first".
+- Handing over to a member who has already checked out: rejected, "Rachel Kim
+  left at 11:00" — a departed lead is the problem handover exists to solve.
+- Two dispatchers handing over simultaneously: the unique lead index means the
+  second transaction fails; it is retried once against fresh state, then
+  surfaced as "The lead changed while you were editing. Reload to see who is
+  leading now."
 - Confirming a crew smaller or larger than `requiredTechCount`: allowed. The
   button states what it will do ("Confirm crew of 2"), so it can never silently
   disagree with the target.
@@ -318,6 +408,13 @@ the same site.
   concurrent writes, conflict detection across day boundaries and adjacent
   windows (a job ending exactly when another starts is not a conflict),
   candidate scoring with and without `base_location`.
+- **Go, handover:** unset-then-set ordering does not trip
+  `uq_assignment_job_lead`; a single-statement swap is written as a failing
+  test first, to document *why* the two-statement form exists so nobody
+  "simplifies" it later. Concurrent handovers leave exactly one lead.
+- **Jest, job-service:** a non-lead completing does not move `Job.status`; a
+  departed member stays in `crewUserIds`; the lead completing with others open
+  returns a warning payload rather than an error.
 - **Jest, job-service:** `crewUserIds` stays consistent with assignments,
   lead-only status transitions, work order creation per member.
 - **Jest, comms-service:** crew email renders all members, marks the lead, falls
