@@ -53,3 +53,6 @@ prisma/generated/
 # Database export archives (share manually, not via git)
 exports/
 apps/admin-dashboard/.env.production
+
+# Superpowers brainstorming session files (mockups, local only)
+.superpowers/
