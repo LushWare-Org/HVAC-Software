@@ -589,6 +589,12 @@ export class JobsService {
       componentId: string | null;
       equipmentId: string | null;
       currency: string;
+      estimatedValue: number;
+      /** Drives day-plan packing — see UpdateJobDto for why it's editable. */
+      estimatedDurationMins: number;
+      /** Target crew size. Guidance for the crew panel's "n of m" counter, not
+       *  a constraint the server enforces. */
+      requiredTechCount: number;
     }>,
   ) {
     await this.findOne(companyId, id);

@@ -14,6 +14,7 @@ import { useJobs, useUpdateJobFields } from '../../hooks/useJobs'
 import { useTechnicians, useManualAssign } from '../../hooks/useScheduling'
 import { techOnProjectMessage, useRostersByDate, toDateKey } from '../projects/projectsApi'
 import ProjectComponentTag from '../projects/ProjectComponentTag'
+import CrewControlCenter from './crew/CrewControlCenter'
 import { useServiceAgreements, type Agreement } from '../../hooks/useAgreements'
 import { useCreateThread, useSendThreadMessage } from '../../hooks/useComms'
 import { useToast } from '../../contexts/ToastContext'
@@ -116,7 +117,10 @@ export default function BoardPlan({
   const [outreachTarget, setOutreachTarget] = useState<Agreement | null>(null)
   const [outreachText, setOutreachText] = useState('')
   const [planPreview, setPlanPreview] = useState<ProposedAssignment[] | null>(null)
-  const [previewEdits, setPreviewEdits] = useState<Record<string, { techId: string; time: string }>>({})
+  const [previewEdits, setPreviewEdits] = useState<Record<string, { techId: string; time: string; durationMins: number }>>({})
+  /** Job whose crew is being edited. The panel is the only place a crew of more
+   *  than one can be built, so the table row is its entry point. */
+  const [crewJob, setCrewJob] = useState<Job | null>(null)
   const [applying, setApplying] = useState(false)
   const [mapExpanded, setMapExpanded] = useState(false)
 
@@ -213,7 +217,11 @@ export default function BoardPlan({
       // always the algorithm's best guess; editing a row only overrides it.
       setPreviewEdits(Object.fromEntries(plan.map(p => [
         p.job.id,
-        { techId: p.tech.id, time: `${String(p.start.getHours()).padStart(2, '0')}:${String(p.start.getMinutes()).padStart(2, '0')}` },
+        {
+          techId: p.tech.id,
+          time: `${String(p.start.getHours()).padStart(2, '0')}:${String(p.start.getMinutes()).padStart(2, '0')}`,
+          durationMins: p.job.estimatedDurationMins ?? DEFAULT_DURATION_MIN,
+        },
       ])))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -266,16 +274,25 @@ export default function BoardPlan({
     for (const p of planPreview) {
       const edit = previewEdits[p.job.id]
       const tech = (edit ? techs.find(t => t.id === edit.techId) : null) ?? p.tech
-      let start = p.start, end = p.end
+      // A duration edited here is a real correction to the job, not just a
+      // one-off for this plan — persist it so later re-plans use it too.
+      const originalDuration = p.job.estimatedDurationMins ?? DEFAULT_DURATION_MIN
+      const durMin = edit?.durationMins ?? originalDuration
+      let start = p.start
+      let end = new Date(start.getTime() + durMin * 60_000)
       if (edit?.time) {
         const [h, m] = edit.time.split(':').map(Number)
         if (Number.isFinite(h) && Number.isFinite(m)) {
           start = new Date(date); start.setHours(h, m, 0, 0)
-          const durMin = p.job.estimatedDurationMins ?? DEFAULT_DURATION_MIN
           end = new Date(start.getTime() + durMin * 60_000)
         }
       }
-      try { await assignJob(p.job, tech, start, end); ok += 1 } catch { failed += 1 }
+      try {
+        if (durMin !== p.job.estimatedDurationMins) {
+          await updateJob.mutateAsync({ id: p.job.id, estimatedDurationMins: durMin } as any)
+        }
+        await assignJob(p.job, tech, start, end); ok += 1
+      } catch { failed += 1 }
     }
     setApplying(false)
     setPlanPreview(null)
@@ -465,6 +482,16 @@ export default function BoardPlan({
       </div>
 
       {viewJob && <Suspense fallback={null}><JobDetailModal isOpen={!!viewJob} onClose={() => setViewJob(null)} job={viewJob} /></Suspense>}
+      <CrewControlCenter
+        job={crewJob}
+        open={!!crewJob}
+        onClose={() => setCrewJob(null)}
+        onOpenJob={(jobId) => {
+          const j = [...dayJobs, ...unassigned].find(x => x.id === jobId)
+          if (j) { setCrewJob(null); setViewJob(j) }
+        }}
+      />
+
       {viewTech && (
         <TechnicianModal tech={viewTech} jobs={techJobs.get(viewTech.userId) ?? []} dayLabel={dayLabel(date)} onClose={() => setViewTech(null)} onSelectJob={j => { setViewTech(null); setViewJob(j) }} />
       )}
@@ -545,12 +572,17 @@ export default function BoardPlan({
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--bd)', background: 'var(--bg-card-2)' }}>
-                      {['Job', 'Technician', 'Time', 'Est. leg'].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 16px', fontSize: 10.5, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>)}
+                      {['Job', 'Technician', 'Crew', 'Time', 'Duration', 'Est. leg'].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 16px', fontSize: 10.5, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>)}
                     </tr>
                   </thead>
                   <tbody>
                     {planPreview.map(p => {
-                      const edit = previewEdits[p.job.id] ?? { techId: p.tech.id, time: `${String(p.start.getHours()).padStart(2, '0')}:${String(p.start.getMinutes()).padStart(2, '0')}` }
+                      const edit = previewEdits[p.job.id] ?? {
+                        techId: p.tech.id,
+                        time: `${String(p.start.getHours()).padStart(2, '0')}:${String(p.start.getMinutes()).padStart(2, '0')}`,
+                        durationMins: p.job.estimatedDurationMins ?? DEFAULT_DURATION_MIN,
+                      }
+                      const durationChanged = edit.durationMins !== (p.job.estimatedDurationMins ?? DEFAULT_DURATION_MIN)
                       const changed = edit.techId !== p.tech.id
                       return (
                         <tr key={p.job.id} style={{ borderBottom: '1px solid var(--bd)' }}>
@@ -580,6 +612,27 @@ export default function BoardPlan({
                             </select>
                           </td>
                           <td style={{ padding: '12px 16px', minWidth: 150 }}>
+                            {/* The row says what is wrong in plain words, so nobody
+                                has to open the panel to DISCOVER a problem, only to
+                                fix one. That is what makes glancing at eight rows safe. */}
+                            <button
+                              type="button"
+                              onClick={() => setCrewJob(p.job)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 6, width: '100%',
+                                background: 'none', border: '1px dashed var(--bd)', borderRadius: 7,
+                                padding: '6px 8px', cursor: 'pointer', textAlign: 'left',
+                              }}
+                            >
+                              <TechAvatar id={edit.techId} name={techs.find(t => t.id === edit.techId)?.name} size={20} />
+                              <span style={{ fontSize: 11, color: 'var(--t3)' }}>
+                                {(p.job.requiredTechCount ?? 0) > 1
+                                  ? `1 of ${p.job.requiredTechCount} · add crew`
+                                  : 'Add crew'}
+                              </span>
+                            </button>
+                          </td>
+                          <td style={{ padding: '12px 16px', minWidth: 150 }}>
                             <input
                               type="time"
                               className="form-input"
@@ -604,6 +657,36 @@ export default function BoardPlan({
                                 fontSize: 10, fontWeight: 700, color: '#B45309',
                               }}>
                                 <AlertCircle size={10} /> asked for {fmtTime(p.requestedTimeConflict.requested.toISOString())}
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '12px 16px', minWidth: 130 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <input
+                                type="number"
+                                min={5}
+                                max={1440}
+                                step={5}
+                                className="form-input"
+                                style={{
+                                  fontSize: 12.5, padding: '7px 8px', height: 36, width: 72,
+                                  borderColor: durationChanged ? 'var(--blue)' : undefined,
+                                }}
+                                value={edit.durationMins}
+                                onChange={e => {
+                                  const next = Number(e.target.value)
+                                  setPreviewEdits(prev => ({
+                                    ...prev,
+                                    [p.job.id]: { ...edit, durationMins: Number.isFinite(next) && next > 0 ? next : DEFAULT_DURATION_MIN },
+                                  }))
+                                }}
+                                aria-label={`Duration for ${p.job.title} in minutes`}
+                              />
+                              <span style={{ fontSize: 11, color: 'var(--t4)' }}>min</span>
+                            </div>
+                            {p.job.estimatedDurationMins == null && (
+                              <span title="No duration set on this job — using the default" style={{ fontSize: 10, color: 'var(--t4)' }}>
+                                default
                               </span>
                             )}
                           </td>

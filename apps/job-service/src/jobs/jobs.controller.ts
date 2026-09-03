@@ -4,7 +4,7 @@ import {
   DefaultValuePipe, ParseIntPipe, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { IsOptional, IsString, IsArray, IsEnum, IsBoolean, IsDateString, IsNumber } from 'class-validator';
+import { IsOptional, IsString, IsArray, IsEnum, IsBoolean, IsDateString, IsNumber, IsInt, Min, Max } from 'class-validator';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { JobsService } from './jobs.service';
@@ -24,6 +24,17 @@ class UpdateJobDto {
   @IsOptional() @IsString() internalNotes?: string;
   @IsOptional() @IsArray() @IsString({ each: true }) tags?: string[];
   @IsOptional() @IsNumber() estimatedValue?: number;
+  /**
+   * How long the visit is expected to take. The day-planner packs a
+   * technician's route from this, so it must stay editable after creation —
+   * a dispatcher who learns a job is bigger than booked needs to correct it.
+   * Bounded so a typo can't blow out a whole day's plan.
+   */
+  @IsOptional() @IsInt() @Min(5) @Max(1440) estimatedDurationMins?: number;
+  /** Optional target crew size. Guidance for smart assign and the "n of m"
+   *  counter, never a rule — a dispatcher may confirm any size. Capped at 20
+   *  because a crew larger than that is a data-entry slip, not a job. */
+  @IsOptional() @IsInt() @Min(1) @Max(20) requiredTechCount?: number;
   @IsOptional() @IsString() cancellationReason?: string;
   @IsOptional() @IsString() projectId?: string;
   @IsOptional() @IsString() componentId?: string;

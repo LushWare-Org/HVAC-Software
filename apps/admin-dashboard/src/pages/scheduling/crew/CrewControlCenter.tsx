@@ -80,6 +80,17 @@ export default function CrewControlCenter({
     )
   }, [open, job?.id, crewQuery.data]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Every hook must run on every render, so this sits above the early return.
+  // Putting it after meant the hook count changed when the panel opened, which
+  // React reports as "Rendered more hooks than during the previous render".
+  const site = useMemo(() => {
+    const lat = job?.serviceLatitude != null ? Number(job.serviceLatitude) : NaN
+    const lng = job?.serviceLongitude != null ? Number(job.serviceLongitude) : NaN
+    // 0,0 is the Gulf of Guinea, not a real service address.
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) return null
+    return { lat, lng }
+  }, [job?.serviceLatitude, job?.serviceLongitude])
+
   if (!open || !job) return null
 
   const candidates = candidatesQuery.data ?? []
@@ -151,13 +162,6 @@ export default function CrewControlCenter({
     ]
     return { id: d.technician.id, name: d.technician.name, blocks }
   })
-
-  const site = useMemo(() => {
-    const lat = job.serviceLatitude != null ? Number(job.serviceLatitude) : NaN
-    const lng = job.serviceLongitude != null ? Number(job.serviceLongitude) : NaN
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) return null
-    return { lat, lng }
-  }, [job.serviceLatitude, job.serviceLongitude])
 
   // Crew members first, then anyone suggested but not yet added, so the map
   // shows both who is going and who else is nearby.
