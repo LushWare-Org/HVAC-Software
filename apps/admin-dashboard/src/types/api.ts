@@ -548,6 +548,10 @@ export interface Technician {
   totalRatings: number
   lastSeenAt?: string
   currentLocation?: { lat: number; lng: number }
+  /** Where the technician starts their day, falling back to their last known
+   *  position. Used for planning future jobs, where a live position predicts
+   *  nothing about where they will set off from. */
+  baseLocation?: { lat: number; lng: number }
   speedKmh?: number
   headingDeg?: number
   batteryPct?: number

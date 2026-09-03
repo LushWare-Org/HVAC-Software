@@ -537,7 +537,7 @@ func (r *TechnicianRepository) FindCrewCandidates(
 		SELECT sub.id, sub.company_id, sub.user_id, sub.name, sub.phone, sub.avatar_url,
 		       sub.skills, sub.max_daily_jobs, sub.is_active, sub.rating, sub.total_ratings,
 		       sub.last_seen_at, sub.created_at, sub.updated_at,
-		       sub.distance_km, sub.from_base
+		       sub.distance_km, sub.from_base, sub.base_lat, sub.base_lng
 		FROM (
 		  SELECT t.id, t.company_id, t.user_id, t.name, t.phone, t.avatar_url,
 		         t.skills, t.max_daily_jobs, t.is_active, t.rating, t.total_ratings,
@@ -548,7 +548,9 @@ func (r *TechnicianRepository) FindCrewCandidates(
 		                     ST_SetSRID(ST_MakePoint($3, $2), 4326)
 		                   ) / 1000.0
 		         END AS distance_km,
-		         (t.base_location IS NOT NULL) AS from_base
+		         (t.base_location IS NOT NULL) AS from_base,
+		         ST_Y(COALESCE(t.base_location, t.current_location)::geometry) AS base_lat,
+		         ST_X(COALESCE(t.base_location, t.current_location)::geometry) AS base_lng
 		  FROM scheduling.technicians t
 		  WHERE t.company_id = $1
 		    AND t.is_active = TRUE
@@ -567,17 +569,22 @@ func (r *TechnicianRepository) FindCrewCandidates(
 	for rows.Next() {
 		var c CrewCandidateRow
 		var skills []string
+		var lat, lng *float64
 		if err := rows.Scan(
 			&c.Technician.ID, &c.Technician.CompanyID, &c.Technician.UserID,
 			&c.Technician.Name, &c.Technician.Phone, &c.Technician.AvatarURL,
 			&skills, &c.Technician.MaxDailyJobs, &c.Technician.IsActive,
 			&c.Technician.Rating, &c.Technician.TotalRatings, &c.Technician.LastSeenAt,
 			&c.Technician.CreatedAt, &c.Technician.UpdatedAt,
-			&c.BaseDistanceKm, &c.FromBase,
+			&c.BaseDistanceKm, &c.FromBase, &lat, &lng,
 		); err != nil {
 			return nil, err
 		}
 		c.Technician.Skills = skills
+		// Whichever point the distance was measured from, so the map can pin it.
+		if lat != nil && lng != nil {
+			c.Technician.BaseLocation = &models.GeoPoint{Lat: *lat, Lng: *lng}
+		}
 		out = append(out, c)
 	}
 	return out, rows.Err()

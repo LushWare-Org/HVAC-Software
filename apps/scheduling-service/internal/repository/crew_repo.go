@@ -58,7 +58,9 @@ func (r *CrewRepository) FindCrew(ctx context.Context, companyID, jobID string) 
 		       a.is_lead, a.score, a.distance_km, a.base_distance_km,
 		       a.assigned_at, a.scheduled_start, a.scheduled_end,
 		       t.user_id, t.name, t.phone, t.avatar_url, t.skills, t.rating,
-		       t.max_daily_jobs
+		       t.max_daily_jobs,
+		       ST_Y(COALESCE(t.base_location, t.current_location)::geometry),
+		       ST_X(COALESCE(t.base_location, t.current_location)::geometry)
 		FROM   scheduling.dispatch_assignments a
 		JOIN   scheduling.technicians t ON t.id = a.technician_id
 		WHERE  a.company_id = $1
@@ -74,6 +76,7 @@ func (r *CrewRepository) FindCrew(ctx context.Context, companyID, jobID string) 
 	crew := []models.CrewMember{}
 	for rows.Next() {
 		var m models.CrewMember
+		var baseLat, baseLng *float64
 		if err := rows.Scan(
 			&m.Assignment.ID, &m.Assignment.CompanyID, &m.Assignment.JobID,
 			&m.Assignment.TechnicianID, &m.Assignment.Status, &m.Assignment.IsLead,
@@ -81,12 +84,17 @@ func (r *CrewRepository) FindCrew(ctx context.Context, companyID, jobID string) 
 			&m.Assignment.AssignedAt, &m.Assignment.ScheduledStart, &m.Assignment.ScheduledEnd,
 			&m.Technician.UserID, &m.Technician.Name, &m.Technician.Phone,
 			&m.Technician.AvatarURL, &m.Technician.Skills, &m.Technician.Rating,
-			&m.Technician.MaxDailyJobs,
+			&m.Technician.MaxDailyJobs, &baseLat, &baseLng,
 		); err != nil {
 			return nil, err
 		}
 		m.Technician.ID = m.Assignment.TechnicianID
 		m.Technician.CompanyID = companyID
+		// Base where known, live position otherwise, so the crew map can pin
+		// every member rather than only the ones who have set a base.
+		if baseLat != nil && baseLng != nil {
+			m.Technician.BaseLocation = &models.GeoPoint{Lat: *baseLat, Lng: *baseLng}
+		}
 		crew = append(crew, m)
 	}
 	return crew, rows.Err()
