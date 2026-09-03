@@ -315,6 +315,9 @@ interface Props {
   assignedJobs: Job[]
   unassignedJobs: Job[]
   assignmentByJobId: Record<string, DispatchAssignment | undefined>
+  /** Every assignment across the board, not one per job. Workload must count
+   *  each crew member; the lead-only map would undercount a helper to zero. */
+  allAssignments: DispatchAssignment[]
   loginMap?: Record<string, string>
   onOpenJob?: (job: Job, assignment?: DispatchAssignment) => void
   onSmartAssign?: (job: Job) => void
@@ -341,6 +344,7 @@ export default function DispatchMap({
   assignedJobs,
   unassignedJobs,
   assignmentByJobId,
+  allAssignments,
   loginMap = {},
   onOpenJob,
   onSmartAssign,
@@ -372,15 +376,18 @@ export default function DispatchMap({
   const staleTechs = useMemo(() => techsWithAvail.filter(x => !AVAIL[x.tier].isLive && x.t.currentLocation), [techsWithAvail])
 
   // ── Workload per tech ──────────────────────────────────────────────────────────
+  // Counts EVERY crew member's assignment, not one per job. Using
+  // assignmentByJobId here would see only the lead, so a helper working three
+  // jobs would show a workload of zero and be ranked as completely free.
   const activeJobCountByTech = useMemo(() => {
     const m: Record<string, number> = {}
-    Object.values(assignmentByJobId).forEach(a => {
+    allAssignments.forEach(a => {
       if (a && ['ASSIGNED', 'EN_ROUTE', 'ON_SITE'].includes(a.status)) {
         m[a.technicianId] = (m[a.technicianId] ?? 0) + 1
       }
     })
     return m
-  }, [assignmentByJobId])
+  }, [allAssignments])
 
   // ── Scope-filtered jobs ────────────────────────────────────────────────────────
   const scopedAssigned   = useMemo(() => assignedJobs.filter(j => jobInScope(j, scope)), [assignedJobs, scope])
@@ -395,7 +402,9 @@ export default function DispatchMap({
     [...scopedAssigned, ...scopedUnassigned].filter(j => !parseCoords(j)).length
   , [scopedAssigned, scopedUnassigned])
 
-  // ── Routing lines: techs with EN_ROUTE / ON_SITE assignments ─────────────────
+  // ── Routing lines: one per JOB, drawn from the lead ─────────────────────────
+  // Deliberately iterates the lead-only map. Using allAssignments would draw one
+  // line per crew member, stacking three identical lines to the same pin.
   const routeLines = useMemo(() => {
     const lines: { techPos: [number, number]; jobPos: [number, number]; status: string }[] = []
     Object.values(assignmentByJobId).forEach(a => {

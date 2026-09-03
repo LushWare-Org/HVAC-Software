@@ -137,10 +137,25 @@ export default function Scheduling() {
   const allAssignmentsQuery = useAllTechAssignments(techIds)
   const allAssignments = allAssignmentsQuery.data ?? []
 
+  /**
+   * The LEAD's assignment for each job.
+   *
+   * Every consumer asks "what is this job's assignment" — to open it, to test
+   * whether it is assigned, to show its status. The lead is the right answer to
+   * all of them, because the lead drives Job.status by design.
+   *
+   * Anything needing EVERY crew member (workload counts, per-member pins) must
+   * use `allAssignments` instead. Collapsing many assignments to one is exactly
+   * how a helper on three jobs ends up looking free.
+   */
   const assignmentByJobId = useMemo(() => {
     return allAssignments.reduce<Record<string, typeof allAssignments[number]>>((acc, assignment) => {
       const current = acc[assignment.jobId]
       if (!current) { acc[assignment.jobId] = assignment; return acc }
+      // Prefer the lead. Fall back to most-recently-updated for rows written
+      // before is_lead existed.
+      if (assignment.isLead && !current.isLead) { acc[assignment.jobId] = assignment; return acc }
+      if (current.isLead) return acc
       const currentTime = new Date(current.updatedAt ?? current.assignedAt ?? 0).getTime()
       const nextTime = new Date(assignment.updatedAt ?? assignment.assignedAt ?? 0).getTime()
       if (nextTime >= currentTime) acc[assignment.jobId] = assignment
@@ -360,6 +375,7 @@ export default function Scheduling() {
           techs={techs}
           loginMap={loginMap}
           assignmentByJobId={assignmentByJobId}
+          allAssignments={allAssignments}
           onOpenJob={handleOpenJob}
           onSmartAssign={handleSmartAssign}
           onManualAssign={handleManualAssign}

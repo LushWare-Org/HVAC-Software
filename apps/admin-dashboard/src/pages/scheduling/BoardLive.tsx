@@ -6,7 +6,7 @@
  */
 import { lazy, Suspense, useState } from 'react'
 import { Loader2, Zap, Users, Phone, Maximize2, Minimize2 } from 'lucide-react'
-import type { Job, Technician, ScoredTechnician } from '../../types/api'
+import type { Job, Technician, ScoredTechnician, DispatchAssignment } from '../../types/api'
 import Avatar from '../../components/Avatar'
 import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 import { getTechAvailability, AVAIL_META, type AvailabilityTier } from './availability'
@@ -15,7 +15,7 @@ import ProjectComponentTag from '../projects/ProjectComponentTag'
 const DispatchMap = lazy(() => import('../dispatch/DispatchMap'))
 
 export default function BoardLive({
-  pendingJobs, assignedJobs, unassignedJobs, techs, loginMap, assignmentByJobId,
+  pendingJobs, assignedJobs, unassignedJobs, techs, loginMap, assignmentByJobId, allAssignments,
   onOpenJob, onSmartAssign, onManualAssign, isAssigning, smartAssigningJobId,
   smartSuggestions, onSelectTech,
 }: {
@@ -25,6 +25,9 @@ export default function BoardLive({
   techs: Technician[]
   loginMap: Record<string, string>
   assignmentByJobId: Record<string, any>
+  /** Every assignment, not just the lead's. Needed for per-technician workload,
+   *  which undercounts badly if it only sees one assignment per job. */
+  allAssignments: DispatchAssignment[]
   onOpenJob: (job: Job, assignment?: any) => void
   onSmartAssign: (job: Job) => void
   onManualAssign: (jobId: string, techId: string) => void
@@ -129,6 +132,7 @@ export default function BoardLive({
             assignedJobs={assignedJobs}
             unassignedJobs={unassignedJobs}
             assignmentByJobId={assignmentByJobId}
+            allAssignments={allAssignments}
             loginMap={loginMap}
             onOpenJob={onOpenJob}
             onSmartAssign={onSmartAssign}
