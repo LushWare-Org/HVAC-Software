@@ -13,6 +13,9 @@ out/
 .env.local
 .env.*.local
 
+tscrm-env-restore.sh
+tscrm-env-setup.md
+
 # Logs
 *.log
 npm-debug.log*

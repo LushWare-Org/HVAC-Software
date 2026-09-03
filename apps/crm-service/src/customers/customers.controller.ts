@@ -29,15 +29,20 @@ import {
 } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import { CustomersService } from './customers.service';
+import { CustomersLookupService } from './customers-lookup.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { MatchCustomerDto } from './dto/match-customer.dto';
 
 @ApiTags('Customers')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('customers')
 export class CustomersController {
-  constructor(private readonly customersService: CustomersService) {}
+  constructor(
+    private readonly customersService: CustomersService,
+    private readonly customersLookupService: CustomersLookupService,
+  ) {}
 
   // ---- Customer Portal: Get own profile ----
   @Get('me')
@@ -148,6 +153,34 @@ export class CustomersController {
   ) {
     const companyId = user.role === Role.SUPER_ADMIN && queryCompanyId ? queryCompanyId : user.companyId;
     return this.customersService.resolveAudienceMembers(companyId, filters ?? '[]', limit);
+  }
+
+  @Get('lookup/by-phone')
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({
+    summary: 'Resolve an inbound caller ID to exactly one customer',
+    description:
+      'Matches on phone or mobile, ignoring formatting and country code. Returns ' +
+      '{ result: "found" | "not_found" | "ambiguous" }. Ambiguous means the number is ' +
+      'shared by more than one customer — ask for a name rather than guessing.',
+  })
+  @ApiQuery({ name: 'phone', required: true, type: String })
+  lookupByPhone(@CurrentUser() user: AuthUser, @Query('phone') phone: string) {
+    return this.customersLookupService.findByPhone(user.companyId, phone ?? '');
+  }
+
+  @Post('lookup/match')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({
+    summary: 'Confirm whether a caller is an existing customer, by name + address',
+    description:
+      'For an existing customer calling from an unrecognised number. This confirms or ' +
+      'denies a specific person; it never returns candidates, so it cannot be used to ' +
+      'discover who lives at an address. Prevents duplicate customer records.',
+  })
+  matchCustomer(@CurrentUser() user: AuthUser, @Body() dto: MatchCustomerDto) {
+    return this.customersLookupService.matchByNameAndAddress(user.companyId, dto);
   }
 
   // ---- Hover summary ----

@@ -12,6 +12,7 @@ import { Prisma } from '../prisma/generated';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/update-job-status.dto';
 import { AuthUser, PaginatedResponse, Role, clampPagination } from '@tscrm/types';
+import { emitPartnerEvent, PartnerEventType } from '@tscrm/queue';
 import { JobEventsPublisher } from '../realtime/job-events.publisher';
 
 // Roles allowed to correct a job's status outside the normal forward-moving
@@ -378,6 +379,22 @@ export class JobsService {
         headers: { 'x-internal-api-key': process.env.INTERNAL_API_KEY ?? '' },
       }).catch((err: unknown) => {
         this.logger.warn(`Failed to notify comms-service of ${newStatus}: ${err instanceof Error ? err.message : String(err)}`);
+      });
+    }
+
+    if (newStatus === JobStatusDto.COMPLETED) {
+      void emitPartnerEvent({
+        type: PartnerEventType.JOB_COMPLETED,
+        companyId,
+        entityId: jobId,
+        occurredAt: now.toISOString(),
+        data: {
+          jobNumber: job.jobNumber,
+          jobType: job.title,
+          customerId: job.customerId,
+          customerName: job.customerName,
+          completedAt: now.toISOString(),
+        },
       });
     }
 

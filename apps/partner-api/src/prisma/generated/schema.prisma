@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/prisma/generated"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("PARTNER_DATABASE_URL")
+  directUrl = env("PARTNER_DIRECT_DATABASE_URL")
+}
+
+enum ApiKeyStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum PartnerEnvironment {
+  LIVE
+  SANDBOX
+}
+
+/// A credential issued to an external integrator (e.g. an AI phone agent
+/// vendor). Only the SHA-256 hash of the key is stored — the plaintext is
+/// shown once at creation and is unrecoverable afterwards.
+model PartnerApiKey {
+  id              String             @id @default(uuid())
+  companyId       String             @map("company_id")
+  name            String
+  environment     PartnerEnvironment @default(LIVE)
+  /// Non-secret display prefix, e.g. "pk_live_a94f1c2b" — safe to render in the UI.
+  keyPrefix       String             @map("key_prefix")
+  keyHash         String             @unique @map("key_hash")
+  scopes          String[]
+  rateLimitPerMin Int                @default(60) @map("rate_limit_per_min")
+  status          ApiKeyStatus       @default(ACTIVE)
+  lastUsedAt      DateTime?          @map("last_used_at")
+  expiresAt       DateTime?          @map("expires_at")
+  createdBy       String?            @map("created_by")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  revokedAt       DateTime?          @map("revoked_at")
+
+  calls PartnerApiCall[]
+
+  @@index([companyId, status])
+  @@map("partner_api_key")
+}
+
+/// One row per appointment a partner booked for a caller who was not already
+/// a customer. Backs the per-number daily cap, so a single number cannot fill
+/// the calendar. Held here rather than in CRM because it is abuse control over
+/// the partner surface, not customer data.
+model PartnerNewCallerBooking {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  /// Trailing digits only — enough to rate-limit, and matches the same
+  /// normalisation the CRM caller lookup uses.
+  phoneSuffix String   @map("phone_suffix")
+  customerId  String?  @map("customer_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([companyId, phoneSuffix, createdAt])
+  @@map("partner_new_caller_booking")
+}
+
+enum WebhookStatus {
+  ACTIVE
+  /// Auto-set after repeated delivery failures, so a dead endpoint stops
+  /// consuming retries. A partner re-enables it by re-registering.
+  SUSPENDED
+  DISABLED
+}
+
+/// A partner's subscription to business events. Each partner registers its own
+/// endpoint; events are only ever delivered to subscriptions belonging to the
+/// same company as the event.
+model PartnerWebhook {
+  id            String        @id @default(uuid())
+  companyId     String        @map("company_id")
+  apiKeyId      String?       @map("api_key_id")
+  url           String
+  /// Shared secret for the HMAC signature on every delivery. Returned once at
+  /// registration so the partner can verify payloads really came from us.
+  secret        String
+  events        String[]
+  status        WebhookStatus @default(ACTIVE)
+  description   String?
+  failureCount  Int           @default(0) @map("failure_count")
+  lastSuccessAt DateTime?     @map("last_success_at")
+  lastFailureAt DateTime?     @map("last_failure_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  deliveries PartnerWebhookDelivery[]
+
+  @@index([companyId, status])
+  @@map("partner_webhook")
+}
+
+/// One row per delivery attempt. Answers "did they get it?" when a partner
+/// says an event never arrived.
+model PartnerWebhookDelivery {
+  id         String   @id @default(uuid())
+  webhookId  String   @map("webhook_id")
+  companyId  String   @map("company_id")
+  eventType  String   @map("event_type")
+  entityId   String   @map("entity_id")
+  attempt    Int      @default(1)
+  statusCode Int?     @map("status_code")
+  success    Boolean  @default(false)
+  error      String?
+  durationMs Int?     @map("duration_ms")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  webhook PartnerWebhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId, createdAt])
+  @@index([companyId, eventType, createdAt])
+  @@map("partner_webhook_delivery")
+}
+
+/// One row per inbound partner request. Used for troubleshooting, abuse
+/// detection and per-partner usage reporting.
+model PartnerApiCall {
+  id         String   @id @default(uuid())
+  apiKeyId   String?  @map("api_key_id")
+  companyId  String?  @map("company_id")
+  method     String
+  path       String
+  statusCode Int      @map("status_code")
+  durationMs Int      @map("duration_ms")
+  ip         String?
+  userAgent  String?  @map("user_agent")
+  errorCode  String?  @map("error_code")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  apiKey PartnerApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+
+  @@index([apiKeyId, createdAt])
+  @@index([companyId, createdAt])
+  @@map("partner_api_call")
+}

@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { emitPartnerEvent, PartnerEventType } from '@tscrm/queue';
 import { TtlCacheService } from '../cache/ttl-cache.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -63,7 +64,88 @@ export class BookingsService {
     const booking = await this.prisma.booking.findFirst({ where: { id, companyId } });
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.customerId) this.ttlCache.del(`status-summary:${companyId}:${booking.customerId}`);
-    return this.prisma.booking.update({ where: { id }, data: { status: 'CONFIRMED' } });
+    const confirmed = await this.prisma.booking.update({
+      where: { id },
+      data: { status: 'CONFIRMED' },
+    });
+
+    void emitPartnerEvent({
+      type: PartnerEventType.BOOKING_CONFIRMED,
+      companyId,
+      entityId: confirmed.id,
+      occurredAt: new Date().toISOString(),
+      data: {
+        serviceType: confirmed.serviceType,
+        customerId: confirmed.customerId,
+        customerName: confirmed.guestName ?? undefined,
+        scheduledFor: confirmed.preferredDate.toISOString(),
+      },
+    });
+
+    return confirmed;
+  }
+
+  async reschedule(
+    companyId: string,
+    id: string,
+    preferredDate: Date,
+    reason?: string,
+  ) {
+    const booking = await this.prisma.booking.findFirst({ where: { id, companyId } });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    if (booking.status === 'CONVERTED') {
+      throw new BadRequestException(
+        'Booking has already been converted to a job — reschedule the job instead',
+      );
+    }
+    if (booking.status === 'CANCELLED') {
+      throw new BadRequestException('Cannot reschedule a cancelled booking');
+    }
+
+    const note = [
+      booking.notes,
+      `Rescheduled from ${booking.preferredDate.toISOString()}${reason ? ` — ${reason}` : ''}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    if (booking.customerId) this.ttlCache.del(`status-summary:${companyId}:${booking.customerId}`);
+
+    return this.prisma.booking.update({
+      where: { id },
+      data: {
+        preferredDate,
+        notes: note,
+        status: 'PENDING',
+      },
+    });
+  }
+
+  async cancel(companyId: string, id: string, reason?: string) {
+    const booking = await this.prisma.booking.findFirst({ where: { id, companyId } });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    if (booking.status === 'CONVERTED') {
+      throw new BadRequestException(
+        'Booking has already been converted to a job — cancel the job instead',
+      );
+    }
+    if (booking.status === 'CANCELLED') {
+      return booking; // idempotent: cancelling twice is not an error
+    }
+
+    if (booking.customerId) this.ttlCache.del(`status-summary:${companyId}:${booking.customerId}`);
+
+    return this.prisma.booking.update({
+      where: { id },
+      data: {
+        status: 'CANCELLED',
+        notes: [booking.notes, reason ? `Cancelled — ${reason}` : 'Cancelled']
+          .filter(Boolean)
+          .join('\n'),
+      },
+    });
   }
 
   async convert(companyId: string, id: string, jobId: string) {

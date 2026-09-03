@@ -16,6 +16,7 @@ import { ConfigService } from '@nestjs/config';
 import { nextInvoiceNumber } from './invoice-number';
 import Stripe from 'stripe';
 import { isFeatureEnabled } from '@tscrm/types';
+import { emitPartnerEvent, PartnerEventType } from '@tscrm/queue';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
@@ -203,7 +204,7 @@ export class InvoicesService {
         `Cannot transition invoice from ${invoice.status} to ${status}`,
       );
     }
-    return this.prisma.invoice.update({
+    const updated = await this.prisma.invoice.update({
       where: { id },
       data: {
         status,
@@ -212,6 +213,24 @@ export class InvoicesService {
         voidedAt: status === InvoiceStatus.VOID ? new Date() : undefined,
       },
     });
+
+    // Business event for partner-api to fan out to partners and staff.
+    // Fire-and-forget: a webhook must never affect whether a payment records.
+    if (status === InvoiceStatus.PAID) {
+      void emitPartnerEvent({
+        type: PartnerEventType.INVOICE_PAID,
+        companyId,
+        entityId: updated.id,
+        occurredAt: (updated.paidAt ?? new Date()).toISOString(),
+        data: {
+          invoiceNumber: updated.invoiceNumber,
+          customerId: updated.customerId,
+          amount: Number(updated.total),
+        },
+      });
+    }
+
+    return updated;
   }
 
   // ── Customer decision actions (portal) ───────────────────────────────────

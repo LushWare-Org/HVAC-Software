@@ -26,6 +26,27 @@ export enum QueueName {
   // risk a real log-event job being silently swallowed by the cleanup
   // worker (or vice versa) depending on which Worker happens to grab it.
   ACTIVITY_LOG_CLEANUP = 'activity-log-cleanup',
+  PARTNER_EVENTS = 'partner-events',
+}
+// ---- Partner event contract ----
+/** Business events partners can subscribe to. */
+export enum PartnerEventType {
+  JOB_COMPLETED = 'job.completed',
+  INVOICE_PAID = 'invoice.paid',
+  QUOTE_ACCEPTED = 'quote.accepted',
+  BOOKING_CONFIRMED = 'booking.confirmed',
+}
+
+export interface PartnerEventJob {
+  type: PartnerEventType;
+  companyId: string;
+  /** The subject of the event (job id, invoice id, …). */
+  entityId: string;
+  /** When it actually happened, not when it was delivered. */
+  occurredAt: string;
+  /** Small, flat, and safe to send outside — no internal ids or PII beyond
+   * what a partner already resolved for this caller. */
+  data: Record<string, unknown>;
 }
 
 // ---- Redis connection factory (shared config) ----
@@ -60,6 +81,24 @@ export function createQueue(
     },
     ...opts,
   });
+}
+
+// ---- Partner event emitter ----
+
+let partnerEventQueue: Queue | null = null;
+export async function emitPartnerEvent(event: PartnerEventJob): Promise<void> {
+  try {
+    if (!partnerEventQueue) {
+      partnerEventQueue = createQueue(QueueName.PARTNER_EVENTS);
+    }
+    await partnerEventQueue.add(event.type, event);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[queue] failed to emit partner event ${event.type} for ${event.entityId}:`,
+      err instanceof Error ? err.message : err,
+    );
+  }
 }
 
 // ---- Worker factory (used inside comms-service processors) ----

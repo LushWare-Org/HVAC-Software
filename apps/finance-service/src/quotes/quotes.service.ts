@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
+import { emitPartnerEvent, PartnerEventType } from '@tscrm/queue';
 import { PrismaService } from '../prisma/prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
@@ -361,7 +362,7 @@ export class QuotesService {
     if (!([QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.VIEWED] as QuoteStatus[]).includes(quote.status)) {
       throw new BadRequestException(`Quote cannot be approved in status: ${quote.status}`);
     }
-    return this.prisma.quote.update({
+    const updated = await this.prisma.quote.update({
       where: { id },
       data: {
         status: QuoteStatus.ACCEPTED,
@@ -371,6 +372,22 @@ export class QuotesService {
       },
       include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
     });
+
+    // "Sale closed" — the event partners most often want. Fire-and-forget.
+    void emitPartnerEvent({
+      type: PartnerEventType.QUOTE_ACCEPTED,
+      companyId,
+      entityId: updated.id,
+      occurredAt: (updated.approvedAt ?? new Date()).toISOString(),
+      data: {
+        quoteNumber: updated.quoteNumber,
+        customerId: updated.customerId,
+        amount: Number(updated.total),
+        acceptedByName: name,
+      },
+    });
+
+    return updated;
   }
 
   // ── Decline by ID (portal/customer) ──────────────────────────────────────
