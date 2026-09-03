@@ -17,7 +17,24 @@ var (
 	// ErrAlreadyCheckedOut: they have finished and gone home. A departed lead is
 	// the problem handover exists to solve, so it must not create one.
 	ErrAlreadyCheckedOut = errors.New("technician has already left this job")
+	// ErrLeadNotInCrew: the named lead is not in the technician list. Rejected
+	// rather than silently added, so the caller's intent is never guessed at.
+	ErrLeadNotInCrew = errors.New("lead must be one of the assigned technicians")
 )
+
+// ValidateCrewInput checks the shape before any database work. An empty crew is
+// valid: it is how a dispatcher undoes a mistake and leaves the job unassigned.
+func ValidateCrewInput(in models.CrewInput) error {
+	if len(in.TechnicianIDs) == 0 {
+		return nil
+	}
+	for _, id := range in.TechnicianIDs {
+		if id == in.LeadTechnicianID {
+			return nil
+		}
+	}
+	return ErrLeadNotInCrew
+}
 
 // CrewRepository reads and writes the set of technicians assigned to a job.
 //
@@ -184,4 +201,143 @@ func recordCrewEvent(
 		companyID, jobID, event, technicianID, technicianName,
 		prev, actorID, actorName, why)
 	return err
+}
+
+// SetCrew replaces a job's crew in one transaction: members no longer listed are
+// cancelled, new members inserted, the lead flag set, and the job's denormalised
+// assignedToId / crewUserIds updated cross-schema so the mobile app's "my jobs"
+// query stays a single job-service query.
+func (r *CrewRepository) SetCrew(
+	ctx context.Context, companyID, jobID, actorID, actorName string, in models.CrewInput,
+) error {
+	if err := ValidateCrewInput(in); err != nil {
+		return err
+	}
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	// Who is on the crew now, so the audit trail can name the difference rather
+	// than recording a vague "crew changed".
+	before := map[string]string{} // technician_id -> name
+	rows, err := tx.Query(ctx, `
+		SELECT a.technician_id, t.name
+		FROM   scheduling.dispatch_assignments a
+		JOIN   scheduling.technicians t ON t.id = a.technician_id
+		WHERE  a.company_id = $1 AND a.job_id = $2 AND a.status <> 'CANCELLED'`,
+		companyID, jobID)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		var id, name string
+		if err := rows.Scan(&id, &name); err != nil {
+			rows.Close()
+			return err
+		}
+		before[id] = name
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	// Cancel anyone dropped from the crew.
+	if _, err = tx.Exec(ctx, `
+		UPDATE scheduling.dispatch_assignments
+		SET    status = 'CANCELLED', is_lead = false, updated_at = NOW()
+		WHERE  company_id = $1 AND job_id = $2
+		  AND  status <> 'CANCELLED'
+		  AND  NOT (technician_id = ANY($3))`,
+		companyID, jobID, in.TechnicianIDs); err != nil {
+		return err
+	}
+
+	kept := map[string]bool{}
+	for _, id := range in.TechnicianIDs {
+		kept[id] = true
+	}
+	for id, name := range before {
+		if !kept[id] {
+			if err = recordCrewEvent(ctx, tx, companyID, jobID, "REMOVED",
+				id, name, "", actorID, actorName, ""); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Insert anyone new. ON CONFLICT covers a technician being re-added after
+	// having been cancelled earlier in the same job's life.
+	for _, techID := range in.TechnicianIDs {
+		if _, err = tx.Exec(ctx, `
+			INSERT INTO scheduling.dispatch_assignments
+			       (company_id, job_id, technician_id, status, assigned_by, is_lead)
+			VALUES ($1, $2, $3, 'ASSIGNED', $4, false)
+			ON CONFLICT (job_id, technician_id) WHERE status <> 'CANCELLED'
+			DO NOTHING`,
+			companyID, jobID, techID, actorID); err != nil {
+			return err
+		}
+		if _, wasAlreadyOn := before[techID]; !wasAlreadyOn {
+			var name string
+			if err = tx.QueryRow(ctx,
+				`SELECT name FROM scheduling.technicians WHERE id = $1`, techID,
+			).Scan(&name); err != nil {
+				return err
+			}
+			if err = recordCrewEvent(ctx, tx, companyID, jobID, "ADDED",
+				techID, name, "", actorID, actorName, ""); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Lead: unset then set, for the same non-deferrable-index reason as SetLead.
+	if _, err = tx.Exec(ctx, `
+		UPDATE scheduling.dispatch_assignments SET is_lead = false, updated_at = NOW()
+		WHERE company_id = $1 AND job_id = $2 AND is_lead AND status <> 'CANCELLED'`,
+		companyID, jobID); err != nil {
+		return err
+	}
+	if in.LeadTechnicianID != "" {
+		if _, err = tx.Exec(ctx, `
+			UPDATE scheduling.dispatch_assignments SET is_lead = true, updated_at = NOW()
+			WHERE company_id = $1 AND job_id = $2 AND technician_id = $3
+			  AND status <> 'CANCELLED'`,
+			companyID, jobID, in.LeadTechnicianID); err != nil {
+			return err
+		}
+	}
+
+	// Denormalise onto the job: lead in assignedToId, everyone in crewUserIds.
+	if _, err = tx.Exec(ctx, `
+		WITH crew AS (
+			SELECT COALESCE(array_agg(t.user_id ORDER BY t.user_id), '{}') AS ids
+			FROM   scheduling.dispatch_assignments a
+			JOIN   scheduling.technicians t ON t.id = a.technician_id
+			WHERE  a.company_id = $1 AND a.job_id = $2 AND a.status <> 'CANCELLED'
+		), lead AS (
+			SELECT t.user_id, t.name
+			FROM   scheduling.dispatch_assignments a
+			JOIN   scheduling.technicians t ON t.id = a.technician_id
+			WHERE  a.company_id = $1 AND a.job_id = $2
+			  AND  a.is_lead AND a.status <> 'CANCELLED'
+			LIMIT  1
+		)
+		UPDATE jobs.jobs j SET
+			"crewUserIds"    = (SELECT ids FROM crew),
+			"assignedToId"   = (SELECT user_id FROM lead),
+			"assignedToName" = (SELECT name FROM lead),
+			status = CASE WHEN j.status = 'PENDING' AND (SELECT user_id FROM lead) IS NOT NULL
+			              THEN 'SCHEDULED' ELSE j.status END,
+			"updatedAt"      = NOW()
+		WHERE j.id = $2 AND j."companyId" = $1`,
+		companyID, jobID); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

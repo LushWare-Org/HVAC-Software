@@ -71,3 +71,35 @@ func TestSetLead_UsesTwoStatementSwap(t *testing.T) {
 		t.Fatal("SetLead must set the new lead in its own statement")
 	}
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Crew input validation
+// ═══════════════════════════════════════════════════════════════════════════
+
+func TestValidateCrewInput(t *testing.T) {
+	cases := []struct {
+		name string
+		in   models.CrewInput
+		want error
+	}{
+		{"lead outside the crew", models.CrewInput{
+			TechnicianIDs: []string{"t1", "t2"}, LeadTechnicianID: "t9",
+		}, ErrLeadNotInCrew},
+		{"lead inside the crew", models.CrewInput{
+			TechnicianIDs: []string{"t1", "t2"}, LeadTechnicianID: "t1",
+		}, nil},
+		// An empty crew is how a dispatcher undoes a mistake and leaves the job
+		// unassigned, so it must not be an error.
+		{"empty crew clears the job", models.CrewInput{
+			TechnicianIDs: []string{}, LeadTechnicianID: "",
+		}, nil},
+		{"single member is their own lead", models.CrewInput{
+			TechnicianIDs: []string{"t1"}, LeadTechnicianID: "t1",
+		}, nil},
+	}
+	for _, c := range cases {
+		if got := ValidateCrewInput(c.in); !errors.Is(got, c.want) {
+			t.Fatalf("%s: got %v want %v", c.name, got, c.want)
+		}
+	}
+}

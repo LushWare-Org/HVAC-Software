@@ -282,3 +282,11 @@ func LeadOf(crew []CrewMember) *CrewMember {
 	}
 	return nil
 }
+
+// CrewInput is a full replacement of a job's crew. Partial updates are not
+// supported on purpose: the dispatcher edits a list and confirms it, so the API
+// takes the list they confirmed rather than a diff nobody computed.
+type CrewInput struct {
+	TechnicianIDs    []string `json:"technicianIds"`
+	LeadTechnicianID string   `json:"leadTechnicianId"`
+}
