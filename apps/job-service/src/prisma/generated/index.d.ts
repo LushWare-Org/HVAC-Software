@@ -83,6 +83,16 @@ export type RescheduleRequest = $Result.DefaultSelection<Prisma.$RescheduleReque
  * 
  */
 export type RescheduleSlot = $Result.DefaultSelection<Prisma.$RescheduleSlotPayload>
+/**
+ * Model JobCrewEvent
+ * Audit trail for crew changes: who was added, removed, handed the lead, or
+ * checked out, and who did it.
+ * 
+ * Cannot reuse JobStatusHistory, whose toStatus is a required JobStatus enum —
+ * a handover is not a status change, and forcing it in would corrupt that
+ * table's meaning.
+ */
+export type JobCrewEvent = $Result.DefaultSelection<Prisma.$JobCrewEventPayload>
 
 /**
  * Enums
@@ -210,6 +220,16 @@ export const RescheduleStatus: {
 
 export type RescheduleStatus = (typeof RescheduleStatus)[keyof typeof RescheduleStatus]
 
+
+export const JobCrewEventType: {
+  ADDED: 'ADDED',
+  REMOVED: 'REMOVED',
+  LEAD_CHANGED: 'LEAD_CHANGED',
+  CHECKED_OUT: 'CHECKED_OUT'
+};
+
+export type JobCrewEventType = (typeof JobCrewEventType)[keyof typeof JobCrewEventType]
+
 }
 
 export type CustomFieldType = $Enums.CustomFieldType
@@ -255,6 +275,10 @@ export const RescheduleReason: typeof $Enums.RescheduleReason
 export type RescheduleStatus = $Enums.RescheduleStatus
 
 export const RescheduleStatus: typeof $Enums.RescheduleStatus
+
+export type JobCrewEventType = $Enums.JobCrewEventType
+
+export const JobCrewEventType: typeof $Enums.JobCrewEventType
 
 /**
  * ##  Prisma Client ʲˢ
@@ -518,6 +542,16 @@ export class PrismaClient<
     * ```
     */
   get rescheduleSlot(): Prisma.RescheduleSlotDelegate<ExtArgs>;
+
+  /**
+   * `prisma.jobCrewEvent`: Exposes CRUD operations for the **JobCrewEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more JobCrewEvents
+    * const jobCrewEvents = await prisma.jobCrewEvent.findMany()
+    * ```
+    */
+  get jobCrewEvent(): Prisma.JobCrewEventDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -972,7 +1006,8 @@ export namespace Prisma {
     WorkOrderTaskCompletion: 'WorkOrderTaskCompletion',
     WorkOrderLineItem: 'WorkOrderLineItem',
     RescheduleRequest: 'RescheduleRequest',
-    RescheduleSlot: 'RescheduleSlot'
+    RescheduleSlot: 'RescheduleSlot',
+    JobCrewEvent: 'JobCrewEvent'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -988,7 +1023,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "jobType" | "jobTemplate" | "jobTemplateTask" | "jobCustomFieldDef" | "jobCustomFieldValue" | "priceBookItem" | "job" | "jobStatusHistory" | "jobPhoto" | "workOrder" | "workOrderTaskCompletion" | "workOrderLineItem" | "rescheduleRequest" | "rescheduleSlot"
+      modelProps: "jobType" | "jobTemplate" | "jobTemplateTask" | "jobCustomFieldDef" | "jobCustomFieldValue" | "priceBookItem" | "job" | "jobStatusHistory" | "jobPhoto" | "workOrder" | "workOrderTaskCompletion" | "workOrderLineItem" | "rescheduleRequest" | "rescheduleSlot" | "jobCrewEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1972,6 +2007,76 @@ export namespace Prisma {
           }
         }
       }
+      JobCrewEvent: {
+        payload: Prisma.$JobCrewEventPayload<ExtArgs>
+        fields: Prisma.JobCrewEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.JobCrewEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.JobCrewEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload>
+          }
+          findFirst: {
+            args: Prisma.JobCrewEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.JobCrewEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload>
+          }
+          findMany: {
+            args: Prisma.JobCrewEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload>[]
+          }
+          create: {
+            args: Prisma.JobCrewEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload>
+          }
+          createMany: {
+            args: Prisma.JobCrewEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.JobCrewEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload>[]
+          }
+          delete: {
+            args: Prisma.JobCrewEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload>
+          }
+          update: {
+            args: Prisma.JobCrewEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.JobCrewEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.JobCrewEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.JobCrewEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JobCrewEventPayload>
+          }
+          aggregate: {
+            args: Prisma.JobCrewEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateJobCrewEvent>
+          }
+          groupBy: {
+            args: Prisma.JobCrewEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<JobCrewEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.JobCrewEventCountArgs<ExtArgs>
+            result: $Utils.Optional<JobCrewEventCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2288,6 +2393,7 @@ export namespace Prisma {
     customFieldValues: number
     statusHistory: number
     photos: number
+    crewEvents: number
     rescheduleRequests: number
   }
 
@@ -2296,6 +2402,7 @@ export namespace Prisma {
     customFieldValues?: boolean | JobCountOutputTypeCountCustomFieldValuesArgs
     statusHistory?: boolean | JobCountOutputTypeCountStatusHistoryArgs
     photos?: boolean | JobCountOutputTypeCountPhotosArgs
+    crewEvents?: boolean | JobCountOutputTypeCountCrewEventsArgs
     rescheduleRequests?: boolean | JobCountOutputTypeCountRescheduleRequestsArgs
   }
 
@@ -2336,6 +2443,13 @@ export namespace Prisma {
    */
   export type JobCountOutputTypeCountPhotosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: JobPhotoWhereInput
+  }
+
+  /**
+   * JobCountOutputType without action
+   */
+  export type JobCountOutputTypeCountCrewEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: JobCrewEventWhereInput
   }
 
   /**
@@ -8744,6 +8858,7 @@ export namespace Prisma {
   export type JobAvgAggregateOutputType = {
     serviceLatitude: Decimal | null
     serviceLongitude: Decimal | null
+    requiredTechCount: number | null
     estimatedDurationMins: number | null
     travelDistanceKm: Decimal | null
     estimatedValue: Decimal | null
@@ -8752,6 +8867,7 @@ export namespace Prisma {
   export type JobSumAggregateOutputType = {
     serviceLatitude: Decimal | null
     serviceLongitude: Decimal | null
+    requiredTechCount: number | null
     estimatedDurationMins: number | null
     travelDistanceKm: Decimal | null
     estimatedValue: Decimal | null
@@ -8783,6 +8899,7 @@ export namespace Prisma {
     priority: $Enums.JobPriority | null
     assignedToId: string | null
     assignedToName: string | null
+    requiredTechCount: number | null
     scheduledStart: Date | null
     scheduledEnd: Date | null
     actualStart: Date | null
@@ -8833,6 +8950,7 @@ export namespace Prisma {
     priority: $Enums.JobPriority | null
     assignedToId: string | null
     assignedToName: string | null
+    requiredTechCount: number | null
     scheduledStart: Date | null
     scheduledEnd: Date | null
     actualStart: Date | null
@@ -8883,6 +9001,8 @@ export namespace Prisma {
     priority: number
     assignedToId: number
     assignedToName: number
+    crewUserIds: number
+    requiredTechCount: number
     scheduledStart: number
     scheduledEnd: number
     actualStart: number
@@ -8913,6 +9033,7 @@ export namespace Prisma {
   export type JobAvgAggregateInputType = {
     serviceLatitude?: true
     serviceLongitude?: true
+    requiredTechCount?: true
     estimatedDurationMins?: true
     travelDistanceKm?: true
     estimatedValue?: true
@@ -8921,6 +9042,7 @@ export namespace Prisma {
   export type JobSumAggregateInputType = {
     serviceLatitude?: true
     serviceLongitude?: true
+    requiredTechCount?: true
     estimatedDurationMins?: true
     travelDistanceKm?: true
     estimatedValue?: true
@@ -8952,6 +9074,7 @@ export namespace Prisma {
     priority?: true
     assignedToId?: true
     assignedToName?: true
+    requiredTechCount?: true
     scheduledStart?: true
     scheduledEnd?: true
     actualStart?: true
@@ -9002,6 +9125,7 @@ export namespace Prisma {
     priority?: true
     assignedToId?: true
     assignedToName?: true
+    requiredTechCount?: true
     scheduledStart?: true
     scheduledEnd?: true
     actualStart?: true
@@ -9052,6 +9176,8 @@ export namespace Prisma {
     priority?: true
     assignedToId?: true
     assignedToName?: true
+    crewUserIds?: true
+    requiredTechCount?: true
     scheduledStart?: true
     scheduledEnd?: true
     actualStart?: true
@@ -9190,6 +9316,8 @@ export namespace Prisma {
     priority: $Enums.JobPriority
     assignedToId: string | null
     assignedToName: string | null
+    crewUserIds: string[]
+    requiredTechCount: number | null
     scheduledStart: Date | null
     scheduledEnd: Date | null
     actualStart: Date | null
@@ -9260,6 +9388,8 @@ export namespace Prisma {
     priority?: boolean
     assignedToId?: boolean
     assignedToName?: boolean
+    crewUserIds?: boolean
+    requiredTechCount?: boolean
     scheduledStart?: boolean
     scheduledEnd?: boolean
     actualStart?: boolean
@@ -9289,6 +9419,7 @@ export namespace Prisma {
     customFieldValues?: boolean | Job$customFieldValuesArgs<ExtArgs>
     statusHistory?: boolean | Job$statusHistoryArgs<ExtArgs>
     photos?: boolean | Job$photosArgs<ExtArgs>
+    crewEvents?: boolean | Job$crewEventsArgs<ExtArgs>
     rescheduleRequests?: boolean | Job$rescheduleRequestsArgs<ExtArgs>
     _count?: boolean | JobCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["job"]>
@@ -9319,6 +9450,8 @@ export namespace Prisma {
     priority?: boolean
     assignedToId?: boolean
     assignedToName?: boolean
+    crewUserIds?: boolean
+    requiredTechCount?: boolean
     scheduledStart?: boolean
     scheduledEnd?: boolean
     actualStart?: boolean
@@ -9372,6 +9505,8 @@ export namespace Prisma {
     priority?: boolean
     assignedToId?: boolean
     assignedToName?: boolean
+    crewUserIds?: boolean
+    requiredTechCount?: boolean
     scheduledStart?: boolean
     scheduledEnd?: boolean
     actualStart?: boolean
@@ -9404,6 +9539,7 @@ export namespace Prisma {
     customFieldValues?: boolean | Job$customFieldValuesArgs<ExtArgs>
     statusHistory?: boolean | Job$statusHistoryArgs<ExtArgs>
     photos?: boolean | Job$photosArgs<ExtArgs>
+    crewEvents?: boolean | Job$crewEventsArgs<ExtArgs>
     rescheduleRequests?: boolean | Job$rescheduleRequestsArgs<ExtArgs>
     _count?: boolean | JobCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -9421,6 +9557,7 @@ export namespace Prisma {
       customFieldValues: Prisma.$JobCustomFieldValuePayload<ExtArgs>[]
       statusHistory: Prisma.$JobStatusHistoryPayload<ExtArgs>[]
       photos: Prisma.$JobPhotoPayload<ExtArgs>[]
+      crewEvents: Prisma.$JobCrewEventPayload<ExtArgs>[]
       rescheduleRequests: Prisma.$RescheduleRequestPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -9449,6 +9586,18 @@ export namespace Prisma {
       priority: $Enums.JobPriority
       assignedToId: string | null
       assignedToName: string | null
+      /**
+       * Every crew member's user id, lead included. Denormalised so the technician
+       * app's "my jobs" query stays a single job-service query instead of a
+       * cross-service join on its hottest path. Maintained by scheduling-service in
+       * the same transaction as the assignment change.
+       */
+      crewUserIds: string[]
+      /**
+       * Optional target crew size. Guidance for smart assign and the "2 of 3"
+       * counter, never a rule — a dispatcher may confirm any size.
+       */
+      requiredTechCount: number | null
       scheduledStart: Date | null
       scheduledEnd: Date | null
       actualStart: Date | null
@@ -9842,6 +9991,7 @@ export namespace Prisma {
     customFieldValues<T extends Job$customFieldValuesArgs<ExtArgs> = {}>(args?: Subset<T, Job$customFieldValuesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JobCustomFieldValuePayload<ExtArgs>, T, "findMany"> | Null>
     statusHistory<T extends Job$statusHistoryArgs<ExtArgs> = {}>(args?: Subset<T, Job$statusHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JobStatusHistoryPayload<ExtArgs>, T, "findMany"> | Null>
     photos<T extends Job$photosArgs<ExtArgs> = {}>(args?: Subset<T, Job$photosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JobPhotoPayload<ExtArgs>, T, "findMany"> | Null>
+    crewEvents<T extends Job$crewEventsArgs<ExtArgs> = {}>(args?: Subset<T, Job$crewEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "findMany"> | Null>
     rescheduleRequests<T extends Job$rescheduleRequestsArgs<ExtArgs> = {}>(args?: Subset<T, Job$rescheduleRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RescheduleRequestPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -9897,6 +10047,8 @@ export namespace Prisma {
     readonly priority: FieldRef<"Job", 'JobPriority'>
     readonly assignedToId: FieldRef<"Job", 'String'>
     readonly assignedToName: FieldRef<"Job", 'String'>
+    readonly crewUserIds: FieldRef<"Job", 'String[]'>
+    readonly requiredTechCount: FieldRef<"Job", 'Int'>
     readonly scheduledStart: FieldRef<"Job", 'DateTime'>
     readonly scheduledEnd: FieldRef<"Job", 'DateTime'>
     readonly actualStart: FieldRef<"Job", 'DateTime'>
@@ -10345,6 +10497,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: JobPhotoScalarFieldEnum | JobPhotoScalarFieldEnum[]
+  }
+
+  /**
+   * Job.crewEvents
+   */
+  export type Job$crewEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    where?: JobCrewEventWhereInput
+    orderBy?: JobCrewEventOrderByWithRelationInput | JobCrewEventOrderByWithRelationInput[]
+    cursor?: JobCrewEventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: JobCrewEventScalarFieldEnum | JobCrewEventScalarFieldEnum[]
   }
 
   /**
@@ -17521,6 +17693,1014 @@ export namespace Prisma {
 
 
   /**
+   * Model JobCrewEvent
+   */
+
+  export type AggregateJobCrewEvent = {
+    _count: JobCrewEventCountAggregateOutputType | null
+    _min: JobCrewEventMinAggregateOutputType | null
+    _max: JobCrewEventMaxAggregateOutputType | null
+  }
+
+  export type JobCrewEventMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    jobId: string | null
+    event: $Enums.JobCrewEventType | null
+    technicianId: string | null
+    technicianName: string | null
+    previousLeadId: string | null
+    actorId: string | null
+    actorName: string | null
+    reason: string | null
+    createdAt: Date | null
+  }
+
+  export type JobCrewEventMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    jobId: string | null
+    event: $Enums.JobCrewEventType | null
+    technicianId: string | null
+    technicianName: string | null
+    previousLeadId: string | null
+    actorId: string | null
+    actorName: string | null
+    reason: string | null
+    createdAt: Date | null
+  }
+
+  export type JobCrewEventCountAggregateOutputType = {
+    id: number
+    companyId: number
+    jobId: number
+    event: number
+    technicianId: number
+    technicianName: number
+    previousLeadId: number
+    actorId: number
+    actorName: number
+    reason: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type JobCrewEventMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    jobId?: true
+    event?: true
+    technicianId?: true
+    technicianName?: true
+    previousLeadId?: true
+    actorId?: true
+    actorName?: true
+    reason?: true
+    createdAt?: true
+  }
+
+  export type JobCrewEventMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    jobId?: true
+    event?: true
+    technicianId?: true
+    technicianName?: true
+    previousLeadId?: true
+    actorId?: true
+    actorName?: true
+    reason?: true
+    createdAt?: true
+  }
+
+  export type JobCrewEventCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    jobId?: true
+    event?: true
+    technicianId?: true
+    technicianName?: true
+    previousLeadId?: true
+    actorId?: true
+    actorName?: true
+    reason?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type JobCrewEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which JobCrewEvent to aggregate.
+     */
+    where?: JobCrewEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of JobCrewEvents to fetch.
+     */
+    orderBy?: JobCrewEventOrderByWithRelationInput | JobCrewEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: JobCrewEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` JobCrewEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` JobCrewEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned JobCrewEvents
+    **/
+    _count?: true | JobCrewEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: JobCrewEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: JobCrewEventMaxAggregateInputType
+  }
+
+  export type GetJobCrewEventAggregateType<T extends JobCrewEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateJobCrewEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateJobCrewEvent[P]>
+      : GetScalarType<T[P], AggregateJobCrewEvent[P]>
+  }
+
+
+
+
+  export type JobCrewEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: JobCrewEventWhereInput
+    orderBy?: JobCrewEventOrderByWithAggregationInput | JobCrewEventOrderByWithAggregationInput[]
+    by: JobCrewEventScalarFieldEnum[] | JobCrewEventScalarFieldEnum
+    having?: JobCrewEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: JobCrewEventCountAggregateInputType | true
+    _min?: JobCrewEventMinAggregateInputType
+    _max?: JobCrewEventMaxAggregateInputType
+  }
+
+  export type JobCrewEventGroupByOutputType = {
+    id: string
+    companyId: string
+    jobId: string
+    event: $Enums.JobCrewEventType
+    technicianId: string
+    technicianName: string
+    previousLeadId: string | null
+    actorId: string
+    actorName: string
+    reason: string | null
+    createdAt: Date
+    _count: JobCrewEventCountAggregateOutputType | null
+    _min: JobCrewEventMinAggregateOutputType | null
+    _max: JobCrewEventMaxAggregateOutputType | null
+  }
+
+  type GetJobCrewEventGroupByPayload<T extends JobCrewEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<JobCrewEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof JobCrewEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], JobCrewEventGroupByOutputType[P]>
+            : GetScalarType<T[P], JobCrewEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type JobCrewEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    jobId?: boolean
+    event?: boolean
+    technicianId?: boolean
+    technicianName?: boolean
+    previousLeadId?: boolean
+    actorId?: boolean
+    actorName?: boolean
+    reason?: boolean
+    createdAt?: boolean
+    job?: boolean | JobDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["jobCrewEvent"]>
+
+  export type JobCrewEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    jobId?: boolean
+    event?: boolean
+    technicianId?: boolean
+    technicianName?: boolean
+    previousLeadId?: boolean
+    actorId?: boolean
+    actorName?: boolean
+    reason?: boolean
+    createdAt?: boolean
+    job?: boolean | JobDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["jobCrewEvent"]>
+
+  export type JobCrewEventSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    jobId?: boolean
+    event?: boolean
+    technicianId?: boolean
+    technicianName?: boolean
+    previousLeadId?: boolean
+    actorId?: boolean
+    actorName?: boolean
+    reason?: boolean
+    createdAt?: boolean
+  }
+
+  export type JobCrewEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    job?: boolean | JobDefaultArgs<ExtArgs>
+  }
+  export type JobCrewEventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    job?: boolean | JobDefaultArgs<ExtArgs>
+  }
+
+  export type $JobCrewEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "JobCrewEvent"
+    objects: {
+      job: Prisma.$JobPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      jobId: string
+      event: $Enums.JobCrewEventType
+      technicianId: string
+      technicianName: string
+      /**
+       * Set only for LEAD_CHANGED: who held the lead before this event.
+       */
+      previousLeadId: string | null
+      actorId: string
+      actorName: string
+      reason: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["jobCrewEvent"]>
+    composites: {}
+  }
+
+  type JobCrewEventGetPayload<S extends boolean | null | undefined | JobCrewEventDefaultArgs> = $Result.GetResult<Prisma.$JobCrewEventPayload, S>
+
+  type JobCrewEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<JobCrewEventFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: JobCrewEventCountAggregateInputType | true
+    }
+
+  export interface JobCrewEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['JobCrewEvent'], meta: { name: 'JobCrewEvent' } }
+    /**
+     * Find zero or one JobCrewEvent that matches the filter.
+     * @param {JobCrewEventFindUniqueArgs} args - Arguments to find a JobCrewEvent
+     * @example
+     * // Get one JobCrewEvent
+     * const jobCrewEvent = await prisma.jobCrewEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends JobCrewEventFindUniqueArgs>(args: SelectSubset<T, JobCrewEventFindUniqueArgs<ExtArgs>>): Prisma__JobCrewEventClient<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one JobCrewEvent that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {JobCrewEventFindUniqueOrThrowArgs} args - Arguments to find a JobCrewEvent
+     * @example
+     * // Get one JobCrewEvent
+     * const jobCrewEvent = await prisma.jobCrewEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends JobCrewEventFindUniqueOrThrowArgs>(args: SelectSubset<T, JobCrewEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__JobCrewEventClient<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first JobCrewEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JobCrewEventFindFirstArgs} args - Arguments to find a JobCrewEvent
+     * @example
+     * // Get one JobCrewEvent
+     * const jobCrewEvent = await prisma.jobCrewEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends JobCrewEventFindFirstArgs>(args?: SelectSubset<T, JobCrewEventFindFirstArgs<ExtArgs>>): Prisma__JobCrewEventClient<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first JobCrewEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JobCrewEventFindFirstOrThrowArgs} args - Arguments to find a JobCrewEvent
+     * @example
+     * // Get one JobCrewEvent
+     * const jobCrewEvent = await prisma.jobCrewEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends JobCrewEventFindFirstOrThrowArgs>(args?: SelectSubset<T, JobCrewEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__JobCrewEventClient<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more JobCrewEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JobCrewEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all JobCrewEvents
+     * const jobCrewEvents = await prisma.jobCrewEvent.findMany()
+     * 
+     * // Get first 10 JobCrewEvents
+     * const jobCrewEvents = await prisma.jobCrewEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const jobCrewEventWithIdOnly = await prisma.jobCrewEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends JobCrewEventFindManyArgs>(args?: SelectSubset<T, JobCrewEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a JobCrewEvent.
+     * @param {JobCrewEventCreateArgs} args - Arguments to create a JobCrewEvent.
+     * @example
+     * // Create one JobCrewEvent
+     * const JobCrewEvent = await prisma.jobCrewEvent.create({
+     *   data: {
+     *     // ... data to create a JobCrewEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends JobCrewEventCreateArgs>(args: SelectSubset<T, JobCrewEventCreateArgs<ExtArgs>>): Prisma__JobCrewEventClient<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many JobCrewEvents.
+     * @param {JobCrewEventCreateManyArgs} args - Arguments to create many JobCrewEvents.
+     * @example
+     * // Create many JobCrewEvents
+     * const jobCrewEvent = await prisma.jobCrewEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends JobCrewEventCreateManyArgs>(args?: SelectSubset<T, JobCrewEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many JobCrewEvents and returns the data saved in the database.
+     * @param {JobCrewEventCreateManyAndReturnArgs} args - Arguments to create many JobCrewEvents.
+     * @example
+     * // Create many JobCrewEvents
+     * const jobCrewEvent = await prisma.jobCrewEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many JobCrewEvents and only return the `id`
+     * const jobCrewEventWithIdOnly = await prisma.jobCrewEvent.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends JobCrewEventCreateManyAndReturnArgs>(args?: SelectSubset<T, JobCrewEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a JobCrewEvent.
+     * @param {JobCrewEventDeleteArgs} args - Arguments to delete one JobCrewEvent.
+     * @example
+     * // Delete one JobCrewEvent
+     * const JobCrewEvent = await prisma.jobCrewEvent.delete({
+     *   where: {
+     *     // ... filter to delete one JobCrewEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends JobCrewEventDeleteArgs>(args: SelectSubset<T, JobCrewEventDeleteArgs<ExtArgs>>): Prisma__JobCrewEventClient<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one JobCrewEvent.
+     * @param {JobCrewEventUpdateArgs} args - Arguments to update one JobCrewEvent.
+     * @example
+     * // Update one JobCrewEvent
+     * const jobCrewEvent = await prisma.jobCrewEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends JobCrewEventUpdateArgs>(args: SelectSubset<T, JobCrewEventUpdateArgs<ExtArgs>>): Prisma__JobCrewEventClient<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more JobCrewEvents.
+     * @param {JobCrewEventDeleteManyArgs} args - Arguments to filter JobCrewEvents to delete.
+     * @example
+     * // Delete a few JobCrewEvents
+     * const { count } = await prisma.jobCrewEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends JobCrewEventDeleteManyArgs>(args?: SelectSubset<T, JobCrewEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more JobCrewEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JobCrewEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many JobCrewEvents
+     * const jobCrewEvent = await prisma.jobCrewEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends JobCrewEventUpdateManyArgs>(args: SelectSubset<T, JobCrewEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one JobCrewEvent.
+     * @param {JobCrewEventUpsertArgs} args - Arguments to update or create a JobCrewEvent.
+     * @example
+     * // Update or create a JobCrewEvent
+     * const jobCrewEvent = await prisma.jobCrewEvent.upsert({
+     *   create: {
+     *     // ... data to create a JobCrewEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the JobCrewEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends JobCrewEventUpsertArgs>(args: SelectSubset<T, JobCrewEventUpsertArgs<ExtArgs>>): Prisma__JobCrewEventClient<$Result.GetResult<Prisma.$JobCrewEventPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of JobCrewEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JobCrewEventCountArgs} args - Arguments to filter JobCrewEvents to count.
+     * @example
+     * // Count the number of JobCrewEvents
+     * const count = await prisma.jobCrewEvent.count({
+     *   where: {
+     *     // ... the filter for the JobCrewEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends JobCrewEventCountArgs>(
+      args?: Subset<T, JobCrewEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], JobCrewEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a JobCrewEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JobCrewEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends JobCrewEventAggregateArgs>(args: Subset<T, JobCrewEventAggregateArgs>): Prisma.PrismaPromise<GetJobCrewEventAggregateType<T>>
+
+    /**
+     * Group by JobCrewEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JobCrewEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends JobCrewEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: JobCrewEventGroupByArgs['orderBy'] }
+        : { orderBy?: JobCrewEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, JobCrewEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetJobCrewEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the JobCrewEvent model
+   */
+  readonly fields: JobCrewEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for JobCrewEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__JobCrewEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    job<T extends JobDefaultArgs<ExtArgs> = {}>(args?: Subset<T, JobDefaultArgs<ExtArgs>>): Prisma__JobClient<$Result.GetResult<Prisma.$JobPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the JobCrewEvent model
+   */ 
+  interface JobCrewEventFieldRefs {
+    readonly id: FieldRef<"JobCrewEvent", 'String'>
+    readonly companyId: FieldRef<"JobCrewEvent", 'String'>
+    readonly jobId: FieldRef<"JobCrewEvent", 'String'>
+    readonly event: FieldRef<"JobCrewEvent", 'JobCrewEventType'>
+    readonly technicianId: FieldRef<"JobCrewEvent", 'String'>
+    readonly technicianName: FieldRef<"JobCrewEvent", 'String'>
+    readonly previousLeadId: FieldRef<"JobCrewEvent", 'String'>
+    readonly actorId: FieldRef<"JobCrewEvent", 'String'>
+    readonly actorName: FieldRef<"JobCrewEvent", 'String'>
+    readonly reason: FieldRef<"JobCrewEvent", 'String'>
+    readonly createdAt: FieldRef<"JobCrewEvent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * JobCrewEvent findUnique
+   */
+  export type JobCrewEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    /**
+     * Filter, which JobCrewEvent to fetch.
+     */
+    where: JobCrewEventWhereUniqueInput
+  }
+
+  /**
+   * JobCrewEvent findUniqueOrThrow
+   */
+  export type JobCrewEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    /**
+     * Filter, which JobCrewEvent to fetch.
+     */
+    where: JobCrewEventWhereUniqueInput
+  }
+
+  /**
+   * JobCrewEvent findFirst
+   */
+  export type JobCrewEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    /**
+     * Filter, which JobCrewEvent to fetch.
+     */
+    where?: JobCrewEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of JobCrewEvents to fetch.
+     */
+    orderBy?: JobCrewEventOrderByWithRelationInput | JobCrewEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for JobCrewEvents.
+     */
+    cursor?: JobCrewEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` JobCrewEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` JobCrewEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of JobCrewEvents.
+     */
+    distinct?: JobCrewEventScalarFieldEnum | JobCrewEventScalarFieldEnum[]
+  }
+
+  /**
+   * JobCrewEvent findFirstOrThrow
+   */
+  export type JobCrewEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    /**
+     * Filter, which JobCrewEvent to fetch.
+     */
+    where?: JobCrewEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of JobCrewEvents to fetch.
+     */
+    orderBy?: JobCrewEventOrderByWithRelationInput | JobCrewEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for JobCrewEvents.
+     */
+    cursor?: JobCrewEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` JobCrewEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` JobCrewEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of JobCrewEvents.
+     */
+    distinct?: JobCrewEventScalarFieldEnum | JobCrewEventScalarFieldEnum[]
+  }
+
+  /**
+   * JobCrewEvent findMany
+   */
+  export type JobCrewEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    /**
+     * Filter, which JobCrewEvents to fetch.
+     */
+    where?: JobCrewEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of JobCrewEvents to fetch.
+     */
+    orderBy?: JobCrewEventOrderByWithRelationInput | JobCrewEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing JobCrewEvents.
+     */
+    cursor?: JobCrewEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` JobCrewEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` JobCrewEvents.
+     */
+    skip?: number
+    distinct?: JobCrewEventScalarFieldEnum | JobCrewEventScalarFieldEnum[]
+  }
+
+  /**
+   * JobCrewEvent create
+   */
+  export type JobCrewEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    /**
+     * The data needed to create a JobCrewEvent.
+     */
+    data: XOR<JobCrewEventCreateInput, JobCrewEventUncheckedCreateInput>
+  }
+
+  /**
+   * JobCrewEvent createMany
+   */
+  export type JobCrewEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many JobCrewEvents.
+     */
+    data: JobCrewEventCreateManyInput | JobCrewEventCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * JobCrewEvent createManyAndReturn
+   */
+  export type JobCrewEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many JobCrewEvents.
+     */
+    data: JobCrewEventCreateManyInput | JobCrewEventCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * JobCrewEvent update
+   */
+  export type JobCrewEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    /**
+     * The data needed to update a JobCrewEvent.
+     */
+    data: XOR<JobCrewEventUpdateInput, JobCrewEventUncheckedUpdateInput>
+    /**
+     * Choose, which JobCrewEvent to update.
+     */
+    where: JobCrewEventWhereUniqueInput
+  }
+
+  /**
+   * JobCrewEvent updateMany
+   */
+  export type JobCrewEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update JobCrewEvents.
+     */
+    data: XOR<JobCrewEventUpdateManyMutationInput, JobCrewEventUncheckedUpdateManyInput>
+    /**
+     * Filter which JobCrewEvents to update
+     */
+    where?: JobCrewEventWhereInput
+  }
+
+  /**
+   * JobCrewEvent upsert
+   */
+  export type JobCrewEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    /**
+     * The filter to search for the JobCrewEvent to update in case it exists.
+     */
+    where: JobCrewEventWhereUniqueInput
+    /**
+     * In case the JobCrewEvent found by the `where` argument doesn't exist, create a new JobCrewEvent with this data.
+     */
+    create: XOR<JobCrewEventCreateInput, JobCrewEventUncheckedCreateInput>
+    /**
+     * In case the JobCrewEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<JobCrewEventUpdateInput, JobCrewEventUncheckedUpdateInput>
+  }
+
+  /**
+   * JobCrewEvent delete
+   */
+  export type JobCrewEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+    /**
+     * Filter which JobCrewEvent to delete.
+     */
+    where: JobCrewEventWhereUniqueInput
+  }
+
+  /**
+   * JobCrewEvent deleteMany
+   */
+  export type JobCrewEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which JobCrewEvents to delete
+     */
+    where?: JobCrewEventWhereInput
+  }
+
+  /**
+   * JobCrewEvent without action
+   */
+  export type JobCrewEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JobCrewEvent
+     */
+    select?: JobCrewEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JobCrewEventInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -17658,6 +18838,8 @@ export namespace Prisma {
     priority: 'priority',
     assignedToId: 'assignedToId',
     assignedToName: 'assignedToName',
+    crewUserIds: 'crewUserIds',
+    requiredTechCount: 'requiredTechCount',
     scheduledStart: 'scheduledStart',
     scheduledEnd: 'scheduledEnd',
     actualStart: 'actualStart',
@@ -17800,6 +18982,23 @@ export namespace Prisma {
   };
 
   export type RescheduleSlotScalarFieldEnum = (typeof RescheduleSlotScalarFieldEnum)[keyof typeof RescheduleSlotScalarFieldEnum]
+
+
+  export const JobCrewEventScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    jobId: 'jobId',
+    event: 'event',
+    technicianId: 'technicianId',
+    technicianName: 'technicianName',
+    previousLeadId: 'previousLeadId',
+    actorId: 'actorId',
+    actorName: 'actorName',
+    reason: 'reason',
+    createdAt: 'createdAt'
+  };
+
+  export type JobCrewEventScalarFieldEnum = (typeof JobCrewEventScalarFieldEnum)[keyof typeof JobCrewEventScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -18076,6 +19275,20 @@ export namespace Prisma {
    * Reference to a field of type 'RescheduleStatus[]'
    */
   export type ListEnumRescheduleStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RescheduleStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'JobCrewEventType'
+   */
+  export type EnumJobCrewEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'JobCrewEventType'>
+    
+
+
+  /**
+   * Reference to a field of type 'JobCrewEventType[]'
+   */
+  export type ListEnumJobCrewEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'JobCrewEventType[]'>
     
 
 
@@ -18646,6 +19859,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFilter<"Job"> | $Enums.JobPriority
     assignedToId?: StringNullableFilter<"Job"> | string | null
     assignedToName?: StringNullableFilter<"Job"> | string | null
+    crewUserIds?: StringNullableListFilter<"Job">
+    requiredTechCount?: IntNullableFilter<"Job"> | number | null
     scheduledStart?: DateTimeNullableFilter<"Job"> | Date | string | null
     scheduledEnd?: DateTimeNullableFilter<"Job"> | Date | string | null
     actualStart?: DateTimeNullableFilter<"Job"> | Date | string | null
@@ -18675,6 +19890,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueListRelationFilter
     statusHistory?: JobStatusHistoryListRelationFilter
     photos?: JobPhotoListRelationFilter
+    crewEvents?: JobCrewEventListRelationFilter
     rescheduleRequests?: RescheduleRequestListRelationFilter
   }
 
@@ -18704,6 +19920,8 @@ export namespace Prisma {
     priority?: SortOrder
     assignedToId?: SortOrderInput | SortOrder
     assignedToName?: SortOrderInput | SortOrder
+    crewUserIds?: SortOrder
+    requiredTechCount?: SortOrderInput | SortOrder
     scheduledStart?: SortOrderInput | SortOrder
     scheduledEnd?: SortOrderInput | SortOrder
     actualStart?: SortOrderInput | SortOrder
@@ -18733,6 +19951,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueOrderByRelationAggregateInput
     statusHistory?: JobStatusHistoryOrderByRelationAggregateInput
     photos?: JobPhotoOrderByRelationAggregateInput
+    crewEvents?: JobCrewEventOrderByRelationAggregateInput
     rescheduleRequests?: RescheduleRequestOrderByRelationAggregateInput
   }
 
@@ -18766,6 +19985,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFilter<"Job"> | $Enums.JobPriority
     assignedToId?: StringNullableFilter<"Job"> | string | null
     assignedToName?: StringNullableFilter<"Job"> | string | null
+    crewUserIds?: StringNullableListFilter<"Job">
+    requiredTechCount?: IntNullableFilter<"Job"> | number | null
     scheduledStart?: DateTimeNullableFilter<"Job"> | Date | string | null
     scheduledEnd?: DateTimeNullableFilter<"Job"> | Date | string | null
     actualStart?: DateTimeNullableFilter<"Job"> | Date | string | null
@@ -18795,6 +20016,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueListRelationFilter
     statusHistory?: JobStatusHistoryListRelationFilter
     photos?: JobPhotoListRelationFilter
+    crewEvents?: JobCrewEventListRelationFilter
     rescheduleRequests?: RescheduleRequestListRelationFilter
   }, "id" | "companyId_jobNumber">
 
@@ -18824,6 +20046,8 @@ export namespace Prisma {
     priority?: SortOrder
     assignedToId?: SortOrderInput | SortOrder
     assignedToName?: SortOrderInput | SortOrder
+    crewUserIds?: SortOrder
+    requiredTechCount?: SortOrderInput | SortOrder
     scheduledStart?: SortOrderInput | SortOrder
     scheduledEnd?: SortOrderInput | SortOrder
     actualStart?: SortOrderInput | SortOrder
@@ -18883,6 +20107,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityWithAggregatesFilter<"Job"> | $Enums.JobPriority
     assignedToId?: StringNullableWithAggregatesFilter<"Job"> | string | null
     assignedToName?: StringNullableWithAggregatesFilter<"Job"> | string | null
+    crewUserIds?: StringNullableListFilter<"Job">
+    requiredTechCount?: IntNullableWithAggregatesFilter<"Job"> | number | null
     scheduledStart?: DateTimeNullableWithAggregatesFilter<"Job"> | Date | string | null
     scheduledEnd?: DateTimeNullableWithAggregatesFilter<"Job"> | Date | string | null
     actualStart?: DateTimeNullableWithAggregatesFilter<"Job"> | Date | string | null
@@ -19503,6 +20729,91 @@ export namespace Prisma {
     window?: StringNullableWithAggregatesFilter<"RescheduleSlot"> | string | null
   }
 
+  export type JobCrewEventWhereInput = {
+    AND?: JobCrewEventWhereInput | JobCrewEventWhereInput[]
+    OR?: JobCrewEventWhereInput[]
+    NOT?: JobCrewEventWhereInput | JobCrewEventWhereInput[]
+    id?: StringFilter<"JobCrewEvent"> | string
+    companyId?: StringFilter<"JobCrewEvent"> | string
+    jobId?: StringFilter<"JobCrewEvent"> | string
+    event?: EnumJobCrewEventTypeFilter<"JobCrewEvent"> | $Enums.JobCrewEventType
+    technicianId?: StringFilter<"JobCrewEvent"> | string
+    technicianName?: StringFilter<"JobCrewEvent"> | string
+    previousLeadId?: StringNullableFilter<"JobCrewEvent"> | string | null
+    actorId?: StringFilter<"JobCrewEvent"> | string
+    actorName?: StringFilter<"JobCrewEvent"> | string
+    reason?: StringNullableFilter<"JobCrewEvent"> | string | null
+    createdAt?: DateTimeFilter<"JobCrewEvent"> | Date | string
+    job?: XOR<JobRelationFilter, JobWhereInput>
+  }
+
+  export type JobCrewEventOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    event?: SortOrder
+    technicianId?: SortOrder
+    technicianName?: SortOrder
+    previousLeadId?: SortOrderInput | SortOrder
+    actorId?: SortOrder
+    actorName?: SortOrder
+    reason?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    job?: JobOrderByWithRelationInput
+  }
+
+  export type JobCrewEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: JobCrewEventWhereInput | JobCrewEventWhereInput[]
+    OR?: JobCrewEventWhereInput[]
+    NOT?: JobCrewEventWhereInput | JobCrewEventWhereInput[]
+    companyId?: StringFilter<"JobCrewEvent"> | string
+    jobId?: StringFilter<"JobCrewEvent"> | string
+    event?: EnumJobCrewEventTypeFilter<"JobCrewEvent"> | $Enums.JobCrewEventType
+    technicianId?: StringFilter<"JobCrewEvent"> | string
+    technicianName?: StringFilter<"JobCrewEvent"> | string
+    previousLeadId?: StringNullableFilter<"JobCrewEvent"> | string | null
+    actorId?: StringFilter<"JobCrewEvent"> | string
+    actorName?: StringFilter<"JobCrewEvent"> | string
+    reason?: StringNullableFilter<"JobCrewEvent"> | string | null
+    createdAt?: DateTimeFilter<"JobCrewEvent"> | Date | string
+    job?: XOR<JobRelationFilter, JobWhereInput>
+  }, "id">
+
+  export type JobCrewEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    event?: SortOrder
+    technicianId?: SortOrder
+    technicianName?: SortOrder
+    previousLeadId?: SortOrderInput | SortOrder
+    actorId?: SortOrder
+    actorName?: SortOrder
+    reason?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: JobCrewEventCountOrderByAggregateInput
+    _max?: JobCrewEventMaxOrderByAggregateInput
+    _min?: JobCrewEventMinOrderByAggregateInput
+  }
+
+  export type JobCrewEventScalarWhereWithAggregatesInput = {
+    AND?: JobCrewEventScalarWhereWithAggregatesInput | JobCrewEventScalarWhereWithAggregatesInput[]
+    OR?: JobCrewEventScalarWhereWithAggregatesInput[]
+    NOT?: JobCrewEventScalarWhereWithAggregatesInput | JobCrewEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"JobCrewEvent"> | string
+    companyId?: StringWithAggregatesFilter<"JobCrewEvent"> | string
+    jobId?: StringWithAggregatesFilter<"JobCrewEvent"> | string
+    event?: EnumJobCrewEventTypeWithAggregatesFilter<"JobCrewEvent"> | $Enums.JobCrewEventType
+    technicianId?: StringWithAggregatesFilter<"JobCrewEvent"> | string
+    technicianName?: StringWithAggregatesFilter<"JobCrewEvent"> | string
+    previousLeadId?: StringNullableWithAggregatesFilter<"JobCrewEvent"> | string | null
+    actorId?: StringWithAggregatesFilter<"JobCrewEvent"> | string
+    actorName?: StringWithAggregatesFilter<"JobCrewEvent"> | string
+    reason?: StringNullableWithAggregatesFilter<"JobCrewEvent"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"JobCrewEvent"> | Date | string
+  }
+
   export type JobTypeCreateInput = {
     id?: string
     companyId: string
@@ -20110,6 +21421,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -20139,6 +21452,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
@@ -20168,6 +21482,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -20195,6 +21511,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventUncheckedCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
@@ -20222,6 +21539,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -20251,6 +21570,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
@@ -20280,6 +21600,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -20307,6 +21629,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUncheckedUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
@@ -20336,6 +21659,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -20385,6 +21710,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -20436,6 +21763,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -21128,6 +22457,103 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     window?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type JobCrewEventCreateInput = {
+    id?: string
+    companyId: string
+    event: $Enums.JobCrewEventType
+    technicianId: string
+    technicianName: string
+    previousLeadId?: string | null
+    actorId: string
+    actorName: string
+    reason?: string | null
+    createdAt?: Date | string
+    job: JobCreateNestedOneWithoutCrewEventsInput
+  }
+
+  export type JobCrewEventUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    jobId: string
+    event: $Enums.JobCrewEventType
+    technicianId: string
+    technicianName: string
+    previousLeadId?: string | null
+    actorId: string
+    actorName: string
+    reason?: string | null
+    createdAt?: Date | string
+  }
+
+  export type JobCrewEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    event?: EnumJobCrewEventTypeFieldUpdateOperationsInput | $Enums.JobCrewEventType
+    technicianId?: StringFieldUpdateOperationsInput | string
+    technicianName?: StringFieldUpdateOperationsInput | string
+    previousLeadId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    actorName?: StringFieldUpdateOperationsInput | string
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    job?: JobUpdateOneRequiredWithoutCrewEventsNestedInput
+  }
+
+  export type JobCrewEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    jobId?: StringFieldUpdateOperationsInput | string
+    event?: EnumJobCrewEventTypeFieldUpdateOperationsInput | $Enums.JobCrewEventType
+    technicianId?: StringFieldUpdateOperationsInput | string
+    technicianName?: StringFieldUpdateOperationsInput | string
+    previousLeadId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    actorName?: StringFieldUpdateOperationsInput | string
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type JobCrewEventCreateManyInput = {
+    id?: string
+    companyId: string
+    jobId: string
+    event: $Enums.JobCrewEventType
+    technicianId: string
+    technicianName: string
+    previousLeadId?: string | null
+    actorId: string
+    actorName: string
+    reason?: string | null
+    createdAt?: Date | string
+  }
+
+  export type JobCrewEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    event?: EnumJobCrewEventTypeFieldUpdateOperationsInput | $Enums.JobCrewEventType
+    technicianId?: StringFieldUpdateOperationsInput | string
+    technicianName?: StringFieldUpdateOperationsInput | string
+    previousLeadId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    actorName?: StringFieldUpdateOperationsInput | string
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type JobCrewEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    jobId?: StringFieldUpdateOperationsInput | string
+    event?: EnumJobCrewEventTypeFieldUpdateOperationsInput | $Enums.JobCrewEventType
+    technicianId?: StringFieldUpdateOperationsInput | string
+    technicianName?: StringFieldUpdateOperationsInput | string
+    previousLeadId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    actorName?: StringFieldUpdateOperationsInput | string
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -21846,6 +23272,14 @@ export namespace Prisma {
     not?: NestedEnumJobPriorityFilter<$PrismaModel> | $Enums.JobPriority
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -21855,14 +23289,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
-  export type StringNullableListFilter<$PrismaModel = never> = {
-    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    has?: string | StringFieldRefInput<$PrismaModel> | null
-    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
-    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
   }
 
   export type EnumRescheduleStateNullableFilter<$PrismaModel = never> = {
@@ -21900,6 +23326,12 @@ export namespace Prisma {
     none?: JobPhotoWhereInput
   }
 
+  export type JobCrewEventListRelationFilter = {
+    every?: JobCrewEventWhereInput
+    some?: JobCrewEventWhereInput
+    none?: JobCrewEventWhereInput
+  }
+
   export type RescheduleRequestListRelationFilter = {
     every?: RescheduleRequestWhereInput
     some?: RescheduleRequestWhereInput
@@ -21915,6 +23347,10 @@ export namespace Prisma {
   }
 
   export type JobPhotoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type JobCrewEventOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -21953,6 +23389,8 @@ export namespace Prisma {
     priority?: SortOrder
     assignedToId?: SortOrder
     assignedToName?: SortOrder
+    crewUserIds?: SortOrder
+    requiredTechCount?: SortOrder
     scheduledStart?: SortOrder
     scheduledEnd?: SortOrder
     actualStart?: SortOrder
@@ -21981,6 +23419,7 @@ export namespace Prisma {
   export type JobAvgOrderByAggregateInput = {
     serviceLatitude?: SortOrder
     serviceLongitude?: SortOrder
+    requiredTechCount?: SortOrder
     estimatedDurationMins?: SortOrder
     travelDistanceKm?: SortOrder
     estimatedValue?: SortOrder
@@ -22012,6 +23451,7 @@ export namespace Prisma {
     priority?: SortOrder
     assignedToId?: SortOrder
     assignedToName?: SortOrder
+    requiredTechCount?: SortOrder
     scheduledStart?: SortOrder
     scheduledEnd?: SortOrder
     actualStart?: SortOrder
@@ -22062,6 +23502,7 @@ export namespace Prisma {
     priority?: SortOrder
     assignedToId?: SortOrder
     assignedToName?: SortOrder
+    requiredTechCount?: SortOrder
     scheduledStart?: SortOrder
     scheduledEnd?: SortOrder
     actualStart?: SortOrder
@@ -22089,6 +23530,7 @@ export namespace Prisma {
   export type JobSumOrderByAggregateInput = {
     serviceLatitude?: SortOrder
     serviceLongitude?: SortOrder
+    requiredTechCount?: SortOrder
     estimatedDurationMins?: SortOrder
     travelDistanceKm?: SortOrder
     estimatedValue?: SortOrder
@@ -22610,6 +24052,65 @@ export namespace Prisma {
     window?: SortOrder
   }
 
+  export type EnumJobCrewEventTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.JobCrewEventType | EnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.JobCrewEventType[] | ListEnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.JobCrewEventType[] | ListEnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumJobCrewEventTypeFilter<$PrismaModel> | $Enums.JobCrewEventType
+  }
+
+  export type JobCrewEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    event?: SortOrder
+    technicianId?: SortOrder
+    technicianName?: SortOrder
+    previousLeadId?: SortOrder
+    actorId?: SortOrder
+    actorName?: SortOrder
+    reason?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type JobCrewEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    event?: SortOrder
+    technicianId?: SortOrder
+    technicianName?: SortOrder
+    previousLeadId?: SortOrder
+    actorId?: SortOrder
+    actorName?: SortOrder
+    reason?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type JobCrewEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    jobId?: SortOrder
+    event?: SortOrder
+    technicianId?: SortOrder
+    technicianName?: SortOrder
+    previousLeadId?: SortOrder
+    actorId?: SortOrder
+    actorName?: SortOrder
+    reason?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type EnumJobCrewEventTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.JobCrewEventType | EnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.JobCrewEventType[] | ListEnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.JobCrewEventType[] | ListEnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumJobCrewEventTypeWithAggregatesFilter<$PrismaModel> | $Enums.JobCrewEventType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumJobCrewEventTypeFilter<$PrismaModel>
+    _max?: NestedEnumJobCrewEventTypeFilter<$PrismaModel>
+  }
+
   export type JobTemplateCreateNestedManyWithoutJobTypeInput = {
     create?: XOR<JobTemplateCreateWithoutJobTypeInput, JobTemplateUncheckedCreateWithoutJobTypeInput> | JobTemplateCreateWithoutJobTypeInput[] | JobTemplateUncheckedCreateWithoutJobTypeInput[]
     connectOrCreate?: JobTemplateCreateOrConnectWithoutJobTypeInput | JobTemplateCreateOrConnectWithoutJobTypeInput[]
@@ -23022,6 +24523,10 @@ export namespace Prisma {
     deleteMany?: WorkOrderLineItemScalarWhereInput | WorkOrderLineItemScalarWhereInput[]
   }
 
+  export type JobCreatecrewUserIdsInput = {
+    set: string[]
+  }
+
   export type JobCreatetagsInput = {
     set: string[]
   }
@@ -23066,6 +24571,13 @@ export namespace Prisma {
     connect?: JobPhotoWhereUniqueInput | JobPhotoWhereUniqueInput[]
   }
 
+  export type JobCrewEventCreateNestedManyWithoutJobInput = {
+    create?: XOR<JobCrewEventCreateWithoutJobInput, JobCrewEventUncheckedCreateWithoutJobInput> | JobCrewEventCreateWithoutJobInput[] | JobCrewEventUncheckedCreateWithoutJobInput[]
+    connectOrCreate?: JobCrewEventCreateOrConnectWithoutJobInput | JobCrewEventCreateOrConnectWithoutJobInput[]
+    createMany?: JobCrewEventCreateManyJobInputEnvelope
+    connect?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+  }
+
   export type RescheduleRequestCreateNestedManyWithoutJobInput = {
     create?: XOR<RescheduleRequestCreateWithoutJobInput, RescheduleRequestUncheckedCreateWithoutJobInput> | RescheduleRequestCreateWithoutJobInput[] | RescheduleRequestUncheckedCreateWithoutJobInput[]
     connectOrCreate?: RescheduleRequestCreateOrConnectWithoutJobInput | RescheduleRequestCreateOrConnectWithoutJobInput[]
@@ -23101,6 +24613,13 @@ export namespace Prisma {
     connect?: JobPhotoWhereUniqueInput | JobPhotoWhereUniqueInput[]
   }
 
+  export type JobCrewEventUncheckedCreateNestedManyWithoutJobInput = {
+    create?: XOR<JobCrewEventCreateWithoutJobInput, JobCrewEventUncheckedCreateWithoutJobInput> | JobCrewEventCreateWithoutJobInput[] | JobCrewEventUncheckedCreateWithoutJobInput[]
+    connectOrCreate?: JobCrewEventCreateOrConnectWithoutJobInput | JobCrewEventCreateOrConnectWithoutJobInput[]
+    createMany?: JobCrewEventCreateManyJobInputEnvelope
+    connect?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+  }
+
   export type RescheduleRequestUncheckedCreateNestedManyWithoutJobInput = {
     create?: XOR<RescheduleRequestCreateWithoutJobInput, RescheduleRequestUncheckedCreateWithoutJobInput> | RescheduleRequestCreateWithoutJobInput[] | RescheduleRequestUncheckedCreateWithoutJobInput[]
     connectOrCreate?: RescheduleRequestCreateOrConnectWithoutJobInput | RescheduleRequestCreateOrConnectWithoutJobInput[]
@@ -23122,6 +24641,11 @@ export namespace Prisma {
 
   export type EnumJobPriorityFieldUpdateOperationsInput = {
     set?: $Enums.JobPriority
+  }
+
+  export type JobUpdatecrewUserIdsInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -23213,6 +24737,20 @@ export namespace Prisma {
     deleteMany?: JobPhotoScalarWhereInput | JobPhotoScalarWhereInput[]
   }
 
+  export type JobCrewEventUpdateManyWithoutJobNestedInput = {
+    create?: XOR<JobCrewEventCreateWithoutJobInput, JobCrewEventUncheckedCreateWithoutJobInput> | JobCrewEventCreateWithoutJobInput[] | JobCrewEventUncheckedCreateWithoutJobInput[]
+    connectOrCreate?: JobCrewEventCreateOrConnectWithoutJobInput | JobCrewEventCreateOrConnectWithoutJobInput[]
+    upsert?: JobCrewEventUpsertWithWhereUniqueWithoutJobInput | JobCrewEventUpsertWithWhereUniqueWithoutJobInput[]
+    createMany?: JobCrewEventCreateManyJobInputEnvelope
+    set?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+    disconnect?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+    delete?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+    connect?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+    update?: JobCrewEventUpdateWithWhereUniqueWithoutJobInput | JobCrewEventUpdateWithWhereUniqueWithoutJobInput[]
+    updateMany?: JobCrewEventUpdateManyWithWhereWithoutJobInput | JobCrewEventUpdateManyWithWhereWithoutJobInput[]
+    deleteMany?: JobCrewEventScalarWhereInput | JobCrewEventScalarWhereInput[]
+  }
+
   export type RescheduleRequestUpdateManyWithoutJobNestedInput = {
     create?: XOR<RescheduleRequestCreateWithoutJobInput, RescheduleRequestUncheckedCreateWithoutJobInput> | RescheduleRequestCreateWithoutJobInput[] | RescheduleRequestUncheckedCreateWithoutJobInput[]
     connectOrCreate?: RescheduleRequestCreateOrConnectWithoutJobInput | RescheduleRequestCreateOrConnectWithoutJobInput[]
@@ -23281,6 +24819,20 @@ export namespace Prisma {
     update?: JobPhotoUpdateWithWhereUniqueWithoutJobInput | JobPhotoUpdateWithWhereUniqueWithoutJobInput[]
     updateMany?: JobPhotoUpdateManyWithWhereWithoutJobInput | JobPhotoUpdateManyWithWhereWithoutJobInput[]
     deleteMany?: JobPhotoScalarWhereInput | JobPhotoScalarWhereInput[]
+  }
+
+  export type JobCrewEventUncheckedUpdateManyWithoutJobNestedInput = {
+    create?: XOR<JobCrewEventCreateWithoutJobInput, JobCrewEventUncheckedCreateWithoutJobInput> | JobCrewEventCreateWithoutJobInput[] | JobCrewEventUncheckedCreateWithoutJobInput[]
+    connectOrCreate?: JobCrewEventCreateOrConnectWithoutJobInput | JobCrewEventCreateOrConnectWithoutJobInput[]
+    upsert?: JobCrewEventUpsertWithWhereUniqueWithoutJobInput | JobCrewEventUpsertWithWhereUniqueWithoutJobInput[]
+    createMany?: JobCrewEventCreateManyJobInputEnvelope
+    set?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+    disconnect?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+    delete?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+    connect?: JobCrewEventWhereUniqueInput | JobCrewEventWhereUniqueInput[]
+    update?: JobCrewEventUpdateWithWhereUniqueWithoutJobInput | JobCrewEventUpdateWithWhereUniqueWithoutJobInput[]
+    updateMany?: JobCrewEventUpdateManyWithWhereWithoutJobInput | JobCrewEventUpdateManyWithWhereWithoutJobInput[]
+    deleteMany?: JobCrewEventScalarWhereInput | JobCrewEventScalarWhereInput[]
   }
 
   export type RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput = {
@@ -23563,6 +25115,24 @@ export namespace Prisma {
     upsert?: RescheduleRequestUpsertWithoutSlotsInput
     connect?: RescheduleRequestWhereUniqueInput
     update?: XOR<XOR<RescheduleRequestUpdateToOneWithWhereWithoutSlotsInput, RescheduleRequestUpdateWithoutSlotsInput>, RescheduleRequestUncheckedUpdateWithoutSlotsInput>
+  }
+
+  export type JobCreateNestedOneWithoutCrewEventsInput = {
+    create?: XOR<JobCreateWithoutCrewEventsInput, JobUncheckedCreateWithoutCrewEventsInput>
+    connectOrCreate?: JobCreateOrConnectWithoutCrewEventsInput
+    connect?: JobWhereUniqueInput
+  }
+
+  export type EnumJobCrewEventTypeFieldUpdateOperationsInput = {
+    set?: $Enums.JobCrewEventType
+  }
+
+  export type JobUpdateOneRequiredWithoutCrewEventsNestedInput = {
+    create?: XOR<JobCreateWithoutCrewEventsInput, JobUncheckedCreateWithoutCrewEventsInput>
+    connectOrCreate?: JobCreateOrConnectWithoutCrewEventsInput
+    upsert?: JobUpsertWithoutCrewEventsInput
+    connect?: JobWhereUniqueInput
+    update?: XOR<XOR<JobUpdateToOneWithWhereWithoutCrewEventsInput, JobUpdateWithoutCrewEventsInput>, JobUncheckedUpdateWithoutCrewEventsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -24068,6 +25638,23 @@ export namespace Prisma {
     _max?: NestedEnumRescheduleStatusFilter<$PrismaModel>
   }
 
+  export type NestedEnumJobCrewEventTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.JobCrewEventType | EnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.JobCrewEventType[] | ListEnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.JobCrewEventType[] | ListEnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumJobCrewEventTypeFilter<$PrismaModel> | $Enums.JobCrewEventType
+  }
+
+  export type NestedEnumJobCrewEventTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.JobCrewEventType | EnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.JobCrewEventType[] | ListEnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.JobCrewEventType[] | ListEnumJobCrewEventTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumJobCrewEventTypeWithAggregatesFilter<$PrismaModel> | $Enums.JobCrewEventType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumJobCrewEventTypeFilter<$PrismaModel>
+    _max?: NestedEnumJobCrewEventTypeFilter<$PrismaModel>
+  }
+
   export type JobTemplateCreateWithoutJobTypeInput = {
     id?: string
     companyId: string
@@ -24172,6 +25759,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -24200,6 +25789,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
@@ -24228,6 +25818,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -24255,6 +25847,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventUncheckedCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
@@ -24380,6 +25973,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFilter<"Job"> | $Enums.JobPriority
     assignedToId?: StringNullableFilter<"Job"> | string | null
     assignedToName?: StringNullableFilter<"Job"> | string | null
+    crewUserIds?: StringNullableListFilter<"Job">
+    requiredTechCount?: IntNullableFilter<"Job"> | number | null
     scheduledStart?: DateTimeNullableFilter<"Job"> | Date | string | null
     scheduledEnd?: DateTimeNullableFilter<"Job"> | Date | string | null
     actualStart?: DateTimeNullableFilter<"Job"> | Date | string | null
@@ -24500,6 +26095,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -24528,6 +26125,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
@@ -24556,6 +26154,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -24583,6 +26183,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventUncheckedCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
@@ -24918,6 +26519,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -24946,6 +26549,7 @@ export namespace Prisma {
     workOrders?: WorkOrderCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
@@ -24975,6 +26579,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -25001,6 +26607,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventUncheckedCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
@@ -25079,6 +26686,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -25107,6 +26716,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
@@ -25136,6 +26746,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -25162,6 +26774,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUncheckedUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
@@ -25476,6 +27089,42 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type JobCrewEventCreateWithoutJobInput = {
+    id?: string
+    companyId: string
+    event: $Enums.JobCrewEventType
+    technicianId: string
+    technicianName: string
+    previousLeadId?: string | null
+    actorId: string
+    actorName: string
+    reason?: string | null
+    createdAt?: Date | string
+  }
+
+  export type JobCrewEventUncheckedCreateWithoutJobInput = {
+    id?: string
+    companyId: string
+    event: $Enums.JobCrewEventType
+    technicianId: string
+    technicianName: string
+    previousLeadId?: string | null
+    actorId: string
+    actorName: string
+    reason?: string | null
+    createdAt?: Date | string
+  }
+
+  export type JobCrewEventCreateOrConnectWithoutJobInput = {
+    where: JobCrewEventWhereUniqueInput
+    create: XOR<JobCrewEventCreateWithoutJobInput, JobCrewEventUncheckedCreateWithoutJobInput>
+  }
+
+  export type JobCrewEventCreateManyJobInputEnvelope = {
+    data: JobCrewEventCreateManyJobInput | JobCrewEventCreateManyJobInput[]
+    skipDuplicates?: boolean
+  }
+
   export type RescheduleRequestCreateWithoutJobInput = {
     id?: string
     companyId: string
@@ -25725,6 +27374,39 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"JobPhoto"> | Date | string
   }
 
+  export type JobCrewEventUpsertWithWhereUniqueWithoutJobInput = {
+    where: JobCrewEventWhereUniqueInput
+    update: XOR<JobCrewEventUpdateWithoutJobInput, JobCrewEventUncheckedUpdateWithoutJobInput>
+    create: XOR<JobCrewEventCreateWithoutJobInput, JobCrewEventUncheckedCreateWithoutJobInput>
+  }
+
+  export type JobCrewEventUpdateWithWhereUniqueWithoutJobInput = {
+    where: JobCrewEventWhereUniqueInput
+    data: XOR<JobCrewEventUpdateWithoutJobInput, JobCrewEventUncheckedUpdateWithoutJobInput>
+  }
+
+  export type JobCrewEventUpdateManyWithWhereWithoutJobInput = {
+    where: JobCrewEventScalarWhereInput
+    data: XOR<JobCrewEventUpdateManyMutationInput, JobCrewEventUncheckedUpdateManyWithoutJobInput>
+  }
+
+  export type JobCrewEventScalarWhereInput = {
+    AND?: JobCrewEventScalarWhereInput | JobCrewEventScalarWhereInput[]
+    OR?: JobCrewEventScalarWhereInput[]
+    NOT?: JobCrewEventScalarWhereInput | JobCrewEventScalarWhereInput[]
+    id?: StringFilter<"JobCrewEvent"> | string
+    companyId?: StringFilter<"JobCrewEvent"> | string
+    jobId?: StringFilter<"JobCrewEvent"> | string
+    event?: EnumJobCrewEventTypeFilter<"JobCrewEvent"> | $Enums.JobCrewEventType
+    technicianId?: StringFilter<"JobCrewEvent"> | string
+    technicianName?: StringFilter<"JobCrewEvent"> | string
+    previousLeadId?: StringNullableFilter<"JobCrewEvent"> | string | null
+    actorId?: StringFilter<"JobCrewEvent"> | string
+    actorName?: StringFilter<"JobCrewEvent"> | string
+    reason?: StringNullableFilter<"JobCrewEvent"> | string | null
+    createdAt?: DateTimeFilter<"JobCrewEvent"> | Date | string
+  }
+
   export type RescheduleRequestUpsertWithWhereUniqueWithoutJobInput = {
     where: RescheduleRequestWhereUniqueInput
     update: XOR<RescheduleRequestUpdateWithoutJobInput, RescheduleRequestUncheckedUpdateWithoutJobInput>
@@ -25789,6 +27471,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -25817,6 +27501,7 @@ export namespace Prisma {
     workOrders?: WorkOrderCreateNestedManyWithoutJobInput
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
@@ -25846,6 +27531,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -25872,6 +27559,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedCreateNestedManyWithoutJobInput
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventUncheckedCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
@@ -25915,6 +27603,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -25943,6 +27633,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUpdateManyWithoutJobNestedInput
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
@@ -25972,6 +27663,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -25998,6 +27691,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedUpdateManyWithoutJobNestedInput
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUncheckedUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
@@ -26025,6 +27719,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -26053,6 +27749,7 @@ export namespace Prisma {
     workOrders?: WorkOrderCreateNestedManyWithoutJobInput
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
@@ -26082,6 +27779,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -26108,6 +27807,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedCreateNestedManyWithoutJobInput
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventUncheckedCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
@@ -26151,6 +27851,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -26179,6 +27881,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUpdateManyWithoutJobNestedInput
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
@@ -26208,6 +27911,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -26234,6 +27939,7 @@ export namespace Prisma {
     workOrders?: WorkOrderUncheckedUpdateManyWithoutJobNestedInput
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUncheckedUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
@@ -26261,6 +27967,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -26289,6 +27997,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
   }
 
@@ -26318,6 +28027,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -26344,6 +28055,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventUncheckedCreateNestedManyWithoutJobInput
     rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
   }
 
@@ -26455,6 +28167,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -26483,6 +28197,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
@@ -26512,6 +28227,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -26538,6 +28255,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUncheckedUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
@@ -26877,6 +28595,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -26906,6 +28626,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
     photos?: JobPhotoCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventCreateNestedManyWithoutJobInput
   }
 
   export type JobUncheckedCreateWithoutRescheduleRequestsInput = {
@@ -26934,6 +28655,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -26961,6 +28684,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
     statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
     photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    crewEvents?: JobCrewEventUncheckedCreateNestedManyWithoutJobInput
   }
 
   export type JobCreateOrConnectWithoutRescheduleRequestsInput = {
@@ -27027,6 +28751,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27056,6 +28782,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUpdateManyWithoutJobNestedInput
   }
 
   export type JobUncheckedUpdateWithoutRescheduleRequestsInput = {
@@ -27084,6 +28811,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27111,6 +28840,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUncheckedUpdateManyWithoutJobNestedInput
   }
 
   export type RescheduleSlotUpsertWithWhereUniqueWithoutRequestInput = {
@@ -27240,6 +28970,254 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type JobCreateWithoutCrewEventsInput = {
+    id?: string
+    companyId: string
+    jobNumber: string
+    customerId: string
+    customerName: string
+    customerPhone?: string | null
+    customerEmail?: string | null
+    serviceAddress: string
+    serviceCity?: string | null
+    serviceState?: string | null
+    serviceZip?: string | null
+    serviceLatitude?: Decimal | DecimalJsLike | number | string | null
+    serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    projectId?: string | null
+    houseId?: string | null
+    componentId?: string | null
+    equipmentId?: string | null
+    title: string
+    description?: string | null
+    status?: $Enums.JobStatus
+    priority?: $Enums.JobPriority
+    assignedToId?: string | null
+    assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
+    scheduledStart?: Date | string | null
+    scheduledEnd?: Date | string | null
+    actualStart?: Date | string | null
+    actualEnd?: Date | string | null
+    estimatedDurationMins?: number | null
+    travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
+    currency?: string
+    quoteId?: string | null
+    invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
+    notes?: string | null
+    internalNotes?: string | null
+    tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
+    createdByUserId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    completedAt?: Date | string | null
+    jobType?: JobTypeCreateNestedOneWithoutJobsInput
+    template?: JobTemplateCreateNestedOneWithoutJobsInput
+    workOrders?: WorkOrderCreateNestedManyWithoutJobInput
+    customFieldValues?: JobCustomFieldValueCreateNestedManyWithoutJobInput
+    statusHistory?: JobStatusHistoryCreateNestedManyWithoutJobInput
+    photos?: JobPhotoCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestCreateNestedManyWithoutJobInput
+  }
+
+  export type JobUncheckedCreateWithoutCrewEventsInput = {
+    id?: string
+    companyId: string
+    jobNumber: string
+    customerId: string
+    customerName: string
+    customerPhone?: string | null
+    customerEmail?: string | null
+    serviceAddress: string
+    serviceCity?: string | null
+    serviceState?: string | null
+    serviceZip?: string | null
+    serviceLatitude?: Decimal | DecimalJsLike | number | string | null
+    serviceLongitude?: Decimal | DecimalJsLike | number | string | null
+    jobTypeId?: string | null
+    templateId?: string | null
+    projectId?: string | null
+    houseId?: string | null
+    componentId?: string | null
+    equipmentId?: string | null
+    title: string
+    description?: string | null
+    status?: $Enums.JobStatus
+    priority?: $Enums.JobPriority
+    assignedToId?: string | null
+    assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
+    scheduledStart?: Date | string | null
+    scheduledEnd?: Date | string | null
+    actualStart?: Date | string | null
+    actualEnd?: Date | string | null
+    estimatedDurationMins?: number | null
+    travelDistanceKm?: Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: Decimal | DecimalJsLike | number | string | null
+    currency?: string
+    quoteId?: string | null
+    invoiceId?: string | null
+    agreementId?: string | null
+    isAgreementJob?: boolean
+    notes?: string | null
+    internalNotes?: string | null
+    tags?: JobCreatetagsInput | string[]
+    cancellationReason?: string | null
+    hasPartShortage?: boolean
+    partShortageNote?: string | null
+    rescheduleState?: $Enums.RescheduleState | null
+    createdByUserId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    completedAt?: Date | string | null
+    workOrders?: WorkOrderUncheckedCreateNestedManyWithoutJobInput
+    customFieldValues?: JobCustomFieldValueUncheckedCreateNestedManyWithoutJobInput
+    statusHistory?: JobStatusHistoryUncheckedCreateNestedManyWithoutJobInput
+    photos?: JobPhotoUncheckedCreateNestedManyWithoutJobInput
+    rescheduleRequests?: RescheduleRequestUncheckedCreateNestedManyWithoutJobInput
+  }
+
+  export type JobCreateOrConnectWithoutCrewEventsInput = {
+    where: JobWhereUniqueInput
+    create: XOR<JobCreateWithoutCrewEventsInput, JobUncheckedCreateWithoutCrewEventsInput>
+  }
+
+  export type JobUpsertWithoutCrewEventsInput = {
+    update: XOR<JobUpdateWithoutCrewEventsInput, JobUncheckedUpdateWithoutCrewEventsInput>
+    create: XOR<JobCreateWithoutCrewEventsInput, JobUncheckedCreateWithoutCrewEventsInput>
+    where?: JobWhereInput
+  }
+
+  export type JobUpdateToOneWithWhereWithoutCrewEventsInput = {
+    where?: JobWhereInput
+    data: XOR<JobUpdateWithoutCrewEventsInput, JobUncheckedUpdateWithoutCrewEventsInput>
+  }
+
+  export type JobUpdateWithoutCrewEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    jobNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceAddress?: StringFieldUpdateOperationsInput | string
+    serviceCity?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceState?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
+    priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
+    assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
+    travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    quoteId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
+    createdByUserId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    jobType?: JobTypeUpdateOneWithoutJobsNestedInput
+    template?: JobTemplateUpdateOneWithoutJobsNestedInput
+    workOrders?: WorkOrderUpdateManyWithoutJobNestedInput
+    customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
+    statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
+    photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
+  }
+
+  export type JobUncheckedUpdateWithoutCrewEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    jobNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    customerName?: StringFieldUpdateOperationsInput | string
+    customerPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    customerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceAddress?: StringFieldUpdateOperationsInput | string
+    serviceCity?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceState?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceZip?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceLatitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    serviceLongitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    jobTypeId?: NullableStringFieldUpdateOperationsInput | string | null
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumJobStatusFieldUpdateOperationsInput | $Enums.JobStatus
+    priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
+    assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
+    scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actualEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    estimatedDurationMins?: NullableIntFieldUpdateOperationsInput | number | null
+    travelDistanceKm?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    estimatedValue?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    quoteId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    agreementId?: NullableStringFieldUpdateOperationsInput | string | null
+    isAgreementJob?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    internalNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: JobUpdatetagsInput | string[]
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    hasPartShortage?: BoolFieldUpdateOperationsInput | boolean
+    partShortageNote?: NullableStringFieldUpdateOperationsInput | string | null
+    rescheduleState?: NullableEnumRescheduleStateFieldUpdateOperationsInput | $Enums.RescheduleState | null
+    createdByUserId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    workOrders?: WorkOrderUncheckedUpdateManyWithoutJobNestedInput
+    customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
+    statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
+    photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
+  }
+
   export type JobTemplateCreateManyJobTypeInput = {
     id?: string
     companyId: string
@@ -27292,6 +29270,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -27428,6 +29408,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27456,6 +29438,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
@@ -27484,6 +29467,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27511,6 +29496,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUncheckedUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
@@ -27539,6 +29525,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27601,6 +29589,8 @@ export namespace Prisma {
     priority?: $Enums.JobPriority
     assignedToId?: string | null
     assignedToName?: string | null
+    crewUserIds?: JobCreatecrewUserIdsInput | string[]
+    requiredTechCount?: number | null
     scheduledStart?: Date | string | null
     scheduledEnd?: Date | string | null
     actualStart?: Date | string | null
@@ -27686,6 +29676,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27714,6 +29706,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUpdateManyWithoutJobNestedInput
   }
 
@@ -27742,6 +29735,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27769,6 +29764,7 @@ export namespace Prisma {
     customFieldValues?: JobCustomFieldValueUncheckedUpdateManyWithoutJobNestedInput
     statusHistory?: JobStatusHistoryUncheckedUpdateManyWithoutJobNestedInput
     photos?: JobPhotoUncheckedUpdateManyWithoutJobNestedInput
+    crewEvents?: JobCrewEventUncheckedUpdateManyWithoutJobNestedInput
     rescheduleRequests?: RescheduleRequestUncheckedUpdateManyWithoutJobNestedInput
   }
 
@@ -27797,6 +29793,8 @@ export namespace Prisma {
     priority?: EnumJobPriorityFieldUpdateOperationsInput | $Enums.JobPriority
     assignedToId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedToName?: NullableStringFieldUpdateOperationsInput | string | null
+    crewUserIds?: JobUpdatecrewUserIdsInput | string[]
+    requiredTechCount?: NullableIntFieldUpdateOperationsInput | number | null
     scheduledStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     scheduledEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     actualStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27939,6 +29937,19 @@ export namespace Prisma {
     caption?: string | null
     photoType?: $Enums.PhotoType
     uploadedById: string
+    createdAt?: Date | string
+  }
+
+  export type JobCrewEventCreateManyJobInput = {
+    id?: string
+    companyId: string
+    event: $Enums.JobCrewEventType
+    technicianId: string
+    technicianName: string
+    previousLeadId?: string | null
+    actorId: string
+    actorName: string
+    reason?: string | null
     createdAt?: Date | string
   }
 
@@ -28095,6 +30106,45 @@ export namespace Prisma {
     caption?: NullableStringFieldUpdateOperationsInput | string | null
     photoType?: EnumPhotoTypeFieldUpdateOperationsInput | $Enums.PhotoType
     uploadedById?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type JobCrewEventUpdateWithoutJobInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    event?: EnumJobCrewEventTypeFieldUpdateOperationsInput | $Enums.JobCrewEventType
+    technicianId?: StringFieldUpdateOperationsInput | string
+    technicianName?: StringFieldUpdateOperationsInput | string
+    previousLeadId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    actorName?: StringFieldUpdateOperationsInput | string
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type JobCrewEventUncheckedUpdateWithoutJobInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    event?: EnumJobCrewEventTypeFieldUpdateOperationsInput | $Enums.JobCrewEventType
+    technicianId?: StringFieldUpdateOperationsInput | string
+    technicianName?: StringFieldUpdateOperationsInput | string
+    previousLeadId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    actorName?: StringFieldUpdateOperationsInput | string
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type JobCrewEventUncheckedUpdateManyWithoutJobInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    event?: EnumJobCrewEventTypeFieldUpdateOperationsInput | $Enums.JobCrewEventType
+    technicianId?: StringFieldUpdateOperationsInput | string
+    technicianName?: StringFieldUpdateOperationsInput | string
+    previousLeadId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    actorName?: StringFieldUpdateOperationsInput | string
+    reason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -28373,6 +30423,10 @@ export namespace Prisma {
      * @deprecated Use RescheduleSlotDefaultArgs instead
      */
     export type RescheduleSlotArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = RescheduleSlotDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use JobCrewEventDefaultArgs instead
+     */
+    export type JobCrewEventArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = JobCrewEventDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

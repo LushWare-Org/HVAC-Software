@@ -204,8 +204,16 @@ model Job {
   priority    JobPriority @default(NORMAL)
 
   // Scheduling refs (set by scheduling-service, stored here for query convenience)
-  assignedToId   String? // Auth0 user ID of primary technician
+  assignedToId   String? // Auth0 user ID of the LEAD technician
   assignedToName String?
+  /// Every crew member's user id, lead included. Denormalised so the technician
+  /// app's "my jobs" query stays a single job-service query instead of a
+  /// cross-service join on its hottest path. Maintained by scheduling-service in
+  /// the same transaction as the assignment change.
+  crewUserIds       String[] @default([])
+  /// Optional target crew size. Guidance for smart assign and the "2 of 3"
+  /// counter, never a rule — a dispatcher may confirm any size.
+  requiredTechCount Int?
   scheduledStart DateTime?
   scheduledEnd   DateTime?
   actualStart    DateTime?
@@ -252,6 +260,7 @@ model Job {
   customFieldValues  JobCustomFieldValue[]
   statusHistory      JobStatusHistory[]
   photos             JobPhoto[]
+  crewEvents         JobCrewEvent[]
   rescheduleRequests RescheduleRequest[]
 
   @@unique([companyId, jobNumber])
@@ -498,4 +507,37 @@ enum RescheduleReason {
   CUSTOMER_UNAVAILABLE
   ACCESS_ISSUE
   OTHER
+}
+
+
+/// Audit trail for crew changes: who was added, removed, handed the lead, or
+/// checked out, and who did it.
+///
+/// Cannot reuse JobStatusHistory, whose toStatus is a required JobStatus enum —
+/// a handover is not a status change, and forcing it in would corrupt that
+/// table's meaning.
+model JobCrewEvent {
+  id             String           @id @default(uuid())
+  companyId      String
+  jobId          String
+  job            Job              @relation(fields: [jobId], references: [id])
+  event          JobCrewEventType
+  technicianId   String
+  technicianName String
+  /// Set only for LEAD_CHANGED: who held the lead before this event.
+  previousLeadId String?
+  actorId        String
+  actorName      String
+  reason         String?
+  createdAt      DateTime         @default(now())
+
+  @@index([companyId, jobId])
+  @@map("job_crew_events")
+}
+
+enum JobCrewEventType {
+  ADDED
+  REMOVED
+  LEAD_CHANGED
+  CHECKED_OUT
 }

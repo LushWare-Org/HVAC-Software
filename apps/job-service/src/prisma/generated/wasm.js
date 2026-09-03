@@ -228,6 +228,8 @@ exports.Prisma.JobScalarFieldEnum = {
   priority: 'priority',
   assignedToId: 'assignedToId',
   assignedToName: 'assignedToName',
+  crewUserIds: 'crewUserIds',
+  requiredTechCount: 'requiredTechCount',
   scheduledStart: 'scheduledStart',
   scheduledEnd: 'scheduledEnd',
   actualStart: 'actualStart',
@@ -346,6 +348,20 @@ exports.Prisma.RescheduleSlotScalarFieldEnum = {
   startAt: 'startAt',
   endAt: 'endAt',
   window: 'window'
+};
+
+exports.Prisma.JobCrewEventScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  jobId: 'jobId',
+  event: 'event',
+  technicianId: 'technicianId',
+  technicianName: 'technicianName',
+  previousLeadId: 'previousLeadId',
+  actorId: 'actorId',
+  actorName: 'actorName',
+  reason: 'reason',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -467,6 +483,13 @@ exports.RescheduleStatus = exports.$Enums.RescheduleStatus = {
   CANCELLED: 'CANCELLED'
 };
 
+exports.JobCrewEventType = exports.$Enums.JobCrewEventType = {
+  ADDED: 'ADDED',
+  REMOVED: 'REMOVED',
+  LEAD_CHANGED: 'LEAD_CHANGED',
+  CHECKED_OUT: 'CHECKED_OUT'
+};
+
 exports.Prisma.ModelName = {
   JobType: 'JobType',
   JobTemplate: 'JobTemplate',
@@ -481,7 +504,8 @@ exports.Prisma.ModelName = {
   WorkOrderTaskCompletion: 'WorkOrderTaskCompletion',
   WorkOrderLineItem: 'WorkOrderLineItem',
   RescheduleRequest: 'RescheduleRequest',
-  RescheduleSlot: 'RescheduleSlot'
+  RescheduleSlot: 'RescheduleSlot',
+  JobCrewEvent: 'JobCrewEvent'
 };
 
 /**
