@@ -42,6 +42,11 @@ export interface Customer {
   city?: string
   state?: string
   zipCode?: string
+  /** Saved service location — the default pin for jobs booked for this customer. */
+  latitude?: number | null
+  longitude?: number | null
+  locationTag?: string | null
+  locationSetAt?: string | null
   type: CustomerType
   isActive: boolean
   automaticFollowupEnabled?: boolean
@@ -303,8 +308,15 @@ export interface Job {
   customerAddress?: string  // alias for backwards compat
   serviceLatitude?: string
   serviceLongitude?: string
+  /** The LEAD technician. A solo job is a crew of one with that person as lead. */
   assignedToId?: string
   assignedToName?: string
+  /** Every crew member's user id, lead included. Denormalised by
+   *  scheduling-service in the same transaction as the assignment change. */
+  crewUserIds?: string[]
+  /** Optional target crew size. Drives the "2 of 3" counter and how many
+   *  candidates are suggested. Guidance, never a rule. */
+  requiredTechCount?: number | null
   jobTypeId?: string
   jobTypeName?: string
   scheduledStart?: string
@@ -558,6 +570,11 @@ export interface DispatchAssignment {
   status: AssignmentStatus
   score?: number
   distanceKm?: number
+  /** The one crew member who drives Job.status and is named to the customer. */
+  isLead?: boolean
+  /** Distance from the technician's base at assign time. Kept apart from
+   *  distanceKm (their live position) so the two are never confused. */
+  baseDistanceKm?: number | null
   assignedBy?: string       // null = auto-assigned
   assignedAt: string
   enRouteAt?: string
@@ -1003,4 +1020,44 @@ export interface CompanyProfile {
   trialEndsAt?: string
   createdAt: string
   updatedAt: string
+}
+
+
+// ─── Crew ────────────────────────────────────────────────────────────────────
+
+/** An existing booking that overlaps a proposed window. */
+export interface ScheduleConflict {
+  jobId: string
+  jobNumber: string
+  title: string
+  start: string
+  end: string
+  lat?: number | null
+  lng?: number | null
+  /** How far the clashing job is from THIS job's site. This is what lets a
+   *  dispatcher judge whether the clash actually matters: "busy" is not a
+   *  decision, "finishes 1.4 km away at 10:30" is. */
+  distanceFromSiteKm?: number | null
+}
+
+/** One technician on a job's crew, with the assignment that put them there. */
+export interface CrewMember {
+  assignment: DispatchAssignment
+  technician: Technician
+}
+
+/** A technician who could be added, with everything needed to judge them. */
+export interface CrewCandidate {
+  technician: Technician
+  score: number
+  /** null when the technician has no base and no known live position. They are
+   *  still assignable, just unscored on distance. */
+  baseDistanceKm?: number | null
+  /** false when baseDistanceKm fell back to the live position, so the UI can
+   *  label which number it is showing. */
+  distanceFromBase: boolean
+  activeJobsThatDay: number
+  /** Arrives as null (not []) when the technician is free. Always read it as
+   *  (conflicts ?? []) or the happy path throws. */
+  conflicts: ScheduleConflict[] | null
 }
