@@ -290,3 +290,18 @@ type CrewInput struct {
 	TechnicianIDs    []string `json:"technicianIds"`
 	LeadTechnicianID string   `json:"leadTechnicianId"`
 }
+
+// ScheduleConflict is an existing assignment that overlaps a proposed window.
+// It carries the clashing job's location and distance so a dispatcher can judge
+// whether the clash actually matters: "busy" is not a decision, "finishes 1.4 km
+// away at 10:30" is.
+type ScheduleConflict struct {
+	JobID              string    `json:"jobId"`
+	JobNumber          string    `json:"jobNumber"`
+	Title              string    `json:"title"`
+	Start              time.Time `json:"start"`
+	End                time.Time `json:"end"`
+	Lat                *float64  `json:"lat,omitempty"`
+	Lng                *float64  `json:"lng,omitempty"`
+	DistanceFromSiteKm *float64  `json:"distanceFromSiteKm,omitempty"`
+}
