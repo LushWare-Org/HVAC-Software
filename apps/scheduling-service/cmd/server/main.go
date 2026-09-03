@@ -55,6 +55,10 @@ func main() {
 	healthH := handler.NewHealthHandler(db, redisClient)
 	techH := handler.NewTechnicianHandler(techRepo)
 	dispatchH := handler.NewDispatchHandler(assignSvc, assignRepo)
+	crewRepo := repository.NewCrewRepository(db)
+	conflictRepo := repository.NewConflictRepository(db)
+	candidateSvc := service.NewCandidateService(techRepo, conflictRepo, assignRepo, cfg)
+	crewH := handler.NewCrewHandler(crewRepo, candidateSvc)
 	gpsH := handler.NewGPSHandler(techRepo, assignRepo, hub)
 	wsH := handler.NewWebSocketHandler(hub)
 
@@ -109,6 +113,9 @@ func main() {
 
 	// Technician profiles
 	// Note: role values MUST match @tscrm/types Role enum (lowercase snake_case injected by Auth0 Action)
+	// Base location, pushed by crm-service when a technician sets or changes it.
+	r.PATCH("/technicians/by-user/:userId/base-location", auth, crewH.SetBaseLocation)
+
 	tech := r.Group("/technicians", auth)
 	{
 		tech.POST("", middleware.RequireRole("super_admin", "company_admin", "office_manager"), techH.Create)
@@ -132,6 +139,18 @@ func main() {
 			dispatchH.ManualAssign,
 		)
 		// Querying
+		// ── Crew: several technicians on one job, exactly one lead ──
+		dispatch.GET("/jobs/:jobId/crew", crewH.GetCrew)
+		dispatch.PATCH("/jobs/:jobId/crew",
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
+			crewH.SetCrew,
+		)
+		dispatch.PATCH("/jobs/:jobId/lead",
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
+			crewH.SetLead,
+		)
+		dispatch.GET("/candidates", crewH.Candidates)
+
 		dispatch.GET("/assignments", dispatchH.GetAllForCompany)
 		dispatch.GET("/assignments/:id", dispatchH.GetOne)
 		dispatch.GET("/assignments/job/:jobId", dispatchH.GetByJob)

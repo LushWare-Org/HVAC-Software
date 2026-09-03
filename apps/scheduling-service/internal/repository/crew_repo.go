@@ -341,3 +341,16 @@ func (r *CrewRepository) SetCrew(
 
 	return tx.Commit(ctx)
 }
+
+// SetBaseLocation writes the technician's home base, matched by their crm user
+// id. ST_MakePoint takes longitude first — a classic source of points landing in
+// the wrong hemisphere.
+func (r *CrewRepository) SetBaseLocation(ctx context.Context, companyID, userID string, lat, lng float64) error {
+	_, err := r.db.Exec(ctx, `
+		UPDATE scheduling.technicians
+		SET    base_location = ST_SetSRID(ST_MakePoint($3, $4), 4326),
+		       updated_at    = NOW()
+		WHERE  company_id = $1 AND user_id = $2`,
+		companyID, userID, lng, lat)
+	return err
+}
