@@ -434,8 +434,8 @@ func (r *TechnicianRepository) UpdateRating(ctx context.Context, technicianID st
 
 // TechnicianWithDistance extends Technician with the PostGIS-computed distance.
 type TechnicianWithDistance struct {
-	Technician  models.Technician
-	DistanceKm  float64
+	Technician models.Technician
+	DistanceKm float64
 }
 
 func scanTechnician(row pgx.Row) (*models.Technician, error) {
@@ -498,4 +498,87 @@ func hasRequiredSkills(techSkills []string, required []string) bool {
 		}
 	}
 	return true
+}
+
+// CrewCandidateRow is a technician considered for a crew, with distance measured
+// from their BASE where known.
+//
+// BaseDistanceKm is nil when the technician has neither a base nor a live
+// position. Such a technician is still returned: they are assignable, just
+// unscored on distance. Dropping them, which FindCandidatesNearby does via
+// `current_location IS NOT NULL`, would silently hide anyone who has never
+// opened the mobile app.
+type CrewCandidateRow struct {
+	Technician     models.Technician
+	BaseDistanceKm *float64
+	// FromBase is false when the distance fell back to the live position, so
+	// callers can say which number they are showing.
+	FromBase bool
+}
+
+// FindCrewCandidates ranks technicians for a crew by distance from where they
+// start their day.
+//
+// Distinct from FindCandidatesNearby, which measures from the live position and
+// is right for dispatching something happening now. For a job days away, where a
+// van is parked at this moment predicts nothing; where the technician sets off
+// from does.
+func (r *TechnicianRepository) FindCrewCandidates(
+	ctx context.Context,
+	companyID string,
+	jobLat, jobLng float64,
+	maxDistanceKm float64,
+	limit int,
+) ([]CrewCandidateRow, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	rows, err := r.db.Query(ctx, `
+		SELECT sub.id, sub.company_id, sub.user_id, sub.name, sub.phone, sub.avatar_url,
+		       sub.skills, sub.max_daily_jobs, sub.is_active, sub.rating, sub.total_ratings,
+		       sub.last_seen_at, sub.created_at, sub.updated_at,
+		       sub.distance_km, sub.from_base
+		FROM (
+		  SELECT t.id, t.company_id, t.user_id, t.name, t.phone, t.avatar_url,
+		         t.skills, t.max_daily_jobs, t.is_active, t.rating, t.total_ratings,
+		         t.last_seen_at, t.created_at, t.updated_at,
+		         CASE WHEN COALESCE(t.base_location, t.current_location) IS NULL THEN NULL
+		              ELSE ST_DistanceSphere(
+		                     COALESCE(t.base_location, t.current_location),
+		                     ST_SetSRID(ST_MakePoint($3, $2), 4326)
+		                   ) / 1000.0
+		         END AS distance_km,
+		         (t.base_location IS NOT NULL) AS from_base
+		  FROM scheduling.technicians t
+		  WHERE t.company_id = $1
+		    AND t.is_active = TRUE
+		) sub
+		WHERE sub.distance_km IS NULL OR sub.distance_km <= $4
+		ORDER BY sub.distance_km ASC NULLS LAST
+		LIMIT $5`,
+		companyID, jobLat, jobLng, maxDistanceKm, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := []CrewCandidateRow{}
+	for rows.Next() {
+		var c CrewCandidateRow
+		var skills []string
+		if err := rows.Scan(
+			&c.Technician.ID, &c.Technician.CompanyID, &c.Technician.UserID,
+			&c.Technician.Name, &c.Technician.Phone, &c.Technician.AvatarURL,
+			&skills, &c.Technician.MaxDailyJobs, &c.Technician.IsActive,
+			&c.Technician.Rating, &c.Technician.TotalRatings, &c.Technician.LastSeenAt,
+			&c.Technician.CreatedAt, &c.Technician.UpdatedAt,
+			&c.BaseDistanceKm, &c.FromBase,
+		); err != nil {
+			return nil, err
+		}
+		c.Technician.Skills = skills
+		out = append(out, c)
+	}
+	return out, rows.Err()
 }

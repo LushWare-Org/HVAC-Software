@@ -305,3 +305,18 @@ type ScheduleConflict struct {
 	Lng                *float64  `json:"lng,omitempty"`
 	DistanceFromSiteKm *float64  `json:"distanceFromSiteKm,omitempty"`
 }
+
+// CrewCandidate is a technician the dispatcher could add, with everything needed
+// to judge them: how well they score, how far from base, how loaded that day,
+// and what they would clash with.
+type CrewCandidate struct {
+	Technician     Technician `json:"technician"`
+	Score          float64    `json:"score"`
+	BaseDistanceKm *float64   `json:"baseDistanceKm,omitempty"`
+	// DistanceFromBase is false when BaseDistanceKm fell back to the live
+	// position, so the UI can label which number it is showing rather than
+	// implying a precision it does not have.
+	DistanceFromBase  bool               `json:"distanceFromBase"`
+	ActiveJobsThatDay int                `json:"activeJobsThatDay"`
+	Conflicts         []ScheduleConflict `json:"conflicts"`
+}
