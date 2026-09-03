@@ -24,8 +24,12 @@ type Technician struct {
 	TotalRatings    int        `json:"totalRatings"`
 	LastSeenAt      *time.Time `json:"lastSeenAt,omitempty"`
 	CurrentLocation *GeoPoint  `json:"currentLocation,omitempty"`
-	CreatedAt       time.Time  `json:"createdAt"`
-	UpdatedAt       time.Time  `json:"updatedAt"`
+	// BaseLocation is where the technician starts their day, synced from
+	// crm.company_users. Used when scoring future jobs, where a live position
+	// predicts nothing about where they will set off from.
+	BaseLocation *GeoPoint `json:"baseLocation,omitempty"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // GeoPoint is used for current_location PostGIS geometry.
@@ -63,24 +67,31 @@ const (
 // DispatchAssignment is the core scheduling record linking
 // a job to a technician with timing and status tracking.
 type DispatchAssignment struct {
-	ID             string           `json:"id"`
-	CompanyID      string           `json:"companyId"`
-	JobID          string           `json:"jobId"`
-	WorkOrderID    *string          `json:"workOrderId,omitempty"`
-	TechnicianID   string           `json:"technicianId"`
-	Status         AssignmentStatus `json:"status"`
-	Score          *float64         `json:"score,omitempty"`
-	DistanceKm     *float64         `json:"distanceKm,omitempty"`
-	AssignedBy     *string          `json:"assignedBy,omitempty"` // nil = auto-assigned
-	AssignedAt     time.Time        `json:"assignedAt"`
-	EnRouteAt      *time.Time       `json:"enRouteAt,omitempty"`
-	OnSiteAt       *time.Time       `json:"onSiteAt,omitempty"`
-	CompletedAt    *time.Time       `json:"completedAt,omitempty"`
-	ScheduledStart *time.Time       `json:"scheduledStart,omitempty"`
-	ScheduledEnd   *time.Time       `json:"scheduledEnd,omitempty"`
-	Notes          *string          `json:"notes,omitempty"`
-	CreatedAt      time.Time        `json:"createdAt"`
-	UpdatedAt      time.Time        `json:"updatedAt"`
+	ID           string           `json:"id"`
+	CompanyID    string           `json:"companyId"`
+	JobID        string           `json:"jobId"`
+	WorkOrderID  *string          `json:"workOrderId,omitempty"`
+	TechnicianID string           `json:"technicianId"`
+	Status       AssignmentStatus `json:"status"`
+	Score        *float64         `json:"score,omitempty"`
+	DistanceKm   *float64         `json:"distanceKm,omitempty"`
+	// IsLead marks the one crew member who drives Job.status and is the name the
+	// customer is given. Enforced unique per job by uq_assignment_job_lead.
+	IsLead bool `json:"isLead"`
+	// BaseDistanceKm is distance from the technician's BASE at assign time, kept
+	// separate from DistanceKm (their live position) so the two are never
+	// confused. Base is what predicts travel to a job days away.
+	BaseDistanceKm *float64   `json:"baseDistanceKm,omitempty"`
+	AssignedBy     *string    `json:"assignedBy,omitempty"` // nil = auto-assigned
+	AssignedAt     time.Time  `json:"assignedAt"`
+	EnRouteAt      *time.Time `json:"enRouteAt,omitempty"`
+	OnSiteAt       *time.Time `json:"onSiteAt,omitempty"`
+	CompletedAt    *time.Time `json:"completedAt,omitempty"`
+	ScheduledStart *time.Time `json:"scheduledStart,omitempty"`
+	ScheduledEnd   *time.Time `json:"scheduledEnd,omitempty"`
+	Notes          *string    `json:"notes,omitempty"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
 }
 
 // GPSTrackingPoint is a single GPS snapshot from a technician device.
@@ -131,7 +142,7 @@ type AssignJobRequest struct {
 	JobLatitude    float64  `json:"jobLatitude"`
 	JobLongitude   float64  `json:"jobLongitude"`
 	RequiredSkills []string `json:"requiredSkills"`
-	RequiredParts  []string `json:"requiredParts"` // inventory item IDs
+	RequiredParts  []string `json:"requiredParts"`  // inventory item IDs
 	ScheduledStart *string  `json:"scheduledStart"` // ISO8601
 	ScheduledEnd   *string  `json:"scheduledEnd"`
 }
@@ -248,4 +259,26 @@ type TechOnProjectError struct {
 
 func (e *TechOnProjectError) Error() string {
 	return "technician is rostered on project " + e.ProjectName + " on " + e.Date
+}
+
+// ── Crew ─────────────────────────────────────────────────────────────────────
+
+// CrewMember pairs an assignment with the technician it points at, so callers do
+// not have to join the two by hand at every call site.
+type CrewMember struct {
+	Assignment DispatchAssignment `json:"assignment"`
+	Technician Technician         `json:"technician"`
+}
+
+// LeadOf returns the crew's lead, or nil when the crew is empty or headless.
+// A headless crew should be impossible (uq_assignment_job_lead), so nil on a
+// non-empty crew means the invariant was bypassed and is worth surfacing rather
+// than silently picking the first member.
+func LeadOf(crew []CrewMember) *CrewMember {
+	for i := range crew {
+		if crew[i].Assignment.IsLead {
+			return &crew[i]
+		}
+	}
+	return nil
 }
