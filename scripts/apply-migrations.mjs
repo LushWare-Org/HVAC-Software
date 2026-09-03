@@ -807,6 +807,128 @@ CREATE INDEX IF NOT EXISTS "Notification_companyId_dedupeKey_idx" ON "comms"."No
     `.trim(),
   },
 
+  // ── CRM: the customer's own service location ──
+  // Jobs already carry serviceLatitude/serviceLongitude, but there was nowhere
+  // to remember where a customer actually *is* — so every job, from either
+  // side, made someone drop a pin again from scratch. These three columns are
+  // that memory: the default pin for new jobs, still overridable per job.
+  {
+    schema: 'crm',
+    name: '20260825000000_add_customer_location',
+    sql: `
+ALTER TABLE "crm"."customers"
+  ADD COLUMN IF NOT EXISTS "latitude"    DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "longitude"   DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "locationTag" TEXT,
+  ADD COLUMN IF NOT EXISTS "locationSetAt" TIMESTAMPTZ;
+    `.trim(),
+  },
+
+  // ── Crew support ──
+  // dispatch_assignments was always one row per (job, technician) with no unique
+  // constraint on job_id, so several technicians per job were already storable.
+  // What was missing is correctness: these two partial indexes are what stop the
+  // same person being added twice and guarantee exactly one lead.
+  {
+    schema: 'scheduling',
+    name: '20260902000000_crew_assignments',
+    sql: `
+ALTER TABLE "scheduling"."dispatch_assignments"
+  ADD COLUMN IF NOT EXISTS "is_lead"          BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS "base_distance_km" NUMERIC(8,3);
+
+ALTER TABLE "scheduling"."technicians"
+  ADD COLUMN IF NOT EXISTS "base_location" geometry(Point, 4326);
+
+CREATE INDEX IF NOT EXISTS idx_technicians_base
+  ON "scheduling"."technicians" USING GIST("base_location");
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_assignment_job_tech
+  ON "scheduling"."dispatch_assignments" (job_id, technician_id)
+  WHERE status <> 'CANCELLED';
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_assignment_job_lead
+  ON "scheduling"."dispatch_assignments" (job_id)
+  WHERE is_lead AND status <> 'CANCELLED';
+    `.trim(),
+  },
+
+  // Every existing job becomes a crew of one. The EARLIEST live assignment
+  // becomes lead: that is the technician the dispatcher originally chose, which
+  // matches intent better than the most-recently-updated row the dashboard
+  // happens to show today.
+  {
+    schema: 'scheduling',
+    name: '20260902000100_crew_backfill',
+    sql: `
+UPDATE "scheduling"."dispatch_assignments" a
+SET    status = 'CANCELLED', updated_at = NOW()
+WHERE  a.status <> 'CANCELLED'
+  AND  EXISTS (
+    SELECT 1 FROM "scheduling"."dispatch_assignments" b
+    WHERE b.job_id = a.job_id
+      AND b.technician_id = a.technician_id
+      AND b.status <> 'CANCELLED'
+      AND b.created_at < a.created_at
+  );
+
+UPDATE "scheduling"."dispatch_assignments" a
+SET    is_lead = true
+WHERE  a.status <> 'CANCELLED'
+  AND  NOT a.is_lead
+  AND  NOT EXISTS (
+    SELECT 1 FROM "scheduling"."dispatch_assignments" b
+    WHERE b.job_id = a.job_id
+      AND b.status <> 'CANCELLED'
+      AND (b.created_at, b.id) < (a.created_at, a.id)
+  );
+    `.trim(),
+  },
+
+  // crewUserIds is denormalised so the technician app's "my jobs" query stays a
+  // single job-service query. Crew membership lives in the Go scheduling
+  // service, so without this the mobile app's hottest path becomes a
+  // cross-service join. ProjectRosterDay.techUserIds sets the same precedent.
+  {
+    schema: 'jobs',
+    name: '20260902000200_job_crew',
+    sql: `
+ALTER TABLE "jobs"."jobs"
+  ADD COLUMN IF NOT EXISTS "crewUserIds"       TEXT[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS "requiredTechCount" INTEGER;
+
+UPDATE "jobs"."jobs"
+SET    "crewUserIds" = ARRAY["assignedToId"]
+WHERE  "assignedToId" IS NOT NULL
+  AND  "crewUserIds" = '{}';
+
+CREATE INDEX IF NOT EXISTS idx_jobs_crew
+  ON "jobs"."jobs" USING GIN("crewUserIds");
+
+DO $$ BEGIN
+  CREATE TYPE "jobs"."JobCrewEventType" AS ENUM
+    ('ADDED', 'REMOVED', 'LEAD_CHANGED', 'CHECKED_OUT');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE TABLE IF NOT EXISTS "jobs"."job_crew_events" (
+  "id"             TEXT PRIMARY KEY,
+  "companyId"      TEXT NOT NULL,
+  "jobId"          TEXT NOT NULL REFERENCES "jobs"."jobs"("id"),
+  "event"          "jobs"."JobCrewEventType" NOT NULL,
+  "technicianId"   TEXT NOT NULL,
+  "technicianName" TEXT NOT NULL,
+  "previousLeadId" TEXT,
+  "actorId"        TEXT NOT NULL,
+  "actorName"      TEXT NOT NULL,
+  "reason"         TEXT,
+  "createdAt"      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_crew_events_job
+  ON "jobs"."job_crew_events" ("companyId", "jobId");
+    `.trim(),
+  },
+
 ];
 
 // ─── Main ────────────────────────────────────────────────────────────────────

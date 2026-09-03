@@ -1572,11 +1572,21 @@ In the same model's relation block, add:
   crewEvents JobCrewEvent[]
 ```
 
-And add an index alongside the existing ones:
+And add an index alongside the existing ones, **single-column, matching the SQL
+from Task 1 exactly**:
 
 ```prisma
-  @@index([companyId, crewUserIds], type: Gin)
+  @@index([crewUserIds], type: Gin)
 ```
+
+A composite `@@index([companyId, crewUserIds], type: Gin)` would be wrong twice
+over: it does not match the index Task 1 actually created, and plain GIN has no
+operator class for a scalar `text` column, so it needs the `btree_gin`
+extension, which is not installed here.
+
+If `prisma validate` rejects `type: Gin` on this Prisma version, omit the
+`@@index` line entirely. The index exists from Task 1 either way; the schema
+file modelling it is a convenience, not a requirement.
 
 At the end of the file:
 
