@@ -49,13 +49,15 @@ func main() {
 
 	// ── 5. Wire services ─────────────────────────────────────────────────
 	rosterRepo := repository.NewProjectRosterRepository(db)
-	assignSvc := service.NewAssignmentService(cfg, techRepo, assignRepo, hub).WithRosterGate(rosterRepo)
+	crewRepo := repository.NewCrewRepository(db)
+	assignSvc := service.NewAssignmentService(cfg, techRepo, assignRepo, hub).
+		WithRosterGate(rosterRepo).
+		WithCrew(crewRepo)
 
 	// ── 6. Wire handlers ─────────────────────────────────────────────────
 	healthH := handler.NewHealthHandler(db, redisClient)
 	techH := handler.NewTechnicianHandler(techRepo)
 	dispatchH := handler.NewDispatchHandler(assignSvc, assignRepo)
-	crewRepo := repository.NewCrewRepository(db)
 	conflictRepo := repository.NewConflictRepository(db)
 	candidateSvc := service.NewCandidateService(techRepo, conflictRepo, assignRepo, cfg)
 	crewH := handler.NewCrewHandler(crewRepo, candidateSvc)

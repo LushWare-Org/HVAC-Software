@@ -21,10 +21,11 @@ import (
 // AssignmentService implements Phase 1: Rule-Based Smart Assignment.
 //
 // Scoring formula (weights chosen to balance field realities):
-//   distanceScore = max(0, 100 - (distanceKm / maxDistanceKm × 100))  → 40%
-//   workloadScore = max(0, 100 - (activeJobs / maxActiveJobs × 100))   → 35%
-//   ratingScore   = (rating / 5.0) × 100                               → 25%
-//   totalScore    = distanceScore×0.40 + workloadScore×0.35 + ratingScore×0.25
+//
+//	distanceScore = max(0, 100 - (distanceKm / maxDistanceKm × 100))  → 40%
+//	workloadScore = max(0, 100 - (activeJobs / maxActiveJobs × 100))   → 35%
+//	ratingScore   = (rating / 5.0) × 100                               → 25%
+//	totalScore    = distanceScore×0.40 + workloadScore×0.35 + ratingScore×0.25
 //
 // Weight rationale:
 //   - Distance (40%) is the strongest operational factor — travel time = unbillable cost
@@ -34,11 +35,20 @@ import (
 // Auto-assign threshold: 90.0 (configurable). If the best candidate scores ≥ 90,
 // the job is assigned automatically. Otherwise the top 3 are returned to the dispatcher.
 type AssignmentService struct {
-	cfg         *config.Config
-	techRepo    *repository.TechnicianRepository
-	assignRepo  *repository.AssignmentRepository
-	hub         *ws.Hub
-	roster      RosterGate // nil-safe: no gate when unset
+	cfg        *config.Config
+	techRepo   *repository.TechnicianRepository
+	assignRepo *repository.AssignmentRepository
+	hub        *ws.Hub
+	roster     RosterGate                 // nil-safe: no gate when unset
+	crewRepo   *repository.CrewRepository // nil-safe: solo notification when unset
+}
+
+// WithCrew lets the en-route notification name every technician on the job
+// rather than only the one who set off. Nil-safe: without it the notification
+// still sends, naming the lead alone, which is what it did before crews.
+func (s *AssignmentService) WithCrew(repo *repository.CrewRepository) *AssignmentService {
+	s.crewRepo = repo
+	return s
 }
 
 func NewAssignmentService(
@@ -480,6 +490,24 @@ func (s *AssignmentService) notifyCustomerEnRoute(companyID string, assignment *
 			"techUserId":   tech.UserID,
 			"techName":     tech.Name,
 		}
+
+		// Tell the customer about everyone who is coming, marking who leads.
+		// Best effort: a failure here must not stop the notification, because an
+		// email naming one technician beats no email at all.
+		if s.crewRepo != nil {
+			if crew, err := s.crewRepo.FindCrew(ctx, companyID, assignment.JobID); err == nil && len(crew) > 1 {
+				members := make([]map[string]interface{}, 0, len(crew))
+				for _, m := range crew {
+					members = append(members, map[string]interface{}{
+						"userId": m.Technician.UserID,
+						"name":   m.Technician.Name,
+						"isLead": m.Assignment.IsLead,
+					})
+				}
+				payload["crew"] = members
+			}
+		}
+
 		if job.ServiceAddress != nil {
 			payload["serviceAddress"] = *job.ServiceAddress
 		}
