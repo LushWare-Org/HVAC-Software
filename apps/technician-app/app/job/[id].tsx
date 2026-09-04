@@ -35,7 +35,7 @@ import { EmptyState } from '@/components/EmptyState'
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useJobDetail, useUpdateJobStatus, useUpdateJob, useUpdateCustomFields } from '@/hooks/useJobs'
-import { useWorkOrdersByJob, useCompleteTask, useAddLineItem, useRemoveLineItem, usePriceBook, useCheckIn, useCheckOut } from '@/hooks/useWorkOrders'
+import { useWorkOrdersByJob, useCompleteTask, useAddLineItem, useRemoveLineItem, usePriceBook, useCheckIn, useCheckOut, useEnsureMyWorkOrder } from '@/hooks/useWorkOrders'
 import { useJobAssignments, useUpdateAssignmentStatus } from '@/hooks/useSchedule'
 import { useCustomerDetail } from '@/hooks/useCustomer'
 import { useLocations, useMyVanLocation, useVanStock, useReturnStock, toNumber } from '@/hooks/useInventory'
@@ -89,9 +89,14 @@ export default function JobDetailScreen() {
   const updateAssignmentStatus = useUpdateAssignmentStatus()
   const checkIn = useCheckIn()
   const checkOut = useCheckOut()
+  const ensureMyWorkOrder = useEnsureMyWorkOrder()
 
-  const workOrder = workOrders?.[0]
-  const assignment = assignments?.[0]
+  // MY work order, not the first one on the job. With a crew there is one per
+  // technician, and [0] would hand a helper the lead's paperwork to sign.
+  const workOrder =
+    workOrders?.find((w: any) => w.technicianId === user?.id) ?? workOrders?.[0]
+  const assignment =
+    assignments?.find((a: any) => a.technicianId === user?.id) ?? assignments?.[0]
 
   const [refreshing, setRefreshing] = useState(false)
   const onRefresh = async () => {
@@ -163,6 +168,21 @@ export default function JobDetailScreen() {
       Alert.alert('Error', err?.message ?? 'Failed to update job status')
     }
   }, [job, assignment, workOrder])
+
+  // Make sure this technician has their own work order for the job. With a crew
+  // there is one per person, and a member who has never opened the job has none
+  // yet, so there would be nowhere for them to check in or sign.
+  const ensuredFor = React.useRef<string | null>(null)
+  React.useEffect(() => {
+    if (!id || !job || !user?.id) return
+    if (ensuredFor.current === id) return
+    ensuredFor.current = id
+    ensureMyWorkOrder.mutate(id, {
+      // Not on the crew, or the job vanished. The screen still works read-only,
+      // so this must never surface as an error to the technician.
+      onError: () => {},
+    })
+  }, [id, job?.id, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const action = job ? getJobAction(job.status) : null
 

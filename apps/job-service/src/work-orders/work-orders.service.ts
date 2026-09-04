@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '@tscrm/types';
@@ -24,6 +25,47 @@ export class WorkOrdersService {
   // ============================================================
   // CREATE — spawns a work order from a job (optionally with template tasks)
   // ============================================================
+
+  /**
+   * Returns the caller's own work order for a job, creating it if absent.
+   *
+   * Work orders are per-technician: with a crew, each member needs their own
+   * place to check in, sign and record parts. Creating them eagerly when a crew
+   * is confirmed would mean the scheduling service reaching across a service
+   * boundary mid-transaction, and would leave orphans behind every time a crew
+   * changed before anyone started. Creating on first open is idempotent and
+   * only ever makes one for someone who actually turned up.
+   *
+   * Deliberately a POST, not a side effect hidden in a GET.
+   */
+  async ensureMine(companyId: string, user: AuthUser, jobId: string) {
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, companyId },
+      select: { id: true, assignedToId: true, crewUserIds: true },
+    });
+    if (!job) throw new NotFoundException('Job not found');
+
+    // Only someone actually on this job may open a work order against it,
+    // or any technician could attach themselves to any customer's visit.
+    const onCrew =
+      job.assignedToId === user.userId ||
+      (job.crewUserIds ?? []).includes(user.userId);
+    if (!onCrew) {
+      throw new ForbiddenException('You are not assigned to this job');
+    }
+
+    const existing = await this.prisma.workOrder.findFirst({
+      where: { companyId, jobId, technicianId: user.userId },
+      include: { taskCompletions: true, lineItems: true },
+    });
+    if (existing) return existing;
+
+    return this.create(companyId, user, {
+      jobId,
+      technicianId: user.userId,
+      technicianName: user.name ?? 'Technician',
+    } as any);
+  }
 
   async create(
     companyId: string,

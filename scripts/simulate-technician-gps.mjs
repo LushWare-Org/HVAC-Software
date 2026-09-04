@@ -357,7 +357,9 @@ async function waitForEnRoute(headers, techUserId, pollSeconds) {
   for (;;) {
     let jobs = []
     try {
-      const res = await apiGet(headers, `/jobs/jobs?status=EN_ROUTE&assignedToId=${encodeURIComponent(techUserId)}&limit=5`)
+      // crewUserId, not assignedToId: assignedToId matches only the LEAD, so
+      // watching a crew member who is not leading would never fire.
+      const res = await apiGet(headers, `/jobs/jobs?status=EN_ROUTE&crewUserId=${encodeURIComponent(techUserId)}&limit=5`)
       jobs = Array.isArray(res?.data) ? res.data : []
     } catch (err) {
       console.log(`  poll failed: ${err.message}`)

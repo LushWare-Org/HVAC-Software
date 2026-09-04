@@ -51,6 +51,26 @@ export function useWorkOrderDetail(workOrderId: string) {
 /**
  * Check in to a work order (technician arrives on site)
  */
+/**
+ * Gets or creates the caller's own work order for a job.
+ *
+ * With a crew there is one work order per technician, and a member who has
+ * never opened the job has none yet. Idempotent, so calling it on every open is
+ * safe and the second call returns the same record.
+ */
+export function useEnsureMyWorkOrder() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const res = await api.post(`/jobs/work-orders/mine/${jobId}`)
+      return res.data
+    },
+    onSuccess: (_data, jobId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.workOrders(jobId) })
+    },
+  })
+}
+
 export function useCheckIn() {
   const qc = useQueryClient()
   return useMutation({

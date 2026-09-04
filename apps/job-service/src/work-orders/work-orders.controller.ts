@@ -62,6 +62,21 @@ export class WorkOrdersController {
     return this.svc.create(user.companyId, user, dto);
   }
 
+  // ---- The caller's own work order for a job ----
+  @Post('mine/:jobId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Get or create the caller's own work order for a job",
+    description:
+      'Idempotent. With a crew, every member needs their own work order to ' +
+      'check in, sign and record parts against. Created on first open rather ' +
+      'than when the crew is confirmed, so no orphans are left behind when a ' +
+      'crew changes before anyone starts.',
+  })
+  ensureMine(@CurrentUser() user: AuthUser, @Param('jobId') jobId: string) {
+    return this.svc.ensureMine(user.companyId, user, jobId);
+  }
+
   // ---- List by job ----
   @Get('by-job/:jobId')
   @ApiOperation({ summary: 'Get all work orders for a job' })
