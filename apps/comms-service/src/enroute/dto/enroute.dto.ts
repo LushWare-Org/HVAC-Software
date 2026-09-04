@@ -1,4 +1,14 @@
-import { IsISO8601, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray, IsBoolean, IsISO8601, IsNotEmpty, IsOptional, IsString, ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+/** One technician on the job's crew. */
+export class EnRouteCrewMemberDto {
+  @IsString() @IsNotEmpty() userId!: string;
+  @IsString() @IsNotEmpty() name!: string;
+  @IsBoolean() isLead!: boolean;
+}
 
 /**
  * Internal payload from scheduling-service when a technician is marked EN_ROUTE.
@@ -39,4 +49,17 @@ export class EnRouteNotificationDto {
 
   @IsOptional() @IsISO8601()
   etaEnd?: string;
+
+  /**
+   * The full crew, when the job has one. Optional: a solo job omits it and the
+   * email renders exactly as before.
+   *
+   * ValidateNested + Type are load-bearing. Without them `whitelist: true`
+   * silently strips every element and the customer is told about nobody.
+   */
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EnRouteCrewMemberDto)
+  crew?: EnRouteCrewMemberDto[];
 }

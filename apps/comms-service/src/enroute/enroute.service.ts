@@ -47,9 +47,14 @@ export class EnRouteNotificationService {
     const companyName = settings.name || COMPANY_NAME;
     const window = this.formatWindow(dto.etaStart, dto.etaEnd, settings.timezone);
     const avatarUrl = await this.fetchTechAvatar(companyId, dto.techUserId);
+    // A solo job produces a one-member crew, so the template has a single shape
+    // to render and the existing email is unchanged.
+    const crew = dto.crew?.length
+      ? await this.fetchCrewAvatars(companyId, dto.crew)
+      : [{ name: dto.techName, isLead: true, avatarUrl }];
 
     const [email, sms] = await Promise.all([
-      this.sendEmail(companyId, dto, window, avatarUrl, companyName),
+      this.sendEmail(companyId, dto, window, avatarUrl, companyName, crew),
       this.sendSms(companyId, dto, window, companyName),
     ]);
     return { email, sms, deduped: false };
@@ -68,6 +73,23 @@ export class EnRouteNotificationService {
     if (etaStart && etaEnd) return `between ${fmt(etaStart)} and ${fmt(etaEnd)}`;
     if (etaStart) return `around ${fmt(etaStart)}`;
     return null;
+  }
+
+  /**
+   * Avatars for the whole crew, in the order given. Each lookup is independent,
+   * so one missing photo never costs the others theirs.
+   */
+  private async fetchCrewAvatars(
+    companyId: string,
+    crew: { userId: string; name: string; isLead: boolean }[],
+  ): Promise<{ name: string; isLead: boolean; avatarUrl: string | null }[]> {
+    return Promise.all(
+      crew.map(async (m) => ({
+        name: m.name,
+        isLead: m.isLead,
+        avatarUrl: await this.fetchTechAvatar(companyId, m.userId),
+      })),
+    );
   }
 
   private async fetchTechAvatar(companyId: string, techUserId: string): Promise<string | null> {
@@ -97,7 +119,7 @@ export class EnRouteNotificationService {
     return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
   }
 
-  private async sendEmail(companyId: string, dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null, companyName: string): Promise<boolean> {
+  private async sendEmail(companyId: string, dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null, companyName: string, crew: { name: string; isLead: boolean; avatarUrl: string | null }[] = []): Promise<boolean> {
     if (!dto.customerEmail) return false;
     try {
       await this.notifications.sendEmail({
@@ -107,7 +129,7 @@ export class EnRouteNotificationService {
         recipientName: dto.customerName,
         recipientEmail: dto.customerEmail,
         subject: `${dto.techName} is on the way — ${dto.jobTitle}`,
-        htmlBody: this.buildEmailHtml(dto, window, avatarUrl, companyName),
+        htmlBody: this.buildEmailHtml(dto, window, avatarUrl, companyName, crew),
       });
       return true;
     } catch (err) {
@@ -119,9 +141,16 @@ export class EnRouteNotificationService {
   private async sendSms(companyId: string, dto: EnRouteNotificationDto, window: string | null, companyName: string): Promise<boolean> {
     if (!dto.customerPhone) return false;
     const eta = window ? ` — expected ${window}` : '';
+    // Lead plus a count, never the full list: a crew of four would blow past a
+    // single SMS segment and the customer pays for the extra ones.
+    const others = Math.max(0, (dto.crew?.length ?? 1) - 1);
+    const who = others > 0
+      ? `${dto.techName} and ${others} other technician${others === 1 ? '' : 's'}`
+      : dto.techName;
+    const verb = others > 0 ? 'are' : 'is';
     const body =
-      `Hi${dto.customerName ? ` ${dto.customerName}` : ''}, ${dto.techName} from ${companyName} ` +
-      `is on the way for "${dto.jobTitle}"${eta}.`;
+      `Hi${dto.customerName ? ` ${dto.customerName}` : ''}, ${who} from ${companyName} ` +
+      `${verb} on the way for "${dto.jobTitle}"${eta}.`;
     try {
       await this.notifications.sendSms({
         companyId,
@@ -142,7 +171,7 @@ export class EnRouteNotificationService {
   // header with an uppercase eyebrow, 560px card, same footer line) — this
   // one just leads with the technician's photo since that's the one thing
   // customers actually want to see the moment their tech sets off.
-  buildEmailHtml(dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null, companyName: string = COMPANY_NAME): string {
+  buildEmailHtml(dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null, companyName: string = COMPANY_NAME, crew: { name: string; isLead: boolean; avatarUrl: string | null }[] = []): string {
     const name = esc(dto.techName);
     const initials = dto.techName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const photo = avatarUrl
@@ -152,6 +181,26 @@ export class EnRouteNotificationService {
       ? `Expected to arrive <strong>${esc(window)}</strong>`
       : 'They will arrive shortly';
     const greetName = dto.customerName ? esc(dto.customerName) : 'there';
+
+    // With a crew, name everyone and say who leads. The customer is about to
+    // open the door to three people; being told about one of them is worse than
+    // being told about none.
+    const others = crew.filter(m => !m.isLead);
+    const crewBlock = others.length === 0 ? '' : `
+    <div style="padding:0 32px 4px;">
+      <p style="margin:18px 0 10px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;">Who is coming</p>
+      ${crew.map(m => {
+        const mn = esc(m.name);
+        const mi = m.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+        const face = m.avatarUrl
+          ? `<img src="${esc(m.avatarUrl)}" alt="${mn}" width="34" height="34" style="width:34px;height:34px;border-radius:50%;object-fit:cover;display:block;" />`
+          : `<div style="width:34px;height:34px;border-radius:50%;background:#E5E7EB;color:#374151;font:700 13px/34px Arial,sans-serif;text-align:center;">${esc(mi)}</div>`;
+        return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr>
+          <td style="padding-right:10px;">${face}</td>
+          <td style="font-size:14px;color:#111827;">${mn}${m.isLead ? ' <span style="color:#2563EB;font-weight:600;">· leading</span>' : ''}</td>
+        </tr></table>`;
+      }).join('')}
+    </div>`;
 
     return `
 <!DOCTYPE html>
@@ -167,7 +216,7 @@ export class EnRouteNotificationService {
           <p style="margin:0;font-size:13.5px;color:rgba(255,255,255,0.85);">${etaLine}</p>
         </td>
       </tr></table>
-    </div>
+    </div>${crewBlock}
     <div style="padding:30px 32px;">
       <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
         Hi ${greetName}, just a heads up — <strong>${name}</strong> from ${esc(companyName)} has started heading your way for your service visit.

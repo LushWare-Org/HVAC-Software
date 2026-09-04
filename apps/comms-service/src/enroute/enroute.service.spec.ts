@@ -126,4 +126,41 @@ describe('EnRouteNotificationService', () => {
     const smsArg = notifications.sendSms.mock.calls[0][0];
     expect(smsArg.body).toContain('10:00 AM');
   });
+
+  it('names the whole crew and marks the lead', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ avatarUrl: 'http://cdn/a.jpg' }),
+    });
+    await service.notify('co-1', {
+      ...baseDto,
+      assignmentId: 'assign-crew-1',
+      crew: [
+        { userId: 'u1', name: 'David Chen', isLead: true },
+        { userId: 'u2', name: 'Rachel Kim', isLead: false },
+      ],
+    } as EnRouteNotificationDto);
+
+    const emailArg = notifications.sendEmail.mock.calls[0][0];
+    expect(emailArg.htmlBody).toContain('David Chen');
+    expect(emailArg.htmlBody).toContain('Rachel Kim');
+    // The customer needs to know who is in charge, not only who is coming.
+    expect(emailArg.htmlBody).toMatch(/leading/i);
+  });
+
+  it('renders the solo email unchanged when no crew is supplied', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ avatarUrl: null }),
+    });
+    await service.notify('co-1', {
+      ...baseDto,
+      assignmentId: 'assign-solo-1',
+    } as EnRouteNotificationDto);
+
+    const emailArg = notifications.sendEmail.mock.calls[0][0];
+    expect(emailArg.htmlBody).toContain('Miguel Torres');
+    // A solo job must not gain crew language.
+    expect(emailArg.htmlBody).not.toMatch(/and 1 other/i);
+  });
 });
