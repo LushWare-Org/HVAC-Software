@@ -57,7 +57,7 @@ export class ServiceClient {
     const url = `${this.baseUrl(service)}${path}`;
     const res = await this.http.get(url, {
       responseType: 'arraybuffer',
-      timeout: Number(process.env.PARTNER_PDF_TIMEOUT_MS ?? 15000),
+      timeout: Number(process.env.PARTNER_PDF_TIMEOUT_MS ?? 30000),
       headers: { Authorization: `Bearer ${this.tokens.tokenFor(companyId)}` },
     });
     return Buffer.from(res.data as ArrayBuffer);

@@ -206,4 +206,66 @@ describe('PartnerBookingsService', () => {
       { reason: 'caller changed their mind' },
     );
   });
+
+  describe('availability', () => {
+    it('asks the caller’s own company, and passes the paging window through', async () => {
+      const services = makeServices();
+      services.get.mockResolvedValue({ timezone: 'Asia/Colombo', capacityPerSlot: 4, slots: [] });
+      const service = new PartnerBookingsService(
+        services,
+        makePrisma() as unknown as PrismaService,
+      );
+
+      await service.availability('co-1', 3, 7);
+
+      expect(services.get).toHaveBeenCalledWith(
+        'crm',
+        '/bookings/availability',
+        'co-1',
+        { limit: 3, daysAhead: 7 },
+      );
+    });
+
+    it('returns slot labels and capacity untouched', async () => {
+      const upstream = {
+        timezone: 'Asia/Colombo',
+        capacityPerSlot: 4,
+        slots: [
+          {
+            start: '2026-09-10T04:30:00.000Z',
+            end: '2026-09-10T06:30:00.000Z',
+            label: 'Thursday, Sep 10, 10 AM–12 PM',
+            remainingCapacity: 3,
+          },
+        ],
+      };
+      const services = makeServices();
+      services.get.mockResolvedValue(upstream);
+      const service = new PartnerBookingsService(
+        services,
+        makePrisma() as unknown as PrismaService,
+      );
+
+      const result = await service.availability('co-1');
+
+      expect(result).toEqual(upstream);
+      // The spoken label must survive verbatim; the agent reads it out.
+      expect((result as typeof upstream).slots[0].label).toBe(
+        'Thursday, Sep 10, 10 AM–12 PM',
+      );
+    });
+
+    it('lets an availability outage surface instead of offering no times as if none existed', async () => {
+      const services = makeServices();
+      services.get.mockRejectedValue(new Error('crm unreachable'));
+      const service = new PartnerBookingsService(
+        services,
+        makePrisma() as unknown as PrismaService,
+      );
+
+      // An empty slot list would make the agent say "we have nothing free",
+      // which is a different and worse lie than "I can't check right now".
+      await expect(service.availability('co-1')).rejects.toThrow('crm unreachable');
+    });
+  });
 });

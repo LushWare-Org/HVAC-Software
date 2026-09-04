@@ -1,6 +1,9 @@
 function supportEmail(): string {
   return process.env.PARTNER_SUPPORT_EMAIL?.trim() || '';
 }
+function statusUrl(): string {
+  return process.env.PARTNER_STATUS_URL?.trim() || '';
+}
 const CSS = `
 :root {
   color-scheme: light;
@@ -220,6 +223,7 @@ const TOC = `
   <li><a href="#security">12. Security &amp; data handling</a></li>
   <li><a href="#matrix">13. Capability matrix</a></li>
   <li><a href="#golive">14. Going live</a></li>
+  <li><a href="#support">15. Versioning &amp; support</a></li>
 </ol>
 </nav>
 `;
@@ -287,7 +291,7 @@ environments; sandbox versus live is decided by the key you present, not the add
   <tr><td>Technician identity, GPS position or live dispatch board</td><td>Staff location is employee data. You get bookable capacity instead &mdash; see <a href="#ref-availability">8.3</a>.</td></tr>
   <tr><td>Free-form outbound SMS or email</td><td>Every send endpoint is tied to a specific document or booking and a recipient already on file. There is no "send arbitrary text to arbitrary number" call.</td></tr>
   <tr><td>Card numbers, tokens or stored payment methods</td><td>Card data is entered on Stripe's hosted page. It never enters this API and never reaches your agent.</td></tr>
-  <tr><td>Editing invoices, quotes or prices</td><td>Money documents are authored inside the CRM by staff.</td></tr>
+  <tr><td>Editing invoices, quotes or prices</td><td>Money documents are authored inside HVACtor by staff.</td></tr>
   <tr><td>Equipment detail records</td><td>You get a count on the caller profile so the agent knows equipment exists. Per-unit make, model and service history are not exposed.</td></tr>
 </table>
 
@@ -1146,7 +1150,7 @@ def verify(headers, raw_body: bytes, secret: str) -> bool:
 moment they fire. That happens automatically alongside your webhook delivery; you do not
 request it and cannot address it.</p>
 
-<p>Staff SMS and email notifications are configured by the company inside the CRM's own
+<p>Staff SMS and email notifications are configured by the company inside HVACtor&rsquo;s own
 automation rules, on its own triggers. The Partner API does not expose a way for an external
 agent to message a company's staff directly &mdash; deliberately, since an integration that
 can page a dispatcher at will is an integration that can be used to page a dispatcher at will.</p>
@@ -1227,7 +1231,7 @@ touch card data because none exists in this API.</p>
   <tr><td>Tenant isolation</td><td>The company is derived from the key server-side and applied to every downstream query. No request field can widen it.</td></tr>
   <tr><td>Least privilege</td><td>Per-key scopes, enforced by a guard that runs on every route by default. A new endpoint is protected unless it is explicitly marked public.</td></tr>
   <tr><td>No bulk access</td><td>There is no customer list, search or export scope in the catalogue at all &mdash; not merely ungranted.</td></tr>
-  <tr><td>No recipient control</td><td>Send endpoints take a customer, never a destination. Delivery addresses come from the CRM record.</td></tr>
+  <tr><td>No recipient control</td><td>Send endpoints take a customer, never a destination. Delivery addresses come from the HVACtor customer record.</td></tr>
   <tr><td>Cross-record checks</td><td>A document or invoice must belong to the customer named in the request, or it is refused.</td></tr>
   <tr><td>Unverified-identity hold</td><td>No payment link against a customer record the agent itself created in the last 24 hours.</td></tr>
   <tr><td>PII minimisation</td><td>Send responses report masked destinations. The caller profile carries what an agent needs to serve the call and no internal identifiers beyond it.</td></tr>
@@ -1310,7 +1314,7 @@ hedge &mdash; the note says exactly where the line is.</p>
   company's timezone. That is everything needed to offer a time you know can be staffed.</p>
   <p class="a"><strong>Not available:</strong> technician identity, GPS position, live dispatch
   board, en-route status or ETA. Staff location is employee data and is not exposed to external
-  partners. The CRM's own dispatch board and GPS tracking remain internal to the company.</p>
+  partners. HVACtor&rsquo;s own dispatch board and GPS tracking remain internal to the company.</p>
   <p class="ref"><code>GET /v1/availability</code> &mdash; see <a href="#ref-availability">8.3</a>.</p>
 </div>
 
@@ -1355,7 +1359,7 @@ hedge &mdash; the note says exactly where the line is.</p>
   four events raise push notifications to the company's own company admins, office managers and
   dispatchers with a registered device, at the same moment your webhook fires. That is automatic
   and requires nothing from you.</p>
-  <p class="a"><strong>Not partner-controlled:</strong> staff SMS and email run on the CRM's own
+  <p class="a"><strong>Not partner-controlled:</strong> staff SMS and email run on HVACtor&rsquo;s own
   automation rules, configured by the company on its own triggers. The Partner API deliberately
   gives an external integration no way to message a company's staff directly.</p>
   <p class="ref">See <a href="#events-staff">Internal staff alerts</a>.</p>
@@ -1437,6 +1441,47 @@ things you would want to have handled anyway.</p>
 <p>Then ask the company administrator for a <code>pk_live_</code> key with the same scope list.
 Nothing in your code changes but the key.</p>
 
+<h2 id="support">15. Versioning &amp; support</h2>
+
+<h4>Versioning policy</h4>
+<p>This is the promise your integration is built on: what we may change under you, and what
+we may not.</p>
+<table>
+  <tr><th>Change</th><th>How it ships</th></tr>
+  <tr><td>New endpoints, new optional request fields, new response fields, new event types</td><td>Added to <code>/v1</code> without notice. Your client must ignore response fields and event types it does not recognise.</td></tr>
+  <tr><td>Removing or renaming a field, changing a type, changing a status code, tightening validation</td><td>A new version path (<code>/v2</code>). <code>/v1</code> keeps being served through an announced deprecation window.</td></tr>
+</table>
+<p>Scopes and event types are additive: a scope you were granted keeps working. The webhook
+signing scheme and the <code>x-tscrm-*</code> header names are part of the <code>/v1</code>
+contract and will not change within it.</p>
+
+<h4>Getting a key</h4>
+<p>Keys are issued by the HVACtor company administrator whose data you will be working with
+&mdash; not by HVACtor centrally, and not self-service. Ask them for a
+<code>pk_test_</code> sandbox key and give them the exact scope list you need (section 5);
+they create it in their admin dashboard and send it to you over a secure channel. The key is
+shown once at creation and cannot be recovered afterwards. Move to a
+<code>pk_live_</code> key once you have worked through section 14.</p>
+
+<h4>Support</h4>
+<p>Integration questions, key and scope requests, rate-limit increases and suspected key
+compromise: ${
+  supportEmail()
+    ? `<a href="mailto:${supportEmail()}">${supportEmail()}</a>`
+    : 'contact your account manager, who will route it to the API team'
+}.</p>
+<p>When reporting a problem, include the endpoint, the UTC timestamp, your key <em>name</em>
+(never the key itself), and the full error body. Every partner request is logged with its key,
+route, status and latency, so a timestamp is usually enough for us to find it.</p>
+${statusUrl() ? `<p>Service status: <a href="${statusUrl()}">${statusUrl()}</a></p>` : ''}
+
+<footer>
+  <p><strong>HVACtor Partner API v1.</strong>
+  Interactive reference <a href="/docs">/docs</a> &middot;
+  OpenAPI spec <a href="/docs-json">/docs-json</a> &middot;
+  Machine-readable capabilities <a href="/capabilities">/capabilities</a> &middot;
+  Health <a href="/health">/health</a></p>
+</footer>
 `;
 
 export function renderGuide(): string {

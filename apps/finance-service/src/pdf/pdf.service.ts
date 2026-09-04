@@ -8,7 +8,7 @@
  * to the template so the HBS template stays logic-free.
  */
 
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
@@ -148,7 +148,7 @@ export interface AgreementPdfContext {
 }
 
 @Injectable()
-export class PdfService implements OnModuleDestroy {
+export class PdfService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PdfService.name);
 
   // ── Browser pool ───────────────────────────────────────────────────────────
@@ -168,6 +168,19 @@ export class PdfService implements OnModuleDestroy {
   private static readonly MAX_CONCURRENT_PDFS = Number(process.env.PDF_MAX_CONCURRENT) > 0
     ? Number(process.env.PDF_MAX_CONCURRENT)
     : 4;
+
+  onModuleInit() {
+    if (process.env.PDF_WARMUP === 'false') return;
+
+    const started = Date.now();
+    void this.getBrowser()
+      .then(() => this.logger.log(`Chromium warmed up in ${Date.now() - started}ms`))
+      .catch((err) =>
+        this.logger.warn(
+          `Chromium warm-up failed, will retry on first request: ${err?.message ?? err}`,
+        ),
+      );
+  }
 
   async onModuleDestroy() {
     if (this.browserPromise) {

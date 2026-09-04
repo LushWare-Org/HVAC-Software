@@ -45,13 +45,26 @@ export class SmsService {
     this.fromPhone = this.config.get<string>('twilio.fromPhone') ?? '';
     this.webhookSecret = this.config.get<string>('twilio.webhookSecret') ?? '';
 
-    // In test environments don't require real credentials
-    if (accountSid && authToken) {
+    const credentialsLookReal =
+      /^AC[0-9a-f]{32}$/i.test(accountSid) && authToken.length >= 20;
+
+    if (credentialsLookReal) {
       this.client = twilio(accountSid, authToken);
     } else {
-      this.logger.warn('Twilio credentials not set — SMS will be mocked in non-prod');
       this.client = null as any;
+      if (this.isProduction) {
+        this.logger.error(
+          'Twilio is not configured — SMS sending is DISABLED and every send will fail. ' +
+            'Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_PHONE_NUMBER.',
+        );
+      } else {
+        this.logger.warn('Twilio not configured — SMS is mocked in this environment');
+      }
     }
+  }
+
+  private get isProduction(): boolean {
+    return (process.env.NODE_ENV ?? '').toLowerCase() === 'production';
   }
 
   async send(to: string, body: string, companyId?: string): Promise<SmsDeliveryResult> {
@@ -66,6 +79,15 @@ export class SmsService {
       }
 
       if (!this.client) {
+        // Never report success for a message that was not sent.
+        if (this.isProduction) {
+          this.logger.error(`SMS to ${to} not sent — Twilio is not configured`);
+          return {
+            success: false,
+            error: 'sms-not-configured',
+            durationMs: Date.now() - start,
+          };
+        }
         this.logger.debug(`[MOCK SMS] To: ${to} | Body: ${body.substring(0, 50)}`);
         return { success: true, externalId: `mock-sid-${Date.now()}`, durationMs: 0 };
       }

@@ -13,7 +13,10 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "seed:sandbox": "node scripts/seed-sandbox.js"
+    "seed:sandbox": "node scripts/seed-sandbox.js",
+    "smoke": "node scripts/smoke.js",
+    "key": "node scripts/key.js",
+    "create-key": "node scripts/create-key.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

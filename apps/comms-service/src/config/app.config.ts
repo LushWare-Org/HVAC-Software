@@ -6,7 +6,7 @@ export default () => ({
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID ?? '',
     authToken: process.env.TWILIO_AUTH_TOKEN ?? '',
-    fromPhone: process.env.TWILIO_FROM_PHONE ?? '',
+    fromPhone: process.env.TWILIO_FROM_PHONE ?? process.env.TWILIO_PHONE_NUMBER ?? '',
     webhookSecret: process.env.TWILIO_WEBHOOK_SECRET ?? '',
   },
   sendgrid: {
