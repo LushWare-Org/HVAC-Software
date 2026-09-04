@@ -138,6 +138,9 @@ export class JobsService {
     filters: {
       status?: string;
       assignedToId?: string;
+      /** Matches anyone in the crew, lead or not. assignedToId only matches the
+       *  lead, so a helper would never see their own job without this. */
+      crewUserId?: string;
       jobTypeId?: string;
       search?: string;
       dateFrom?: string;
@@ -166,6 +169,7 @@ export class JobsService {
 
     if (filters.status) where.status = filters.status;
     if (filters.assignedToId) where.assignedToId = filters.assignedToId;
+    if (filters.crewUserId) where.crewUserIds = { has: filters.crewUserId };
     if (filters.jobTypeId) where.jobTypeId = filters.jobTypeId;
     if (filters.customerId) where.customerId = filters.customerId;
     if (filters.agreementId) where.agreementId = filters.agreementId;

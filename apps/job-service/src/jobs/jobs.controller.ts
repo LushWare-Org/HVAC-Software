@@ -121,6 +121,10 @@ export class JobsController {
     @Query('componentId') componentId?: string,
     @Query('equipmentId') equipmentId?: string,
     @Query('isAgreementJob') isAgreementJob?: string,
+    // Appended deliberately rather than placed beside assignedToId: this method
+    // takes 17 positional parameters and its spec calls it positionally, so
+    // inserting in the middle silently shifts every argument after it.
+    @Query('crewUserId') crewUserId?: string,
   ) {
     // CUSTOMER role: force-filter to their own customerId for security — EXCEPT
     // when querying a specific componentId they actually own. A component-linked
@@ -141,7 +145,7 @@ export class JobsController {
     }
 
     return this.jobsService.findAll(user.companyId, page, limit, {
-      status, assignedToId, jobTypeId, search, dateFrom, dateTo,
+      status, assignedToId, crewUserId, jobTypeId, search, dateFrom, dateTo,
       customerId: effectiveCustomerId,
       agreementId,
       projectId,
