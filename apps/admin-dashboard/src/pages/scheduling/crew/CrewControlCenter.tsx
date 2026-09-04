@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { X, Crown, UserMinus } from 'lucide-react'
 import type { Job, CrewCandidate, CrewMember, Technician } from '../../../types/api'
 import { useCrew, useCrewCandidates, useSetCrew } from '../../../hooks/useCrew'
+import { useUpdateJobFields } from '../../../hooks/useJobs'
 import { DEFAULT_DURATION_MIN } from '../../../lib/dayPlan'
 import TechAvatar from '../../../components/TechAvatar'
 import CrewTimeline, { type TimelineRow, type TimelineBlock } from './CrewTimeline'
@@ -46,11 +47,15 @@ export default function CrewControlCenter({
   open,
   onClose,
   onOpenJob,
+  onSaved,
 }: {
   job: Job | null
   open: boolean
   onClose: () => void
   onOpenJob?: (jobId: string) => void
+  /** Fires after a successful save so a caller showing a summary of this crew
+   *  (the plan table) can update without refetching. */
+  onSaved?: (jobId: string, technicianIds: string[], leadTechnicianId: string) => void
 }) {
   const jobId = open && job ? job.id : undefined
   const { start, end } = useMemo(() => (job ? jobWindow(job) : { start: new Date(), end: new Date() }), [job])
@@ -58,6 +63,7 @@ export default function CrewControlCenter({
   const crewQuery = useCrew(jobId)
   const candidatesQuery = useCrewCandidates(jobId, start.toISOString(), end.toISOString(), 12)
   const setCrew = useSetCrew()
+  const updateJob = useUpdateJobFields()
 
   const [draft, setDraft] = useState<DraftMember[]>([])
   const [target, setTarget] = useState<number | null>(null)
@@ -142,6 +148,12 @@ export default function CrewControlCenter({
         technicianIds: draftIds,
         leadTechnicianId: lead?.technician.id ?? '',
       })
+      // Persist the target too, or the "n of m" counter resets every time the
+      // panel closes and the number the dispatcher chose is silently lost.
+      if (target !== (job.requiredTechCount ?? null)) {
+        await updateJob.mutateAsync({ id: job.id, requiredTechCount: target ?? null })
+      }
+      onSaved?.(job.id, draftIds, lead?.technician.id ?? '')
       onClose()
     } catch (e: any) {
       setError(e?.response?.data?.error ?? 'Could not save the crew. Try again.')

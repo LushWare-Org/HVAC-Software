@@ -117,7 +117,12 @@ export default function BoardPlan({
   const [outreachTarget, setOutreachTarget] = useState<Agreement | null>(null)
   const [outreachText, setOutreachText] = useState('')
   const [planPreview, setPlanPreview] = useState<ProposedAssignment[] | null>(null)
-  const [previewEdits, setPreviewEdits] = useState<Record<string, { techId: string; time: string; durationMins: number }>>({})
+  const [previewEdits, setPreviewEdits] = useState<Record<string, {
+    techId: string; time: string; durationMins: number
+    /** undefined means "just techId", i.e. a crew of one. Optional so every
+     *  existing path keeps working; a row only gains a crew once given one. */
+    crewTechIds?: string[]
+  }>>({})
   /** Job whose crew is being edited. The panel is the only place a crew of more
    *  than one can be built, so the table row is its entry point. */
   const [crewJob, setCrewJob] = useState<Job | null>(null)
@@ -267,11 +272,30 @@ export default function BoardPlan({
     }
   }
 
+  /**
+   * A row needs a decision when the job asks for a crew larger than what is
+   * planned for it. Applying it anyway would quietly schedule one technician
+   * for a three-person job, so it is held back rather than blocked outright.
+   *
+   * Clashes against a technician's OTHER existing jobs are not checked here:
+   * that needs a candidates call per row, and eight of them on every preview
+   * would make the plan slow to open. The crew panel shows them per job.
+   */
+  const crewSizeFor = (jobId: string) => previewEdits[jobId]?.crewTechIds?.length ?? 1
+  const shortfallFor = (job: Job) => {
+    const want = job.requiredTechCount ?? 1
+    return Math.max(0, want - crewSizeFor(job.id))
+  }
+  const readyRows = useMemo(
+    () => (planPreview ?? []).filter(p => shortfallFor(p.job) === 0),
+    [planPreview, previewEdits],
+  )
+
   const applyPlan = async () => {
     if (!planPreview) return
     setApplying(true)
     let ok = 0, failed = 0
-    for (const p of planPreview) {
+    for (const p of readyRows) {
       const edit = previewEdits[p.job.id]
       const tech = (edit ? techs.find(t => t.id === edit.techId) : null) ?? p.tech
       // A duration edited here is a real correction to the job, not just a
@@ -490,6 +514,15 @@ export default function BoardPlan({
           const j = [...dayJobs, ...unassigned].find(x => x.id === jobId)
           if (j) { setCrewJob(null); setViewJob(j) }
         }}
+        onSaved={(jobId, technicianIds, leadTechnicianId) => {
+          // Reflect the saved crew in the preview row straight away, so the
+          // "n of m" counter and the Apply count settle without a refetch.
+          setPreviewEdits(prev => {
+            const row = prev[jobId]
+            if (!row) return prev
+            return { ...prev, [jobId]: { ...row, crewTechIds: technicianIds, techId: leadTechnicianId || row.techId } }
+          })
+        }}
       />
 
       {viewTech && (
@@ -585,7 +618,17 @@ export default function BoardPlan({
                       const durationChanged = edit.durationMins !== (p.job.estimatedDurationMins ?? DEFAULT_DURATION_MIN)
                       const changed = edit.techId !== p.tech.id
                       return (
-                        <tr key={p.job.id} style={{ borderBottom: '1px solid var(--bd)' }}>
+                        <tr key={p.job.id} style={{
+                          borderBottom: '1px solid var(--bd)',
+                          // Attention rows keep their place in time order. Sorting
+                          // them to the top would break the mental model of a day
+                          // running 08:00 to 17:00; an amber edge locates them well
+                          // enough without moving them.
+                          borderLeft: `3px solid ${shortfallFor(p.job) > 0 ? 'var(--amber)' : 'transparent'}`,
+                          background: shortfallFor(p.job) > 0
+                            ? 'color-mix(in srgb, var(--amber) 5%, transparent)'
+                            : undefined,
+                        }}>
                           <td style={{ padding: '12px 16px' }}>
                             <p style={{ fontWeight: 600, color: 'var(--t1)', margin: 0, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               {p.job.title}
@@ -615,22 +658,57 @@ export default function BoardPlan({
                             {/* The row says what is wrong in plain words, so nobody
                                 has to open the panel to DISCOVER a problem, only to
                                 fix one. That is what makes glancing at eight rows safe. */}
-                            <button
-                              type="button"
-                              onClick={() => setCrewJob(p.job)}
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: 6, width: '100%',
-                                background: 'none', border: '1px dashed var(--bd)', borderRadius: 7,
-                                padding: '6px 8px', cursor: 'pointer', textAlign: 'left',
-                              }}
-                            >
-                              <TechAvatar id={edit.techId} name={techs.find(t => t.id === edit.techId)?.name} size={20} />
-                              <span style={{ fontSize: 11, color: 'var(--t3)' }}>
-                                {(p.job.requiredTechCount ?? 0) > 1
-                                  ? `1 of ${p.job.requiredTechCount} · add crew`
-                                  : 'Add crew'}
-                              </span>
-                            </button>
+                            {(() => {
+                              const crewIds = edit.crewTechIds ?? [edit.techId]
+                              const want = p.job.requiredTechCount ?? null
+                              const shortBy = shortfallFor(p.job)
+                              const leadName = techs.find(t => t.id === crewIds[0])?.name ?? 'Nobody'
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => setCrewJob(p.job)}
+                                  title="Open the crew panel"
+                                  style={{
+                                    display: 'flex', alignItems: 'center', gap: 7, width: '100%',
+                                    background: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left',
+                                    padding: '6px 8px',
+                                    border: `1px ${shortBy > 0 ? 'solid' : 'dashed'} ${
+                                      shortBy > 0 ? 'color-mix(in srgb, var(--amber) 55%, transparent)' : 'var(--bd)'}`,
+                                  }}
+                                >
+                                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                                    {crewIds.slice(0, 3).map((id, i) => (
+                                      <span key={id} style={{ marginLeft: i === 0 ? 0 : -7, display: 'flex' }}>
+                                        <TechAvatar id={id} name={techs.find(t => t.id === id)?.name} size={21} />
+                                      </span>
+                                    ))}
+                                    {/* An empty slot is easy to miss; a placeholder is not. */}
+                                    {shortBy > 0 && (
+                                      <span style={{
+                                        marginLeft: -7, width: 21, height: 21, borderRadius: '50%',
+                                        border: '2px solid var(--bg-card)',
+                                        background: 'color-mix(in srgb, var(--amber) 22%, transparent)',
+                                        color: 'var(--amber)', fontSize: 10, fontWeight: 700,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      }}>?</span>
+                                    )}
+                                  </span>
+                                  <span style={{ fontSize: 10.5, lineHeight: 1.35, minWidth: 0 }}>
+                                    {shortBy > 0 ? (
+                                      <span style={{ color: 'var(--amber)', fontWeight: 600 }}>
+                                        {crewIds.length} of {want} · {shortBy} more needed
+                                      </span>
+                                    ) : (
+                                      <span style={{ color: 'var(--t3)' }}>
+                                        {crewIds.length > 1
+                                          ? `${leadName} leads · +${crewIds.length - 1}`
+                                          : `${leadName} leads`}
+                                      </span>
+                                    )}
+                                  </span>
+                                </button>
+                              )
+                            })()}
                           </td>
                           <td style={{ padding: '12px 16px', minWidth: 150 }}>
                             <input
@@ -700,8 +778,10 @@ export default function BoardPlan({
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '14px 20px', borderTop: '1px solid var(--bd)', flexShrink: 0 }}>
               <button className="btn btn-secondary btn-sm" onClick={() => { setPlanPreview(null); setPreviewEdits({}) }} disabled={applying}>Discard</button>
-              <button className="btn btn-primary btn-sm" onClick={applyPlan} disabled={applying || planPreview.length === 0}>
-                {applying ? <><Loader2 size={12} className="spin" /> Applying…</> : <>Apply {planPreview.length} assignment{planPreview.length === 1 ? '' : 's'}</>}
+              <button className="btn btn-primary btn-sm" onClick={applyPlan} disabled={applying || readyRows.length === 0}>
+                {applying
+                  ? <><Loader2 size={12} className="spin" /> Applying…</>
+                  : <>Apply {readyRows.length} assignment{readyRows.length === 1 ? '' : 's'}</>}
               </button>
             </div>
           </div>
