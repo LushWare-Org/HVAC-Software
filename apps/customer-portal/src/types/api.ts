@@ -23,6 +23,12 @@ export interface CustomerProfile {
   city?: string
   state?: string
   zipCode?: string
+  /** Saved service location — pre-fills the map when booking a service. */
+  latitude?: number | null
+  longitude?: number | null
+  locationTag?: string | null
+  /** Set the first time a pin is saved; distinguishes "never set" from 0,0. */
+  locationSetAt?: string | null
   notes?: string
   source?: string
   tags: string[]
@@ -107,7 +113,13 @@ export interface Job {
   customerName?: string
   serviceAddress?: string
   assignedToId?: string
+  /** The LEAD technician's name. */
   assignedToName?: string
+  /** Every crew member's id, lead included. Names for the others are not
+   *  fetched here: the portal has no technician directory endpoint, and adding
+   *  one to show two extra names on a list row is not worth a new API surface.
+   *  The en-route email carries the full names and photos. */
+  crewUserIds?: string[]
   scheduledStart?: string
   scheduledEnd?: string
   estimatedDuration?: number

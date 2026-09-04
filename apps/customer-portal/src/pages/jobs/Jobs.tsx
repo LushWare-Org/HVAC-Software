@@ -326,6 +326,12 @@ export default function MyJobs() {
             const s = STATUS_MAP[job.status] ?? { label: job.status, css: 'badge-neutral' }
             const who = technicians[job.id]?.name ?? job.assignedToName
             const whoAvatar = technicians[job.id]?.avatarUrl
+            // "and 2 others" rather than a list: the customer needs to know how
+            // many people are arriving, and the email carries the names.
+            const crewExtra = Math.max(0, (job.crewUserIds?.length ?? 1) - 1)
+            const crewSuffix = crewExtra > 0
+              ? ` and ${crewExtra} other${crewExtra === 1 ? '' : 's'}`
+              : ''
             const isLive = LIVE_STATUSES.includes(job.status)
             const isOpen = OPEN_STATUSES.includes(job.status)
             const startT = fmtTime(job.scheduledStart)
@@ -341,7 +347,7 @@ export default function MyJobs() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexWrap: 'wrap' }}>
                       <span className={`badge ${s.css}`}>{s.label}</span>
                       <span style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--t1)' }}>{job.title}</span>
-                      {who && <span style={{ fontSize: 12, color: 'var(--t3)' }}>· {who}</span>}
+                      {who && <span style={{ fontSize: 12, color: 'var(--t3)' }}>· {who}{crewSuffix}</span>}
                       {jobContext(job) && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--blue)' }}>
                           <Briefcase size={11} /> {jobContext(job)}
@@ -387,7 +393,7 @@ export default function MyJobs() {
                       <RescheduleBadge state={job.rescheduleState} size="sm" />
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                         {who
-                          ? <><TechAvatar name={who} avatarUrl={whoAvatar} size={18} /> {who}</>
+                          ? <><TechAvatar name={who} avatarUrl={whoAvatar} size={18} /> {who}{crewSuffix}</>
                           : <><Wrench size={11} /> Technician TBD</>}
                       </span>
                       {job.serviceAddress && (
@@ -445,7 +451,7 @@ export default function MyJobs() {
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t2)' }}>{job.title}</div>
                   <div style={{ fontSize: 11.5, color: 'var(--t4)', marginTop: 2 }}>
-                    {fmtDate(job.scheduledStart ?? job.createdAt)}{who ? ` · ${who}` : ''}{jobContext(job) ? ` · ${jobContext(job)}` : ''}
+                    {fmtDate(job.scheduledStart ?? job.createdAt)}{who ? ` · ${who}${crewSuffix}` : ''}{jobContext(job) ? ` · ${jobContext(job)}` : ''}
                   </div>
                 </div>
                 <span className={`badge ${s.css}`} style={{ flexShrink: 0 }}>{s.label}</span>
