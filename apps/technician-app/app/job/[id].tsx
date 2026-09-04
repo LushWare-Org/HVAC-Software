@@ -33,6 +33,7 @@ import { ActionButton } from '@/components/ActionButton'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { EmptyState } from '@/components/EmptyState'
 
+import { useAuth } from '@/contexts/AuthContext'
 import { useJobDetail, useUpdateJobStatus, useUpdateJob, useUpdateCustomFields } from '@/hooks/useJobs'
 import { useWorkOrdersByJob, useCompleteTask, useAddLineItem, useRemoveLineItem, usePriceBook, useCheckIn, useCheckOut } from '@/hooks/useWorkOrders'
 import { useJobAssignments, useUpdateAssignmentStatus } from '@/hooks/useSchedule'
@@ -74,6 +75,7 @@ export default function JobDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>()
   const id = params.id ?? ''
   const router = useRouter()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
 
   // Data
@@ -163,6 +165,18 @@ export default function JobDetailScreen() {
   }, [job, assignment, workOrder])
 
   const action = job ? getJobAction(job.status) : null
+
+  /**
+   * Only the lead moves the job's status. Everyone else completes their own work
+   * order and signs their own work, but the job itself belongs to the lead.
+   *
+   * A job with no lead recorded (anything created before crews existed) treats
+   * whoever is looking at it as the lead, so this can never lock someone out of
+   * their own single-technician job.
+   */
+  const isLead = !job?.assignedToId || job.assignedToId === user?.id
+  const leadName = job?.assignedToName ?? 'The lead'
+  const crewSize = job?.crewUserIds?.length ?? 1
   const isActionLoading =
     updateJobStatus.isPending || updateAssignmentStatus.isPending || checkIn.isPending || checkOut.isPending
 
@@ -257,12 +271,41 @@ export default function JobDetailScreen() {
       {/* Bottom action button */}
       {action && (
         <View style={styles.bottomAction}>
+          {/* Disabled with a reason rather than hidden: a missing button reads
+              as a bug, a disabled one with an explanation reads as a rule. */}
+          {crewSize > 1 && (
+            <Text
+              style={{
+                fontSize: FontSize.sm,
+                color: Colors.textSecondary,
+                marginBottom: Spacing.sm,
+                textAlign: 'center',
+              }}
+            >
+              {isLead
+                ? `You are leading this job with ${crewSize - 1} other technician${crewSize === 2 ? '' : 's'}.`
+                : `${leadName} is leading this job and updates its status. You can still complete your own work above.`}
+            </Text>
+          )}
+          {crewSize === 1 && !isLead && (
+            <Text
+              style={{
+                fontSize: FontSize.sm,
+                color: Colors.textSecondary,
+                marginBottom: Spacing.sm,
+                textAlign: 'center',
+              }}
+            >
+              {leadName} is leading this job and updates its status.
+            </Text>
+          )}
           <ActionButton
             label={action.label}
             icon={action.icon}
             color={action.color}
             onPress={handlePrimaryAction}
             loading={isActionLoading}
+            disabled={!isLead}
             fullWidth
             size="lg"
           />

@@ -23,10 +23,12 @@ interface JobFilters {
 export function useMyJobs(filters: JobFilters = {}) {
   const { user, isAuthenticated } = useAuth()
   return useQuery({
-    queryKey: queryKeys.jobs({ ...filters, assignedToId: user?.id }),
+    // crewUserId, not assignedToId: assignedToId matches only the LEAD, so a
+    // technician working as part of a crew would never see their own job.
+    queryKey: queryKeys.jobs({ ...filters, crewUserId: user?.id }),
     queryFn: async () => {
       const params = new URLSearchParams()
-      if (user?.id)         params.set('assignedToId', user.id)
+      if (user?.id)         params.set('crewUserId', user.id)
       if (filters.status)   params.set('status', filters.status)
       if (filters.page)     params.set('page', String(filters.page))
       if (filters.limit)    params.set('limit', String(filters.limit ?? 50))

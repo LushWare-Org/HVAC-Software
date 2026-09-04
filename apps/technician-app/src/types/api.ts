@@ -118,7 +118,12 @@ export interface Job {
   serviceAddress?: string
   serviceLatitude?: number
   serviceLongitude?: number
+  /** The LEAD technician. Only they can move the job's status. */
   assignedToId?: string
+  /** Every crew member's user id, lead included. */
+  crewUserIds?: string[]
+  /** Optional target crew size. Guidance, never a rule. */
+  requiredTechCount?: number | null
   assignedToName?: string
   scheduledStart?: string
   scheduledEnd?: string
