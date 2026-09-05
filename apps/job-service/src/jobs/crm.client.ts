@@ -68,6 +68,34 @@ export class CrmClient {
     }
   }
 
+  /**
+   * The customer's contact details, for notifications on jobs whose own
+   * denormalised `customerEmail` is empty.
+   *
+   * That gap is real: jobs created from the admin dashboard historically never
+   * carried an email, so any notification gated on `job.customerEmail` silently
+   * did nothing. Looking the customer up keeps those jobs reachable instead of
+   * failing quietly.
+   */
+  async getCustomerContact(
+    companyId: string,
+    customerId: string,
+  ): Promise<{ email: string | null; phone: string | null; name: string | null } | undefined> {
+    try {
+      const res = await axios.get(`${CRM_URL}/customers/${customerId}`, {
+        timeout: 8_000,
+        headers: this.serviceHeaders(companyId),
+      });
+      const c = res.data ?? {};
+      const name = [c.firstName, c.lastName].filter(Boolean).join(' ').trim();
+      return { email: c.email ?? null, phone: c.phone ?? null, name: name || null };
+    } catch (err: any) {
+      if (err?.response?.status === 404) return undefined;
+      this.logger.warn(`Could not fetch customer ${customerId}: ${err?.response?.status} ${err.message}`);
+      return undefined;
+    }
+  }
+
   private serviceHeaders(companyId: string): Record<string, string> {
     if (process.env.BYPASS_AUTH === 'true') {
       return {

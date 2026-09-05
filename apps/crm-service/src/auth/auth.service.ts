@@ -13,6 +13,14 @@ import { EmailService } from '../email/email.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
 const JWT_EXPIRES_IN = '24h';
+// Mobile apps (customer-app, technician-app) opt into this via platform:'mobile'
+// on login — a 24h web session is fine for a browser tab, but a phone app that
+// asks for a password every single day trains people to stop trusting it.
+// Device-level biometric/passcode unlock is still what gates day-to-day access;
+// this only controls how long the underlying session survives before a real
+// re-login is required.
+const JWT_EXPIRES_IN_MOBILE = '30d';
+const JWT_EXPIRES_IN_MOBILE_SECONDS = 30 * 24 * 60 * 60;
 const APP_NAME = process.env.APP_NAME ?? 'HVACtor.ai';
 
 /** Generate a readable temporary password: 3 groups of 4 alphanumeric chars, e.g. "aX3k-Rm9p-Q2wZ" */
@@ -39,7 +47,7 @@ export class AuthService {
    * that one (which made every account but one effectively unusable once an email
    * was reused across tenants).
    */
-  async login(email: string, password: string) {
+  async login(email: string, password: string, platform?: string) {
     const candidates = await this.prisma.companyUser.findMany({ where: { email: email.toLowerCase() } });
 
     let user: (typeof candidates)[number] | undefined;
@@ -113,12 +121,16 @@ export class AuthService {
     };
     if (customerId) tokenPayload['customer_id'] = customerId;
 
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' });
+    const isMobile = platform === 'mobile';
+    const token = jwt.sign(tokenPayload, JWT_SECRET, {
+      expiresIn: isMobile ? JWT_EXPIRES_IN_MOBILE : JWT_EXPIRES_IN,
+      algorithm: 'HS256',
+    });
 
     return {
       access_token: token,
       token_type: 'Bearer',
-      expires_in: 86400,
+      expires_in: isMobile ? JWT_EXPIRES_IN_MOBILE_SECONDS : 86400,
       user: {
         id: user.id,
         email: user.email,

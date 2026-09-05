@@ -335,7 +335,12 @@ export class CustomersService {
 
     const customer = await this.prisma.customer.update({
       where: { id },
-      data: dto,
+      data: {
+        ...dto,
+        // Same stamp as updateMe — an admin setting the pin counts as the
+        // location being on file, so the portal stops nagging for it.
+        ...(dto.latitude != null && dto.longitude != null ? { locationSetAt: new Date() } : {}),
+      },
     });
 
     this.ttlCache.del(`status-summary:${companyId}:${id}`);
@@ -725,9 +730,26 @@ export class CustomersService {
     return customer;
   }
 
-  async updateMe(companyId: string, userId: string, dto: Partial<{ firstName: string; lastName: string; email: string; phone: string; mobile: string; address: string; city: string; state: string; zipCode: string; notes: string }>, customerId?: string) {
+  async updateMe(
+    companyId: string,
+    userId: string,
+    dto: Partial<{
+      firstName: string; lastName: string; email: string; phone: string; mobile: string;
+      address: string; city: string; state: string; zipCode: string; notes: string;
+      latitude: number; longitude: number; locationTag: string;
+    }>,
+    customerId?: string,
+  ) {
     const customer = await this.findMe(companyId, userId, customerId);
-    return this.prisma.customer.update({ where: { id: customer.id }, data: dto });
+    return this.prisma.customer.update({
+      where: { id: customer.id },
+      data: {
+        ...dto,
+        // Stamp when the pin was actually set, so the portal/app can tell
+        // "never provided" apart from "provided and happens to be 0,0".
+        ...(dto.latitude != null && dto.longitude != null ? { locationSetAt: new Date() } : {}),
+      },
+    });
   }
 
   private computeDaysSinceLastService(bookings: Array<{ preferredDate: Date }>, fallbackDate: Date, now: Date): number {

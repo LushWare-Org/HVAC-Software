@@ -31,6 +31,7 @@ import { Role, AuthUser } from '@tscrm/types';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 
 @ApiTags('Customers')
 @ApiBearerAuth()
@@ -51,7 +52,7 @@ export class CustomersController {
   @ApiOperation({ summary: 'Update current customer portal user\'s customer profile' })
   updateMe(
     @CurrentUser() user: AuthUser,
-    @Body() dto: { firstName?: string; lastName?: string; phone?: string; mobile?: string; address?: string; city?: string; state?: string; zipCode?: string },
+    @Body() dto: UpdateMyProfileDto,
   ) {
     return this.customersService.updateMe(user.companyId, user.userId, dto, user.customerId);
   }

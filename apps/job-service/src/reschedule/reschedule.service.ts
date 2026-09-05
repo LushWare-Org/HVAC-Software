@@ -22,6 +22,10 @@ import {
  * the one piece that mutates a customer's appointment (and calls another
  * service) separate from the conversation around it.
  */
+/** Slices of the reschedule list the Reschedules tab can ask for. */
+export const RESCHEDULE_INBOX_SCOPES = ['action', 'waiting', 'closed', 'all'] as const;
+export type RescheduleInboxScope = (typeof RESCHEDULE_INBOX_SCOPES)[number];
+
 @Injectable()
 export class RescheduleService {
   private readonly logger = new Logger(RescheduleService.name);
@@ -393,20 +397,63 @@ export class RescheduleService {
    * is with the customer) could return an empty page 1 while real work sat on
    * page 2, and would report an inflated `total`.
    */
-  async inbox(companyId: string, page: number | string = 1, limit: number | string = 20) {
+  /**
+   * Which slice of the reschedule list to return.
+   *
+   * `action` is the original inbox: only what staff must act on. It stays the
+   * default so existing callers are unaffected. The other scopes exist because
+   * that filter also *hid* everything else — an admin-opened request waiting on
+   * a customer never appeared anywhere, so staff had no way to see what they
+   * had asked for, chase it, or confirm it happened.
+   */
+  private inboxWhere(companyId: string, scope: RescheduleInboxScope) {
+    const needsStaff = [
+      { status: RescheduleStatus.SLOT_PICKED },
+      { status: RescheduleStatus.AWAITING_RESPONSE, openedBy: RescheduleActor.CUSTOMER },
+    ];
+    switch (scope) {
+      case 'waiting':
+        // We asked; the customer hasn't answered yet.
+        return {
+          companyId,
+          status: RescheduleStatus.AWAITING_RESPONSE,
+          openedBy: RescheduleActor.ADMIN,
+        };
+      case 'closed':
+        // Defined as the complement of the two live statuses rather than a
+        // list of finished ones, so DECLINED/SUPERSEDED — and any status added
+        // later — can never fall through the gap between the tabs.
+        return {
+          companyId,
+          status: {
+            notIn: [RescheduleStatus.AWAITING_RESPONSE, RescheduleStatus.SLOT_PICKED],
+          },
+        };
+      case 'all':
+        return { companyId };
+      case 'action':
+      default:
+        return { companyId, OR: needsStaff };
+    }
+  }
+
+  async inbox(
+    companyId: string,
+    page: number | string = 1,
+    limit: number | string = 20,
+    scope: RescheduleInboxScope = 'action',
+  ) {
     const { page: p, limit: l, skip } = clampPagination({ page, limit });
-    const where = {
-      companyId,
-      OR: [
-        { status: RescheduleStatus.SLOT_PICKED },
-        { status: RescheduleStatus.AWAITING_RESPONSE, openedBy: RescheduleActor.CUSTOMER },
-      ],
-    };
+    const where = this.inboxWhere(companyId, scope);
 
     const [rows, total] = await Promise.all([
       this.prisma.rescheduleRequest.findMany({
         where,
-        orderBy: { createdAt: 'asc' },   // oldest first — the ones at risk float up
+        // Actionable scopes: oldest first, so the ones at risk float up.
+        // Resolved/all: newest first — it's a history, and recent is relevant.
+        orderBy: scope === 'closed' || scope === 'all'
+          ? { createdAt: 'desc' as const }
+          : { createdAt: 'asc' as const },
         skip,
         take: l,
         include: {
@@ -431,6 +478,16 @@ export class RescheduleService {
       })),
       meta: { total, page: p, limit: l, totalPages: Math.ceil(total / l) },
     };
+  }
+
+  /** Row counts per scope, so the Reschedules tabs can carry badges. */
+  async inboxCounts(companyId: string): Promise<Record<RescheduleInboxScope, number>> {
+    const [action, waiting, closed, all] = await Promise.all(
+      RESCHEDULE_INBOX_SCOPES.map((scope) =>
+        this.prisma.rescheduleRequest.count({ where: this.inboxWhere(companyId, scope) as any }),
+      ),
+    );
+    return { action, waiting, closed, all };
   }
 
   async stats(companyId: string, from?: string, to?: string) {

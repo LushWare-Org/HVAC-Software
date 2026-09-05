@@ -26,6 +26,7 @@ import type { Job } from '../types/api'
 import { formatMoney } from '../lib/format'
 
 import RescheduleBanner from '../components/reschedule/RescheduleBanner'
+import AddLocationPrompt from '../components/AddLocationPrompt'
 import TechAvatar from '../components/TechAvatar'
 
 const BookServiceModal = lazy(() => import('./jobs/BookServiceModal'))
@@ -292,6 +293,12 @@ export default function Dashboard() {
           <RescheduleBanner jobs={data!.allJobs} />
         </div>
       )}
+
+      {/* Below reschedule (which is time-critical), above the money strip —
+          setting a location is a one-off convenience, not an emergency. */}
+      <div style={{ marginBottom: 16 }}>
+        <AddLocationPrompt />
+      </div>
 
       {/* One consolidated "needs attention" strip — pay first, review later */}
       {pendingInvoices.length > 0 ? (

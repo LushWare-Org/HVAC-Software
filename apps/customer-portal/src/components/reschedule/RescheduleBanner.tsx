@@ -17,13 +17,18 @@ export default function RescheduleBanner({ jobs }: { jobs: Job[] }) {
 
   return (
     <>
+      {/* Every colour here comes from the amber tokens, which flip per theme
+          (light #D97706 / dark + black #F59E0B). The previous hardcoded
+          #B45309 on a translucent wash was near-invisible against the dark
+          themes' card background. */}
       <div style={{
-        background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.3)',
+        background: 'var(--amber-dim)',
+        border: '1px solid color-mix(in srgb, var(--amber) 45%, transparent)',
         borderRadius: 14, padding: '14px 16px',
         display: 'flex', flexDirection: 'column', gap: 10,
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
-          <CalendarClock size={17} style={{ color: '#B45309', flexShrink: 0, marginTop: 1 }} />
+          <CalendarClock size={17} style={{ color: 'var(--amber)', flexShrink: 0, marginTop: 1 }} />
           <div>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>
               {waiting.length === 1
@@ -42,7 +47,8 @@ export default function RescheduleBanner({ jobs }: { jobs: Job[] }) {
               onClick={() => setActive(job)}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                gap: 10, background: 'var(--bg-card)', border: '1px solid rgba(217,119,6,0.3)',
+                gap: 10, background: 'var(--bg-card)',
+                border: '1px solid color-mix(in srgb, var(--amber) 45%, transparent)',
                 borderRadius: 10, padding: '10px 13px', cursor: 'pointer',
                 textAlign: 'left', fontFamily: 'inherit',
               }}
@@ -50,7 +56,7 @@ export default function RescheduleBanner({ jobs }: { jobs: Job[] }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{job.title}</span>
               <span style={{
                 display: 'flex', alignItems: 'center', gap: 4,
-                fontSize: 12, fontWeight: 700, color: '#B45309', flexShrink: 0,
+                fontSize: 12, fontWeight: 700, color: 'var(--amber)', flexShrink: 0,
               }}>
                 Pick a time <ChevronRight size={13} />
               </span>

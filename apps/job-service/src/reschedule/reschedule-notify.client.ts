@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import axios from 'axios';
+import { CrmClient } from '../jobs/crm.client';
 
 const COMMS_URL = process.env.COMMS_SERVICE_URL ?? 'http://localhost:3005';
 
@@ -22,17 +23,45 @@ export interface RescheduleNotifyPayload {
 export class RescheduleNotifyClient {
   private readonly logger = new Logger(RescheduleNotifyClient.name);
 
+  constructor(@Optional() private readonly crm?: CrmClient) {}
+
   requestOpened(companyId: string, p: RescheduleNotifyPayload) { return this.send(companyId, 'OPENED', p); }
   responded(companyId: string, p: RescheduleNotifyPayload)     { return this.send(companyId, 'RESPONDED', p); }
   applied(companyId: string, p: RescheduleNotifyPayload)       { return this.send(companyId, 'APPLIED', p); }
   closed(companyId: string, p: RescheduleNotifyPayload)        { return this.send(companyId, 'CLOSED', p); }
   nudge(companyId: string, p: RescheduleNotifyPayload)         { return this.send(companyId, 'NUDGE', p); }
 
+  /**
+   * comms-service only emails when the job carries a customerEmail. Jobs
+   * created from the admin dashboard never did, so those reschedules reached
+   * the database and then went out to nobody. Fill the gap from CRM here — one
+   * place, so every event (OPENED/RESPONDED/APPLIED/CLOSED/NUDGE) is covered.
+   */
+  private async withCustomerContact(
+    companyId: string,
+    job: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    if (job.customerEmail || !job.customerId || !this.crm) return job;
+    try {
+      const contact = await this.crm.getCustomerContact(companyId, String(job.customerId));
+      if (!contact?.email) return job;
+      return {
+        ...job,
+        customerEmail: contact.email,
+        customerPhone: job.customerPhone ?? contact.phone ?? undefined,
+        customerName: job.customerName ?? contact.name ?? undefined,
+      };
+    } catch {
+      return job; // Never let enrichment failure block the notification.
+    }
+  }
+
   private async send(companyId: string, event: RescheduleEvent, p: RescheduleNotifyPayload): Promise<void> {
     try {
+      const job = await this.withCustomerContact(companyId, p.job);
       await axios.post(
         `${COMMS_URL}/notifications/reschedule`,
-        { event, job: p.job, request: p.request },
+        { event, job, request: p.request },
         { timeout: 8_000, headers: this.serviceHeaders(companyId) },
       );
     } catch (err: any) {

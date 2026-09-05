@@ -8,6 +8,7 @@ import MapPicker from "../../components/MapPickerLazy";
 import ProjectJobLinkPicker, { type ProjectJobLink } from "../../components/ProjectJobLinkPicker";
 import { useComponents } from "../projects/componentsApi";
 import type { ProjectTemplateType, ComponentTypeMeta } from "../projects/projectsApi";
+import { DURATION_PRESETS, DEFAULT_DURATION_MIN, formatDurationLabel } from "../../lib/dayPlan";
 
 interface AddJobModalProps {
   isOpen: boolean;
@@ -58,6 +59,8 @@ export default function AddJobModal({
   const [customerSearch, setCustomerSearch] = useState('');
   const [projectLink, setProjectLink] = useState<ProjectJobLink>({});
   const [equipmentId, setEquipmentId] = useState('');
+  /** Label of the customer's saved pin when we pre-filled the map from it. */
+  const [usedSavedLocation, setUsedSavedLocation] = useState<string | null>(null);
   const [formData, setFormData]   = useState({
     title: "",
     description: "",
@@ -65,9 +68,12 @@ export default function AddJobModal({
     serviceType: "Maintenance",
     customerId: lockedCustomer?.id ?? "",
     customerName: lockedCustomer?.name ?? "",
+    customerEmail: "",
+    customerPhone: "",
     serviceAddress: lockedCustomer?.address ?? "",
     date: new Date().toISOString().split("T")[0],
     time: "09:00",
+    durationMins: String(DEFAULT_DURATION_MIN),
     lat: lockedCustomer?.lat ?? 6.9271,
     lng: lockedCustomer?.lng ?? 79.8612,
   });
@@ -161,7 +167,23 @@ export default function AddJobModal({
     if (c) {
       const name = `${c.firstName} ${c.lastName}`.trim();
       const addr = [c.address, c.city, c.state, c.zipCode].filter(Boolean).join(', ');
-      setFormData(prev => ({ ...prev, customerId: c.id, customerName: name, serviceAddress: addr || 'N/A' }));
+      // Carry contact details onto the job: notifications (reschedule, en-route,
+      // status) read them from the job row, and jobs created here used to leave
+      // them null — so those emails silently went nowhere.
+      // Drop the pin on the customer's saved location when they have one, so
+      // nobody re-picks it for every job. Still fully editable on the map below.
+      const hasSavedPin = c.latitude != null && c.longitude != null;
+      setFormData(prev => ({
+        ...prev,
+        customerId: c.id,
+        customerName: name,
+        customerEmail: c.email ?? '',
+        customerPhone: c.phone ?? '',
+        serviceAddress: addr || 'N/A',
+        lat: hasSavedPin ? Number(c.latitude) : prev.lat,
+        lng: hasSavedPin ? Number(c.longitude) : prev.lng,
+      }));
+      setUsedSavedLocation(hasSavedPin ? (c.locationTag || 'saved location') : null);
     }
   };
 
@@ -188,6 +210,13 @@ export default function AddJobModal({
       if (!isNaN(dt.getTime())) scheduledStart = dt.toISOString();
     }
 
+    // Clamp to the same bounds the API enforces, so a stray keystroke surfaces
+    // as a sane value here instead of a 400 from the server.
+    const parsedDuration = Number(formData.durationMins);
+    const durationMinsValue = Number.isFinite(parsedDuration) && parsedDuration > 0
+      ? Math.min(1440, Math.max(5, Math.round(parsedDuration)))
+      : DEFAULT_DURATION_MIN;
+
     createJob.mutate(
       {
         title:              formData.title.trim(),
@@ -196,8 +225,11 @@ export default function AddJobModal({
         tags:               [formData.serviceType.toLowerCase()],
         customerId:         formData.customerId,
         customerName:       formData.customerName,
+        customerEmail:      formData.customerEmail || undefined,
+        customerPhone:      formData.customerPhone || undefined,
         serviceAddress:     formData.serviceAddress,
         scheduledStart,
+        estimatedDurationMins: durationMinsValue,
         serviceLatitude:    formData.lat,
         serviceLongitude:   formData.lng,
         projectId:          lockedProject?.id ?? projectLink.projectId ?? undefined,
@@ -215,9 +247,12 @@ export default function AddJobModal({
             serviceType: "Maintenance",
             customerId: lockedCustomer?.id ?? "",
             customerName: lockedCustomer?.name ?? "",
+    customerEmail: "",
+    customerPhone: "",
             serviceAddress: lockedCustomer?.address ?? "",
             date: new Date().toISOString().split("T")[0],
             time: "09:00",
+    durationMins: String(DEFAULT_DURATION_MIN),
             lat: lockedCustomer?.lat ?? 6.9271,
             lng: lockedCustomer?.lng ?? 79.8612,
           });
@@ -565,14 +600,65 @@ export default function AddJobModal({
                       className={inputCls}
                     />
                   </div>
+                  {/* Feeds the day-planner: it packs each technician's route
+                      from this, so a wrong value double-books the day. */}
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Expected Duration
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        name="durationMins"
+                        value={DURATION_PRESETS.includes(Number(formData.durationMins)) ? formData.durationMins : 'custom'}
+                        onChange={(e) => {
+                          if (e.target.value === 'custom') return;
+                          setFormData(prev => ({ ...prev, durationMins: e.target.value }));
+                        }}
+                        disabled={isLoading}
+                        className={inputCls}
+                      >
+                        {DURATION_PRESETS.map(m => (
+                          <option key={m} value={String(m)}>{formatDurationLabel(m)}</option>
+                        ))}
+                        <option value="custom">Custom…</option>
+                      </select>
+                      <input
+                        type="number"
+                        name="durationMins"
+                        min={5}
+                        max={1440}
+                        step={5}
+                        value={formData.durationMins}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        className={`${inputCls} w-28`}
+                        aria-label="Duration in minutes"
+                      />
+                      <span className="text-xs text-gray-500 shrink-0">min</span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      Used when auto-scheduling to fit this job into a technician's day.
+                    </p>
+                  </div>
                 </div>
                 <MapPicker
                   label="Service Location (GPS for Dispatch)"
                   lat={formData.lat}
                   lng={formData.lng}
-                  onChange={(lat, lng) => setFormData(prev => ({ ...prev, lat, lng }))}
+                  onChange={(lat, lng) => { setUsedSavedLocation(null); setFormData(prev => ({ ...prev, lat, lng })); }}
                   height="240px"
                 />
+                {usedSavedLocation ? (
+                  <p className="text-[11px] text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                    <Home size={12} className="shrink-0" />
+                    Using {formData.customerName || 'this customer'}'s saved location
+                    {usedSavedLocation !== 'saved location' ? ` (${usedSavedLocation})` : ''}. Drag the pin to change it for this job.
+                  </p>
+                ) : formData.customerId ? (
+                  <p className="text-[11px] text-gray-500">
+                    This customer has no saved location — pick one on the map above.
+                  </p>
+                ) : null}
               </>
             )}
           </div>

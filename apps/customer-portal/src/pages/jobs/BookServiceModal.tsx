@@ -82,11 +82,25 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
   const [serviceAddress, setServiceAddress] = useState('')
   const [notes, setNotes] = useState('')
   const [coords, setCoords] = useState({ lat: 25.2048, lng: 55.2708 })
+  /** True while the pin is still the customer's saved one (not hand-moved). */
+  const [pinFromProfile, setPinFromProfile] = useState(false)
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
+
+  // Start the map on the customer's saved location when they have one, so a
+  // returning customer never has to find their own house again. Runs once the
+  // profile arrives; a customer with no saved pin keeps the map default and
+  // picks a spot themselves, exactly as before.
+  useEffect(() => {
+    const lat = customerProfile?.latitude
+    const lng = customerProfile?.longitude
+    if (lat == null || lng == null) return
+    setCoords({ lat: Number(lat), lng: Number(lng) })
+    setPinFromProfile(true)
+  }, [customerProfile?.latitude, customerProfile?.longitude])
 
   // Saved address from the customer profile (one-tap chip)
   const savedAddress = useMemo(() => {
@@ -463,11 +477,14 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
                   label="Pin the exact location (helps dispatch send the nearest tech)"
                   lat={coords.lat}
                   lng={coords.lng}
-                  onChange={(lat, lng) => setCoords({ lat, lng })}
+                  onChange={(lat, lng) => { setPinFromProfile(false); setCoords({ lat, lng }) }}
                   height="200px"
                 />
                 <div style={{ marginTop: 8, fontSize: 11, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MapPin size={12} /> We use this pin to assign the closest available technician.
+                  <MapPin size={12} />
+                  {pinFromProfile
+                    ? <>Using your saved location{customerProfile?.locationTag ? ` (${customerProfile.locationTag})` : ''} — drag the pin if this visit is somewhere else.</>
+                    : <>We use this pin to assign the closest available technician.</>}
                 </div>
               </div>
 

@@ -10,6 +10,19 @@ export const DAY_END_H = 17
 export const DEFAULT_DURATION_MIN = 90
 export const TRAVEL_BUFFER_MIN = 30
 
+/** Common visit lengths offered in job forms; anything else is typed in. */
+export const DURATION_PRESETS = [30, 45, 60, 90, 120, 180, 240, 480]
+
+/** 90 → "1h 30m", 60 → "1h", 45 → "45m". Used in forms and the plan preview. */
+export function formatDurationLabel(mins: number): string {
+  if (!Number.isFinite(mins) || mins <= 0) return '—'
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  if (h && m) return `${h}h ${m}m`
+  if (h) return `${h}h`
+  return `${m}m`
+}
+
 export function jobCoords(j: Job): { lat: number; lng: number } | null {
   const lat = j.serviceLatitude != null ? Number(j.serviceLatitude) : NaN
   const lng = j.serviceLongitude != null ? Number(j.serviceLongitude) : NaN

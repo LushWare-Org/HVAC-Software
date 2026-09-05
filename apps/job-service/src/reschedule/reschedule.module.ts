@@ -5,6 +5,7 @@ import { RescheduleApplyService } from './reschedule-apply.service';
 import { SchedulingClient } from './scheduling.client';
 import { RescheduleNotifyClient } from './reschedule-notify.client';
 import { RescheduleNudgeCron } from './reschedule-nudge.cron';
+import { CrmClient } from '../jobs/crm.client';
 
 @Module({
   controllers: [RescheduleController],
@@ -14,6 +15,9 @@ import { RescheduleNudgeCron } from './reschedule-nudge.cron';
     SchedulingClient,
     RescheduleNotifyClient,
     RescheduleNudgeCron,
+    // Lets RescheduleNotifyClient fill in a missing customerEmail before
+    // handing the job to comms-service.
+    CrmClient,
   ],
   exports: [RescheduleService],
 })

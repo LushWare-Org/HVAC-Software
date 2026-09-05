@@ -6,6 +6,9 @@ import {
   IsArray,
   IsBoolean,
   MaxLength,
+  IsNumber,
+  Min,
+  Max,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -73,6 +76,29 @@ export class CreateCustomerDto {
   @IsOptional()
   @IsString()
   zipCode?: string;
+
+  // Service location — becomes the default pin on every job created for this
+  // customer, so nobody has to re-drop it each time. Bounded to real
+  // coordinates so a bad payload can't put a technician in the ocean.
+  @ApiPropertyOptional({ example: 6.9271, description: 'Default service location latitude' })
+  @IsOptional()
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  latitude?: number;
+
+  @ApiPropertyOptional({ example: 79.8612, description: 'Default service location longitude' })
+  @IsOptional()
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  longitude?: number;
+
+  @ApiPropertyOptional({ example: 'Home', description: 'Label for the saved location' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  locationTag?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

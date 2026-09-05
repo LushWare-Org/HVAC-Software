@@ -26,16 +26,37 @@ export function useRescheduleHistory(jobId?: string) {
   })
 }
 
-export function useRescheduleInbox(page = 1, limit = 20) {
+/**
+ * Which slice of the reschedule list to load.
+ *  - action  : needs staff now (customer asked, or picked a slot)
+ *  - waiting : we asked the customer and they haven't answered
+ *  - closed  : applied, cancelled, declined, superseded
+ *  - all     : everything, newest first
+ */
+export type RescheduleScope = 'action' | 'waiting' | 'closed' | 'all'
+
+export function useRescheduleInbox(page = 1, limit = 20, scope: RescheduleScope = 'action') {
   return useQuery({
-    queryKey: ['reschedule', 'inbox', page, limit],
+    queryKey: ['reschedule', 'inbox', page, limit, scope],
     queryFn: async () => {
       const res = await api.get<{ data: RescheduleInboxRow[]; meta: { total: number; totalPages: number } }>(
-        '/jobs/reschedule/inbox', { params: { page, limit } })
+        '/jobs/reschedule/inbox', { params: { page, limit, scope } })
       return res.data
     },
     // Shared work — a dispatcher should not be staring at a queue another
     // dispatcher cleared five minutes ago.
+    refetchInterval: 60_000,
+  })
+}
+
+/** Per-scope row counts, for the tab badges. */
+export function useRescheduleInboxCounts() {
+  return useQuery({
+    queryKey: ['reschedule', 'inbox', 'counts'],
+    queryFn: async () => {
+      const res = await api.get<Record<RescheduleScope, number>>('/jobs/reschedule/inbox/counts')
+      return res.data
+    },
     refetchInterval: 60_000,
   })
 }

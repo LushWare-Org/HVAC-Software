@@ -152,6 +152,16 @@ model Customer {
   city        String?
   state       String?
   zipCode     String?
+
+  // The customer's own service location — the default pin for any job created
+  // for them, from the admin side or the portal. Optional: a customer who has
+  // never set one picks a location per job instead (the old behaviour).
+  latitude      Float?
+  longitude     Float?
+  /// Free-text label the customer chooses, e.g. "Home", "Shop", "Site B".
+  locationTag   String?
+  locationSetAt DateTime?
+
   notes       String?
   source      String?      // how they found us
   tags        String[]     // flexible tagging

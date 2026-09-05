@@ -1,16 +1,21 @@
 /**
  * ReschedulesInbox — the staff workspace for rescheduling.
  *
- * Everything currently waiting on a staff member, oldest first so the requests
- * at risk of becoming no-shows float to the top. A row where the customer has
- * already chosen a time is one click from Apply; everything else opens the job
- * so the dispatcher can respond properly.
+ * Four views, because "needs you" alone was hiding most of the picture: a
+ * request staff opened and were waiting on a customer for appeared nowhere at
+ * all, so there was no way to see what had been asked, chase it, or confirm it
+ * landed. The tabs partition every request — nothing is unreachable now.
+ *
+ * "Needs you" stays the default and keeps its oldest-first ordering, so the
+ * requests at risk of becoming no-shows still float to the top.
  */
-import { Loader2, Check, CalendarClock, AlertTriangle, Inbox } from 'lucide-react'
+import { useState } from 'react'
+import { Loader2, Check, CalendarClock, AlertTriangle, Inbox, ArrowUpRight, User } from 'lucide-react'
 import { RESCHEDULE_REASON_LABELS, formatSlot } from '../../lib/reschedule'
 import { useToast } from '../../contexts/ToastContext'
 import {
   useRescheduleInbox, useApplyReschedule, useRespondReschedule, useRescheduleStats,
+  useRescheduleInboxCounts, type RescheduleScope,
 } from '../../hooks/useReschedule'
 import type { RescheduleInboxRow } from '../../types/api'
 import { TechChip } from '../../components/TechAvatar'
@@ -19,8 +24,27 @@ function daysOld(iso: string) {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
 }
 
+const SCOPES: { key: RescheduleScope; label: string; empty: string }[] = [
+  { key: 'action', label: 'Needs you', empty: 'Nothing waiting on you right now.' },
+  { key: 'waiting', label: 'Waiting on customer', empty: "You haven't asked any customers to reschedule." },
+  { key: 'closed', label: 'Resolved', empty: 'No reschedules have been resolved yet.' },
+  { key: 'all', label: 'All', empty: 'No reschedule requests yet.' },
+]
+
+/** Human label + colour for a request's status, from either side. */
+const STATUS_META: Record<string, { label: string; color: string }> = {
+  AWAITING_RESPONSE: { label: 'Awaiting reply', color: 'var(--amber)' },
+  SLOT_PICKED: { label: 'Time chosen', color: 'var(--green)' },
+  APPLIED: { label: 'Applied', color: 'var(--green)' },
+  DECLINED: { label: 'Declined', color: 'var(--red)' },
+  CANCELLED: { label: 'Cancelled', color: 'var(--t4)' },
+  SUPERSEDED: { label: 'Superseded', color: 'var(--t4)' },
+}
+
 export default function ReschedulesInbox({ onOpenJob }: { onOpenJob: (jobId: string) => void }) {
-  const inboxQ = useRescheduleInbox()
+  const [scope, setScope] = useState<RescheduleScope>('action')
+  const inboxQ = useRescheduleInbox(1, 20, scope)
+  const countsQ = useRescheduleInboxCounts()
   const statsQ = useRescheduleStats()
   const applyMut = useApplyReschedule()
   const respondMut = useRespondReschedule()
@@ -79,6 +103,39 @@ export default function ReschedulesInbox({ onOpenJob }: { onOpenJob: (jobId: str
         </div>
       )}
 
+      {/* Scope tabs — every request lives under exactly one of these. */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {SCOPES.map(({ key, label }) => {
+          const active = scope === key
+          const count = countsQ.data?.[key]
+          return (
+            <button
+              key={key}
+              onClick={() => setScope(key)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '7px 13px', borderRadius: 999, cursor: 'pointer',
+                fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600,
+                border: `1px solid ${active ? 'var(--blue)' : 'var(--bd)'}`,
+                background: active ? 'var(--blue-dim)' : 'var(--bg-card)',
+                color: active ? 'var(--blue)' : 'var(--t2)',
+              }}
+            >
+              {label}
+              {count != null && count > 0 && (
+                <span style={{
+                  fontSize: 10.5, fontWeight: 800, padding: '1px 6px', borderRadius: 999,
+                  background: active ? 'var(--blue)' : 'var(--bg-card-2)',
+                  color: active ? '#fff' : 'var(--t3)',
+                }}>
+                  {count}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {inboxQ.isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
@@ -88,8 +145,19 @@ export default function ReschedulesInbox({ onOpenJob }: { onOpenJob: (jobId: str
           <div style={{ padding: '48px 20px', textAlign: 'center' }}>
             <Inbox size={28} style={{ color: 'var(--t4)', opacity: 0.6, margin: '0 auto 10px' }} />
             <p style={{ fontSize: 13, color: 'var(--t3)', margin: 0 }}>
-              Nothing waiting on you. Reschedule requests from customers land here.
+              {SCOPES.find(s => s.key === scope)?.empty}
             </p>
+            {scope === 'action' && (countsQ.data?.all ?? 0) > 0 && (
+              <button
+                onClick={() => setScope('all')}
+                style={{
+                  marginTop: 10, background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, color: 'var(--blue)',
+                }}
+              >
+                See all {countsQ.data?.all} reschedule requests →
+              </button>
+            )}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -121,10 +189,40 @@ export default function ReschedulesInbox({ onOpenJob }: { onOpenJob: (jobId: str
                         {row.job.title}
                       </button>
                       <span style={{ fontSize: 11, color: 'var(--t4)' }}>{row.job.jobNumber}</span>
+
+                      {/* Who started this round — the single most important
+                          missing detail: "did we ask them, or did they ask us?" */}
+                      <span
+                        title={`Opened by ${row.request.openedByName ?? (row.request.openedBy === 'ADMIN' ? 'your team' : 'the customer')}`}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10,
+                          fontWeight: 700, padding: '2px 7px', borderRadius: 999,
+                          color: row.request.openedBy === 'ADMIN' ? 'var(--blue)' : 'var(--violet)',
+                          background: `color-mix(in srgb, ${
+                            row.request.openedBy === 'ADMIN' ? 'var(--blue)' : 'var(--violet)'} 14%, transparent)`,
+                        }}
+                      >
+                        {row.request.openedBy === 'ADMIN'
+                          ? <><ArrowUpRight size={9} /> We asked</>
+                          : <><User size={9} /> Customer asked</>}
+                      </span>
+
+                      {/* Status matters once the list includes resolved rows. */}
+                      {STATUS_META[row.request.status] && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999,
+                          color: STATUS_META[row.request.status].color,
+                          background: `color-mix(in srgb, ${STATUS_META[row.request.status].color} 14%, transparent)`,
+                        }}>
+                          {STATUS_META[row.request.status].label}
+                        </span>
+                      )}
+
                       {row.isStale && (
                         <span style={{
                           display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10,
-                          fontWeight: 700, color: '#B91C1C', background: 'rgba(220,38,38,0.12)',
+                          fontWeight: 700, color: 'var(--red)',
+                          background: 'color-mix(in srgb, var(--red) 14%, transparent)',
                           padding: '2px 7px', borderRadius: 999,
                         }}>
                           <AlertTriangle size={9} /> {daysOld(row.request.createdAt)}d no reply

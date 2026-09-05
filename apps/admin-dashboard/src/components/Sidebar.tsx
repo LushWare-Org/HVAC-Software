@@ -81,6 +81,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
             label: 'Home',
             items: [
                 { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+                // CRM sits alongside Dashboard: it's the other daily landing
+                // surface, not a "sales" sub-area you go hunting for.
+                { icon: Users, label: 'Customers & CRM', path: '/customers' },
             ],
         },
         {
@@ -93,9 +96,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
             ],
         },
         {
-            label: 'Sales & customers',
+            // Renamed from "Sales & customers": Customers & CRM moved up to
+            // Home, so the old label no longer described what's in here.
+            label: 'Sales & marketing',
             items: [
-                { icon: Users, label: 'Customers & CRM', path: '/customers' },
                 { icon: Megaphone, label: 'Marketing', path: '/marketing' },
                 { icon: MessageSquare, label: 'Communications', path: '/communications', badge: unreadMessages },
             ],

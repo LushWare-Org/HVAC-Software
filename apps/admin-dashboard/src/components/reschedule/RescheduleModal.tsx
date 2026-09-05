@@ -273,7 +273,7 @@ function LiveRound({ request, busy, onPick, onApply, onDecline, onCancel }: {
           }}>
             <p style={{
               margin: '0 0 4px', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase',
-              color: '#047857', letterSpacing: '0.06em',
+              color: 'var(--green)', letterSpacing: '0.06em',
             }}>
               Customer chose
             </p>
@@ -335,10 +335,10 @@ function LiveRound({ request, busy, onPick, onApply, onDecline, onCancel }: {
           ) : (
             <div style={{
               display: 'flex', gap: 8, alignItems: 'flex-start',
-              background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)',
+              background: 'var(--amber-dim)', border: '1px solid color-mix(in srgb, var(--amber) 40%, transparent)',
               borderRadius: 10, padding: '11px 13px',
             }}>
-              <MessageSquareWarning size={14} style={{ color: '#B45309', flexShrink: 0, marginTop: 1 }} />
+              <MessageSquareWarning size={14} style={{ color: 'var(--amber)', flexShrink: 0, marginTop: 1 }} />
               <p style={{ margin: 0, fontSize: 12.5, color: 'var(--t2)' }}>
                 They asked to reschedule without naming a time. Decline this and open a new
                 request offering them some options.

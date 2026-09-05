@@ -12,15 +12,15 @@ import type { RescheduleStateValue } from '../../types/api'
 const META: Record<RescheduleStateValue, { label: string; short: string; color: string; bg: string }> = {
   AWAITING_CUSTOMER: {
     label: 'Pick a time', short: 'Pick a time',
-    color: '#B45309', bg: 'rgba(217,119,6,0.12)',
+    color: 'var(--amber)', bg: 'color-mix(in srgb, var(--amber) 15%, transparent)',
   },
   AWAITING_ADMIN: {
     label: 'Reschedule requested', short: 'Requested',
-    color: '#1D4ED8', bg: 'rgba(37,99,235,0.12)',
+    color: 'var(--blue)', bg: 'color-mix(in srgb, var(--blue) 15%, transparent)',
   },
   READY_TO_APPLY: {
     label: 'Confirming your time', short: 'Confirming',
-    color: '#1D4ED8', bg: 'rgba(37,99,235,0.12)',
+    color: 'var(--blue)', bg: 'color-mix(in srgb, var(--blue) 15%, transparent)',
   },
 }
 

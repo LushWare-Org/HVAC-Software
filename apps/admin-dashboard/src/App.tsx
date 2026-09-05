@@ -8,6 +8,7 @@ import Topbar from './components/Topbar'
 import { useTechDirectory } from './components/TechAvatar'
 import Login from './pages/Login'
 import ChatWidget from './components/ChatWidget'
+import ModalCloseGuard from './components/ModalCloseGuard'
 
 // ── Code-split page routes ──────────────────────────────────────────────────
 // Each page is loaded only when its route is first visited. This keeps the
@@ -239,6 +240,8 @@ export default function App() {
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
+          {/* Confirms accidental backdrop clicks for every modal in the app. */}
+          <ModalCloseGuard />
         </ToastProvider>
       </ThemeProvider>
     </AuthProvider>

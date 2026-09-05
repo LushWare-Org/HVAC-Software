@@ -26,6 +26,7 @@ import {
   useSaveMyEquipment,
 } from '../hooks/useCustomerPortal'
 import { useAuth } from '../contexts/AuthContext'
+import MyLocationCard from '../components/MyLocationCard'
 import type { CustomerEquipment } from '../types/api'
 
 function fmtDate(iso?: string) {
@@ -327,6 +328,19 @@ function PushNotificationsSection() {
 export default function Profile() {
   const { updateLocalUser } = useAuth()
   const [tab, setTab] = useState<'personal' | 'security' | 'equipment'>('personal')
+
+  // The dashboard's "Add your location" shortcut links to /profile#my-location.
+  // React Router doesn't scroll to a hash on its own, so land the user on the
+  // card instead of dropping them at the top of the page to hunt for it.
+  useEffect(() => {
+    if (window.location.hash !== '#my-location') return
+    setTab('personal')
+    // Wait a frame so the card is mounted before scrolling to it.
+    const id = window.setTimeout(() => {
+      document.getElementById('my-location')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+    return () => window.clearTimeout(id)
+  }, [])
   const [saved, setSaved] = useState(true)
   const [saveError, setSaveError] = useState('')
   const [passError, setPassError] = useState('')
@@ -446,6 +460,12 @@ export default function Profile() {
           <Shield size={14} /> Security
         </button>
       </div>
+
+      {tab === 'personal' && (
+        <div id="my-location" style={{ marginBottom: 20, scrollMarginTop: 90 }}>
+          <MyLocationCard />
+        </div>
+      )}
 
       {tab === 'personal' && (
         <div className="card anim-fade-in">

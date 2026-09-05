@@ -6,6 +6,7 @@ import { useAuth } from './contexts/AuthContext'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import ChatWidget from './components/ChatWidget'
+import ModalCloseGuard from './components/ModalCloseGuard'
 // Dashboard + Login stay eager: they're the post-login landing and the
 // pre-login screen, both shown immediately. Everything else is lazy-loaded
 // so the initial JS bundle stays tight.
@@ -147,6 +148,8 @@ export default function App() {
             <Route path="/*" element={<AppShell />} />
           </Routes>
         </BrowserRouter>
+        {/* Confirms accidental backdrop clicks for every modal in the app. */}
+        <ModalCloseGuard />
       </ToastProvider>
     </ThemeProvider>
   )

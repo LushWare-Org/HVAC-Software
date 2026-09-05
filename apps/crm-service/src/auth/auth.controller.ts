@@ -12,6 +12,13 @@ const STAFF_WRITE = [Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, 
 class LoginDto {
   @IsEmail() email!: string;
   @IsString() @MinLength(6) password!: string;
+  /**
+   * 'mobile' issues a long-lived token instead of the 24h web default — a
+   * phone app that re-prompts for a password every day trains customers to
+   * distrust it. Web (admin dashboard, customer/technician portals) is
+   * unaffected: they simply never send this field.
+   */
+  @IsOptional() @IsString() platform?: string;
 }
 
 class RegisterDto {
@@ -84,7 +91,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log in with email and password' })
   login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.email, dto.password);
+    return this.authService.login(dto.email, dto.password, dto.platform);
   }
 
   @Post('register')

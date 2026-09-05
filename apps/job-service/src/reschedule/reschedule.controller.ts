@@ -4,7 +4,9 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { AuthUser, Role } from '@tscrm/types';
-import { RescheduleService } from './reschedule.service';
+import {
+  RescheduleService, RESCHEDULE_INBOX_SCOPES, type RescheduleInboxScope,
+} from './reschedule.service';
 import { RescheduleApplyService } from './reschedule-apply.service';
 import { OpenRescheduleDto, RespondRescheduleDto, ApplyRescheduleDto } from './dto/reschedule.dto';
 
@@ -30,11 +32,32 @@ export class RescheduleController {
 
   @Get('inbox')
   @Roles(...STAFF_ROLES)
-  @ApiOperation({ summary: 'Every reschedule round currently waiting on staff' })
+  @ApiOperation({ summary: 'Reschedule rounds, filtered by scope (defaults to those needing staff)' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  inbox(@CurrentUser() user: AuthUser, @Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.reschedule.inbox(user.companyId, page ?? 1, limit ?? 20);
+  @ApiQuery({
+    name: 'scope', required: false, enum: RESCHEDULE_INBOX_SCOPES,
+    description: 'action = needs staff (default), waiting = asked customer, closed = applied/cancelled, all = everything',
+  })
+  inbox(
+    @CurrentUser() user: AuthUser,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('scope') scope?: string,
+  ) {
+    // Unknown values fall back to the original behaviour rather than 400 —
+    // this is a view filter, not something worth failing a page load over.
+    const safeScope = (RESCHEDULE_INBOX_SCOPES as readonly string[]).includes(scope ?? '')
+      ? (scope as RescheduleInboxScope)
+      : 'action';
+    return this.reschedule.inbox(user.companyId, page ?? 1, limit ?? 20, safeScope);
+  }
+
+  @Get('inbox/counts')
+  @Roles(...STAFF_ROLES)
+  @ApiOperation({ summary: 'How many reschedules sit in each scope — drives the tab badges' })
+  inboxCounts(@CurrentUser() user: AuthUser) {
+    return this.reschedule.inboxCounts(user.companyId);
   }
 
   @Get('stats')
