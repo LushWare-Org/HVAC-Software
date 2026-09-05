@@ -17,10 +17,15 @@ import (
 type CrewHandler struct {
 	crewRepo  *repository.CrewRepository
 	candidate *service.CandidateService
+	sim       *service.GPSSimService
 }
 
-func NewCrewHandler(crewRepo *repository.CrewRepository, candidate *service.CandidateService) *CrewHandler {
-	return &CrewHandler{crewRepo: crewRepo, candidate: candidate}
+func NewCrewHandler(
+	crewRepo *repository.CrewRepository,
+	candidate *service.CandidateService,
+	sim *service.GPSSimService,
+) *CrewHandler {
+	return &CrewHandler{crewRepo: crewRepo, candidate: candidate, sim: sim}
 }
 
 // GetCrew returns the job's live crew, lead first.
@@ -143,4 +148,61 @@ func (h *CrewHandler) respondWithCrew(c *gin.Context, companyID, jobID string) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": crew, "count": len(crew)})
+}
+
+// ─── GPS simulation (trial tool) ─────────────────────────────────────────────
+//
+// Every route here 404s unless ENABLE_GPS_SIMULATION=true, so a normal
+// deployment behaves as though the feature does not exist.
+
+// GET /dispatch/simulate/status?jobId=…
+// Also tells the dashboard whether to show its button at all, so the UI can
+// never offer something the server would refuse.
+func (h *CrewHandler) SimulationStatus(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	if !service.SimulationEnabled() {
+		c.JSON(http.StatusOK, gin.H{"enabled": false, "run": nil})
+		return
+	}
+	var run any
+	if jobID := c.Query("jobId"); jobID != "" {
+		if st := h.sim.Status(claims.CompanyID, jobID); st != nil {
+			run = st
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"enabled": true, "run": run})
+}
+
+// POST /dispatch/jobs/:jobId/simulate
+// Arms the watcher. Nothing moves until the job is marked EN_ROUTE.
+func (h *CrewHandler) SimulateArm(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	if !service.SimulationEnabled() {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+	var body struct {
+		Speed   float64  `json:"speed"`
+		FromLat *float64 `json:"fromLat"`
+		FromLng *float64 `json:"fromLng"`
+	}
+	_ = c.ShouldBindJSON(&body)
+
+	st, err := h.sim.Arm(claims.CompanyID, c.Param("jobId"), body.Speed, body.FromLat, body.FromLng)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, st)
+}
+
+// DELETE /dispatch/jobs/:jobId/simulate
+func (h *CrewHandler) SimulateStop(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	if !service.SimulationEnabled() {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+	stopped := h.sim.Stop(claims.CompanyID, c.Param("jobId"))
+	c.JSON(http.StatusOK, gin.H{"stopped": stopped})
 }

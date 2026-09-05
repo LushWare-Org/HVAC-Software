@@ -60,7 +60,8 @@ func main() {
 	dispatchH := handler.NewDispatchHandler(assignSvc, assignRepo)
 	conflictRepo := repository.NewConflictRepository(db)
 	candidateSvc := service.NewCandidateService(techRepo, conflictRepo, assignRepo, cfg)
-	crewH := handler.NewCrewHandler(crewRepo, candidateSvc)
+	simSvc := service.NewGPSSimService(techRepo, assignRepo, crewRepo, hub)
+	crewH := handler.NewCrewHandler(crewRepo, candidateSvc, simSvc)
 	gpsH := handler.NewGPSHandler(techRepo, assignRepo, hub)
 	wsH := handler.NewWebSocketHandler(hub)
 
@@ -153,6 +154,17 @@ func main() {
 			crewH.SetLead,
 		)
 		dispatch.GET("/candidates", crewH.Candidates)
+
+		// GPS simulation — trial tool, inert unless ENABLE_GPS_SIMULATION=true.
+		dispatch.GET("/simulate/status", crewH.SimulationStatus)
+		dispatch.POST("/jobs/:jobId/simulate",
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
+			crewH.SimulateArm,
+		)
+		dispatch.DELETE("/jobs/:jobId/simulate",
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
+			crewH.SimulateStop,
+		)
 
 		dispatch.GET("/assignments", dispatchH.GetAllForCompany)
 		dispatch.GET("/assignments/:id", dispatchH.GetOne)

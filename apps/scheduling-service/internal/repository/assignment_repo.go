@@ -453,3 +453,13 @@ func (r *AssignmentRepository) FindGPSTrail(
 	}
 	return out, rows.Err()
 }
+
+// QueryJobStatus reads a job's current status (cross-schema). Used by the GPS
+// simulator to wait for EN_ROUTE without job-service needing to push an event.
+func (r *AssignmentRepository) QueryJobStatus(ctx context.Context, companyID, jobID string, out *string) error {
+	// ::text because status is a Postgres enum (jobs."JobStatus"), and scanning
+	// an unregistered enum OID into a plain string is not something to rely on.
+	return r.db.QueryRow(ctx, `
+		SELECT status::text FROM jobs.jobs WHERE id = $1 AND "companyId" = $2`,
+		jobID, companyID).Scan(out)
+}

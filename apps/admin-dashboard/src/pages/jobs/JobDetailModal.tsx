@@ -31,10 +31,12 @@ import JobActivityTab from "./JobActivityTab";
 import { formatMoney } from '../../lib/format'
 import { useTechnicians } from "../../hooks/useScheduling";
 import Avatar from "../../components/Avatar";
+import GpsSimulationControl from '../../components/GpsSimulationControl'
 import JobStatusOverrideMenu from "../../components/JobStatusOverrideMenu";
 import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
 import RescheduleModal from "../../components/reschedule/RescheduleModal";
 import { STAFF_RESCHEDULABLE_STATUSES } from "../../lib/reschedule";
+import { DURATION_PRESETS, DEFAULT_DURATION_MIN, formatDurationLabel } from "../../lib/dayPlan";
 
 interface JobDetailModalProps {
   isOpen: boolean;
@@ -66,6 +68,7 @@ const PRIORITY_CSS: Record<string, string> = {
 };
 
 const inputView = "w-full px-3 py-2.5 rounded-lg border border-transparent text-sm font-medium bg-[var(--bg-hover)] text-[var(--t2)]";
+const inputCls = "w-full px-3 py-2.5 rounded-lg border border-[var(--bd)] text-sm font-medium bg-[var(--bg-card)] text-[var(--t1)]";
 
 
 type EqDraft = Partial<EquipmentRecord> & { _tempId?: string };
@@ -94,6 +97,12 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
   // J5: Parts shortage
   const [savingShortage, setSavingShortage] = useState(false);
   const [hasShortage, setHasShortage] = useState<boolean>(propJob?.hasPartShortage ?? false);
+
+  // Expected duration — drives day-plan packing, editable here.
+  const [durationDraft, setDurationDraft] = useState<number>(
+    propJob?.estimatedDurationMins ?? DEFAULT_DURATION_MIN,
+  );
+  const [savingDuration, setSavingDuration] = useState(false);
 
   // Customer data for the Customer tab
   const customerQuery = useCustomer(propJob?.customerId ?? "");
@@ -124,6 +133,31 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
   // Prefer the server-fresh copy; fall back to the list-page prop for first render.
   const job = (jobDetail ?? propJob)!;
   const statusHistory = jobDetail?.statusHistory ?? [];
+
+  // Re-seed the duration editor when a different job is opened, or when the
+  // server-fresh copy arrives with a value the list-page prop didn't carry.
+  useEffect(() => {
+    setDurationDraft(job?.estimatedDurationMins ?? DEFAULT_DURATION_MIN);
+  }, [job?.id, job?.estimatedDurationMins]);
+
+  const saveDuration = () => {
+    if (!job?.id) return;
+    const mins = Math.min(1440, Math.max(5, Math.round(durationDraft)));
+    setSavingDuration(true);
+    updateFields.mutate(
+      { id: job.id, estimatedDurationMins: mins } as any,
+      {
+        onSuccess: () => {
+          setSavingDuration(false);
+          showSuccess(`Duration set to ${formatDurationLabel(mins)}`);
+        },
+        onError: () => {
+          setSavingDuration(false);
+          showError("Could not save the duration.");
+        },
+      },
+    );
+  };
 
   const invoicesQuery = useInvoices({ limit: 50 });
   const quotesQuery = useQuotes({ limit: 50 });
@@ -474,6 +508,9 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
             {/* ── Overview ──────────────────────────────────────────────── */}
             {activeTab === "overview" && (
               <div className="space-y-5">
+                {/* Renders nothing unless the server has GPS simulation enabled,
+                    so this is invisible on a normal deployment. */}
+                <GpsSimulationControl jobId={job.id} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
@@ -1084,6 +1121,52 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
                       <Clock size={11} /> Scheduled End
                     </label>
                     <input value={job.scheduledEnd ? new Date(job.scheduledEnd).toLocaleString() : "—"} disabled className={inputView} />
+                  </div>
+                  {/* Editable: the day-planner packs technician routes from
+                      this, so a dispatcher must be able to correct it when a
+                      job turns out bigger or smaller than booked. */}
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                      <Clock size={11} /> Expected Duration
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={DURATION_PRESETS.includes(durationDraft) ? String(durationDraft) : 'custom'}
+                        onChange={(e) => {
+                          if (e.target.value === 'custom') return
+                          setDurationDraft(Number(e.target.value))
+                        }}
+                        className={inputCls}
+                      >
+                        {DURATION_PRESETS.map(m => (
+                          <option key={m} value={String(m)}>{formatDurationLabel(m)}</option>
+                        ))}
+                        <option value="custom">Custom…</option>
+                      </select>
+                      <input
+                        type="number"
+                        min={5}
+                        max={1440}
+                        step={5}
+                        value={durationDraft}
+                        onChange={(e) => setDurationDraft(Number(e.target.value))}
+                        className={`${inputCls} w-24`}
+                        aria-label="Duration in minutes"
+                      />
+                      <span className="text-xs text-gray-500 shrink-0">min</span>
+                      <button
+                        onClick={saveDuration}
+                        disabled={savingDuration || durationDraft === (job.estimatedDurationMins ?? DEFAULT_DURATION_MIN)}
+                        className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-40 hover:bg-blue-700 transition-colors cursor-pointer shrink-0"
+                      >
+                        {savingDuration ? 'Saving…' : 'Save'}
+                      </button>
+                    </div>
+                    {job.estimatedDurationMins == null && (
+                      <p className="text-[11px] text-gray-500">
+                        No duration set — auto-scheduling assumes {formatDurationLabel(DEFAULT_DURATION_MIN)}.
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
