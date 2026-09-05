@@ -160,7 +160,7 @@ func (h *CrewHandler) respondWithCrew(c *gin.Context, companyID, jobID string) {
 // never offer something the server would refuse.
 func (h *CrewHandler) SimulationStatus(c *gin.Context) {
 	claims := middleware.GetClaims(c)
-	if !service.SimulationEnabled() {
+	if !service.SimulationEnabledFor(claims.CompanyID) {
 		c.JSON(http.StatusOK, gin.H{"enabled": false, "run": nil})
 		return
 	}
@@ -177,7 +177,7 @@ func (h *CrewHandler) SimulationStatus(c *gin.Context) {
 // Arms the watcher. Nothing moves until the job is marked EN_ROUTE.
 func (h *CrewHandler) SimulateArm(c *gin.Context) {
 	claims := middleware.GetClaims(c)
-	if !service.SimulationEnabled() {
+	if !service.SimulationEnabledFor(claims.CompanyID) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
@@ -199,7 +199,7 @@ func (h *CrewHandler) SimulateArm(c *gin.Context) {
 // DELETE /dispatch/jobs/:jobId/simulate
 func (h *CrewHandler) SimulateStop(c *gin.Context) {
 	claims := middleware.GetClaims(c)
-	if !service.SimulationEnabled() {
+	if !service.SimulationEnabledFor(claims.CompanyID) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}

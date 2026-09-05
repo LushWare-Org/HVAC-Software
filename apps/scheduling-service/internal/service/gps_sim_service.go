@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -35,11 +36,31 @@ import (
 
 var ErrSimulationDisabled = errors.New("gps simulation is not enabled on this server")
 
-// SimulationEnabled reports whether the operator opted in. Checked on every
-// call rather than cached, so flipping the env var does not need a restart on
-// platforms that can update it in place.
-func SimulationEnabled() bool {
-	return os.Getenv("ENABLE_GPS_SIMULATION") == "true"
+// SimulationEnabledFor reports whether simulation is allowed for one company.
+//
+// TWO things must be true, not one:
+//
+//	ENABLE_GPS_SIMULATION=true
+//	GPS_SIMULATION_COMPANIES=<comma separated company ids>   (must list this one)
+//
+// The allowlist is required rather than optional on purpose. The realistic
+// failure is not someone attacking this endpoint, it is the flag being left on
+// after the trial and forgotten. An allowlist means that mistake can only ever
+// affect the tenant it was switched on for, never a real customer added later.
+//
+// Checked on every call rather than cached, so changing the env vars does not
+// need a restart on a platform that can update them in place.
+func SimulationEnabledFor(companyID string) bool {
+	if os.Getenv("ENABLE_GPS_SIMULATION") != "true" {
+		return false
+	}
+	allowed := strings.Split(os.Getenv("GPS_SIMULATION_COMPANIES"), ",")
+	for _, a := range allowed {
+		if strings.TrimSpace(a) == companyID && companyID != "" {
+			return true
+		}
+	}
+	return false
 }
 
 type SimPhase string
@@ -94,7 +115,7 @@ func key(companyID, jobID string) string { return companyID + "|" + jobID }
 
 // Arm starts watching a job. Nothing moves until it turns EN_ROUTE.
 func (s *GPSSimService) Arm(companyID, jobID string, speed float64, fromLat, fromLng *float64) (*SimStatus, error) {
-	if !SimulationEnabled() {
+	if !SimulationEnabledFor(companyID) {
 		return nil, ErrSimulationDisabled
 	}
 	if speed <= 0 || speed > 200 {
