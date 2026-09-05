@@ -68,3 +68,13 @@ apps/admin-dashboard/.env.production
 # stray package-lock.json makes EAS Build detect npm and fail the install step.
 package-lock.json
 yarn.lock
+
+# Deploy scripts that carry live credentials inline (OpenAI, SendGrid, Brevo
+# SMTP, Stripe, the Supabase password). They are operational tooling, not
+# source, and GitHub push protection rejects them for good reason. Keep them
+# local, or move the secrets to Secret Manager before tracking them.
+scripts/deploy-chat-service.sh
+scripts/deploy-crm-service.sh
+scripts/deploy-integrations.sh
+scripts/migrate-comms.sh
+scripts/update-comms-envvars.sh
