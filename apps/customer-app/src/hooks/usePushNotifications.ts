@@ -81,6 +81,16 @@ function routeForPush(data: Record<string, unknown> | undefined): void {
     router.push(`/job/${jobId}` as never)
     return
   }
+  const quoteId = data?.quoteId
+  if (typeof quoteId === 'string' && quoteId) {
+    router.push(`/quote/${quoteId}` as never)
+    return
+  }
+  const invoiceId = data?.invoiceId
+  if (typeof invoiceId === 'string' && invoiceId) {
+    router.push(`/invoice/${invoiceId}` as never)
+    return
+  }
   router.push('/(tabs)' as never)
 }
 

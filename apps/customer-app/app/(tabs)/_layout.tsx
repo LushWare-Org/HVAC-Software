@@ -1,17 +1,14 @@
 import React from 'react'
 import { Tabs } from 'expo-router'
-import { Text } from 'react-native'
+import { Feather } from '@expo/vector-icons'
+import { useUnreadThreadsCount, useUnreadNotificationsCount } from '@/hooks/useMyMessages'
 import { Colors } from '@/constants/theme'
 
-/**
- * Emoji tab icons keep M2 dependency-free; M3 swaps in a proper icon set when
- * the remaining tabs (Jobs, Quotes, Invoices, Messages) arrive.
- */
-function Icon({ glyph, color }: { glyph: string; color: string }) {
-  return <Text style={{ fontSize: 20, color }}>{glyph}</Text>
-}
-
 export default function TabsLayout() {
+  const unreadThreads = useUnreadThreadsCount()
+  const unreadNotifications = useUnreadNotificationsCount()
+  const messagesBadge = unreadThreads + unreadNotifications
+
   return (
     <Tabs
       screenOptions={{
@@ -23,11 +20,27 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Home', tabBarIcon: ({ color }) => <Icon glyph="🏠" color={color} /> }}
+        options={{ title: 'Home', tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} /> }}
+      />
+      <Tabs.Screen
+        name="jobs"
+        options={{ title: 'Services', tabBarIcon: ({ color, size }) => <Feather name="tool" size={size} color={color} /> }}
+      />
+      <Tabs.Screen
+        name="billing"
+        options={{ title: 'Billing', tabBarIcon: ({ color, size }) => <Feather name="file-text" size={size} color={color} /> }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: 'Messages',
+          tabBarIcon: ({ color, size }) => <Feather name="message-circle" size={size} color={color} />,
+          tabBarBadge: messagesBadge > 0 ? messagesBadge : undefined,
+        }}
       />
       <Tabs.Screen
         name="profile"
-        options={{ title: 'Profile', tabBarIcon: ({ color }) => <Icon glyph="👤" color={color} /> }}
+        options={{ title: 'Profile', tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} /> }}
       />
     </Tabs>
   )

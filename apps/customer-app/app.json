@@ -7,6 +7,7 @@
     "scheme": "tscustomer",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/images/icon.png",
     "runtimeVersion": {
       "policy": "fingerprint"
     },
@@ -22,18 +23,35 @@
     },
     "android": {
       "package": "com.tscrm.customer",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
       "permissions": [
         "VIBRATE",
         "USE_BIOMETRIC",
         "USE_FINGERPRINT"
       ]
     },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
     "plugins": [
       "expo-router",
       "expo-secure-store",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
+        }
+      ],
+      [
         "expo-notifications",
         {
+          "icon": "./assets/images/notification-icon.png",
           "color": "#2563EB"
         }
       ],

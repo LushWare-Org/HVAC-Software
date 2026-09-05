@@ -1,17 +1,51 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet,
-  Text, TextInput, TouchableOpacity, View,
+  TextInput, TouchableOpacity, View,
 } from 'react-native'
 import { router } from 'expo-router'
+import { Feather } from '@expo/vector-icons'
+import { Text } from '@/components/Text'
+import { Logo } from '@/components/Logo'
 import { useAuth } from '@/contexts/AuthContext'
-import { Colors, FontSize, Radius, Spacing } from '@/constants/theme'
+import { Colors, FontSize, Radius, Shadow, Spacing } from '@/constants/theme'
 
 export default function Login() {
-  const { login, isLoading } = useAuth()
+  const { login, isLoading, hasStoredSession, isAuthenticated, retryUnlock } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [unlocking, setUnlocking] = useState(false)
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const autoTriedRef = useRef(false)
+
+  // A valid session is on the device but locked — this is a lock screen, not
+  // a login form, so it should prompt the same way the phone itself would
+  // when you open it: immediately, without a tap first.
+  const locked = hasStoredSession && !isAuthenticated && !showPasswordForm
+
+  const attemptUnlock = async () => {
+    setUnlocking(true)
+    setError('')
+    try {
+      const ok = await retryUnlock()
+      if (ok) {
+        router.replace('/(tabs)')
+      } else {
+        setError('Unlock canceled.')
+      }
+    } finally {
+      setUnlocking(false)
+    }
+  }
+
+  useEffect(() => {
+    if (locked && !autoTriedRef.current) {
+      autoTriedRef.current = true
+      void attemptUnlock()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked])
 
   const onSubmit = async () => {
     setError('')
@@ -29,12 +63,53 @@ export default function Login() {
     }
   }
 
+  if (locked) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.lockCard}>
+          <View style={styles.logoWrap}>
+            <Logo size={56} />
+          </View>
+          <Text style={styles.title}>HVACtor.ai</Text>
+          <Text style={styles.subtitle}>Unlock to continue where you left off</Text>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <TouchableOpacity
+            style={[styles.button, unlocking && styles.buttonDisabled]}
+            onPress={attemptUnlock}
+            disabled={unlocking}
+          >
+            {unlocking ? (
+              <ActivityIndicator color={Colors.textInverse} />
+            ) : (
+              <>
+                <Feather name="unlock" size={16} color={Colors.textInverse} />
+                <Text style={styles.buttonText}>Unlock</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.switchAccount}
+            onPress={() => setShowPasswordForm(true)}
+          >
+            <Text style={styles.switchAccountText}>Sign in with a different account</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    )
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.card}>
+        <View style={styles.logoWrap}>
+          <Logo size={56} />
+        </View>
         <Text style={styles.title}>HVACtor.ai</Text>
         <Text style={styles.subtitle}>Sign in to view your services</Text>
 
@@ -71,6 +146,12 @@ export default function Login() {
             ? <ActivityIndicator color={Colors.textInverse} />
             : <Text style={styles.buttonText}>Sign in</Text>}
         </TouchableOpacity>
+
+        {hasStoredSession ? (
+          <TouchableOpacity style={styles.switchAccount} onPress={() => setShowPasswordForm(false)}>
+            <Text style={styles.switchAccountText}>Back to unlock</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </KeyboardAvoidingView>
   )
@@ -87,9 +168,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.xl,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    ...Shadow.card,
   },
+  lockCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    alignItems: 'center',
+    ...Shadow.raised,
+  },
+  logoWrap: { alignItems: 'center', marginBottom: Spacing.base },
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '700',
@@ -114,14 +202,20 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     backgroundColor: Colors.surface,
   },
-  error: { color: Colors.danger, fontSize: FontSize.sm, marginBottom: Spacing.md },
+  error: { color: Colors.danger, fontSize: FontSize.sm, marginBottom: Spacing.md, textAlign: 'center' },
   button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
     backgroundColor: Colors.primary,
     borderRadius: Radius.md,
     paddingVertical: Spacing.base,
-    alignItems: 'center',
+    width: '100%',
     marginTop: Spacing.xs,
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: Colors.textInverse, fontSize: FontSize.base, fontWeight: '600' },
+  switchAccount: { marginTop: Spacing.lg, paddingVertical: Spacing.sm },
+  switchAccountText: { color: Colors.textMuted, fontSize: FontSize.sm, fontWeight: '600', textAlign: 'center' },
 })
