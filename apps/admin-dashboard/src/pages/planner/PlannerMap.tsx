@@ -14,6 +14,7 @@
 import { useMemo, useState } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
+import { createMapViewStore } from '../../lib/mapView'
 import 'leaflet/dist/leaflet.css'
 import type { Job, Technician } from '../../types/api'
 import type { Agreement } from '../../hooks/useAgreements'
@@ -113,15 +114,17 @@ function techIcon(name: string, avatarUrl?: string | null) {
   })
 }
 
-// Remember where the user left the map (pan/zoom) for the whole session, so
-// navigating to another page and back doesn't reset their view.
-let savedView: { center: [number, number]; zoom: number } | null = null
+// Remember where the user left the map (pan/zoom), so navigating to another
+// page and back doesn't reset their view. Shared with DispatchMap via
+// lib/mapView, which also makes the view survive a reload — this was a
+// module-level variable that a refresh silently discarded.
+const plannerMapView = createMapViewStore('planner')
 
 function ViewKeeper() {
   const map = useMapEvents({
     moveend: () => {
       const c = map.getCenter()
-      savedView = { center: [c.lat, c.lng], zoom: map.getZoom() }
+      plannerMapView.write({ center: [c.lat, c.lng], zoom: map.getZoom() })
     },
   })
   return null
@@ -131,6 +134,7 @@ function FitBounds({ points }: { points: Array<[number, number]> }) {
   const map = useMap()
   useMemo(() => {
     // The user has a view they chose — restore it instead of auto-fitting.
+    const savedView = plannerMapView.read()
     if (savedView) {
       map.setView(savedView.center, savedView.zoom, { animate: false })
       return

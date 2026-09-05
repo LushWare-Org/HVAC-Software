@@ -18,6 +18,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, Polyline, useMap } from 'react-leaflet'
 import { useQuery } from '@tanstack/react-query'
 import api from '../../lib/api'
+import { createMapViewStore } from '../../lib/mapView'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { DispatchAssignment, Job, ScoredTechnician, Technician } from '../../types/api'
@@ -320,18 +321,44 @@ function RoutePolyline({
   )
 }
 
-// ─── FitBoundsOnLoad — must be rendered inside MapContainer ──────────────────────
-function FitBoundsOnLoad({ points }: { points: [number, number][] }) {
+const dispatchMapView = createMapViewStore('dispatch')
+
+/**
+ * Restores the last view, or fits all points the first time.
+ *
+ * Must be rendered inside MapContainer. Runs once on mount: re-fitting whenever
+ * `points` changed would yank the map back every time a technician moved, which
+ * is the same frustration in a different disguise.
+ */
+function RememberView({ points }: { points: [number, number][] }) {
   const map = useMap()
+
   useEffect(() => {
-    if (!points.length) return
-    if (points.length === 1) {
+    const saved = dispatchMapView.read()
+    if (saved) {
+      map.setView(saved.center, saved.zoom, { animate: false })
+    } else if (points.length === 1) {
       map.setView(points[0], 13)
-      return
+    } else if (points.length > 1) {
+      const bounds = L.latLngBounds(points.map(p => L.latLng(p[0], p[1])))
+      map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 })
     }
-    const bounds = L.latLngBounds(points.map(p => L.latLng(p[0], p[1])))
-    map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 })
+
+    const save = () => {
+      const c = map.getCenter()
+      dispatchMapView.write({ center: [c.lat, c.lng], zoom: map.getZoom() })
+    }
+    map.on('moveend', save)
+    map.on('zoomend', save)
+    return () => {
+      // Capture the final position on unmount too: switching tabs immediately
+      // after a pan would otherwise lose that last move.
+      save()
+      map.off('moveend', save)
+      map.off('zoomend', save)
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return null
 }
 
@@ -646,7 +673,7 @@ export default function DispatchMap({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <FitBoundsOnLoad points={allPoints} />
+          <RememberView points={allPoints} />
 
           {/* ── Routing lines (road-following via OSRM) ────────────────────── */}
           {layers.routes && routeLines.map(({ techPos, jobPos, status, technicianId }) => (
