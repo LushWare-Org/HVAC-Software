@@ -945,6 +945,31 @@ WHERE  "assignedToId" IS NOT NULL
     `.trim(),
   },
 
+  // Repairs jobs whose live assignments have no lead at all. The partial unique
+  // index forbids TWO leads but not zero, and assignments created between the
+  // crew migration and the Create fix defaulted is_lead to false. A leaderless
+  // job disables the status button in the mobile app for the only technician on
+  // site. Promotes the earliest live assignment, matching the original backfill.
+  {
+    schema: 'scheduling',
+    name: '20260905000100_backfill_missing_lead',
+    sql: `
+UPDATE "scheduling"."dispatch_assignments" a
+SET    is_lead = true
+WHERE  a.status <> 'CANCELLED'
+  AND  NOT a.is_lead
+  AND  NOT EXISTS (
+    SELECT 1 FROM "scheduling"."dispatch_assignments" b
+    WHERE b.job_id = a.job_id AND b.is_lead AND b.status <> 'CANCELLED'
+  )
+  AND  NOT EXISTS (
+    SELECT 1 FROM "scheduling"."dispatch_assignments" c
+    WHERE c.job_id = a.job_id AND c.status <> 'CANCELLED'
+      AND (c.created_at, c.id) < (a.created_at, a.id)
+  );
+    `.trim(),
+  },
+
 ];
 
 // ─── Main ────────────────────────────────────────────────────────────────────

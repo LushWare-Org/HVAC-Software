@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -100,4 +101,25 @@ func (h *GPSHandler) RecordGPS(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "technicianId": tech.ID})
+}
+
+// GET /gps/trail/:technicianId?minutes=120&limit=500
+// Where the technician has actually been, for drawing the travelled path.
+func (h *GPSHandler) Trail(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+
+	minutes, _ := strconv.Atoi(c.DefaultQuery("minutes", "120"))
+	if minutes <= 0 || minutes > 1440 {
+		minutes = 120
+	}
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "500"))
+
+	since := time.Now().Add(-time.Duration(minutes) * time.Minute)
+	points, err := h.assignRepo.FindGPSTrail(
+		c.Request.Context(), claims.CompanyID, c.Param("technicianId"), since, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": points, "count": len(points)})
 }

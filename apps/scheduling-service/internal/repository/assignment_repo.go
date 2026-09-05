@@ -32,11 +32,19 @@ func (r *AssignmentRepository) Create(
 	scheduledEnd *time.Time,
 	notes *string,
 ) (*models.DispatchAssignment, error) {
+	// is_lead is set when nobody on this job leads yet. Single-technician assign
+	// would otherwise leave a crew of one with NO lead, and the partial unique
+	// index only forbids TWO leads, not zero. A leaderless job means the mobile
+	// app disables its own status button for the only person on site.
 	row := r.db.QueryRow(ctx, `
 		INSERT INTO scheduling.dispatch_assignments
 			(company_id, job_id, technician_id, status, score, distance_km,
-			 assigned_by, scheduled_start, scheduled_end, notes)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+			 assigned_by, scheduled_start, scheduled_end, notes, is_lead)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+			NOT EXISTS (
+				SELECT 1 FROM scheduling.dispatch_assignments
+				WHERE job_id = $2 AND is_lead AND status <> 'CANCELLED'
+			))
 		RETURNING id, company_id, job_id, work_order_id, technician_id, status,
 		          score, distance_km, assigned_by, assigned_at,
 		          en_route_at, on_site_at, completed_at,
@@ -400,4 +408,48 @@ func collectAssignments(rows pgx.Rows) ([]*models.DispatchAssignment, error) {
 		result = append(result, &a)
 	}
 	return result, rows.Err()
+}
+
+// GPSTrailPoint is one breadcrumb on a technician's actual path.
+type GPSTrailPoint struct {
+	Lat        float64   `json:"lat"`
+	Lng        float64   `json:"lng"`
+	CapturedAt time.Time `json:"capturedAt"`
+}
+
+// FindGPSTrail returns where a technician has actually been, oldest first.
+//
+// This is the road they DROVE, as opposed to the route they were meant to take.
+// Drawing both is the point: the difference between them is the information a
+// dispatcher wants when someone is late.
+//
+// Bounded by time and count so one long shift cannot return tens of thousands of
+// points into a browser.
+func (r *AssignmentRepository) FindGPSTrail(
+	ctx context.Context, companyID, technicianID string, since time.Time, limit int,
+) ([]GPSTrailPoint, error) {
+	if limit <= 0 || limit > 2000 {
+		limit = 500
+	}
+	rows, err := r.db.Query(ctx, `
+		SELECT ST_Y(location::geometry), ST_X(location::geometry), captured_at
+		FROM   scheduling.gps_tracking
+		WHERE  company_id = $1 AND technician_id = $2 AND captured_at >= $3
+		ORDER BY captured_at ASC
+		LIMIT  $4`,
+		companyID, technicianID, since, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := []GPSTrailPoint{}
+	for rows.Next() {
+		var p GPSTrailPoint
+		if err := rows.Scan(&p.Lat, &p.Lng, &p.CapturedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
 }

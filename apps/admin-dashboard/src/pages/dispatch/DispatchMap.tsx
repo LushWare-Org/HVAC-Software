@@ -17,6 +17,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, Polyline, useMap } from 'react-leaflet'
 import { useQuery } from '@tanstack/react-query'
+import api from '../../lib/api'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { DispatchAssignment, Job, ScoredTechnician, Technician } from '../../types/api'
@@ -184,9 +185,24 @@ function jobIcon(priority: string, assigned: boolean, status?: string): L.DivIco
 
 // ─── Road routing via OSRM public API ────────────────────────────────────────────
 // OSRM returns GeoJSON [lng, lat] pairs; Leaflet needs [lat, lng].
+/**
+ * Snaps a position to a ~150 m grid.
+ *
+ * The route is recalculated from the technician's CURRENT position, which is
+ * what makes the blue line shrink as they drive and re-route if they take a
+ * different road. But a GPS fix lands every 30 s, and asking OSRM for a new
+ * route on every one would hammer a public demo server for a line that has
+ * barely changed. Rounding the origin means a recalculation only happens once
+ * they have actually moved.
+ */
+function routeGrid(p: [number, number] | null): string {
+  if (!p) return 'none'
+  return `${p[0].toFixed(3)},${p[1].toFixed(3)}`
+}
+
 function useRoadRoute(from: [number, number] | null, to: [number, number] | null) {
   return useQuery<[number, number][] | null>({
-    queryKey: ['osrm-route', from, to],
+    queryKey: ['osrm-route', routeGrid(from), routeGrid(to)],
     queryFn: async () => {
       if (!from || !to) return null
       const url =
@@ -207,26 +223,67 @@ function useRoadRoute(from: [number, number] | null, to: [number, number] | null
   })
 }
 
+/**
+ * Where the technician has actually been, for the travelled part of the line.
+ *
+ * Separate from the OSRM route on purpose: one is the road they were meant to
+ * take, the other is the road they took. Drawing both means the difference is
+ * visible, which is exactly what a dispatcher wants to see when someone is late.
+ */
+function useGpsTrail(technicianId: string | null, active: boolean) {
+  return useQuery<[number, number][]>({
+    queryKey: ['gps-trail', technicianId],
+    enabled: !!technicianId && active,
+    queryFn: async () => {
+      const res = await api.get<{ data: { lat: number; lng: number }[] }>(
+        `/scheduling/gps/trail/${technicianId}`, { params: { minutes: 180, limit: 400 } })
+      return (res.data.data ?? []).map(p => [p.lat, p.lng] as [number, number])
+    },
+    // Matches the app's GPS cadence: a new fix lands roughly every 30 s.
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  })
+}
+
 // Renders one route line: road-following when the OSRM fetch succeeds,
 // straight dashed line (clearly marked) while loading / on error.
+/** Blue = road still to drive. Green = road already driven. */
+const ROUTE_AHEAD = '#2563EB'
+const ROUTE_DRIVEN = '#059669'
+const ROUTE_ONSITE = '#7C3AED'
+
 function RoutePolyline({
-  techPos, jobPos, status,
+  techPos, jobPos, status, technicianId,
 }: {
   techPos: [number, number]
   jobPos: [number, number]
   status: string
+  technicianId: string
 }) {
+  // Routed from the technician's CURRENT position, so the blue line shortens as
+  // they drive and re-routes on its own if they take a different road. No
+  // deviation detection needed: the origin moving IS the deviation.
   const { data: roadCoords, isLoading } = useRoadRoute(techPos, jobPos)
   const isOnSite = status === 'ON_SITE'
-  const color = isOnSite ? '#7c3aed' : '#d97706'
+  const { data: trail } = useGpsTrail(technicianId, !isOnSite)
+  const color = isOnSite ? ROUTE_ONSITE : ROUTE_AHEAD
+
+  const driven = (trail?.length ?? 0) > 1 ? trail! : null
 
   if (isLoading || !roadCoords) {
-    // Fallback: straight line while loading or if OSRM unreachable
+    // Straight line while OSRM is loading or unreachable. Dashed and faint so it
+    // never passes for a real road route.
     return (
-      <Polyline
-        positions={[techPos, jobPos]}
-        pathOptions={{ color, weight: 2, opacity: 0.4, dashArray: '4 6' }}
-      />
+      <>
+        {driven && (
+          <Polyline positions={driven}
+            pathOptions={{ color: ROUTE_DRIVEN, weight: 4, opacity: 0.9, lineCap: 'round' }} />
+        )}
+        <Polyline
+          positions={[techPos, jobPos]}
+          pathOptions={{ color, weight: 2, opacity: 0.4, dashArray: '4 6' }}
+        />
+      </>
     )
   }
 
@@ -235,14 +292,25 @@ function RoutePolyline({
       {/* Subtle halo for contrast against map tiles */}
       <Polyline
         positions={roadCoords}
-        pathOptions={{ color: '#fff', weight: 6, opacity: 0.5 }}
+        pathOptions={{ color: '#fff', weight: 7, opacity: 0.6 }}
       />
+
+      {/* Already driven, from the real GPS breadcrumbs rather than the planned
+          route, so a detour shows as the detour actually taken. */}
+      {driven && (
+        <Polyline
+          positions={driven}
+          pathOptions={{ color: ROUTE_DRIVEN, weight: 4.5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }}
+        />
+      )}
+
+      {/* Still to drive */}
       <Polyline
         positions={roadCoords}
         pathOptions={{
           color,
-          weight: 3,
-          opacity: 0.85,
+          weight: 3.5,
+          opacity: 0.9,
           dashArray: isOnSite ? undefined : '10 6',
           lineCap: 'round',
           lineJoin: 'round',
@@ -406,18 +474,35 @@ export default function DispatchMap({
   // Deliberately iterates the lead-only map. Using allAssignments would draw one
   // line per crew member, stacking three identical lines to the same pin.
   const routeLines = useMemo(() => {
-    const lines: { techPos: [number, number]; jobPos: [number, number]; status: string }[] = []
+    const lines: {
+      techPos: [number, number]; jobPos: [number, number]
+      status: string; technicianId: string
+    }[] = []
     Object.values(assignmentByJobId).forEach(a => {
-      if (!a || !['EN_ROUTE', 'ON_SITE'].includes(a.status)) return
+      if (!a) return
+      const job = [...assignedJobs, ...unassignedJobs].find(j => j.id === a.jobId)
+      if (!job) return
+
+      // Gate on the JOB's status, falling back to the assignment's.
+      //
+      // These two drift: marking a job EN_ROUTE through job-service does not
+      // touch scheduling's assignment row, so keying only on the assignment
+      // meant a job the whole rest of the app showed as EN_ROUTE had no route
+      // line at all. The job status is what the lead controls and what the
+      // customer is told, so it wins.
+      const effective = ['EN_ROUTE', 'ON_SITE'].includes(job.status) ? job.status : a.status
+      if (!['EN_ROUTE', 'ON_SITE'].includes(effective)) return
+
       const tech = technicians.find(t => t.id === a.technicianId)
-      const job  = [...assignedJobs, ...unassignedJobs].find(j => j.id === a.jobId)
-      if (!tech?.currentLocation || !job) return
+      if (!tech?.currentLocation) return
       const coords = parseCoords(job)
       if (!coords) return
+
       lines.push({
         techPos: [tech.currentLocation.lat, tech.currentLocation.lng],
         jobPos:  [coords.lat, coords.lng],
-        status:  a.status,
+        status:  effective,
+        technicianId: a.technicianId,
       })
     })
     return lines
@@ -564,12 +649,13 @@ export default function DispatchMap({
           <FitBoundsOnLoad points={allPoints} />
 
           {/* ── Routing lines (road-following via OSRM) ────────────────────── */}
-          {layers.routes && routeLines.map(({ techPos, jobPos, status }, i) => (
+          {layers.routes && routeLines.map(({ techPos, jobPos, status, technicianId }) => (
             <RoutePolyline
-              key={`route-${i}`}
+              key={`route-${technicianId}`}
               techPos={techPos}
               jobPos={jobPos}
               status={status}
+              technicianId={technicianId}
             />
           ))}
 

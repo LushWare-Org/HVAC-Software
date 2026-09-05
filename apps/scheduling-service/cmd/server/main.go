@@ -108,6 +108,7 @@ func main() {
 
 	// GPS ingestion (technician mobile app → dashboard)
 	r.POST("/gps", auth, gpsH.RecordGPS)
+	r.GET("/gps/trail/:technicianId", auth, gpsH.Trail)
 
 	// Internal: CRM pushes updated review averages here (no JWT, private network).
 	// Keep this OUTSIDE the auth group so crm-service can call it with a plain fetch.
