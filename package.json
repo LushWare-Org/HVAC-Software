@@ -29,7 +29,8 @@
     "db:reset": "bash scripts/db-reset.sh",
     "db:studio": "pnpm --filter crm-service prisma:studio",
     "env:generate": "bash scripts/generate-env.sh",
-    "health": "bash scripts/health-check.sh"
+    "health": "bash scripts/health-check.sh",
+    "eas-build-pre-install": "node apps/customer-app/eas-hooks/pre-install.js"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.0.0",

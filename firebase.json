@@ -1,7 +1,7 @@
 {
   "hosting": [
     {
-      "site": "tscrm-demo-admin",
+      "site": "hvactor-admin",
       "public": "apps/admin-dashboard/dist",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
@@ -19,7 +19,7 @@
       ]
     },
     {
-      "site": "tscrm-demo-customer",
+      "site": "hvactor-customer",
       "public": "apps/customer-portal/dist",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
@@ -48,7 +48,7 @@
       ]
     },
     {
-      "site": "tscrm-hvac-landing",
+      "site": "hvactor-landing",
       "public": "apps/hvac-landing/dist",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [{ "source": "**", "destination": "/index.html" }],

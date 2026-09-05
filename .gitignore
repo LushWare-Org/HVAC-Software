@@ -56,3 +56,15 @@ apps/admin-dashboard/.env.production
 
 # Superpowers brainstorming session files (mockups, local only)
 .superpowers/
+
+# Firebase hosting deploy caches (regenerated on every deploy)
+.firebase/
+
+# Prisma clients are generated during the Docker build (prisma generate)
+**/src/prisma/generated/
+**/src/*/prisma/generated/
+
+# npm lockfile. This repo is pnpm-only (the preinstall hook rejects npm), and a
+# stray package-lock.json makes EAS Build detect npm and fail the install step.
+package-lock.json
+yarn.lock

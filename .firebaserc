@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "tscrm-demo-2026",
+    "default": "hvactor",
     "hvactor": "hvactor"
   },
   "targets": {},
