@@ -1,7 +1,12 @@
 #!/bin/bash
 set -e
 
-REDIS_URL="rediss://default:AZ7uAAIgcDFlZTc0MDExNWY3OTY0MjVkYWE3ZDNhZjU2OWRjODVkNA@more-mastodon-40686.upstash.io:6379"
+# The live Upstash database. The previous value here pointed at
+# more-mastodon-40686, which was deleted during the Redis migration and no
+# longer resolves (NXDOMAIN), so every run of this script silently re-broke
+# scheduling-service. Verified 2026-09-06: natural-ape-42315 resolves and is
+# the host job-service and comms-service already use.
+REDIS_URL="${REDIS_URL:-rediss://default:AaVLAAIgcDExY2FkOTY4MzczNDY0MDFhYThjZTYwOGZmOWNjZmRiYg@natural-ape-42315.upstash.io:6379}"
 
 gcloud run services update scheduling-service \
   --region=us-central1 \

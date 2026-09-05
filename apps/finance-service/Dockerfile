@@ -1,5 +1,5 @@
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
-FROM node:20-bullseye-slim AS builder
+FROM node:20-bookworm-slim AS builder
 WORKDIR /repo
 
 # Install pnpm
@@ -25,7 +25,7 @@ RUN pnpm --filter=finance-service build
 RUN cd apps/finance-service && npx prisma generate
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
-FROM node:20-bullseye-slim AS runner
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
@@ -47,6 +47,15 @@ COPY --from=builder /repo/apps/finance-service/src/prisma/generated ./dist/prism
 COPY --from=builder /repo/apps/finance-service/package.json ./
 
 # Puppeteer requires Chromium on the runtime image.
+#
+# Bookworm, not bullseye. Debian 11 moved to LTS and its security pool no
+# longer carries the exact point-release versions its index advertises, so
+# this install started failing with 404s on libglx-mesa0 and
+# libavahi-common-data. Not a cache problem: it fails identically with
+# --no-cache and a freshly pulled base.
+#
+# /usr/bin/chromium is the same path on bookworm, so PUPPETEER_EXECUTABLE_PATH
+# below is unchanged.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     ca-certificates \

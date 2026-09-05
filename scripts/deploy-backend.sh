@@ -60,7 +60,7 @@ echo ""
 echo "STEP 3: Health Checks"
 echo "--------------------------------------"
 
-GATEWAY="https://nginx-gateway-srkxrd2xka-uc.a.run.app"
+GATEWAY="https://nginx-gateway-536584181394.us-central1.run.app"
 
 for SVC in crm jobs scheduling finance comms analytics inventory chat; do
   printf "  %-12s " "$SVC:"

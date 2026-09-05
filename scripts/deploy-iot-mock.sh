@@ -9,7 +9,7 @@ set -euo pipefail
 REGISTRY="us-central1-docker.pkg.dev/${GCP_PROJECT:-hvactor}/tscrm-images"
 REGION="us-central1"
 PROJECT="${GCP_PROJECT:-hvactor}"
-GATEWAY_URL="https://nginx-gateway-srkxrd2xka-uc.a.run.app"
+GATEWAY_URL="https://nginx-gateway-536584181394.us-central1.run.app"
 ADMIN_URL="https://tscrm-demo-admin.web.app"
 CUSTOMER_URL="https://tscrm-demo-customer.web.app"
 

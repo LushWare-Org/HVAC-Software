@@ -32,7 +32,7 @@ set -euo pipefail
 PROJECT="${GCP_PROJECT:-hvactor}"
 REGISTRY="us-central1-docker.pkg.dev/${PROJECT}/tscrm-images"
 REGION="us-central1"
-GATEWAY="https://nginx-gateway-srkxrd2xka-uc.a.run.app"
+GATEWAY="https://nginx-gateway-536584181394.us-central1.run.app"
 AVATAR_BUCKET="${AVATAR_BUCKET:-tscrm-avatars-2026}"
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export DOCKER_DEFAULT_PLATFORM="linux/amd64"

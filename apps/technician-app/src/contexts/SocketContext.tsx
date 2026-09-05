@@ -48,7 +48,7 @@ const EVENT_TO_QUERY_KEYS: Record<string, string[][]> = {
 
 // ── URL helpers ──────────────────────────────────────────────────────────────
 
-const DEFAULT_API_BASE_URL = 'https://nginx-gateway-srkxrd2xka-uc.a.run.app/api'
+const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.us-central1.run.app/api'
 
 function getDefaultApiBaseUrl(): string {
   return __DEV__ ? 'http://localhost:80/api' : DEFAULT_API_BASE_URL

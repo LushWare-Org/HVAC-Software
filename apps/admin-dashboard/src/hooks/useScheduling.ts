@@ -34,7 +34,7 @@ import type {
   AssignJobRequest,
 } from '../types/api'
 
-const DEFAULT_DISPATCH_WS_BASE = 'wss://nginx-gateway-srkxrd2xka-uc.a.run.app'
+const DEFAULT_DISPATCH_WS_BASE = 'wss://nginx-gateway-536584181394.us-central1.run.app'
 
 // ─── Technicians ───────────────────────────────────────────────────────────────
 

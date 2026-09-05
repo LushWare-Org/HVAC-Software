@@ -7,6 +7,12 @@ generator client {
   provider        = "prisma-client-js"
   output          = "../src/prisma/generated"
   previewFeatures = ["multiSchema"]
+  // The runtime image is Debian 12 (bookworm), which ships OpenSSL 3.0, while
+  // local dev is macOS. Prisma compiles a separate query engine per OpenSSL
+  // version, so without this the container starts and answers /health but
+  // every query fails with PrismaClientInitializationError. "native" alone
+  // covers only the machine that ran `prisma generate`.
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
