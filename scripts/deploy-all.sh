@@ -26,10 +26,10 @@
 # ============================================================================
 set -euo pipefail
 
-PROJECT="tscrm-demo-2026"
+PROJECT="hvactor"
 REGISTRY="us-central1-docker.pkg.dev/${PROJECT}/tscrm-images"
 REGION="us-central1"
-GATEWAY="https://nginx-gateway-2ohuhmktua-uc.a.run.app"
+GATEWAY="https://nginx-gateway-536584181394.us-central1.run.app"
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export DOCKER_DEFAULT_PLATFORM="linux/amd64"
 
@@ -113,6 +113,7 @@ if $FRONTEND; then
   echo "---------------------------------------------"
   pnpm --filter admin-dashboard build
   pnpm --filter customer-portal build
+  pnpm --filter hvac-landing build
 
   echo ""
   echo "STEP 4: Deploy Firebase Hosting (admin + portal)"
@@ -135,6 +136,7 @@ echo "============================================="
 echo "✅ DEPLOY COMPLETE"
 echo "============================================="
 date
-echo "  Admin:   https://tscrm-demo-admin.web.app"
-echo "  Portal:  https://tscrm-demo-customer.web.app"
+echo "  Admin:   https://hvactor-admin.web.app"
+echo "  Portal:  https://hvactor-customer.web.app"
+echo "  Landing: https://hvactor-landing.web.app"
 echo "  Gateway: ${GATEWAY}"

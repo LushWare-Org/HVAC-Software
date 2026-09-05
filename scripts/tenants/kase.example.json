@@ -1,0 +1,13 @@
+{
+  "name": "KASE Engineering",
+  "email": "admin@kase-engineering.example",
+  "country": "LK",
+  "currency": "LKR",
+  "timezone": "Asia/Colombo",
+  "features": { "onlinePayments": false, "sms": false },
+  "admin": {
+    "name": "KASE Admin",
+    "email": "admin@kase-engineering.example",
+    "tempPassword": "ChangeMe!2026"
+  }
+}

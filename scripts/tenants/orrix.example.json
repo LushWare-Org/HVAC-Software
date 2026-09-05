@@ -1,0 +1,13 @@
+{
+  "name": "Orrix Engineering",
+  "email": "admin@orrix-engineering.example",
+  "country": "LK",
+  "currency": "LKR",
+  "timezone": "Asia/Colombo",
+  "features": { "onlinePayments": false, "sms": false },
+  "admin": {
+    "name": "Orrix Admin",
+    "email": "admin@orrix-engineering.example",
+    "tempPassword": "ChangeMe!2026"
+  }
+}

@@ -7,7 +7,7 @@
 
 import axios from 'axios'
 
-const DEFAULT_API_BASE_URL = 'https://nginx-gateway-2ohuhmktua-uc.a.run.app/api'
+const DEFAULT_API_BASE_URL = 'https://nginx-gateway-srkxrd2xka-uc.a.run.app/api'
 
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')

@@ -5,7 +5,7 @@ REDIS_URL="rediss://default:AZ7uAAIgcDFlZTc0MDExNWY3OTY0MjVkYWE3ZDNhZjU2OWRjODVk
 
 gcloud run services update scheduling-service \
   --region=us-central1 \
-  --project=tscrm-demo-2026 \
+  --project=${GCP_PROJECT:-hvactor} \
   --update-env-vars="GIN_MODE=debug,REDIS_URL=${REDIS_URL},ENABLE_GPS_SIMULATION=${ENABLE_GPS_SIMULATION:-false},GPS_SIMULATION_COMPANIES=${GPS_SIMULATION_COMPANIES:-}"
 
 echo "✅ scheduling-service updated"

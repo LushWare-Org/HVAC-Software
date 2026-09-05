@@ -58,7 +58,7 @@
  *   --osrm <url>       OSRM base URL      (default router.project-osrm.org)
  *
  *   node scripts/simulate-technician-gps.mjs \
- *     --api https://nginx-gateway-2ohuhmktua-uc.a.run.app/api \
+ *     --api https://nginx-gateway-srkxrd2xka-uc.a.run.app/api \
  *     --email tech@kase.lk --password ... \
  *     --watch-tech user-tech-001 --hold
  */

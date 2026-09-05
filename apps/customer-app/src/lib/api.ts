@@ -51,6 +51,17 @@ const api = axios.create({
   timeout: 15000,
 })
 
+/**
+ * Fires once when a request comes back 401 with a session already in place —
+ * AuthContext registers this to clear the stored session and send the user
+ * back to /login with an explanation, rather than leaving every screen stuck
+ * on "could not load" forever with no visible reason why.
+ */
+let onSessionExpired: (() => void) | null = null
+export function setOnSessionExpired(fn: (() => void) | null) {
+  onSessionExpired = fn
+}
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -62,6 +73,12 @@ api.interceptors.response.use(
     console.warn(
       `[Customer API] ${error.config?.method?.toUpperCase()} ${error.config?.url} → ${error.response?.status}: ${msg}`,
     )
+    // A 401 on the login call itself just means wrong credentials — that is
+    // not a session expiring, and must not trigger this path.
+    const isLoginRequest = typeof error.config?.url === 'string' && error.config.url.includes('/auth/login')
+    if (error.response?.status === 401 && !isLoginRequest) {
+      onSessionExpired?.()
+    }
     return Promise.reject(error)
   },
 )

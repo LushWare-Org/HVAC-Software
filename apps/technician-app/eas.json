@@ -17,8 +17,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-2ohuhmktua-uc.a.run.app/api",
-        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-2ohuhmktua-uc.a.run.app",
+        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-srkxrd2xka-uc.a.run.app/api",
+        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-srkxrd2xka-uc.a.run.app",
         "EXPO_PUBLIC_COMPANY_ID": "co-demo-001",
         "npm_config_user_agent": "pnpm"
       }
@@ -30,8 +30,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-2ohuhmktua-uc.a.run.app/api",
-        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-2ohuhmktua-uc.a.run.app",
+        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-srkxrd2xka-uc.a.run.app/api",
+        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-srkxrd2xka-uc.a.run.app",
         "EXPO_PUBLIC_COMPANY_ID": "co-demo-001",
         "npm_config_user_agent": "pnpm"
       }
@@ -39,8 +39,8 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-2ohuhmktua-uc.a.run.app/api",
-        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-2ohuhmktua-uc.a.run.app",
+        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-srkxrd2xka-uc.a.run.app/api",
+        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-srkxrd2xka-uc.a.run.app",
         "EXPO_PUBLIC_COMPANY_ID": "co-demo-001",
         "npm_config_user_agent": "pnpm"
       }
