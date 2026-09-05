@@ -345,15 +345,24 @@ function RememberView({ points }: { points: [number, number][] }) {
     }
 
     const save = () => {
-      const c = map.getCenter()
-      dispatchMapView.write({ center: [c.lat, c.lng], zoom: map.getZoom() })
+      // Leaflet reads positions off live DOM nodes, so this throws if it runs
+      // while the map is being torn down. Guarded rather than trusted: an
+      // uncaught throw here kills the React unmount and blanks the whole page.
+      try {
+        const c = map.getCenter()
+        dispatchMapView.write({ center: [c.lat, c.lng], zoom: map.getZoom() })
+      } catch {
+        /* map already going away — the last moveend already saved the view */
+      }
     }
     map.on('moveend', save)
     map.on('zoomend', save)
     return () => {
-      // Capture the final position on unmount too: switching tabs immediately
-      // after a pan would otherwise lose that last move.
-      save()
+      // Deliberately NOT saving here. Calling map.getCenter() during teardown
+      // reads _leaflet_pos off an element Leaflet has already removed, which
+      // threw and blanked the page when switching sub-tabs. Nothing is lost:
+      // Leaflet fires moveend at the end of every pan and zoom, so the view is
+      // already stored before any unmount can happen.
       map.off('moveend', save)
       map.off('zoomend', save)
     }
