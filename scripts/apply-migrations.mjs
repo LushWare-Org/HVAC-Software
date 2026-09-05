@@ -929,6 +929,22 @@ CREATE INDEX IF NOT EXISTS idx_job_crew_events_job
     `.trim(),
   },
 
+  // Repairs jobs assigned through the single-technician path between the crew
+  // migration and the SyncJobAssignment fix. Those set assignedToId but left
+  // crewUserIds empty, which made the job invisible to the technician it had
+  // just been given to, because the mobile app filters on crew membership.
+  // Idempotent: only touches rows that are actually inconsistent.
+  {
+    schema: 'jobs',
+    name: '20260905000000_backfill_missing_crew',
+    sql: `
+UPDATE "jobs"."jobs"
+SET    "crewUserIds" = ARRAY["assignedToId"]
+WHERE  "assignedToId" IS NOT NULL
+  AND  NOT ("assignedToId" = ANY("crewUserIds"));
+    `.trim(),
+  },
+
 ];
 
 // ─── Main ────────────────────────────────────────────────────────────────────

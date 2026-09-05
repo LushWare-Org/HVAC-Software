@@ -298,10 +298,22 @@ func (r *AssignmentRepository) CancelActiveForJob(ctx context.Context, companyID
 // SyncJobAssignment updates the job in the jobs schema to reflect the new assignment.
 // Uses cross-schema query since all services share the same PostgreSQL instance.
 func (r *AssignmentRepository) SyncJobAssignment(ctx context.Context, companyID, jobID, techUserID, techName string) error {
+	// crewUserIds must move with assignedToId. The mobile app and the GPS
+	// simulator both filter on crew membership, so a job assigned through this
+	// single-technician path with an empty crew is invisible to the technician
+	// it was just given to. Rebuilt from the live assignments rather than set to
+	// {techUserID}, so this stays correct if a crew is later added around them.
 	_, err := r.db.Exec(ctx, `
+		WITH crew AS (
+			SELECT COALESCE(array_agg(DISTINCT t.user_id), ARRAY[$1]::text[]) AS ids
+			FROM   scheduling.dispatch_assignments a
+			JOIN   scheduling.technicians t ON t.id = a.technician_id
+			WHERE  a.company_id = $4 AND a.job_id = $3 AND a.status <> 'CANCELLED'
+		)
 		UPDATE jobs.jobs SET
 			"assignedToId" = $1,
 			"assignedToName" = $2,
+			"crewUserIds" = (SELECT ids FROM crew),
 			status = CASE WHEN status = 'PENDING' THEN 'SCHEDULED' ELSE status END,
 			"updatedAt" = NOW()
 		WHERE id = $3 AND "companyId" = $4`,
