@@ -442,7 +442,7 @@ export default function DispatchMap({
   const noGPSTechs    = technicians.filter(t => !t.currentLocation).length
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', minHeight: 0 }}>
 
       {/* ── Stats row ─────────────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
@@ -539,17 +539,27 @@ export default function DispatchMap({
       {/* ── Map ─────────────────────────────────────────────────────────────────── */}
       {/* zIndex: 0 traps the Leaflet panes/controls in their own stacking context
           so page modals (z-index 1000 at the root) always paint above the map */}
-      <div style={{ position: 'relative', zIndex: 0, borderRadius: 12, overflow: 'hidden', border: '1px solid #e5e7eb', height: 560, boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
+      {/* flex:1 rather than a fixed height. At 560px the stats row, the two
+          control rows and the map together overflowed this card, which sets
+          overflow:hidden — and because Leaflet's container is focusable,
+          clicking the map scrolled it into view, pushing the stat cards out of
+          sight with no scrollbar to bring them back. Filling the space leaves
+          nothing to scroll. minHeight keeps it usable on short windows. */}
+      <div style={{ position: 'relative', zIndex: 0, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--bd)', flex: 1, minHeight: 280, boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
         <MapContainer
           center={defaultCenter}
           zoom={12}
           style={{ height: '100%', width: '100%' }}
           scrollWheelZoom
         >
-          {/* CartoDB Positron — clean, professional, low visual noise */}
+          {/* OpenStreetMap standard tiles.
+              Previously CartoDB Positron, which was nicer to look at but now
+              stamps "API KEY REQUIRED" across every tile: CARTO made basemap
+              access keyed. OSM needs no key and is what MapPicker, PlannerMap
+              and CrewMapInner already use, so all five maps now match. */}
           <TileLayer
-            attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <FitBoundsOnLoad points={allPoints} />
 
