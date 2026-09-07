@@ -9,7 +9,22 @@ import { readFileSync } from 'fs';
 
 const { Client } = pg;
 
-const BASE_URL = 'postgresql://postgres.piezmopzxbuksjuuwwyw:vnHoMrqPMHTRHOu6@aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres';
+// Never hardcode this. It is the full production connection string for every
+// schema, and this repo is public. It lived here in plain text for three weeks
+// before anyone noticed.
+const BASE_URL = process.env.MIGRATIONS_DATABASE_URL;
+
+if (!BASE_URL) {
+  console.error(
+    'MIGRATIONS_DATABASE_URL is not set.\n\n' +
+      'Set it to the session mode (direct, port 5432) connection string, not the\n' +
+      'PgBouncer one, because migrations run DDL:\n\n' +
+      '  export MIGRATIONS_DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/postgres"\n' +
+      '  node scripts/apply-migrations.mjs\n\n' +
+      'Credentials live in ~/tscrm-env-setup.md, deliberately outside this repo.',
+  );
+  process.exit(1);
+}
 
 async function connect(schema) {
   const client = new Client({

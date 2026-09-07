@@ -67,6 +67,14 @@ if $MIGRATIONS; then
   echo ""
   echo "STEP 0: Apply pending migrations"
   echo "---------------------------------------------"
+  # Checked here rather than letting it fail inside the runner, so a missing
+  # credential stops the deploy before any image is built.
+  if [ -z "${MIGRATIONS_DATABASE_URL:-}" ]; then
+    echo "❌ MIGRATIONS_DATABASE_URL is not set."
+    echo "   source ~/tscrm-env-restore.sh   (or export it), then re-run."
+    echo "   To deploy without touching the database: --skip-migrations"
+    exit 1
+  fi
   node scripts/apply-migrations.mjs
   echo "✅ Migrations applied (or already up to date)"
 fi
