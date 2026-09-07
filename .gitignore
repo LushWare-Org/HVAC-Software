@@ -78,3 +78,8 @@ scripts/deploy-crm-service.sh
 scripts/deploy-integrations.sh
 scripts/migrate-comms.sh
 scripts/update-comms-envvars.sh
+
+# Real tenant seed configs carry admin passwords in cleartext.
+# Commit the .example.json template instead; keep the real ones local.
+scripts/tenants/*.json
+!scripts/tenants/*.example.json
