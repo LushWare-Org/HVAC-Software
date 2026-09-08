@@ -231,14 +231,40 @@ function useRoadRoute(from: [number, number] | null, to: [number, number] | null
  * take, the other is the road they took. Drawing both means the difference is
  * visible, which is exactly what a dispatcher wants to see when someone is late.
  */
-function useGpsTrail(technicianId: string | null, active: boolean) {
+/**
+ * `since` is when THIS trip started (the assignment's enRouteAt). It matters:
+ * asking for a flat window of history drew every road the technician had driven
+ * in that window, so the leg of a previous job hung off the back of the current
+ * green line and looked like they were routed somewhere they were not.
+ *
+ * With no enRouteAt to anchor to (job-service can move a job to EN_ROUTE without
+ * touching scheduling's assignment row) we fall back to a short window. That can
+ * still trail slightly into a previous trip, but an hour beats three.
+ */
+const TRAIL_FALLBACK_MINUTES = 60
+
+function useGpsTrail(technicianId: string | null, since: string | null) {
   return useQuery<[number, number][]>({
-    queryKey: ['gps-trail', technicianId],
-    enabled: !!technicianId && active,
+    queryKey: ['gps-trail', technicianId, since ?? 'recent'],
+    enabled: !!technicianId,
     queryFn: async () => {
-      const res = await api.get<{ data: { lat: number; lng: number }[] }>(
-        `/scheduling/gps/trail/${technicianId}`, { params: { minutes: 180, limit: 400 } })
-      return (res.data.data ?? []).map(p => [p.lat, p.lng] as [number, number])
+      const startedAt = since ? new Date(since).getTime() : null
+      const minutes = startedAt
+        // Two minutes of slack so the fix taken just before the tap is included
+        // and the line starts where they actually were.
+        ? Math.ceil((Date.now() - startedAt) / 60_000) + 2
+        : TRAIL_FALLBACK_MINUTES
+
+      const res = await api.get<{ data: { lat: number; lng: number; capturedAt: string }[] }>(
+        `/scheduling/gps/trail/${technicianId}`, { params: { minutes, limit: 400 } })
+
+      const points = res.data.data ?? []
+      // The window above is granular to the minute; this trims to the exact
+      // moment, so no tail of the previous journey survives.
+      const trip = startedAt
+        ? points.filter(p => new Date(p.capturedAt).getTime() >= startedAt)
+        : points
+      return trip.map(p => [p.lat, p.lng] as [number, number])
     },
     // Matches the app's GPS cadence: a new fix lands roughly every 30 s.
     refetchInterval: 30_000,
@@ -255,17 +281,18 @@ const ROUTE_DRIVEN = '#059669'
 // Only ever rendered for EN_ROUTE jobs: routeLines drops everything else, so
 // there is no arrived/on-site variant to handle here.
 function RoutePolyline({
-  techPos, jobPos, technicianId,
+  techPos, jobPos, technicianId, enRouteAt,
 }: {
   techPos: [number, number]
   jobPos: [number, number]
   technicianId: string
+  enRouteAt: string | null
 }) {
   // Routed from the technician's CURRENT position, so the blue line shortens as
   // they drive and re-routes on its own if they take a different road. No
   // deviation detection needed: the origin moving IS the deviation.
   const { data: roadCoords, isLoading } = useRoadRoute(techPos, jobPos)
-  const { data: trail } = useGpsTrail(technicianId, true)
+  const { data: trail } = useGpsTrail(technicianId, enRouteAt)
   const color = ROUTE_AHEAD
 
   const driven = (trail?.length ?? 0) > 1 ? trail! : null
@@ -511,7 +538,7 @@ export default function DispatchMap({
   const routeLines = useMemo(() => {
     const lines: {
       techPos: [number, number]; jobPos: [number, number]
-      technicianId: string
+      technicianId: string; enRouteAt: string | null
     }[] = []
     Object.values(assignmentByJobId).forEach(a => {
       if (!a) return
@@ -543,9 +570,23 @@ export default function DispatchMap({
         techPos: [tech.currentLocation.lat, tech.currentLocation.lng],
         jobPos:  [coords.lat, coords.lng],
         technicianId: a.technicianId,
+        enRouteAt: a.enRouteAt ?? null,
       })
     })
-    return lines
+
+    // One line per technician: nobody drives to two places at once. A job left
+    // in EN_ROUTE because it was never marked arrived would otherwise keep its
+    // route on the map forever, alongside the real one. Most recent trip wins;
+    // an assignment with no enRouteAt loses to one that has it.
+    const latestByTech = new Map<string, typeof lines[number]>()
+    for (const line of lines) {
+      const held = latestByTech.get(line.technicianId)
+      if (!held) { latestByTech.set(line.technicianId, line); continue }
+      const t = line.enRouteAt ? new Date(line.enRouteAt).getTime() : -Infinity
+      const h = held.enRouteAt ? new Date(held.enRouteAt).getTime() : -Infinity
+      if (t > h) latestByTech.set(line.technicianId, line)
+    }
+    return [...latestByTech.values()]
   }, [assignmentByJobId, technicians, assignedJobs, unassignedJobs])
 
   // ── All map points for auto-fit ────────────────────────────────────────────────
@@ -689,12 +730,13 @@ export default function DispatchMap({
           <RememberView points={allPoints} />
 
           {/* ── Routing lines (road-following via OSRM) ────────────────────── */}
-          {layers.routes && routeLines.map(({ techPos, jobPos, technicianId }) => (
+          {layers.routes && routeLines.map(({ techPos, jobPos, technicianId, enRouteAt }) => (
             <RoutePolyline
               key={`route-${technicianId}`}
               techPos={techPos}
               jobPos={jobPos}
               technicianId={technicianId}
+              enRouteAt={enRouteAt}
             />
           ))}
 
