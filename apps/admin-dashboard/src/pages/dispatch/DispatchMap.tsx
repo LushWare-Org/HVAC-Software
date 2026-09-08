@@ -929,11 +929,15 @@ export default function DispatchMap({
         ))}
         <span style={{ width: 1, background: '#e5e7eb', height: 14, alignSelf: 'center' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#374151' }}>Routes:</div>
+        {/* Matches what is actually drawn. The old legend described a dashed
+            amber En Route line and a purple On Site one; routes have been blue
+            and green since road routing landed, and on-site jobs no longer
+            draw a line at all. */}
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 16, borderTop: '2px dashed #d97706', display: 'inline-block' }} /> En Route
+          <span style={{ width: 16, borderTop: `2.5px solid ${ROUTE_DRIVEN}`, display: 'inline-block' }} /> Driven
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 16, borderTop: '2.5px solid #7c3aed', display: 'inline-block' }} /> On Site
+          <span style={{ width: 16, borderTop: `2.5px dashed ${ROUTE_AHEAD}`, display: 'inline-block' }} /> To drive
         </span>
         <span style={{ width: 1, background: '#e5e7eb', height: 14, alignSelf: 'center' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#374151' }}>Priority:</div>
