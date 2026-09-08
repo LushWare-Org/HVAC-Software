@@ -10,7 +10,7 @@
  *  5. Workload badge on technician markers
  *  6. Job priority coloring
  *  7. Today / Week / All scope toggle
- *  8. Routing lines (EN_ROUTE = dashed, ON_SITE = solid)
+ *  8. Routing lines while EN_ROUTE only; cleared once the job is ON_SITE
  *  Plus: toggleable map layers (live techs, stale techs, assigned jobs, unassigned jobs, routes)
  */
 
@@ -251,23 +251,22 @@ function useGpsTrail(technicianId: string | null, active: boolean) {
 /** Blue = road still to drive. Green = road already driven. */
 const ROUTE_AHEAD = '#2563EB'
 const ROUTE_DRIVEN = '#059669'
-const ROUTE_ONSITE = '#7C3AED'
 
+// Only ever rendered for EN_ROUTE jobs: routeLines drops everything else, so
+// there is no arrived/on-site variant to handle here.
 function RoutePolyline({
-  techPos, jobPos, status, technicianId,
+  techPos, jobPos, technicianId,
 }: {
   techPos: [number, number]
   jobPos: [number, number]
-  status: string
   technicianId: string
 }) {
   // Routed from the technician's CURRENT position, so the blue line shortens as
   // they drive and re-routes on its own if they take a different road. No
   // deviation detection needed: the origin moving IS the deviation.
   const { data: roadCoords, isLoading } = useRoadRoute(techPos, jobPos)
-  const isOnSite = status === 'ON_SITE'
-  const { data: trail } = useGpsTrail(technicianId, !isOnSite)
-  const color = isOnSite ? ROUTE_ONSITE : ROUTE_AHEAD
+  const { data: trail } = useGpsTrail(technicianId, true)
+  const color = ROUTE_AHEAD
 
   const driven = (trail?.length ?? 0) > 1 ? trail! : null
 
@@ -312,7 +311,7 @@ function RoutePolyline({
           color,
           weight: 3.5,
           opacity: 0.9,
-          dashArray: isOnSite ? undefined : '10 6',
+          dashArray: '10 6',
           lineCap: 'round',
           lineJoin: 'round',
         }}
@@ -512,7 +511,7 @@ export default function DispatchMap({
   const routeLines = useMemo(() => {
     const lines: {
       techPos: [number, number]; jobPos: [number, number]
-      status: string; technicianId: string
+      technicianId: string
     }[] = []
     Object.values(assignmentByJobId).forEach(a => {
       if (!a) return
@@ -527,7 +526,13 @@ export default function DispatchMap({
       // line at all. The job status is what the lead controls and what the
       // customer is told, so it wins.
       const effective = ['EN_ROUTE', 'ON_SITE'].includes(job.status) ? job.status : a.status
-      if (!['EN_ROUTE', 'ON_SITE'].includes(effective)) return
+
+      // Only while they are still driving. Once the job is ON_SITE (the status
+      // behind the technician app's "Arrived" button) the route has served its
+      // purpose, and leaving it up clutters the map with lines to jobs nobody
+      // is travelling to any more. The technician marker still shows them at
+      // the job, so nothing is lost by dropping the line.
+      if (effective !== 'EN_ROUTE') return
 
       const tech = technicians.find(t => t.id === a.technicianId)
       if (!tech?.currentLocation) return
@@ -537,7 +542,6 @@ export default function DispatchMap({
       lines.push({
         techPos: [tech.currentLocation.lat, tech.currentLocation.lng],
         jobPos:  [coords.lat, coords.lng],
-        status:  effective,
         technicianId: a.technicianId,
       })
     })
@@ -685,12 +689,11 @@ export default function DispatchMap({
           <RememberView points={allPoints} />
 
           {/* ── Routing lines (road-following via OSRM) ────────────────────── */}
-          {layers.routes && routeLines.map(({ techPos, jobPos, status, technicianId }) => (
+          {layers.routes && routeLines.map(({ techPos, jobPos, technicianId }) => (
             <RoutePolyline
               key={`route-${technicianId}`}
               techPos={techPos}
               jobPos={jobPos}
-              status={status}
               technicianId={technicianId}
             />
           ))}
