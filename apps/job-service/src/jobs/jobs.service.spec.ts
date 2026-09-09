@@ -95,6 +95,11 @@ const mockPrisma = {
   },
   // generateJobNumber reads MAX(jobNumber) via $queryRaw inside the tx
   $queryRaw: jest.fn().mockResolvedValue([{ maxNumber: 0 }]),
+  // Cross-schema stamp of en_route_at / on_site_at onto scheduling's
+  // assignment row. Must exist on the mock: the call is wrapped in a
+  // try/catch, so a missing method would be swallowed and the tests would
+  // pass while the write never happened.
+  $executeRawUnsafe: jest.fn().mockResolvedValue(1),
   $transaction: jest.fn((fnOrArray: any): any => {
     if (typeof fnOrArray === 'function') return fnOrArray(mockPrisma);
     return Promise.all(fnOrArray);
@@ -316,6 +321,47 @@ describe('JobsService — updateJobStatus', () => {
       const historyCall = mockPrisma.jobStatusHistory.create.mock.calls[0][0];
       expect(historyCall.data.note).toContain('[Admin correction]');
       expect(historyCall.data.note).toContain('tech tapped the wrong stage');
+    });
+
+    it('stamps en_route_at on the assignment when a job goes en route', async () => {
+      setupUpdateMocks(JobStatusDto.SCHEDULED, JobStatusDto.EN_ROUTE);
+      await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.TECHNICIAN), {
+        status: JobStatusDto.EN_ROUTE,
+      });
+      const calls = mockPrisma.$executeRawUnsafe.mock.calls;
+      expect(calls).toHaveLength(1);
+      expect(calls[0][0]).toContain('en_route_at');
+      expect(calls[0][0]).toContain('scheduling.dispatch_assignments');
+      expect(calls[0][1]).toBe(JOB_ID);
+    });
+
+    it('stamps on_site_at when the technician arrives', async () => {
+      setupUpdateMocks(JobStatusDto.EN_ROUTE, JobStatusDto.ON_SITE);
+      await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.TECHNICIAN), {
+        status: JobStatusDto.ON_SITE,
+      });
+      const calls = mockPrisma.$executeRawUnsafe.mock.calls;
+      expect(calls).toHaveLength(1);
+      expect(calls[0][0]).toContain('on_site_at');
+    });
+
+    it('leaves the assignment alone for statuses that are not travel stages', async () => {
+      setupUpdateMocks(JobStatusDto.ON_SITE, JobStatusDto.COMPLETED);
+      await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.TECHNICIAN), {
+        status: JobStatusDto.COMPLETED,
+      });
+      expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
+    });
+
+    it('still completes the status change when the assignment stamp fails', async () => {
+      setupUpdateMocks(JobStatusDto.SCHEDULED, JobStatusDto.EN_ROUTE);
+      mockPrisma.$executeRawUnsafe.mockRejectedValueOnce(new Error('scheduling unreachable'));
+      await expect(
+        service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.TECHNICIAN), {
+          status: JobStatusDto.EN_ROUTE,
+        }),
+      ).resolves.toBeDefined();
+      expect(mockPrisma.job.update).toHaveBeenCalled();
     });
 
     it('does not need force for an already-valid transition (no override tag)', async () => {

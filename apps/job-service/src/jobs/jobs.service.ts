@@ -351,6 +351,8 @@ export class JobsService {
 
     await this.invalidateStatsCache(companyId);
 
+    await this.stampAssignmentTimestamps(jobId, newStatus);
+
     this.events.publish(companyId, {
       jobId, change: 'STATUS', status: newStatus, previousStatus: currentStatus,
       customerId: job.customerId,
@@ -415,6 +417,47 @@ export class JobsService {
     }
 
     return updated;
+  }
+
+  /**
+   * Mirrors an EN_ROUTE / ON_SITE transition onto scheduling's assignment row.
+   *
+   * These two stores drift. Moving a job through this service updated
+   * jobs.jobs and nothing else, so scheduling.dispatch_assignments kept a null
+   * en_route_at for any trip that started here rather than in the dispatch
+   * board. Measured on live data: only 13 of 33 assignments had the timestamp,
+   * which left anything reasoning about when a trip began with no anchor.
+   *
+   * Written straight across the schema boundary rather than over HTTP because
+   * both schemas live in the same database under the same role, so there is no
+   * network call to fail and nothing to keep in sync afterwards.
+   *
+   * Deliberately outside the transaction and swallowed on failure: a technician
+   * tapping "On my way" must not get an error because a denormalised timestamp
+   * could not be written. The job status itself is the source of truth.
+   */
+  private async stampAssignmentTimestamps(jobId: string, newStatus: JobStatusDto) {
+    const column =
+      newStatus === JobStatusDto.EN_ROUTE ? 'en_route_at'
+      : newStatus === JobStatusDto.ON_SITE ? 'on_site_at'
+      : null;
+    if (!column) return;
+
+    try {
+      // Overwrites rather than coalesces: a job sent en route a second time is
+      // a new trip, and the old timestamp would describe a journey that ended.
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE scheduling.dispatch_assignments
+            SET ${column} = now()
+          WHERE job_id = $1::uuid AND status <> 'CANCELLED'`,
+        jobId,
+      );
+    } catch (err: unknown) {
+      this.logger.warn(
+        `Could not stamp ${column} on the assignment for job ${jobId}: ` +
+        `${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 
   // ============================================================

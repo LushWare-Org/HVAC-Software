@@ -17,7 +17,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, Polyline, useMap } from 'react-leaflet'
 import { useQuery } from '@tanstack/react-query'
-import api from '../../lib/api'
 import { createMapViewStore } from '../../lib/mapView'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -224,93 +223,39 @@ function useRoadRoute(from: [number, number] | null, to: [number, number] | null
   })
 }
 
-/**
- * Where the technician has actually been, for the travelled part of the line.
- *
- * Separate from the OSRM route on purpose: one is the road they were meant to
- * take, the other is the road they took. Drawing both means the difference is
- * visible, which is exactly what a dispatcher wants to see when someone is late.
- */
-/**
- * `since` is when THIS trip started (the assignment's enRouteAt). It matters:
- * asking for a flat window of history drew every road the technician had driven
- * in that window, so the leg of a previous job hung off the back of the current
- * green line and looked like they were routed somewhere they were not.
- *
- * With no enRouteAt to anchor to (job-service can move a job to EN_ROUTE without
- * touching scheduling's assignment row) we fall back to a short window. That can
- * still trail slightly into a previous trip, but an hour beats three.
- */
-const TRAIL_FALLBACK_MINUTES = 60
-
-function useGpsTrail(technicianId: string | null, since: string | null) {
-  return useQuery<[number, number][]>({
-    queryKey: ['gps-trail', technicianId, since ?? 'recent'],
-    enabled: !!technicianId,
-    queryFn: async () => {
-      const startedAt = since ? new Date(since).getTime() : null
-      const minutes = startedAt
-        // Two minutes of slack so the fix taken just before the tap is included
-        // and the line starts where they actually were.
-        ? Math.ceil((Date.now() - startedAt) / 60_000) + 2
-        : TRAIL_FALLBACK_MINUTES
-
-      const res = await api.get<{ data: { lat: number; lng: number; capturedAt: string }[] }>(
-        `/scheduling/gps/trail/${technicianId}`, { params: { minutes, limit: 400 } })
-
-      const points = res.data.data ?? []
-      // The window above is granular to the minute; this trims to the exact
-      // moment, so no tail of the previous journey survives.
-      const trip = startedAt
-        ? points.filter(p => new Date(p.capturedAt).getTime() >= startedAt)
-        : points
-      return trip.map(p => [p.lat, p.lng] as [number, number])
-    },
-    // Matches the app's GPS cadence: a new fix lands roughly every 30 s.
-    refetchInterval: 30_000,
-    staleTime: 15_000,
-  })
-}
-
 // Renders one route line: road-following when the OSRM fetch succeeds,
 // straight dashed line (clearly marked) while loading / on error.
-/** Blue = road still to drive. Green = road already driven. */
+/**
+ * The only line the map draws: the road still to drive, from where the
+ * technician is right now to the job.
+ *
+ * There is deliberately no travelled-path line. It was drawn from stored GPS
+ * breadcrumbs, which meant it showed history, and history is what put a
+ * finished journey on the map next to the live one. A dispatcher watching a
+ * technician move wants where they are going, not where they have been.
+ */
 const ROUTE_AHEAD = '#2563EB'
-const ROUTE_DRIVEN = '#059669'
 
 // Only ever rendered for EN_ROUTE jobs: routeLines drops everything else, so
 // there is no arrived/on-site variant to handle here.
-function RoutePolyline({
-  techPos, jobPos, technicianId, enRouteAt,
-}: {
+function RoutePolyline({ techPos, jobPos }: {
   techPos: [number, number]
   jobPos: [number, number]
-  technicianId: string
-  enRouteAt: string | null
 }) {
   // Routed from the technician's CURRENT position, so the blue line shortens as
   // they drive and re-routes on its own if they take a different road. No
   // deviation detection needed: the origin moving IS the deviation.
   const { data: roadCoords, isLoading } = useRoadRoute(techPos, jobPos)
-  const { data: trail } = useGpsTrail(technicianId, enRouteAt)
   const color = ROUTE_AHEAD
-
-  const driven = (trail?.length ?? 0) > 1 ? trail! : null
 
   if (isLoading || !roadCoords) {
     // Straight line while OSRM is loading or unreachable. Dashed and faint so it
     // never passes for a real road route.
     return (
-      <>
-        {driven && (
-          <Polyline positions={driven}
-            pathOptions={{ color: ROUTE_DRIVEN, weight: 4, opacity: 0.9, lineCap: 'round' }} />
-        )}
-        <Polyline
-          positions={[techPos, jobPos]}
-          pathOptions={{ color, weight: 2, opacity: 0.4, dashArray: '4 6' }}
-        />
-      </>
+      <Polyline
+        positions={[techPos, jobPos]}
+        pathOptions={{ color, weight: 2, opacity: 0.4, dashArray: '4 6' }}
+      />
     )
   }
 
@@ -321,15 +266,6 @@ function RoutePolyline({
         positions={roadCoords}
         pathOptions={{ color: '#fff', weight: 7, opacity: 0.6 }}
       />
-
-      {/* Already driven, from the real GPS breadcrumbs rather than the planned
-          route, so a detour shows as the detour actually taken. */}
-      {driven && (
-        <Polyline
-          positions={driven}
-          pathOptions={{ color: ROUTE_DRIVEN, weight: 4.5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }}
-        />
-      )}
 
       {/* Still to drive */}
       <Polyline
@@ -730,13 +666,11 @@ export default function DispatchMap({
           <RememberView points={allPoints} />
 
           {/* ── Routing lines (road-following via OSRM) ────────────────────── */}
-          {layers.routes && routeLines.map(({ techPos, jobPos, technicianId, enRouteAt }) => (
+          {layers.routes && routeLines.map(({ techPos, jobPos, technicianId }) => (
             <RoutePolyline
               key={`route-${technicianId}`}
               techPos={techPos}
               jobPos={jobPos}
-              technicianId={technicianId}
-              enRouteAt={enRouteAt}
             />
           ))}
 
@@ -971,15 +905,10 @@ export default function DispatchMap({
         ))}
         <span style={{ width: 1, background: '#e5e7eb', height: 14, alignSelf: 'center' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#374151' }}>Routes:</div>
-        {/* Matches what is actually drawn. The old legend described a dashed
-            amber En Route line and a purple On Site one; routes have been blue
-            and green since road routing landed, and on-site jobs no longer
-            draw a line at all. */}
+        {/* One line, one meaning: the road left to drive. Nothing is drawn
+            for a technician who has arrived. */}
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 16, borderTop: `2.5px solid ${ROUTE_DRIVEN}`, display: 'inline-block' }} /> Driven
-        </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 16, borderTop: `2.5px dashed ${ROUTE_AHEAD}`, display: 'inline-block' }} /> To drive
+          <span style={{ width: 16, borderTop: `2.5px dashed ${ROUTE_AHEAD}`, display: 'inline-block' }} /> Driving to job
         </span>
         <span style={{ width: 1, background: '#e5e7eb', height: 14, alignSelf: 'center' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#374151' }}>Priority:</div>
