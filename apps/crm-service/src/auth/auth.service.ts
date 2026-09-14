@@ -10,8 +10,9 @@ import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { requireJwtSecret } from '@tscrm/auth-client';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
+const JWT_SECRET = requireJwtSecret();
 const JWT_EXPIRES_IN = '24h';
 // Mobile apps (customer-app, technician-app) opt into this via platform:'mobile'
 // on login — a 24h web session is fine for a browser tab, but a phone app that

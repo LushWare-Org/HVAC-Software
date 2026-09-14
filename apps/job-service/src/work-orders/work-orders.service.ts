@@ -8,9 +8,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '@tscrm/types';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
+import { requireJwtSecret } from '@tscrm/auth-client';
 
 function systemToken(companyId: string): string {
-  const secret = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
+  const secret = requireJwtSecret();
   return jwt.sign(
     { sub: 'system-job-service', company_id: companyId, role: 'company_admin', name: 'Job Service', iss: 'tscrm-local' },
     secret,

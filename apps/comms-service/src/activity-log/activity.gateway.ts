@@ -9,6 +9,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import * as jwt from 'jsonwebtoken';
+import { requireJwtSecret } from '@tscrm/auth-client';
 
 interface ActivitySocket extends Socket {
   userRole?: string;
@@ -63,7 +64,7 @@ export class ActivityGateway implements OnGatewayConnection {
           return;
         }
       } else {
-        const secret = process.env.JWT_SECRET ?? 'dev-jwt-secret-change-in-production';
+        const secret = requireJwtSecret();
         const decoded = jwt.verify(token, secret) as any;
         role = decoded.role;
       }

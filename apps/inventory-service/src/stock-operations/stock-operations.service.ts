@@ -4,9 +4,10 @@ import { MovementType, Prisma } from '../prisma/generated';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
 import { clampPagination } from '@tscrm/types';
+import { requireJwtSecret } from '@tscrm/auth-client';
 
 function systemToken(companyId: string): string {
-  const secret = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
+  const secret = requireJwtSecret();
   return jwt.sign(
     { sub: 'system-inventory-service', company_id: companyId, role: 'company_admin', name: 'Inventory Service', iss: 'tscrm-local' },
     secret,

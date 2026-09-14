@@ -5,8 +5,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '../prisma/generated';
 import { StorageService } from '../storage/storage.service';
 import { clampPagination } from '@tscrm/types';
+import { requireJwtSecret } from '@tscrm/auth-client';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tscrm-local-jwt-secret-change-in-production';
+const JWT_SECRET = requireJwtSecret();
 const COMMS_SERVICE_URL = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
 const APP_NAME = process.env.APP_NAME || 'HVACtor.ai';
 
