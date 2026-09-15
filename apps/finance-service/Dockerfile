@@ -56,7 +56,9 @@ COPY --from=builder /repo/apps/finance-service/package.json ./
 #
 # /usr/bin/chromium is the same path on bookworm, so PUPPETEER_EXECUTABLE_PATH
 # below is unchanged.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Acquire::Retries: the chromium .deb is ~100MB and mirror resets mid-transfer
+# have failed this build repeatedly; retrying the fetch is the right response.
+RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
     chromium \
     ca-certificates \
     fonts-liberation \

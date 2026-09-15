@@ -4,6 +4,8 @@ WORKDIR /repo
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
+# Registry resets during a fresh install have failed this build; retry instead of dying.
+RUN pnpm config set fetch-retries 5 && pnpm config set fetch-retry-maxtimeout 120000
 
 # Copy workspace manifests (for layer caching — only reinstall when these change)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
@@ -30,6 +32,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
+# Registry resets during a fresh install have failed this build; retry instead of dying.
+RUN pnpm config set fetch-retries 5 && pnpm config set fetch-retry-maxtimeout 120000
 
 # Shared runtime libraries the prebuilt `canvas` binary dynamically links against
 # (pulled in via pdf-to-img, used by document-templates). Without these the
