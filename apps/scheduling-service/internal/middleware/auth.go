@@ -118,10 +118,17 @@ func JWTMiddleware(auth0Domain, audience string) gin.HandlerFunc {
 		var parseErr error
 
 		if alg := peekJWTAlgorithm(tokenStr); alg == "HS256" {
-			// Local JWT signed with symmetric secret
+			// Local JWT signed with symmetric secret.
+			//
+			// No fallback. This used to default to a string that is committed to
+			// a public repository, so a deployment missing JWT_SECRET would keep
+			// running and accept a token forged by anyone who had read the repo,
+			// for any tenant and any role. A missing secret now rejects every
+			// token instead; the failure is loud and immediate rather than silent.
 			localSecret := os.Getenv("JWT_SECRET")
 			if localSecret == "" {
-				localSecret = "tscrm-local-jwt-secret-change-in-production"
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "server auth misconfigured: JWT_SECRET is not set"})
+				return
 			}
 			parsedToken, parseErr = jwt.Parse(
 				[]byte(tokenStr),

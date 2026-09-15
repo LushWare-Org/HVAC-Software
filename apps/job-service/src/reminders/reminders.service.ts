@@ -80,7 +80,13 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
             jobId: job.id,
             dedupeKey: `job-reminder:${job.id}:${day}`,
           },
-          { timeout: 8_000 },
+          {
+            timeout: 8_000,
+            // comms requires this for service-to-service pushes: the endpoint
+            // has no user context, so the shared key is what proves the caller
+            // is one of our services and not anyone who found the URL.
+            headers: { 'x-internal-api-key': process.env.INTERNAL_API_KEY ?? '' },
+          },
         );
         sent += 1;
       } catch (err) {

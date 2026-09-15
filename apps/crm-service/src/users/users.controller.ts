@@ -18,6 +18,8 @@ import { JwtAuthGuard, RolesGuard, CurrentUser, Roles } from '@tscrm/auth-client
 import { AuthUser, Role } from '@tscrm/types';
 import { UsersService } from './users.service';
 import { RegisterPushTokenDto } from './dto/push-token.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { ForbiddenException } from '@nestjs/common';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -88,12 +90,16 @@ export class UsersController {
   }
 
   @Post(':id/approve')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Approve a pending technician application' })
   approve(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.usersService.approveTechnician(user.companyId, id);
   }
 
   @Post(':id/reject')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
   @ApiOperation({ summary: 'Reject a pending technician application' })
   reject(
     @CurrentUser() user: AuthUser,
@@ -172,17 +178,26 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a user' })
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER)
+  @ApiOperation({ summary: 'Update a user (admin)' })
   update(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
-    @Body() body: { name?: string; email?: string; phone?: string; role?: string; isActive?: boolean },
+    @Body() body: UpdateUserDto,
   ) {
+    // Only a super admin may grant super admin. Without this, a company admin
+    // could promote an account past their own level.
+    if (body.role === 'super_admin' && user.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenException('Only a super admin can grant the super_admin role.');
+    }
     return this.usersService.update(user.companyId, id, body);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a user' })
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Delete a user (admin)' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.usersService.remove(user.companyId, id);
   }

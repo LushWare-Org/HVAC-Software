@@ -20,7 +20,8 @@ import api from '../../lib/api'
 
 async function downloadWithAuth(url: string, filename: string) {
   const res = await api.get(url, { responseType: 'blob' })
-  const blob = new Blob([res.data], { type: res.headers['content-type'] ?? 'application/octet-stream' })
+  // axios 1.18 types header values as a union rather than string; coerce.
+  const blob = new Blob([res.data], { type: String(res.headers['content-type'] ?? 'application/octet-stream') })
   const href = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = href

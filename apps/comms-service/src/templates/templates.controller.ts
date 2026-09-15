@@ -10,8 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
-import { AuthUser } from '@tscrm/types';
+import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
+import { AuthUser, Role } from '@tscrm/types';
 import { TemplatesService } from './templates.service';
 import {
   CreateTemplateDto,
@@ -25,11 +25,17 @@ import { Channel, TemplateType } from '../prisma/generated';
 @ApiTags('Notification Templates')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+// Message templates are the words the company sends to every customer.
+// Creating, editing and deleting them was open to any signed-in role; it is
+// staff-only now. Rendering a preview stays available to any authenticated
+// user because it changes nothing.
 @Controller('templates')
 export class TemplatesController {
   constructor(private readonly service: TemplatesService) {}
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Create a notification template' })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateTemplateDto) {
     return this.service.create(user.companyId, dto);
@@ -60,6 +66,8 @@ export class TemplatesController {
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Update template' })
   update(
     @CurrentUser() user: AuthUser,
@@ -70,6 +78,8 @@ export class TemplatesController {
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Delete template' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.service.remove(user.companyId, id);

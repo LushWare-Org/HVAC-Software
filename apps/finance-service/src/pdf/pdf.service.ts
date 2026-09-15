@@ -34,19 +34,51 @@ const pct = (val: number | { toString(): string } | null | undefined): string =>
 // apply that block's per-field style (font/color for text slots, background/
 // border/padding for box slots) without any logic living in the .hbs itself.
 Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
+
+// These helpers emit their output with {{{ }}}, so nothing they return is
+// escaped by Handlebars. Every string they interpolate is tenant-editable
+// template config, and blockStyleOverride writes into a <style> element, where
+// a value like `x}</style><script>` ends the stylesheet and starts a script.
+// So each value is rebuilt from an allowlist rather than trusted: a font name
+// is letters, digits, spaces, commas, quotes and hyphens; a colour is hex,
+// rgb()/hsl(), or a bare word; an alignment or weight is a keyword or number.
+// Anything else is dropped from the output rather than passed through.
+const CSS_FONT   = /^[A-Za-z0-9 ,'"\-]{1,80}$/;
+const CSS_COLOR  = /^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla)\([0-9.,%\s]{1,40}\)|[a-zA-Z]{1,30})$/;
+const CSS_WEIGHT = /^(normal|bold|bolder|lighter|[1-9]00)$/;
+const CSS_ALIGN  = /^(left|right|center|justify|start|end)$/;
+const CSS_IDENT  = /^[A-Za-z0-9_\-]{1,64}$/;
+
+function cssVal(value: unknown, pattern: RegExp): string | null {
+  if (typeof value !== 'string') return null;
+  const v = value.trim();
+  return pattern.test(v) ? v : null;
+}
+function cssNum(value: unknown, max = 500): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max
+    ? Math.round(value) : null;
+}
+
+/** Style declarations for a block, each value validated, in a fixed order. */
+function safeStyleParts(style: Record<string, unknown>, important = false): string[] {
+  const imp = important ? ' !important' : '';
+  const parts: string[] = [];
+  const font = cssVal(style.fontFamily, CSS_FONT);       if (font)   parts.push(`font-family: ${font}${imp};`);
+  const size = cssNum(style.fontSize, 200);              if (size)   parts.push(`font-size: ${size}px${imp};`);
+  const wght = cssVal(style.fontWeight, CSS_WEIGHT)
+    ?? (cssNum(style.fontWeight, 900)?.toString() ?? null); if (wght)  parts.push(`font-weight: ${wght}${imp};`);
+  const col  = cssVal(style.color, CSS_COLOR);           if (col)    parts.push(`color: ${col}${imp};`);
+  const al   = cssVal(style.align, CSS_ALIGN);           if (al)     parts.push(`text-align: ${al}${imp};`);
+  const bg   = cssVal(style.background, CSS_COLOR);      if (bg)     parts.push(`background: ${bg}${imp};`);
+  const bc   = cssVal(style.borderColor, CSS_COLOR);     if (bc)     parts.push(`border-color: ${bc}${imp};`);
+  const br   = cssNum(style.borderRadiusPx);             if (br !== null) parts.push(`border-radius: ${br}px${imp};`);
+  const pd   = cssNum(style.paddingPx);                  if (pd !== null) parts.push(`padding: ${pd}px${imp};`);
+  return parts;
+}
+
 Handlebars.registerHelper('blockStyle', (style: Record<string, unknown> | undefined) => {
   if (!style) return '';
-  const parts: string[] = [];
-  if (style.fontFamily) parts.push(`font-family: ${style.fontFamily};`);
-  if (style.fontSize) parts.push(`font-size: ${style.fontSize}px;`);
-  if (style.fontWeight) parts.push(`font-weight: ${style.fontWeight};`);
-  if (style.color) parts.push(`color: ${style.color};`);
-  if (style.align) parts.push(`text-align: ${style.align};`);
-  if (style.background) parts.push(`background: ${style.background};`);
-  if (style.borderColor) parts.push(`border-color: ${style.borderColor};`);
-  if (typeof style.borderRadiusPx === 'number') parts.push(`border-radius: ${style.borderRadiusPx}px;`);
-  if (typeof style.paddingPx === 'number') parts.push(`padding: ${style.paddingPx}px;`);
-  return new Handlebars.SafeString(parts.join(' '));
+  return new Handlebars.SafeString(safeStyleParts(style).join(' '));
 });
 // A block's style is set on its `.tpl-block` wrapper, but the partial's actual content
 // element (e.g. `.brand-name`, `.doc-card`) has its own explicit color/font/background
@@ -54,20 +86,15 @@ Handlebars.registerHelper('blockStyle', (style: Record<string, unknown> | undefi
 // wrapper's inline style alone is invisible for exactly the properties admins want to
 // change. This renders a tiny scoped stylesheet targeting that block's direct content
 // children with !important, which reliably wins regardless of the partial's own CSS.
-Handlebars.registerHelper('blockStyleOverride', (blockId: string, style: Record<string, unknown> | undefined) => {
+Handlebars.registerHelper('blockStyleOverride', (blockId: unknown, style: Record<string, unknown> | undefined) => {
   if (!style) return '';
-  const parts: string[] = [];
-  if (style.fontFamily) parts.push(`font-family: ${style.fontFamily} !important;`);
-  if (style.fontSize) parts.push(`font-size: ${style.fontSize}px !important;`);
-  if (style.fontWeight) parts.push(`font-weight: ${style.fontWeight} !important;`);
-  if (style.color) parts.push(`color: ${style.color} !important;`);
-  if (style.align) parts.push(`text-align: ${style.align} !important;`);
-  if (style.background) parts.push(`background: ${style.background} !important;`);
-  if (style.borderColor) parts.push(`border-color: ${style.borderColor} !important;`);
-  if (typeof style.borderRadiusPx === 'number') parts.push(`border-radius: ${style.borderRadiusPx}px !important;`);
-  if (typeof style.paddingPx === 'number') parts.push(`padding: ${style.paddingPx}px !important;`);
+  // The id lands inside a CSS attribute selector inside a <style> tag. Only a
+  // plain identifier is allowed through; anything else cannot be scoped safely.
+  const id = cssVal(blockId, CSS_IDENT);
+  if (!id) return '';
+  const parts = safeStyleParts(style, true);
   if (parts.length === 0) return '';
-  return new Handlebars.SafeString(`<style>[data-block-id="${blockId}"] > * { ${parts.join(' ')} }</style>`);
+  return new Handlebars.SafeString(`<style>[data-block-id="${id}"] > * { ${parts.join(' ')} }</style>`);
 });
 // Hero-section blocks are free-positioned anywhere on the header canvas (literally
 // draggable to any x/y) since they're all fixed-size — unlike body-section blocks
@@ -512,6 +539,49 @@ export class PdfService implements OnModuleDestroy {
     return this.browserPromise;
   }
 
+  /**
+   * Whether the renderer may fetch this URL. Public http(s) only.
+   *
+   * Everything a tenant can legitimately reference from a document is a
+   * public image (logo, letterhead). Everything an attacker would reference
+   * from inside Chromium on Cloud Run is not: the metadata server at
+   * 169.254.169.254, loopback, private ranges, file://. Deny by default.
+   */
+  static isSafeResourceUrl(raw: string): boolean {
+    let url: URL;
+    try { url = new URL(raw); } catch { return false; }
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+
+    const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+    if (host === 'localhost' || host.endsWith('.localhost')) return false;
+    if (host === 'metadata.google.internal' || host.endsWith('.internal')) return false;
+
+    // IPv6 literals are refused outright. The URL parser rewrites v4-mapped
+    // forms into hex (::ffff:169.254.169.254 becomes ::ffff:a9fe:a9fe), which
+    // slipped past a dotted-quad check, and no legitimate logo is served from a
+    // bare IPv6 address.
+    if (host.includes(':')) return false;
+
+    // A single-label name like "metadata" is resolved through the host's search
+    // domain on GCE and lands on metadata.google.internal. Real image hosts are
+    // fully qualified, so anything without a dot is refused.
+    if (!host.includes('.')) return false;
+
+    // Numeric IPv4: reject anything that is not globally routable.
+    const v4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (v4) {
+      const [a, b] = [Number(v4[1]), Number(v4[2])];
+      if (a === 10 || a === 127 || a === 0) return false;
+      if (a === 169 && b === 254) return false;           // link-local, incl. metadata
+      if (a === 172 && b >= 16 && b <= 31) return false;
+      if (a === 192 && b === 168) return false;
+      if (a === 100 && b >= 64 && b <= 127) return false;  // CGNAT
+      if (a >= 224) return false;                          // multicast / reserved
+      return true;
+    }
+    return true;
+  }
+
   /** Acquire a slot in the concurrency-limited PDF pool. */
   private async acquireSlot(): Promise<void> {
     if (this.inflight < PdfService.MAX_CONCURRENT_PDFS) {
@@ -535,6 +605,25 @@ export class PdfService implements OnModuleDestroy {
       const browser = await this.getBrowser();
       const page = await browser.newPage();
       try {
+        // The rendered HTML carries tenant-authored values: template styling,
+        // company details, customer names, line-item text. Chromium runs here
+        // with the Cloud Run metadata server one HTTP request away, so any
+        // script that reaches the page can read the service account token and
+        // post it out. Two controls, either of which is sufficient on its own:
+        //
+        //  1. No page JavaScript. Every template is static markup and CSS; the
+        //     only script we need is our own page.evaluate below, which runs
+        //     over the DevTools protocol and is unaffected by this setting.
+        //  2. No requests to anything but public http(s) hosts. Kills the
+        //     metadata endpoint, link-local, loopback and RFC1918 ranges, and
+        //     file:// — while still letting logo and letterhead images load.
+        await page.setJavaScriptEnabled(false);
+        await page.setRequestInterception(true);
+        page.on('request', (req) => {
+          if (PdfService.isSafeResourceUrl(req.url())) req.continue();
+          else req.abort('blockedbyclient');
+        });
+
         // 'domcontentloaded' is reliable for fully-inlined HTML templates and
         // avoids 30s timeouts caused by networkidle0 waiting for external
         // resources.

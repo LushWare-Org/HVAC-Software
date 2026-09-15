@@ -6,7 +6,7 @@
     "apps/*",
     "packages/*"
   ],
-  "description": "Trade & Service CRM — Field Service Management Platform",
+  "description": "Trade & Service CRM \u2014 Field Service Management Platform",
   "scripts": {
     "preinstall": "node -e \"const ua=process.env.npm_config_user_agent||''; if(!ua.includes('pnpm')){console.error('This repo uses pnpm. Run: pnpm install'); process.exit(1)}\"",
     "setup": "bash scripts/setup.sh",
@@ -49,5 +49,34 @@
   "dependencies": {
     "pg": "^8.20.0",
     "pnpm": "^9.15.9"
+  },
+  "pnpm": {
+    "overrides": {
+      "axios": ">=1.18.0",
+      "ws": ">=8.21.0",
+      "multer": ">=2.3.0",
+      "socket.io-parser": ">=4.2.7",
+      "form-data": ">=4.0.6",
+      "websocket-driver": ">=0.7.5",
+      "protobufjs": ">=7.5.5",
+      "tar": ">=7.5.19",
+      "undici": ">=6.27.0",
+      "engine.io": ">=6.6.7",
+      "react-router": ">=7.18.2",
+      "@grpc/grpc-js": ">=1.14.4",
+      "nanoid@3": ">=3.3.18",
+      "js-yaml@4": ">=4.3.2",
+      "js-yaml@3": ">=3.15.2",
+      "lodash": ">=4.18.0",
+      "nodemailer": ">=9.1.1",
+      "fast-uri": ">=3.1.6",
+      "brace-expansion@1": ">=1.1.18",
+      "brace-expansion@2": ">=2.1.4",
+      "brace-expansion@>=3": ">=5.0.9",
+      "picomatch@4": ">=4.0.4",
+      "ip-address": ">=10.3.1",
+      "@xmldom/xmldom": ">=0.8.15",
+      "fast-xml-builder": ">=1.1.7"
+    }
   }
 }

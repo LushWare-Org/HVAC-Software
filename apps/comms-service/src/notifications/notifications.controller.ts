@@ -19,8 +19,8 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
-import { AuthUser } from '@tscrm/types';
+import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
+import { AuthUser, Role } from '@tscrm/types';
 import { NotificationsService } from './notifications.service';
 import {
   SendSmsDto,
@@ -35,6 +35,10 @@ import { Channel, DeliveryStatus } from '../prisma/generated';
 @ApiTags('Notifications')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+// Sending goes out under the company's own Twilio and SendGrid identity and
+// costs money per message. These routes were open to any signed-in role,
+// including customers who had registered themselves, so anyone could send
+// arbitrary SMS and email as the contractor. Staff only.
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
@@ -42,6 +46,8 @@ export class NotificationsController {
   // ── SMS ──────────────────────────────────────────────────────────────────
 
   @Post('sms')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Queue an SMS notification' })
   sendSms(@CurrentUser() user: AuthUser, @Body() dto: SendSmsDto) {
     return this.notificationsService.sendSms({
@@ -54,6 +60,8 @@ export class NotificationsController {
   // ── Email ─────────────────────────────────────────────────────────────────
 
   @Post('email')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Queue an email notification' })
   sendEmail(@CurrentUser() user: AuthUser, @Body() dto: SendEmailDto) {
     return this.notificationsService.sendEmail({
@@ -66,6 +74,8 @@ export class NotificationsController {
   // ── Push ──────────────────────────────────────────────────────────────────
 
   @Post('push')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Queue a push notification' })
   sendPush(@CurrentUser() user: AuthUser, @Body() dto: SendPushDto) {
     return this.notificationsService.sendPush({
@@ -76,6 +86,8 @@ export class NotificationsController {
   }
 
   @Post('in-app')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
   @ApiOperation({ summary: 'Send an in-app notification broadcast' })
   sendInApp(@CurrentUser() user: AuthUser, @Body() dto: SendInAppNotificationDto) {
     return this.notificationsService.sendInApp({

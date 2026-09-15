@@ -773,6 +773,10 @@ export class FollowupAgent {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // analytics requires this: the ingest route has no user context and
+          // is reachable from the internet, so the shared key is the only thing
+          // that separates our services from anyone posting fabricated events.
+          'x-internal-api-key': process.env.INTERNAL_API_KEY ?? '',
         },
         body: JSON.stringify({
           companyId: payload.companyId,
