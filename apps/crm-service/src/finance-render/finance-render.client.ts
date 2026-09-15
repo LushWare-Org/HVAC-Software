@@ -1,5 +1,6 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import axios from 'axios';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 const FINANCE_URL = process.env.FINANCE_SERVICE_URL ?? 'http://localhost:3004';
 
@@ -44,6 +45,7 @@ export class FinanceRenderClient {
         'x-test-user-name': 'Finance Render Client',
       };
     }
-    return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+    // Per-call token signed with JWT_SECRET; SERVICE_JWT was never set anywhere.
+    return serviceAuthHeaders(companyId, 'crm:finance-render');
   }
 }

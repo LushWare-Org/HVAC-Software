@@ -45,16 +45,26 @@ describe('JobsClient', () => {
     expect(headers.Authorization).toBeUndefined()
   })
 
-  it('sends SERVICE_JWT bearer header when BYPASS_AUTH is not true', async () => {
+  it('mints a per-call service token scoped to the company when BYPASS_AUTH is not true', async () => {
     process.env.BYPASS_AUTH = 'false'
-    process.env.SERVICE_JWT = 'tok-xyz'
+    process.env.JWT_SECRET = 'unit-test-secret'
     mockedAxios.post.mockResolvedValue({ data: { id: 'job-456' } })
 
     await client.createJob(baseInput)
 
     const headers = mockedAxios.post.mock.calls[0][2]?.headers as Record<string, string>
-    expect(headers.Authorization).toBe('Bearer tok-xyz')
     expect(headers['x-test-company-id']).toBeUndefined()
+    expect(headers.Authorization).toMatch(/^Bearer /)
+
+    // The token must verify with the shared secret and carry the tenant it acts
+    // for; that claim is what every receiving guard scopes queries by.
+    const jwt = require('jsonwebtoken') as typeof import('jsonwebtoken')
+    const claims = jwt.verify(headers.Authorization.slice(7), 'unit-test-secret') as Record<string, unknown>
+    expect(claims.company_id).toBe('co-1')
+    expect(claims.role).toBe('super_admin')
+    expect(claims.iss).toBe('tscrm-local')
+    expect(String(claims.sub)).toMatch(/^svc:/)
+    expect(Number(claims.exp) - Number(claims.iat)).toBeLessThanOrEqual(120)
   })
 
   it('returns null and does not throw on HTTP failure', async () => {

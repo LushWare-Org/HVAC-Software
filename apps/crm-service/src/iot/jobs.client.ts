@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 const JOBS_URL = process.env.JOBS_SERVICE_URL ?? 'http://localhost:3002';
 
@@ -57,6 +58,7 @@ export class JobsClient {
         'x-test-user-name': 'IoT Automation',
       };
     }
-    return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+    // Per-call token signed with JWT_SECRET; SERVICE_JWT was never set anywhere.
+    return serviceAuthHeaders(companyId, 'crm:iot-automation');
   }
 }

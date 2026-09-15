@@ -17,6 +17,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagingGateway } from '../messaging/messaging.gateway';
 import { JobAssignedDto } from './dto/job-assigned.dto';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 const CRM_SERVICE_URL = process.env.CRM_SERVICE_URL ?? 'http://localhost:3001';
 const DEDUPE_TTL_MS = 5 * 60 * 1000;
@@ -176,7 +177,7 @@ export class JobAssignedNotificationService {
         'x-test-user-id': 'comms-service',
       };
     }
-    return { 'x-internal-company-id': companyId };
+    return serviceAuthHeaders(companyId, 'comms:job-assigned');
   }
 
   private pruneDedupe() {

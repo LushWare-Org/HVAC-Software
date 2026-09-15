@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService, renderEmailCard, emailInfoBox } from '../email/email.service';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 const JOBS_URL = process.env.JOBS_SERVICE_URL ?? 'http://localhost:3002';
@@ -228,7 +229,8 @@ export class AgreementsCron implements OnModuleInit, OnModuleDestroy {
         'x-test-user-name': 'Agreements Automation',
       };
     }
-    return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+    // Per-call token signed with JWT_SECRET; SERVICE_JWT was never set anywhere.
+    return serviceAuthHeaders(companyId, 'crm:agreements-cron');
   }
 
   /** true = open job exists, false = none, null = job-service unreachable. */

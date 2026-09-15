@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 const CRM_URL = process.env.CRM_SERVICE_URL ?? 'http://localhost:3001';
 
@@ -52,6 +53,7 @@ export class CrmClient {
         'x-test-user-name': 'Finance Service (CRM client)',
       };
     }
-    return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+    // Per-call token signed with JWT_SECRET; SERVICE_JWT was never set anywhere.
+    return serviceAuthHeaders(companyId, 'finance:crm-client');
   }
 }

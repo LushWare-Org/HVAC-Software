@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 export interface CrmEquipment {
   id: string;
@@ -158,7 +159,7 @@ export class CrmClient {
       };
     }
     return {
-      Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}`,
+      ...serviceAuthHeaders(companyId ?? 'system', 'comms:automation-worker'),
     };
   }
 }

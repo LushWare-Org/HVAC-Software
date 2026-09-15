@@ -1,5 +1,6 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import axios from 'axios';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 const CRM_SERVICE_URL = process.env.CRM_SERVICE_URL ?? 'http://localhost:3001';
 const TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -24,7 +25,8 @@ function serviceHeaders(companyId: string): Record<string, string> {
       'x-test-user-name': 'Activity Log Worker',
     };
   }
-  return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+  // Per-call token signed with JWT_SECRET; SERVICE_JWT was never set anywhere.
+    return serviceAuthHeaders(companyId, 'comms:activity-log');
 }
 
 /**

@@ -11,6 +11,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { EnRouteNotificationDto } from './dto/enroute.dto';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 const COMPANY_NAME = process.env.SENDGRID_FROM_NAME ?? process.env.SMTP_FROM_NAME ?? 'HVACtor.ai';
 const CRM_SERVICE_URL = process.env.CRM_SERVICE_URL ?? 'http://localhost:3001';
@@ -116,7 +117,8 @@ export class EnRouteNotificationService {
         'x-test-user-email': 'enroute@tscrm.internal',
       };
     }
-    return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+    // Per-call token signed with JWT_SECRET; SERVICE_JWT was never set anywhere.
+    return serviceAuthHeaders(companyId, 'comms:enroute-notifier');
   }
 
   private async sendEmail(companyId: string, dto: EnRouteNotificationDto, window: string | null, avatarUrl: string | null, companyName: string, crew: { name: string; isLead: boolean; avatarUrl: string | null }[] = []): Promise<boolean> {

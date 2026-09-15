@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 const SCHEDULING_URL = process.env.SCHEDULING_SERVICE_URL ?? 'http://localhost:3003';
 
@@ -61,6 +62,7 @@ export class SchedulingClient {
         'x-test-user-name': 'Job Service (reschedule)',
       };
     }
-    return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+    // Per-call token signed with JWT_SECRET; SERVICE_JWT was never set anywhere.
+    return serviceAuthHeaders(companyId, 'job:reschedule');
   }
 }

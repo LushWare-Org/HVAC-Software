@@ -14,6 +14,7 @@ import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/upda
 import { AuthUser, PaginatedResponse, Role, clampPagination } from '@tscrm/types';
 import { JobEventsPublisher } from '../realtime/job-events.publisher';
 import { CrmClient } from './crm.client';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 // Roles allowed to correct a job's status outside the normal forward-moving
 // state machine (dto.force = true) — e.g. undoing a technician's mis-tap.
@@ -406,7 +407,7 @@ export class JobsService {
               'x-test-user-email': 'jobs@tscrm.internal',
               'x-test-user-name': 'Job Service',
             }
-          : { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+          : serviceAuthHeaders(companyId, 'job:status-notifier');
       axios
         .post(`${crmBase}/agreements/${job.agreementId}/record-visit`, { jobId }, { headers, timeout: 8_000 })
         .catch((err: unknown) => {

@@ -1,6 +1,7 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import axios from 'axios';
 import { CrmClient } from '../jobs/crm.client';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 const COMMS_URL = process.env.COMMS_SERVICE_URL ?? 'http://localhost:3005';
 
@@ -81,6 +82,7 @@ export class RescheduleNotifyClient {
         'x-test-user-name': 'Job Service (reschedule)',
       };
     }
-    return { Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}` };
+    // Per-call token signed with JWT_SECRET; SERVICE_JWT was never set anywhere.
+    return serviceAuthHeaders(companyId, 'job:reschedule-notify');
   }
 }

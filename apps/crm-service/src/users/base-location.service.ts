@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
+import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 /**
  * Keeps scheduling.technicians.base_location in step with the technician's own
@@ -34,10 +35,7 @@ export class BaseLocationService {
         'x-test-user-id': 'crm-base-location-sync',
       };
     }
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.SERVICE_JWT ?? ''}`,
-    };
+    return { 'Content-Type': 'application/json', ...serviceAuthHeaders(companyId, 'crm:base-location-sync') };
   }
 
   /** Pushes one technician's base to scheduling. Never throws. */
