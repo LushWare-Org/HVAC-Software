@@ -59,6 +59,7 @@ COPY --from=builder /repo/apps/finance-service/package.json ./
 # Acquire::Retries: the chromium .deb is ~100MB and mirror resets mid-transfer
 # have failed this build repeatedly; retrying the fetch is the right response.
 RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
+    openssl \
     chromium \
     ca-certificates \
     fonts-liberation \

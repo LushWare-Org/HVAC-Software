@@ -43,7 +43,13 @@ RUN pnpm config set fetch-retries 5 && pnpm config set fetch-retry-maxtimeout 12
 # (pulled in via pdf-to-img, used by document-templates). Without these the
 # process crashes on boot the moment anything require()s canvas, since it's an
 # eager NestJS provider import, not a lazily-loaded one.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# openssl is required by Prisma, not by canvas. bookworm-slim ships without it,
+# and without it Prisma cannot detect the OpenSSL version, silently falls back
+# to the debian-openssl-1.1.x engine, and every query fails at runtime while
+# /health still returns 200. That is what broke login on the first bookworm
+# build of this image.
+RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
+    openssl \
     libcairo2 \
     libpango-1.0-0 \
     libjpeg62-turbo \
