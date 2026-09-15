@@ -1,5 +1,9 @@
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
-FROM node:20-bullseye-slim AS builder
+# bookworm, not bullseye: Debian 11 moved to LTS and its security pool no longer
+# serves the package versions its index lists (404 on libfreetype6, libtiff5).
+# Only the layer cache had been hiding this. schema.prisma already targets
+# debian-openssl-3.0.x, which bookworm needs.
+FROM node:20-bookworm-slim AS builder
 WORKDIR /repo
 
 # Install pnpm
@@ -27,7 +31,7 @@ RUN pnpm --filter=crm-service build
 RUN cd apps/crm-service && npx prisma generate
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
-FROM node:20-bullseye-slim AS runner
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 

@@ -1,4 +1,5 @@
-import { Body, Controller, Headers, Post, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { InternalApiKeyGuard } from '@tscrm/auth-client';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { CustomerNotificationsService } from './customer-notifications.service';
 import { CustomerPushDto } from './customer-push.dto';
@@ -19,14 +20,10 @@ export class CustomerNotificationsController {
   constructor(private readonly service: CustomerNotificationsService) {}
 
   @Post('customer-push')
+  @UseGuards(InternalApiKeyGuard)
   @ApiSecurity('x-internal-api-key')
   @ApiOperation({ summary: "Send a push to a customer, resolving their token and deduping" })
-  send(@Headers('x-internal-api-key') key: string | undefined, @Body() dto: CustomerPushDto) {
-    const expected = process.env.INTERNAL_API_KEY;
-    // Fail closed: an unset key rejects everything rather than accepting everything.
-    if (!expected || !key || key !== expected) {
-      throw new UnauthorizedException('Invalid internal API key');
-    }
+  send(@Body() dto: CustomerPushDto) {
     return this.service.pushToCustomer(dto);
   }
 }

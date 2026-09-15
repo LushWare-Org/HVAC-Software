@@ -11,3 +11,4 @@ export * from './company-id.decorator';
 export * from './auth.module';
 export * from './secrets';
 export * from './service-token';
+export * from './internal-api-key.guard';

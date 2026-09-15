@@ -1,4 +1,5 @@
-import { Body, Controller, Headers, Post, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { InternalApiKeyGuard } from '@tscrm/auth-client';
 import { IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
 import { EventsService } from './events.service';
 
@@ -33,12 +34,8 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  create(@Headers('x-internal-api-key') key: string | undefined, @Body() dto: CreateAnalyticsEventDto) {
-    const expected = process.env.INTERNAL_API_KEY;
-    // Fail closed: an unset key rejects everything rather than accepting everything.
-    if (!expected || !key || key !== expected) {
-      throw new UnauthorizedException('Invalid internal API key');
-    }
+  @UseGuards(InternalApiKeyGuard)
+  create(@Body() dto: CreateAnalyticsEventDto) {
     return this.eventsService.createEvent(dto);
   }
 }
