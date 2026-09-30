@@ -1,5 +1,8 @@
 import { ActivityLogController, ActivityLogIngestController } from './activity-log.controller';
 import { Role } from '@tscrm/types';
+import { InternalApiKeyGuard } from '@tscrm/auth-client';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
+import { UnauthorizedException } from '@nestjs/common';
 
 function makePrisma() {
   return {
@@ -77,5 +80,28 @@ describe('ActivityLogIngestController', () => {
   it('carries no @Roles metadata (service-to-service, not user-guarded)', () => {
     const roles = Reflect.getMetadata('roles', ActivityLogIngestController);
     expect(roles).toBeUndefined();
+  });
+
+  // This route was reachable with zero credentials until this fix — verified
+  // live: a fabricated event posted with no auth landed in the real activity
+  // log. No @Roles here is still correct (there's no user JWT to check a role
+  // against), but the route must not be bare; InternalApiKeyGuard is the
+  // credential that replaces it.
+  it('applies InternalApiKeyGuard to the ingest method, and nothing weaker', () => {
+    const method = ActivityLogIngestController.prototype.ingest;
+    const guards = Reflect.getMetadata(GUARDS_METADATA, method);
+    expect(guards).toEqual([InternalApiKeyGuard]);
+  });
+
+  it('the guard rejects a request with no key, and one with the wrong key', () => {
+    const guard = new InternalApiKeyGuard();
+    process.env.INTERNAL_API_KEY = 'the-real-key';
+    const contextWith = (key?: string) => ({
+      switchToHttp: () => ({ getRequest: () => ({ headers: key ? { 'x-internal-api-key': key } : {} }) }),
+    }) as any;
+
+    expect(() => guard.canActivate(contextWith(undefined))).toThrow(UnauthorizedException);
+    expect(() => guard.canActivate(contextWith('wrong-key'))).toThrow(UnauthorizedException);
+    expect(guard.canActivate(contextWith('the-real-key'))).toBe(true);
   });
 });

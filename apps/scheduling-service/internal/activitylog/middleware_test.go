@@ -16,7 +16,9 @@ func TestMiddleware_PostsEventAfterHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	received := make(chan map[string]interface{}, 1)
+	var gotKey string
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotKey = r.Header.Get("x-internal-api-key")
 		var body map[string]interface{}
 		_ = json.NewDecoder(r.Body).Decode(&body)
 		received <- body
@@ -31,7 +33,7 @@ func TestMiddleware_PostsEventAfterHandler(t *testing.T) {
 		})
 		c.Next()
 	})
-	r.Use(Middleware(upstream.URL))
+	r.Use(Middleware(upstream.URL, "test-internal-key"))
 	r.POST("/dispatch/assign", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"jobId": "j1"})
 	})
@@ -54,6 +56,12 @@ func TestMiddleware_PostsEventAfterHandler(t *testing.T) {
 		if body["description"] != "Auto-assigned a technician to a job" {
 			t.Errorf("expected a narrative description, got %v", body["description"])
 		}
+		// comms-service rejects this route with no key (see ActivityLogIngestController) —
+		// verified live before the fix: an unauthenticated POST landed a fake entry in the
+		// real audit trail. The middleware must actually send it, not just be given one.
+		if gotKey != "test-internal-key" {
+			t.Errorf("expected x-internal-api-key header to carry the configured key, got %q", gotKey)
+		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("timed out waiting for activity-log ingest call")
 	}
@@ -70,7 +78,7 @@ func TestMiddleware_SkipsGetRequests(t *testing.T) {
 	defer upstream.Close()
 
 	r := gin.New()
-	r.Use(Middleware(upstream.URL))
+	r.Use(Middleware(upstream.URL, "test-internal-key"))
 	r.GET("/technicians", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"items": []string{}})
 	})

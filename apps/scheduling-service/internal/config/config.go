@@ -29,6 +29,11 @@ type Config struct {
 
 	// Comms service (activity-log ingest)
 	CommsServiceURL string
+	// Shared secret comms-service checks on the ingest route. Left empty
+	// rather than required: activity logging is fire-and-forget by design
+	// (see activitylog.Middleware), and a missing key should make that one
+	// POST get rejected, not take the whole service down at startup.
+	InternalAPIKey string
 }
 
 // Load reads config from environment variables (set via .env + Docker).
@@ -44,6 +49,7 @@ func Load() *Config {
 		MaxDistanceKm:       50.0,
 		MaxActiveJobs:       5,
 		CommsServiceURL:     getEnvOrDefault("COMMS_SERVICE_URL", "http://localhost:3005"),
+		InternalAPIKey:      getEnvOrDefault("INTERNAL_API_KEY", ""),
 	}
 	return cfg
 }

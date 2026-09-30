@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard, Roles, RolesGuard } from '@tscrm/auth-client';
+import { JwtAuthGuard, Roles, RolesGuard, InternalApiKeyGuard } from '@tscrm/auth-client';
 import { Role, clampPagination } from '@tscrm/types';
 import type { ActivityLogEvent } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
@@ -52,15 +52,20 @@ export class ActivityLogController {
 
 /**
  * Internal ingest for services with no BullMQ client (scheduling-service,
- * Go). Deliberately NOT role-guarded — it's a service-to-service endpoint,
- * never called from a frontend, and carries no user JWT. It funnels into
- * the exact same write+broadcast path as every NestJS-originated event.
+ * Go). Not role-guarded — it's a service-to-service endpoint, never called
+ * from a frontend, and carries no user JWT to check a role against. But it
+ * is reachable through the public gateway like every other Cloud Run
+ * service, so it needs its own credential: without one, anyone who found
+ * this URL could write fabricated entries into the exact feed super admins
+ * are meant to treat as ground truth. Verified live before this fix — a
+ * fake event posted with no credentials at all landed in the real table.
  */
 @Controller('activity-log')
 export class ActivityLogIngestController {
   constructor(private readonly processor: ActivityLogProcessor) {}
 
   @Post('ingest')
+  @UseGuards(InternalApiKeyGuard)
   async ingest(@Body() event: ActivityLogEvent) {
     await this.processor.handleEvent(event);
     return { accepted: true };

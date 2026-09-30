@@ -102,7 +102,7 @@ func main() {
 
 	// ── All other routes require a valid Auth0 JWT ───────────────────────
 	auth := middleware.JWTMiddleware(cfg.Auth0Domain, cfg.Auth0Audience)
-	r.Use(activitylog.Middleware(cfg.CommsServiceURL))
+	r.Use(activitylog.Middleware(cfg.CommsServiceURL, cfg.InternalAPIKey))
 
 	// WebSocket endpoint
 	r.GET("/ws", auth, wsH.ServeWS)

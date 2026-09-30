@@ -31,7 +31,7 @@ type activityEvent struct {
 // timeout — a slow or unreachable comms-service must never slow down or
 // fail a real scheduling request. Register AFTER the auth middleware so
 // claims (company/user/role) are already on the Gin context.
-func Middleware(commsServiceURL string) gin.HandlerFunc {
+func Middleware(commsServiceURL, internalAPIKey string) gin.HandlerFunc {
 	client := &http.Client{Timeout: 3 * time.Second}
 
 	return func(c *gin.Context) {
@@ -76,7 +76,7 @@ func Middleware(commsServiceURL string) gin.HandlerFunc {
 			}
 		}
 
-		go postEvent(client, commsServiceURL, event)
+		go postEvent(client, commsServiceURL, internalAPIKey, event)
 	}
 }
 
@@ -134,7 +134,7 @@ func statusToLabel(statusCode int) string {
 	return "SUCCESS"
 }
 
-func postEvent(client *http.Client, commsServiceURL string, event activityEvent) {
+func postEvent(client *http.Client, commsServiceURL, internalAPIKey string, event activityEvent) {
 	body, err := json.Marshal(event)
 	if err != nil {
 		return
@@ -144,6 +144,11 @@ func postEvent(client *http.Client, commsServiceURL string, event activityEvent)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
+	// Required now: comms-service rejects this route with no key. An empty
+	// key here just means the event gets a 401 and is dropped — same
+	// fire-and-forget tolerance as an unreachable comms-service, not a
+	// reason to fail the real scheduling request that triggered it.
+	req.Header.Set("x-internal-api-key", internalAPIKey)
 	resp, err := client.Do(req)
 	if err == nil {
 		resp.Body.Close()
