@@ -49,7 +49,7 @@ func (r *AssignmentRepository) Create(
 		          score, distance_km, assigned_by, assigned_at,
 		          en_route_at, on_site_at, completed_at,
 		          scheduled_start, scheduled_end, notes,
-		          created_at, updated_at`,
+		          created_at, updated_at, is_lead`,
 		companyID, jobID, technicianID, string(status), score, distanceKm,
 		assignedBy, scheduledStart, scheduledEnd, notes,
 	)
@@ -74,7 +74,7 @@ func (r *AssignmentRepository) CreateSuggested(
 		          score, distance_km, assigned_by, assigned_at,
 		          en_route_at, on_site_at, completed_at,
 		          scheduled_start, scheduled_end, notes,
-		          created_at, updated_at`,
+		          created_at, updated_at, is_lead`,
 		companyID, jobID, technicianID, string(status), s, d,
 	)
 	return scanAssignment(row)
@@ -87,7 +87,7 @@ func (r *AssignmentRepository) FindByID(ctx context.Context, companyID, id strin
 		       score, distance_km, assigned_by, assigned_at,
 		       en_route_at, on_site_at, completed_at,
 		       scheduled_start, scheduled_end, notes,
-		       created_at, updated_at
+		       created_at, updated_at, is_lead
 		FROM scheduling.dispatch_assignments
 		WHERE id = $1 AND company_id = $2`, id, companyID)
 	a, err := scanAssignment(row)
@@ -104,7 +104,7 @@ func (r *AssignmentRepository) FindByJob(ctx context.Context, companyID, jobID s
 		       score, distance_km, assigned_by, assigned_at,
 		       en_route_at, on_site_at, completed_at,
 		       scheduled_start, scheduled_end, notes,
-		       created_at, updated_at
+		       created_at, updated_at, is_lead
 		FROM scheduling.dispatch_assignments
 		WHERE company_id = $1 AND job_id = $2
 		ORDER BY created_at DESC`, companyID, jobID)
@@ -130,7 +130,7 @@ func (r *AssignmentRepository) FindAllForCompany(
 			       score, distance_km, assigned_by, assigned_at,
 			       en_route_at, on_site_at, completed_at,
 			       scheduled_start, scheduled_end, notes,
-			       created_at, updated_at
+			       created_at, updated_at, is_lead
 			FROM scheduling.dispatch_assignments
 			WHERE company_id = $1
 			ORDER BY created_at DESC
@@ -151,7 +151,7 @@ func (r *AssignmentRepository) FindAllForCompany(
 		       score, distance_km, assigned_by, assigned_at,
 		       en_route_at, on_site_at, completed_at,
 		       scheduled_start, scheduled_end, notes,
-		       created_at, updated_at
+		       created_at, updated_at, is_lead
 		FROM scheduling.dispatch_assignments
 		WHERE company_id = $1
 		  AND status = ANY($2::scheduling.assignment_status[])
@@ -175,7 +175,7 @@ func (r *AssignmentRepository) FindByTechnician(
 			       score, distance_km, assigned_by, assigned_at,
 			       en_route_at, on_site_at, completed_at,
 			       scheduled_start, scheduled_end, notes,
-			       created_at, updated_at
+			       created_at, updated_at, is_lead
 			FROM scheduling.dispatch_assignments
 			WHERE company_id = $1 AND technician_id = $2
 			ORDER BY created_at DESC
@@ -197,7 +197,7 @@ func (r *AssignmentRepository) FindByTechnician(
 		       score, distance_km, assigned_by, assigned_at,
 		       en_route_at, on_site_at, completed_at,
 		       scheduled_start, scheduled_end, notes,
-		       created_at, updated_at
+		       created_at, updated_at, is_lead
 		FROM scheduling.dispatch_assignments
 		WHERE company_id = $1 AND technician_id = $2
 		  AND status = ANY($3::scheduling.assignment_status[])
@@ -228,7 +228,7 @@ func (r *AssignmentRepository) UpdateStatus(
 		         RETURNING id, company_id, job_id, work_order_id, technician_id, status,
 		                   score, distance_km, assigned_by, assigned_at,
 		                   en_route_at, on_site_at, completed_at,
-		                   scheduled_start, scheduled_end, notes, created_at, updated_at`
+		                   scheduled_start, scheduled_end, notes, created_at, updated_at, is_lead`
 	case models.StatusOnSite:
 		query = `UPDATE scheduling.dispatch_assignments
 		         SET status = $1, on_site_at = $2, notes = COALESCE($3, notes), updated_at = $2
@@ -236,7 +236,7 @@ func (r *AssignmentRepository) UpdateStatus(
 		         RETURNING id, company_id, job_id, work_order_id, technician_id, status,
 		                   score, distance_km, assigned_by, assigned_at,
 		                   en_route_at, on_site_at, completed_at,
-		                   scheduled_start, scheduled_end, notes, created_at, updated_at`
+		                   scheduled_start, scheduled_end, notes, created_at, updated_at, is_lead`
 	case models.StatusCompleted:
 		query = `UPDATE scheduling.dispatch_assignments
 		         SET status = $1, completed_at = $2, notes = COALESCE($3, notes), updated_at = $2
@@ -244,7 +244,7 @@ func (r *AssignmentRepository) UpdateStatus(
 		         RETURNING id, company_id, job_id, work_order_id, technician_id, status,
 		                   score, distance_km, assigned_by, assigned_at,
 		                   en_route_at, on_site_at, completed_at,
-		                   scheduled_start, scheduled_end, notes, created_at, updated_at`
+		                   scheduled_start, scheduled_end, notes, created_at, updated_at, is_lead`
 	default:
 		query = `UPDATE scheduling.dispatch_assignments
 		         SET status = $1, notes = COALESCE($3, notes), updated_at = $2
@@ -252,7 +252,7 @@ func (r *AssignmentRepository) UpdateStatus(
 		         RETURNING id, company_id, job_id, work_order_id, technician_id, status,
 		                   score, distance_km, assigned_by, assigned_at,
 		                   en_route_at, on_site_at, completed_at,
-		                   scheduled_start, scheduled_end, notes, created_at, updated_at`
+		                   scheduled_start, scheduled_end, notes, created_at, updated_at, is_lead`
 	}
 
 	row := r.db.QueryRow(ctx, query, string(status), now, notes, id, companyID)
@@ -380,7 +380,7 @@ func scanAssignment(row pgx.Row) (*models.DispatchAssignment, error) {
 		&a.Score, &a.DistanceKm, &a.AssignedBy, &a.AssignedAt,
 		&a.EnRouteAt, &a.OnSiteAt, &a.CompletedAt,
 		&a.ScheduledStart, &a.ScheduledEnd, &a.Notes,
-		&a.CreatedAt, &a.UpdatedAt,
+		&a.CreatedAt, &a.UpdatedAt, &a.IsLead,
 	)
 	if err != nil {
 		return nil, err
@@ -399,7 +399,7 @@ func collectAssignments(rows pgx.Rows) ([]*models.DispatchAssignment, error) {
 			&a.Score, &a.DistanceKm, &a.AssignedBy, &a.AssignedAt,
 			&a.EnRouteAt, &a.OnSiteAt, &a.CompletedAt,
 			&a.ScheduledStart, &a.ScheduledEnd, &a.Notes,
-			&a.CreatedAt, &a.UpdatedAt,
+			&a.CreatedAt, &a.UpdatedAt, &a.IsLead,
 		)
 		if err != nil {
 			return nil, err

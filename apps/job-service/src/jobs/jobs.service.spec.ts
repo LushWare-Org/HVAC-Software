@@ -93,6 +93,9 @@ const mockPrisma = {
   jobCustomFieldValue: {
     upsert: jest.fn(),
   },
+  workOrder: {
+    deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+  },
   // generateJobNumber reads MAX(jobNumber) via $queryRaw inside the tx
   $queryRaw: jest.fn().mockResolvedValue([{ maxNumber: 0 }]),
   // Cross-schema stamp of en_route_at / on_site_at onto scheduling's
@@ -323,32 +326,59 @@ describe('JobsService — updateJobStatus', () => {
       expect(historyCall.data.note).toContain('tech tapped the wrong stage');
     });
 
-    it('stamps en_route_at on the assignment when a job goes en route', async () => {
+    it('stamps en_route_at on the crew and moves the lead to EN_ROUTE', async () => {
       setupUpdateMocks(JobStatusDto.SCHEDULED, JobStatusDto.EN_ROUTE);
       await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.TECHNICIAN), {
         status: JobStatusDto.EN_ROUTE,
       });
       const calls = mockPrisma.$executeRawUnsafe.mock.calls;
-      expect(calls).toHaveLength(1);
+      expect(calls).toHaveLength(2);
       expect(calls[0][0]).toContain('en_route_at');
-      expect(calls[0][0]).toContain('scheduling.dispatch_assignments');
-      expect(calls[0][1]).toBe(JOB_ID);
+      expect(calls[1][0]).toContain("status = 'EN_ROUTE'");
+      expect(calls[1][0]).toContain('is_lead');
+      for (const call of calls) {
+        expect(call[0]).toContain('scheduling.dispatch_assignments');
+        expect(call[1]).toBe(JOB_ID);
+        expect(call[2]).toBe(COMPANY_ID);
+      }
     });
 
-    it('stamps on_site_at when the technician arrives', async () => {
+    it('binds job_id as text, never casting to uuid (the column is TEXT)', async () => {
+      setupUpdateMocks(JobStatusDto.SCHEDULED, JobStatusDto.EN_ROUTE);
+      await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.TECHNICIAN), {
+        status: JobStatusDto.EN_ROUTE,
+      });
+      for (const call of mockPrisma.$executeRawUnsafe.mock.calls) {
+        expect(call[0]).not.toContain('::uuid');
+      }
+    });
+
+    it('stamps on_site_at and moves the lead to ON_SITE when the technician arrives', async () => {
       setupUpdateMocks(JobStatusDto.EN_ROUTE, JobStatusDto.ON_SITE);
       await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.TECHNICIAN), {
         status: JobStatusDto.ON_SITE,
       });
       const calls = mockPrisma.$executeRawUnsafe.mock.calls;
-      expect(calls).toHaveLength(1);
+      expect(calls).toHaveLength(2);
       expect(calls[0][0]).toContain('on_site_at');
+      expect(calls[1][0]).toContain("status = 'ON_SITE'");
     });
 
-    it('leaves the assignment alone for statuses that are not travel stages', async () => {
+    it('closes every live crew assignment when the job is completed', async () => {
       setupUpdateMocks(JobStatusDto.ON_SITE, JobStatusDto.COMPLETED);
       await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.TECHNICIAN), {
         status: JobStatusDto.COMPLETED,
+      });
+      const calls = mockPrisma.$executeRawUnsafe.mock.calls;
+      expect(calls).toHaveLength(1);
+      expect(calls[0][0]).toContain("status = 'COMPLETED'");
+      expect(calls[0][0]).not.toContain('is_lead');
+    });
+
+    it('leaves the assignment alone for ON_HOLD', async () => {
+      setupUpdateMocks(JobStatusDto.SCHEDULED, JobStatusDto.ON_HOLD);
+      await service.updateStatus(COMPANY_ID, JOB_ID, makeAuthUser(Role.COMPANY_ADMIN), {
+        status: JobStatusDto.ON_HOLD,
       });
       expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
     });
@@ -534,6 +564,58 @@ describe('JobsService — create', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 // findAll — componentId/equipmentId filters (Housing Scheme service log)
 // ═══════════════════════════════════════════════════════════════════════════
+
+describe('JobsService — realtime events for edits and deletes', () => {
+  let service: JobsService;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        JobsService,
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: JobEventsPublisher, useValue: mockEvents },
+        { provide: RedisCacheService, useValue: mockCache },
+        { provide: CrmClient, useValue: mockCrmClient },
+      ],
+    }).compile();
+    service = module.get<JobsService>(JobsService);
+    mockPrisma.job.findFirst.mockResolvedValue(makeJob(JobStatusDto.SCHEDULED));
+    mockPrisma.job.update.mockImplementation(({ data }: any) =>
+      Promise.resolve({ ...makeJob(JobStatusDto.SCHEDULED), ...data }),
+    );
+  });
+
+  it('publishes SCHEDULE when an edit moves the job in time', async () => {
+    await service.update(COMPANY_ID, JOB_ID, { scheduledStart: '2026-10-05T09:00:00.000Z' }, { userId: 'user-9', name: 'Jane' });
+    expect(mockEvents.publish).toHaveBeenCalledWith(COMPANY_ID, expect.objectContaining({
+      jobId: JOB_ID, change: 'SCHEDULE', actorUserId: 'user-9', actorName: 'Jane',
+    }));
+  });
+
+  it('publishes ASSIGNMENT when an edit changes the lead technician', async () => {
+    await service.patchFields(COMPANY_ID, JOB_ID, { assignedToId: 'tech-2', assignedToName: 'Sam' }, { actor: { userId: 'user-9' } });
+    expect(mockEvents.publish).toHaveBeenCalledWith(COMPANY_ID, expect.objectContaining({ change: 'ASSIGNMENT' }));
+  });
+
+  it('publishes UPDATED for any other field edit', async () => {
+    await service.update(COMPANY_ID, JOB_ID, { priority: 'HIGH' });
+    expect(mockEvents.publish).toHaveBeenCalledWith(COMPANY_ID, expect.objectContaining({ change: 'UPDATED' }));
+  });
+
+  it('stays silent when told to (a status event follows in the same request)', async () => {
+    await service.patchFields(COMPANY_ID, JOB_ID, { notes: 'x' }, { silent: true });
+    expect(mockEvents.publish).not.toHaveBeenCalled();
+  });
+
+  it('publishes DELETED with the customer so their portal drops the job', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue({ ...makeJob(JobStatusDto.PENDING), customerId: 'cust-001' });
+    await service.remove(COMPANY_ID, JOB_ID, { userId: 'user-9', name: 'Jane' });
+    expect(mockEvents.publish).toHaveBeenCalledWith(COMPANY_ID, expect.objectContaining({
+      jobId: JOB_ID, change: 'DELETED', customerId: 'cust-001', actorUserId: 'user-9',
+    }));
+  });
+});
 
 describe('JobsService — findAll filters', () => {
   let service: JobsService;

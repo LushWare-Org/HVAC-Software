@@ -61,7 +61,7 @@ func main() {
 	conflictRepo := repository.NewConflictRepository(db)
 	candidateSvc := service.NewCandidateService(techRepo, conflictRepo, assignRepo, cfg)
 	simSvc := service.NewGPSSimService(techRepo, assignRepo, crewRepo, hub)
-	crewH := handler.NewCrewHandler(crewRepo, candidateSvc, simSvc)
+	crewH := handler.NewCrewHandler(crewRepo, candidateSvc, simSvc, hub)
 	gpsH := handler.NewGPSHandler(techRepo, assignRepo, hub)
 	wsH := handler.NewWebSocketHandler(hub)
 

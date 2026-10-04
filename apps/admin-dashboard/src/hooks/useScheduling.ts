@@ -306,9 +306,13 @@ function resolveDispatchWsBase(): string {
   return `${protocol}//${window.location.host}`
 }
 
-export function useDispatchWebSocket() {
+export function useDispatchWebSocket(onEvent?: (event: DispatchEvent) => void) {
   const [status, setStatus] = useState<WsStatus>('disconnected')
   const [lastEvent, setLastEvent] = useState<DispatchEvent | null>(null)
+  // A ref, not state: two events arriving in the same tick would collapse into
+  // one render, and the first would never reach the listener (or its toast).
+  const onEventRef = useRef(onEvent)
+  onEventRef.current = onEvent
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const attemptRef = useRef(0)
@@ -360,6 +364,7 @@ export function useDispatchWebSocket() {
       try {
         const event: DispatchEvent = JSON.parse(e.data)
         setLastEvent(event)
+        try { onEventRef.current?.(event) } catch { /* a listener bug must not stop cache updates */ }
 
         if (event.type === 'ASSIGNMENT_CREATED' || event.type === 'ASSIGNMENT_STATUS_CHANGED') {
           queryClient.invalidateQueries({ queryKey: ['scheduling'] })
@@ -412,10 +417,9 @@ export function useDispatchWebSocket() {
           if (change === 'RESCHEDULE') {
             queryClient.invalidateQueries({ queryKey: ['reschedule'] })
           }
-          // An assignment change alters the dispatch board's assignment map.
-          if (change === 'RESCHEDULE' || change === 'ASSIGNMENT') {
-            queryClient.invalidateQueries({ queryKey: ['scheduling'] })
-          }
+          // Every job change can move assignments too: job-service now keeps the
+          // lead's assignment in step with job status, and crew edits arrive here.
+          queryClient.invalidateQueries({ queryKey: ['scheduling'] })
         }
       } catch {
         // Ignore non-JSON messages (ping/pong frames)

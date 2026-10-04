@@ -136,7 +136,7 @@ export class RescheduleApplyService {
       assignedToId: null, assignedToName: null,
       rescheduleState: null,
       jobNumber: (job as any).jobNumber, title: job.title,
-      customerName: job.customerName, actorUserId: user.userId,
+      customerName: job.customerName, actorUserId: user.userId, actorName: user.name ?? user.email,
     });
 
     // Best-effort, after the transaction. A stale assignment is visible on the

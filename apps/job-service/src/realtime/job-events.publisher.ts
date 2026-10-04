@@ -19,7 +19,7 @@ export interface JobChangedPayload {
    *  in comms-service; an event without it is dropped rather than broadcast. */
   customerId?: string;
   /** What changed, so the client can invalidate narrowly instead of everything. */
-  change: 'STATUS' | 'CREATED' | 'SCHEDULE' | 'RESCHEDULE' | 'ASSIGNMENT' | 'DELETED';
+  change: 'STATUS' | 'CREATED' | 'SCHEDULE' | 'RESCHEDULE' | 'ASSIGNMENT' | 'UPDATED' | 'DELETED';
   status?: string;
   previousStatus?: string;
   scheduledStart?: string | null;
@@ -31,6 +31,8 @@ export interface JobChangedPayload {
   customerName?: string | null;
   /** Who caused it, so a client can avoid re-reacting to its own action. */
   actorUserId?: string;
+  /** Shown in the board's toast ("Nuwan marked JOB-0042 on site"). */
+  actorName?: string;
 }
 
 /**

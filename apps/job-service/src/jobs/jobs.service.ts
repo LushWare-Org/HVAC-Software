@@ -23,6 +23,9 @@ const STATUS_OVERRIDE_ROLES: Role[] = [Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Rol
 const CREATE_JOB_MAX_ATTEMPTS = 5;
 const STATS_CACHE_TTL_S = 30;
 
+/** Who made a change, carried into the realtime event for the board's toast. */
+export interface JobActor { userId: string; name?: string }
+
 @Injectable()
 export class JobsService {
   private readonly logger = new Logger(JobsService.name);
@@ -95,7 +98,7 @@ export class JobsService {
           customerId: job.customerId,
           scheduledStart: job.scheduledStart?.toISOString() ?? null,
           jobNumber: job.jobNumber, title: job.title,
-          customerName: job.customerName, actorUserId: user.userId,
+          customerName: job.customerName, actorUserId: user.userId, actorName: user.name ?? user.email,
         });
 
         // Best-effort confirmation email to the customer — never blocks job creation.
@@ -257,10 +260,10 @@ export class JobsService {
   // DELETE
   // ============================================================
 
-  async remove(companyId: string, id: string) {
+  async remove(companyId: string, id: string, actor?: JobActor) {
     const existing = await this.prisma.job.findFirst({
       where: { id, companyId },
-      select: { id: true },
+      select: { id: true, status: true, customerId: true, jobNumber: true, title: true, customerName: true },
     });
     if (!existing) throw new NotFoundException(`Job ${id} not found`);
 
@@ -271,6 +274,12 @@ export class JobsService {
     });
 
     await this.invalidateStatsCache(companyId);
+    this.events.publish(companyId, {
+      jobId: id, change: 'DELETED', status: existing.status,
+      customerId: existing.customerId ?? undefined,
+      jobNumber: existing.jobNumber, title: existing.title,
+      customerName: existing.customerName, actorUserId: actor?.userId, actorName: actor?.name,
+    });
     return { success: true, id };
   }
 
@@ -352,7 +361,7 @@ export class JobsService {
 
     await this.invalidateStatsCache(companyId);
 
-    await this.stampAssignmentTimestamps(jobId, newStatus);
+    await this.syncAssignmentsToJobStatus(companyId, jobId, newStatus);
 
     this.events.publish(companyId, {
       jobId, change: 'STATUS', status: newStatus, previousStatus: currentStatus,
@@ -360,7 +369,7 @@ export class JobsService {
       assignedToId: (updated as any).assignedToId ?? null,
       assignedToName: (updated as any).assignedToName ?? null,
       jobNumber: job.jobNumber, title: job.title,
-      customerName: job.customerName, actorUserId: user.userId,
+      customerName: job.customerName, actorUserId: user.userId, actorName: user.name ?? user.email,
     });
 
     // EN_ROUTE uses its own richer pipeline (tech photo + real ETA window) via
@@ -437,25 +446,63 @@ export class JobsService {
    * tapping "On my way" must not get an error because a denormalised timestamp
    * could not be written. The job status itself is the source of truth.
    */
-  private async stampAssignmentTimestamps(jobId: string, newStatus: JobStatusDto) {
-    const column =
-      newStatus === JobStatusDto.EN_ROUTE ? 'en_route_at'
-      : newStatus === JobStatusDto.ON_SITE ? 'on_site_at'
-      : null;
-    if (!column) return;
+  /**
+   * Keeps the dispatch assignments in step with the job's status.
+   *
+   * Job.status is the truth and the lead drives it, but the scheduling board
+   * reads assignment status. Anything that moved only the job (the admin job
+   * modal, a status override) used to leave the assignment behind, so a
+   * completed job could sit on the Active board as "en route" forever.
+   *
+   * Travel stages move the lead only (helpers keep their own); finishing or
+   * cancelling the job closes every live crew row. A job with no lead recorded
+   * (rows from before crews existed) treats all its live rows as the lead.
+   */
+  private async syncAssignmentsToJobStatus(companyId: string, jobId: string, newStatus: JobStatusDto) {
+    const LEAD = `(is_lead OR NOT EXISTS (
+        SELECT 1 FROM scheduling.dispatch_assignments l
+         WHERE l.job_id = $1 AND l.company_id = $2 AND l.is_lead AND l.status <> 'CANCELLED'))`;
+    const statements: string[] = [];
+    switch (newStatus) {
+      case JobStatusDto.EN_ROUTE:
+        // A second trip overwrites the timestamp: the old one described a journey that ended.
+        statements.push(`UPDATE scheduling.dispatch_assignments SET en_route_at = now(), updated_at = now()
+          WHERE job_id = $1 AND company_id = $2 AND status <> 'CANCELLED'`);
+        statements.push(`UPDATE scheduling.dispatch_assignments SET status = 'EN_ROUTE', updated_at = now()
+          WHERE job_id = $1 AND company_id = $2 AND status <> 'CANCELLED' AND ${LEAD}`);
+        break;
+      case JobStatusDto.ON_SITE:
+        statements.push(`UPDATE scheduling.dispatch_assignments SET on_site_at = now(), updated_at = now()
+          WHERE job_id = $1 AND company_id = $2 AND status <> 'CANCELLED'`);
+        statements.push(`UPDATE scheduling.dispatch_assignments SET status = 'ON_SITE', updated_at = now()
+          WHERE job_id = $1 AND company_id = $2 AND status <> 'CANCELLED' AND ${LEAD}`);
+        break;
+      case JobStatusDto.SCHEDULED:
+        statements.push(`UPDATE scheduling.dispatch_assignments SET status = 'ASSIGNED', updated_at = now()
+          WHERE job_id = $1 AND company_id = $2 AND status IN ('EN_ROUTE', 'ON_SITE', 'COMPLETED') AND ${LEAD}`);
+        break;
+      case JobStatusDto.COMPLETED:
+        statements.push(`UPDATE scheduling.dispatch_assignments
+            SET status = 'COMPLETED', completed_at = COALESCE(completed_at, now()), updated_at = now()
+          WHERE job_id = $1 AND company_id = $2 AND status NOT IN ('CANCELLED', 'COMPLETED')`);
+        break;
+      case JobStatusDto.CANCELLED:
+        statements.push(`UPDATE scheduling.dispatch_assignments SET status = 'CANCELLED', updated_at = now()
+          WHERE job_id = $1 AND company_id = $2 AND status NOT IN ('CANCELLED', 'COMPLETED')`);
+        break;
+      default:
+        return;
+    }
 
     try {
-      // Overwrites rather than coalesces: a job sent en route a second time is
-      // a new trip, and the old timestamp would describe a journey that ended.
-      await this.prisma.$executeRawUnsafe(
-        `UPDATE scheduling.dispatch_assignments
-            SET ${column} = now()
-          WHERE job_id = $1::uuid AND status <> 'CANCELLED'`,
-        jobId,
-      );
+      // job_id is TEXT in scheduling; binding it as plain text matters. A
+      // ::uuid cast here fails with "operator does not exist: text = uuid".
+      for (const sql of statements) {
+        await this.prisma.$executeRawUnsafe(sql, jobId, companyId);
+      }
     } catch (err: unknown) {
       this.logger.warn(
-        `Could not stamp ${column} on the assignment for job ${jobId}: ` +
+        `Could not sync assignments for job ${jobId} to ${newStatus}: ` +
         `${err instanceof Error ? err.message : String(err)}`,
       );
     }
@@ -568,7 +615,7 @@ export class JobsService {
       status: job.status,
       customerId: job.customerId,
       scheduledStart: start.toISOString(),
-      actorUserId: user.userId,
+      actorUserId: user.userId, actorName: user.name ?? user.email,
     });
 
     return updated;
@@ -599,11 +646,12 @@ export class JobsService {
       hasPartShortage?: boolean;
       partShortageNote?: string;
     }>,
+    opts: { actor?: JobActor; silent?: boolean } = {},
   ) {
     await this.findOne(companyId, id);
     // Strip fields that don't exist on the Prisma Job model
     const { gpsTrackingEnabled: _gps, ...rest } = data;
-    return this.prisma.job.update({
+    const updated = await this.prisma.job.update({
       where: { id },
       data: {
         ...rest,
@@ -613,6 +661,8 @@ export class JobsService {
         completedAt: rest.completedAt ? new Date(rest.completedAt) : undefined,
       },
     });
+    if (!opts.silent) this.publishEdit(companyId, updated, rest, opts.actor);
+    return updated;
   }
 
   // ============================================================
@@ -644,6 +694,7 @@ export class JobsService {
        *  a constraint the server enforces. */
       requiredTechCount: number;
     }>,
+    actor?: JobActor,
   ) {
     await this.findOne(companyId, id);
     const updated = await this.prisma.job.update({
@@ -658,7 +709,29 @@ export class JobsService {
     // Generic PATCH can change status/scheduledStart (the admin UI's status
     // dropdown goes through here) — the cached stat counts must not lag it.
     await this.invalidateStatsCache(companyId);
+    this.publishEdit(companyId, updated, data, actor);
     return updated;
+  }
+
+  /** Field edits publish too, or a job edited on one board goes stale on every other open board. */
+  private publishEdit(
+    companyId: string,
+    job: { id: string; status: string; customerId: string | null; jobNumber: string; title: string;
+      customerName: string | null; scheduledStart: Date | null; assignedToId: string | null; assignedToName: string | null },
+    changed: Record<string, unknown>,
+    actor?: JobActor,
+  ) {
+    const change = changed.assignedToId !== undefined ? 'ASSIGNMENT'
+      : changed.scheduledStart !== undefined || changed.scheduledEnd !== undefined ? 'SCHEDULE'
+      : 'UPDATED';
+    this.events.publish(companyId, {
+      jobId: job.id, change, status: job.status,
+      customerId: job.customerId ?? undefined,
+      scheduledStart: job.scheduledStart?.toISOString() ?? null,
+      assignedToId: job.assignedToId, assignedToName: job.assignedToName,
+      jobNumber: job.jobNumber, title: job.title,
+      customerName: job.customerName, actorUserId: actor?.userId, actorName: actor?.name,
+    });
   }
 
   // ============================================================

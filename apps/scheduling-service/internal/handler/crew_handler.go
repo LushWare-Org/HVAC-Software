@@ -11,6 +11,7 @@ import (
 	"github.com/tscrm/scheduling-service/internal/models"
 	"github.com/tscrm/scheduling-service/internal/repository"
 	"github.com/tscrm/scheduling-service/internal/service"
+	"github.com/tscrm/scheduling-service/internal/ws"
 )
 
 // CrewHandler serves the crew a job has and the candidates it could add.
@@ -18,14 +19,16 @@ type CrewHandler struct {
 	crewRepo  *repository.CrewRepository
 	candidate *service.CandidateService
 	sim       *service.GPSSimService
+	hub       *ws.Hub
 }
 
 func NewCrewHandler(
 	crewRepo *repository.CrewRepository,
 	candidate *service.CandidateService,
 	sim *service.GPSSimService,
+	hub *ws.Hub,
 ) *CrewHandler {
-	return &CrewHandler{crewRepo: crewRepo, candidate: candidate, sim: sim}
+	return &CrewHandler{crewRepo: crewRepo, candidate: candidate, sim: sim, hub: hub}
 }
 
 // GetCrew returns the job's live crew, lead first.
@@ -56,6 +59,7 @@ func (h *CrewHandler) SetCrew(c *gin.Context) {
 	case err != nil:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	default:
+		h.broadcastCrewChange(c, claims, "CREW")
 		h.respondWithCrew(c, claims.CompanyID, c.Param("jobId"))
 	}
 }
@@ -80,8 +84,28 @@ func (h *CrewHandler) SetLead(c *gin.Context) {
 	case err != nil:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	default:
+		h.broadcastCrewChange(c, claims, "LEAD")
 		h.respondWithCrew(c, claims.CompanyID, c.Param("jobId"))
 	}
+}
+
+// broadcastCrewChange tells every open board that a job's crew moved, so a crew
+// edited by one dispatcher shows up on everyone else's board without a refresh.
+func (h *CrewHandler) broadcastCrewChange(c *gin.Context, claims middleware.AuthClaims, crewChange string) {
+	if h.hub == nil {
+		return
+	}
+	h.hub.BroadcastMessage(c.Request.Context(), models.WSMessage{
+		Type:      models.WSTypeJobChanged,
+		CompanyID: claims.CompanyID,
+		Payload: gin.H{
+			"jobId":       c.Param("jobId"),
+			"change":      "ASSIGNMENT",
+			"crewChange":  crewChange,
+			"actorUserId": claims.UserID,
+			"actorName":   claims.Name,
+		},
+	})
 }
 
 // Candidates ranks who else could join this job.

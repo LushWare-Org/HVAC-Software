@@ -75,6 +75,8 @@ class UpdateCustomFieldsDto {
  */
 const CUSTOMER_PATCHABLE_FIELDS = ['status', 'statusNote', 'cancellationReason'] as const;
 
+const actorOf = (user: AuthUser) => ({ userId: user.userId, name: user.name ?? user.email });
+
 @ApiTags('Jobs')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -229,7 +231,7 @@ export class JobsController {
     @Param('id') id: string,
     @Body() dto: UpdateJobDto,
   ) {
-    return this.jobsService.update(user.companyId, id, dto);
+    return this.jobsService.update(user.companyId, id, dto, actorOf(user));
   }
 
   // ---- Combined PATCH (fields + optional status in one call) ----
@@ -269,9 +271,11 @@ export class JobsController {
     const { status, statusNote, force, gpsTrackingEnabled, completedAt, ...fields } = dto;
     const hasFields = Object.values(fields).some((v) => v !== undefined);
     if (hasFields || gpsTrackingEnabled !== undefined || completedAt !== undefined) {
+      // A status change in the same request publishes its own event; skip the
+      // field event so the board doesn't announce one edit twice.
       await this.jobsService.patchFields(user.companyId, id, {
         ...fields, gpsTrackingEnabled, completedAt,
-      });
+      }, { actor: actorOf(user), silent: !!status });
     }
     if (status) {
       return this.jobsService.updateStatus(
@@ -319,7 +323,7 @@ export class JobsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a job (admin/office manager only)' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.jobsService.remove(user.companyId, id);
+    return this.jobsService.remove(user.companyId, id, actorOf(user));
   }
 
   // ---- Custom field values ----

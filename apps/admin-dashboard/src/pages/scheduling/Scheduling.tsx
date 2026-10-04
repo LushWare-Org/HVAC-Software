@@ -16,7 +16,7 @@
  * /planner for side-by-side comparison until this page is verified to have
  * full parity.
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   CalendarDays, Users, CheckCircle2, AlertCircle, X, LayoutGrid, Activity, Sparkles, CalendarClock,
@@ -25,12 +25,17 @@ import {
   useTechnicians, useSmartAssign, useManualAssign,
   useUpdateAssignmentStatus, useAllTechAssignments,
   useDispatchWebSocket, useTechnicianLoginMap,
+  type DispatchEvent,
 } from '../../hooks/useScheduling'
+import { useToast } from '../../contexts/ToastContext'
+import { useAuth } from '../../contexts/AuthContext'
+import { humanizeStatus } from '../../lib/format'
+import { describeLiveEvent, type JobRef } from './liveToasts'
 import { useJobs, useUpdateJobStatus } from '../../hooks/useJobs'
 import type { Job, Technician, AssignResponse, ScoredTechnician } from '../../types/api'
 import AddTechnicianModal from '../../components/AddTechnicianModal'
 import AddJobModal from '../jobs/AddJobModal'
-import JobDetailPanel from '../dispatch/JobDetailPanel'
+import JobDetailModal from '../jobs/JobDetailModal'
 import TechnicianDetailPanel from '../dispatch/TechnicianDetailPanel'
 import AddQuoteModal from '../finance/AddQuoteModal'
 import AddInvoiceModal from '../finance/AddInvoiceModal'
@@ -46,6 +51,8 @@ import ActiveControlTower from './ActiveControlTower'
 import CompletedLedger from './CompletedLedger'
 
 type Scope = 'live' | 'plan'
+
+const JOB_TO_STAGE: Record<string, string> = { SCHEDULED: 'ASSIGNED', EN_ROUTE: 'EN_ROUTE', ON_SITE: 'ON_SITE' }
 type SubTab = 'board' | 'active' | 'completed' | 'calendar' | 'reschedules'
 
 function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate() + n); return x }
@@ -69,8 +76,9 @@ export default function Scheduling() {
   const [showAddTech, setShowAddTech] = useState(false)
   const [showCreateJob, setShowCreateJob] = useState(false)
   const [selectedTech, setSelectedTech] = useState<Technician | null>(null)
-  const [error, setError] = useState('')
-  const [successMsg, setSuccessMsg] = useState('')
+  const toast = useToast()
+  const { user } = useAuth()
+  const setError = useCallback((msg: string) => { if (msg) toast.showError(msg) }, [toast])
 
   const [suggestions, setSuggestions] = useState<AssignResponse['suggestions'] | null>(null)
   const [pendingJobId, setPendingJobId] = useState<string | null>(null)
@@ -78,7 +86,21 @@ export default function Scheduling() {
   const [pendingJobLng, setPendingJobLng] = useState(0)
   const [noTechsWarning, setNoTechsWarning] = useState('')
 
-  const ws = useDispatchWebSocket()
+  // Changes made elsewhere (a technician in the field, another dispatcher)
+  // announce themselves as toasts. jobsRef is read at event time so the toast
+  // can name a job the event payload didn't describe.
+  const jobsRef = useRef<Record<string, JobRef>>({})
+  const recentToasts = useRef<Map<string, number>>(new Map())
+  const onLiveEvent = useCallback((event: DispatchEvent) => {
+    const t = describeLiveEvent(event, user?.id, (id) => jobsRef.current[id])
+    if (!t) return
+    const now = Date.now()
+    const last = recentToasts.current.get(t.key)
+    if (last && now - last < 5_000) return
+    recentToasts.current.set(t.key, now)
+    toast.showToast({ title: t.title, message: t.message, variant: t.variant, durationMs: 6_000 })
+  }, [toast, user?.id])
+  const ws = useDispatchWebSocket(onLiveEvent)
 
   // Header actions (Add Technician / Create Job) and the live-status pill now
   // live in the Topbar for this page — it triggers these via CustomEvents,
@@ -133,6 +155,9 @@ export default function Scheduling() {
   const pendingJobs: Job[] = pendingJobsQuery.data?.data ?? []
   const allJobsQuery = useJobs({ limit: 200 })
   const allJobs: Job[] = allJobsQuery.data?.data ?? []
+  useEffect(() => {
+    jobsRef.current = Object.fromEntries(allJobs.map(j => [j.id, { jobNumber: j.jobNumber, title: j.title }]))
+  }, [allJobs])
 
   const allAssignmentsQuery = useAllTechAssignments(techIds)
   const allAssignments = allAssignmentsQuery.data ?? []
@@ -150,6 +175,9 @@ export default function Scheduling() {
    */
   const assignmentByJobId = useMemo(() => {
     return allAssignments.reduce<Record<string, typeof allAssignments[number]>>((acc, assignment) => {
+      // A cancelled row is history (the job was reassigned or called off), not
+      // the job's assignment. Letting it win made reassigned jobs look stale.
+      if (assignment.status === 'CANCELLED') return acc
       const current = acc[assignment.jobId]
       if (!current) { acc[assignment.jobId] = assignment; return acc }
       // Prefer the lead. Fall back to most-recently-updated for rows written
@@ -163,10 +191,22 @@ export default function Scheduling() {
     }, {})
   }, [allAssignments])
 
-  const activeAssignments = useMemo(
-    () => Object.values(assignmentByJobId).filter(a => ['ASSIGNED', 'EN_ROUTE', 'ON_SITE'].includes(a.status)),
-    [assignmentByJobId],
-  )
+  /**
+   * Active work is read from the JOB's status, not the assignment's.
+   *
+   * Job.status is what the lead technician and the job modal actually move;
+   * the assignment used to lag it, which left completed jobs on this board as
+   * "en route" and dropped live ones off it. The assignment is still what ties
+   * the job to a technician.
+   */
+  const activeRows = useMemo(() => allJobs
+    .filter(job => JOB_TO_STAGE[job.status] && assignmentByJobId[job.id])
+    .map(job => {
+      const a = assignmentByJobId[job.id]
+      return { assignment: { ...a, status: JOB_TO_STAGE[job.status] }, technician: techs.find(t => t.id === a.technicianId), job }
+    })
+    .sort((x, y) => new Date(y.assignment.assignedAt ?? 0).getTime() - new Date(x.assignment.assignedAt ?? 0).getTime()),
+    [allJobs, assignmentByJobId, techs])
 
   const TERMINAL = ['CANCELLED', 'COMPLETED', 'INVOICED', 'PAID'] as const
   const activeJobs = allJobs.filter(job => !TERMINAL.includes(job.status as any))
@@ -179,13 +219,16 @@ export default function Scheduling() {
   const updateJobStatus = useUpdateJobStatus()
 
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
-  const [selectedAssignment, setSelectedAssignment] = useState<any>(null)
+  // The assignment is still tracked so opening a job from a technician's row
+  // clears correctly, but the full job modal reads the job itself rather than a
+  // pre-selected assignment.
+  const [, setSelectedAssignment] = useState<any>(null)
 
   const [showQuoteFromJob, setShowQuoteFromJob] = useState(false)
   const [showInvoiceFromJob, setShowInvoiceFromJob] = useState(false)
   const [financeContextJob, setFinanceContextJob] = useState<Job | null>(null)
 
-  const showSuccess = (msg: string) => { setSuccessMsg(msg); setTimeout(() => setSuccessMsg(''), 4000) }
+  const showSuccess = (msg: string) => toast.showSuccess(msg)
 
   const handleSmartAssign = (job: Job) => {
     setError(''); setNoTechsWarning(''); setSuggestions(null); setPendingJobId(job.id)
@@ -252,20 +295,20 @@ export default function Scheduling() {
 
   const handleStatusTransition = (assignmentId: string, newStatus: string, jobId?: string) => {
     setError('')
+    const job = jobId ? allJobs.find(j => j.id === jobId) : undefined
     updateStatus.mutate({ id: assignmentId, status: newStatus }, {
       onSuccess: () => {
         const mappedJobStatus = ASSIGNMENT_TO_JOB_STATUS[newStatus]
-        if (mappedJobStatus && jobId) updateJobStatus.mutate({ id: jobId, status: mappedJobStatus, statusNote: `Assignment status changed to ${newStatus}` })
+        if (mappedJobStatus && jobId) {
+          updateJobStatus.mutate({ id: jobId, status: mappedJobStatus, statusNote: `Assignment status changed to ${newStatus}` }, {
+            onSuccess: () => showSuccess(`${job?.jobNumber ?? 'Job'} marked ${humanizeStatus(mappedJobStatus)}`),
+            onError: (err: any) => setError(err?.response?.data?.message ?? 'The job status could not be updated.'),
+          })
+        }
       },
       onError: (err: any) => setError(err?.response?.data?.error ?? 'Status update failed.'),
     })
   }
-
-  // ── Derived: active tab rows ──────────────────────────────────────────────
-  const activeAssignmentsWithJob = useMemo(() => activeAssignments
-    .map(a => ({ assignment: a, technician: techs.find(t => t.id === a.technicianId), job: allJobs.find(j => j.id === (a as any).jobId) }))
-    .sort((a, b) => new Date((b.assignment as any).assignedAt ?? 0).getTime() - new Date((a.assignment as any).assignedAt ?? 0).getTime()),
-    [activeAssignments, techs, allJobs])
 
   // ── Derived: completed tab rows ───────────────────────────────────────────
   const completedRows = useMemo(() => allJobs
@@ -274,7 +317,7 @@ export default function Scheduling() {
     [allJobs, assignmentByJobId])
 
   const scopeStats = scope === 'live'
-    ? { jobs: allJobs.length, unassigned: pendingJobs.length, extra: activeAssignments.length, extraLabel: 'active', backlog: null as number | null }
+    ? { jobs: allJobs.length, unassigned: pendingJobs.length, extra: activeRows.length, extraLabel: 'active', backlog: null as number | null }
     : { jobs: planStats.jobs, unassigned: planStats.unassigned, extra: planStats.opportunities, extraLabel: 'pull-forward', backlog: planStats.backlog }
 
   return (
@@ -298,7 +341,7 @@ export default function Scheduling() {
 
         <div style={{ display: 'flex' }}>
           <button className={`tab-btn ${subTab === 'board' ? 'active' : ''}`} onClick={() => setSubTab('board')}><LayoutGrid size={14} /> Board</button>
-          <button className={`tab-btn ${subTab === 'active' ? 'active' : ''}`} onClick={() => setSubTab('active')}><Activity size={14} /> Active <span className="tab-count">{activeAssignments.length}</span></button>
+          <button className={`tab-btn ${subTab === 'active' ? 'active' : ''}`} onClick={() => setSubTab('active')}><Activity size={14} /> Active <span className="tab-count">{activeRows.length}</span></button>
           <button className={`tab-btn ${subTab === 'completed' ? 'active' : ''}`} onClick={() => setSubTab('completed')}><CheckCircle2 size={14} /> Completed <span className="tab-count">{completedRows.length}</span></button>
           <button className={`tab-btn ${subTab === 'calendar' ? 'active' : ''}`} onClick={() => setSubTab('calendar')}><CalendarDays size={14} /> Calendar</button>
           <button className={`tab-btn ${subTab === 'reschedules' ? 'active' : ''}`} onClick={() => setSubTab('reschedules')}>
@@ -326,22 +369,10 @@ export default function Scheduling() {
         )}
       </div>
 
-      {successMsg && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 10, color: '#10b981', fontSize: 13 }}>
-          <CheckCircle2 size={14} /> {successMsg}
-          <button onClick={() => setSuccessMsg('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#10b981', cursor: 'pointer' }}><X size={14} /></button>
-        </div>
-      )}
       {noTechsWarning && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)', borderRadius: 10, color: '#d97706', fontSize: 13 }}>
           <AlertCircle size={14} /> {noTechsWarning}
           <button onClick={() => setNoTechsWarning('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#d97706', cursor: 'pointer' }}><X size={14} /></button>
-        </div>
-      )}
-      {error && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 10, color: '#dc2626', fontSize: 13 }}>
-          <AlertCircle size={14} /> {error}
-          <button onClick={() => setError('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }}><X size={14} /></button>
         </div>
       )}
 
@@ -391,8 +422,8 @@ export default function Scheduling() {
       {subTab === 'active' && (
         <ActiveControlTower
           isLoading={allAssignmentsQuery.isLoading}
-          rows={activeAssignmentsWithJob}
-          availableTechs={techs.filter(t => !activeAssignmentsWithJob.some(r => r.technician?.id === t.id))}
+          rows={activeRows}
+          availableTechs={techs.filter(t => !activeRows.some(r => r.technician?.id === t.id))}
           onOpenAssignment={handleOpenJob}
           onAdvance={handleStatusTransition}
           isAdvancing={updateStatus.isPending}
@@ -441,10 +472,12 @@ export default function Scheduling() {
       )}
 
       {selectedJob && (
-        <JobDetailPanel
-          jobId={(selectedAssignment as any)?.jobId ?? selectedJob.id}
-          assignment={selectedAssignment}
-          technician={selectedAssignment ? techs.find(t => t.id === selectedAssignment.technicianId) : undefined}
+        // One job view everywhere. The scheduling board used to open a reduced
+        // panel with its own subset of the job, so what you could see depended
+        // on which page you clicked from, and the crew, checklist, equipment,
+        // inventory and activity were all unreachable from here.
+        <JobDetailModal
+          job={selectedJob}
           isOpen={!!selectedJob}
           onClose={() => { setSelectedJob(null); setSelectedAssignment(null) }}
           onCreateQuote={(j) => { setFinanceContextJob(j ?? selectedJob); setShowQuoteFromJob(true); setSelectedJob(null); setSelectedAssignment(null) }}
