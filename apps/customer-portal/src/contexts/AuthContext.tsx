@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import type { ReactNode } from 'react'
 import api from '../lib/api'
 import { clearPersistedQueryCache } from '../lib/queryClient'
+import { authStorage } from '../lib/authStorage'
 
 // ─── JWT expiry check (no library needed) ────────────────────────────────────
 function isTokenExpired(token: string): boolean {
@@ -30,9 +31,11 @@ interface AuthContextType {
   isAuthenticated: boolean
   mustResetPassword: boolean
   isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => void
+  justSignedIn: boolean
+  finishSignIn: () => void
   updateLocalUser: (patch: Partial<PortalUser>) => void
   clearMustResetPassword: () => void
 }
@@ -51,25 +54,20 @@ export interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const TOKEN_KEY = 'cp_token'
-const USER_KEY  = 'cp_user'
-
 // ─── Session restore — synchronous, runs before first render ─────────────────
 function initToken(): string | null {
-  const stored = localStorage.getItem(TOKEN_KEY)
+  const stored = authStorage.getToken()
   if (!stored || isTokenExpired(stored)) {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+    authStorage.clear()
     return null
   }
   return stored
 }
 
 function initUser(): PortalUser | null {
-  const token = localStorage.getItem(TOKEN_KEY)
-  if (!token) return null
+  if (!authStorage.getToken()) return null
   try {
-    const saved = localStorage.getItem(USER_KEY)
+    const saved = authStorage.getUserRaw()
     return saved ? JSON.parse(saved) : null
   } catch { return null }
 }
@@ -78,6 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(initToken)
   const [user,  setUser]  = useState<PortalUser | null>(initUser)
   const [isLoading, setIsLoading] = useState(false)
+  // True from a successful sign-in until the first screen's data has loaded.
+  const [justSignedIn, setJustSignedIn] = useState(false)
+  const finishSignIn = useCallback(() => setJustSignedIn(false), [])
 
   useEffect(() => {
     if (token) {
@@ -93,8 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // keys until each query's own refetch resolves — same risk _setSession
     // guards against on the way in.
     clearPersistedQueryCache()
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+    authStorage.clear()
     setToken(null)
     setUser(null)
     delete api.defaults.headers.common['Authorization']
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [token, logout])
 
-  const _setSession = useCallback((access_token: string, userData: PortalUser) => {
+  const _setSession = useCallback((access_token: string, userData: PortalUser, remember: boolean) => {
     // The query cache is persisted to localStorage keyed by generic query names
     // (['my-houses'], ['my-projects'], ...) with no customerId in the key — if a
     // different account previously logged into this same browser, its cached
@@ -128,19 +128,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // login()/register() never hard-reload the page (unlike logout()), so this
     // is the one place that must clear it explicitly.
     clearPersistedQueryCache()
-    localStorage.setItem(TOKEN_KEY, access_token)
-    localStorage.setItem(USER_KEY, JSON.stringify(userData))
+    authStorage.save(access_token, userData, remember)
     setToken(access_token)
     setUser(userData)
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
   }, [])
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, rememberMe = false) => {
     setIsLoading(true)
     try {
-      const res = await api.post('/crm/auth/login', { email, password })
+      const res = await api.post('/crm/auth/login', { email, password, rememberMe })
       const { access_token, user: u } = res.data
-      _setSession(access_token, u)
+      // A forced password change comes first; the loading screen would cover it.
+      setJustSignedIn(!u?.mustResetPassword)
+      _setSession(access_token, u, rememberMe)
     } finally {
       setIsLoading(false)
     }
@@ -151,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await api.post('/crm/auth/register', data)
       const { access_token, user: u } = res.data
-      _setSession(access_token, u)
+      _setSession(access_token, u, true)
     } finally {
       setIsLoading(false)
     }
@@ -161,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(prev => {
       if (!prev) return prev
       const updated = { ...prev, ...patch }
-      localStorage.setItem(USER_KEY, JSON.stringify(updated))
+      authStorage.saveUser(updated)
       return updated
     })
   }, [])
@@ -178,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!token && !!user,
       mustResetPassword,
       isLoading,
+      justSignedIn, finishSignIn,
       login, register, logout, updateLocalUser, clearMustResetPassword,
     }}>
       {children}

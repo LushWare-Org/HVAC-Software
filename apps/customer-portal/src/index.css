@@ -2277,3 +2277,20 @@ textarea:focus {
     padding: 0 10px;
   }
 }
+/* ── Airflow sign-in and loading screens ─────────────────────────────────── */
+.af-root *:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--af-focus, #2563EB); border-radius: 6px; }
+.af-root input::placeholder { color: #8296AA; }
+@keyframes af-dash { to { stroke-dashoffset: -100; } }
+.af-line { stroke-dasharray: 6 8; animation: af-dash 3s linear infinite; }
+@keyframes af-wave { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+.af-wave { transform-origin: bottom; animation: af-wave 1.2s ease-in-out infinite; }
+@keyframes af-fade { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+.af-fade { animation: af-fade 2s ease-in-out infinite; }
+@keyframes af-pulse { 0%, 100% { opacity: .35; } 50% { opacity: .65; } }
+.af-pulse { animation: af-pulse 2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .af-line { animation: none; stroke-dasharray: none; }
+  .af-wave { animation: none; transform: scaleY(0.6); }
+  .af-fade { animation: none; opacity: .7; }
+  .af-pulse { animation: none; opacity: .5; }
+}

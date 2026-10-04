@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Get, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, IsOptional, IsArray, IsNumber } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional, IsArray, IsNumber, IsBoolean } from 'class-validator';
 import { CurrentUser, JwtAuthGuard, RolesGuard, Roles } from '@tscrm/auth-client';
 import { AuthUser, Role } from '@tscrm/types';
 import { AuthService } from './auth.service';
@@ -19,6 +19,17 @@ class LoginDto {
    * unaffected: they simply never send this field.
    */
   @IsOptional() @IsString() platform?: string;
+  /** "Keep me signed in" on the web: a 14-day session instead of 24 hours. */
+  @IsOptional() @IsBoolean() rememberMe?: boolean;
+}
+
+class ForgotPasswordDto {
+  @IsEmail() email!: string;
+}
+
+class ResetPasswordDto {
+  @IsString() @MinLength(20) token!: string;
+  @IsString() @MinLength(8) newPassword!: string;
 }
 
 class RegisterDto {
@@ -91,7 +102,21 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log in with email and password' })
   login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.email, dto.password, dto.platform);
+    return this.authService.login(dto.email, dto.password, dto.platform, dto.rememberMe === true);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Email a password reset link (same response whether or not the account exists)' })
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.requestPasswordReset(dto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Set a new password from an emailed reset link' })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPasswordWithToken(dto.token, dto.newPassword);
   }
 
   @Post('register')

@@ -12,6 +12,7 @@ import ModalCloseGuard from './components/ModalCloseGuard'
 // so the initial JS bundle stays tight.
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
+import { SignInTransition } from './components/airflow/CustomerAuth'
 
 const Jobs                = lazy(() => import('./pages/jobs/Jobs'))
 const Invoices            = lazy(() => import('./pages/invoices/Invoices'))
@@ -23,6 +24,8 @@ const MyProjects          = lazy(() => import('./pages/MyProjects'))
 const MyProperty          = lazy(() => import('./pages/MyProperty'))
 const Equipment           = lazy(() => import('./pages/Equipment'))
 const ForceResetPassword  = lazy(() => import('./pages/ForceResetPassword'))
+const ForgotPassword      = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword       = lazy(() => import('./pages/ResetPassword'))
 const Tips                = lazy(() => import('./pages/Tips'))
 const Offers              = lazy(() => import('./pages/Offers'))
 const Agreements          = lazy(() => import('./pages/Agreements'))
@@ -134,8 +137,10 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            {/* Force-reset gate — shown when admin provisioned the account */}
-            <Route path="/reset-password" element={<ForceResetPasswordGuard />} />
+            <Route path="/forgot-password" element={<Suspense fallback={null}><ForgotPassword /></Suspense>} />
+            {/* With ?token= it's an emailed reset link; without, the forced
+                first-sign-in reset for admin-provisioned accounts. */}
+            <Route path="/reset-password" element={<ResetPasswordRoute />} />
             {/* Public: email confirm link — token-gated, no login required */}
             <Route
               path="/agreements/confirm/:token"
@@ -147,12 +152,27 @@ export default function App() {
             />
             <Route path="/*" element={<AppShell />} />
           </Routes>
+          <SignInGate />
         </BrowserRouter>
         {/* Confirms accidental backdrop clicks for every modal in the app. */}
         <ModalCloseGuard />
       </ToastProvider>
     </ThemeProvider>
   )
+}
+
+function ResetPasswordRoute() {
+  const { search } = useLocation()
+  if (new URLSearchParams(search).get('token')) {
+    return <Suspense fallback={null}><ResetPassword /></Suspense>
+  }
+  return <ForceResetPasswordGuard />
+}
+
+/** Covers the portal with the loading screen from sign-in until its first data arrives. */
+function SignInGate() {
+  const { justSignedIn, finishSignIn } = useAuth()
+  return justSignedIn ? <SignInTransition onDone={finishSignIn} /> : null
 }
 
 /** Wrapper: only render ForceResetPassword if user is authenticated AND mustReset. */

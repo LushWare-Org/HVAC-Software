@@ -7,6 +7,9 @@ import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import { useTechDirectory } from './components/TechAvatar'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
+import { SignInTransition } from './components/airflow/AdminAuth'
 import ChatWidget from './components/ChatWidget'
 import ModalCloseGuard from './components/ModalCloseGuard'
 
@@ -213,23 +216,22 @@ function AuthenticatedApp() {
 }
 
 function AppRoutes() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, justSignedIn, finishSignIn } = useAuth()
+  const { pathname } = useLocation()
 
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: 'var(--bg-app)',
-      }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--bd)', borderTopColor: 'var(--blue)', animation: 'spin 0.7s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    )
+  if (!isAuthenticated) {
+    // Signed-out pages. Anything else shows sign-in, whatever the URL.
+    if (pathname === '/forgot-password') return <ForgotPassword />
+    if (pathname === '/reset-password') return <ResetPassword />
+    return <Login />
   }
 
-  if (!isAuthenticated) return <Login />
-
-  return <AuthenticatedApp />
+  return (
+    <>
+      <AuthenticatedApp />
+      {justSignedIn && <SignInTransition onDone={finishSignIn} />}
+    </>
+  )
 }
 
 export default function App() {

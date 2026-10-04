@@ -22,6 +22,23 @@ const JWT_EXPIRES_IN = '24h';
 // re-login is required.
 const JWT_EXPIRES_IN_MOBILE = '30d';
 const JWT_EXPIRES_IN_MOBILE_SECONDS = 30 * 24 * 60 * 60;
+// Web sign-in with "Keep me signed in" ticked.
+const JWT_EXPIRES_IN_REMEMBER = '14d';
+const JWT_EXPIRES_IN_REMEMBER_SECONDS = 14 * 24 * 60 * 60;
+
+// Password reset links. Signed with a key DERIVED from the JWT secret, never the
+// secret itself, so a reset token can never be accepted as an access token.
+const RESET_TOKEN_TTL = '30m';
+const RESET_TOKEN_AUDIENCE = 'password-reset';
+const RESET_SIGNING_KEY = crypto.createHmac('sha256', JWT_SECRET).update('password-reset-v1').digest();
+const STAFF_APP_URL = (process.env.FRONTEND_URL ?? 'http://localhost:5173').replace(/\/$/, '');
+const CUSTOMER_APP_URL = (process.env.CUSTOMER_PORTAL_URL ?? 'http://localhost:5174').replace(/\/$/, '');
+
+/** Ties a reset link to the password it was issued against: once the password
+ *  changes, every outstanding link for it stops working. */
+function passwordFingerprint(passwordHash: string | null): string {
+  return crypto.createHash('sha256').update(passwordHash ?? '').digest('hex').slice(0, 24);
+}
 const APP_NAME = process.env.APP_NAME ?? 'HVACtor.ai';
 
 /** Generate a readable temporary password: 3 groups of 4 alphanumeric chars, e.g. "aX3k-Rm9p-Q2wZ" */
@@ -48,7 +65,7 @@ export class AuthService {
    * that one (which made every account but one effectively unusable once an email
    * was reused across tenants).
    */
-  async login(email: string, password: string, platform?: string) {
+  async login(email: string, password: string, platform?: string, rememberMe = false) {
     const candidates = await this.prisma.companyUser.findMany({ where: { email: email.toLowerCase() } });
 
     let user: (typeof candidates)[number] | undefined;
@@ -123,15 +140,13 @@ export class AuthService {
     if (customerId) tokenPayload['customer_id'] = customerId;
 
     const isMobile = platform === 'mobile';
-    const token = jwt.sign(tokenPayload, JWT_SECRET, {
-      expiresIn: isMobile ? JWT_EXPIRES_IN_MOBILE : JWT_EXPIRES_IN,
-      algorithm: 'HS256',
-    });
+    const expiresIn = isMobile ? JWT_EXPIRES_IN_MOBILE : rememberMe ? JWT_EXPIRES_IN_REMEMBER : JWT_EXPIRES_IN;
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn, algorithm: 'HS256' });
 
     return {
       access_token: token,
       token_type: 'Bearer',
-      expires_in: isMobile ? JWT_EXPIRES_IN_MOBILE_SECONDS : 86400,
+      expires_in: isMobile ? JWT_EXPIRES_IN_MOBILE_SECONDS : rememberMe ? JWT_EXPIRES_IN_REMEMBER_SECONDS : 86400,
       user: {
         id: user.id,
         email: user.email,
@@ -538,6 +553,84 @@ export class AuthService {
    * Force password reset — called on first login after receiving a temp password.
    * Validates the new password, hashes it, and clears mustResetPassword.
    */
+  /**
+   * Emails a reset link to every active account on this address. Always returns
+   * the same answer, so the form can't be used to discover who has an account.
+   * An email can belong to several companies (email is unique per company), so
+   * each account gets its own link naming its company.
+   */
+  async requestPasswordReset(email: string) {
+    const accounts = await this.prisma.companyUser.findMany({
+      where: { email: email.toLowerCase().trim(), isActive: true },
+    });
+
+    for (const user of accounts) {
+      if (!user.passwordHash) continue;
+      if (user.role === 'technician' && user.approvalStatus !== 'APPROVED') continue;
+
+      const token = jwt.sign(
+        { sub: user.id, cid: user.companyId, fp: passwordFingerprint(user.passwordHash) },
+        RESET_SIGNING_KEY,
+        { expiresIn: RESET_TOKEN_TTL, audience: RESET_TOKEN_AUDIENCE, algorithm: 'HS256' },
+      );
+      const base = user.role === 'customer' ? CUSTOMER_APP_URL : STAFF_APP_URL;
+      const company = await this.prisma.company.findUnique({ where: { id: user.companyId }, select: { name: true } });
+
+      this.emailService
+        .sendPasswordResetLink({
+          to: user.email,
+          name: user.name,
+          companyName: company?.name ?? APP_NAME,
+          resetUrl: `${base}/reset-password?token=${encodeURIComponent(token)}`,
+        })
+        .catch(() => undefined);
+    }
+
+    return { success: true, message: 'If that email has an account, a reset link is on its way.' };
+  }
+
+  /** Sets a new password from an emailed reset link. Each link works once. */
+  async resetPasswordWithToken(token: string, newPassword: string) {
+    if (!newPassword || newPassword.length < 8) {
+      throw new BadRequestException('Your new password needs at least 8 characters.');
+    }
+
+    let claims: { sub: string; cid: string; fp: string };
+    try {
+      claims = jwt.verify(token, RESET_SIGNING_KEY, {
+        audience: RESET_TOKEN_AUDIENCE,
+        algorithms: ['HS256'],
+      }) as typeof claims;
+    } catch {
+      throw new BadRequestException('This reset link has expired or is not valid. Request a new one.');
+    }
+
+    const user = await this.prisma.companyUser.findFirst({
+      where: { id: claims.sub, companyId: claims.cid, isActive: true },
+    });
+    if (!user || passwordFingerprint(user.passwordHash) !== claims.fp) {
+      throw new BadRequestException('This reset link has already been used. Request a new one.');
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await this.prisma.companyUser.update({
+      where: { id: user.id },
+      data: { passwordHash: newHash, mustResetPassword: false },
+    });
+
+    const company = await this.prisma.company.findUnique({ where: { id: user.companyId }, select: { name: true } });
+    this.emailService
+      .sendPasswordResetConfirmation({
+        to: user.email,
+        name: user.name,
+        companyName: company?.name ?? APP_NAME,
+        portalUrl: user.role === 'customer' ? CUSTOMER_APP_URL : STAFF_APP_URL,
+      })
+      .catch(() => undefined);
+
+    return { success: true, message: 'Password updated. You can sign in with it now.' };
+  }
+
   async forceResetPassword(userId: string, companyId: string, newPassword: string) {
     if (!newPassword || newPassword.length < 8) {
       throw new BadRequestException('New password must be at least 8 characters');

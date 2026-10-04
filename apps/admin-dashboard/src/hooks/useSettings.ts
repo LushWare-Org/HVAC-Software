@@ -6,6 +6,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
 import api from '../lib/api'
 import { queryClient } from '../lib/queryClient'
+import { authStorage } from '../lib/authStorage'
 
 /**
  * Local mirrors of `packages/types/src/finance-settings.ts` — the frontends
@@ -120,7 +121,7 @@ export function useCompany() {
       const res = await api.get('/crm/company')
       return res.data
     },
-    enabled: !!localStorage.getItem('tscrm_token'),
+    enabled: !!authStorage.getToken(),
     retry: 1,
   })
 }

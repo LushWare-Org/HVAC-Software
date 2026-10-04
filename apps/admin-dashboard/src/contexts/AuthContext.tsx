@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import type { ReactNode } from 'react'
 import api from '../lib/api'
 import { clearPersistedQueryCache, queryClient } from '../lib/queryClient'
+import { authStorage } from '../lib/authStorage'
 
 // ─── JWT expiry check (no library needed) ────────────────────────────────────
 // Decodes the payload section of a JWT and checks the `exp` claim.
@@ -56,35 +57,32 @@ interface AuthContextType {
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>
   logout: () => void
+  justSignedIn: boolean
+  finishSignIn: () => void
   updateLocalUser: (patch: Partial<AuthUser>) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const TOKEN_KEY = 'tscrm_token'
-const USER_KEY  = 'tscrm_user'
-
 // ─── Session restore — synchronous, runs before first render ─────────────────
-// Clears localStorage immediately if the stored token is expired so the app
+// Clears the saved session immediately if its token is expired so the app
 // never renders the dashboard with a dead session.
 function initToken(): string | null {
-  const stored = localStorage.getItem(TOKEN_KEY)
+  const stored = authStorage.getToken()
   if (!stored || isTokenExpired(stored)) {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+    authStorage.clear()
     return null
   }
   return stored
 }
 
 function initUser(): AuthUser | null {
-  // Re-check localStorage — initToken() may have cleared it already
-  const token = localStorage.getItem(TOKEN_KEY)
-  if (!token) return null
+  // Re-check storage — initToken() may have cleared it already
+  if (!authStorage.getToken()) return null
   try {
-    const saved = localStorage.getItem(USER_KEY)
+    const saved = authStorage.getUserRaw()
     return saved ? JSON.parse(saved) : null
   } catch { return null }
 }
@@ -93,6 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(initToken)
   const [user,  setUser]  = useState<AuthUser | null>(initUser)
   const [isLoading, setIsLoading] = useState(false)
+  // True from a successful sign-in until the first screen's data has loaded,
+  // so the app shows the loading screen instead of a half-filled dashboard.
+  const [justSignedIn, setJustSignedIn] = useState(false)
+  const finishSignIn = useCallback(() => setJustSignedIn(false), [])
 
   // Keep axios default header in sync with token state
   useEffect(() => {
@@ -104,8 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token])
 
   const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+    authStorage.clear()
     setToken(null)
     setUser(null)
     delete api.defaults.headers.common['Authorization']
@@ -142,16 +143,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, rememberMe = false) => {
     setIsLoading(true)
     try {
-      const res = await api.post('/crm/auth/login', { email, password })
+      const res = await api.post('/crm/auth/login', { email, password, rememberMe })
       const { access_token, user: userData } = res.data
-      localStorage.setItem(TOKEN_KEY, access_token)
-      localStorage.setItem(USER_KEY, JSON.stringify(userData))
+      authStorage.save(access_token, userData, rememberMe)
       // Set the axios header synchronously — the token-sync useEffect hasn't
       // run yet, and warmCriticalCaches() fires requests immediately.
       api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
+      setJustSignedIn(true)
       setToken(access_token)
       setUser(userData)
       warmCriticalCaches()
@@ -164,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(prev => {
       if (!prev) return prev
       const updated = { ...prev, ...patch }
-      localStorage.setItem(USER_KEY, JSON.stringify(updated))
+      authStorage.saveUser(updated)
       return updated
     })
   }, [])
@@ -174,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user, token,
       isAuthenticated: !!token && !!user,
       isLoading,
+      justSignedIn, finishSignIn,
       login, logout, updateLocalUser,
     }}>
       {children}

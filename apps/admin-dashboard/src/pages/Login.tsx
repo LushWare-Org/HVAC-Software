@@ -1,119 +1,75 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Lock, Mail, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { AtSign, Lock } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { AF } from '../components/airflow/AirflowArt'
+import { AdminAuthShell, AuthAlert, AuthField, AuthHeading, AuthSubmit } from '../components/airflow/AdminAuth'
+
+function signInError(err: any): string {
+  const msg = err?.response?.data?.message
+  if (err?.response?.status === 401 && (!msg || /invalid email or password/i.test(String(msg)))) {
+    return "That email and password don't match. Check them and try again."
+  }
+  if (!err?.response) return "We couldn't reach HVACtor. Check your connection and try again."
+  return typeof msg === 'string' ? msg : 'Sign-in failed. Try again in a moment.'
+}
 
 export default function Login() {
   const { login, isLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [remember, setRemember] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
     try {
-      await login(email, password)
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Invalid email or password'
-      setError(typeof msg === 'string' ? msg : 'Login failed')
+      await login(email.trim(), password, remember)
+    } catch (err) {
+      setError(signInError(err))
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0e17]">
-      <div className="w-full max-w-md mx-4">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
-              <span className="text-white text-xl font-bold">T&S</span>
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-white">HVACtor.ai</h1>
-          <p className="text-gray-400 text-sm mt-1">Sign in to your account</p>
+    <AdminAuthShell>
+      <AuthHeading title="Sign in to your dispatch office" subtitle="Enter your work credentials to open today's board." />
+      {error && <AuthAlert tone="error">{error}</AuthAlert>}
+
+      <form onSubmit={handleSubmit} noValidate={false}>
+        <AuthField
+          id="admin-email" label="Email" type="email" icon={<AtSign size={16} />}
+          value={email} onChange={e => setEmail(e.target.value)}
+          placeholder="you@yourcompany.com" autoComplete="username" autoFocus required
+          disabled={isLoading} invalid={!!error}
+        />
+        <AuthField
+          id="admin-password" label="Password" type="password" icon={<Lock size={16} />}
+          value={password} onChange={e => setPassword(e.target.value)}
+          placeholder="Enter your password" autoComplete="current-password" required
+          disabled={isLoading} invalid={!!error}
+        />
+
+        <div className="flex items-center justify-between gap-3 -mt-1 mb-5">
+          <label className="flex items-center gap-2.5 min-h-[44px] cursor-pointer text-sm">
+            <input
+              type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}
+              className="w-[18px] h-[18px] rounded" style={{ accentColor: AF.accent }}
+            />
+            Keep me signed in
+          </label>
+          <Link to="/forgot-password" className="text-sm font-medium py-3 hover:underline" style={{ color: AF.supply }}>
+            Forgot password?
+          </Link>
         </div>
 
-        {/* Login form */}
-        <form onSubmit={handleSubmit} className="bg-[#111827] rounded-xl border border-gray-800 p-8 shadow-xl">
-          {error && (
-            <div className="flex items-center gap-2 p-3 mb-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-              <AlertCircle size={16} />
-              {error}
-            </div>
-          )}
+        <AuthSubmit busy={isLoading} busyLabel="Signing in" disabled={!email || !password}>Sign in</AuthSubmit>
+      </form>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  required
-                  autoFocus
-                  autoComplete="email"
-                  disabled={isLoading}
-                  className="w-full pl-10 pr-4 py-3 bg-[#0a0e17] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="current-password"
-                  disabled={isLoading}
-                  className="w-full pl-10 pr-10 py-3 bg-[#0a0e17] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 bg-transparent border-0 cursor-pointer"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading || !email || !password}
-            className="w-full mt-6 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer border-0 text-sm"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </button>
-        </form>
-
-        {/* Info */}
-        <p className="text-center text-gray-600 text-xs mt-6">
-          &copy; {new Date().getFullYear()} HVACtor.ai
-        </p>
-      </div>
-    </div>
+      <p className="text-sm mt-6 text-center leading-relaxed" style={{ color: AF.textMuted }}>
+        Locked out? Your company admin can also reset your password.
+      </p>
+    </AdminAuthShell>
   )
 }

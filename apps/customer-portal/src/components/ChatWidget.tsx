@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { MessageCircle, X, Send, Loader2, Bot } from 'lucide-react'
+import { authStorage } from '../lib/authStorage'
 
 interface Turn {
   role: 'user' | 'assistant'
@@ -49,7 +50,7 @@ export default function ChatWidget() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('cp_token') ?? ''}`,
+          Authorization: `Bearer ${authStorage.getToken() ?? ''}`,
         },
         body: JSON.stringify({ message, history }),
         signal: abortRef.current.signal,

@@ -221,6 +221,37 @@ export class EmailService {
     await this.send({ to: opts.to, subject, html, companyName: opts.companyName });
   }
 
+  async sendPasswordResetLink(opts: {
+    to: string;
+    name: string;
+    companyName: string;
+    resetUrl: string;
+  }): Promise<void> {
+    const esc = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    const subject = `Reset your ${opts.companyName} password`;
+    const body = `
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi <strong>${esc(opts.name)}</strong>,</p>
+      <p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:${TEXT_MUTED};">
+        We received a request to reset the password for your ${esc(opts.companyName)} account. Choose a new one with the button below.
+      </p>
+      <p style="margin:0 0 22px;">
+        <a href="${opts.resetUrl}" style="display:inline-block;background:${EMAIL_ACCENT.blue};color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 22px;border-radius:10px;">Choose a new password</a>
+      </p>
+      ${emailInfoBox({
+        accent: 'blue',
+        html: `<p style="margin:0;font-size:13px;line-height:1.7;color:${TEXT_MUTED};">This link works once and expires in 30 minutes. If you didn't ask for it, ignore this email: your password stays the same.</p>`,
+      })}
+    `;
+    const html = renderEmailCard({
+      accent: 'blue',
+      eyebrow: 'Account security',
+      title: 'Reset your password',
+      bodyHtml: body,
+      companyName: opts.companyName,
+    });
+    await this.send({ to: opts.to, subject, html, companyName: opts.companyName });
+  }
+
   async sendPasswordResetConfirmation(opts: {
     to: string;
     name: string;

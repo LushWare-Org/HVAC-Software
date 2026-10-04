@@ -6,6 +6,7 @@
  */
 
 import axios from 'axios'
+import { authStorage } from './authStorage'
 
 const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.us-central1.run.app/api'
 
@@ -22,8 +23,8 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Restore token from localStorage on startup
-const storedToken = localStorage.getItem('cp_token')
+// Restore the saved session's token on startup
+const storedToken = authStorage.getToken()
 if (storedToken) {
   api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
 }
@@ -32,7 +33,7 @@ api.interceptors.request.use((config) => {
   // Attach the token per-request — closes the race where requests fired right
   // after login go out before the default header is set (401 → auto-logout).
   if (!config.headers.Authorization) {
-    const token = localStorage.getItem('cp_token')
+    const token = authStorage.getToken()
     if (token) config.headers.Authorization = `Bearer ${token}`
   }
   // Dev bypass identity headers — only when there's NO real session. Sending
@@ -42,7 +43,7 @@ api.interceptors.request.use((config) => {
     config.headers['x-test-company-id'] = import.meta.env.VITE_COMPANY_ID
     config.headers['x-test-user-role'] = 'CUSTOMER'
     try {
-      const cpUser = localStorage.getItem('cp_user')
+      const cpUser = authStorage.getUserRaw()
       if (cpUser) {
         const parsed = JSON.parse(cpUser)
         if (parsed?.id)         config.headers['x-test-user-id']      = parsed.id

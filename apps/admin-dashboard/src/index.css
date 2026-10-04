@@ -2856,3 +2856,18 @@ img {
   border-color: var(--bd-md) !important;
   color: var(--t1) !important;
 }
+
+/* ── Airflow sign-in and loading screens ─────────────────────────────────── */
+.af-root *:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--af-focus, #2563EB); border-radius: 6px; }
+.af-root input::placeholder { color: rgba(216, 228, 240, 0.45); }
+@keyframes af-dash { to { stroke-dashoffset: -100; } }
+.af-line { stroke-dasharray: 6 8; animation: af-dash 3s linear infinite; }
+@keyframes af-drift { 0% { transform: translate(0, 0); opacity: .3; } 50% { opacity: .7; } 100% { transform: translate(30px, -20px); opacity: 0; } }
+.af-drift { animation: af-drift 3s ease-in-out infinite; opacity: .4; }
+@keyframes af-row-fill { from { width: 0%; } to { width: 100%; } }
+.af-row-fill { animation: af-row-fill 2.2s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) {
+  .af-line { animation: none; stroke-dasharray: none; }
+  .af-drift { animation: none; }
+  .af-row-fill { animation: none; width: 60%; }
+}

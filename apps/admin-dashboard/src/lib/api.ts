@@ -7,6 +7,7 @@
  */
 
 import axios from 'axios'
+import { authStorage } from './authStorage'
 
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')
@@ -19,8 +20,8 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Restore token from localStorage on startup
-const storedToken = localStorage.getItem('tscrm_token')
+// Restore the saved session's token on startup
+const storedToken = authStorage.getToken()
 if (storedToken) {
   api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
 }
@@ -31,7 +32,7 @@ if (storedToken) {
 // triggered auth:expired and logged the user straight back out.
 api.interceptors.request.use((config) => {
   if (!config.headers.Authorization) {
-    const token = localStorage.getItem('tscrm_token')
+    const token = authStorage.getToken()
     if (token) config.headers.Authorization = `Bearer ${token}`
   }
   return config
