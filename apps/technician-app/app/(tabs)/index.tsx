@@ -17,6 +17,7 @@ import { useMyJobs } from '@/hooks/useJobs'
 import { useMyAssignments } from '@/hooks/useSchedule'
 import { useTechnicianProfile, useUserProfile } from '@/hooks/useProfile'
 import { useGPSTracking } from '@/hooks/useGPS'
+import { useDoubleBackToExit } from '@/hooks/useDoubleBackToExit'
 import { uploadPendingAvatarIfAny } from '@/hooks/useAvatar'
 import { AvatarReminderBanner } from '@/components/AvatarReminderBanner'
 import { JobCard } from '@/components/JobCard'
@@ -30,6 +31,7 @@ import type { Job, DispatchAssignment } from '@/types/api'
 export default function HomeScreen() {
   const { user } = useAuth()
   const router = useRouter()
+  useDoubleBackToExit()
 
   // Data
   const { data: jobsData, isLoading: jobsLoading, refetch: refetchJobs } = useMyJobs({ limit: 50 })

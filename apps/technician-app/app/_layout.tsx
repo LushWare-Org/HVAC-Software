@@ -107,7 +107,8 @@ export default function RootLayout() {
                 <Stack.Screen name="pending-approval"     options={{ animation: 'fade' }} />
                 <Stack.Screen name="force-reset-password" options={{ animation: 'fade', gestureEnabled: false }} />
                 <Stack.Screen name="setup-location"       options={{ animation: 'fade', gestureEnabled: false }} />
-                <Stack.Screen name="(tabs)" />
+                {/* No swipe-back from the dashboard: there is nothing behind it a technician should land on. */}
+                <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
                 <Stack.Screen
                   name="job/[id]"
                   options={{ headerShown: false, animation: 'slide_from_right' }}

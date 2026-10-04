@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   View,
   Text,
@@ -15,8 +15,16 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius, Shadow } from '@/constants/theme'
 
 export default function LoginScreen() {
-  const { login, isLoading } = useAuth()
+  const { login, isLoading, isAuthenticated, isInitializing } = useAuth()
   const router = useRouter()
+  const signingIn = useRef(false)
+
+  // A signed-in technician should never sit on this screen (e.g. reached by a
+  // back press). Send them back through the root router instead of asking them
+  // to sign in again. Skipped mid-login, where handleLogin routes itself.
+  useEffect(() => {
+    if (!isInitializing && isAuthenticated && !signingIn.current) router.replace('/')
+  }, [isInitializing, isAuthenticated])
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,6 +39,7 @@ export default function LoginScreen() {
     }
     setError('')
     setRejectionMsg('')
+    signingIn.current = true
     try {
       const result = await login(email.trim(), password)
       if (result.status === 'APPROVED') {
@@ -47,6 +56,8 @@ export default function LoginScreen() {
     } catch (err: any) {
       const msg = err.response?.data?.message ?? err.message ?? 'Login failed. Please check your credentials.'
       setError(msg)
+    } finally {
+      signingIn.current = false
     }
   }
 
