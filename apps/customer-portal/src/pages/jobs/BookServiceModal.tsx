@@ -1,11 +1,13 @@
 /**
- * BookServiceModal — 3-step booking wizard (portal redesign).
+ * BookServiceModal — 4-step booking wizard (portal redesign).
  *
  * Step 1  Service  — tile grid instead of a dropdown, brief description,
  *                    optional equipment link (auto-attach hint).
  * Step 2  When     — quick date strip + native date fallback, three arrival
- *                    windows instead of a raw time field, saved-address chip.
- * Step 3  Review   — everything on one card, notes, GPS pin, one submit.
+ *                    windows instead of a raw time field.
+ * Step 3  Where    — map pin (required, starts on the saved location) and an
+ *                    optional written address.
+ * Step 4  Review   — everything on one card, access notes, one submit.
  *
  * Critical fix from the design review: the old modal hardcoded #fff/#111827
  * and broke in dark & black themes — every surface here reads CSS tokens.
@@ -29,7 +31,7 @@ interface BookServiceModalProps {
   componentLabel?: string
 }
 
-type Step = 1 | 2 | 3
+type Step = 1 | 2 | 3 | 4
 
 const SERVICE_TYPES: { value: string; label: string; icon: React.ElementType; danger?: boolean }[] = [
   { value: 'Maintenance', label: 'Maintenance', icon: Wrench },
@@ -133,8 +135,12 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
   const isEmergency = serviceType === 'Emergency'
 
   const step1Valid = !!serviceType
-  const step2Valid = !!preferredDate && !!serviceAddress.trim()
+  // The address is optional: the map pin is what dispatch routes on. A blank
+  // address falls back to the pin so the job never shows an empty location.
+  const step2Valid = !!preferredDate
   const busy = isPending || isSubmittingJob
+  const pinLabel = `Pinned location (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)})`
+  const effectiveAddress = serviceAddress.trim() || pinLabel
 
   const handleSubmit = async () => {
     // Local time parsing so the customer's timezone applies (unchanged contract)
@@ -154,7 +160,7 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
       preferredDate: preferredIso,
       notes: [notes, windowNote, equipmentNote].filter(Boolean).join('\n'),
       urgency: isEmergency ? 'EMERGENCY' : 'NORMAL',
-      serviceAddress,
+      serviceAddress: effectiveAddress,
       serviceLatitude: coords.lat,
       serviceLongitude: coords.lng,
     })
@@ -162,7 +168,7 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
     await submitJobRequest({
       title: requestTitle,
       description,
-      serviceAddress,
+      serviceAddress: effectiveAddress,
       serviceLatitude: coords.lat,
       serviceLongitude: coords.lng,
       priority: isEmergency ? 'EMERGENCY' : 'NORMAL',
@@ -177,7 +183,7 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
     setTimeout(onClose, 1600)
   }
 
-  const steps = ['Service', 'When', 'Review']
+  const steps = ['Service', 'When', 'Where', 'Review']
 
   const modal = (
     <div
@@ -410,8 +416,26 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
                 </div>
               </div>
 
+            </>
+          ) : step === 3 ? (
+            <>
+              <MapPicker
+                label="Where should we come? Drag the pin to the exact spot"
+                lat={coords.lat}
+                lng={coords.lng}
+                onChange={(lat, lng) => { setPinFromProfile(false); setCoords({ lat, lng }) }}
+                height="240px"
+              />
+              <div style={{ marginTop: 8, fontSize: 11, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <MapPin size={12} />
+                {pinFromProfile
+                  ? <>Using your saved location{customerProfile?.locationTag ? ` (${customerProfile.locationTag})` : ''}. Drag the pin if this visit is somewhere else.</>
+                  : <>We use this pin to send the closest available technician.</>}
+              </div>
+
               <div style={{ marginTop: 20 }}>
-                <span style={lbl}>Service address</span>
+                <span style={lbl}>Address (optional)</span>
+                {savedAddress && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {savedAddress && (
                     <button onClick={() => setUseSavedAddress(true)} style={{
@@ -431,12 +455,13 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
                     color: !useSavedAddress || !savedAddress ? 'var(--blue)' : 'var(--t2)',
                     fontSize: 12, fontWeight: 600, padding: '8px 12px', borderRadius: 10,
                   }}>
-                    <Plus size={13} /> {savedAddress ? 'Different address' : 'Enter address'}
+                    <Plus size={13} /> Different address
                   </button>
                 </div>
+                )}
                 {(!useSavedAddress || !savedAddress) && (
-                  <input style={{ ...input, marginTop: 10 }} value={serviceAddress}
-                    placeholder="Street address where service is needed"
+                  <input style={{ ...input, marginTop: savedAddress ? 10 : 0 }} value={serviceAddress}
+                    placeholder="Street, building or unit number, if the pin needs it"
                     onChange={e => setServiceAddress(e.target.value)} />
                 )}
               </div>
@@ -453,7 +478,7 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
                   ['When', preferredDate
                     ? `${new Date(`${preferredDate}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} · ${selectedWindow.label} (${selectedWindow.range})`
                     : '—'],
-                  ['Address', serviceAddress || '—'],
+                  ['Address', serviceAddress.trim() || 'Map pin only'],
                   ...(selectedEquipment
                     ? [['Equipment', [selectedEquipment.brand, selectedEquipment.type, selectedEquipment.model].filter(Boolean).join(' ')]]
                     : []),
@@ -470,22 +495,6 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
                 <textarea style={{ ...input, resize: 'none', lineHeight: 1.55 }} rows={2}
                   value={notes} placeholder="Gate codes, pets, parking, anything the technician should know…"
                   onChange={e => setNotes(e.target.value)} />
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <MapPicker
-                  label="Pin the exact location (helps dispatch send the nearest tech)"
-                  lat={coords.lat}
-                  lng={coords.lng}
-                  onChange={(lat, lng) => { setPinFromProfile(false); setCoords({ lat, lng }) }}
-                  height="200px"
-                />
-                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MapPin size={12} />
-                  {pinFromProfile
-                    ? <>Using your saved location{customerProfile?.locationTag ? ` (${customerProfile.locationTag})` : ''} — drag the pin if this visit is somewhere else.</>
-                    : <>We use this pin to assign the closest available technician.</>}
-                </div>
               </div>
 
               <div style={{
@@ -507,7 +516,7 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
             background: 'var(--bg-card-2)', borderTop: '1px solid var(--bd)', padding: '13px 26px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
           }}>
-            <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--t4)' }}>Step {step} of 3</span>
+            <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--t4)' }}>Step {step} of 4</span>
             <div style={{ display: 'flex', gap: 10 }}>
               {step === 1 ? (
                 <button className="btn btn-secondary btn-sm" onClick={onClose}>Cancel</button>
@@ -517,12 +526,12 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
                   <ChevronLeft size={13} /> Back
                 </button>
               )}
-              {step < 3 ? (
+              {step < 4 ? (
                 <button
                   className="btn btn-primary btn-sm"
-                  disabled={step === 1 ? !step1Valid : !step2Valid}
+                  disabled={step === 1 ? !step1Valid : step === 2 ? !step2Valid : false}
                   onClick={() => setStep(s => (s + 1) as Step)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 700, opacity: (step === 1 ? step1Valid : step2Valid) ? 1 : 0.5 }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 700, opacity: (step === 1 ? step1Valid : step === 2 ? step2Valid : true) ? 1 : 0.5 }}
                 >
                   Continue <ChevronRight size={13} />
                 </button>
