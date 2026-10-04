@@ -146,8 +146,13 @@ export class JobsController {
       }
     }
 
+    // TECHNICIAN role: only jobs they are on the crew of, whatever the client
+    // asks for. Without this, an app build that sent no (or an unrecognised)
+    // filter listed every job in the company, unassigned ones included.
+    const effectiveCrewUserId = user.role === Role.TECHNICIAN ? user.userId : crewUserId;
+
     return this.jobsService.findAll(user.companyId, page, limit, {
-      status, assignedToId, crewUserId, jobTypeId, search, dateFrom, dateTo,
+      status, assignedToId, crewUserId: effectiveCrewUserId, jobTypeId, search, dateFrom, dateTo,
       customerId: effectiveCustomerId,
       agreementId,
       projectId,

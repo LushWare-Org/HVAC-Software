@@ -162,6 +162,35 @@ describe('JobsController.findAll — customer componentId visibility', () => {
   });
 });
 
+describe('JobsController.findAll — technicians only see their own jobs', () => {
+  let controller: JobsController;
+  let jobsService: { findAll: jest.Mock };
+  const none = [undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+    undefined, undefined, undefined, undefined, undefined, undefined] as const;
+
+  beforeEach(() => {
+    jobsService = { findAll: jest.fn().mockResolvedValue({ data: [], page: 1, limit: 20, total: 0, totalPages: 0 }) };
+    controller = new JobsController(jobsService as unknown as JobsService, {} as unknown as CrmClient);
+  });
+
+  it('scopes a technician to their own crew when the app sends no filter at all', async () => {
+    await controller.findAll(makeUser({ role: Role.TECHNICIAN, customerId: null }), 1, 20, ...none);
+    expect(jobsService.findAll).toHaveBeenCalledWith(CO, 1, 20, expect.objectContaining({ crewUserId: 'user-1' }));
+  });
+
+  it("ignores a technician's attempt to ask for someone else's jobs", async () => {
+    await controller.findAll(makeUser({ role: Role.TECHNICIAN, customerId: null }), 1, 20, ...none, 'someone-else');
+    expect(jobsService.findAll).toHaveBeenCalledWith(CO, 1, 20, expect.objectContaining({ crewUserId: 'user-1' }));
+  });
+
+  it('leaves staff free to list every job, or filter by any crew member', async () => {
+    await controller.findAll(makeUser({ role: Role.DISPATCHER, customerId: null }), 1, 20, ...none);
+    expect(jobsService.findAll).toHaveBeenLastCalledWith(CO, 1, 20, expect.objectContaining({ crewUserId: undefined }));
+    await controller.findAll(makeUser({ role: Role.DISPATCHER, customerId: null }), 1, 20, ...none, 'tech-9');
+    expect(jobsService.findAll).toHaveBeenLastCalledWith(CO, 1, 20, expect.objectContaining({ crewUserId: 'tech-9' }));
+  });
+});
+
 describe('JobsController.patch — customer field whitelist', () => {
   let controller: JobsController;
   let jobsService: {
