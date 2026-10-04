@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Mail, Phone, MapPin, CheckCircle2, ArrowRight, ArrowDown } from 'lucide-react'
+import { Mail, Phone, CheckCircle2, ArrowRight, ArrowDown } from 'lucide-react'
 import PageHero from '../components/ui/PageHero'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
@@ -209,9 +209,6 @@ export default function Contact() {
                 <a href={`tel:${BRAND.phone}`} className="hover:underline">
                   {BRAND.phone}
                 </a>
-              </ContactRow>
-              <ContactRow icon={MapPin} label="Headquarters">
-                {BRAND.address}
               </ContactRow>
             </div>
           </aside>

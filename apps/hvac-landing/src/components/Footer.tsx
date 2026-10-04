@@ -48,10 +48,6 @@ export default function Footer() {
                 <Phone className="h-3.5 w-3.5 flex-none" />
                 {BRAND.phone}
               </a>
-              <p className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 flex-none" />
-                {BRAND.address}
-              </p>
             </div> */}
           </div>
 

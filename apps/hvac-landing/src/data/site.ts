@@ -43,9 +43,8 @@ import {
 export const BRAND = {
   name: 'HVACtor.AI',
   tagline: 'Field Service Management for the trades',
-  email: 'sales@hvactor.ai',
-  phone: '+1 (123) 456-7890',
-  address: '2200 Market Street, Suite 700, Denver, CO 80205',
+  email: 'info@hvactor.ai',
+  phone: '+94 760340975',
 }
 
 export interface NavItem {

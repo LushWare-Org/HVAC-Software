@@ -8,6 +8,7 @@ import FaqAccordion from '../components/ui/FaqAccordion'
 import CtaBanner from '../components/ui/CtaBanner'
 import Button from '../components/ui/Button'
 import Reveal from '../components/ui/Reveal'
+import { BRAND } from '../data/site'
 import { PRICING_PLANS, PRICING_TEAM_SIZES, BETA_OFFER, FAQS } from '../data/site'
 import type { TeamSizeId } from '../data/site'
 
@@ -302,8 +303,8 @@ export default function Pricing() {
               </h2>
               <p className="mt-4 text-slate-600">
                 Can’t find what you’re looking for? Reach us at{' '}
-                <a href="mailto:sales@hvactor.ai" className="font-medium text-navy-800 underline underline-offset-4">
-                  sales@hvactor.ai
+                <a href={`mailto:${BRAND.email}`} className="font-medium text-navy-800 underline underline-offset-4">
+                  {BRAND.email}
                 </a>
                 .
               </p>
