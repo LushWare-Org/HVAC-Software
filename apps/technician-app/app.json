@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "scheme": "tstechnician",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.tscrm.technician",
@@ -64,7 +63,9 @@
           "color": "#2563EB"
         }
       ],
-      "expo-task-manager"
+      "expo-task-manager",
+      "expo-splash-screen",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

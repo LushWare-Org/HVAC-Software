@@ -4,3 +4,7 @@
 
 expo-env.d.ts
 # @end expo-cli
+# Local Expo state and generated native projects (expo prebuild / run:ios)
+.expo/
+/ios
+/android
