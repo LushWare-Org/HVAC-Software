@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../contexts/ToastContext";
 import {
-  X, Edit2, Save, Wrench, MapPin, User, Calendar,
+  X, Edit2, Save, Wrench, User, Calendar,
   DollarSign, FileText, Clock, AlertCircle, Loader2, ArrowRight,
   Send, Receipt, Truck, Package, CheckSquare, ClipboardList, CalendarClock,
   Plus, Trash2, MessageSquare, Phone, Mail, Home,
@@ -28,9 +28,11 @@ import {
 } from "../../hooks/useInventory";
 import type { Job, EquipmentRecord } from "../../types/api";
 import JobActivityTab from "./JobActivityTab";
+import JobStatusSpine from "./JobStatusSpine";
+import JobVitalsRail from "./JobVitalsRail";
+import CrewControlCenter from "../scheduling/crew/CrewControlCenter";
+import { useCrew } from "../../hooks/useCrew";
 import { formatMoney } from '../../lib/format'
-import { useTechnicians } from "../../hooks/useScheduling";
-import Avatar from "../../components/Avatar";
 import GpsSimulationControl from '../../components/GpsSimulationControl'
 import JobStatusOverrideMenu from "../../components/JobStatusOverrideMenu";
 import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
@@ -107,7 +109,6 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
   // Customer data for the Customer tab
   const customerQuery = useCustomer(propJob?.customerId ?? "");
   const customer = customerQuery.data;
-  const techniciansQuery = useTechnicians();
 
   // Mutations
   const navigate = useNavigate();
@@ -133,6 +134,12 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
   // Prefer the server-fresh copy; fall back to the list-page prop for first render.
   const job = (jobDetail ?? propJob)!;
   const statusHistory = jobDetail?.statusHistory ?? [];
+
+  // The crew the old modal never showed. Read-only here; editing opens the
+  // control centre, which already handles candidates, conflicts and the lead.
+  const crewQuery = useCrew(propJob?.id);
+  const crew = crewQuery.data ?? [];
+  const [showCrewCenter, setShowCrewCenter] = useState(false);
 
   // Re-seed the duration editor when a different job is opened, or when the
   // server-fresh copy arrives with a value the list-page prop didn't carry.
@@ -357,11 +364,11 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
 
   const status = STATUS_MAP[job.status] ?? STATUS_MAP.PENDING;
 
-  const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
+  const tabs: { id: TabType; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: "overview",  label: "Overview",      icon: <Wrench size={13} /> },
     { id: "customer",  label: "Customer",      icon: <User size={13} /> },
     { id: "checklist", label: "Checklist",      icon: <CheckSquare size={13} /> },
-    { id: "equipment", label: "Equipment",      icon: <Package size={13} /> },
+    { id: "equipment", label: "Equipment",      icon: <Package size={13} />, badge: equipmentQuery.data?.length },
     { id: "inventory", label: "Inventory",      icon: <Truck size={13} /> },
     { id: "details",   label: "Schedule",       icon: <Calendar size={13} /> },
     { id: "finance",   label: "Finance",        icon: <DollarSign size={13} /> },
@@ -385,69 +392,126 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl max-w-3xl w-full flex flex-col shadow-2xl admin-modal-box"
-        style={{ height: 700 }}
+        className="flex flex-col admin-modal-box"
+        style={{
+          background: 'var(--bg-card)',
+          borderRadius: 14,
+          boxShadow: '0 24px 64px rgba(15,23,42,0.28)',
+          width: 'min(1280px, 96vw)',
+          height: 'min(880px, 92vh)',
+        }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between shadow-lg rounded-t-xl shrink-0">
-          <div className="text-white flex-1 min-w-0">
-            {onBack && (
-              <button
-                onClick={() => { onClose(); onBack(); }}
-                className="flex items-center gap-1 text-blue-200 hover:text-white text-xs font-semibold mb-1 bg-transparent border-0 cursor-pointer p-0 transition-colors"
-              >
-                ← {backLabel ?? 'Back'}
-              </button>
-            )}
-            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-              <span className="text-blue-200 text-xs font-semibold tracking-wider">{job.id.slice(0, 8)}…</span>
-              <span className={`badge ${status.css} text-xs`} style={{ fontSize: 11 }}>{status.label}</span>
-              {job.priority && (
-                <span className={`badge ${PRIORITY_CSS[job.priority] ?? "badge-neutral"} text-xs`} style={{ fontSize: 11 }}>{job.priority}</span>
-              )}
-              {hasShortage && (
-                <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 5, background: 'rgba(245,158,11,0.25)', color: '#fbbf24', fontWeight: 800, letterSpacing: '0.03em', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                  <Package size={9} /> PARTS SHORT
-                </span>
-              )}
-              <RescheduleBadge state={job.rescheduleState} />
-            </div>
-            <h2 className="text-lg font-bold leading-tight truncate">{job.title}</h2>
-            <p className="text-blue-100 text-xs mt-0.5 truncate">
-              {job.customerName ?? "No customer"}
-              {job.assignedToName && ` · Tech: ${job.assignedToName}`}
-            </p>
-            {job.projectId && <ProjectComponentTag projectId={job.projectId} componentId={job.componentId} tone="hero" />}
-          </div>
-          <div className="flex items-center gap-2 ml-3 shrink-0">
-            <button onClick={onClose} className="text-blue-100 hover:text-white transition-colors p-1.5 hover:bg-blue-500 rounded-lg cursor-pointer bg-transparent border-0">
-              <X size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs — scrollable to prevent overflow */}
-        <div className="flex border-b border-gray-200 bg-gray-50 shrink-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {tabs.map(t => (
+        {/* Header — quiet surface rather than a coloured hero, so the spine
+            below it is the thing the eye lands on. */}
+        <div style={{ padding: '15px 20px 0', flexShrink: 0 }}>
+          {onBack && (
             <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold transition-colors border-b-2 cursor-pointer bg-transparent whitespace-nowrap ${
-                activeTab === t.id
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              onClick={() => { onClose(); onBack(); }}
+              style={{ all: 'unset', cursor: 'pointer', color: 'var(--blue)', fontSize: 11.5, fontWeight: 700, marginBottom: 8, display: 'inline-block' }}
             >
-              {t.icon}
-              {t.label}
+              ← {backLabel ?? 'Back'}
             </button>
-          ))}
+          )}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 4 }}>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11.5, color: 'var(--t3)', fontWeight: 600 }}>
+                  {(job as any).jobNumber ?? job.id.slice(0, 8)}
+                </span>
+                <span className={`badge ${status.css}`} style={{ fontSize: 11 }}>{status.label}</span>
+                {job.priority && (
+                  <span className={`badge ${PRIORITY_CSS[job.priority] ?? "badge-neutral"}`} style={{ fontSize: 11 }}>{job.priority}</span>
+                )}
+                {hasShortage && (
+                  <span style={{ fontSize: 10.5, padding: '2px 7px', borderRadius: 5, background: 'var(--amber-dim)', color: 'var(--amber)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <Package size={10} /> Parts short
+                  </span>
+                )}
+                <RescheduleBadge state={job.rescheduleState} />
+                {job.projectId && <ProjectComponentTag projectId={job.projectId} componentId={job.componentId} />}
+              </div>
+              <h2 style={{ fontSize: 21, fontWeight: 700, color: 'var(--t1)', lineHeight: 1.22, letterSpacing: '-0.015em', margin: 0 }}>
+                {job.title}
+              </h2>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                style={{ all: 'unset', cursor: 'pointer', padding: 6, borderRadius: 8, color: 'var(--t3)', display: 'inline-flex' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* The signature element: where this job is, and how long it has been
+              there. See JobStatusSpine. */}
+          <div style={{ marginTop: 14 }}>
+            <JobStatusSpine
+              status={job.status}
+              statusHistory={statusHistory}
+              createdAt={(job as any).createdAt}
+            />
+          </div>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
+        {/* Body: vitals stay put, the tab is the working surface */}
+        <div style={{ flex: 1, display: 'flex', minHeight: 0, borderTop: '1px solid var(--bd)', marginTop: 12 }}>
+          <JobVitalsRail
+            job={job}
+            crew={crew}
+            crewLoading={crewQuery.isLoading}
+            onManageCrew={() => setShowCrewCenter(true)}
+            onOpenCustomer={() => setActiveTab('customer')}
+          />
+
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            {/* Tabs */}
+            <div
+              style={{ display: 'flex', gap: 2, padding: '9px 16px 0', borderBottom: '1px solid var(--bd)', overflowX: 'auto', flexShrink: 0, scrollbarWidth: 'none' }}
+            >
+              {tabs.map(t => {
+                const on = activeTab === t.id
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id)}
+                    style={{
+                      all: 'unset',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 13px',
+                      borderRadius: '7px 7px 0 0',
+                      fontSize: 12.5,
+                      fontWeight: on ? 700 : 550,
+                      color: on ? 'var(--t1)' : 'var(--t3)',
+                      background: on ? 'var(--bg-card)' : 'transparent',
+                      borderBottom: on ? '2px solid var(--blue)' : '2px solid transparent',
+                      whiteSpace: 'nowrap',
+                      marginBottom: -1,
+                    }}
+                  >
+                    {t.icon}
+                    {t.label}
+                    {t.badge != null && t.badge > 0 && (
+                      <span style={{
+                        fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700,
+                        padding: '1px 5px', borderRadius: 20,
+                        background: on ? 'var(--blue-dim)' : 'var(--bg-card-2)',
+                        color: on ? 'var(--blue)' : 'var(--t3)',
+                      }}>{t.badge}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-6">
 
             {error && (
               <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -507,93 +571,136 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
 
             {/* ── Overview ──────────────────────────────────────────────── */}
             {activeTab === "overview" && (
-              <div className="space-y-5">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {/* Renders nothing unless the server has GPS simulation enabled,
                     so this is invisible on a normal deployment. */}
                 <GpsSimulationControl jobId={job.id} />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                      <User size={11} /> Customer
-                    </label>
-                    <input value={job.customerName ?? "—"} disabled className={inputView} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                      <User size={11} /> Technician
-                    </label>
-                    <div className="flex gap-2 items-center">
-                      {job.assignedToId && job.assignedToName && (
-                        <Avatar
-                          name={job.assignedToName}
-                          avatarUrl={techniciansQuery.data?.find(t => t.userId === job.assignedToId)?.avatarUrl}
-                          size={34}
-                          radius={17}
-                          fontSize={13}
-                        />
-                      )}
-                      <input value={job.assignedToName ?? "Unassigned"} disabled className={`${inputView} flex-1`} />
-                      {job.assignedToId && job.assignedToName && (
+
+                {/* Anything that should change what someone does next, first and
+                    together. Nothing renders when the job is simply fine. */}
+                {(() => {
+                  const alerts: { tone: string; text: string; action?: () => void; actionLabel?: string }[] = [];
+                  if (job.status === "CANCELLED" && (job as any).cancellationReason) {
+                    alerts.push({ tone: 'var(--red)', text: `Cancelled: ${(job as any).cancellationReason}` });
+                  }
+                  if (!crew.length && !job.assignedToName && job.status !== "CANCELLED") {
+                    alerts.push({ tone: 'var(--amber)', text: 'Nobody is assigned to this job yet.', action: () => setShowCrewCenter(true), actionLabel: 'Assign' });
+                  }
+                  const need = (job as any).requiredTechCount ?? 0;
+                  if (need > 0 && crew.length > 0 && crew.length < need) {
+                    alerts.push({ tone: 'var(--amber)', text: `This job is set up for ${need} technicians and has ${crew.length}.`, action: () => setShowCrewCenter(true), actionLabel: 'Add' });
+                  }
+                  if (hasShortage) {
+                    alerts.push({ tone: 'var(--amber)', text: (job as any).partShortageNote ? `Waiting on parts: ${(job as any).partShortageNote}` : 'Waiting on parts.' });
+                  }
+                  if (!job.scheduledStart && !["COMPLETED","INVOICED","PAID","CANCELLED"].includes(job.status)) {
+                    alerts.push({ tone: 'var(--amber)', text: 'No date or time set.', action: () => setActiveTab('details'), actionLabel: 'Schedule' });
+                  }
+                  if (!alerts.length) return null;
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'var(--bd)', border: '1px solid var(--bd)', borderRadius: 10, overflow: 'hidden' }}>
+                      {alerts.map((a, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 13px', background: 'var(--bg-card)' }}>
+                          <span style={{ width: 3, alignSelf: 'stretch', borderRadius: 2, background: a.tone, flexShrink: 0 }} />
+                          <AlertCircle size={14} style={{ color: a.tone, flexShrink: 0 }} />
+                          <span style={{ fontSize: 13, color: 'var(--t1)', flex: 1 }}>{a.text}</span>
+                          {a.action && (
+                            <button onClick={a.action} style={{ all: 'unset', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--blue)' }}>
+                              {a.actionLabel}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* What was asked for */}
+                <section>
+                  <h3 style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--t3)', margin: '0 0 7px' }}>What was reported</h3>
+                  <p style={{ fontSize: 14.5, lineHeight: 1.6, color: 'var(--t1)', margin: 0, maxWidth: '72ch', whiteSpace: 'pre-wrap' }}>
+                    {job.description?.trim() || 'No description was given when this job was raised.'}
+                  </p>
+                </section>
+
+                {/* Where the work stands, pulled from the tabs so the answer is
+                    here rather than three clicks away. */}
+                <section>
+                  <h3 style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--t3)', margin: '0 0 9px' }}>Where it stands</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(168px, 1fr))', gap: 1, background: 'var(--bd)', border: '1px solid var(--bd)', borderRadius: 10, overflow: 'hidden' }}>
+                    {(() => {
+                      const tasks = workOrder?.tasks ?? [];
+                      const done = tasks.filter(t => t.isCompleted).length;
+                      const eq = equipmentQuery.data?.length ?? 0;
+                      const last = statusHistory.length
+                        ? [...statusHistory].sort((a: any, b: any) => +new Date(b.createdAt) - +new Date(a.createdAt))[0]
+                        : null;
+                      const cells: { label: string; value: string; sub?: string; onClick?: () => void }[] = [
+                        {
+                          label: 'Checklist',
+                          value: tasks.length ? `${done} of ${tasks.length}` : 'None yet',
+                          sub: tasks.length ? (done === tasks.length ? 'all done' : `${tasks.length - done} left`) : 'no work order',
+                          onClick: () => setActiveTab('checklist'),
+                        },
+                        {
+                          label: 'Equipment on site',
+                          value: eq ? String(eq) : 'None',
+                          sub: eq ? (eq === 1 ? 'unit on record' : 'units on record') : 'nothing recorded',
+                          onClick: () => setActiveTab('equipment'),
+                        },
+                        {
+                          label: 'Crew',
+                          value: crew.length ? String(crew.length) : (job.assignedToName ? '1' : 'None'),
+                          sub: crew.find(m => m.assignment?.isLead)?.technician.name ?? job.assignedToName ?? 'unassigned',
+                          onClick: () => setShowCrewCenter(true),
+                        },
+                        {
+                          label: 'Last update',
+                          value: last ? new Date(last.createdAt).toLocaleDateString([], { day: 'numeric', month: 'short' }) : '—',
+                          sub: last ? String(last.toStatus).replace(/_/g, ' ').toLowerCase() : 'no history',
+                          onClick: () => setActiveTab('activity'),
+                        },
+                      ];
+                      return cells.map(c => (
                         <button
-                          onClick={handleChatWithTech}
-                          title={`Chat with ${job.assignedToName}`}
-                          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-violet-200 bg-violet-50 text-violet-600 hover:bg-violet-100 transition-colors cursor-pointer"
+                          key={c.label}
+                          onClick={c.onClick}
+                          style={{ all: 'unset', cursor: 'pointer', padding: '11px 13px', background: 'var(--bg-card)', display: 'block' }}
                         >
-                          <MessageSquare size={13} /> Chat
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--t4)', marginBottom: 4 }}>{c.label}</div>
+                          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em', lineHeight: 1.15 }}>{c.value}</div>
+                          {c.sub && <div style={{ fontSize: 11.5, color: 'var(--t3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.sub}</div>}
                         </button>
-                      )}
-                    </div>
+                      ));
+                    })()}
                   </div>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                      <MapPin size={11} /> Address
-                    </label>
-                    <input value={job.serviceAddress ?? job.customerAddress ?? "—"} disabled className={inputView} />
-                  </div>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Title</label>
-                    <input value={job.title} disabled className={inputView} />
-                  </div>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</label>
-                    <textarea value={job.description ?? ""} disabled rows={3} className={`${inputView} resize-none`} />
-                  </div>
-                </div>
+                </section>
 
-                {/* J4: Cancellation reason (shown only when cancelled) */}
-                {job.status === "CANCELLED" && (job as any).cancellationReason && (
-                  <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-100">
-                    <AlertCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs font-bold text-red-600 uppercase tracking-wider mb-0.5">Cancellation Reason</p>
-                      <p className="text-sm text-red-700 font-medium">{(job as any).cancellationReason}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* J5: Parts shortage flag (shown for active/on-hold jobs) */}
-                {!["PAID", "CANCELLED"].includes(job.status) && (
-                  <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${hasShortage ? "bg-amber-50 border-amber-200" : "bg-gray-50 border-gray-200"}`}>
-                    <div className="flex items-center gap-3">
-                      <Package size={16} className={hasShortage ? "text-amber-600" : "text-gray-400"} />
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">Parts on backorder</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Flag if this job is stalled waiting for a part</p>
-                      </div>
-                    </div>
+                {/* Actions that belong to the job as a whole rather than a tab */}
+                <section style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  {job.assignedToId && job.assignedToName && (
+                    <button
+                      onClick={handleChatWithTech}
+                      style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: '1px solid var(--violet-dim)', background: 'var(--violet-dim)', color: 'var(--violet)', fontSize: 12.5, fontWeight: 650 }}
+                    >
+                      <MessageSquare size={13} /> Message {job.assignedToName.split(' ')[0]}
+                    </button>
+                  )}
+                  {!["PAID", "CANCELLED"].includes(job.status) && (
                     <button
                       onClick={handleToggleShortage}
                       disabled={savingShortage}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer border-0 focus:outline-none disabled:opacity-60 ${hasShortage ? "bg-amber-500" : "bg-gray-300"}`}
+                      style={{ all: 'unset', cursor: savingShortage ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 12px', borderRadius: 8, border: `1px solid ${hasShortage ? 'var(--amber)' : 'var(--bd-md)'}`, background: hasShortage ? 'var(--amber-dim)' : 'transparent', color: hasShortage ? 'var(--amber)' : 'var(--t2)', fontSize: 12.5, fontWeight: 650, opacity: savingShortage ? 0.6 : 1 }}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${hasShortage ? "translate-x-[18px]" : "translate-x-[2px]"}`} />
+                      <Package size={13} /> {hasShortage ? 'Waiting on parts' : 'Flag parts on backorder'}
                     </button>
-                  </div>
-                )}
+                  )}
+                </section>
+
                 {hasShortage && !["PAID", "CANCELLED"].includes(job.status) && (
                   <input
                     className={`${inputView} !bg-amber-50 !border-amber-200`}
-                    placeholder="Which part? (PO#, supplier, etc.) — optional"
+                    placeholder="Which part? (PO number, supplier) — optional"
                     defaultValue={(job as any).partShortageNote ?? ""}
                     onBlur={e => {
                       if (e.target.value !== ((job as any).partShortageNote ?? "")) {
@@ -602,10 +709,8 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
                     }}
                   />
                 )}
-
               </div>
             )}
-
             {/* ── Customer ──────────────────────────────────────────────── */}
             {activeTab === "customer" && (
               <div className="space-y-5">
@@ -1306,6 +1411,8 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
               </div>
             )}
 
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1348,6 +1455,15 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
             Close
           </button>
         </div>
+
+        {/* Full crew editing lives in the control centre, which already handles
+            candidates, conflicts, the lead and the map. No second implementation. */}
+        <CrewControlCenter
+          job={showCrewCenter ? job : null}
+          open={showCrewCenter}
+          onClose={() => setShowCrewCenter(false)}
+          onSaved={() => crewQuery.refetch()}
+        />
 
         {showReschedule && (
           <RescheduleModal
