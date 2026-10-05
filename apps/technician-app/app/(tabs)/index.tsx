@@ -22,6 +22,7 @@ import { useCompanyBranding } from '@/hooks/useCompanyBranding'
 import { uploadPendingAvatarIfAny } from '@/hooks/useAvatar'
 import { AvatarReminderBanner } from '@/components/AvatarReminderBanner'
 import { JobCard } from '@/components/JobCard'
+import { ActiveJobHero } from '@/components/ActiveJobHero'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ActionButton } from '@/components/ActionButton'
@@ -147,6 +148,9 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* The job in progress comes first: it is what the technician needs next. */}
+        {activeJob && <ActiveJobHero job={activeJob} assignment={assignmentMap[activeJob.id]} />}
+
         {/* Photo reminder — shown each launch until a profile photo exists */}
         <AvatarReminderBanner />
 
@@ -182,27 +186,6 @@ export default function HomeScreen() {
             <Text style={styles.statLabel}>Rating</Text>
           </View>
         </View>
-
-        {/* Active Job Banner */}
-        {activeJob && (
-          <TouchableOpacity
-            style={styles.activeJobBanner}
-            onPress={() => router.push(`/job/${activeJob.id}`)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.activePulse} />
-            <View style={styles.activeContent}>
-              <Text style={styles.activeLabel}>
-                {activeJob.status === 'EN_ROUTE' ? '🚗 En Route' : '📍 On Site'}
-              </Text>
-              <Text style={styles.activeTitle} numberOfLines={1}>{activeJob.title}</Text>
-              <Text style={styles.activeAddress} numberOfLines={1}>
-                {activeJob.serviceAddress ?? activeJob.customerName}
-              </Text>
-            </View>
-            <Text style={styles.activeArrow}>›</Text>
-          </TouchableOpacity>
-        )}
 
         {/* Next Up */}
         {!activeJob && nextJob && (
@@ -246,7 +229,7 @@ export default function HomeScreen() {
               subtitle="Enjoy your day off! New assignments will appear here."
             />
           ) : (
-            todaysJobs.map((job) => (
+            todaysJobs.filter((job) => job.id !== activeJob?.id).map((job) => (
               <JobCard
                 key={job.id}
                 job={job}
@@ -358,48 +341,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     marginTop: 2,
-  },
-  activeJobBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    marginHorizontal: Spacing.base,
-    marginBottom: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.base,
-    ...Shadow.md,
-  },
-  activePulse: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#4ADE80',
-    marginRight: Spacing.md,
-  },
-  activeContent: {
-    flex: 1,
-  },
-  activeLabel: {
-    fontSize: FontSize.xs,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: FontWeight.semibold,
-    marginBottom: 2,
-  },
-  activeTitle: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-  },
-  activeAddress: {
-    fontSize: FontSize.sm,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 2,
-  },
-  activeArrow: {
-    fontSize: 28,
-    color: Colors.white,
-    fontWeight: FontWeight.bold,
-    marginLeft: Spacing.sm,
   },
   nextUpSection: {
     marginBottom: Spacing.base,

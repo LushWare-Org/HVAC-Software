@@ -133,20 +133,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity style={styles.applyBtn} onPress={() => router.push('/signup')} activeOpacity={0.85}>
-            <Text style={styles.applyBtnText}>🛠  Apply to Join as a Technician</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.applyHint}>
-            New here? Submit your details and an admin will approve your account.
-          </Text>
-
           <Text style={styles.footer}>Trade & Service CRM v1.0</Text>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -180,11 +166,5 @@ const styles = StyleSheet.create({
   loginBtn: { backgroundColor: Colors.primary, borderRadius: BorderRadius.md, paddingVertical: Spacing.base, alignItems: 'center', marginTop: Spacing.xl },
   loginBtnDisabled: { opacity: 0.6 },
   loginBtnText: { color: Colors.white, fontSize: FontSize.md, fontWeight: FontWeight.semibold },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: Spacing.lg },
-  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
-  dividerText: { marginHorizontal: Spacing.md, color: Colors.textMuted, fontSize: FontSize.sm },
-  applyBtn: { borderWidth: 1.5, borderColor: Colors.primary, borderRadius: BorderRadius.md, paddingVertical: Spacing.base, alignItems: 'center' },
-  applyBtnText: { color: Colors.primary, fontSize: FontSize.base, fontWeight: FontWeight.semibold },
-  applyHint: { textAlign: 'center', color: Colors.textMuted, fontSize: FontSize.xs, marginTop: Spacing.sm },
   footer: { textAlign: 'center', color: Colors.textMuted, fontSize: FontSize.xs, marginTop: Spacing['2xl'] },
 })
