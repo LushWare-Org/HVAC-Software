@@ -230,6 +230,16 @@ export class JobsService {
   // GET ONE (full detail)
   // ============================================================
 
+  /** Existence and ownership only: one indexed query instead of the full job. */
+  async findOwnership(companyId: string, id: string) {
+    const job = await this.prisma.job.findFirst({
+      where: { id, companyId },
+      select: { id: true, customerId: true, status: true },
+    });
+    if (!job) throw new NotFoundException(`Job ${id} not found`);
+    return job;
+  }
+
   async findOne(companyId: string, id: string) {
     const job = await this.prisma.job.findFirst({
       where: { id, companyId },
@@ -648,7 +658,7 @@ export class JobsService {
     }>,
     opts: { actor?: JobActor; silent?: boolean } = {},
   ) {
-    await this.findOne(companyId, id);
+    await this.findOwnership(companyId, id);
     // Strip fields that don't exist on the Prisma Job model
     const { gpsTrackingEnabled: _gps, ...rest } = data;
     const updated = await this.prisma.job.update({

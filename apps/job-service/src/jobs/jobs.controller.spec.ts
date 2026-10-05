@@ -194,12 +194,13 @@ describe('JobsController.findAll — technicians only see their own jobs', () =>
 describe('JobsController.patch — customer field whitelist', () => {
   let controller: JobsController;
   let jobsService: {
-    findOne: jest.Mock; patchFields: jest.Mock; updateStatus: jest.Mock;
+    findOne: jest.Mock; findOwnership: jest.Mock; patchFields: jest.Mock; updateStatus: jest.Mock;
   };
 
   beforeEach(() => {
     jobsService = {
       findOne: jest.fn().mockResolvedValue({ id: 'job-1', customerId: CUSTOMER_ID, status: 'SCHEDULED' }),
+      findOwnership: jest.fn().mockResolvedValue({ id: 'job-1', customerId: CUSTOMER_ID, status: 'SCHEDULED' }),
       patchFields: jest.fn().mockResolvedValue({}),
       updateStatus: jest.fn().mockResolvedValue({}),
     };
@@ -291,7 +292,7 @@ describe('JobsController.patch — customer field whitelist', () => {
   });
 
   it('still blocks a customer touching another customer\'s job', async () => {
-    jobsService.findOne.mockResolvedValue({ id: 'job-1', customerId: OTHER_CUSTOMER_ID });
+    jobsService.findOwnership.mockResolvedValue({ id: 'job-1', customerId: OTHER_CUSTOMER_ID });
     await expect(
       controller.patch(makeUser(), 'job-1', { status: 'CANCELLED' } as any),
     ).rejects.toThrow(ForbiddenException);

@@ -248,7 +248,9 @@ export class JobsController {
     @Param('id') id: string,
     @Body() dto: PatchJobDto,
   ) {
-    const job = await this.jobsService.findOne(user.companyId, id) as any;
+    // Only ownership is needed here. The full job (ten related tables) is loaded
+    // once, for the response, not once per check.
+    const job = await this.jobsService.findOwnership(user.companyId, id);
 
     // CUSTOMER role: their own job, cancellation only, and nothing else.
     if (user.role === Role.CUSTOMER) {
