@@ -8,7 +8,7 @@
 import axios from 'axios'
 import { authStorage } from './authStorage'
 
-const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.us-central1.run.app/api'
+const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.asia-northeast3.run.app/api'
 
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')
