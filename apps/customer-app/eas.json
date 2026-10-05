@@ -10,7 +10,8 @@
       "env": {
         "npm_config_user_agent": "pnpm"
       },
-      "channel": "development"
+      "channel": "development",
+      "node": "22.14.0"
     },
     "preview-apk": {
       "distribution": "internal",
@@ -22,7 +23,8 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app/api",
         "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "npm_config_user_agent": "pnpm"
-      }
+      },
+      "node": "22.14.0"
     },
     "preview-ios-simulator": {
       "distribution": "internal",
@@ -34,7 +36,8 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app/api",
         "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "npm_config_user_agent": "pnpm"
-      }
+      },
+      "node": "22.14.0"
     },
     "production": {
       "autoIncrement": true,
@@ -43,7 +46,8 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app/api",
         "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "npm_config_user_agent": "pnpm"
-      }
+      },
+      "node": "22.14.0"
     },
     "production-apk": {
       "distribution": "internal",
@@ -56,7 +60,8 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app/api",
         "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "npm_config_user_agent": "pnpm"
-      }
+      },
+      "node": "22.14.0"
     }
   },
   "submit": {

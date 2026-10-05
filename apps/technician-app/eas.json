@@ -9,7 +9,8 @@
       "distribution": "internal",
       "env": {
         "npm_config_user_agent": "pnpm"
-      }
+      },
+      "channel": "development"
     },
     "preview-apk": {
       "distribution": "internal",
@@ -21,7 +22,8 @@
         "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "EXPO_PUBLIC_COMPANY_ID": "co-demo-001",
         "npm_config_user_agent": "pnpm"
-      }
+      },
+      "channel": "preview"
     },
     "production-apk": {
       "autoIncrement": true,
@@ -34,7 +36,8 @@
         "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "EXPO_PUBLIC_COMPANY_ID": "co-demo-001",
         "npm_config_user_agent": "pnpm"
-      }
+      },
+      "channel": "production"
     },
     "production": {
       "autoIncrement": true,
@@ -43,7 +46,8 @@
         "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "EXPO_PUBLIC_COMPANY_ID": "co-demo-001",
         "npm_config_user_agent": "pnpm"
-      }
+      },
+      "channel": "production"
     }
   }
 }

@@ -75,6 +75,13 @@
       "eas": {
         "projectId": "87133be4-26f3-4643-b295-3582ce56a37b"
       }
+    },
+    "owner": "ravishan12",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/87133be4-26f3-4643-b295-3582ce56a37b"
     }
   }
 }

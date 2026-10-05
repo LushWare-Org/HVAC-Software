@@ -9,7 +9,7 @@
     "newArchEnabled": true,
     "icon": "./assets/images/icon.png",
     "runtimeVersion": {
-      "policy": "fingerprint"
+      "policy": "appVersion"
     },
     "ios": {
       "supportsTablet": false,
