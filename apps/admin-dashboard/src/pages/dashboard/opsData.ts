@@ -1,4 +1,4 @@
-import type { Job, Technician } from '../../types/api'
+import type { DispatchAssignment, Job, Technician } from '../../types/api'
 
 const LATE_AFTER_MIN = 15
 
@@ -179,4 +179,107 @@ export function buildTechRows(techs: Technician[], today: Job[], now: Date): Tec
     return { id: t.id, name: t.name, state: 'FREE', detail: 'Free' }
   })
   return rows.sort((a, b) => order[a.state] - order[b.state] || a.name.localeCompare(b.name))
+}
+
+// ─── Live now: who is driving or on site ─────────────────────────────────────
+
+export interface LiveMove {
+  techId: string
+  name: string
+  state: 'EN_ROUTE' | 'ON_SITE'
+  job: { id: string; jobNumber: string; customer: string; address: string }
+  /** When this stage started: the en-route time, or the arrival time. */
+  since: string | null
+  enRouteAt: string | null
+  techPos: [number, number] | null
+  jobPos: [number, number] | null
+  /** Straight-line distance left, en route only. */
+  distanceKm: number | null
+  /** Rough minutes to arrive, en route only. */
+  etaMin: number | null
+  /** When the last GPS fix arrived, null when there has never been one. */
+  gpsAt: string | null
+}
+
+/** City driving: roads run about 1.3x the straight line, at about 30 km/h. */
+const ROAD_FACTOR = 1.3
+const CITY_KMH = 30
+
+export function distanceKm(a: [number, number], b: [number, number]): number {
+  const r = (d: number) => (d * Math.PI) / 180
+  const dLat = r(b[0] - a[0])
+  const dLng = r(b[1] - a[1])
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dLng / 2) ** 2
+  return 6371 * 2 * Math.asin(Math.sqrt(h))
+}
+
+function jobPin(j: Job): [number, number] | null {
+  const lat = Number.parseFloat(j.serviceLatitude ?? '')
+  const lng = Number.parseFloat(j.serviceLongitude ?? '')
+  return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null
+}
+
+/**
+ * One row per technician who is driving to a job or working at one, newest
+ * activity first within each group (driving before on site).
+ *
+ * A technician can hold more than one job in progress when an old one was
+ * never closed. The most recent trip or arrival wins, so the row shows what
+ * they are doing now rather than whatever job happened to come first.
+ *
+ * The job status decides the stage, because that is what the technician app
+ * sets and what the customer is told. The lead's assignment row supplies the
+ * start times, falling back to any live crew row, then to the job's assignee.
+ */
+export function buildLiveMoves(jobs: Job[], techs: Technician[], assignments: DispatchAssignment[]): LiveMove[] {
+  const techById = new Map(techs.map(t => [t.id, t]))
+  const techByUser = new Map(techs.map(t => [t.userId, t]))
+  const byTech = new Map<string, LiveMove>()
+  const t = (r: LiveMove) => (r.since ? new Date(r.since).getTime() : 0)
+
+  for (const j of jobs) {
+    if (j.status !== 'EN_ROUTE' && j.status !== 'ON_SITE') continue
+    const live = assignments.filter(a => a.jobId === j.id && a.status !== 'CANCELLED' && a.status !== 'COMPLETED')
+    const a = live.find(x => x.isLead) ?? live[0]
+    const tech = (a && techById.get(a.technicianId)) ?? (j.assignedToId ? techByUser.get(j.assignedToId) : undefined)
+    if (!tech) continue
+
+    const state = j.status as LiveMove['state']
+    const techPos: [number, number] | null = tech.currentLocation ? [tech.currentLocation.lat, tech.currentLocation.lng] : null
+    const jobPos = jobPin(j)
+    const km = state === 'EN_ROUTE' && techPos && jobPos ? distanceKm(techPos, jobPos) : null
+    const row: LiveMove = {
+      techId: tech.id,
+      name: tech.name,
+      state,
+      job: { id: j.id, jobNumber: j.jobNumber ?? 'Job', customer: j.customerName ?? '', address: j.serviceAddress ?? '' },
+      since: (state === 'EN_ROUTE' ? a?.enRouteAt : a?.onSiteAt) ?? null,
+      enRouteAt: a?.enRouteAt ?? null,
+      techPos, jobPos,
+      distanceKm: km,
+      etaMin: km === null ? null : Math.max(1, Math.round((km * ROAD_FACTOR / CITY_KMH) * 60)),
+      // Live updates carry locationUpdatedAt; a fresh load only has lastSeenAt.
+      gpsAt: tech.locationUpdatedAt ?? tech.lastSeenAt ?? null,
+    }
+    const held = byTech.get(tech.id)
+    if (!held || t(row) > t(held) || (t(row) === t(held) && row.state === 'EN_ROUTE')) byTech.set(tech.id, row)
+  }
+
+  return [...byTech.values()].sort((x, y) => (x.state === y.state ? t(y) - t(x) : x.state === 'EN_ROUTE' ? -1 : 1))
+}
+
+/** "just now", "45s ago", "3 min ago", "2 h ago", "26 days ago". */
+export function ago(seconds: number | null): string {
+  if (seconds === null) return 'no GPS yet'
+  if (seconds < 10) return 'just now'
+  if (seconds < 60) return `${seconds}s ago`
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`
+  if (seconds < 48 * 3600) return `${Math.floor(seconds / 3600)} h ago`
+  return `${Math.floor(seconds / 86400)} days ago`
+}
+
+/** Minutes between an ISO time and now, for "on the road 12 min". */
+export function minutesSince(iso: string | null, now: Date): number | null {
+  if (!iso) return null
+  return Math.max(0, Math.round((now.getTime() - new Date(iso).getTime()) / 60_000))
 }

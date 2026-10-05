@@ -3,13 +3,15 @@
  * Charts and long-range numbers live on Analytics; this page is for acting.
  * Every colour comes from the theme variables, so light, dark and black all work.
  */
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, Briefcase, Plus, CheckCircle2, AlertTriangle, ArrowUpRight } from 'lucide-react'
+import { CalendarDays, Briefcase, Plus, CheckCircle2, AlertTriangle, ArrowUpRight, Navigation, Wrench } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useCompany } from '../hooks/useSettings'
 import { useJobs } from '../hooks/useJobs'
-import { useTechnicians, useDispatchWebSocket } from '../hooks/useScheduling'
+import { useTechnicians, useDispatchWebSocket, useAllTechAssignments, type DispatchEvent } from '../hooks/useScheduling'
+import { useToast } from '../contexts/ToastContext'
+import { describeLiveEvent, type JobRef } from './scheduling/liveToasts'
 import { useRescheduleInbox } from '../hooks/useReschedule'
 import { useQuotes } from '../hooks/useFinance'
 import { useLeads } from '../hooks/useCustomers'
@@ -20,7 +22,9 @@ import RecommendationsPanel from '../components/RecommendationsPanel'
 import ComponentIssuesAlert from '../components/ComponentIssuesAlert'
 import AddJobModal from './jobs/AddJobModal'
 import type { Job, Technician } from '../types/api'
-import { buildAttention, buildStages, buildTechRows, clock, todaysJobs, type StageKey, type TechState } from './dashboard/opsData'
+import { ago, buildAttention, buildLiveMoves, buildStages, buildTechRows, clock, minutesSince, todaysJobs, type LiveMove, type StageKey, type TechState } from './dashboard/opsData'
+
+const LiveMovesMap = lazy(() => import('./dashboard/LiveMovesMap'))
 
 const MONEY_ROLES = new Set(['super_admin', 'company_admin', 'office_manager'])
 
@@ -74,11 +78,79 @@ function Skeleton({ h = 16, w = '100%' }: { h?: number; w?: string | number }) {
     return <div className="ops-skeleton" style={{ height: h, width: w }} />
 }
 
+/** A GPS fix older than this is called out: the position on the map may be stale. */
+const GPS_STALE_S = 5 * 60
+
+function LiveNow({ moves }: { moves: LiveMove[] }) {
+    // Its own clock: "GPS 20s ago" needs to tick faster than the page's minute.
+    const now = useNow(10_000)
+    const driving = moves.filter(m => m.state === 'EN_ROUTE').length
+    const onSite = moves.length - driving
+    return (
+        <Panel
+            title="Live now"
+            meta={[driving && `${driving} driving`, onSite && `${onSite} on site`].filter(Boolean).join(', ')}
+            link={{ to: '/scheduling', label: 'Open board' }}
+            className="ops-live-panel"
+        >
+            <div className="ops-live-grid">
+                <ul className="ops-live-list">
+                    {moves.map(m => {
+                        const mins = minutesSince(m.since, now)
+                        const age = m.gpsAt ? Math.max(0, Math.round((now.getTime() - new Date(m.gpsAt).getTime()) / 1000)) : null
+                        const stale = age === null || age > GPS_STALE_S
+                        return (
+                            <li key={m.techId}>
+                                <Link to="/scheduling?view=active" className="ops-live-row">
+                                    <span className={`ops-live-icon ${m.state === 'EN_ROUTE' ? 'is-driving' : 'is-onsite'}`} aria-hidden="true">
+                                        {m.state === 'EN_ROUTE' ? <Navigation size={15} /> : <Wrench size={15} />}
+                                    </span>
+                                    <span className="ops-live-body">
+                                        <span className="ops-live-line">
+                                            <strong>{m.name}</strong>
+                                            <span className={`ops-live-chip ${m.state === 'EN_ROUTE' ? 'is-driving' : 'is-onsite'}`}>{m.state === 'EN_ROUTE' ? 'En route' : 'On site'}</span>
+                                        </span>
+                                        <span className="ops-live-job">{m.job.jobNumber}{m.job.customer ? `, ${m.job.customer}` : ''}</span>
+                                        <span className="ops-live-meta">
+                                            {m.state === 'EN_ROUTE'
+                                                ? <>{m.distanceKm !== null ? `${m.distanceKm < 1 ? `${Math.round(m.distanceKm * 1000)} m` : `${m.distanceKm.toFixed(1)} km`} away, about ${m.etaMin} min` : 'Distance unknown'}{mins !== null ? `. Left ${mins} min ago` : ''}</>
+                                                : <>{mins !== null ? `Working for ${mins} min` : 'Working'}</>}
+                                        </span>
+                                        <span className={`ops-live-gps${stale ? ' is-stale' : ''}`}>{age === null ? 'No GPS signal yet' : `GPS ${ago(age)}`}</span>
+                                    </span>
+                                </Link>
+                            </li>
+                        )
+                    })}
+                </ul>
+                <Suspense fallback={<div className="ops-live-map ops-skeleton" />}>
+                    <LiveMovesMap moves={moves} />
+                </Suspense>
+            </div>
+        </Panel>
+    )
+}
+
 export default function Dashboard() {
     const now = useNow()
     const { user } = useAuth()
     const showMoney = MONEY_ROLES.has(String(user?.role ?? '').toLowerCase())
-    useDispatchWebSocket()
+    const toast = useToast()
+    // Changes made by others (a technician in the field, another dispatcher)
+    // announce themselves here too. jobsRef is read at event time so the toast
+    // can name a job the payload did not describe.
+    const jobsRef = useRef<Record<string, JobRef>>({})
+    const recentToasts = useRef<Map<string, number>>(new Map())
+    const onLiveEvent = useCallback((event: DispatchEvent) => {
+        const t = describeLiveEvent(event, user?.id, (id) => jobsRef.current[id])
+        if (!t) return
+        const at = Date.now()
+        const last = recentToasts.current.get(t.key)
+        if (last && at - last < 5_000) return
+        recentToasts.current.set(t.key, at)
+        toast.showToast({ title: t.title, message: t.message, variant: t.variant, durationMs: 6_000 })
+    }, [toast, user?.id])
+    useDispatchWebSocket(onLiveEvent)
     const [showNewJob, setShowNewJob] = useState(false)
 
     const company = useCompany().data
@@ -95,6 +167,12 @@ export default function Dashboard() {
     // The appointments feed can include visits that already started; show only what's ahead.
     const nextVisits = (appointments ?? []).filter(v => new Date(v.scheduledStart).getTime() >= now.getTime() - 30 * 60_000)
     const techs: Technician[] = techQuery.data ?? []
+    const techIds = useMemo(() => techs.map(t => t.id), [techs])
+    const assignments = useAllTechAssignments(techIds).data
+    const moves = useMemo(() => buildLiveMoves(jobs, techs, assignments ?? []), [jobs, techs, assignments])
+    useEffect(() => {
+        jobsRef.current = Object.fromEntries(jobs.map(j => [j.id, { jobNumber: j.jobNumber, title: j.title }]))
+    }, [jobs])
     const today = useMemo(() => todaysJobs(jobs, now), [jobs, now])
     const stages = useMemo(() => buildStages(today), [today])
     const lateCount = useMemo(() => buildTechRows(techs, today, now).filter(r => r.state === 'LATE').length, [techs, today, now])
@@ -151,6 +229,8 @@ export default function Dashboard() {
                 </p>
             </div>
             </section>
+
+            {moves.length > 0 && <LiveNow moves={moves} />}
 
             <div className="ops-grid">
                 <Panel title="Needs attention" meta={attention.length ? String(attention.length) : undefined} className="ops-attention">
