@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from 'react'
 import { AppState, AppStateStatus } from 'react-native'
-import { Stack } from 'expo-router'
+import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { AuthProvider } from '@/contexts/AuthContext'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { SocketProvider, useSocketContext } from '@/contexts/SocketContext'
 import { queryClient } from '@/lib/queryClient'
 import { setupQueryPersistence } from '@/lib/queryPersistence'
@@ -82,6 +82,30 @@ function RealtimeSync() {
   return null
 }
 
+/** Screens that make sense without a session. Everything else needs one. */
+const PUBLIC_ROUTES = new Set(['login', 'signup', 'pending-approval'])
+
+/**
+ * Sends the technician to sign-in whenever the session ends, wherever they are.
+ * The launch screen only decides once, so without this an expired session left
+ * the dashboard on screen with nothing behind it working.
+ */
+function SessionGuard() {
+  const { isAuthenticated, isInitializing } = useAuth()
+  const segments = useSegments()
+  const router = useRouter()
+  const first = segments[0] as string | undefined
+
+  useEffect(() => {
+    if (isInitializing || isAuthenticated) return
+    // The launch screen (no segment) routes itself.
+    if (!first || PUBLIC_ROUTES.has(first)) return
+    router.replace('/login')
+  }, [isAuthenticated, isInitializing, first])
+
+  return null
+}
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -91,6 +115,7 @@ export default function RootLayout() {
           <AuthProvider>
             {/* Single socket connection for the entire auth session */}
             <SocketProvider>
+              <SessionGuard />
               <ForegroundRefresher />
               <RealtimeSync />
               <StatusBar style="dark" />

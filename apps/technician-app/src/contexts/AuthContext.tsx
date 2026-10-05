@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
+import { AppState } from 'react-native'
 import api, { setAuthHeader } from '@/lib/api'
 import { setGpsAuthHeader } from '@/lib/gpsClient'
 import { clearPersistedQueryCache } from '@/lib/queryPersistence'
@@ -38,6 +39,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const PENDING_USER_KEY = 'tech_pending_user'
 
+/**
+ * When a JWT stops being valid, in ms since epoch, read from its own exp claim.
+ * The signature is not checked here (the server does that); this only spots a
+ * token that is certainly dead without a network call. Null if unreadable.
+ */
+export function tokenExpiresAt(token: string): number | null {
+  try {
+    const part = token.split('.')[1]
+    if (!part || typeof globalThis.atob !== 'function') return null
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '=')
+    const exp = JSON.parse(globalThis.atob(b64)).exp
+    return typeof exp === 'number' ? exp * 1000 : null
+  } catch {
+    return null
+  }
+}
+
+/** Expired, or close enough that the next request would fail. */
+export function isTokenExpired(token: string, now = Date.now()): boolean {
+  const exp = tokenExpiresAt(token)
+  return exp !== null && exp - now < 30_000
+}
+
+/** Longest delay setTimeout accepts; a 30-day token is rechecked when this fires. */
+const MAX_TIMER_MS = 2_147_483_647
+/** Server check on resume at most this often, so foregrounding stays cheap. */
+const VERIFY_EVERY_MS = 10 * 60_000
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<TechUser | null>(null)
   const [token, setToken] = useState<string | null>(null)
@@ -50,7 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const savedToken = await storage.getToken()
         const savedUser = await storage.getUser<TechUser>()
-        if (savedToken && savedUser) {
+        if (savedToken && savedUser && isTokenExpired(savedToken)) {
+          // Restoring a dead token is what left the app looking signed in
+          // while every request failed. Go straight to sign-in instead.
+          await _clearSession()
+        } else if (savedToken && savedUser) {
           setToken(savedToken)
           setUser(savedUser)
           setAuthHeader(savedToken)
@@ -85,6 +118,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => api.interceptors.response.eject(interceptor)
   }, [])
 
+  // Keep a restored or live session honest: sign out the moment the token
+  // expires, and on start-up and each return to the app confirm with the
+  // server that it is still accepted. A 401/403 ends the session; no answer
+  // (offline, server down) keeps it, because this app must work offline.
+  const lastVerified = useRef(0)
+  useEffect(() => {
+    if (!token) return
+    let cancelled = false
+
+    const verify = async (force = false) => {
+      if (isTokenExpired(token)) { await _clearSession(); return }
+      if (!force && Date.now() - lastVerified.current < VERIFY_EVERY_MS) return
+      lastVerified.current = Date.now()
+      try {
+        await api.get('/crm/users/me')
+      } catch (err: any) {
+        const status = err?.response?.status
+        if (!cancelled && (status === 401 || status === 403)) await _clearSession()
+      }
+    }
+    verify(true)
+
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const arm = () => {
+      const exp = tokenExpiresAt(token)
+      if (exp === null) return
+      timer = setTimeout(() => { isTokenExpired(token) ? _clearSession() : arm() }, Math.min(Math.max(exp - Date.now(), 0), MAX_TIMER_MS))
+    }
+    arm()
+
+    const sub = AppState.addEventListener('change', (next) => { if (next === 'active') verify() })
+    return () => { cancelled = true; if (timer) clearTimeout(timer); sub.remove() }
+  }, [token])
+
   const _setSession = async (accessToken: string, userData: TechUser) => {
     setToken(accessToken)
     setUser(userData)
@@ -111,7 +178,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string): Promise<{ status: ApprovalStatus; mustResetPassword?: boolean; rejectionMessage?: string }> => {
     setIsLoading(true)
     try {
-      const res = await api.post<LoginResponse>('/crm/auth/login', { email, password })
+      // platform: 'mobile' gets the 30-day phone session instead of the
+      // 24-hour browser one, so technicians are not signed out every day.
+      const res = await api.post<LoginResponse>('/crm/auth/login', { email, password, platform: 'mobile' })
       const { access_token, user: u } = res.data
       if (u.role.toLowerCase() !== 'technician') {
         throw new Error('This app is for technicians only.')
