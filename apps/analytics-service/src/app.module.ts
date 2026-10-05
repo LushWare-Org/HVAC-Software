@@ -14,6 +14,7 @@ import { ExportsModule } from './exports/exports.module';
 import { EventsModule } from './events/events.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { RevenueAgentModule } from './revenue-agent/revenue-agent.module';
+import { AiUsageModule } from './ai-usage/ai-usage.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { RevenueAgentModule } from './revenue-agent/revenue-agent.module';
     EventsModule,
     RecommendationsModule,
     RevenueAgentModule,
+    AiUsageModule,
   ],
   providers: [RedisCacheService],
   exports: [RedisCacheService],

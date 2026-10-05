@@ -26,6 +26,8 @@ export enum QueueName {
   // risk a real log-event job being silently swallowed by the cleanup
   // worker (or vice versa) depending on which Worker happens to grab it.
   ACTIVITY_LOG_CLEANUP = 'activity-log-cleanup',
+  // One record per AI model call (or skipped call), stored by analytics-service.
+  AI_USAGE = 'ai-usage',
 }
 
 // ---- Redis connection factory (shared config) ----

@@ -1,4 +1,6 @@
 import { describeError, isRetryable } from './errors';
+import type { AiGuard } from './guard';
+import { estimateCostUsd } from './pricing';
 import { GeminiProvider } from './providers/gemini';
 import { OpenAIProvider } from './providers/openai';
 import type {
@@ -7,6 +9,8 @@ import type {
 
 /** One finished call, for usage tracking. Emitted whether it succeeded or not. */
 export interface AiCallRecord {
+  /** ISO time the call finished. */
+  at: string;
   task: string;
   companyId?: string;
   ok: boolean;
@@ -15,6 +19,12 @@ export interface AiCallRecord {
   attempts: number;
   latencyMs: number;
   usage?: AiUsage;
+  /** Estimated USD, when the model's price and token counts are known. */
+  costUsd?: number;
+  /** Set when the guard stopped the call before any model was asked. */
+  skipped?: string;
+  /** Short reason when every model failed. */
+  error?: string;
 }
 
 export interface AiGatewayOptions {
@@ -27,6 +37,8 @@ export interface AiGatewayOptions {
   backoffMs?: number;
   defaultTimeoutMs?: number;
   onCall?: (record: AiCallRecord) => void;
+  /** Asked before any model is called: company switch, monthly budget. */
+  guard?: AiGuard;
   sleep?: (ms: number) => Promise<void>;
 }
 
@@ -48,6 +60,7 @@ export class AiGateway {
   private readonly backoffMs: number;
   private readonly defaultTimeoutMs: number;
   private readonly onCall?: (record: AiCallRecord) => void;
+  private readonly guard?: AiGuard;
   private readonly sleep: (ms: number) => Promise<void>;
 
   constructor(opts: AiGatewayOptions = {}) {
@@ -60,6 +73,7 @@ export class AiGateway {
     this.backoffMs = opts.backoffMs ?? 750;
     this.defaultTimeoutMs = opts.defaultTimeoutMs ?? 20_000;
     this.onCall = opts.onCall;
+    this.guard = opts.guard;
     this.sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
   }
 
@@ -67,6 +81,16 @@ export class AiGateway {
     const started = Date.now();
     const failures: string[] = [];
     let attempts = 0;
+
+    if (this.guard) {
+      let decision: Awaited<ReturnType<AiGuard>> = { allowed: true };
+      try { decision = await this.guard({ task: req.task, companyId: req.companyId }); } catch { /* fail open */ }
+      if (!decision.allowed) {
+        this.logger.log(`[ai] ${req.task} skipped${req.companyId ? ` for company=${req.companyId}` : ''}: ${decision.reason}`);
+        this.emit({ task: req.task, companyId: req.companyId, ok: false, attempts: 0, latencyMs: 0, skipped: decision.reason });
+        return null;
+      }
+    }
 
     for (const route of this.resolveRoutes(req)) {
       const label = `${route.provider}/${route.model}`;
@@ -99,7 +123,8 @@ export class AiGateway {
             `${res.usage ? `, tokens=${res.usage.inputTokens ?? '?'}/${res.usage.outputTokens ?? '?'}` : ''}` +
             `${req.companyId ? `, company=${req.companyId}` : ''}${fellBack}`,
           );
-          this.emit({ task: req.task, companyId: req.companyId, ok: true, provider: route.provider, model: route.model, attempts, latencyMs: result.latencyMs, usage: res.usage });
+          const costUsd = estimateCostUsd(route.provider, route.model, res.usage) ?? undefined;
+          this.emit({ task: req.task, companyId: req.companyId, ok: true, provider: route.provider, model: route.model, attempts, latencyMs: result.latencyMs, usage: res.usage, costUsd });
           return result;
         } catch (err) {
           failures.push(`${label}: ${describeError(err)}`);
@@ -114,7 +139,7 @@ export class AiGateway {
       `[ai] ${req.task} failed after ${attempts} attempt(s) in ${latencyMs}ms` +
       `${req.companyId ? `, company=${req.companyId}` : ''}: ${failures.join('; ') || 'no routes'}`,
     );
-    this.emit({ task: req.task, companyId: req.companyId, ok: false, attempts, latencyMs });
+    this.emit({ task: req.task, companyId: req.companyId, ok: false, attempts, latencyMs, error: (failures.join('; ') || 'no routes').slice(0, 500) });
     return null;
   }
 
@@ -145,8 +170,8 @@ export class AiGateway {
     });
   }
 
-  private emit(record: AiCallRecord) {
-    try { this.onCall?.(record); } catch { /* usage tracking must never break the call */ }
+  private emit(record: Omit<AiCallRecord, 'at'>) {
+    try { this.onCall?.({ at: new Date().toISOString(), ...record }); } catch { /* usage tracking must never break the call */ }
   }
 }
 

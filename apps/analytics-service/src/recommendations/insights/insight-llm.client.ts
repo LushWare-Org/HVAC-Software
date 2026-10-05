@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AiGateway } from '@tscrm/ai';
+import type { AiGateway } from '@tscrm/ai';
+import { PrismaService } from '../../prisma/prisma.service';
+import { createAnalyticsAiGateway } from '../../ai/ai-gateway.factory';
 import type { InsightLlmRecommendation, InsightSignal } from './insight-types';
 import { INSIGHT_LLM_SYSTEM_PROMPT, buildInsightLlmUserPrompt } from './insight-llm.prompt';
 
@@ -22,7 +24,11 @@ const MAX_ACTION_LABEL_LENGTH = 60;
 @Injectable()
 export class InsightLlmClient {
   private readonly logger = new Logger(InsightLlmClient.name);
-  private readonly gateway = new AiGateway({ logger: this.logger });
+  private readonly gateway: AiGateway;
+
+  constructor(prisma: PrismaService) {
+    this.gateway = createAnalyticsAiGateway(prisma, this.logger);
+  }
 
   async recommend(signal: InsightSignal, companyId?: string): Promise<InsightLlmRecommendation | null> {
     const res = await this.gateway.generateJson({

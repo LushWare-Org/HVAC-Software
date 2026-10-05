@@ -1,5 +1,6 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { AiGateway } from '@tscrm/ai';
+import { createCrmAiGateway } from '../ai/ai-gateway.factory';
 import { DEFAULT_GEMINI_MODEL } from '../ai/ai-routes';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -40,7 +41,7 @@ export class EquipmentScanService {
     private readonly prisma: PrismaService,
     @Optional() gateway?: AiGateway,
   ) {
-    this.gateway = gateway ?? new AiGateway({ logger: this.logger });
+    this.gateway = gateway ?? createCrmAiGateway(prisma, this.logger);
   }
 
   async scanAndStore(

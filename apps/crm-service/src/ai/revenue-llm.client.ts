@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AiGateway } from '@tscrm/ai';
 import type { RevenueCustomerProfile, RevenueLlmRecommendation } from '@tscrm/types';
 import { REVENUE_LLM_SYSTEM_PROMPT, buildRevenueLlmUserPrompt } from './revenue-llm.prompt';
+import type { AiGateway } from '@tscrm/ai';
+import { PrismaService } from '../prisma/prisma.service';
+import { createCrmAiGateway } from './ai-gateway.factory';
 import { ModelLedger, geminiThenOpenAi } from './ai-routes';
 
 const VALID_CHANNELS = new Set(['whatsapp', 'email', 'call']);
@@ -20,8 +22,12 @@ const REQUEST_TIMEOUT_MS = 30_000;
 @Injectable()
 export class RevenueLlmClient {
   private readonly logger = new Logger(RevenueLlmClient.name);
-  private readonly gateway = new AiGateway({ logger: this.logger });
+  private readonly gateway: AiGateway;
   private readonly ledger = new ModelLedger();
+
+  constructor(prisma: PrismaService) {
+    this.gateway = createCrmAiGateway(prisma, this.logger);
+  }
 
   async recommend(profile: RevenueCustomerProfile, companyId?: string): Promise<RevenueLlmRecommendation | null> {
     const res = await this.gateway.generateJson({

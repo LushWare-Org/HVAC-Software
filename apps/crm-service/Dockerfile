@@ -24,6 +24,7 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm --filter=@tscrm/types build 2>/dev/null || true
 RUN pnpm --filter=@tscrm/auth-client build 2>/dev/null || true
 # No || true: a broken AI package must fail the image, not ship without AI.
+RUN pnpm --filter=@tscrm/queue build
 RUN pnpm --filter=@tscrm/ai build
 
 # Build the service

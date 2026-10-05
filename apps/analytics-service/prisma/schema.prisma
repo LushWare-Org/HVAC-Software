@@ -37,3 +37,29 @@ model AnalyticsEvent {
   @@index([companyId, createdAt])
   @@map("analytics_events")
 }
+
+// ── AI usage ────────────────────────────────────────────────────────────────
+// One row per AI model call (or call skipped by the company switch / budget),
+// written by AiUsageProcessor from the ai-usage queue that every service's AI
+// gateway publishes to. Drives per-company cost reporting and monthly budgets.
+model AiUsage {
+  id           String   @id @default(uuid())
+  companyId    String?
+  service      String
+  task         String
+  ok           Boolean
+  provider     String?
+  model        String?
+  attempts     Int
+  latencyMs    Int
+  inputTokens  Int?
+  outputTokens Int?
+  costUsd      Decimal? @db.Decimal(12, 6)
+  skipped      String?
+  error        String?
+  createdAt    DateTime @default(now())
+
+  @@index([companyId, createdAt])
+  @@index([createdAt])
+  @@map("ai_usage")
+}
