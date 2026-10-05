@@ -16,6 +16,8 @@ export class FollowupCron implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
+    // Set on a standby copy of this service, so two copies never both send.
+    if (process.env.DISABLE_SCHEDULED_TASKS === 'true') return;
     this.intervalHandle = setInterval(() => {
       void this.runOnce();
     }, SIX_HOURS_MS);

@@ -33,6 +33,8 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
+    // Set on a standby copy of this service, so two copies never both send.
+    if (process.env.DISABLE_SCHEDULED_TASKS === 'true') return;
     this.timer = setInterval(() => {
       this.sweep().catch((err: Error) =>
         this.logger.warn(`reminder sweep failed: ${err.message}`),

@@ -16,6 +16,8 @@ export class UpsellCron implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
+    // Set on a standby copy of this service, so two copies never both send.
+    if (process.env.DISABLE_SCHEDULED_TASKS === 'true') return;
     if (process.env.UPSELL_AGENT_ENABLED === 'false') {
       this.logger.log('Upsell agent cron is disabled');
       return;

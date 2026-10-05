@@ -17,6 +17,7 @@ export class IotTokenRefreshService {
   // Nest tokens expire in 60 min → same cron catches them with 2 min buffer
   @Cron('0 */8 * * * *')
   async refreshExpiringTokens() {
+    if (process.env.DISABLE_SCHEDULED_TASKS === 'true') return;
     const cutoff = new Date(Date.now() + 2 * 60 * 1000)
 
     const connections = await this.prisma.customerIotConnection.findMany({

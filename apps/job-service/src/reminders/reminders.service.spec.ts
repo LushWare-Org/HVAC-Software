@@ -71,3 +71,22 @@ describe('RemindersService.sweep', () => {
     expect(where.scheduledStart.lte.getTime()).toBeGreaterThan(where.scheduledStart.gte.getTime());
   });
 });
+
+describe('RemindersService on a standby copy', () => {
+  afterEach(() => { delete process.env.DISABLE_SCHEDULED_TASKS; jest.restoreAllMocks(); });
+
+  it('does not start the reminder timer when scheduled tasks are disabled', () => {
+    process.env.DISABLE_SCHEDULED_TASKS = 'true';
+    const spy = jest.spyOn(global, 'setInterval');
+    const service = new RemindersService({} as any, {} as any);
+    service.onModuleInit();
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('starts it normally when the switch is absent', () => {
+    const spy = jest.spyOn(global, 'setInterval').mockReturnValue({ unref() {} } as any);
+    const service = new RemindersService({} as any, {} as any);
+    service.onModuleInit();
+    expect(spy).toHaveBeenCalled();
+  });
+});

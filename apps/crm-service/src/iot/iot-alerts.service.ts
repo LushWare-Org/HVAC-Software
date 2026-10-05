@@ -28,6 +28,7 @@ export class IotAlertsService {
   // Runs every 15 minutes — check for emergency heat, offline, and underperformance
   @Cron('0 */15 * * * *')
   async checkAlerts() {
+    if (process.env.DISABLE_SCHEDULED_TASKS === 'true') return;
     const devices = await this.prisma.customerIotDevice.findMany({
       where: { lastSyncedAt: { not: null } },
       include: { connection: { select: { companyId: true, customerId: true, provider: true } } },

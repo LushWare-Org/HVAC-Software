@@ -86,6 +86,7 @@ export class BaseLocationService {
    */
   @Cron('0 30 2 * * *')
   async nightlyReconcile(): Promise<void> {
+    if (process.env.DISABLE_SCHEDULED_TASKS === 'true') return;
     const { synced, failed } = await this.reconcileAll();
     if (failed > 0) {
       this.logger.warn(`base location reconcile left ${failed} technician(s) unsynced`);
