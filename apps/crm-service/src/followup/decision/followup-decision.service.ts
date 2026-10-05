@@ -102,7 +102,7 @@ export class FollowupDecisionService {
       notes: request.notes,
     });
 
-    const llmRecommendation = await this.llmClient.recommend(profile);
+    const llmRecommendation = await this.llmClient.recommend(profile, request.companyId);
 
     const validation = this.validationService.validate(
       {
@@ -119,7 +119,7 @@ export class FollowupDecisionService {
     const audit: FollowupDecisionAudit = {
       ruleResult,
       llmRecommendation,
-      llmModel: llmRecommendation ? (process.env.GEMINI_MODEL_FOLLOWUP ?? 'gemini-2.5-flash') : null,
+      llmModel: llmRecommendation ? (this.llmClient.modelUsed?.(llmRecommendation) ?? null) : null,
       validation: { passed: validation.passed, failedChecks: validation.failedChecks },
       finalAction: ruleResult.action as FollowupAction,
       finalChannel: validation.finalChannel,

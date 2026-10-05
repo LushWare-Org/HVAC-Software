@@ -123,7 +123,7 @@ export class RetentionDecisionService {
       notes: request.notes,
     });
 
-    const llmRecommendation = await this.llmClient.recommend(profile);
+    const llmRecommendation = await this.llmClient.recommend(profile, request.companyId);
 
     const ruleAction: RetentionAction =
       ruleResult.reasonCode === 'NONE' ? 'no_action' : RULE_ACTION_MAP[ruleResult.reasonCode];
@@ -144,7 +144,7 @@ export class RetentionDecisionService {
     const audit: RetentionDecisionAudit = {
       ruleResult,
       llmRecommendation,
-      llmModel: llmRecommendation ? (process.env.GEMINI_MODEL_RETENTION ?? 'gemini-2.5-flash') : null,
+      llmModel: llmRecommendation ? (this.llmClient.modelUsed?.(llmRecommendation) ?? null) : null,
       validation: { passed: validation.passed, failedChecks: validation.failedChecks },
       finalAction: validation.finalAction,
       finalChannel: validation.finalChannel,

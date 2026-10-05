@@ -108,7 +108,7 @@ export class UpsellDecisionService {
       notes: request.notes,
     });
 
-    const llmRecommendation = await this.llmClient.recommend(profile);
+    const llmRecommendation = await this.llmClient.recommend(profile, request.companyId);
 
     const validation = this.validationService.validate(
       {
@@ -126,7 +126,7 @@ export class UpsellDecisionService {
     const audit: UpsellDecisionAudit = {
       ruleResult,
       llmRecommendation,
-      llmModel: llmRecommendation ? (process.env.GEMINI_MODEL_UPSELL ?? 'gemini-2.5-flash') : null,
+      llmModel: llmRecommendation ? (this.llmClient.modelUsed?.(llmRecommendation) ?? null) : null,
       validation: { passed: validation.passed, failedChecks: validation.failedChecks },
       finalCategory: validation.finalCategory,
       finalChannel: validation.finalChannel,

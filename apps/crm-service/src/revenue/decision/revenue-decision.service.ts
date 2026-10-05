@@ -106,7 +106,7 @@ export class RevenueDecisionService {
       notes: request.notes,
     });
 
-    const llmRecommendation = await this.llmClient.recommend(profile);
+    const llmRecommendation = await this.llmClient.recommend(profile, request.companyId);
 
     const validation = this.validationService.validate(
       {
@@ -125,7 +125,7 @@ export class RevenueDecisionService {
     const audit: RevenueDecisionAudit = {
       ruleResult,
       llmRecommendation,
-      llmModel: llmRecommendation ? (process.env.GEMINI_MODEL_REVENUE ?? 'gemini-2.5-flash') : null,
+      llmModel: llmRecommendation ? (this.llmClient.modelUsed?.(llmRecommendation) ?? null) : null,
       validation: { passed: validation.passed, failedChecks: validation.failedChecks },
       finalCategory: validation.finalCategory,
       finalChannel: validation.finalChannel,

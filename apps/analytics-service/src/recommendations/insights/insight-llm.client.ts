@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenAI } from '@google/genai';
+import { AiGateway } from '@tscrm/ai';
 import type { InsightLlmRecommendation, InsightSignal } from './insight-types';
 import { INSIGHT_LLM_SYSTEM_PROMPT, buildInsightLlmUserPrompt } from './insight-llm.prompt';
 
 const VALID_PRIORITIES = new Set(['Low', 'Medium', 'High']);
-const REQUEST_TIMEOUT_MS = 8000;
+/** Results are cached 10 minutes; thinking models can take over 12s. */
+const REQUEST_TIMEOUT_MS = 20_000;
 const MAX_TITLE_LENGTH = 60;
 const MAX_ACTION_LABEL_LENGTH = 60;
 
@@ -13,71 +14,31 @@ const MAX_ACTION_LABEL_LENGTH = 60;
  * revenue-recommendation opportunity the rule engine has already decided
  * exists and already fully quantified. Never authors a dollar figure — the
  * caller (InsightValidationService) always uses the rule engine's `impact`.
- * Any failure returns null so the caller falls back to a rule-only, canned
- * description — mirrors apps/crm-service/src/ai/upsell-llm.client.ts. Uses
- * Gemini via @google/genai rather than OpenAI — config.httpOptions.timeout
- * is unreliable on some SDK versions (googleapis/js-genai#1277), so the call
- * is additionally raced against a manual timeout.
+ *
+ * Goes through the shared AI gateway: Gemini first, OpenAI as the backup when
+ * OPENAI_API_KEY is set. Returns null only when every model failed, so the
+ * caller falls back to its rule-only, canned description.
  */
 @Injectable()
 export class InsightLlmClient {
   private readonly logger = new Logger(InsightLlmClient.name);
-  private readonly model = process.env.GEMINI_MODEL_INSIGHTS ?? 'gemini-2.5-flash';
-  private client: GoogleGenAI | null = null;
+  private readonly gateway = new AiGateway({ logger: this.logger });
 
-  async recommend(signal: InsightSignal): Promise<InsightLlmRecommendation | null> {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return null;
-    }
-
-    try {
-      const response = await this.withTimeout(
-        this.getClient(apiKey).models.generateContent({
-          model: this.model,
-          contents: buildInsightLlmUserPrompt(signal),
-          config: {
-            systemInstruction: INSIGHT_LLM_SYSTEM_PROMPT,
-            responseMimeType: 'application/json',
-            temperature: 0.4,
-            httpOptions: { timeout: REQUEST_TIMEOUT_MS },
-          },
-        }),
-        REQUEST_TIMEOUT_MS,
-      );
-
-      const raw = response.text;
-      if (!raw) {
-        this.logger.warn('Insight LLM returned an empty response');
-        return null;
-      }
-
-      const parsed: unknown = JSON.parse(raw);
-      if (!this.isValidRecommendation(parsed)) {
-        this.logger.warn(`Insight LLM returned an unexpected shape: ${raw}`);
-        return null;
-      }
-
-      return parsed;
-    } catch (error) {
-      this.logger.warn(`Insight LLM recommendation unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return null;
-    }
-  }
-
-  private getClient(apiKey: string): GoogleGenAI {
-    if (!this.client) {
-      this.client = new GoogleGenAI({ apiKey });
-    }
-    return this.client;
-  }
-
-  private withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-    let timer: NodeJS.Timeout;
-    const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error(`Gemini request timed out after ${ms}ms`)), ms);
+  async recommend(signal: InsightSignal, companyId?: string): Promise<InsightLlmRecommendation | null> {
+    const res = await this.gateway.generateJson({
+      task: 'insights',
+      companyId,
+      system: INSIGHT_LLM_SYSTEM_PROMPT,
+      prompt: buildInsightLlmUserPrompt(signal),
+      temperature: 0.4,
+      timeoutMs: REQUEST_TIMEOUT_MS,
+      routes: [
+        { provider: 'gemini', model: process.env.GEMINI_MODEL_INSIGHTS || 'gemini-3.8-flash' },
+        { provider: 'openai', model: process.env.OPENAI_MODEL_FALLBACK || 'gpt-4o-mini' },
+      ],
+      validate: (v): v is InsightLlmRecommendation => this.isValidRecommendation(v),
     });
-    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+    return res?.data ?? null;
   }
 
   private isValidRecommendation(value: unknown): value is InsightLlmRecommendation {

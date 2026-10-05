@@ -17,6 +17,8 @@ RUN pnpm install --frozen-lockfile
 # Build shared packages first (required by services)
 RUN pnpm --filter=@tscrm/types build 2>/dev/null || true
 RUN pnpm --filter=@tscrm/auth-client build 2>/dev/null || true
+# No || true: a broken AI package must fail the image, not ship without AI.
+RUN pnpm --filter=@tscrm/ai build
 
 # Build the service
 RUN pnpm --filter=analytics-service build

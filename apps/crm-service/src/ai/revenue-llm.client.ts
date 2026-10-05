@@ -1,82 +1,47 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenAI } from '@google/genai';
+import { AiGateway } from '@tscrm/ai';
 import type { RevenueCustomerProfile, RevenueLlmRecommendation } from '@tscrm/types';
 import { REVENUE_LLM_SYSTEM_PROMPT, buildRevenueLlmUserPrompt } from './revenue-llm.prompt';
+import { ModelLedger, geminiThenOpenAi } from './ai-routes';
 
 const VALID_CHANNELS = new Set(['whatsapp', 'email', 'call']);
 const VALID_PRIORITIES = new Set(['Low', 'Medium', 'High']);
-const REQUEST_TIMEOUT_MS = 12000; // @google/genai rejects deadlines under 10s
 const MAX_MESSAGE_LENGTH = 320;
+/** Background batch work, so a slow model is allowed time; thinking models often pass 12s. */
+const REQUEST_TIMEOUT_MS = 30_000;
 
 /**
- * Recommends strategy/action/impact-framing/channel/message for a revenue
- * opportunity the rule engine has already decided exists. Never decides
- * whether an opportunity exists or which category it belongs to. Any
- * failure returns null so the caller falls back to the rule-only, no-message
- * path — mirrors RetentionLlmClient/UpsellLlmClient. Uses Gemini via
- * @google/genai rather than OpenAI — config.httpOptions.timeout is
- * unreliable on some SDK versions (googleapis/js-genai#1277), so the call is
- * additionally raced against a manual timeout.
+ * Writes the copy/offer/channel for a decision the rule engine has already
+ * made; never decides whether to act. Goes through the shared AI gateway:
+ * Gemini first, OpenAI as the backup, retries on busy or slow responses.
+ * Returns null only when every model failed, so the caller falls back to its
+ * rule-only path.
  */
 @Injectable()
 export class RevenueLlmClient {
   private readonly logger = new Logger(RevenueLlmClient.name);
-  private readonly model = process.env.GEMINI_MODEL_REVENUE ?? 'gemini-2.5-flash';
-  private client: GoogleGenAI | null = null;
+  private readonly gateway = new AiGateway({ logger: this.logger });
+  private readonly ledger = new ModelLedger();
 
-  async recommend(profile: RevenueCustomerProfile): Promise<RevenueLlmRecommendation | null> {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return null;
-    }
-
-    try {
-      const response = await this.withTimeout(
-        this.getClient(apiKey).models.generateContent({
-          model: this.model,
-          contents: buildRevenueLlmUserPrompt(profile),
-          config: {
-            systemInstruction: REVENUE_LLM_SYSTEM_PROMPT,
-            responseMimeType: 'application/json',
-            temperature: 0.4,
-            httpOptions: { timeout: REQUEST_TIMEOUT_MS },
-          },
-        }),
-        REQUEST_TIMEOUT_MS,
-      );
-
-      const raw = response.text;
-      if (!raw) {
-        this.logger.warn('Revenue LLM returned an empty response');
-        return null;
-      }
-
-      const parsed: unknown = JSON.parse(raw);
-      if (!this.isValidRecommendation(parsed)) {
-        this.logger.warn(`Revenue LLM returned an unexpected shape: ${raw}`);
-        return null;
-      }
-
-      return parsed;
-    } catch (error) {
-      this.logger.warn(`Revenue LLM recommendation unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return null;
-    }
-  }
-
-  private getClient(apiKey: string): GoogleGenAI {
-    if (!this.client) {
-      this.client = new GoogleGenAI({ apiKey });
-    }
-    return this.client;
-  }
-
-  private withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-    let timer: NodeJS.Timeout;
-    const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error(`Gemini request timed out after ${ms}ms`)), ms);
+  async recommend(profile: RevenueCustomerProfile, companyId?: string): Promise<RevenueLlmRecommendation | null> {
+    const res = await this.gateway.generateJson({
+      task: 'revenue',
+      companyId,
+      system: REVENUE_LLM_SYSTEM_PROMPT,
+      prompt: buildRevenueLlmUserPrompt(profile),
+      temperature: 0.4,
+      timeoutMs: REQUEST_TIMEOUT_MS,
+      routes: geminiThenOpenAi('GEMINI_MODEL_REVENUE'),
+      validate: (v): v is RevenueLlmRecommendation => this.isValidRecommendation(v),
     });
-    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+    if (!res) return null;
+    this.ledger.note(res.data, `${res.provider}/${res.model}`);
+    return res.data;
+  }
+
+  /** Which model wrote a recommendation this client returned, e.g. "gemini/gemini-3.8-flash". */
+  modelUsed(rec: RevenueLlmRecommendation | null): string | null {
+    return this.ledger.of(rec);
   }
 
   private isValidRecommendation(value: unknown): value is RevenueLlmRecommendation {

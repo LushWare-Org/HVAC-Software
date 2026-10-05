@@ -57,7 +57,7 @@ export class RecommendationEngineService {
     if (cached) return cached;
 
     const signals = await this.collectSignals(companyId, forecastDays);
-    const recommendations = await Promise.all(signals.map((signal, index) => this.buildRecommendation(signal, index)));
+    const recommendations = await Promise.all(signals.map((signal, index) => this.buildRecommendation(signal, index, companyId)));
 
     const scored = recommendations
       .map((r) => ({ ...r, priorityScore: Math.round(r.impact * r.confidence) }))
@@ -94,8 +94,8 @@ export class RecommendationEngineService {
     return signals.filter((s): s is InsightSignal => s !== null);
   }
 
-  private async buildRecommendation(signal: InsightSignal, index: number): Promise<Omit<Recommendation, 'priorityScore'>> {
-    const llmRec = await this.llmClient.recommend(signal);
+  private async buildRecommendation(signal: InsightSignal, index: number, companyId: string): Promise<Omit<Recommendation, 'priorityScore'>> {
+    const llmRec = await this.llmClient.recommend(signal, companyId);
     const validated = this.validation.validate(signal, llmRec);
 
     return {

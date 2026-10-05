@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import OpenAI from 'openai';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { AiGateway } from '@tscrm/ai';
+import { DEFAULT_GEMINI_MODEL } from '../ai/ai-routes';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface EquipmentScanResult {
@@ -16,27 +17,30 @@ Extract whatever is clearly legible. Respond with ONLY a JSON object of this exa
 
 If no nameplate is visible, set brand/model/serialNo to null. If no error code table is visible, return an empty errorCodes array. Never invent values that are not actually legible in the photo.`;
 
+/** A photo upload is not waited on, but a vision call can be slow: allow it time. */
+const SCAN_TIMEOUT_MS = 45_000;
+
+const isObject = (v: unknown): v is Record<string, any> => !!v && typeof v === 'object' && !Array.isArray(v);
+
 /**
  * Fire-and-forget scan runner — scanAndStore() always resolves (internal try/catch)
  * so callers can invoke it without awaiting and without risking an unhandled rejection.
+ *
+ * Goes through the shared AI gateway: OpenAI vision first, Gemini as the
+ * backup. The image travels as base64 inside the request rather than as the
+ * object's URL, because in dev that URL is localhost MinIO, which no AI
+ * provider can reach.
  */
 @Injectable()
 export class EquipmentScanService {
   private readonly logger = new Logger(EquipmentScanService.name);
-  // Built lazily, not as a field initializer: the OpenAI SDK throws synchronously
-  // when the API key is empty, and this is an eagerly-instantiated NestJS provider —
-  // a missing key must not be able to crash the whole app at boot over one feature.
-  private client: OpenAI | null = null;
-  private readonly model = process.env.OPENAI_MODEL_EQUIPMENT_SCAN ?? 'gpt-4o';
+  private readonly gateway: AiGateway;
 
-  constructor(private readonly prisma: PrismaService) {}
-
-  private getClient(): OpenAI {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not configured — equipment photo scanning is disabled');
-    }
-    if (!this.client) this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    return this.client;
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() gateway?: AiGateway,
+  ) {
+    this.gateway = gateway ?? new AiGateway({ logger: this.logger });
   }
 
   async scanAndStore(
@@ -45,7 +49,7 @@ export class EquipmentScanService {
     image: { buffer: Buffer; mimetype: string },
   ): Promise<void> {
     try {
-      const result = await this.scan(image);
+      const result = await this.scan(companyId, image);
       await this.prisma.equipment.updateMany({
         where: { id: equipmentId, companyId },
         data: { imageScanStatus: 'DONE', imageScanResult: result as any, imageScanError: null },
@@ -60,28 +64,26 @@ export class EquipmentScanService {
     }
   }
 
-  private async scan(image: { buffer: Buffer; mimetype: string }): Promise<EquipmentScanResult> {
-    // Sent as a base64 data URL rather than the object's public URL: in dev that URL
-    // points at localhost:9000 (MinIO), which OpenAI's servers cannot reach at all —
-    // "400 Error while downloading ...". A data URL sidesteps needing the storage
-    // endpoint to be publicly reachable from OpenAI in the first place, in any environment.
-    const dataUrl = `data:${image.mimetype};base64,${image.buffer.toString('base64')}`;
-    const completion = await this.getClient().chat.completions.create({
-      model: this.model,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: SCAN_PROMPT },
-            { type: 'image_url', image_url: { url: dataUrl } },
-          ],
-        },
+  private async scan(companyId: string, image: { buffer: Buffer; mimetype: string }): Promise<EquipmentScanResult> {
+    if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
+      throw new Error('No AI key configured (OPENAI_API_KEY or GEMINI_API_KEY) — equipment photo scanning is disabled');
+    }
+    const res = await this.gateway.generateJson({
+      task: 'equipment-scan',
+      companyId,
+      system: SCAN_PROMPT,
+      prompt: 'Read the equipment in this photo.',
+      images: [{ mimeType: image.mimetype, base64: image.buffer.toString('base64') }],
+      timeoutMs: SCAN_TIMEOUT_MS,
+      routes: [
+        { provider: 'openai', model: process.env.OPENAI_MODEL_EQUIPMENT_SCAN || 'gpt-4o' },
+        { provider: 'gemini', model: process.env.GEMINI_MODEL_EQUIPMENT_SCAN || DEFAULT_GEMINI_MODEL },
       ],
-    } as any);
+      validate: isObject,
+    });
+    if (!res) throw new Error('No AI model could read the photo right now. Try again in a minute.');
 
-    const raw = completion.choices[0]?.message?.content ?? '{}';
-    const parsed = JSON.parse(raw);
+    const parsed = res.data;
     return {
       brand: parsed.brand ?? null,
       model: parsed.model ?? null,

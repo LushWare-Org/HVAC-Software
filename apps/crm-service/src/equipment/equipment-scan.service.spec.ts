@@ -1,10 +1,4 @@
-const createMock = jest.fn();
-jest.mock('openai', () => {
-  return jest.fn().mockImplementation(() => ({
-    chat: { completions: { create: createMock } },
-  }));
-});
-
+import type { AiGateway } from '@tscrm/ai';
 import { EquipmentScanService } from './equipment-scan.service';
 
 function makePrisma() {
@@ -14,53 +8,58 @@ function makePrisma() {
 }
 
 const TEST_IMAGE = { buffer: Buffer.from('fake-jpeg-bytes'), mimetype: 'image/jpeg' };
+const answer = (data: unknown) => ({ data, provider: 'openai', model: 'gpt-4o', attempts: 1, latencyMs: 5 });
 
 describe('EquipmentScanService', () => {
   let prisma: ReturnType<typeof makePrisma>;
+  let generateJson: jest.Mock;
   let service: EquipmentScanService;
-
-  const ORIGINAL_KEY = process.env.OPENAI_API_KEY;
+  const ORIGINAL = { openai: process.env.OPENAI_API_KEY, gemini: process.env.GEMINI_API_KEY };
 
   beforeEach(() => {
     prisma = makePrisma();
-    service = new EquipmentScanService(prisma as any);
-    createMock.mockReset();
+    generateJson = jest.fn();
+    service = new EquipmentScanService(prisma as any, { generateJson } as unknown as AiGateway);
     process.env.OPENAI_API_KEY = 'test-key';
+    delete process.env.GEMINI_API_KEY;
   });
 
   afterEach(() => {
-    process.env.OPENAI_API_KEY = ORIGINAL_KEY;
+    process.env.OPENAI_API_KEY = ORIGINAL.openai;
+    process.env.GEMINI_API_KEY = ORIGINAL.gemini;
   });
 
-  it('marks FAILED (never throws, never crashes the process) when OPENAI_API_KEY is not configured', async () => {
+  it('marks FAILED (never throws, never crashes the process) when no AI key is configured', async () => {
     delete process.env.OPENAI_API_KEY;
 
     await expect(service.scanAndStore('co-1', 'eq-1', TEST_IMAGE)).resolves.toBeUndefined();
 
-    expect(createMock).not.toHaveBeenCalled();
+    expect(generateJson).not.toHaveBeenCalled();
     expect(prisma.equipment.updateMany).toHaveBeenCalledWith({
       where: { id: 'eq-1', companyId: 'co-1' },
       data: { imageScanStatus: 'FAILED', imageScanError: expect.stringContaining('OPENAI_API_KEY') },
     });
   });
 
-  it('sends the image as a base64 data URL, not a plain URL (OpenAI cannot reach localhost:9000)', async () => {
-    createMock.mockResolvedValue({ choices: [{ message: { content: '{}' } }] });
+  it('sends the photo inline as base64, OpenAI vision first and Gemini as the backup', async () => {
+    generateJson.mockResolvedValue(answer({}));
 
     await service.scanAndStore('co-1', 'eq-1', TEST_IMAGE);
 
-    const call = createMock.mock.calls[0][0];
-    const imagePart = call.messages[0].content.find((c: any) => c.type === 'image_url');
-    expect(imagePart.image_url.url).toBe(`data:image/jpeg;base64,${TEST_IMAGE.buffer.toString('base64')}`);
+    const req = generateJson.mock.calls[0][0];
+    expect(req).toMatchObject({
+      task: 'equipment-scan',
+      companyId: 'co-1',
+      images: [{ mimeType: 'image/jpeg', base64: TEST_IMAGE.buffer.toString('base64') }],
+    });
+    expect(req.routes.map((r: { provider: string }) => r.provider)).toEqual(['openai', 'gemini']);
   });
 
   it('parses a successful scan and stores DONE with the result', async () => {
-    createMock.mockResolvedValue({
-      choices: [{ message: { content: JSON.stringify({
-        brand: 'Carrier', model: '58STA', serialNo: '1234ABC',
-        errorCodes: [{ code: 'E4', meaning: 'Igniter failure' }],
-      }) } }],
-    });
+    generateJson.mockResolvedValue(answer({
+      brand: 'Carrier', model: '58STA', serialNo: '1234ABC',
+      errorCodes: [{ code: 'E4', meaning: 'Igniter failure' }, { code: 7 }],
+    }));
 
     await service.scanAndStore('co-1', 'eq-1', TEST_IMAGE);
 
@@ -78,7 +77,7 @@ describe('EquipmentScanService', () => {
   });
 
   it('defaults missing fields to null/empty when the model omits them', async () => {
-    createMock.mockResolvedValue({ choices: [{ message: { content: '{}' } }] });
+    generateJson.mockResolvedValue(answer({}));
 
     await service.scanAndStore('co-1', 'eq-1', TEST_IMAGE);
 
@@ -92,25 +91,25 @@ describe('EquipmentScanService', () => {
     });
   });
 
-  it('marks FAILED and never throws when the OpenAI call rejects', async () => {
-    createMock.mockRejectedValue(new Error('rate limited'));
+  it('marks FAILED with a readable reason when every model failed', async () => {
+    generateJson.mockResolvedValue(null);
 
     await expect(service.scanAndStore('co-1', 'eq-1', TEST_IMAGE)).resolves.toBeUndefined();
 
     expect(prisma.equipment.updateMany).toHaveBeenCalledWith({
       where: { id: 'eq-1', companyId: 'co-1' },
-      data: { imageScanStatus: 'FAILED', imageScanError: 'rate limited' },
+      data: { imageScanStatus: 'FAILED', imageScanError: expect.stringContaining('No AI model could read the photo') },
     });
   });
 
-  it('marks FAILED when the response content is not valid JSON', async () => {
-    createMock.mockResolvedValue({ choices: [{ message: { content: 'not json' } }] });
+  it('marks FAILED and never throws when the gateway itself throws', async () => {
+    generateJson.mockRejectedValue(new Error('unexpected'));
 
-    await service.scanAndStore('co-1', 'eq-1', TEST_IMAGE);
+    await expect(service.scanAndStore('co-1', 'eq-1', TEST_IMAGE)).resolves.toBeUndefined();
 
     expect(prisma.equipment.updateMany).toHaveBeenCalledWith({
       where: { id: 'eq-1', companyId: 'co-1' },
-      data: expect.objectContaining({ imageScanStatus: 'FAILED' }),
+      data: { imageScanStatus: 'FAILED', imageScanError: 'unexpected' },
     });
   });
 });
