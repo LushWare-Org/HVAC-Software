@@ -185,6 +185,11 @@ export default function Finance() {
   const [searchParams, setSearchParams] = useSearchParams()
   useEffect(() => {
     if (searchParams.get('tab') === 'quotes') setTab('quotes')
+    if (searchParams.get('tab') === 'invoices') {
+      setTab('invoices')
+      const status = searchParams.get('status')
+      if (status) setInvStatus(status.toUpperCase())
+    }
     if (searchParams.get('filter') === 'pending_quotes') {
       setQuoPendingAging(true)
       setQuoPage(1)

@@ -1,534 +1,236 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
-import {
-    DollarSign, Briefcase, Users, CheckCircle,
-    ArrowRight, Clock, ChevronLeft, ChevronRight, Eye, AlertCircle, RefreshCw
-} from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useDashboardKpis, useRecentJobs, useUpcomingAppointments } from '../hooks/useDashboard'
-import { useRevenueSeries, useJobsByStatus } from '../hooks/useAnalytics'
+/**
+ * Operations dashboard: what is happening today and what needs a person now.
+ * Charts and long-range numbers live on Analytics; this page is for acting.
+ * Every colour comes from the theme variables, so light, dark and black all work.
+ */
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { CalendarDays, Briefcase, Plus, CheckCircle2, AlertTriangle, ArrowUpRight } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 import { useCompany } from '../hooks/useSettings'
+import { useJobs } from '../hooks/useJobs'
+import { useTechnicians, useDispatchWebSocket } from '../hooks/useScheduling'
+import { useRescheduleInbox } from '../hooks/useReschedule'
+import { useQuotes } from '../hooks/useFinance'
+import { useLeads } from '../hooks/useCustomers'
+import { usePendingTechnicians } from '../hooks/useTeam'
+import { useDashboardMoney, useUpcomingAppointments } from '../hooks/useDashboard'
+import { formatMoney } from '../lib/format'
 import RecommendationsPanel from '../components/RecommendationsPanel'
 import ComponentIssuesAlert from '../components/ComponentIssuesAlert'
-import type { Job, Appointment } from '../types/api'
-import { formatMoneyCompact } from '../lib/format'
+import AddJobModal from './jobs/AddJobModal'
+import type { Job, Technician } from '../types/api'
+import { buildAttention, buildStages, buildTechRows, clock, todaysJobs, type StageKey, type TechState } from './dashboard/opsData'
 
-// recharts (~120KB gzip) is kept out of Dashboard's own chunk — Dashboard is
-// the post-login landing page and loads eagerly, so pulling the chart lib in
-// directly would put it on the critical path for every login.
-const RevenueAreaChart = lazy(() => import('../components/DashboardCharts').then(m => ({ default: m.RevenueAreaChart })))
-const JobStatusPieChart = lazy(() => import('../components/DashboardCharts').then(m => ({ default: m.JobStatusPieChart })))
+const MONEY_ROLES = new Set(['super_admin', 'company_admin', 'office_manager'])
 
-function getGreeting() {
-    const h = new Date().getHours()
-    if (h < 12) return 'Good morning'
-    if (h < 17) return 'Good afternoon'
-    return 'Good evening'
+const STAGE_TONE: Record<StageKey, { bg: string; fg: string }> = {
+    DONE: { bg: 'var(--green-dim)', fg: 'var(--green)' },
+    ON_SITE: { bg: 'var(--amber-dim)', fg: 'var(--amber)' },
+    EN_ROUTE: { bg: 'var(--cyan-dim)', fg: 'var(--cyan)' },
+    SCHEDULED: { bg: 'var(--violet-dim)', fg: 'var(--violet)' },
+    UNASSIGNED: { bg: 'var(--bg-card-2)', fg: 'var(--t2)' },
 }
 
-// ─── Status maps: backend UPPER_CASE → display ────────────────────────────────
-
-const JOB_STATUS_MAP: Record<string, { label: string; css: string }> = {
-    PENDING:     { label: 'Pending',     css: 'badge-amber' },
-    SCHEDULED:   { label: 'Scheduled',   css: 'badge-violet' },
-    IN_PROGRESS: { label: 'In Progress', css: 'badge-blue' },
-    COMPLETED:   { label: 'Completed',   css: 'badge-green' },
-    INVOICED:    { label: 'Invoiced',    css: 'badge-cyan' },
-    PAID:        { label: 'Paid',        css: 'badge-green' },
-    CANCELLED:   { label: 'Cancelled',  css: 'badge-red' },
-    ON_HOLD:     { label: 'On Hold',     css: 'badge-neutral' },
-    // legacy lowercase from mock data
-    in_progress: { label: 'In Progress', css: 'badge-blue' },
-    scheduled:   { label: 'Scheduled',   css: 'badge-violet' },
-    completed:   { label: 'Completed',   css: 'badge-green' },
-    pending:     { label: 'Pending',     css: 'badge-amber' },
-    invoiced:    { label: 'Invoiced',    css: 'badge-cyan' },
-    cancelled:   { label: 'Cancelled',  css: 'badge-red' },
+const TECH_TONE: Record<TechState, { dot: string; label: string }> = {
+    LATE: { dot: 'var(--red)', label: 'Late' },
+    ON_SITE: { dot: 'var(--amber)', label: 'On site' },
+    EN_ROUTE: { dot: 'var(--cyan)', label: 'En route' },
+    NEXT: { dot: 'var(--violet)', label: 'Scheduled' },
+    FREE: { dot: 'var(--green)', label: 'Free' },
+    OFFLINE: { dot: 'var(--t4)', label: 'Offline' },
 }
 
-
-const JOB_STATUS_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#6b7280', '#ef4444']
-
-function fmt(n: number) {
-    return formatMoneyCompact(n)
+function useNow(intervalMs = 60_000) {
+    const [now, setNow] = useState(() => new Date())
+    useEffect(() => {
+        const id = window.setInterval(() => setNow(new Date()), intervalMs)
+        return () => window.clearInterval(id)
+    }, [intervalMs])
+    return now
 }
 
-// ─── Small loading skeleton ────────────────────────────────────────────────────
-
-function Skeleton({ w = '100%', h = 20 }: { w?: string | number; h?: string | number }) {
+function Panel({ title, meta, link, children, className = '' }: { title: string; meta?: string; link?: { to: string; label: string }; children: React.ReactNode; className?: string }) {
     return (
-        <div
-            style={{
-                width: w,
-                height: h,
-                background: 'var(--bg-hover)',
-                borderRadius: 6,
-                animation: 'pulse 1.5s infinite',
-            }}
-        />
+        <section className={`ops-panel ${className}`} aria-label={title}>
+            <header className="ops-panel-head">
+                <h2>{title}</h2>
+                {meta && <span className="ops-meta">{meta}</span>}
+                {link && <Link to={link.to} className="ops-link">{link.label}<ArrowUpRight size={14} aria-hidden="true" /></Link>}
+            </header>
+            {children}
+        </section>
     )
 }
 
-// ─── Dashboard Component ──────────────────────────────────────────────────────
+/** "14:00" today, "Tue 09:30" another day. */
+function visitWhen(iso: string, now: Date): string {
+    const d = new Date(iso)
+    const sameDay = d.toDateString() === now.toDateString()
+    return sameDay ? clock(iso) : `${d.toLocaleDateString(undefined, { weekday: 'short' })} ${clock(iso)}`
+}
+
+function Skeleton({ h = 16, w = '100%' }: { h?: number; w?: string | number }) {
+    return <div className="ops-skeleton" style={{ height: h, width: w }} />
+}
 
 export default function Dashboard() {
-    const [mounted, setMounted] = useState(false)
-    const [page, setPage] = useState(1)
-    const itemsPerPage = 10
-    const navigate = useNavigate()
+    const now = useNow()
+    const { user } = useAuth()
+    const showMoney = MONEY_ROLES.has(String(user?.role ?? '').toLowerCase())
+    useDispatchWebSocket()
+    const [showNewJob, setShowNewJob] = useState(false)
 
-    useEffect(() => { setMounted(true) }, [])
+    const company = useCompany().data
+    const jobsQuery = useJobs({ limit: 200 })
+    const techQuery = useTechnicians()
+    const reschedules = useRescheduleInbox().data?.meta?.total ?? 0
+    const agingQuotes = useQuotes({ pendingAging: true, limit: 1 }).data?.total ?? 0
+    const newLeads = useLeads({ status: 'NEW', limit: 1 }).data?.total ?? 0
+    const pendingTechs = usePendingTechnicians().data?.total ?? 0
+    const moneyQuery = useDashboardMoney(showMoney)
+    const appointments = useUpcomingAppointments(12).data?.data
 
-    // ── API data ─────────────────────────────────────────────────────────────
-    const kpiQuery = useDashboardKpis()
-    const recentJobsQuery = useRecentJobs(page, itemsPerPage)
-    const appointmentsQuery = useUpcomingAppointments(4)
-    const revenueQuery = useRevenueSeries('month')
-    const jobStatusQuery = useJobsByStatus()
-    const companyQuery = useCompany()
-    const company = companyQuery.data
+    const jobs: Job[] = jobsQuery.data?.data ?? []
+    // The appointments feed can include visits that already started; show only what's ahead.
+    const nextVisits = (appointments ?? []).filter(v => new Date(v.scheduledStart).getTime() >= now.getTime() - 30 * 60_000)
+    const techs: Technician[] = techQuery.data ?? []
+    const today = useMemo(() => todaysJobs(jobs, now), [jobs, now])
+    const stages = useMemo(() => buildStages(today), [today])
+    const lateCount = useMemo(() => buildTechRows(techs, today, now).filter(r => r.state === 'LATE').length, [techs, today, now])
+    const techRows = useMemo(() => buildTechRows(techs, today, now), [techs, today, now])
+    const money = moneyQuery.data
+    const attention = useMemo(() => buildAttention({
+        jobs, now, reschedules, agingQuotes, newLeads, pendingTechs,
+        overdueCount: showMoney ? money?.overdueCount : undefined,
+        overdueAmountLabel: showMoney && money ? formatMoney(money.overdueAmount, { decimals: 0 }) : undefined,
+    }), [jobs, now, reschedules, agingQuotes, newLeads, pendingTechs, showMoney, money])
 
-    // ── Derived data ──────────────────────────────────────────────────────────
-
-    // Revenue chart data — from analytics service or empty fallback
-    const revenueData = (revenueQuery.data ?? []).map((s) => ({
-        month: new Date(s.period).toLocaleDateString('en-US', { month: 'short' }),
-        revenue: s.revenue,
-    }))
-
-    // Job status pie chart — from analytics service
-    const jobStatusData = (jobStatusQuery.data ?? []).map((s) => ({
-        name: s.status.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-        value: s.count,
-    }))
-
-    // Recent jobs from API
-    const jobs: Job[] = recentJobsQuery.data?.data ?? []
-    const totalJobs = recentJobsQuery.data?.total ?? 0
-    const totalPages = Math.max(1, Math.ceil(totalJobs / itemsPerPage))
-    const paginatedJobs = jobs
-
-    // Upcoming appointments from API
-    const appointments: Appointment[] = appointmentsQuery.data?.data ?? []
-
-    // KPI values from API (with formatted fallbacks while loading)
-    const kpi = kpiQuery.data
-    const statCards = [
-        {
-            title: 'Total Revenue',
-            value: kpi?.revenue.formattedValue ?? '—',
-            sub: kpi?.revenue.trend != null ? `${kpi.revenue.trend > 0 ? '+' : ''}${kpi.revenue.trend}% vs prior period` : 'Loading…',
-            icon: DollarSign,
-            loading: kpiQuery.isLoading,
-            href: '/finance',
-        },
-        {
-            title: 'Jobs Completed',
-            value: kpi?.jobsCompleted.formattedValue ?? '—',
-            sub: kpi?.jobsCompleted.trend != null ? `${kpi.jobsCompleted.trend > 0 ? '+' : ''}${kpi.jobsCompleted.trend}% vs prior period` : 'Loading…',
-            icon: Briefcase,
-            loading: kpiQuery.isLoading,
-            href: '/jobs',
-        },
-        {
-            title: 'Active Customers',
-            value: kpi?.activeCustomers.formattedValue ?? '—',
-            sub: 'Current active accounts',
-            icon: Users,
-            loading: kpiQuery.isLoading,
-            href: '/customers',
-        },
-        {
-            title: 'Lead Conversion',
-            value: kpi?.leadConversionRate.formattedValue ?? '—',
-            sub: kpi?.leadConversionRate.unit ?? 'leads converted',
-            icon: CheckCircle,
-            loading: kpiQuery.isLoading,
-            href: '/customers',
-        },
-    ]
-
-    // ── Error banner ──────────────────────────────────────────────────────────
-    const hasError = kpiQuery.isError || recentJobsQuery.isError
+    const working = techRows.filter(r => r.state !== 'OFFLINE').length
+    const total = stages.reduce((s, x) => s + x.count, 0)
 
     return (
-        <div className="anim-fade-up">
-
-            {/* Error banner */}
-            {hasError && (
-                <div style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '10px 16px', marginBottom: 16,
-                    background: 'var(--red-dim)', borderRadius: 8,
-                    color: 'var(--red)', fontSize: 13,
-                }}>
-                    <AlertCircle size={14} />
-                    <span>Some data could not be loaded — services may be offline.</span>
-                    <button
-                        style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--red)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }}
-                        onClick={() => {
-                            kpiQuery.refetch()
-                            recentJobsQuery.refetch()
-                            appointmentsQuery.refetch()
-                        }}
-                    >
-                        <RefreshCw size={12} /> Retry
-                    </button>
-                </div>
-            )}
-
-            {/* Company welcome header */}
-            <div style={{
-                display: 'flex', alignItems: 'center', gap: 16,
-                marginBottom: 24, padding: '18px 24px',
-                background: 'var(--bg-card)',
-                border: '1px solid var(--bd)',
-                borderRadius: 'var(--r-lg)',
-                borderLeft: '4px solid var(--blue)',
-            }}>
-                {company?.logoUrl ? (
-                    <img
-                        src={company.logoUrl}
-                        alt={company.name ?? 'Company'}
-                        style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'contain', background: 'var(--bg-surface)', padding: 4, flexShrink: 0 }}
-                    />
-                ) : (
-                    <div style={{
-                        width: 48, height: 48, borderRadius: 10, flexShrink: 0,
-                        background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 700, color: '#fff', fontSize: 20,
-                    }}>
-                        {(company?.name ?? 'H')[0].toUpperCase()}
-                    </div>
-                )}
-                <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 2 }}>
-                        {getGreeting()}
-                    </div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', lineHeight: 1.2 }}>
-                        {company?.name ?? 'HVACtor.ai'}
-                    </div>
-                    {company?.city && (
-                        <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>
-                            {[company.city, company.state].filter(Boolean).join(', ')}
-                        </div>
-                    )}
-                </div>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 20, flexShrink: 0 }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--blue)' }}>{kpi?.activeCustomers.formattedValue ?? '—'}</div>
-                        <div style={{ fontSize: 10, color: 'var(--t4)', fontWeight: 500, marginTop: 1 }}>Customers</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--green)' }}>{kpi?.revenue.formattedValue ?? '—'}</div>
-                        <div style={{ fontSize: 10, color: 'var(--t4)', fontWeight: 500, marginTop: 1 }}>Revenue</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>{kpi?.jobsCompleted.formattedValue ?? '—'}</div>
-                        <div style={{ fontSize: 10, color: 'var(--t4)', fontWeight: 500, marginTop: 1 }}>Jobs Done</div>
-                    </div>
-                </div>
-            </div>
-
+        <div className="ops anim-fade-up">
             <ComponentIssuesAlert />
 
-            {/* KPI Cards */}
-            <div className="kpi-grid mb-5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
-                {statCards.map((stat, index) => {
-                    const Icon = stat.icon
-                    return (
-                        <div key={index} className={`kpi-card card-hover anim-fade-up delay-${index + 1}`} style={{ padding: '16px 20px', borderRadius: 'var(--r-md)', cursor: stat.href ? 'pointer' : 'default' }} onClick={() => stat.href && navigate(stat.href)}>
-                            <div className="kpi-card-top" style={{ marginBottom: 12, alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div className="kpi-label" style={{ fontSize: 13, color: 'var(--t3)', fontWeight: 500, margin: 0 }}>{stat.title}</div>
-                                <Icon size={16} strokeWidth={1.5} color="var(--t3)" />
-                            </div>
-                            {stat.loading
-                                ? <Skeleton h={28} w="60%" />
-                                : <div className="kpi-value" style={{ fontSize: 26, fontWeight: 700, color: 'var(--t1)' }}>{stat.value}</div>
-                            }
-                            {stat.sub && !stat.loading && <div style={{ fontSize: 11, color: 'var(--t4)', marginTop: 4 }}>{stat.sub}</div>}
-                        </div>
-                    )
-                })}
+            <section aria-label="Today" className="ops-panel ops-today">
+            <header className="ops-top">
+                <div>
+                    <h1>Today</h1>
+                    <p className="ops-meta">
+                        <span className="ops-live" aria-hidden="true" />
+                        {company?.name ? `${company.name}, ` : ''}live, updated {clock(now.toISOString())}
+                    </p>
+                </div>
+                <nav className="ops-actions" aria-label="Quick actions">
+                    <Link to="/scheduling" className="ops-btn"><CalendarDays size={16} aria-hidden="true" />Scheduling</Link>
+                    <Link to="/jobs" className="ops-btn"><Briefcase size={16} aria-hidden="true" />All jobs</Link>
+                    <button type="button" onClick={() => setShowNewJob(true)} className="ops-btn ops-btn-primary"><Plus size={16} aria-hidden="true" />New job</button>
+                </nav>
+            </header>
+
+            <div className="ops-stages-wrap">
+                {jobsQuery.isLoading ? <Skeleton h={64} /> : total === 0 ? (
+                    <div className="ops-empty-row">No jobs scheduled for today. <Link to="/scheduling" className="ops-link">Plan the day</Link></div>
+                ) : (
+                    <div className="ops-stages">
+                        {stages.filter(s => s.count > 0).map(s => (
+                            <Link
+                                key={s.key} to={s.href}
+                                className={`ops-stage${s.key === 'UNASSIGNED' ? ' ops-stage-open' : ''}`}
+                                style={{ flexGrow: s.count, background: STAGE_TONE[s.key].bg }}
+                            >
+                                <span className="ops-stage-n" style={{ color: STAGE_TONE[s.key].fg }}>{s.count}</span>
+                                <span className="ops-stage-l">{s.label}</span>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+                <p className="ops-meta">
+                    {total} {total === 1 ? 'job' : 'jobs'} today{lateCount ? `, ${lateCount} running late` : ''}{total ? '. Select a stage to open those jobs.' : '.'}
+                </p>
             </div>
+            </section>
+
+            <div className="ops-grid">
+                <Panel title="Needs attention" meta={attention.length ? String(attention.length) : undefined} className="ops-attention">
+                    {jobsQuery.isLoading ? (
+                        <div className="ops-list"><Skeleton h={56} /><Skeleton h={56} /><Skeleton h={56} /></div>
+                    ) : attention.length === 0 ? (
+                        <div className="ops-caught-up"><CheckCircle2 size={22} aria-hidden="true" /><div><strong>You're all caught up.</strong><span>Nothing is waiting on you right now.</span></div></div>
+                    ) : (
+                        <ul className="ops-list">
+                            {attention.map(item => (
+                                <li key={item.id} className={`ops-item${item.tone === 'urgent' ? ' ops-item-urgent' : ''}`}>
+                                    {item.tone === 'urgent' && <AlertTriangle size={16} className="ops-item-icon" aria-hidden="true" />}
+                                    <div className="ops-item-body">
+                                        <span className="ops-item-kind">{item.kind}</span>
+                                        <strong>{item.title}</strong>
+                                        <span className="ops-item-detail">{item.detail}</span>
+                                    </div>
+                                    {item.tel
+                                        ? <a href={`tel:${item.tel}`} className="ops-btn ops-btn-sm">{item.action}</a>
+                                        : <Link to={item.href} className={`ops-btn ops-btn-sm${item.action === 'Assign' ? ' ops-btn-primary' : ''}`}>{item.action}</Link>}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </Panel>
+
+                <div className="ops-side">
+                    <Panel title="Technicians" meta={techs.length ? `${working} working` : undefined} link={{ to: '/scheduling', label: 'Live map' }}>
+                        {techQuery.isLoading ? <div className="ops-list"><Skeleton /><Skeleton /><Skeleton /></div> : techRows.length === 0 ? (
+                            <p className="ops-meta">No technicians yet. <Link to="/team" className="ops-link">Add one</Link></p>
+                        ) : (
+                            <ul className="ops-techs">
+                                {techRows.map(r => (
+                                    <li key={r.id}>
+                                        <Link to="/scheduling" className="ops-tech">
+                                            <span className="ops-dot" style={{ background: TECH_TONE[r.state].dot }} aria-hidden="true" />
+                                            <span className="ops-tech-name">{r.name}</span>
+                                            <span className="ops-tech-detail">{r.detail}</span>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </Panel>
+
+                    <Panel title="Next visits" link={{ to: '/scheduling?view=calendar', label: 'Calendar' }}>
+                        {nextVisits.length === 0 ? <p className="ops-meta">No upcoming visits booked.</p> : (
+                            <ul className="ops-visits">
+                                {nextVisits.slice(0, 4).map(v => (
+                                    <li key={v.id}>
+                                        <span className="ops-visit-time">{visitWhen(v.scheduledStart, now)}</span>
+                                        <span className="ops-visit-body"><strong>{v.customerName}</strong><span>{v.serviceType ?? 'Visit'}{v.technicianName ? `, ${v.technicianName}` : ''}</span></span>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </Panel>
+                </div>
+            </div>
+
+            {showMoney && (
+                <section aria-label="Money" className="ops-money">
+                    {[
+                        { label: 'Collected today', value: money?.collectedToday, to: '/finance?tab=invoices&status=PAID' },
+                        { label: 'Collected this week', value: money?.collectedThisWeek, to: '/finance?tab=invoices&status=PAID' },
+                        { label: 'Outstanding', value: money?.outstanding, to: '/finance?tab=invoices' },
+                        { label: money?.overdueCount ? `Overdue, ${money.overdueCount} ${money.overdueCount === 1 ? 'invoice' : 'invoices'}` : 'Overdue', value: money?.overdueAmount, to: '/finance?tab=invoices&status=OVERDUE', alert: !!money?.overdueCount },
+                    ].map(m => (
+                        <Link key={m.label} to={m.to} className="ops-money-cell">
+                            <span className="ops-meta">{m.label}</span>
+                            {moneyQuery.isLoading ? <Skeleton h={26} w="60%" /> : moneyQuery.isError ? <span className="ops-meta">Unavailable</span> : (
+                                <span className={`ops-money-v${m.alert ? ' ops-money-alert' : ''}`}>{formatMoney(m.value ?? 0, { decimals: 0 })}</span>
+                            )}
+                        </Link>
+                    ))}
+                </section>
+            )}
 
             <RecommendationsPanel limit={3} />
-
-            <div className="grid-2 mb-5" style={{ gridTemplateColumns: '2fr 1fr' }}>
-                {/* Revenue Area Chart */}
-                <div className="card card-hover anim-fade-up delay-2">
-                    <div className="card-header mb-4">
-                        <div>
-                            <div className="card-title">Revenue Overview</div>
-                        </div>
-                        <div className="flex gap-2">
-                            <span className="badge badge-neutral">This Year</span>
-                        </div>
-                    </div>
-                    <div className="card-body" style={{ paddingTop: 0 }}>
-                        <div className="chart-wrap" style={{ height: 260 }}>
-                            {mounted && (
-                                revenueQuery.isLoading
-                                    ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={180} /></div>
-                                    : <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={180} /></div>}>
-                                        <RevenueAreaChart data={revenueData} />
-                                    </Suspense>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Job Status Chart */}
-                <div className="card card-hover anim-fade-up delay-3">
-                    <div className="card-header mb-4">
-                        <div>
-                            <div className="card-title">Job Status</div>
-                            <div className="card-subtitle">Current period</div>
-                        </div>
-                    </div>
-                    <div className="card-body" style={{ paddingTop: 0 }}>
-                        <div style={{ height: 180 }}>
-                            {mounted && (
-                                jobStatusQuery.isLoading
-                                    ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={120} /></div>
-                                    : <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Skeleton w="80%" h={120} /></div>}>
-                                        <JobStatusPieChart data={jobStatusData} />
-                                    </Suspense>
-                            )}
-                        </div>
-                        <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', marginTop: 12 }}>
-                            {jobStatusData.map((item, index) => (
-                                <div key={item.name} className="flex items-center gap-2">
-                                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: JOB_STATUS_COLORS[index], flexShrink: 0 }} />
-                                    <span className="text-sm text-3" style={{ flex: 1, fontSize: 11 }}>{item.name}</span>
-                                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>{item.value}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Recent Jobs Table */}
-            <div className="card card-hover mb-5 anim-fade-up delay-3">
-                <div className="card-header">
-                    <div>
-                        <div className="card-title">Recent Jobs</div>
-                        <div className="card-subtitle">Latest work orders across all technicians</div>
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            className="btn btn-primary btn-sm"
-                            style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
-                            onClick={() => navigate('/jobs')}
-                        >
-                            View All <ArrowRight size={12} />
-                        </button>
-                    </div>
-                </div>
-                <div className="card-body-flush mt-4">
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Job</th>
-                                    <th>Customer</th>
-                                    <th>Service</th>
-                                    <th>Technician</th>
-                                    <th>Status</th>
-                                    <th className="text-right">Amount</th>
-                                    <th style={{ textAlign: 'center', width: 100 }}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recentJobsQuery.isLoading && (
-                                    Array.from({ length: 4 }).map((_, i) => (
-                                        <tr key={i}>
-                                            {Array.from({ length: 7 }).map((_, j) => (
-                                                <td key={j}><Skeleton h={14} /></td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                )}
-                                {!recentJobsQuery.isLoading && paginatedJobs.map(j => {
-                                    const s = JOB_STATUS_MAP[j.status] ?? { label: j.status, css: 'badge-neutral' }
-                                    const amount = j.finalAmount ?? j.estimatedAmount ?? 0
-                                    return (
-                                        <tr key={j.id}>
-                                            <td><span className="td-mono td-primary">{j.id}</span></td>
-                                            <td>
-                                                <div className="cell-user">
-                                                    <div>
-                                                        <span className="cell-name">{j.customerName ?? '—'}</span>
-                                                        <div style={{ fontSize: 11, color: 'var(--t4)' }}>
-                                                            {j.scheduledStart ? new Date(j.scheduledStart).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>{j.title}</td>
-                                            <td>{j.assignedToName ?? '—'}</td>
-                                            <td><span className={`badge ${s.css}`}>{s.label}</span></td>
-                                            <td className="td-primary font-600 text-right">{fmt(amount)}</td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <button className="p-2 hover:bg-emerald-50 rounded-lg text-emerald-600 transition-colors" title="View Job Details">
-                                                    <Eye size={14} strokeWidth={2.5} />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
-                                {!recentJobsQuery.isLoading && paginatedJobs.length === 0 && (
-                                    <tr>
-                                        <td colSpan={7} style={{ textAlign: 'center', color: 'var(--t4)', padding: '24px 0' }}>
-                                            No jobs found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div className="card-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-                    <span className="text-[13px] text-[var(--t3)]">
-                        Showing {jobs.length > 0 ? (page - 1) * itemsPerPage + 1 : 0} to {Math.min(page * itemsPerPage, totalJobs)} of {totalJobs} jobs
-                    </span>
-                    <div className="flex items-center gap-2">
-                        <button
-                            className="btn btn-secondary btn-sm flex items-center justify-center p-1"
-                            style={{ width: 32, height: 32 }}
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
-                            disabled={page === 1}
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <span className="text-[13px] text-[var(--t2)] mx-2">
-                            Page {page} of {totalPages}
-                        </span>
-                        <button
-                            className="btn btn-secondary btn-sm flex items-center justify-center p-1"
-                            style={{ width: 32, height: 32 }}
-                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                            disabled={page === totalPages || totalPages === 0}
-                        >
-                            <ChevronRight size={18} />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Bottom row: Upcoming Appointments */}
-            <div className="grid-2 mb-5 anim-fade-up delay-4">
-                <div className="card card-hover">
-                    <div className="card-header">
-                        <div>
-                            <div className="card-title">Upcoming Appointments</div>
-                            <div className="card-subtitle">Next scheduled visits</div>
-                        </div>
-                        <button
-                            className="btn btn-ghost btn-sm"
-                            style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--blue)' }}
-                            onClick={() => navigate('/scheduling?view=calendar')}
-                        >
-                            View Calendar <ArrowRight size={12} />
-                        </button>
-                    </div>
-                    <div className="card-body mt-3">
-                        {appointmentsQuery.isLoading && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                {Array.from({ length: 3 }).map((_, i) => (
-                                    <Skeleton key={i} h={60} />
-                                ))}
-                            </div>
-                        )}
-                        {!appointmentsQuery.isLoading && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                {appointments.length === 0 && (
-                                    <div style={{ textAlign: 'center', color: 'var(--t4)', padding: '16px 0', fontSize: 13 }}>
-                                        No upcoming appointments
-                                    </div>
-                                )}
-                                {appointments.map((apt) => (
-                                    <div
-                                        key={apt.id}
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: 14,
-                                            padding: '10px 12px', borderRadius: 'var(--r-lg)',
-                                            background: 'var(--bg-hover)', transition: 'background var(--dur-fast)', cursor: 'default',
-                                        }}
-                                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-active)')}
-                                        onMouseLeave={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                                    >
-                                        <div style={{
-                                            width: 50, height: 50, borderRadius: 'var(--r-md)',
-                                            background: 'var(--blue-dim)', display: 'flex',
-                                            flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                        }}>
-                                            <span style={{ fontSize: 10, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                                {new Date(apt.scheduledStart).toLocaleDateString('en-GB', { month: 'short' })}
-                                            </span>
-                                            <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--blue)', lineHeight: 1.1 }}>
-                                                {new Date(apt.scheduledStart).getDate()}
-                                            </span>
-                                        </div>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {apt.serviceType ?? 'Service'}
-                                            </div>
-                                            <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 4 }}>{apt.customerName ?? '—'}</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                <Clock size={11} style={{ color: 'var(--t4)', flexShrink: 0 }} />
-                                                <span style={{ fontSize: 11, color: 'var(--t4)' }}>
-                                                    {new Date(apt.scheduledStart).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                                                </span>
-                                                {apt.technicianName && (
-                                                    <>
-                                                        <span style={{ fontSize: 11, color: 'var(--t4)' }}>·</span>
-                                                        <span style={{ fontSize: 11, color: 'var(--t4)' }}>{apt.technicianName}</span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Outstanding invoices summary */}
-                <div className="card card-hover">
-                    <div className="card-header">
-                        <div>
-                            <div className="card-title">Finance Summary</div>
-                            <div className="card-subtitle">Outstanding & overdue</div>
-                        </div>
-                    </div>
-                    <div className="card-body mt-3">
-                        {kpiQuery.isLoading
-                            ? <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}><Skeleton h={40} /><Skeleton h={40} /></div>
-                            : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                    <div style={{ padding: '14px 16px', borderRadius: 'var(--r-md)', background: 'var(--bg-hover)' }}>
-                                        <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 4 }}>Outstanding Invoices</div>
-                                        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)' }}>
-                                            {kpi?.outstandingInvoices.formattedValue ?? '—'}
-                                        </div>
-                                        <div style={{ fontSize: 11, color: 'var(--t4)' }}>{kpi?.outstandingInvoices.unit}</div>
-                                    </div>
-                                    <div style={{ padding: '14px 16px', borderRadius: 'var(--r-md)', background: 'var(--bg-hover)' }}>
-                                        <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 4 }}>Avg Rating</div>
-                                        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--amber)' }}>
-                                            ★ {kpi?.avgRating.formattedValue ?? '—'}
-                                        </div>
-                                        <div style={{ fontSize: 11, color: 'var(--t4)' }}>customer satisfaction</div>
-                                    </div>
-                                </div>
-                            )
-                        }
-                    </div>
-                </div>
-            </div>
+            <AddJobModal isOpen={showNewJob} onClose={() => setShowNewJob(false)} />
         </div>
     )
 }

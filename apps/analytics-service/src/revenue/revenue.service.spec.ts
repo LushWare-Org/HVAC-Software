@@ -5,6 +5,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RevenueService } from './revenue.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisCacheService } from '../redis-cache.service';
 import { GranularityEnum } from '../dashboard/dto/dashboard.dto';
 
 const COMPANY_ID = 'co-001';
@@ -19,6 +20,7 @@ describe('RevenueService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RevenueService,
+        { provide: RedisCacheService, useValue: { get: jest.fn().mockResolvedValue(null), set: jest.fn().mockResolvedValue(undefined) } },
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();

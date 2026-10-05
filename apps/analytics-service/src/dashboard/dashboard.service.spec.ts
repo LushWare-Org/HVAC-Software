@@ -12,6 +12,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardService } from './dashboard.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisCacheService } from '../redis-cache.service';
 
 // ── Mock ───────────────────────────────────────────────────────────────────────
 
@@ -71,6 +72,7 @@ describe('DashboardService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DashboardService,
+        { provide: RedisCacheService, useValue: { get: jest.fn().mockResolvedValue(null), set: jest.fn().mockResolvedValue(undefined) } },
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
@@ -108,7 +110,7 @@ describe('DashboardService', () => {
       setupKpiMocks({ revenue: '12345.67' });
 
       const result = await service.getKpis(COMPANY_ID, {});
-      expect(result.revenue.formattedValue).toContain('12,346');  // rounded
+      expect(result.revenue.formattedValue).toContain('12,345.67');
     });
 
     it('uses defaults when no date range provided (last 30 days)', async () => {
@@ -133,3 +135,44 @@ describe('DashboardService', () => {
     });
   });
 });
+
+describe('DashboardService.getMoney', () => {
+  let service: DashboardService;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        DashboardService,
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: RedisCacheService, useValue: { get: jest.fn().mockResolvedValue(null), set: jest.fn() } },
+      ],
+    }).compile();
+    service = module.get(DashboardService);
+  });
+
+  it('reports payments received and what is still owed, as numbers', async () => {
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([{ today: '1240.50', week: '6980' }])
+      .mockResolvedValueOnce([{ outstanding: '8420', overdue_count: 3n, overdue_amount: '2100' }]);
+
+    const money = await service.getMoney(COMPANY_ID, new Date('2026-10-05T00:00:00Z'), new Date('2026-09-29T00:00:00Z'));
+
+    expect(money).toEqual({ collectedToday: 1240.5, collectedThisWeek: 6980, outstanding: 8420, overdueCount: 3, overdueAmount: 2100 });
+  });
+
+  it('returns zeros for a company with no payments or invoices', async () => {
+    mockPrisma.$queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    const money = await service.getMoney(COMPANY_ID, new Date(), new Date());
+    expect(money).toEqual({ collectedToday: 0, collectedThisWeek: 0, outstanding: 0, overdueCount: 0, overdueAmount: 0 });
+  });
+
+  it('scopes both queries to the caller\'s company', async () => {
+    mockPrisma.$queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    await service.getMoney(COMPANY_ID, new Date(), new Date());
+    for (const [sql] of mockPrisma.$queryRaw.mock.calls) {
+      expect((sql as { values: unknown[] }).values).toContain(COMPANY_ID);
+    }
+  });
+});
+

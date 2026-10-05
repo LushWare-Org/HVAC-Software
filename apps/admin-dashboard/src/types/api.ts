@@ -304,6 +304,7 @@ export interface Job {
   priority: JobPriority
   customerId?: string
   customerName?: string
+  customerPhone?: string
   serviceAddress?: string
   customerAddress?: string  // alias for backwards compat
   serviceLatitude?: string

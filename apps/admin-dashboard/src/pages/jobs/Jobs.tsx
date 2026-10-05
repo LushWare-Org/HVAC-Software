@@ -215,6 +215,13 @@ export default function Jobs() {
   // ?filter=high_utilization&forecastDays=N — restricts to exactly the jobs
   // scheduled in that forecast window (mirrors InsightDataService.getUtilizationFacts).
   const [searchParams, setSearchParams] = useSearchParams();
+  // Deep links from the dashboard: /jobs?status=EN_ROUTE opens the list filtered.
+  useEffect(() => {
+    const status = searchParams.get('status')
+    if (status) setFilterStatus(status.toUpperCase())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   useEffect(() => {
     if (searchParams.get('filter') === 'high_utilization') {
       setUtilizationFilterActive(true);

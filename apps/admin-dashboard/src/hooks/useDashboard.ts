@@ -83,3 +83,28 @@ export function prefetchDashboard(): Promise<unknown> {
     queryClient.prefetchQuery({ queryKey: ['dashboard', 'appointments', 4], queryFn: () => fetchAppointments(4) }),
   ])
 }
+
+export interface DashboardMoney {
+  collectedToday: number
+  collectedThisWeek: number
+  outstanding: number
+  overdueCount: number
+  overdueAmount: number
+}
+
+/** Payments received today and this week (the user's local day), plus what is still owed. */
+export function useDashboardMoney(enabled: boolean) {
+  return useQuery<DashboardMoney>({
+    queryKey: ['dashboard', 'money'],
+    queryFn: async () => {
+      const today = new Date(); today.setHours(0, 0, 0, 0)
+      const week = new Date(today); week.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+      const res = await api.get('/analytics/dashboard/money', {
+        params: { todayStart: today.toISOString(), weekStart: week.toISOString() },
+      })
+      return res.data
+    },
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}

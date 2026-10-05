@@ -38,6 +38,15 @@ export interface DashboardKpis {
   periodLabel: string;
 }
 
+/** Cash position for the dashboard's money band. */
+export interface DashboardMoney {
+  collectedToday: number;
+  collectedThisWeek: number;
+  outstanding: number;
+  overdueCount: number;
+  overdueAmount: number;
+}
+
 @Injectable()
 export class DashboardService {
   constructor(
@@ -114,6 +123,45 @@ export class DashboardService {
   }
 
   // ── Private query helpers ───────────────────────────────────────────────────
+
+  /**
+   * Money actually received (succeeded payments) since the caller's local
+   * start of day and week, plus what customers still owe. "Today" is the
+   * user's day, not the server's, so the browser sends both boundaries.
+   * Overdue counts invoices past their due date even if a scheduled job has
+   * not flipped them to OVERDUE yet.
+   */
+  async getMoney(companyId: string, todayStart: Date, weekStart: Date): Promise<DashboardMoney> {
+    const since = todayStart < weekStart ? todayStart : weekStart;
+    const [paid] = await this.prisma.$queryRaw<{ today: string; week: string }[]>(
+      Prisma.sql`
+        SELECT COALESCE(SUM(amount) FILTER (WHERE "paidAt" >= ${todayStart}), 0)::TEXT AS today,
+               COALESCE(SUM(amount) FILTER (WHERE "paidAt" >= ${weekStart}), 0)::TEXT  AS week
+        FROM   finance."Payment"
+        WHERE  "companyId" = ${companyId}
+          AND  status = 'SUCCEEDED'
+          AND  "paidAt" >= ${since}
+      `,
+    );
+    const [owed] = await this.prisma.$queryRaw<{ outstanding: string; overdue_count: bigint; overdue_amount: string }[]>(
+      Prisma.sql`
+        SELECT COALESCE(SUM("balanceDue"), 0)::TEXT AS outstanding,
+               COUNT(*) FILTER (WHERE status = 'OVERDUE' OR "dueDate" < NOW())                         AS overdue_count,
+               COALESCE(SUM("balanceDue") FILTER (WHERE status = 'OVERDUE' OR "dueDate" < NOW()), 0)::TEXT AS overdue_amount
+        FROM   finance."Invoice"
+        WHERE  "companyId" = ${companyId}
+          AND  status IN ('SENT', 'PARTIALLY_PAID', 'OVERDUE')
+          AND  "balanceDue" > 0
+      `,
+    );
+    return {
+      collectedToday: parseFloat(paid?.today ?? '0'),
+      collectedThisWeek: parseFloat(paid?.week ?? '0'),
+      outstanding: parseFloat(owed?.outstanding ?? '0'),
+      overdueCount: Number(owed?.overdue_count ?? 0),
+      overdueAmount: parseFloat(owed?.overdue_amount ?? '0'),
+    };
+  }
 
   private async queryRevenue(companyId: string, from: Date, to: Date): Promise<number> {
     const rows = await this.prisma.$queryRaw<{ total: string }[]>(
