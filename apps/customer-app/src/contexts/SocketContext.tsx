@@ -8,7 +8,7 @@ import { devWsBaseUrl } from '@/lib/devHost'
 import { expoHostUri } from '@/lib/api'
 import type { ThreadMessage } from '@/types/api'
 
-const DEFAULT_WS_BASE_URL = 'https://nginx-gateway-536584181394.us-central1.run.app'
+const DEFAULT_WS_BASE_URL = 'https://nginx-gateway-536584181394.asia-northeast3.run.app'
 
 function getWsBaseUrl(): string {
   const explicit =

@@ -15,7 +15,7 @@
 import axios from 'axios'
 import Constants from 'expo-constants'
 
-const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.us-central1.run.app/api'
+const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.asia-northeast3.run.app/api'
 
 function getDefaultApiBaseUrl(): string {
   return __DEV__ ? 'http://localhost:80/api' : DEFAULT_API_BASE_URL

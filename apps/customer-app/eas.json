@@ -19,8 +19,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app/api",
-        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app",
+        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app/api",
+        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "npm_config_user_agent": "pnpm"
       }
     },
@@ -31,8 +31,8 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app/api",
-        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app",
+        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app/api",
+        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "npm_config_user_agent": "pnpm"
       }
     },
@@ -40,8 +40,8 @@
       "autoIncrement": true,
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app/api",
-        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app",
+        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app/api",
+        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "npm_config_user_agent": "pnpm"
       }
     },
@@ -53,8 +53,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app/api",
-        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.us-central1.run.app",
+        "EXPO_PUBLIC_API_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app/api",
+        "EXPO_PUBLIC_WS_BASE_URL": "https://nginx-gateway-536584181394.asia-northeast3.run.app",
         "npm_config_user_agent": "pnpm"
       }
     }

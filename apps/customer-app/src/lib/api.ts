@@ -5,14 +5,14 @@
  * injected by AuthContext via setAuthHeader().
  *
  * Base URL: EXPO_PUBLIC_API_BASE_URL (set per EAS build profile), falling back
- * to the hvactor gateway. NOTE: the older 2ohuhmktua gateway that technician-app
- * still defaults to belongs to a decommissioned project — never use it here.
+ * to the hvactor gateway in Seoul (asia-northeast3, next to the database).
+ * The older 2ohuhmktua gateway belongs to a decommissioned project.
  */
 import axios from 'axios'
 import Constants from 'expo-constants'
 import { devApiBaseUrl } from './devHost'
 
-const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.us-central1.run.app/api'
+const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.asia-northeast3.run.app/api'
 
 /** The address Metro is served from — the machine running the local services. */
 export function expoHostUri(): string | undefined {
