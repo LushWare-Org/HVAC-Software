@@ -140,6 +140,29 @@ describe('PdfService — template-aware rendering', () => {
   });
 });
 
+describe('PdfService — company logo fallback', () => {
+  const service = new PdfService();
+  const opts = { currency: 'LKR', timezone: 'Asia/Colombo', logoUrl: 'https://cdn.example.com/company-logo.png' };
+
+  it('shows the company logo when the tenant has no document template', () => {
+    const html = service.renderQuoteHtml(baseQuote, 'Acme HVAC', '123 Main St', opts);
+    expect(html).toContain('https://cdn.example.com/company-logo.png');
+  });
+
+  it('shows the company logo when a template sets none', () => {
+    const template: DocumentTemplateConfig = { id: 't9', documentType: 'QUOTE', mode: 'BUILDER' };
+    const html = service.renderQuoteHtml(baseQuote, 'Acme HVAC', '123 Main St', opts, template);
+    expect(html).toContain('https://cdn.example.com/company-logo.png');
+  });
+
+  it("prefers the template's own logo over the company logo", () => {
+    const template: DocumentTemplateConfig = { id: 't10', documentType: 'QUOTE', mode: 'BUILDER', logoUrl: 'https://cdn.example.com/template-logo.png' };
+    const html = service.renderQuoteHtml(baseQuote, 'Acme HVAC', '123 Main St', opts, template);
+    expect(html).toContain('https://cdn.example.com/template-logo.png');
+    expect(html).not.toContain('company-logo.png');
+  });
+});
+
 describe('PdfService — agreement rendering', () => {
   const service = new PdfService();
   const context = {

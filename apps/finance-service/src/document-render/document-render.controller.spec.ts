@@ -11,26 +11,33 @@ function makePdfService() {
 function makeTemplateClient() {
   return { resolve: jest.fn().mockResolvedValue(null) };
 }
+function makeSettings() {
+  return { getSettings: jest.fn().mockResolvedValue({ currency: 'LKR', timezone: 'Asia/Colombo', logoUrl: 'https://cdn.example/logo.png' }) };
+}
 
 describe('DocumentRenderController', () => {
   it('renderAgreement resolves the template then generates a PDF', async () => {
     const pdf = makePdfService();
     const templates = makeTemplateClient();
-    const controller = new DocumentRenderController(pdf as any, templates as any);
+    const controller = new DocumentRenderController(pdf as any, templates as any, makeSettings() as any);
     const res: any = { set: jest.fn(), end: jest.fn() };
     await controller.renderAgreement(
       { companyId: 'co-1', templateId: 't1', context: { name: 'X', customerName: 'Y', customerEmail: 'y@x.com', startDate: '2026-01-01' }, companyName: 'Acme', companyAddress: '1 St' },
       res,
     );
     expect(templates.resolve).toHaveBeenCalledWith('co-1', 'AGREEMENT', 't1');
-    expect(pdf.generateAgreementPdf).toHaveBeenCalled();
+    expect(pdf.generateAgreementPdf).toHaveBeenCalledWith(
+      expect.anything(), 'Acme', '1 St',
+      { currency: 'LKR', timezone: 'Asia/Colombo', logoUrl: 'https://cdn.example/logo.png' },
+      null,
+    );
     expect(res.end).toHaveBeenCalledWith(Buffer.from('pdf-bytes'));
   });
 
   it('preview returns HTML for the requested documentType using draft template fields directly (no DB lookup)', () => {
     const pdf = makePdfService();
     const templates = makeTemplateClient();
-    const controller = new DocumentRenderController(pdf as any, templates as any);
+    const controller = new DocumentRenderController(pdf as any, templates as any, makeSettings() as any);
     const result = controller.preview({ documentType: 'QUOTE', template: { mode: 'BUILDER', accentColor: '#111' } } as any);
     expect(templates.resolve).not.toHaveBeenCalled();
     expect(result).toEqual({ html: '<html>quote</html>' });

@@ -363,6 +363,7 @@ export class InvoicesService {
       const invoicePdf = await this.pdfService.generateInvoicePdf(updated as any, companyName, companyAddress, {
         currency: sendSettings.currency,
         timezone: sendSettings.timezone,
+        logoUrl: sendSettings.logoUrl,
       });
       // Best-effort — the invoice is already marked SENT with its PDF generated;
       // a slow/unreachable comms-service or SMTP relay must never fail this
@@ -726,7 +727,7 @@ export class InvoicesService {
       },
       companyName,
       companyAddress,
-      { currency: settings.currency, timezone: settings.timezone },
+      { currency: settings.currency, timezone: settings.timezone, logoUrl: settings.logoUrl },
       template,
     );
 

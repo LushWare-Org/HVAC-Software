@@ -2,6 +2,7 @@ import { Body, Controller, Post, Res, UseGuards, BadRequestException } from '@ne
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
 import { JwtAuthGuard } from '@tscrm/auth-client';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { PdfService } from '../pdf/pdf.service';
 import { DocumentTemplateClient, DocumentTemplateConfig } from '../document-templates/document-template.client';
 
@@ -56,6 +57,7 @@ export class DocumentRenderController {
   constructor(
     private readonly pdfService: PdfService,
     private readonly templates: DocumentTemplateClient,
+    private readonly companySettings: CompanySettingsClient,
   ) {}
 
   @Post('internal/documents/render')
@@ -64,6 +66,7 @@ export class DocumentRenderController {
   async renderAgreement(@Body() body: RenderAgreementBody, @Res() res: Response) {
     if (!body?.context?.name) throw new BadRequestException('context.name is required');
     const template = await this.templates.resolve(body.companyId, 'AGREEMENT', body.templateId);
+    const settings = await this.companySettings.getSettings(body.companyId);
     const pdf = await this.pdfService.generateAgreementPdf(
       {
         ...body.context,
@@ -74,7 +77,7 @@ export class DocumentRenderController {
       },
       body.companyName,
       body.companyAddress,
-      undefined,
+      { currency: settings.currency, timezone: settings.timezone, logoUrl: settings.logoUrl },
       template,
     );
     res.set({ 'Content-Type': 'application/pdf', 'Content-Length': pdf.length });

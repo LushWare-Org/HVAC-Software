@@ -412,7 +412,7 @@ export class AutomationService {
           recipientId,
           recipientName,
           recipientEmail: email,
-          subject: rendered.subject ?? 'Notification from T&S CRM',
+          subject: rendered.subject ?? 'Notification from HVACtor.ai',
           htmlBody: rendered.body,
           scheduledAt,
         });

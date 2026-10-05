@@ -308,6 +308,7 @@ export class QuotesService {
       const quotePdf = await this.pdfService.generateQuotePdf(updated as any, companyName, companyAddress, {
         currency: sendSettings.currency,
         timezone: sendSettings.timezone,
+        logoUrl: sendSettings.logoUrl,
       });
       // Best-effort — the quote is already marked SENT with its PDF generated;
       // a slow/unreachable comms-service or SMTP relay must never fail this

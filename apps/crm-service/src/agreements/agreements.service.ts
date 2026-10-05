@@ -302,6 +302,7 @@ export class AgreementsService {
     const confirmUrl = `${portalUrl}/agreements/confirm/${confirmToken}`;
     await this.email.sendMail({
       to: agreement.customer.email,
+      companyId,
       subject: `Please review your service agreement: ${agreement.name}`,
       html: this.agreementEmailHtml(agreement, confirmUrl),
     });
@@ -446,6 +447,7 @@ export class AgreementsService {
     const portalUrl = process.env.CUSTOMER_PORTAL_URL ?? 'http://localhost:5174';
     await this.email.sendMail({
       to: customer.email,
+      companyId: agreement.companyId,
       subject: `Your service agreement "${agreement.name}" has been updated`,
       html: `
 <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1a1a1a;">

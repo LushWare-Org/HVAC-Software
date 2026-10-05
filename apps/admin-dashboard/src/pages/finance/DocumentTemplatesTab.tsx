@@ -54,7 +54,7 @@ export default function DocumentTemplatesTab() {
         <div style={{ padding: '36px 20px', textAlign: 'center' }}>
           <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t2)', margin: 0 }}>No templates yet</p>
           <p style={{ fontSize: 12, color: 'var(--t4)', margin: '4px 0 0' }}>
-            Without one, {SECTIONS.find(s => s.key === section)?.label.toLowerCase()} use the default T&amp;S CRM look.
+            Without one, {SECTIONS.find(s => s.key === section)?.label.toLowerCase()} use the default HVACtor.ai look.
           </p>
         </div>
       ) : (

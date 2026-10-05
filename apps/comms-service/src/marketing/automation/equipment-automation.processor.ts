@@ -75,6 +75,7 @@ export class EquipmentAutomationProcessor extends WorkerHost {
     }
 
     const result = await this.emailService.send({
+      companyId: data.companyId,
       to: data.to,
       subject: data.subject,
       htmlBody: data.htmlBody,

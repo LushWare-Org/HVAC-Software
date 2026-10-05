@@ -6,7 +6,9 @@
  *  - SendGrid as fallback when SMTP is not configured
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
+import { withCompanyLogo } from './company-logo';
 import { ConfigService } from '@nestjs/config';
 import * as sgMail from '@sendgrid/mail';
 import * as Handlebars from 'handlebars';
@@ -43,6 +45,8 @@ export interface SendEmailOptions {
   headers?: Record<string, string>;
   /** Per-tenant sender display name — e.g. the company's own name — overrides the configured default. */
   fromName?: string;
+  /** The tenant this email is for: its logo is put at the top. */
+  companyId?: string;
 }
 
 @Injectable()
@@ -55,7 +59,10 @@ export class EmailService {
   private readonly provider: EmailProvider;
   private readonly smtpTransporter?: Transporter;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    @Optional() private readonly companySettings?: CompanySettingsClient,
+  ) {
     const configuredProvider = (this.config.get<string>('email.provider') ?? 'auto').toLowerCase();
 
     const smtpHost = this.config.get<string>('smtp.host') ?? '';
@@ -115,6 +122,10 @@ export class EmailService {
   }
 
   async send(opts: SendEmailOptions): Promise<EmailDeliveryResult> {
+    if (opts.companyId && opts.companyId !== 'ALL' && this.companySettings) {
+      const settings = await this.companySettings.getSettings(opts.companyId).catch(() => null);
+      if (settings) opts = { ...opts, htmlBody: withCompanyLogo(opts.htmlBody, settings.logoUrl, settings.name || opts.fromName || '') };
+    }
     const start = Date.now();
     const fromName = opts.fromName?.trim() || this.fromName;
     try {

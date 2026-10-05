@@ -37,7 +37,7 @@ export class EmailProcessor extends WorkerHost {
     const settings = await this.companySettings.getSettings(companyId);
     const fromName = settings.name || undefined;
 
-    const result = await this.emailService.send({ to, toName, subject, htmlBody, attachments, fromName });
+    const result = await this.emailService.send({ to, toName, subject, htmlBody, attachments, fromName, companyId });
 
     if (result.success) {
       await this.prisma.notification.update({

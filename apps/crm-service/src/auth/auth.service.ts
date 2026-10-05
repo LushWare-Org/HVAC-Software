@@ -297,6 +297,7 @@ export class AuthService {
       name: `${customer.firstName} ${customer.lastName}`.trim(),
       tempPassword,
       companyName: company?.name ?? APP_NAME,
+      companyId,
     });
 
     return { user: { id: user.id }, alreadyProvisioned: false };
@@ -538,6 +539,7 @@ export class AuthService {
       name: dto.name,
       tempPassword,
       companyName: company?.name ?? APP_NAME,
+      companyId,
     });
 
     return {
@@ -581,6 +583,7 @@ export class AuthService {
           to: user.email,
           name: user.name,
           companyName: company?.name ?? APP_NAME,
+          companyId: user.companyId,
           resetUrl: `${base}/reset-password?token=${encodeURIComponent(token)}`,
         })
         .catch(() => undefined);
@@ -624,6 +627,7 @@ export class AuthService {
         to: user.email,
         name: user.name,
         companyName: company?.name ?? APP_NAME,
+        companyId: user.companyId,
         portalUrl: user.role === 'customer' ? CUSTOMER_APP_URL : STAFF_APP_URL,
       })
       .catch(() => undefined);
@@ -652,6 +656,7 @@ export class AuthService {
         to: user.email,
         name: user.name,
         companyName: company?.name ?? APP_NAME,
+        companyId,
       })
       .catch(() => undefined);
 
@@ -693,6 +698,7 @@ export class AuthService {
       name: `${customer.firstName} ${customer.lastName}`.trim(),
       tempPassword,
       companyName: company?.name ?? APP_NAME,
+      companyId,
     });
 
     return { success: true, message: `Welcome email resent to ${customer.email}` };

@@ -230,6 +230,7 @@ export class InvoicesController {
     const pdf = await this.pdfService.generateInvoicePdf(invoice as any, companyName, companyAddress, {
       currency: settings.currency,
       timezone: settings.timezone,
+      logoUrl: settings.logoUrl,
     }, template);
     res.set({
       'Content-Type': 'application/pdf',
@@ -276,7 +277,7 @@ export class InvoicesController {
       },
       companyName,
       companyAddress,
-      { currency: settings.currency, timezone: settings.timezone },
+      { currency: settings.currency, timezone: settings.timezone, logoUrl: settings.logoUrl },
       template,
     );
     res.set({

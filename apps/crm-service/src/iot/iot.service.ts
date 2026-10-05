@@ -513,6 +513,7 @@ export class IotService {
       to: customer.email,
       subject: `Connect your thermostat — ${appName}`,
       companyName: appName,
+      companyId,
       html: `
 <!DOCTYPE html>
 <html lang="en">

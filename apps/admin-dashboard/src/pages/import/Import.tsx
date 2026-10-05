@@ -576,7 +576,7 @@ function StepDone({ batch, batchId }: { batch: ImportBatch | null; batchId: stri
         <p style={{ fontSize: 13, color: 'var(--t3)' }}>
           {batch?.status === 'FAILED'
             ? 'Something went wrong. Check the error report below.'
-            : `Your data is now in T&S CRM and ready to use.`}
+            : `Your data is now in HVACtor.ai and ready to use.`}
         </p>
       </div>
 
@@ -807,7 +807,7 @@ export default function Import() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>Data Import</h1>
-          <p style={{ fontSize: 14, color: 'var(--t3)' }}>Migrate customers and equipment from your existing platform into T&S CRM.</p>
+          <p style={{ fontSize: 14, color: 'var(--t3)' }}>Migrate customers and equipment from your existing platform into HVACtor.ai.</p>
         </div>
         {user?.role === 'super_admin' && (
           <Link

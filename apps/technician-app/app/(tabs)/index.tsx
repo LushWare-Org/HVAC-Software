@@ -18,6 +18,7 @@ import { useMyAssignments } from '@/hooks/useSchedule'
 import { useTechnicianProfile, useUserProfile } from '@/hooks/useProfile'
 import { useGPSTracking } from '@/hooks/useGPS'
 import { useDoubleBackToExit } from '@/hooks/useDoubleBackToExit'
+import { useCompanyBranding } from '@/hooks/useCompanyBranding'
 import { uploadPendingAvatarIfAny } from '@/hooks/useAvatar'
 import { AvatarReminderBanner } from '@/components/AvatarReminderBanner'
 import { JobCard } from '@/components/JobCard'
@@ -38,6 +39,7 @@ export default function HomeScreen() {
   const { data: assignments, refetch: refetchAssignments } = useMyAssignments('ASSIGNED,EN_ROUTE,ON_SITE')
   const { data: techProfile } = useTechnicianProfile()
   const { data: me } = useUserProfile()
+  const { data: company } = useCompanyBranding()
 
   // Filter today's jobs — only show truly today's work + in-progress jobs
   const todayStr = new Date().toISOString().slice(0, 10)
@@ -122,6 +124,14 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
+            {company?.name ? (
+              <View style={styles.brandRow}>
+                {company.logoUrl ? (
+                  <Image source={{ uri: company.logoUrl }} style={styles.brandLogo} resizeMode="contain" accessibilityLabel={`${company.name} logo`} />
+                ) : null}
+                <Text style={styles.brandName} numberOfLines={1}>{company.name}</Text>
+              </View>
+            ) : null}
             <Text style={styles.greeting}>{greeting},</Text>
             <Text style={styles.userName}>{user?.name ?? 'Technician'}</Text>
           </View>
@@ -270,6 +280,24 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  brandLogo: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+  },
+  brandName: {
+    flexShrink: 1,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textSecondary,
   },
   greeting: {
     fontSize: FontSize.base,

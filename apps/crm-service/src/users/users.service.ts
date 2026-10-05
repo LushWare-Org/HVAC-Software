@@ -240,7 +240,7 @@ export class UsersService {
           If you have any questions, please contact your dispatcher or office manager.
         </p>
         <hr style="border:none;border-top:1px solid #1e293b;margin:24px 0;" />
-        <p style="font-size:12px;color:#475569;">© ${APP_NAME} — T&S CRM</p>
+        <p style="font-size:12px;color:#475569;">© ${APP_NAME}</p>
       </div>`;
 
     const res = await fetch(`${COMMS_SERVICE_URL}/notifications/email`, {
@@ -280,7 +280,7 @@ export class UsersService {
           If you believe this is an error, please contact the admin directly.
         </p>
         <hr style="border:none;border-top:1px solid #1e293b;margin:24px 0;" />
-        <p style="font-size:12px;color:#475569;">© ${APP_NAME} — T&S CRM</p>
+        <p style="font-size:12px;color:#475569;">© ${APP_NAME}</p>
       </div>`;
 
     const res = await fetch(`${COMMS_SERVICE_URL}/notifications/email`, {

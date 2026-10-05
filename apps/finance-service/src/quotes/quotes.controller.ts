@@ -234,6 +234,7 @@ export class QuotesController {
     const pdf = await this.pdfService.generateQuotePdf(quote as any, companyName, companyAddress, {
       currency: settings.currency,
       timezone: settings.timezone,
+      logoUrl: settings.logoUrl,
     }, template);
     res.set({
       'Content-Type': 'application/pdf',

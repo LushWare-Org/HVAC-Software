@@ -19,7 +19,12 @@ import type { DocumentTemplateConfig } from '../document-templates/document-temp
 import { DEFAULT_ROWS, HERO_CANVAS_HEIGHT, type TemplateRow, type TemplateBlock } from './slots';
 
 // ── Money/date formatting lives in ./format (currency + timezone aware) ─────
-export interface PdfRenderOpts { currency: string; timezone: string }
+export interface PdfRenderOpts {
+  currency: string;
+  timezone: string;
+  /** The company's own logo, used when the document template doesn't set one. */
+  logoUrl?: string | null;
+}
 const DEFAULT_RENDER_OPTS: PdfRenderOpts = { currency: 'USD', timezone: 'America/New_York' };
 
 const pct = (val: number | { toString(): string } | null | undefined): string => {
@@ -195,6 +200,8 @@ export class PdfService implements OnModuleDestroy {
   private static readonly MAX_CONCURRENT_PDFS = Number(process.env.PDF_MAX_CONCURRENT) > 0
     ? Number(process.env.PDF_MAX_CONCURRENT)
     : 4;
+  /** Longest a PDF waits for logo/letterhead images before rendering without them. */
+  private static readonly IMAGE_WAIT_MS = 5000;
 
   async onModuleDestroy() {
     if (this.browserPromise) {
@@ -261,7 +268,7 @@ export class PdfService implements OnModuleDestroy {
     const context = {
       companyName: template?.companyName || companyName,
       companyAddress: template?.companyAddress || companyAddress,
-      template: this.templateContext(template),
+      template: this.templateContext(template, opts.logoUrl),
       rows: this.resolveRows('QUOTE', template),
       quoteNumber: quote.quoteNumber,
       status: quote.status,
@@ -318,7 +325,7 @@ export class PdfService implements OnModuleDestroy {
     const context = {
       companyName: template?.companyName || companyName,
       companyAddress: template?.companyAddress || companyAddress,
-      template: this.templateContext(template),
+      template: this.templateContext(template, opts.logoUrl),
       rows: this.resolveRows('INVOICE', template),
       invoiceNumber: invoice.invoiceNumber,
       status: invoice.status,
@@ -373,7 +380,7 @@ export class PdfService implements OnModuleDestroy {
     return tpl({
       companyName: template?.companyName || companyName,
       companyAddress: template?.companyAddress || companyAddress,
-      template: this.templateContext(template),
+      template: this.templateContext(template, opts.logoUrl),
       rows: this.resolveRows('AGREEMENT', template),
       name: context.name,
       description: context.description ?? '',
@@ -406,7 +413,7 @@ export class PdfService implements OnModuleDestroy {
     return tpl({
       companyName: template?.companyName || companyName,
       companyAddress: template?.companyAddress || companyAddress,
-      template: this.templateContext(template),
+      template: this.templateContext(template, opts.logoUrl),
       rows: this.resolveRows('PAYMENT_RECEIPT', template),
       receiptNumber: context.receiptNumber,
       amountFmt: usd(context.amount),
@@ -424,11 +431,11 @@ export class PdfService implements OnModuleDestroy {
   }
 
   /** Normalizes a resolved template into exactly what the .hbs files need — never null, so `{{#if template.x}}` always works. */
-  private templateContext(template?: DocumentTemplateConfig | null) {
-    if (!template) return { isLetterhead: false };
+  private templateContext(template?: DocumentTemplateConfig | null, companyLogoUrl?: string | null) {
+    if (!template) return { isLetterhead: false, logoUrl: companyLogoUrl || null };
     return {
       isLetterhead: template.mode === 'LETTERHEAD',
-      logoUrl: template.logoUrl ?? null,
+      logoUrl: template.logoUrl || companyLogoUrl || null,
       headerText: template.headerText ?? null,
       footerText: template.footerText ?? null,
       bankDetails: template.bankDetails ?? null,
@@ -630,15 +637,22 @@ export class PdfService implements OnModuleDestroy {
         await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 15000 });
         // 'domcontentloaded' doesn't wait for external <img> requests (logo/letterhead
         // URLs) to finish — without this, page.pdf() can snapshot before those images
-        // arrive, silently dropping them from the output.
-        await page.evaluate(async () => {
-          const win = globalThis as any;
-          const images: any[] = Array.from(win.document.images).filter((img: any) => !img.complete);
-          await Promise.all(images.map((img: any) => new Promise((resolve) => {
-            img.addEventListener('load', resolve, { once: true });
-            img.addEventListener('error', resolve, { once: true });
-          })));
-        });
+        // arrive, silently dropping them from the output. Capped, because a
+        // stalled image host otherwise holds the request until Chromium's own
+        // ~60s network timeout and the gateway gives up first. The cap is a
+        // Node timer: page timers never fire with page JavaScript disabled.
+        let capTimer: NodeJS.Timeout | undefined;
+        await Promise.race([
+          page.evaluate(async () => {
+            const win = globalThis as any;
+            const images: any[] = Array.from(win.document.images).filter((img: any) => !img.complete);
+            await Promise.all(images.map((img: any) => new Promise((resolve) => {
+              img.addEventListener('load', resolve, { once: true });
+              img.addEventListener('error', resolve, { once: true });
+            })));
+          }),
+          new Promise<void>((resolve) => { capTimer = setTimeout(resolve, PdfService.IMAGE_WAIT_MS); }),
+        ]).finally(() => clearTimeout(capTimer));
         const pdfBuffer = await page.pdf({
           format: 'Letter',
           printBackground: true,

@@ -405,6 +405,7 @@ export class ProjectsService {
         subject: `You've been added to "${projectName}" — ${companyName}`,
         html,
         companyName,
+        companyId,
       });
     } catch {
       // Never let a notification failure affect the project write path.

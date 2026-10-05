@@ -130,6 +130,7 @@ export class MarketingSendWorker extends WorkerHost {
       const unsubUrl = `${CLICK_BASE}/m/u/${unsubToken}`;
 
       const result = await this.emailService.send({
+        companyId,
         to: address,
         subject: subject ?? 'A message from us',
         htmlBody: renderedBody,
@@ -170,7 +171,7 @@ export class MarketingSendWorker extends WorkerHost {
       return;
     }
 
-    const result = await this.emailService.send({ to, subject, htmlBody });
+    const result = await this.emailService.send({ to, subject, htmlBody, companyId });
 
     if (!result.success) {
       await this.prisma.sendJob.update({ where: { id: sendJobId }, data: { status: SendJobStatus.FAILED, error: result.error } });
@@ -204,6 +205,7 @@ export class MarketingSendWorker extends WorkerHost {
     const htmlBody = buildReviewEmailHtml(customerName, trackedLink, unsubLink);
 
     const result = await this.emailService.send({
+      companyId,
       to: customerEmail,
       subject: `How was your service, ${customerName}?`,
       htmlBody,

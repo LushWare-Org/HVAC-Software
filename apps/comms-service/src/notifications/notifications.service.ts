@@ -199,6 +199,7 @@ export class NotificationsService {
       });
 
       const result = await this.emailService.send({
+        companyId: req.companyId,
         to: req.recipientEmail,
         toName: req.recipientName,
         subject: req.subject,

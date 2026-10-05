@@ -17,7 +17,9 @@
  * name is available.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { withCompanyLogo } from './company-logo';
 
 const APP_NAME = process.env.APP_NAME ?? 'HVACtor.ai';
 
@@ -109,7 +111,7 @@ export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: any = null;
 
-  constructor() {
+  constructor(@Optional() private readonly prisma?: PrismaService) {
     this.initTransporter();
   }
 
@@ -141,6 +143,8 @@ export class EmailService {
   }
 
   async sendWelcomeCustomer(opts: {
+    /** Puts the tenant's logo at the top of the email. */
+    companyId?: string;
     to: string;
     name: string;
     tempPassword: string;
@@ -178,10 +182,12 @@ export class EmailService {
       companyName: opts.companyName,
     });
 
-    await this.send({ to: opts.to, subject, html, companyName: opts.companyName });
+    await this.send({ to: opts.to, subject, html, companyName: opts.companyName, companyId: opts.companyId });
   }
 
   async sendWelcomeTechnician(opts: {
+    /** Puts the tenant's logo at the top of the email. */
+    companyId?: string;
     to: string;
     name: string;
     tempPassword: string;
@@ -218,10 +224,12 @@ export class EmailService {
       companyName: opts.companyName,
     });
 
-    await this.send({ to: opts.to, subject, html, companyName: opts.companyName });
+    await this.send({ to: opts.to, subject, html, companyName: opts.companyName, companyId: opts.companyId });
   }
 
   async sendPasswordResetLink(opts: {
+    /** Puts the tenant's logo at the top of the email. */
+    companyId?: string;
     to: string;
     name: string;
     companyName: string;
@@ -249,10 +257,12 @@ export class EmailService {
       bodyHtml: body,
       companyName: opts.companyName,
     });
-    await this.send({ to: opts.to, subject, html, companyName: opts.companyName });
+    await this.send({ to: opts.to, subject, html, companyName: opts.companyName, companyId: opts.companyId });
   }
 
   async sendPasswordResetConfirmation(opts: {
+    /** Puts the tenant's logo at the top of the email. */
+    companyId?: string;
     to: string;
     name: string;
     companyName: string;
@@ -283,14 +293,20 @@ export class EmailService {
       companyName: opts.companyName,
     });
 
-    await this.send({ to: opts.to, subject, html, companyName: opts.companyName });
+    await this.send({ to: opts.to, subject, html, companyName: opts.companyName, companyId: opts.companyId });
   }
 
-  async sendMail(opts: { to: string; subject: string; html: string; companyName?: string }): Promise<void> {
+  async sendMail(opts: { to: string; subject: string; html: string; companyName?: string; companyId?: string }): Promise<void> {
     return this.send(opts);
   }
 
-  private async send(opts: { to: string; subject: string; html: string; companyName?: string }): Promise<void> {
+  private async send(opts: { to: string; subject: string; html: string; companyName?: string; companyId?: string }): Promise<void> {
+    if (opts.companyId && this.prisma) {
+      const company = await this.prisma.company
+        .findUnique({ where: { id: opts.companyId }, select: { logoUrl: true, name: true } })
+        .catch(() => null);
+      opts = { ...opts, html: withCompanyLogo(opts.html, company?.logoUrl, company?.name ?? opts.companyName ?? APP_NAME) };
+    }
     const fromName = opts.companyName?.trim() || SMTP_FROM_NAME_DEFAULT;
     const from = SMTP_FROM_EMAIL ? `${fromName} <${SMTP_FROM_EMAIL}>` : fromName;
 
