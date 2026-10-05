@@ -22,6 +22,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { DispatchAssignment, Job, ScoredTechnician, Technician } from '../../types/api'
 import { useLocations, useLocationStock, decimalToNumber } from '../../hooks/useInventory'
+import TripTrail, { ROUTE_DRIVEN } from '../../components/map/TripTrail'
 
 // Fix default marker icon (Leaflet + bundler issue)
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -226,16 +227,15 @@ function useRoadRoute(from: [number, number] | null, to: [number, number] | null
 // Renders one route line: road-following when the OSRM fetch succeeds,
 // straight dashed line (clearly marked) while loading / on error.
 /**
- * The only line the map draws: the road still to drive, from where the
- * technician is right now to the job.
+ * Two lines per trip: the road still to drive (dashed, from where the
+ * technician is now to the job) and the road already driven (solid).
  *
- * There is deliberately no travelled-path line. It was drawn from stored GPS
- * breadcrumbs, which meant it showed history, and history is what put a
- * finished journey on the map next to the live one. A dispatcher watching a
- * technician move wants where they are going, not where they have been.
+ * The driven line starts at the trip's en-route time and nothing earlier. An
+ * older version drew a rolling window of GPS history, which put a finished
+ * journey on the map next to the live one; scoping it to one trip keeps the
+ * path without that confusion. Both lines disappear once the job is ON_SITE.
  */
 const ROUTE_AHEAD = '#2563EB'
-
 // Only ever rendered for EN_ROUTE jobs: routeLines drops everything else, so
 // there is no arrived/on-site variant to handle here.
 function RoutePolyline({ techPos, jobPos }: {
@@ -673,6 +673,15 @@ export default function DispatchMap({
               jobPos={jobPos}
             />
           ))}
+          {/* Drawn after the route ahead so the driven path sits on top. */}
+          {layers.routes && routeLines.map(({ techPos, technicianId, enRouteAt }) => (
+            <TripTrail
+              key={`trip-${technicianId}-${enRouteAt ?? 'none'}`}
+              technicianId={technicianId}
+              enRouteAt={enRouteAt}
+              techPos={techPos}
+            />
+          ))}
 
           {/* ── Live technician markers ───────────────────────────────────────── */}
           {layers.liveTechs && liveTechs.map(({ t, tier }) => {
@@ -905,10 +914,13 @@ export default function DispatchMap({
         ))}
         <span style={{ width: 1, background: '#e5e7eb', height: 14, alignSelf: 'center' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#374151' }}>Routes:</div>
-        {/* One line, one meaning: the road left to drive. Nothing is drawn
-            for a technician who has arrived. */}
+        {/* Both lines belong to the current trip only, and both go once the
+            technician is marked arrived. */}
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 16, borderTop: `2.5px dashed ${ROUTE_AHEAD}`, display: 'inline-block' }} /> Driving to job
+          <span style={{ width: 16, borderTop: `3.5px solid ${ROUTE_DRIVEN}`, display: 'inline-block' }} /> Driven so far
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 16, borderTop: `2.5px dashed ${ROUTE_AHEAD}`, display: 'inline-block' }} /> Still to drive
         </span>
         <span style={{ width: 1, background: '#e5e7eb', height: 14, alignSelf: 'center' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#374151' }}>Priority:</div>

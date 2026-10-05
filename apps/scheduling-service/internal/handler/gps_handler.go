@@ -103,18 +103,17 @@ func (h *GPSHandler) RecordGPS(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok", "technicianId": tech.ID})
 }
 
-// GET /gps/trail/:technicianId?minutes=120&limit=500
+// GET /gps/trail/:technicianId?since=<RFC3339>|minutes=120&limit=500
 // Where the technician has actually been, for drawing the travelled path.
+//
+// Pass since (the trip's en-route time) to get one journey only. A rolling
+// minutes window mixes in earlier trips, which is why the map used to show a
+// finished journey next to the live one.
 func (h *GPSHandler) Trail(c *gin.Context) {
 	claims := middleware.GetClaims(c)
 
-	minutes, _ := strconv.Atoi(c.DefaultQuery("minutes", "120"))
-	if minutes <= 0 || minutes > 1440 {
-		minutes = 120
-	}
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "500"))
-
-	since := time.Now().Add(-time.Duration(minutes) * time.Minute)
+	since := trailSince(time.Now(), c.Query("since"), c.DefaultQuery("minutes", "120"))
 	points, err := h.assignRepo.FindGPSTrail(
 		c.Request.Context(), claims.CompanyID, c.Param("technicianId"), since, limit)
 	if err != nil {
@@ -122,4 +121,19 @@ func (h *GPSHandler) Trail(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": points, "count": len(points)})
+}
+
+// trailSince picks where a trail starts. A valid since inside the last 24 hours
+// wins; anything else (missing, malformed, in the future, too old) falls back
+// to the minutes window, itself clamped to 1..1440 with 120 as the default.
+func trailSince(now time.Time, sinceParam, minutesParam string) time.Time {
+	if t, err := time.Parse(time.RFC3339, sinceParam); err == nil &&
+		!t.After(now) && now.Sub(t) <= 24*time.Hour {
+		return t
+	}
+	minutes, _ := strconv.Atoi(minutesParam)
+	if minutes <= 0 || minutes > 1440 {
+		minutes = 120
+	}
+	return now.Add(-time.Duration(minutes) * time.Minute)
 }

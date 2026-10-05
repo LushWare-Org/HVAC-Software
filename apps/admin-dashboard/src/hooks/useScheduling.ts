@@ -54,6 +54,32 @@ export function useTechnicians() {
   })
 }
 
+// ─── Trip trail ────────────────────────────────────────────────────────────────
+
+export interface TripPoint { lat: number; lng: number; capturedAt: string }
+
+/**
+ * Where a technician has driven on the current trip, oldest first.
+ *
+ * Starts at the trip's en-route time, so only this journey is drawn, never an
+ * earlier one. The server copy makes it survive a refresh; live GPS_UPDATE
+ * events append to this cache (see useDispatchWebSocket), and the slow refetch
+ * fills any points a dropped socket missed.
+ */
+export function useTripTrail(technicianId: string, since: string | null) {
+  return useQuery<TripPoint[]>({
+    queryKey: ['scheduling', 'trip', technicianId, since],
+    queryFn: async () => {
+      const res = await api.get(`/scheduling/gps/trail/${technicianId}`, { params: { since, limit: 2000 } })
+      const arr = res.data?.data
+      return Array.isArray(arr) ? arr : []
+    },
+    enabled: !!since,
+    staleTime: 15 * 1000,
+    refetchInterval: 60 * 1000,
+  })
+}
+
 /**
  * Warm the Scheduling cockpit's mount queries: technicians + the two job
  * lists it renders from. The assignments query keys off the fetched tech
@@ -399,6 +425,11 @@ export function useDispatchWebSocket(onEvent?: (event: DispatchEvent) => void) {
                 : t,
             )
           })
+          // Extend any trip line being drawn for this technician, so the
+          // travelled path grows with the marker instead of waiting for a refetch.
+          queryClient.setQueriesData<TripPoint[]>({ queryKey: ['scheduling', 'trip', p.technicianId] }, (prev) =>
+            prev ? [...prev, { lat: p.lat, lng: p.lng, capturedAt: p.capturedAt ?? new Date().toISOString() }] : prev,
+          )
         }
 
         if (event.type === 'TECHNICIAN_ONLINE') {
