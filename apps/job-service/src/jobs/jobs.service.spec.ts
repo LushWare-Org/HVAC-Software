@@ -615,6 +615,17 @@ describe('JobsService — realtime events for edits and deletes', () => {
       jobId: JOB_ID, change: 'DELETED', customerId: 'cust-001', actorUserId: 'user-9',
     }));
   });
+
+  it('cancels the crew rows of a deleted job so it leaves every schedule', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(makeJob(JobStatusDto.SCHEDULED));
+    mockPrisma.$executeRawUnsafe.mockClear();
+    await service.remove(COMPANY_ID, JOB_ID);
+    const [sql, jobId, companyId] = mockPrisma.$executeRawUnsafe.mock.calls[0];
+    expect(sql).toMatch(/UPDATE scheduling\.dispatch_assignments SET status = 'CANCELLED'/);
+    expect(sql).toMatch(/status <> 'CANCELLED'/);
+    expect([jobId, companyId]).toEqual([JOB_ID, COMPANY_ID]);
+    expect(mockPrisma.job.delete).toHaveBeenCalled();
+  });
 });
 
 describe('JobsService — findAll filters', () => {

@@ -277,8 +277,17 @@ export class JobsService {
     });
     if (!existing) throw new NotFoundException(`Job ${id} not found`);
 
-    // WorkOrder relation does not cascade on delete in this schema.
+    // WorkOrder relation does not cascade on delete in this schema, and the
+    // crew rows live in another schema with no foreign key, so both are
+    // handled here. Cancelling (including completed rows) takes the job off
+    // every technician's schedule and the Active/Completed boards. job_id is
+    // TEXT in scheduling, so it is bound as plain text.
     await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe(
+        `UPDATE scheduling.dispatch_assignments SET status = 'CANCELLED', updated_at = now()
+          WHERE job_id = $1 AND company_id = $2 AND status <> 'CANCELLED'`,
+        id, companyId,
+      );
       await tx.workOrder.deleteMany({ where: { jobId: id } });
       await tx.job.delete({ where: { id } });
     });
