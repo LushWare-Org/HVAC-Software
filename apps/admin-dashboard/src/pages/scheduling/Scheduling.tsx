@@ -68,7 +68,10 @@ function dayLabel(d: Date): string {
 export default function Scheduling() {
   const [searchParams] = useSearchParams()
   const [scope, setScope] = useState<Scope>('live')
-  const [subTab, setSubTab] = useState<SubTab>(() => (searchParams.get('view') === 'calendar' ? 'calendar' : 'board'))
+  const [subTab, setSubTab] = useState<SubTab>(() => {
+    const view = searchParams.get('view')
+    return view === 'calendar' || view === 'active' || view === 'completed' || view === 'reschedules' ? view : 'board'
+  })
   const [planDate, setPlanDate] = useState(() => addDays(startOfDay(new Date()), 1))
   const [planStats, setPlanStats] = useState<PlanStats>({ jobs: 0, unassigned: 0, opportunities: 0, backlog: 0 })
   const [autoScheduleRequestId, setAutoScheduleRequestId] = useState(0)

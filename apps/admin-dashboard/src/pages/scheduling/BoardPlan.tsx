@@ -25,6 +25,7 @@ import TechnicianModal from '../planner/TechnicianModal'
 import AgreementDrawer from '../agreements/AgreementDrawer'
 import ProjectsTodayBand from '../projects/ProjectsTodayBand'
 import { formatMoney } from '../../lib/format'
+import { queryClient } from '../../lib/queryClient'
 import {
   buildDayPlan, jobCoords,
   DAY_START_H, DAY_END_H, DEFAULT_DURATION_MIN,
@@ -127,6 +128,8 @@ export default function BoardPlan({
    *  than one can be built, so the table row is its entry point. */
   const [crewJob, setCrewJob] = useState<Job | null>(null)
   const [applying, setApplying] = useState(false)
+  // Per-row progress while a plan is being applied.
+  const [applyState, setApplyState] = useState<Record<string, 'pending' | 'working' | 'done' | 'failed'>>({})
   const [mapExpanded, setMapExpanded] = useState(false)
 
   // Leaflet only recalculates its tile layout on a real `window resize`
@@ -244,15 +247,49 @@ export default function BoardPlan({
     return diff !== 0 ? diff : a.name.localeCompare(b.name)
   }), [techs, techJobs])
 
-  const assignJob = async (job: Job, tech: Technician, start: Date, end: Date) => {
-    const coords = jobCoords(job)
-    await manualAssign.mutateAsync({
-      jobId: job.id, technicianId: tech.id,
-      jobLatitude: coords?.lat ?? 0, jobLongitude: coords?.lng ?? 0,
-      scheduledStart: start.toISOString(), scheduledEnd: end.toISOString(),
-      notes: 'Assigned via Scheduling — Plan a day',
+  /**
+   * Moves the job into the technician's row right away. The two saves below
+   * take seconds (the database is a long way from the servers), so waiting for
+   * them before the board changed made every assignment feel stuck. If a save
+   * fails, the refetch in assignJob puts the board back as it really is.
+   */
+  const markAssignedLocally = (job: Job, tech: Technician, start: Date, end: Date) => {
+    queryClient.setQueriesData<{ data: Job[] }>({ queryKey: ['jobs', 'list'] }, old => {
+      if (!old?.data) return old
+      return {
+        ...old,
+        data: old.data.map(j => j.id !== job.id ? j : {
+          ...j,
+          assignedToId: tech.userId,
+          assignedToName: tech.name,
+          scheduledStart: start.toISOString(),
+          scheduledEnd: end.toISOString(),
+          status: j.status === 'PENDING' ? 'SCHEDULED' : j.status,
+        }),
+      }
     })
-    await updateJob.mutateAsync({ id: job.id, scheduledStart: start.toISOString(), scheduledEnd: end.toISOString() } as any)
+  }
+
+  const assignJob = async (job: Job, tech: Technician, start: Date, end: Date, extraFields: Record<string, unknown> = {}) => {
+    const coords = jobCoords(job)
+    await queryClient.cancelQueries({ queryKey: ['jobs', 'list'] })
+    markAssignedLocally(job, tech, start, end)
+    try {
+      // Independent writes: the assignment (scheduling-service) and the job's
+      // times (job-service) go out together instead of one after the other.
+      await Promise.all([
+        manualAssign.mutateAsync({
+          jobId: job.id, technicianId: tech.id,
+          jobLatitude: coords?.lat ?? 0, jobLongitude: coords?.lng ?? 0,
+          scheduledStart: start.toISOString(), scheduledEnd: end.toISOString(),
+          notes: 'Assigned via Scheduling, Plan a day',
+        }),
+        updateJob.mutateAsync({ id: job.id, scheduledStart: start.toISOString(), scheduledEnd: end.toISOString(), ...extraFields } as any),
+      ])
+    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      throw e
+    }
   }
 
   const assignSelected = async () => {
@@ -263,10 +300,12 @@ export default function BoardPlan({
     const start = new Date(date); start.setHours(h, m, 0, 0)
     const durMin = selectedJob.estimatedDurationMins ?? DEFAULT_DURATION_MIN
     const end = new Date(start.getTime() + durMin * 60_000)
+    const job = selectedJob
+    // The board shows the move immediately; the panel needn't wait for the save.
+    setSelectedJob(null)
     try {
-      await assignJob(selectedJob, tech, start, end)
-      toast.showSuccess(`Assigned to ${tech.name} at ${assignTime}`)
-      setSelectedJob(null)
+      await assignJob(job, tech, start, end)
+      toast.showSuccess(`${job.jobNumber} assigned to ${tech.name} at ${assignTime}`)
     } catch (e: any) {
       toast.showError(techOnProjectMessage(e, tech.name) ?? e?.response?.data?.message ?? e?.response?.data?.error ?? 'Could not assign')
     }
@@ -291,38 +330,64 @@ export default function BoardPlan({
     [planPreview, previewEdits],
   )
 
+  const applyTotal = Object.keys(applyState).length
+  const applyFinished = Object.values(applyState).filter(v => v === 'done' || v === 'failed').length
+
   const applyPlan = async () => {
     if (!planPreview) return
-    setApplying(true)
-    let ok = 0, failed = 0
-    for (const p of readyRows) {
+    const rows = readyRows.map(p => {
       const edit = previewEdits[p.job.id]
       const tech = (edit ? techs.find(t => t.id === edit.techId) : null) ?? p.tech
       // A duration edited here is a real correction to the job, not just a
-      // one-off for this plan — persist it so later re-plans use it too.
-      const originalDuration = p.job.estimatedDurationMins ?? DEFAULT_DURATION_MIN
-      const durMin = edit?.durationMins ?? originalDuration
+      // one-off for this plan, so it is saved and later re-plans use it too.
+      const durMin = edit?.durationMins ?? p.job.estimatedDurationMins ?? DEFAULT_DURATION_MIN
       let start = p.start
-      let end = new Date(start.getTime() + durMin * 60_000)
       if (edit?.time) {
         const [h, m] = edit.time.split(':').map(Number)
-        if (Number.isFinite(h) && Number.isFinite(m)) {
-          start = new Date(date); start.setHours(h, m, 0, 0)
-          end = new Date(start.getTime() + durMin * 60_000)
+        if (Number.isFinite(h) && Number.isFinite(m)) { start = new Date(date); start.setHours(h, m, 0, 0) }
+      }
+      const end = new Date(start.getTime() + durMin * 60_000)
+      const extra = durMin !== p.job.estimatedDurationMins ? { estimatedDurationMins: durMin } : {}
+      return { job: p.job, tech, start, end, extra }
+    })
+
+    setApplying(true)
+    setApplyState(Object.fromEntries(rows.map(r => [r.job.id, 'pending' as const])))
+    // Show every move on the board at once, then save three at a time.
+    await queryClient.cancelQueries({ queryKey: ['jobs', 'list'] })
+    rows.forEach(r => markAssignedLocally(r.job, r.tech, r.start, r.end))
+
+    let ok = 0, failed = 0
+    const failedIds = new Set<string>()
+    const queue = [...rows]
+    const worker = async () => {
+      for (let r = queue.shift(); r; r = queue.shift()) {
+        setApplyState(prev => ({ ...prev, [r!.job.id]: 'working' }))
+        try {
+          await assignJob(r.job, r.tech, r.start, r.end, r.extra)
+          ok += 1
+          setApplyState(prev => ({ ...prev, [r!.job.id]: 'done' }))
+        } catch {
+          failed += 1
+          failedIds.add(r.job.id)
+          setApplyState(prev => ({ ...prev, [r!.job.id]: 'failed' }))
         }
       }
-      try {
-        if (durMin !== p.job.estimatedDurationMins) {
-          await updateJob.mutateAsync({ id: p.job.id, estimatedDurationMins: durMin } as any)
-        }
-        await assignJob(p.job, tech, start, end); ok += 1
-      } catch { failed += 1 }
     }
+    await Promise.all([worker(), worker(), worker()])
+
     setApplying(false)
+    const day = dayLabel(date)
+    if (failed) {
+      // Keep the window open so the failed rows stay visible and can be retried.
+      toast.showToast({ variant: 'error', title: 'Some jobs were not scheduled', message: `${ok} of ${rows.length} scheduled for ${day}. The ${failed} marked rows failed; check them and apply again.` })
+      setPlanPreview(prev => prev?.filter(p => failedIds.has(p.job.id)) ?? null)
+      return
+    }
     setPlanPreview(null)
     setPreviewEdits({})
-    if (failed) toast.showError(`${ok} assigned, ${failed} failed — check and retry`)
-    else toast.showSuccess(`${ok} job${ok === 1 ? '' : 's'} scheduled`)
+    setApplyState({})
+    toast.showToast({ variant: 'success', title: 'Day scheduled', message: `${ok} job${ok === 1 ? '' : 's'} assigned for ${day}.` })
   }
 
   const openOutreach = (a: Agreement) => {
@@ -581,6 +646,16 @@ export default function BoardPlan({
                 <div className="card-subtitle">Customer-requested times are kept as-is; jobs with no requested time fill the gaps around them (nearest technician, routes ordered by proximity). Adjust any row before applying — nothing is saved until you apply.</div>
               </div>
             </div>
+            {applyTotal > 0 && (
+              <div className="plan-progress" role="status" aria-live="polite">
+                <div className="plan-progress-text">
+                  {applying
+                    ? <>Scheduling {applyFinished} of {applyTotal}. The board already shows the new plan; saving each job now.</>
+                    : <>{applyFinished} of {applyTotal} processed.</>}
+                </div>
+                <div className="plan-progress-track"><div className="plan-progress-fill" style={{ width: `${applyTotal ? (applyFinished / applyTotal) * 100 : 0}%` }} /></div>
+              </div>
+            )}
             <div className="card-body" style={{ overflowY: 'auto', padding: 0 }}>
               {planPreview.some(p => p.requestedTimeConflict) && (
                 <div style={{
@@ -631,6 +706,7 @@ export default function BoardPlan({
                         }}>
                           <td style={{ padding: '12px 16px' }}>
                             <p style={{ fontWeight: 600, color: 'var(--t1)', margin: 0, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              {applyState[p.job.id] && <ApplyStatus state={applyState[p.job.id]} />}
                               {p.job.title}
                               <RescheduleBadge state={p.job.rescheduleState} size="sm" />
                             </p>
@@ -777,10 +853,10 @@ export default function BoardPlan({
               )}
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '14px 20px', borderTop: '1px solid var(--bd)', flexShrink: 0 }}>
-              <button className="btn btn-secondary btn-sm" onClick={() => { setPlanPreview(null); setPreviewEdits({}) }} disabled={applying}>Discard</button>
+              <button className="btn btn-secondary btn-sm" onClick={() => { setPlanPreview(null); setPreviewEdits({}); setApplyState({}) }} disabled={applying}>{applyTotal && !applying ? 'Close' : 'Discard'}</button>
               <button className="btn btn-primary btn-sm" onClick={applyPlan} disabled={applying || readyRows.length === 0}>
                 {applying
-                  ? <><Loader2 size={12} className="spin" /> Applying…</>
+                  ? <><Loader2 size={12} className="spin" /> Scheduling {applyFinished} of {applyTotal}</>
                   : <>Apply {readyRows.length} assignment{readyRows.length === 1 ? '' : 's'}</>}
               </button>
             </div>
@@ -817,4 +893,11 @@ export default function BoardPlan({
       )}
     </div>
   )
+}
+
+function ApplyStatus({ state }: { state: 'pending' | 'working' | 'done' | 'failed' }) {
+  if (state === 'done') return <span className="plan-status plan-status-done"><CheckCircle2 size={13} aria-hidden="true" />Scheduled</span>
+  if (state === 'failed') return <span className="plan-status plan-status-failed"><AlertCircle size={13} aria-hidden="true" />Failed</span>
+  if (state === 'working') return <span className="plan-status plan-status-working"><Loader2 size={13} className="spin" aria-hidden="true" />Saving</span>
+  return <span className="plan-status">Waiting</span>
 }
