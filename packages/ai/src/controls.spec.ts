@@ -62,6 +62,14 @@ describe('createAiGuard', () => {
     expect(await guard({ task: 't', companyId: 'c2' })).toEqual({ allowed: true });
   });
 
+  it('fails open, quickly, when Redis or the switch never answers', async () => {
+    const never = () => new Promise<never>(() => { /* a disconnected client queues forever */ });
+    const guard = createAiGuard({ redis: { get: never }, isEnabled: never, lookupTimeoutMs: 20 });
+    const t = Date.now();
+    expect(await guard({ task: 't', companyId: 'c1' })).toEqual({ allowed: true });
+    expect(Date.now() - t).toBeLessThan(500);
+  });
+
   it('fails open when the switch or Redis lookup errors', async () => {
     const guard = createAiGuard({ isEnabled: async () => { throw new Error('db'); }, redis: { get: async () => { throw new Error('redis'); } } });
     expect(await guard({ task: 't', companyId: 'c1' })).toEqual({ allowed: true });
