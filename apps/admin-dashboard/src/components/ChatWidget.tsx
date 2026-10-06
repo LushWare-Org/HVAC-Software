@@ -1,16 +1,39 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MessageCircle, X, Send, Loader2, Bot } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, Bot, CheckCircle2, XCircle, ShieldCheck } from 'lucide-react'
 import { authStorage } from '../lib/authStorage'
+import api from '../lib/api'
+import { queryClient } from '../lib/queryClient'
+import { ASK_ASSISTANT_EVENT } from '../lib/assistant'
+
+/** A change the assistant prepared, waiting for the person to confirm. */
+interface ActionCardData {
+  token: string
+  id: string
+  title: string
+  lines: string[]
+  state: 'pending' | 'running' | 'done' | 'failed' | 'cancelled'
+  result?: string
+}
 
 interface Turn {
   role: 'user' | 'assistant'
   content: string
+  /** Set on a card turn; card turns are shown but never sent back as history. */
+  action?: ActionCardData
+  /** Sent to the assistant as context but not shown (the card already shows it). */
+  hidden?: boolean
 }
 
+/** Same base as every other API call, so chat follows the gateway the app uses. */
+const API_BASE = api.defaults.baseURL ?? '/api'
+
+/** Pages a confirmed action can change, refreshed so they show it straight away. */
+const REFRESH_AFTER_ACTION = [['jobs'], ['scheduling'], ['finance'], ['invoices'], ['dashboard']]
+
 const STARTER_PROMPTS = [
-  'How much revenue did we make this month?',
+  'What jobs are scheduled for tomorrow?',
+  'Send a reminder for the oldest overdue invoice',
   'How do I approve a pending technician?',
-  'Show me overdue invoices',
 ]
 
 export default function ChatWidget() {
@@ -46,13 +69,13 @@ export default function ChatWidget() {
     abortRef.current = new AbortController()
 
     try {
-      const response = await fetch('/api/chat/message', {
+      const response = await fetch(`${API_BASE}/chat/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authStorage.getToken() ?? ''}`,
         },
-        body: JSON.stringify({ message, history }),
+        body: JSON.stringify({ message, history: history.filter(t => !t.action).map(({ role, content }) => ({ role, content })) }),
         signal: abortRef.current.signal,
       })
 
@@ -61,6 +84,7 @@ export default function ChatWidget() {
       const reader = response.body!.getReader()
       const decoder = new TextDecoder()
       let assembled = ''
+      const cards: ActionCardData[] = []
 
       while (true) {
         const { done, value } = await reader.read()
@@ -78,6 +102,7 @@ export default function ChatWidget() {
             const parsed = JSON.parse(payload)
             if (parsed.error) { assembled = parsed.error; break }
             if (parsed.status) { setStatusMsg(parsed.status) }
+            if (parsed.action) cards.push({ ...parsed.action, state: 'pending' })
             if (parsed.chunk) {
               assembled += parsed.chunk
               setStatusMsg('')
@@ -87,7 +112,11 @@ export default function ChatWidget() {
         }
       }
 
-      setHistory(h => [...h, { role: 'assistant', content: assembled }])
+      setHistory(h => [
+        ...h,
+        ...(assembled || !cards.length ? [{ role: 'assistant' as const, content: assembled }] : []),
+        ...cards.map(action => ({ role: 'assistant' as const, content: '', action })),
+      ])
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         setHistory(h => [...h, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }])
@@ -98,6 +127,48 @@ export default function ChatWidget() {
       setStatusMsg('')
     }
   }, [streaming, history])
+
+  // "Ask the assistant" elsewhere in the app opens the chat with a request already sent.
+  const sendRef = useRef(send)
+  sendRef.current = send
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const message = (e as CustomEvent<{ message?: string }>).detail?.message
+      if (!message) return
+      setOpen(true)
+      sendRef.current(message)
+    }
+    window.addEventListener(ASK_ASSISTANT_EVENT, onAsk)
+    return () => window.removeEventListener(ASK_ASSISTANT_EVENT, onAsk)
+  }, [])
+
+  const updateCard = (id: string, patch: Partial<ActionCardData>) =>
+    setHistory(h => h.map(t => (t.action?.id === id ? { ...t, action: { ...t.action, ...patch } } : t)))
+
+  const confirmAction = useCallback(async (card: ActionCardData) => {
+    updateCard(card.id, { state: 'running' })
+    let ok = false
+    let message = 'Something went wrong. Please try again.'
+    try {
+      const res = await fetch(`${API_BASE}/chat/actions/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authStorage.getToken() ?? ''}` },
+        body: JSON.stringify({ token: card.token }),
+      })
+      const body = await res.json().catch(() => ({}))
+      ok = res.ok && body.ok === true
+      if (body.message) message = body.message
+    } catch { /* network failure: message above */ }
+    updateCard(card.id, { state: ok ? 'done' : 'failed', result: message })
+    // Tell the assistant what happened, so its next answer starts from the truth.
+    setHistory(h => [...h, { role: 'assistant', content: ok ? `The person confirmed. ${message}` : `The person confirmed but it failed. ${message}`, hidden: true }])
+    if (ok) REFRESH_AFTER_ACTION.forEach(queryKey => queryClient.invalidateQueries({ queryKey }))
+  }, [])
+
+  const cancelAction = useCallback((card: ActionCardData) => {
+    updateCard(card.id, { state: 'cancelled' })
+    setHistory(h => [...h, { role: 'assistant', content: `The person pressed Cancel on "${card.title}". Nothing was changed.`, hidden: true }])
+  }, [])
 
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -175,9 +246,10 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {history.map((turn, i) => (
-              <Bubble key={i} turn={turn} />
-            ))}
+            {history.map((turn, i) => turn.hidden ? null : turn.action
+              ? <ActionCard key={turn.action.id} card={turn.action} onConfirm={confirmAction} onCancel={cancelAction} />
+              : <Bubble key={i} turn={turn} />
+            )}
 
             {streaming && streamingContent && (
               <Bubble turn={{ role: 'assistant', content: streamingContent }} streaming />
@@ -185,7 +257,7 @@ export default function ChatWidget() {
 
             {streaming && (statusMsg || !streamingContent) && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--t3)', fontSize: 12, fontStyle: 'italic' }}>
-                <Loader2 size={12} className="spin" /> {statusMsg || 'Thinking…'}
+                <Loader2 size={12} className="animate-spin" /> {statusMsg || 'Thinking…'}
               </div>
             )}
 
@@ -290,6 +362,48 @@ function Bubble({ turn, streaming }: { turn: Turn; streaming?: boolean }) {
         {isUser ? turn.content : renderMarkdown(turn.content)}
         {streaming && <span style={{ opacity: 0.4 }}>▍</span>}
       </div>
+    </div>
+  )
+}
+
+function ActionCard({ card, onConfirm, onCancel }: {
+  card: ActionCardData
+  onConfirm: (card: ActionCardData) => void
+  onCancel: (card: ActionCardData) => void
+}) {
+  const btn = { minHeight: 40, padding: '0 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' } as const
+  return (
+    <div role="group" aria-label={card.title} style={{
+      border: '1px solid var(--bd)', borderRadius: 12, padding: 12, background: 'var(--bg-card)',
+      display: 'flex', flexDirection: 'column', gap: 8,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--t3)' }}>
+        <ShieldCheck size={14} aria-hidden="true" /> Nothing changes until you confirm
+      </div>
+      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{card.title}</div>
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {card.lines.map((l, i) => <li key={i} style={{ fontSize: 13, color: 'var(--t2)', lineHeight: 1.5 }}>{l}</li>)}
+      </ul>
+      {card.state === 'pending' && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <button type="button" onClick={() => onConfirm(card)} style={{ ...btn, border: 'none', background: 'var(--blue)', color: '#fff' }}>Confirm</button>
+          <button type="button" onClick={() => onCancel(card)} style={{ ...btn, border: '1px solid var(--bd)', background: 'transparent', color: 'var(--t2)' }}>Cancel</button>
+        </div>
+      )}
+      {card.state === 'running' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--t2)' }}>
+          <Loader2 size={14} className="animate-spin" aria-hidden="true" /> Working…
+        </div>
+      )}
+      {(card.state === 'done' || card.state === 'failed') && (
+        <div role="status" style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: 13, color: card.state === 'done' ? 'var(--green)' : 'var(--red)' }}>
+          {card.state === 'done' ? <CheckCircle2 size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} /> : <XCircle size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />}
+          <span>{card.result}</span>
+        </div>
+      )}
+      {card.state === 'cancelled' && (
+        <div role="status" style={{ fontSize: 13, color: 'var(--t3)' }}>Cancelled. Nothing was changed.</div>
+      )}
     </div>
   )
 }

@@ -2,71 +2,51 @@ import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';
 
+export type LlmEvent =
+  | { type: 'text'; text: string }
+  | { type: 'tool'; call: { id: string; name: string; args: string } }
+  | { type: 'usage'; inputTokens: number; outputTokens: number };
+
 @Injectable()
 export class LLMProvider {
-  private readonly client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
+  private client: OpenAI | null = null;
   readonly modelHelp = process.env.OPENAI_MODEL_HELP ?? 'gpt-4o-mini';
   readonly modelData = process.env.OPENAI_MODEL_DATA ?? 'gpt-4o';
 
-  async *stream(
-    model: string,
-    messages: ChatCompletionMessageParam[],
-    tools?: ChatCompletionTool[],
-  ): AsyncIterable<string> {
-    const params: OpenAI.Chat.ChatCompletionCreateParamsStreaming = {
+  // Built on first use: the SDK throws when the key is empty, which must not
+  // stop the service from booting.
+  private get api(): OpenAI {
+    return (this.client ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
+  }
+
+  /**
+   * Streams text, then at most one tool call per round (parallel calls are
+   * off so each action gets its own confirmation), then token usage.
+   */
+  async *stream(model: string, messages: ChatCompletionMessageParam[], tools?: ChatCompletionTool[]): AsyncIterable<LlmEvent> {
+    const stream = await this.api.chat.completions.create({
       model,
       messages,
       stream: true,
-      ...(tools?.length ? { tools, tool_choice: 'auto' } : {}),
-    };
+      stream_options: { include_usage: true },
+      ...(tools?.length ? { tools, tool_choice: 'auto' as const, parallel_tool_calls: false } : {}),
+    });
 
-    const stream = await this.client.chat.completions.create(params);
-
-    let toolCallBuffer: { id: string; name: string; args: string } | null = null;
-
+    let call: { id: string; name: string; args: string } | null = null;
     for await (const chunk of stream) {
+      if (chunk.usage) {
+        yield { type: 'usage', inputTokens: chunk.usage.prompt_tokens, outputTokens: chunk.usage.completion_tokens };
+      }
       const delta = chunk.choices[0]?.delta;
       if (!delta) continue;
-
-      // Accumulate tool call arguments
-      if (delta.tool_calls?.[0]) {
-        const tc = delta.tool_calls[0];
-        if (tc.id) {
-          toolCallBuffer = { id: tc.id, name: tc.function?.name ?? '', args: '' };
-        }
-        if (toolCallBuffer && tc.function?.arguments) {
-          toolCallBuffer.args += tc.function.arguments;
-        }
+      const tc = delta.tool_calls?.[0];
+      if (tc) {
+        if (tc.id) call = { id: tc.id, name: tc.function?.name ?? '', args: '' };
+        if (call && tc.function?.arguments) call.args += tc.function.arguments;
         continue;
       }
-
-      // Tool call is fully accumulated — signal caller to execute it
-      if (toolCallBuffer && !delta.tool_calls) {
-        yield `__TOOL_CALL__${JSON.stringify(toolCallBuffer)}`;
-        toolCallBuffer = null;
-        continue;
-      }
-
-      if (delta.content) yield delta.content;
+      if (delta.content) yield { type: 'text', text: delta.content };
     }
-
-    // Flush any remaining tool call
-    if (toolCallBuffer) {
-      yield `__TOOL_CALL__${JSON.stringify(toolCallBuffer)}`;
-    }
-  }
-
-  async complete(
-    model: string,
-    messages: ChatCompletionMessageParam[],
-    tools?: ChatCompletionTool[],
-  ): Promise<OpenAI.Chat.ChatCompletion> {
-    return this.client.chat.completions.create({
-      model,
-      messages,
-      stream: false,
-      ...(tools?.length ? { tools, tool_choice: 'auto' } : {}),
-    });
+    if (call) yield { type: 'tool', call };
   }
 }

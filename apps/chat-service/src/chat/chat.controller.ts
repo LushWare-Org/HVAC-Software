@@ -6,6 +6,8 @@ import { IsString, IsArray, IsOptional, IsIn } from 'class-validator';
 import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
 import { AuthUser } from '@tscrm/types';
 import { ChatService, ChatTurn } from './chat.service';
+import { confirmAction } from '../agent/action-runner';
+import type { AgentContext } from '../agent/types';
 import { BotType } from '../prompts/prompt.service';
 
 class ChatTurnDto {
@@ -14,6 +16,11 @@ class ChatTurnDto {
 
   @IsString()
   content!: string;
+}
+
+class ConfirmActionDto {
+  @IsString()
+  token!: string;
 }
 
 class ChatRequestDto {
@@ -38,21 +45,7 @@ export class ChatController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    // Derive botType server-side from JWT — client cannot override this
-    const botType: BotType = user.role === 'customer' ? 'customer' : 'admin';
-
-    // Extract raw token so tool executor can forward it to downstream services in prod
-    const authHeader = req.headers['authorization'] ?? '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
-
-    const ctx = {
-      companyId: user.companyId,
-      customerId: user.customerId,
-      userId: user.userId,
-      role: user.role,
-      email: user.email ?? '',
-      token,
-    };
+    const { botType, ctx } = this.context(user, req);
 
     // Set up SSE
     res.setHeader('Content-Type', 'text/event-stream');
@@ -67,13 +60,10 @@ export class ChatController {
         ctx,
       );
 
-      for await (const chunk of stream) {
-        if (chunk.startsWith('__STATUS__')) {
-          const tool = chunk.slice('__STATUS__'.length).replace(/_/g, ' ')
-          res.write(`data: ${JSON.stringify({ status: `Looking up ${tool}…` })}\n\n`)
-        } else {
-          res.write(`data: ${JSON.stringify({ chunk })}\n\n`)
-        }
+      for await (const ev of stream) {
+        if (ev.type === 'chunk') res.write(`data: ${JSON.stringify({ chunk: ev.text })}\n\n`);
+        else if (ev.type === 'status') res.write(`data: ${JSON.stringify({ status: ev.text })}\n\n`);
+        else res.write(`data: ${JSON.stringify({ action: ev.action })}\n\n`);
       }
 
       res.write('data: [DONE]\n\n');
@@ -82,5 +72,32 @@ export class ChatController {
     } finally {
       res.end();
     }
+  }
+
+  /** Runs an action the person confirmed on a card. */
+  @Post('actions/confirm')
+  @HttpCode(HttpStatus.OK)
+  async confirm(@Body() body: ConfirmActionDto, @CurrentUser() user: AuthUser, @Req() req: Request) {
+    const { botType, ctx } = this.context(user, req);
+    return confirmAction(body.token, ctx, botType);
+  }
+
+  /** Bot type comes from the token, never from the client. */
+  private context(user: AuthUser, req: Request): { botType: BotType; ctx: AgentContext } {
+    const botType: BotType = user.role === 'customer' ? 'customer' : 'admin';
+    const authHeader = req.headers['authorization'] ?? '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+    return {
+      botType,
+      ctx: {
+        companyId: user.companyId,
+        customerId: user.customerId,
+        userId: user.userId,
+        role: String(user.role),
+        email: user.email ?? '',
+        name: (user as { name?: string }).name,
+        token,
+      },
+    };
   }
 }

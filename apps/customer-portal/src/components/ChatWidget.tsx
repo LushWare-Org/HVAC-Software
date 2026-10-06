@@ -1,16 +1,34 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MessageCircle, X, Send, Loader2, Bot } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, Bot, CheckCircle2, XCircle, ShieldCheck } from 'lucide-react'
 import { authStorage } from '../lib/authStorage'
+import api from '../lib/api'
+import { queryClient } from '../lib/queryClient'
+
+/** A request the assistant prepared, waiting for the customer to confirm. */
+interface ActionCardData {
+  token: string
+  id: string
+  title: string
+  lines: string[]
+  state: 'pending' | 'running' | 'done' | 'failed' | 'cancelled'
+  result?: string
+}
 
 interface Turn {
   role: 'user' | 'assistant'
   content: string
+  /** Set on a card turn; shown, never sent back as history. */
+  action?: ActionCardData
+  /** Sent to the assistant as context but not shown (the card already shows it). */
+  hidden?: boolean
 }
 
+const API_BASE = api.defaults.baseURL ?? '/api'
+
 const STARTER_PROMPTS = [
-  'Do I have any upcoming appointments?',
-  'How do I pay an invoice?',
-  'What equipment do you have for my property?',
+  'My AC is not cooling. Can someone come out?',
+  'When is my next appointment?',
+  'I need to move my next visit',
 ]
 
 export default function ChatWidget() {
@@ -46,13 +64,13 @@ export default function ChatWidget() {
     abortRef.current = new AbortController()
 
     try {
-      const response = await fetch('/api/chat/message', {
+      const response = await fetch(`${api.defaults.baseURL ?? '/api'}/chat/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authStorage.getToken() ?? ''}`,
         },
-        body: JSON.stringify({ message, history }),
+        body: JSON.stringify({ message, history: history.filter(t => !t.action).map(({ role, content }) => ({ role, content })) }),
         signal: abortRef.current.signal,
       })
 
@@ -61,6 +79,7 @@ export default function ChatWidget() {
       const reader = response.body!.getReader()
       const decoder = new TextDecoder()
       let assembled = ''
+      const cards: ActionCardData[] = []
 
       while (true) {
         const { done, value } = await reader.read()
@@ -78,6 +97,7 @@ export default function ChatWidget() {
             const parsed = JSON.parse(payload)
             if (parsed.error) { assembled = parsed.error; break }
             if (parsed.status) { setStatusMsg(parsed.status) }
+            if (parsed.action) cards.push({ ...parsed.action, state: 'pending' })
             if (parsed.chunk) {
               assembled += parsed.chunk
               setStatusMsg('')
@@ -87,7 +107,11 @@ export default function ChatWidget() {
         }
       }
 
-      setHistory(h => [...h, { role: 'assistant', content: assembled }])
+      setHistory(h => [
+        ...h,
+        ...(assembled || !cards.length ? [{ role: 'assistant' as const, content: assembled }] : []),
+        ...cards.map(action => ({ role: 'assistant' as const, content: '', action })),
+      ])
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         setHistory(h => [...h, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }])
@@ -98,6 +122,34 @@ export default function ChatWidget() {
       setStatusMsg('')
     }
   }, [streaming, history])
+
+  const updateCard = (id: string, patch: Partial<ActionCardData>) =>
+    setHistory(h => h.map(t => (t.action?.id === id ? { ...t, action: { ...t.action, ...patch } } : t)))
+
+  const confirmAction = useCallback(async (card: ActionCardData) => {
+    updateCard(card.id, { state: 'running' })
+    let ok = false
+    let message = 'Something went wrong. Please try again.'
+    try {
+      const res = await fetch(`${API_BASE}/chat/actions/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authStorage.getToken() ?? ''}` },
+        body: JSON.stringify({ token: card.token }),
+      })
+      const body = await res.json().catch(() => ({}))
+      ok = res.ok && body.ok === true
+      if (body.message) message = body.message
+    } catch { /* network failure: message above */ }
+    updateCard(card.id, { state: ok ? 'done' : 'failed', result: message })
+    setHistory(h => [...h, { role: 'assistant', content: ok ? `The customer confirmed. ${message}` : `The customer confirmed but it failed. ${message}`, hidden: true }])
+    // Every portal query key starts with 'customer', so their visits, quotes and messages refresh.
+    if (ok) queryClient.invalidateQueries({ queryKey: ['customer'] })
+  }, [])
+
+  const cancelAction = useCallback((card: ActionCardData) => {
+    updateCard(card.id, { state: 'cancelled' })
+    setHistory(h => [...h, { role: 'assistant', content: `The customer pressed Cancel on "${card.title}". Nothing was sent.`, hidden: true }])
+  }, [])
 
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -171,9 +223,10 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {history.map((turn, i) => (
-              <Bubble key={i} turn={turn} />
-            ))}
+            {history.map((turn, i) => turn.hidden ? null : turn.action
+              ? <ActionCard key={turn.action.id} card={turn.action} onConfirm={confirmAction} onCancel={cancelAction} />
+              : <Bubble key={i} turn={turn} />
+            )}
 
             {streaming && streamingContent && (
               <Bubble turn={{ role: 'assistant', content: streamingContent }} streaming />
@@ -290,3 +343,47 @@ function Bubble({ turn, streaming }: { turn: Turn; streaming?: boolean }) {
     </div>
   )
 }
+
+/** Matches this panel's own light palette. */
+function ActionCard({ card, onConfirm, onCancel }: {
+  card: ActionCardData
+  onConfirm: (card: ActionCardData) => void
+  onCancel: (card: ActionCardData) => void
+}) {
+  const btn = { minHeight: 44, padding: '0 18px', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' } as const
+  return (
+    <div role="group" aria-label={card.title} style={{
+      border: '1px solid #e5e7eb', borderRadius: 12, padding: 12, background: '#fff',
+      display: 'flex', flexDirection: 'column', gap: 8,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6b7280' }}>
+        <ShieldCheck size={14} aria-hidden="true" /> Nothing is sent until you confirm
+      </div>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{card.title}</div>
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {card.lines.map((l, i) => <li key={i} style={{ fontSize: 13, color: '#4b5563', lineHeight: 1.5 }}>{l}</li>)}
+      </ul>
+      {card.state === 'pending' && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <button type="button" onClick={() => onConfirm(card)} style={{ ...btn, border: 'none', background: '#2563eb', color: '#fff' }}>Confirm</button>
+          <button type="button" onClick={() => onCancel(card)} style={{ ...btn, border: '1px solid #d1d5db', background: '#fff', color: '#374151' }}>Cancel</button>
+        </div>
+      )}
+      {card.state === 'running' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#4b5563' }}>
+          <Loader2 size={14} aria-hidden="true" style={{ animation: 'spin 1s linear infinite' }} /> Sending…
+        </div>
+      )}
+      {(card.state === 'done' || card.state === 'failed') && (
+        <div role="status" style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: 13, color: card.state === 'done' ? '#059669' : '#dc2626' }}>
+          {card.state === 'done' ? <CheckCircle2 size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} /> : <XCircle size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />}
+          <span>{card.result}</span>
+        </div>
+      )}
+      {card.state === 'cancelled' && (
+        <div role="status" style={{ fontSize: 13, color: '#6b7280' }}>Cancelled. Nothing was sent.</div>
+      )}
+    </div>
+  )
+}
+
