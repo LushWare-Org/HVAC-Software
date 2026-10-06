@@ -43,6 +43,11 @@ interface RevenuePredictionResult {
 const HIGH_VALUE_LTV_THRESHOLD = 2000;
 const CHURN_RISK_MIN_PROBABILITY = 0.4;
 
+/** A search box's words, each matched on its own. Capped so a pasted paragraph stays cheap. */
+export function searchWords(search: string): string[] {
+  return search.trim().split(/\s+/).filter(Boolean).slice(0, 6);
+}
+
 @Injectable()
 export class CustomersService {
   constructor(
@@ -108,13 +113,17 @@ export class CustomersService {
       ...(type && { type: type as any }),
       ...(tags && tags.length > 0 && { tags: { hasSome: tags } }),
       ...(riskSegmentIds && { id: { in: riskSegmentIds } }),
+      // Every word must match somewhere, so a full name split across first and
+      // last name ("R&R Brothers (pvt) LTD") still finds the customer.
       ...(search && {
-        OR: [
-          { firstName: { contains: search, mode: 'insensitive' as const } },
-          { lastName: { contains: search, mode: 'insensitive' as const } },
-          { email: { contains: search, mode: 'insensitive' as const } },
-          { phone: { contains: search } },
-        ],
+        AND: searchWords(search).map((w) => ({
+          OR: [
+            { firstName: { contains: w, mode: 'insensitive' as const } },
+            { lastName: { contains: w, mode: 'insensitive' as const } },
+            { email: { contains: w, mode: 'insensitive' as const } },
+            { phone: { contains: w } },
+          ],
+        })),
       }),
     };
 
@@ -247,8 +256,8 @@ export class CustomersService {
     ];
     if (type) conditions.push(Prisma.sql`c.type = ${type}`);
     if (tags?.length) conditions.push(Prisma.sql`c.tags && ${tags}::text[]`);
-    if (search) {
-      const like = `%${search}%`;
+    for (const w of search ? searchWords(search) : []) {
+      const like = `%${w}%`;
       conditions.push(Prisma.sql`(c.first_name ILIKE ${like} OR c.last_name ILIKE ${like} OR c.email ILIKE ${like} OR c.phone LIKE ${like})`);
     }
     const whereClause = Prisma.join(conditions, ' AND ');
