@@ -213,6 +213,10 @@ const (
 	// dispatch board's data is mostly jobs, so without these the board can
 	// only ever see assignment and GPS activity.
 	WSTypeJobChanged WSMessageType = "JOB_CHANGED"
+
+	// A technician's day was marked off, given different hours, or reset.
+	// Kelvin re-checks straight away instead of waiting for his next refresh.
+	WSTypeAvailabilityChanged WSMessageType = "AVAILABILITY_CHANGED"
 )
 
 type WSMessage struct {

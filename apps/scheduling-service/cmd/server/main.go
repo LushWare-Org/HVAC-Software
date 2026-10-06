@@ -67,7 +67,8 @@ func main() {
 	slotRepo := repository.NewSlotRepository(db)
 	slotH := handler.NewSlotHandler(service.NewSlotService(slotRepo))
 	disruptionH := handler.NewDisruptionHandler(service.NewDisruptionService(slotRepo))
-	availabilityH := handler.NewAvailabilityHandler(slotRepo)
+	availabilityH := handler.NewAvailabilityHandler(slotRepo, hub)
+	gapH := handler.NewGapHandler(service.NewGapService(slotRepo))
 
 	// ── 7. Configure Gin router ──────────────────────────────────────────
 	if os.Getenv("GIN_MODE") == "" {
@@ -163,6 +164,9 @@ func main() {
 		dispatch.GET("/disruptions",
 			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
 			disruptionH.Today)
+		dispatch.GET("/gaps",
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
+			gapH.Upcoming)
 		// Technicians' days off and different hours (technician_shifts).
 		dispatch.GET("/availability",
 			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),

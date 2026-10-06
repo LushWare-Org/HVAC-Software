@@ -185,4 +185,46 @@ func TestSlotRepositoryAgainstRealSchema(t *testing.T) {
 	if rows, _ := repo.ShiftOverrides(ctx, co, day, day); len(rows) != 0 {
 		t.Errorf("clearing should remove the entry, got %+v", rows)
 	}
+
+	// Cancellation gaps: SL-2 was cancelled with Kasun still booked 13:00-14:00.
+	job("SL-5", "PENDING", 25.08, 55.14)
+	exec(`UPDATE jobs.jobs SET priority = 'HIGH', "estimatedDurationMins" = 45 WHERE id = 'SL-5'`)
+	job("SL-6", "SCHEDULED", 25.08, 55.14)
+	assign("SL-6", kasun, "ASSIGNED", local(16, 0), local(17, 0))
+	assign("SL-6", nuwan, "ASSIGNED", local(16, 0), local(17, 0)) // a crew job: never pulled forward
+	freed, err := repo.FreedVisits(ctx, co, time.Now(), local(23, 59))
+	if err != nil || len(freed) != 1 || freed[0].JobNumber != "SL-2" || freed[0].TechName != "Kasun" || !freed[0].Start.Equal(local(13, 0)) || freed[0].CancelledAt.IsZero() {
+		t.Fatalf("want SL-2 freed for Kasun at 13:00, got %+v (%v)", freed, err)
+	}
+	cands, err := repo.FillCandidates(ctx, co, time.Now(), time.Now().Add(14*24*time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	byJob := map[string]int{}
+	for i, c := range cands {
+		byJob[c.JobID] = i
+	}
+	if i, ok := byJob["SL-5"]; !ok || cands[i].TechID != "" || cands[i].Priority != "HIGH" || cands[i].Duration != 45*time.Minute {
+		t.Errorf("SL-5 should be waiting work, HIGH, 45 min: %+v", cands)
+	}
+	if i, ok := byJob["SL-1"]; !ok || cands[i].TechID != kasun || cands[i].Current == nil || !cands[i].Current.Equal(local(9, 0)) {
+		t.Errorf("SL-1 should be Kasun's own 09:00 visit: %+v", cands)
+	}
+	for _, gone := range []string{"SL-2", "SL-6"} {
+		if _, ok := byJob[gone]; ok {
+			t.Errorf("%s should not be a candidate (cancelled, or a crew job)", gone)
+		}
+	}
+	report, err := service.NewGapService(repo).Upcoming(ctx, co)
+	if err != nil || len(report.Gaps) != 1 || report.Gaps[0].CancelledJobNumber != "SL-2" {
+		t.Fatalf("want SL-2's gap, got %+v (%v)", report, err)
+	}
+	var offered []string
+	for _, f := range report.Gaps[0].Fills {
+		offered = append(offered, f.Request)
+	}
+	if len(offered) == 0 || report.Gaps[0].Fills[0].JobNumber != "SL-5" {
+		t.Errorf("SL-5 should be offered first, got %v", offered)
+	}
+	t.Logf("gap %s-%s, offered %v", report.Gaps[0].From.In(dubai).Format("15:04"), report.Gaps[0].To.In(dubai).Format("15:04"), offered)
 }

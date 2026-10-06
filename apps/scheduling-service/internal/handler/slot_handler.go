@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tscrm/scheduling-service/internal/middleware"
+	"github.com/tscrm/scheduling-service/internal/models"
 	"github.com/tscrm/scheduling-service/internal/repository"
 	"github.com/tscrm/scheduling-service/internal/service"
 )
@@ -82,13 +84,36 @@ func (h *DisruptionHandler) Today(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-// AvailabilityHandler sets technicians' days off and different hours.
-type AvailabilityHandler struct {
-	repo *repository.SlotRepository
+// ShiftStore is what the availability endpoints read and write; SlotRepository implements it.
+type ShiftStore interface {
+	ShiftOverrides(ctx context.Context, companyID, from, to string) ([]repository.ShiftRow, error)
+	SetShift(ctx context.Context, companyID, technicianID, date string, available bool, start, end string, note *string) error
+	ClearShift(ctx context.Context, companyID, technicianID, date string) error
 }
 
-func NewAvailabilityHandler(repo *repository.SlotRepository) *AvailabilityHandler {
-	return &AvailabilityHandler{repo: repo}
+// Broadcaster announces changes to open dashboards; ws.Hub implements it.
+type Broadcaster interface {
+	BroadcastMessage(ctx context.Context, msg models.WSMessage)
+}
+
+// AvailabilityHandler sets technicians' days off and different hours.
+type AvailabilityHandler struct {
+	repo ShiftStore
+	hub  Broadcaster
+}
+
+func NewAvailabilityHandler(repo ShiftStore, hub Broadcaster) *AvailabilityHandler {
+	return &AvailabilityHandler{repo: repo, hub: hub}
+}
+
+func (h *AvailabilityHandler) announce(c *gin.Context, companyID, technicianID, date string) {
+	if h.hub == nil {
+		return
+	}
+	h.hub.BroadcastMessage(c.Request.Context(), models.WSMessage{
+		Type: models.WSTypeAvailabilityChanged, CompanyID: companyID,
+		Payload: gin.H{"technicianId": technicianID, "date": date},
+	})
 }
 
 var hhmm = regexp.MustCompile(`^([01]\d|2[0-3]):[0-5]\d$`)
@@ -159,6 +184,7 @@ func (h *AvailabilityHandler) Set(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.announce(c, claims.CompanyID, c.Param("technicianId"), date)
 	c.JSON(http.StatusOK, gin.H{"technicianId": c.Param("technicianId"), "date": date, "available": *in.Available, "start": start, "end": end})
 }
 
@@ -173,5 +199,26 @@ func (h *AvailabilityHandler) Clear(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.announce(c, claims.CompanyID, c.Param("technicianId"), c.Param("date"))
 	c.Status(http.StatusNoContent)
+}
+
+type GapHandler struct {
+	svc *service.GapService
+}
+
+func NewGapHandler(svc *service.GapService) *GapHandler {
+	return &GapHandler{svc: svc}
+}
+
+// GET /dispatch/gaps: time freed by cancellations in the next few days, with
+// the work that could fill it. Staff only (route guarded by role).
+func (h *GapHandler) Upcoming(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	res, err := h.svc.Upcoming(c.Request.Context(), claims.CompanyID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }
