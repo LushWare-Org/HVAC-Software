@@ -2,11 +2,13 @@ import {
   Controller, Post, Body, Res, Req, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { IsString, IsArray, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsArray, IsOptional, IsIn, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
 import { AuthUser } from '@tscrm/types';
 import { ChatService, ChatTurn } from './chat.service';
 import { confirmAction } from '../agent/action-runner';
+import { agentContext } from '../agent/context';
 import type { AgentContext } from '../agent/types';
 import { BotType } from '../prompts/prompt.service';
 
@@ -23,6 +25,19 @@ class ConfirmActionDto {
   token!: string;
 }
 
+class PageRecordDto {
+  @IsString() type!: string;
+  @IsString() id!: string;
+  @IsString() label!: string;
+}
+
+class PageContextDto {
+  @IsString() page!: string;
+  @IsString() label!: string;
+  @IsOptional() @IsString() filter?: string;
+  @IsOptional() @ValidateNested() @Type(() => PageRecordDto) record?: PageRecordDto;
+}
+
 class ChatRequestDto {
   @IsString()
   message!: string;
@@ -30,6 +45,9 @@ class ChatRequestDto {
   @IsArray()
   @IsOptional()
   history?: ChatTurnDto[];
+
+  @IsOptional() @ValidateNested() @Type(() => PageContextDto)
+  context?: PageContextDto;
 }
 
 @UseGuards(JwtAuthGuard)
@@ -45,7 +63,7 @@ export class ChatController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const { botType, ctx } = this.context(user, req);
+    const { botType, ctx } = agentContext(user, req);
 
     // Set up SSE
     res.setHeader('Content-Type', 'text/event-stream');
@@ -55,7 +73,7 @@ export class ChatController {
 
     try {
       const stream = this.chatService.streamResponse(
-        { message: body.message, history: body.history ?? [] },
+        { message: body.message, history: body.history ?? [], context: body.context },
         botType,
         ctx,
       );
@@ -78,26 +96,7 @@ export class ChatController {
   @Post('actions/confirm')
   @HttpCode(HttpStatus.OK)
   async confirm(@Body() body: ConfirmActionDto, @CurrentUser() user: AuthUser, @Req() req: Request) {
-    const { botType, ctx } = this.context(user, req);
+    const { botType, ctx } = agentContext(user, req);
     return confirmAction(body.token, ctx, botType);
-  }
-
-  /** Bot type comes from the token, never from the client. */
-  private context(user: AuthUser, req: Request): { botType: BotType; ctx: AgentContext } {
-    const botType: BotType = user.role === 'customer' ? 'customer' : 'admin';
-    const authHeader = req.headers['authorization'] ?? '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
-    return {
-      botType,
-      ctx: {
-        companyId: user.companyId,
-        customerId: user.customerId,
-        userId: user.userId,
-        role: String(user.role),
-        email: user.email ?? '',
-        name: (user as { name?: string }).name,
-        token,
-      },
-    };
   }
 }

@@ -1,6 +1,6 @@
 import * as jwt from 'jsonwebtoken';
 import { signAction, verifyAction, ActionTokenError } from './action-token';
-import { toolsFor, findTool } from './registry';
+import { toolsFor, findTool, withoutKelvinOnly } from './registry';
 import { confirmAction } from './action-runner';
 import { WRITE_TOOLS, when } from './tools/write-tools';
 import { ToolRefusal, type AgentContext } from './types';
@@ -199,5 +199,46 @@ describe('confirmAction', () => {
   it('rejects an expired or foreign token without running anything', async () => {
     const { token } = signAction({ tool: 'cancel_job', args: {}, title: 'Cancel', lines: [] }, { ...ctx, userId: 'someone-else' });
     expect(await confirmAction(token, ctx, 'admin')).toEqual({ ok: false, message: 'This confirmation belongs to someone else.' });
+  });
+});
+
+describe('find_customers', () => {
+  const find = findTool('find_customers', 'admin', 'dispatcher')!;
+  const rr = { id: 'c-rr', firstName: 'R&R', lastName: 'Brothers (pvt) LTD', type: 'COMMERCIAL', phone: '0771234567' };
+  const searchHttp = (hits: Record<string, any[]>) => {
+    const asked: string[] = [];
+    const http = { get: async (_s: string, _p: string, q: any) => { asked.push(q.search); return { data: hits[q.search] ?? [] }; } } as any;
+    return { http, asked };
+  };
+
+  it('returns exact matches with the full name', async () => {
+    const { http, asked } = searchHttp({ 'R&R Brothers (pvt) LTD': [rr] });
+    const out = (await find.run!({ search: 'R&R Brothers (pvt) LTD' }, ctx, http)) as any[];
+    expect(out).toEqual([expect.objectContaining({ id: 'c-rr', name: 'R&R Brothers (pvt) LTD', type: 'COMMERCIAL' })]);
+    expect(out[0].closeMatch).toBeUndefined();
+    expect(asked).toHaveLength(1);
+  });
+
+  it('a typo still finds the customer, word by word, marked as a close match', async () => {
+    const { http, asked } = searchHttp({ 'R&R': [rr] });
+    const out = (await find.run!({ search: 'R&R btothers' }, ctx, http)) as any[];
+    expect(asked).toEqual(['R&R btothers', 'R&R', 'btothers']);
+    expect(out).toEqual([expect.objectContaining({ id: 'c-rr', closeMatch: true })]);
+  });
+
+  it('a single unknown word is simply not found', async () => {
+    const { http, asked } = searchHttp({});
+    expect(await find.run!({ search: 'Nobody' }, ctx, http)).toEqual([]);
+    expect(asked).toEqual(['Nobody']);
+  });
+});
+
+describe('Kelvin-only tools', () => {
+  it('create_job is offered only to companies with Kelvin switched on', () => {
+    const tools = toolsFor('admin', 'dispatcher');
+    expect(tools.map((t) => t.name)).toContain('create_job');
+    expect(withoutKelvinOnly(tools, {}).map((t) => t.name)).not.toContain('create_job');
+    expect(withoutKelvinOnly(tools, { kelvin: false }).map((t) => t.name)).not.toContain('create_job');
+    expect(withoutKelvinOnly(tools, { kelvin: true }).map((t) => t.name)).toContain('create_job');
   });
 });

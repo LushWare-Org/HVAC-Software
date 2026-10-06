@@ -11,6 +11,8 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import { SignInTransition } from './components/airflow/AdminAuth'
 import ChatWidget from './components/ChatWidget'
+import { LazyMotion } from 'motion/react'
+import { KelvinProvider, useKelvin } from './kelvin/KelvinProvider'
 import ModalCloseGuard from './components/ModalCloseGuard'
 
 // ── Code-split page routes ──────────────────────────────────────────────────
@@ -22,6 +24,25 @@ import ModalCloseGuard from './components/ModalCloseGuard'
 // it ready before the login animation finishes.
 import Dashboard from './pages/Dashboard'
 import { useCompanySettings } from './hooks/useCompanySettings'
+
+const KelvinCorner    = lazy(() => import('./kelvin/KelvinCorner'))
+const KelvinPanel     = lazy(() => import('./kelvin/KelvinPanel'))
+const KelvinDesk      = lazy(() => import('./kelvin/KelvinDesk'))
+const loadMotion = () => import('./kelvin/motionFeatures').then(m => m.default)
+
+/** Kelvin when the company has him; the old chat widget otherwise. */
+function KelvinShell() {
+  const k = useKelvin()
+  if (!k.enabled) return <ChatWidget />
+  return (
+    <LazyMotion features={loadMotion} strict>
+      <Suspense fallback={null}>
+        <KelvinCorner />
+        <KelvinPanel />
+      </Suspense>
+    </LazyMotion>
+  )
+}
 
 const BanditDashboard = lazy(() => import('./pages/BanditDashboard'))
 const Customers       = lazy(() => import('./pages/customers/Customers'))
@@ -154,6 +175,7 @@ function AuthenticatedApp() {
   }, [isMobile])
 
   return (
+    <KelvinProvider>
     <div className="app-shell">
       {isMobile && (
         <div
@@ -173,6 +195,7 @@ function AuthenticatedApp() {
               next page's chunk loads. The fallback is a 3px shimmer at the
               very top, NOT a full-page spinner — perceived speed wins. */}
           <Suspense fallback={<RouteLoading />}>
+            <LazyMotion features={loadMotion} strict>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/customers" element={<Customers />} />
@@ -193,6 +216,7 @@ function AuthenticatedApp() {
               <Route path="/import/admin" element={<AdminImports />} />
               <Route path="/team" element={<Team />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/kelvin" element={<KelvinDesk />} />
               <Route
                 path="/system-activity"
                 element={user?.role === 'super_admin' ? <SystemActivity /> : <Navigate to="/" replace />}
@@ -200,10 +224,11 @@ function AuthenticatedApp() {
               <Route path="/login" element={<Navigate to="/" replace />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </LazyMotion>
           </Suspense>
         </div>
       </div>
-      <ChatWidget />
+      <KelvinShell />
       {/* Keyframes for the top-of-page route loader */}
       <style>{`
         @keyframes routeLoadShimmer {
@@ -212,6 +237,7 @@ function AuthenticatedApp() {
         }
       `}</style>
     </div>
+    </KelvinProvider>
   )
 }
 

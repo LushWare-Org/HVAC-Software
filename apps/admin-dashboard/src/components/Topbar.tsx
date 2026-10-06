@@ -13,6 +13,7 @@ import AddInvoiceModal from '../pages/finance/AddInvoiceModal'
 import AddQuoteModal from '../pages/finance/AddQuoteModal'
 import TechnicianDetailModal from '../pages/scheduling/TechnicianDetailModal'
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '../hooks/useComms'
+import KelvinPill from '../kelvin/KelvinPill'
 
 function useDropdown() {
     const [open, setOpen] = useState(false)
@@ -199,6 +200,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
             case '/analytics': return { title: 'Analytics', sub: 'Business intelligence and performance insights' }
             case '/settings': return { title: 'Settings', sub: '' }
             case '/profile': return { title: 'My Profile', sub: 'Manage your account and preferences' }
+            case '/kelvin': return { title: 'Kelvin', sub: 'What needs you, and what he has done' }
             case '/team': return { title: 'Team Management', sub: '' }
             default:
                 if (pathname.startsWith('/projects/')) return { title: 'Project', sub: '' }
@@ -367,6 +369,8 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                             </div>
                         </div>
                     )}
+
+                    <KelvinPill />
 
                     {/* Main Actions */}
                     <div className="flex items-center gap-2.5">

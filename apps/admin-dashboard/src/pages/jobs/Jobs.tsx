@@ -14,6 +14,8 @@ import type { Job } from "../../types/api";
 import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import Avatar from "../../components/Avatar";
+import KelvinNotes from '../../kelvin/KelvinNotes'
+import { useKelvinContext } from '../../kelvin/useKelvinContext'
 
 const STATUS: Record<string, { label: string; css: string }> = {
   PENDING:     { label: "Pending",     css: "badge-amber" },
@@ -198,6 +200,7 @@ export default function Jobs() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  useKelvinContext({ page: 'jobs', label: 'Jobs', ...(filterStatus !== 'all' ? { filter: filterStatus } : {}) });
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterAgreement, setFilterAgreement] = useState(false);
   const [filterProjectId, setFilterProjectId] = useState("");
@@ -434,6 +437,8 @@ export default function Jobs() {
           {urgentCount} urgent/emergency job{urgentCount > 1 ? "s" : ""} — shown at the top of the list
         </div>
       )}
+
+      <KelvinNotes page="jobs" />
 
       {/* Active / Upcoming Jobs */}
       <div className="card anim-fade-up delay-2 mb-4">

@@ -6,7 +6,7 @@ import { isFeatureEnabled } from '@tscrm/types';
 import { LLMProvider } from '../llm/llm.provider';
 import { PromptService, BotType } from '../prompts/prompt.service';
 import { signAction } from '../agent/action-token';
-import { toolsFor, toOpenAiTools } from '../agent/registry';
+import { toolsFor, toOpenAiTools, withoutKelvinOnly } from '../agent/registry';
 import { ServiceHttp, serviceErrorMessage } from '../agent/service-http';
 import { ToolRefusal, type AgentContext, type AgentTool } from '../agent/types';
 
@@ -15,10 +15,13 @@ export interface ChatTurn {
   content: string;
 }
 
+export interface PageContext { page: string; label: string; filter?: string; record?: { type: string; id: string; label: string } }
 export interface ChatRequest {
   message: string;
   history: ChatTurn[];
+  context?: PageContext;
 }
+const one = (v: unknown, max: number) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 
 export type ChatEvent =
   | { type: 'chunk'; text: string }
@@ -45,7 +48,7 @@ export function utcOffset(timeZone: string, at = new Date()): string {
 }
 
 /** The part of the system prompt that changes every request: the clock, and how to act. */
-export function contextPrompt(ctx: AgentContext, tools: AgentTool[], now = new Date()): string {
+export function contextPrompt(ctx: AgentContext, tools: AgentTool[], now = new Date(), page?: PageContext): string {
   const tz = ctx.timezone || 'UTC';
   let local: string;
   try {
@@ -68,6 +71,20 @@ export function contextPrompt(ctx: AgentContext, tools: AgentTool[], now = new D
       '- If an action is refused, pass the reason on plainly and suggest what to do instead.\n' +
       '- One action per message. If they ask for several, prepare the first and offer the next.',
     );
+  }
+  if (tools.some((t) => t.name === 'create_job')) {
+    parts.push(
+      '## You are Kelvin\nYou are Kelvin, the assistant built into this dashboard.\n' +
+      '- Creating a job: find the customer first (offer close matches). Ask for one missing detail at a time, offering choices rather than open questions. ' +
+      'For "today", "this evening" or "tomorrow", call find_open_times and offer at most 3 times. With no time, create it without one: it goes to the unassigned list. ' +
+      'After it is created, offer one sensible next step once.',
+    );
+  }
+  if (page?.label) {
+    const rec = page.record?.id
+      ? ` with ${one(page.record.type, 20)} ${one(page.record.label, 120)} open (id ${one(page.record.id, 60)}). "This ${one(page.record.type, 20)}" means that one.`
+      : '.';
+    parts.push(`## On screen\nThe person is on the ${one(page.label, 40)} page${page.filter ? ` (filter: ${one(page.filter, 40)})` : ''}${rec}`);
   }
   return parts.join('\n\n');
 }
@@ -108,10 +125,10 @@ export class ChatService {
       return;
     }
 
-    const tools = toolsFor(botType, ctx.role);
+    const tools = withoutKelvinOnly(toolsFor(botType, ctx.role), settings.features);
     const model = this.llm.modelData;
     const messages: ChatCompletionMessageParam[] = [
-      { role: 'system', content: `${this.prompts.forBot(botType)}\n\n${contextPrompt(ctx, tools)}` },
+      { role: 'system', content: `${this.prompts.forBot(botType)}\n\n${contextPrompt(ctx, tools, new Date(), req.context)}` },
       ...req.history.slice(-10).map((t) => ({ role: t.role, content: t.content }) as ChatCompletionMessageParam),
       { role: 'user', content: req.message },
     ];

@@ -1,0 +1,191 @@
+/* Kelvin: a thermostat dial with eyes. Ink is the text colour, eyes the card
+   colour, so the face flips by itself in light, dark and black. His own colour is
+   the colour-temperature scale (candle 1900 K to sky 10000 K), used only for him. */
+:root {
+  --k-1900: #ff7a1a; --k-3200: #ffb15c; --k-5000: #ffe2b8; --k-6500: #eef2ff; --k-10000: #8fb0ff;
+  --k-scale: conic-gradient(from 0deg, var(--k-1900), var(--k-3200), var(--k-5000), var(--k-6500), var(--k-10000), var(--k-1900));
+  --k-cool: conic-gradient(from 0deg, var(--k-6500), var(--k-10000), var(--k-6500), var(--k-10000), var(--k-6500));
+  --k-line: linear-gradient(90deg, var(--k-1900), var(--k-3200), var(--k-5000), var(--k-10000), var(--k-1900));
+}
+.kv-face { position: relative; display: inline-block; width: var(--kv-size); height: var(--kv-size); flex-shrink: 0; }
+.kv-temp { position: absolute; inset: 0; border-radius: 50%; background: var(--k-cool); }
+.kv-ripple { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--k-1900); animation: kv-ripple 1.6s cubic-bezier(.2,.8,.2,1) 3; pointer-events: none; }
+.kv-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.kv-ring circle { fill: none; stroke-width: 6; }
+.kv-ring-fill { stroke: var(--blue); stroke-linecap: round; transition: stroke-dashoffset 300ms var(--ease), stroke 200ms var(--ease); }
+.kv-ring-fill.is-indeterminate { animation: kv-spin 1s linear infinite; transform-origin: 50% 50%; }
+.kv-dial { position: absolute; inset: 14%; border-radius: 50%; background: var(--t1); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 calc(var(--kv-size) * 0.035) var(--bg-card); }
+.kv-eyes { display: flex; gap: calc(var(--kv-size) * 0.12); transition: transform 180ms var(--ease); }
+.kv-eye { display: block; width: calc(var(--kv-size) * 0.1); height: calc(var(--kv-size) * 0.17); border-radius: 999px; background: var(--bg-card);
+  animation: kv-blink 5.5s infinite; animation-delay: var(--kv-blink-delay); transition: height 200ms var(--ease), border-radius 200ms var(--ease); }
+.kv-news .kv-temp { background: var(--k-scale); animation: kv-spin 3.2s linear infinite; }
+.kv-urgent .kv-temp { background: var(--k-scale); animation: kv-spin 1.1s linear infinite; }
+.kv-thinking .kv-temp { background: var(--k-scale); animation: kv-spin 1.6s linear infinite; }
+.kv-thinking .kv-eye { animation: kv-look 1.6s ease-in-out infinite; }
+.kv-pleased .kv-temp { background: var(--green); }
+.kv-pleased .kv-ring-fill { stroke: var(--green); }
+.kv-pleased .kv-eye { height: calc(var(--kv-size) * 0.08); border-radius: 999px 999px 2px 2px; }
+.kv-asleep .kv-temp { background: var(--bd); }
+.kv-asleep .kv-eye { height: 2px; animation: none; }
+.kv-asleep .kv-dial { opacity: .7; }
+.kv-glyph { display: inline-flex; align-items: center; justify-content: center; gap: 2px; border-radius: 50%; background: currentColor; }
+.kv-glyph i { width: 2px; height: 4px; border-radius: 2px; background: var(--bg-card); }
+@keyframes kv-blink { 0%, 94%, 100% { transform: scaleY(1) } 96% { transform: scaleY(.1) } }
+@keyframes kv-look { 0%, 100% { transform: translateX(-12%) } 50% { transform: translateX(12%) } }
+@keyframes kv-spin { to { transform: rotate(360deg) } }
+@keyframes kv-ripple { from { transform: scale(1); opacity: .9 } to { transform: scale(1.9); opacity: 0 } }
+@keyframes kv-hop { 0%, 100% { transform: translateY(0) } 30% { transform: translateY(-14px) scale(1.04, .96) } 55% { transform: translateY(0) scale(1.06, .94) } 75% { transform: translateY(-4px) } }
+@media (prefers-reduced-motion: reduce) {
+  .kv-eye, .kv-ring, .kv-ring-fill.is-indeterminate, .kv-temp, .kv-ripple { animation: none !important; }
+  .kv-eyes { transition: none; }
+}
+
+/* Panel: a floating card on Kelvin's side; the page moves over to make room. */
+@media (min-width: 1024px) {
+  body.kelvin-open:not(.kelvin-left) .main-content { margin-right: 412px; transition: margin-right 360ms var(--ease); }
+  body.kelvin-open.kelvin-left .main-content { margin-left: 412px; transition: margin-left 360ms var(--ease); }
+}
+.kv-panel { position: fixed; top: 12px; bottom: 12px; width: 388px; z-index: 1001; background: var(--bg-card); border-radius: 22px; border: 1px solid var(--bd);
+  display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 64px rgba(2,6,23,.38); }
+.kv-panel.is-right { right: 12px; }
+.kv-panel.is-left { left: 12px; }
+@media (max-width: 1023px) {
+  .kv-panel { top: 8px; bottom: 8px; width: calc(100vw - 16px); max-width: 440px; }
+  .kv-panel.is-right { right: 8px; } .kv-panel.is-left { left: 8px; }
+}
+.kv-panel-head { position: relative; display: flex; align-items: center; gap: 12px; padding: 18px 14px 16px 18px; }
+.kv-panel-head::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--k-line); background-size: 300% 100%; animation: kv-drift 6s linear infinite; }
+.kv-panel-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.kv-panel-who strong { font-size: 17px; font-weight: 600; color: var(--t1); }
+.kv-panel-who span { font-size: 12px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kv-gauge { display: flex; flex-direction: column; align-items: flex-end; padding-right: 2px; }
+.kv-gauge strong { font-size: 24px; font-weight: 600; line-height: 1; color: var(--t1); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.kv-gauge span { font-size: 11px; color: var(--t3); margin-top: 3px; }
+.kv-icon-btn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: none; background: transparent; color: var(--t2); border-radius: 12px; cursor: pointer; }
+.kv-icon-btn:hover { background: var(--bg-hover); }
+.kv-ctx { align-self: flex-start; margin: 12px 18px 0; padding: 4px 10px; border-radius: 999px; background: var(--bg-card-2); font-size: 12px; color: var(--t2); max-width: calc(100% - 36px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kv-thread { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+.kv-hello { margin: 4px 0; font-size: 15px; line-height: 1.5; color: var(--t1); max-width: 34ch; }
+.kv-msg { max-width: 90%; font-size: 14px; line-height: 1.55; color: var(--t1); word-break: break-word; }
+.kv-msg.is-user { align-self: flex-end; background: var(--bg-card-2); border-radius: 16px 16px 4px 16px; padding: 9px 13px; }
+.kv-msg.is-assistant { align-self: flex-start; }
+.kv-turn { align-self: stretch; }
+.kv-status { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--t3); }
+.kv-dots { display: inline-flex; gap: 3px; }
+.kv-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--k-3200); animation: kv-dot 1s ease-in-out infinite; }
+.kv-dots i:nth-child(2) { animation-delay: .15s; background: var(--k-5000); } .kv-dots i:nth-child(3) { animation-delay: .3s; background: var(--k-10000); }
+.kv-keys { display: flex; gap: 8px; padding: 2px 14px 10px; overflow-x: auto; scrollbar-width: none; mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.kv-keys::-webkit-scrollbar { display: none; }
+.kv-key { flex-shrink: 0; min-height: 36px; padding: 6px 12px; border: 1px solid var(--bd-md); border-bottom-width: 3px; border-radius: 10px; background: var(--bg-card); color: var(--t2); font: inherit; font-size: 12.5px; cursor: pointer; transition: transform 120ms var(--ease), border-color 120ms var(--ease); }
+.kv-key:hover:not(:disabled) { color: var(--t1); border-color: var(--t3); }
+.kv-key:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 1px; }
+.kv-key:disabled { opacity: .5; }
+.kv-ask { display: flex; gap: 8px; align-items: flex-end; margin: 0 12px 12px; padding: 6px 6px 6px 14px; border-radius: 18px; background: var(--bg-card-2); }
+.kv-ask textarea { flex: 1; resize: none; min-height: 40px; max-height: 120px; padding: 10px 0; border: none; background: transparent; color: var(--t1); font: inherit; font-size: 14px; outline: none !important; }
+.kv-ask:focus-within { box-shadow: 0 0 0 2px var(--blue); }
+.kv-send { position: relative; width: 44px; height: 44px; flex-shrink: 0; border: none; border-radius: 14px; background: var(--k-scale); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.kv-send::before { content: ''; position: absolute; inset: 3px; border-radius: 11px; background: var(--t1); }
+.kv-send svg { position: relative; color: var(--bg-card); }
+.kv-send:disabled { opacity: .35; cursor: not-allowed; }
+.kv-panel-foot { padding: 0 18px 10px; margin-top: -6px; }
+.kv-link { border: none; background: none; padding: 8px 0; min-height: 36px; color: var(--t3); font: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+@keyframes kv-drift { to { background-position: 300% 0 } }
+@keyframes kv-dot { 0%, 100% { transform: translateY(0); opacity: .5 } 50% { transform: translateY(-3px); opacity: 1 } }
+.kv-card { position: relative; overflow: hidden; border: 1px solid var(--bd); border-radius: 16px; padding: 12px 12px 12px 15px; display: flex; flex-direction: column; gap: 8px; background: var(--bg-card); }
+.kv-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(var(--k-1900), var(--k-3200), var(--k-10000)); }
+.kv-card-heat { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--k-line); background-size: 300% 100%; animation: kv-drift 1.2s linear infinite; }
+.kv-card.is-done::before { background: var(--green); }
+.kv-card.is-failed::before { background: var(--amber); }
+.kv-card-head { display: flex; align-items: center; gap: 8px; }
+.kv-card-title { font-size: 14px; font-weight: 600; color: var(--t1); }
+.kv-card-lines { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--t2); }
+.kv-card-note { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--t3); }
+.kv-card-actions { display: flex; gap: 8px; }
+.kv-card-actions .ops-btn { min-height: 44px; }
+.kv-card-status { margin: 0; font-size: 13px; color: var(--t2); }
+.kv-card-status.is-done { color: var(--green); }
+.kv-card-status.is-failed { color: var(--amber); }
+.kv-panel :is(button, textarea):focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { body.kelvin-open .main-content { transition: none; } .kv-panel-head::after, .kv-card-heat, .kv-dots i, .kv-heatline { animation: none; } }
+
+.kv-corner { position: fixed; top: 0; left: 0; z-index: 1000; width: 60px; height: 60px; touch-action: none; }
+.kv-corner-btn { width: 60px; height: 60px; border: none; border-radius: 50%; background: var(--bg-card); box-shadow: 0 6px 18px rgba(15,23,42,.22); display: inline-flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; }
+.kv-corner-btn:active { cursor: grabbing; }
+.kv-corner-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.kv-corner-btn.kv-hop { animation: kv-hop 700ms cubic-bezier(.2,.8,.2,1); }
+.kv-bubble-region { position: absolute; bottom: 4px; display: flex; }
+.kv-corner.is-right .kv-bubble-region { right: 70px; justify-content: flex-end; }
+.kv-corner.is-left .kv-bubble-region { left: 70px; justify-content: flex-start; }
+.kv-bubble { width: max-content; max-width: 280px; background: var(--bg-card); color: var(--t1); border-radius: 14px; padding: 9px 12px 9px 14px; display: flex; flex-direction: column; gap: 2px;
+  border-left: 3px solid var(--k-3200); box-shadow: 0 10px 30px rgba(2,6,23,.3); }
+.kv-bubble.is-urgent { border-left-color: var(--k-1900); }
+.kv-bubble-tag { font-size: 11px; font-weight: 600; color: var(--amber); }
+.kv-bubble-text { border: none; background: none; padding: 0; color: inherit; font: inherit; font-size: 13px; line-height: 1.4; text-align: left; cursor: pointer;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.kelvin-looked { outline: 2px solid var(--t1); outline-offset: 2px; transition: outline-color 2s var(--ease); }
+body.kelvin-open .kv-corner { display: none; }
+@media (max-width: 640px) { .kv-bubble { max-width: calc(100vw - 110px); } }
+
+.kv-desk { max-width: 1100px; display: flex; flex-direction: column; gap: 16px; background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg); padding: 20px 24px; }
+@media (max-width: 640px) { .kv-desk { padding: 16px; } }
+.kv-desk-hello { display: flex; align-items: center; gap: 20px; padding: 8px 0; }
+.kv-desk-hello h1 { margin: 0; font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--t1); text-wrap: balance; }
+.kv-desk-hello p { margin: 4px 0 0; font-size: 14px; color: var(--t3); }
+.kv-desk-ask { display: flex; gap: 8px; }
+.kv-desk-ask input { flex: 1; height: 48px; padding: 0 14px; border: 1px solid var(--bd-md); border-radius: var(--r-md); background: var(--bg-input); color: var(--t1); font: inherit; font-size: 15px; }
+.kv-desk-ask .ops-btn { height: 48px; }
+.kv-desk-cols { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; margin-top: 8px; }
+.kv-desk-cols h2 { margin: 0 0 10px; font-size: 16px; font-weight: 600; color: var(--t1); }
+.kv-sub { margin: 16px 0 8px; font-size: 13px; font-weight: 600; color: var(--t3); }
+.kv-empty { margin: 0; font-size: 14px; color: var(--t2); }
+.kv-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.kv-item { background: var(--bg-card); border: 1px solid var(--bd); border-left: 3px solid var(--t1); border-radius: var(--r-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.kv-item.is-urgent { border-left-color: var(--amber); }
+.kv-item.is-quiet { border-left-color: var(--bd-md); }
+.kv-item-tag { font-size: 12px; font-weight: 600; color: var(--amber); }
+.kv-item-title { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--t1); }
+.kv-item-why { margin: 0; font-size: 13px; color: var(--t2); }
+.kv-item-fixes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.kv-item-fixes .ops-btn { min-height: 40px; height: auto; white-space: normal; text-align: left; }
+.kv-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.kv-log li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--bd); font-size: 13px; color: var(--t2); }
+.kv-log time { color: var(--t3); font-variant-numeric: tabular-nums; }
+.kv-log li.is-action_failed span { color: var(--amber); }
+.kv-prefs { background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg); padding: 16px 20px; margin-bottom: 20px; }
+.kv-prefs h2 { margin: 0 0 10px; font-size: 16px; font-weight: 600; color: var(--t1); }
+.kv-prefs-opts { display: flex; flex-direction: column; gap: 8px; }
+.kv-prefs-opts label { display: flex; gap: 10px; align-items: flex-start; min-height: 44px; padding: 8px 10px; border: 1px solid var(--bd); border-radius: var(--r-md); cursor: pointer; }
+.kv-prefs-opts label.is-on { border-color: var(--t1); }
+.kv-prefs-opts span { display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--t1); }
+.kv-prefs-opts small { font-size: 12px; color: var(--t3); }
+@media (max-width: 860px) { .kv-desk-cols { grid-template-columns: minmax(0, 1fr); } .kv-desk-hello h1 { font-size: 20px; } }
+
+.kv-notes { display: flex; flex-direction: column; gap: 8px; }
+.kv-note { display: flex; gap: 10px; align-items: flex-start; background: var(--bg-card); border: 1px solid var(--bd); border-left: 3px solid var(--t1); border-radius: var(--r-md); padding: 12px 14px; }
+.kv-note.is-urgent { border-left-color: var(--amber); }
+.kv-note-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+/* Room at the bottom of every page so Kelvin's corner never covers the last row. */
+body.kelvin-on .page { padding-bottom: 96px; }
+
+/* Kelvin in the top bar: face and name open his desk, "Ask anything" opens his panel. */
+.kv-pill { display: flex; align-items: stretch; height: 44px; border: 1px solid var(--bd); border-radius: 999px; background: var(--bg-card); overflow: hidden; }
+.kv-pill button { border: none; background: none; font: inherit; cursor: pointer; display: flex; align-items: center; transition: background 120ms var(--ease); }
+.kv-pill button:hover { background: var(--bg-hover); }
+.kv-pill button:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.kv-pill-who { gap: 8px; padding: 0 12px 0 5px; color: var(--t1); }
+.kv-pill-name { font-size: 14px; font-weight: 600; }
+.kv-pill-count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--k-1900); color: #fff; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+.kv-pill .kv-pill-ask { gap: 10px; padding: 0 14px; border-left: 1px solid var(--bd); color: var(--t3); font-size: 13px; white-space: nowrap; }
+.kv-pill-ask kbd { font: inherit; font-size: 11px; border: 1px solid var(--bd); border-radius: 6px; padding: 1px 6px; color: var(--t3); }
+/* Make room: the "Ask anything" half goes first, then the name. */
+body.kelvin-open .kv-pill .kv-pill-ask { display: none; }
+@media (max-width: 1100px) { .kv-pill .kv-pill-ask { display: none; } }
+@media (max-width: 900px) { .kv-pill .kv-pill-name { display: none; } .kv-pill .kv-pill-who { padding: 0 6px 0 5px; } }
+@media (max-width: 640px) { .kv-pill { height: 40px; } .kv-pill .kv-pill-count { display: none; } }
+
+/* Kelvin's mark on anything he found: a slowly moving colour-temperature line and who found it. */
+.kv-heatline { display: block; width: 140px; height: 3px; border-radius: 2px; margin: 8px 0 2px; background: var(--k-line); background-size: 300% 100%; animation: kv-drift 6s linear infinite; }
+.kv-by { margin: 0; font-size: 12px; color: var(--t3); }
+
+.kv-panel .kv-ripple { display: none; }

@@ -61,8 +61,9 @@ export class ServiceHttp {
 
 /** A service's own error message ("Cannot send a VOID invoice"), for the person to read. */
 export function serviceErrorMessage(err: unknown): string {
-  const e = err as { response?: { status?: number; data?: { message?: unknown } }; message?: string };
-  const msg = e.response?.data?.message;
+  const e = err as { response?: { status?: number; data?: { message?: unknown; error?: unknown } }; message?: string };
+  // Nest services say `message`; the Go scheduling service says `error`.
+  const msg = e.response?.data?.message ?? e.response?.data?.error;
   if (Array.isArray(msg)) return msg.join('; ');
   if (typeof msg === 'string') return msg;
   if (e.response?.status === 403) return 'Your role is not allowed to do that.';

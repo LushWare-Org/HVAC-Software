@@ -28,6 +28,7 @@ export enum QueueName {
   ACTIVITY_LOG_CLEANUP = 'activity-log-cleanup',
   // One record per AI model call (or skipped call), stored by analytics-service.
   AI_USAGE = 'ai-usage',
+  KELVIN_EVENTS = 'kelvin-events',
 }
 
 // ---- Redis connection factory (shared config) ----

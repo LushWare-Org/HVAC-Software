@@ -9,6 +9,7 @@ import { User, Mail, Phone, Shield, Building2, Calendar, Save, Check, Loader2, A
 import { useMyProfile, useUpdateMyProfile } from '../hooks/useSettings'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../lib/api'
+import KelvinPrefsCard from '../kelvin/KelvinPrefsCard'
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin',
@@ -124,6 +125,8 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      <KelvinPrefsCard />
 
       {/* Personal info */}
       <div className="bg-[var(--bg-card)] border border-[var(--bd)] rounded-[var(--r)] p-6 mb-5">

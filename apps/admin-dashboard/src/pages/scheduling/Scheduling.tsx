@@ -19,7 +19,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  CalendarDays, Users, CheckCircle2, AlertCircle, X, LayoutGrid, Activity, Sparkles, CalendarClock,
+  CalendarDays, Users, CheckCircle2, AlertCircle, X, LayoutGrid, Activity, Sparkles, CalendarClock, UserCheck,
 } from 'lucide-react'
 import {
   useTechnicians, useSmartAssign, useManualAssign,
@@ -49,11 +49,14 @@ import BoardLive from './BoardLive'
 import BoardPlan, { type PlanStats } from './BoardPlan'
 import ActiveControlTower from './ActiveControlTower'
 import CompletedLedger from './CompletedLedger'
+import Roster from './Roster'
+import KelvinNotes from '../../kelvin/KelvinNotes'
+import { useKelvinContext } from '../../kelvin/useKelvinContext'
 
 type Scope = 'live' | 'plan'
 
 const JOB_TO_STAGE: Record<string, string> = { SCHEDULED: 'ASSIGNED', EN_ROUTE: 'EN_ROUTE', ON_SITE: 'ON_SITE' }
-type SubTab = 'board' | 'active' | 'completed' | 'calendar' | 'reschedules'
+type SubTab = 'board' | 'active' | 'completed' | 'calendar' | 'reschedules' | 'roster'
 
 function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate() + n); return x }
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x }
@@ -70,7 +73,7 @@ export default function Scheduling() {
   const [scope, setScope] = useState<Scope>('live')
   const [subTab, setSubTab] = useState<SubTab>(() => {
     const view = searchParams.get('view')
-    return view === 'calendar' || view === 'active' || view === 'completed' || view === 'reschedules' ? view : 'board'
+    return view === 'calendar' || view === 'active' || view === 'completed' || view === 'reschedules' || view === 'roster' ? view : 'board'
   })
   const [planDate, setPlanDate] = useState(() => addDays(startOfDay(new Date()), 1))
   const [planStats, setPlanStats] = useState<PlanStats>({ jobs: 0, unassigned: 0, opportunities: 0, backlog: 0 })
@@ -222,6 +225,10 @@ export default function Scheduling() {
   const updateJobStatus = useUpdateJobStatus()
 
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+  useKelvinContext({
+    page: 'scheduling', label: 'Scheduling', filter: subTab,
+    ...(selectedJob ? { record: { type: 'job', id: selectedJob.id, label: `${selectedJob.jobNumber}, ${selectedJob.title}` } } : {}),
+  })
   // The assignment is still tracked so opening a job from a technician's row
   // clears correctly, but the full job modal reads the job itself rather than a
   // pre-selected assignment.
@@ -351,6 +358,7 @@ export default function Scheduling() {
             <CalendarClock size={14} /> Reschedules
             {rescheduleCount > 0 && <span className="tab-count">{rescheduleCount}</span>}
           </button>
+          <button className={`tab-btn ${subTab === 'roster' ? 'active' : ''}`} onClick={() => setSubTab('roster')}><UserCheck size={14} /> Who's working</button>
         </div>
         {subTab === 'board' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12.5, color: 'var(--t2)', flexWrap: 'wrap' }}>
@@ -371,6 +379,8 @@ export default function Scheduling() {
           </div>
         )}
       </div>
+
+      <KelvinNotes page="scheduling" />
 
       {noTechsWarning && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)', borderRadius: 10, color: '#d97706', fontSize: 13 }}>
@@ -443,6 +453,8 @@ export default function Scheduling() {
           }}
         />
       )}
+
+      {subTab === 'roster' && <Roster techs={techs} assignments={allAssignments} jobs={allJobs} />}
 
       {subTab === 'calendar' && (
         <DispatchCalendar

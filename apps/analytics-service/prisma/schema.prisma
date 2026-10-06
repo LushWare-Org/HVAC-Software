@@ -63,3 +63,35 @@ model AiUsage {
   @@index([createdAt])
   @@map("ai_usage")
 }
+
+// ── Kelvin ──────────────────────────────────────────────────────────────────
+// What Kelvin told each person and what he did, written by KelvinProcessor from
+// the kelvin-events queue. Feeds "Done today" and stops him repeating himself.
+model KelvinEvent {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  userId      String   @map("user_id")
+  itemId      String?  @map("item_id")
+  type        String
+  action      String?
+  recordRef   String?  @map("record_ref")
+  summary     String
+  confirmedBy String?  @map("confirmed_by")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([companyId, userId, createdAt])
+  @@index([companyId, itemId])
+  @@map("kelvin_events")
+}
+
+// Each person's choice of how chatty Kelvin is.
+model KelvinPrefs {
+  companyId  String    @map("company_id")
+  userId     String    @map("user_id")
+  speakMode  String    @default("ALL") @map("speak_mode")
+  quietUntil DateTime? @map("quiet_until") @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@id([companyId, userId])
+  @@map("kelvin_prefs")
+}

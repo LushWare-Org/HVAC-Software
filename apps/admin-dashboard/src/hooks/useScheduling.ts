@@ -292,6 +292,8 @@ export interface DispatchEvent {
     // reschedule-badge changes. The board's data is mostly jobs, so without
     // these it could only ever reflect assignment and GPS activity.
     | 'JOB_CHANGED'
+    // A technician's day was marked off or given different hours.
+    | 'AVAILABILITY_CHANGED'
     | 'PING'
   companyId?: string
   payload: Record<string, unknown>

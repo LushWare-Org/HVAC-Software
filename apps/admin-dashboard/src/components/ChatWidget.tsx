@@ -1,19 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { MessageCircle, X, Send, Loader2, Bot, CheckCircle2, XCircle, ShieldCheck } from 'lucide-react'
-import { authStorage } from '../lib/authStorage'
-import api from '../lib/api'
 import { queryClient } from '../lib/queryClient'
 import { ASK_ASSISTANT_EVENT } from '../lib/assistant'
-
-/** A change the assistant prepared, waiting for the person to confirm. */
-interface ActionCardData {
-  token: string
-  id: string
-  title: string
-  lines: string[]
-  state: 'pending' | 'running' | 'done' | 'failed' | 'cancelled'
-  result?: string
-}
+import { renderMarkdown } from '../kelvin/markdown'
+import { confirmCard, streamChat, type ActionCardData } from '../kelvin/chatStream'
 
 interface Turn {
   role: 'user' | 'assistant'
@@ -23,9 +13,6 @@ interface Turn {
   /** Sent to the assistant as context but not shown (the card already shows it). */
   hidden?: boolean
 }
-
-/** Same base as every other API call, so chat follows the gateway the app uses. */
-const API_BASE = api.defaults.baseURL ?? '/api'
 
 /** Pages a confirmed action can change, refreshed so they show it straight away. */
 const REFRESH_AFTER_ACTION = [['jobs'], ['scheduling'], ['finance'], ['invoices'], ['dashboard']]
@@ -69,49 +56,13 @@ export default function ChatWidget() {
     abortRef.current = new AbortController()
 
     try {
-      const response = await fetch(`${API_BASE}/chat/message`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authStorage.getToken() ?? ''}`,
-        },
-        body: JSON.stringify({ message, history: history.filter(t => !t.action).map(({ role, content }) => ({ role, content })) }),
+      const { text: assembled, cards } = await streamChat({
+        message,
+        history: history.filter(t => !t.action).map(({ role, content }) => ({ role, content })),
         signal: abortRef.current.signal,
+        onStatus: setStatusMsg,
+        onChunk: setStreamingContent,
       })
-
-      if (!response.ok) throw new Error('Request failed')
-
-      const reader = response.body!.getReader()
-      const decoder = new TextDecoder()
-      let assembled = ''
-      const cards: ActionCardData[] = []
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const text = decoder.decode(value, { stream: true })
-        const lines = text.split('\n')
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          const payload = line.slice(6)
-          if (payload === '[DONE]') break
-
-          try {
-            const parsed = JSON.parse(payload)
-            if (parsed.error) { assembled = parsed.error; break }
-            if (parsed.status) { setStatusMsg(parsed.status) }
-            if (parsed.action) cards.push({ ...parsed.action, state: 'pending' })
-            if (parsed.chunk) {
-              assembled += parsed.chunk
-              setStatusMsg('')
-              setStreamingContent(assembled)
-            }
-          } catch {}
-        }
-      }
-
       setHistory(h => [
         ...h,
         ...(assembled || !cards.length ? [{ role: 'assistant' as const, content: assembled }] : []),
@@ -147,18 +98,7 @@ export default function ChatWidget() {
 
   const confirmAction = useCallback(async (card: ActionCardData) => {
     updateCard(card.id, { state: 'running' })
-    let ok = false
-    let message = 'Something went wrong. Please try again.'
-    try {
-      const res = await fetch(`${API_BASE}/chat/actions/confirm`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authStorage.getToken() ?? ''}` },
-        body: JSON.stringify({ token: card.token }),
-      })
-      const body = await res.json().catch(() => ({}))
-      ok = res.ok && body.ok === true
-      if (body.message) message = body.message
-    } catch { /* network failure: message above */ }
+    const { ok, message } = await confirmCard(card.token)
     updateCard(card.id, { state: ok ? 'done' : 'failed', result: message })
     // Tell the assistant what happened, so its next answer starts from the truth.
     setHistory(h => [...h, { role: 'assistant', content: ok ? `The person confirmed. ${message}` : `The person confirmed but it failed. ${message}`, hidden: true }])
@@ -297,55 +237,6 @@ export default function ChatWidget() {
       )}
     </>
   )
-}
-
-function renderMarkdown(text: string): React.ReactNode[] {
-  const lines = text.split('\n')
-  const nodes: React.ReactNode[] = []
-
-  const inlineFormat = (s: string, key: string): React.ReactNode => {
-    const parts = s.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g)
-    return (
-      <span key={key}>
-        {parts.map((p, i) => {
-          if (p.startsWith('**') && p.endsWith('**')) return <strong key={i}>{p.slice(2, -2)}</strong>
-          if (p.startsWith('*') && p.endsWith('*')) return <em key={i}>{p.slice(1, -1)}</em>
-          if (p.startsWith('`') && p.endsWith('`')) return <code key={i} style={{ background: 'rgba(0,0,0,0.08)', borderRadius: 3, padding: '1px 4px', fontSize: 12 }}>{p.slice(1, -1)}</code>
-          return p
-        })}
-      </span>
-    )
-  }
-
-  lines.forEach((line, i) => {
-    const bulletMatch = line.match(/^[\-\*]\s+(.+)/)
-    const numberedMatch = line.match(/^(\d+)\.\s+(.+)/)
-    const headingMatch = line.match(/^#{1,3}\s+(.+)/)
-
-    if (headingMatch) {
-      nodes.push(<div key={i} style={{ fontWeight: 700, fontSize: 14, marginTop: i > 0 ? 8 : 0 }}>{inlineFormat(headingMatch[1], `h${i}`)}</div>)
-    } else if (bulletMatch) {
-      nodes.push(
-        <div key={i} style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-          <span style={{ opacity: 0.5, flexShrink: 0 }}>•</span>
-          <span>{inlineFormat(bulletMatch[1], `b${i}`)}</span>
-        </div>
-      )
-    } else if (numberedMatch) {
-      nodes.push(
-        <div key={i} style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-          <span style={{ opacity: 0.6, flexShrink: 0 }}>{numberedMatch[1]}.</span>
-          <span>{inlineFormat(numberedMatch[2], `n${i}`)}</span>
-        </div>
-      )
-    } else if (line.trim() === '') {
-      if (i > 0 && i < lines.length - 1) nodes.push(<div key={i} style={{ height: 6 }} />)
-    } else {
-      nodes.push(<div key={i}>{inlineFormat(line, `l${i}`)}</div>)
-    }
-  })
-
-  return nodes
 }
 
 function Bubble({ turn, streaming }: { turn: Turn; streaming?: boolean }) {

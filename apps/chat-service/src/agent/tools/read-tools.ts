@@ -108,15 +108,30 @@ const staffTools: AgentTool[] = [
   },
   {
     name: 'find_customers',
-    description: 'Search customers by name, email or phone.',
+    description:
+      'Search customers by name, email or phone. Names may be typed partly or with typos: when nothing matches exactly, ' +
+      'close matches come back with closeMatch: true. Offer those to the person before saying a customer does not exist.',
     parameters: { type: 'object', properties: { search: { type: 'string' } }, required: ['search'] },
     kind: 'read',
     bots: ['admin'],
     roles: STAFF,
-    run: async (args, _ctx, http) =>
-      list(await http.get('crm', '/customers', { search: args.search, limit: 8 })).map((c) => ({
-        id: c.id, name: `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(), phone: c.phone ?? c.mobile, email: c.email, address: c.address,
-      })),
+    run: async (args, _ctx, http) => {
+      const search = String(args.search ?? '').trim();
+      const shape = (c: any, closeMatch: boolean) => ({
+        id: c.id, name: `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(), type: c.type,
+        phone: c.phone ?? c.mobile, email: c.email, address: c.address, ...(closeMatch && { closeMatch: true }),
+      });
+      const exact = list(await http.get('crm', '/customers', { search, limit: 8 }));
+      if (exact.length) return exact.map((c) => shape(c, false));
+      // A typo in one word ("btothers") hides the customer; each word on its own still finds them.
+      const words = search.split(/\s+/).filter((w) => w.replace(/[^\p{L}\p{N}]/gu, '').length >= 2).slice(0, 4);
+      if (words.length < 2) return [];
+      const seen = new Map<string, any>();
+      for (const rows of await Promise.all(words.map((w) => http.get('crm', '/customers', { search: w, limit: 5 })))) {
+        for (const c of list(rows)) if (!seen.has(c.id)) seen.set(c.id, c);
+      }
+      return [...seen.values()].slice(0, 8).map((c) => shape(c, true));
+    },
   },
   {
     name: 'list_technicians',

@@ -4,6 +4,7 @@ import { ActionTokenError, verifyAction } from './action-token';
 import { findTool } from './registry';
 import { ServiceHttp, serviceErrorMessage } from './service-http';
 import { ToolRefusal, type AgentContext } from './types';
+import { publishKelvinEvent } from '../kelvin/kelvin-events';
 
 const logger = new Logger('AiActions');
 
@@ -33,12 +34,22 @@ export async function confirmAction(token: string, ctx: AgentContext, bot: BotTy
   if (!tool || tool.kind !== 'write') return { ok: false, message: 'You are not allowed to do that.', actionId: action.id };
 
   try {
-    await tool.run(action.args, ctx, new ServiceHttp(ctx, action.id));
+    const result: any = await tool.run(action.args, ctx, new ServiceHttp(ctx, action.id));
+    const summary: string = typeof result?.summary === 'string' ? result.summary : action.title;
     logger.log(`AI action ${action.id} confirmed: ${action.tool} by ${ctx.userId} (company=${ctx.companyId})`);
-    return { ok: true, message: `Done: ${action.title}.`, actionId: action.id };
+    publishKelvinEvent({
+      companyId: ctx.companyId, userId: ctx.userId, type: 'ACTION_DONE', action: action.tool,
+      summary, recordRef: typeof result?.recordRef === 'string' ? result.recordRef : undefined, confirmedBy: ctx.userId,
+    });
+    return { ok: true, message: `Done: ${summary}.`, actionId: action.id };
   } catch (err) {
     const reason = err instanceof ToolRefusal ? err.message : serviceErrorMessage(err);
     logger.warn(`AI action ${action.id} failed: ${action.tool} by ${ctx.userId}: ${reason}`);
+    publishKelvinEvent({
+      companyId: ctx.companyId, userId: ctx.userId, type: 'ACTION_FAILED', action: action.tool,
+      summary: `${action.title}: ${reason}`, confirmedBy: ctx.userId,
+    });
     return { ok: false, message: `Could not ${action.title.charAt(0).toLowerCase()}${action.title.slice(1)}: ${reason}`, actionId: action.id };
   }
+
 }

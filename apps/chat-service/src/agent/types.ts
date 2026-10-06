@@ -41,6 +41,8 @@ export interface AgentTool {
   bots: BotType[];
   /** Roles allowed to use the tool. Omit for any signed-in user of the bot. */
   roles?: string[];
+  /** Offered only to companies with Kelvin switched on (features.kelvin === true). */
+  kelvinOnly?: boolean;
   /** Write tools: look things up and describe the change. Throw to refuse with a reason the model can relay. */
   preview?: (args: Record<string, any>, ctx: AgentContext, http: ServiceHttp) => Promise<ActionPreview>;
   run: (args: Record<string, any>, ctx: AgentContext, http: ServiceHttp) => Promise<unknown>;

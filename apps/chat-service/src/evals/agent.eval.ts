@@ -76,6 +76,12 @@ function answer(method: string, service: string, path: string, params?: any) {
   }
   if (service === 'finance' && path === '/quotes') return { data: [quoteQ1] };
   if (path === '/quotes/q-1') return quoteQ1;
+  const rr = { id: 'c-rr', firstName: 'R&R', lastName: 'Brothers (pvt) LTD', isActive: true, address: '12 Galle Rd', city: 'Dubai', latitude: 25.2, longitude: 55.27, addresses: [] };
+  if (service === 'crm' && path === '/customers') {
+    const q = String(params?.search ?? '').toLowerCase();
+    return { data: q && ['r&r', 'r&r brothers', 'r&r brothers (pvt) ltd', 'brothers'].includes(q) ? [rr] : [] };
+  }
+  if (service === 'crm' && path === '/customers/c-rr') return rr;
   throw Object.assign(new Error('not found'), { response: { status: 404, data: { message: 'Not found' } } });
 }
 
@@ -93,12 +99,12 @@ jest.mock('../agent/service-http', () => {
 
 const staff = (role = 'office_manager'): AgentContext => ({ companyId: 'co-eval', userId: 'u-eval', role, email: 'e@x.com', token: 'jwt' });
 
-async function ask(message: string, ctx: AgentContext, bot: 'admin' | 'customer' = 'admin') {
+async function ask(message: string, ctx: AgentContext, bot: 'admin' | 'customer' = 'admin', context?: any) {
   calls.length = 0;
   const svc = new ChatService(new LLMProvider(), new PromptService());
   let reply = '';
   const cards: Array<{ tool: string; args: Record<string, any>; title: string }> = [];
-  for await (const ev of svc.streamResponse({ message, history: [] }, bot, ctx) as AsyncIterable<ChatEvent>) {
+  for await (const ev of svc.streamResponse({ message, history: [], context }, bot, ctx) as AsyncIterable<ChatEvent>) {
     if (ev.type === 'chunk') reply += ev.text;
     if (ev.type === 'action') { const a = verifyAction(ev.action.token, ctx); cards.push({ tool: a.tool, args: a.args, title: a.title }); }
   }
@@ -268,5 +274,27 @@ live('assistant behaviour (real model, fake company)', () => {
     expect(r.cards).toHaveLength(1);
     expect(r.cards[0]).toMatchObject({ tool: 'set_technician_availability', args: { technicianId: 't-kasun', status: 'hours', end: '12:00', dates: [dubaiDate(1)] } });
   });
-});
 
+  it('kelvin: creates a job for a customer named with a typo, at a real open time', async () => {
+    const r = await ask('Create a job for R&R btothers, AC not cooling, tomorrow morning', staff('dispatcher'));
+    expect(r.calls).toEqual(expect.arrayContaining(['GET crm /customers']));
+    expect(r.writes).toEqual([]);
+    if (r.cards.length) {
+      expect(r.cards[0]).toMatchObject({ tool: 'create_job', args: { dto: { customerId: 'c-rr' } } });
+    } else {
+      // Asking which time is also right: it must offer real times, not invent them.
+      expect(r.reply).toMatch(/R&R/);
+    }
+  });
+
+  it('kelvin: says plainly it cannot create a customer, and where to do it', async () => {
+    const r = await ask('Create a job for Nobody Known Ltd, boiler service', staff('dispatcher'));
+    expect(r.cards).toEqual([]);
+    expect(r.reply).toMatch(/Customers/);
+  });
+
+  it('kelvin: "this job" means the one open on screen', async () => {
+    const r = await ask('Move this job to Friday at 9am', staff('dispatcher'), 'admin', { page: 'jobs', label: 'Jobs', record: { type: 'job', id: 'j-412', label: 'JOB-0412, AC not cooling, Sara Perera' } });
+    expect(r.cards[0]).toMatchObject({ tool: 'reschedule_job', args: { jobId: 'j-412' } });
+  });
+});

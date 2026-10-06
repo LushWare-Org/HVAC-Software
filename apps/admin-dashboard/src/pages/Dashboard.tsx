@@ -21,10 +21,15 @@ import { formatMoney } from '../lib/format'
 import RecommendationsPanel from '../components/RecommendationsPanel'
 import MorningBrief from './dashboard/MorningBrief'
 import RunningBehind from './dashboard/RunningBehind'
+import FreedTime from './dashboard/FreedTime'
 import ComponentIssuesAlert from '../components/ComponentIssuesAlert'
 import AddJobModal from './jobs/AddJobModal'
 import type { Job, Technician } from '../types/api'
 import { ago, buildAttention, buildLiveMoves, buildStages, buildTechRows, clock, minutesSince, todaysJobs, type LiveMove, type StageKey, type TechState } from './dashboard/opsData'
+import KelvinNotes from '../kelvin/KelvinNotes'
+import { isKelvinOn } from '../kelvin/KelvinProvider'
+import { useKelvinContext } from '../kelvin/useKelvinContext'
+import { useCompanySettings } from '../hooks/useCompanySettings'
 
 const LiveMovesMap = lazy(() => import('./dashboard/LiveMovesMap'))
 
@@ -138,6 +143,8 @@ function LiveNow({ moves }: { moves: LiveMove[] }) {
 export default function Dashboard() {
     const now = useNow()
     const { user } = useAuth()
+    const { data: settings } = useCompanySettings()
+    useKelvinContext({ page: 'dashboard', label: 'Dashboard' })
     const showMoney = MONEY_ROLES.has(String(user?.role ?? '').toLowerCase())
     const toast = useToast()
     // Changes made by others (a technician in the field, another dispatcher)
@@ -194,8 +201,9 @@ export default function Dashboard() {
     return (
         <div className="ops anim-fade-up">
             <ComponentIssuesAlert />
-            {BRIEF_ROLES.has(String(user?.role ?? '').toLowerCase()) && <RunningBehind />}
-            {BRIEF_ROLES.has(String(user?.role ?? '').toLowerCase()) && <MorningBrief />}
+            {BRIEF_ROLES.has(String(user?.role ?? '').toLowerCase()) && (isKelvinOn(settings?.features)
+              ? <KelvinNotes page="dashboard" limit={5} />
+              : <><RunningBehind /><FreedTime /><MorningBrief /></>)}
 
             <section aria-label="Today" className="ops-panel ops-today">
             <header className="ops-top">
