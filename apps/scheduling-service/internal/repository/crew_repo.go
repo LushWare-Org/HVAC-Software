@@ -278,12 +278,22 @@ func (r *CrewRepository) SetCrew(
 	}
 
 	// Insert anyone new. ON CONFLICT covers a technician being re-added after
-	// having been cancelled earlier in the same job's life.
+	// having been cancelled earlier in the same job's life. New rows take the
+	// job's own time: without it, conflict checks and the slot finder (which
+	// read assignment times) saw the added technician as free all day.
 	for _, techID := range in.TechnicianIDs {
 		if _, err = tx.Exec(ctx, `
 			INSERT INTO scheduling.dispatch_assignments
-			       (company_id, job_id, technician_id, status, assigned_by, is_lead)
-			VALUES ($1, $2, $3, 'ASSIGNED', $4, false)
+			       (company_id, job_id, technician_id, status, assigned_by, is_lead,
+			        scheduled_start, scheduled_end)
+			SELECT $1, $2, $3, 'ASSIGNED', $4, false,
+			       -- jobs.jobs keeps UTC wall-clock without a zone (Prisma); say so,
+			       -- rather than let the session's TimeZone decide the instant.
+			       j."scheduledStart" AT TIME ZONE 'UTC',
+			       COALESCE(j."scheduledEnd",
+			                j."scheduledStart" + make_interval(mins => COALESCE(j."estimatedDurationMins", 90))) AT TIME ZONE 'UTC'
+			FROM   (SELECT 1) one
+			LEFT JOIN jobs.jobs j ON j.id = $2 AND j."companyId" = $1
 			ON CONFLICT (job_id, technician_id) WHERE status <> 'CANCELLED'
 			DO NOTHING`,
 			companyID, jobID, techID, actorID); err != nil {

@@ -64,6 +64,10 @@ func main() {
 	crewH := handler.NewCrewHandler(crewRepo, candidateSvc, simSvc, hub)
 	gpsH := handler.NewGPSHandler(techRepo, assignRepo, hub)
 	wsH := handler.NewWebSocketHandler(hub)
+	slotRepo := repository.NewSlotRepository(db)
+	slotH := handler.NewSlotHandler(service.NewSlotService(slotRepo))
+	disruptionH := handler.NewDisruptionHandler(service.NewDisruptionService(slotRepo))
+	availabilityH := handler.NewAvailabilityHandler(slotRepo)
 
 	// ── 7. Configure Gin router ──────────────────────────────────────────
 	if os.Getenv("GIN_MODE") == "" {
@@ -154,6 +158,21 @@ func main() {
 			crewH.SetLead,
 		)
 		dispatch.GET("/candidates", crewH.Candidates)
+		// Open times for a visit; customers get times only (see SlotHandler).
+		dispatch.GET("/slots", slotH.Find)
+		dispatch.GET("/disruptions",
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
+			disruptionH.Today)
+		// Technicians' days off and different hours (technician_shifts).
+		dispatch.GET("/availability",
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
+			availabilityH.List)
+		dispatch.PUT("/availability/:technicianId/:date",
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
+			availabilityH.Set)
+		dispatch.DELETE("/availability/:technicianId/:date",
+			middleware.RequireRole("super_admin", "company_admin", "office_manager", "dispatcher"),
+			availabilityH.Clear)
 
 		// GPS simulation — trial tool, inert unless ENABLE_GPS_SIMULATION=true.
 		dispatch.GET("/simulate/status", crewH.SimulationStatus)
