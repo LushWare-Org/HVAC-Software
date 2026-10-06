@@ -2964,6 +2964,60 @@ img {
 .ops-money-alert { color: var(--red); }
 @media (max-width: 760px) { .ops-money { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ops-stage { min-width: 72px; padding: 8px 10px; } }
 
+/* ── Today's sheet (morning brief) ─────────────────────────────────────────
+   Read like a dispatcher's day sheet: a calendar leaf for the day it covers,
+   one headline, then ruled rows worked top to bottom. Urgency is a coloured
+   edge AND a word, never colour alone. Theme tokens only. */
+.brief { gap: 0; padding: 0; overflow: hidden; }
+.brief-head { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--bd); }
+.brief-leaf { width: 56px; flex-shrink: 0; border: 1px solid var(--bd-md); border-radius: var(--r-sm); text-align: center; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-card); }
+.brief-leaf-wd { font-size: 12px; font-weight: 600; color: var(--bg-card); background: var(--t1); padding: 2px 0; }
+.brief-leaf-day { font-size: 24px; font-weight: 600; line-height: 1.15; color: var(--t1); padding-top: 4px; }
+.brief-leaf-mo { font-size: 12px; color: var(--t3); padding-bottom: 4px; }
+.brief-headline-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.brief-headline { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.3; color: var(--t1); text-wrap: balance; }
+.brief-yesterday { margin: 0; font-size: 13px; color: var(--t3); }
+.brief-refresh { align-self: flex-start; }
+.brief-refresh:disabled { opacity: .6; cursor: progress; }
+
+.brief-rows { list-style: none; margin: 0; padding: 0; }
+.brief-row { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 4px 16px; align-items: start; padding: 14px 20px 14px 17px; border-left: 3px solid var(--tone); border-bottom: 1px solid var(--bd); }
+.brief-tag { font-size: 13px; font-weight: 600; color: var(--tone); padding-top: 1px; }
+.brief-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.brief-title { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.4; color: var(--t1); }
+.brief-why { margin: 0; font-size: 14px; line-height: 1.5; color: var(--t2); max-width: 70ch; }
+.brief-examples { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.brief-examples li { font-size: 13px; color: var(--t2); }
+.brief-examples li span { color: var(--t3); }
+.brief-examples li span::before { content: ', '; }
+.brief-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.brief-more { margin: 0; padding: 12px 20px; border: none; border-bottom: 1px solid var(--bd); background: transparent; color: var(--blue); font: inherit; font-size: 13px; font-weight: 500; text-align: left; cursor: pointer; }
+.brief-more:hover { background: var(--bg-hover); }
+.brief-clear { margin: 0; padding: 16px 20px; font-size: 14px; color: var(--t2); border-bottom: 1px solid var(--bd); }
+.brief-note { margin: 0; font-size: 14px; color: var(--t2); }
+.brief-foot { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 10px 20px; font-size: 12px; color: var(--t3); }
+.brief-failed { color: var(--amber); }
+.brief :is(button, a):focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.brief > .ops-panel-head, .brief .brief-note + div { padding: 0 20px 16px; }
+.brief:has(> .brief-note) { padding: 16px 20px; gap: 12px; }
+
+@media (max-width: 640px) {
+  .brief-head { flex-wrap: wrap; padding: 14px 16px; }
+  .brief-headline { font-size: 18px; }
+  .brief-refresh-text { display: none; }
+  .brief-refresh { align-self: center; }
+  .brief-row { grid-template-columns: minmax(0, 1fr); padding: 12px 16px 12px 13px; }
+  .brief-actions { justify-content: flex-start; margin-top: 6px; }
+  .brief-more, .brief-clear, .brief-foot { padding-left: 16px; padding-right: 16px; }
+}
+
+/* Running behind: the day sheet's rows, with fixes as a wrapping row of buttons. */
+.rb-head { padding-top: 14px; padding-bottom: 14px; }
+.rb-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.rb-option { height: auto; min-height: 36px; padding: 6px 12px; white-space: normal; text-align: left; line-height: 1.35; }
+.brief-row:has(.rb-options) { grid-template-columns: 110px minmax(0, 1fr); }
+@media (max-width: 640px) { .brief-row:has(.rb-options) { grid-template-columns: minmax(0, 1fr); } }
+
 .ops-skeleton { border-radius: var(--r-sm); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .ops-skeleton { animation: none; } }
 

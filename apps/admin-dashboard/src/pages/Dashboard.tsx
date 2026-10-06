@@ -19,6 +19,8 @@ import { usePendingTechnicians } from '../hooks/useTeam'
 import { useDashboardMoney, useUpcomingAppointments } from '../hooks/useDashboard'
 import { formatMoney } from '../lib/format'
 import RecommendationsPanel from '../components/RecommendationsPanel'
+import MorningBrief from './dashboard/MorningBrief'
+import RunningBehind from './dashboard/RunningBehind'
 import ComponentIssuesAlert from '../components/ComponentIssuesAlert'
 import AddJobModal from './jobs/AddJobModal'
 import type { Job, Technician } from '../types/api'
@@ -27,6 +29,8 @@ import { ago, buildAttention, buildLiveMoves, buildStages, buildTechRows, clock,
 const LiveMovesMap = lazy(() => import('./dashboard/LiveMovesMap'))
 
 const MONEY_ROLES = new Set(['super_admin', 'company_admin', 'office_manager'])
+/** Roles the analytics brief endpoint serves. */
+const BRIEF_ROLES = new Set(['super_admin', 'company_admin', 'office_manager', 'dispatcher'])
 
 const STAGE_TONE: Record<StageKey, { bg: string; fg: string }> = {
     DONE: { bg: 'var(--green-dim)', fg: 'var(--green)' },
@@ -190,6 +194,8 @@ export default function Dashboard() {
     return (
         <div className="ops anim-fade-up">
             <ComponentIssuesAlert />
+            {BRIEF_ROLES.has(String(user?.role ?? '').toLowerCase()) && <RunningBehind />}
+            {BRIEF_ROLES.has(String(user?.role ?? '').toLowerCase()) && <MorningBrief />}
 
             <section aria-label="Today" className="ops-panel ops-today">
             <header className="ops-top">
