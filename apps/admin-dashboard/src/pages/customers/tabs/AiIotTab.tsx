@@ -9,6 +9,7 @@ import { IotDevicesTab } from '../IotDevicesTab'
 import { formatMoney } from '../../../lib/format'
 import type { CustomerStatusSummary } from '../../../types/api'
 import { SectionLabel } from '../shared'
+import { useKelvinOn } from '../../../kelvin/KelvinMark'
 
 function formatPct(value: number) {
   if (!Number.isFinite(value)) return '0%'
@@ -94,11 +95,12 @@ function ReasoningCard({ title, result, accent, details }: {
 
 export default function AiIotTab({ customerId }: { customerId: string }) {
   const statusSummaryQuery = useCustomerStatusSummary(customerId || undefined)
+  const kelvin = useKelvinOn()
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       <div>
-        <SectionLabel icon={Sparkles}>AI Reasoning</SectionLabel>
+        <SectionLabel icon={Sparkles}>{kelvin ? "Kelvin's reasoning" : 'AI Reasoning'}</SectionLabel>
         {statusSummaryQuery.isLoading && (
           <div style={{ borderRadius: 12, border: '1px solid var(--bd)', background: 'var(--bg-card-2)', padding: 16 }}>
             <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', margin: 0 }}>Loading reasoning from customer status signals...</p>

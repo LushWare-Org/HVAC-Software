@@ -1,6 +1,6 @@
 export type Urgency = 'urgent' | 'soon' | 'quiet';
 export type Audience = 'dispatch' | 'money' | 'all';
-export type KelvinKind = 'BRIEF' | 'LATE' | 'TECH_OFF' | 'GAP' | 'EMERGENCY_UNASSIGNED' | 'RESCHEDULE_REQUEST' | 'NOTICE';
+export type KelvinKind = 'BRIEF' | 'LATE' | 'TECH_OFF' | 'GAP' | 'EMERGENCY_UNASSIGNED' | 'RESCHEDULE_REQUEST' | 'NOTICE' | 'ROUTINE' | 'OVERDUE' | 'LOW_STOCK' | 'SUGGESTION';
 export type SpeakMode = 'ALL' | 'URGENT_ONLY' | 'NEVER';
 
 /** One way to deal with an item: asking Kelvin, who shows a confirm card. */
@@ -14,7 +14,7 @@ export interface KelvinItem {
   title: string;
   why?: string;
   fixes: KelvinFix[];
-  anchor?: { page: 'dashboard' | 'jobs' | 'scheduling' | 'customers' | 'finance'; recordType?: 'job' | 'technician' | 'customer' | 'invoice'; recordId?: string };
+  anchor?: { page: 'dashboard' | 'jobs' | 'scheduling' | 'customers' | 'finance' | 'inventory'; recordType?: 'job' | 'technician' | 'customer' | 'invoice'; recordId?: string };
   audience: Audience;
   createdAt: string;
   expiresAt?: string;
@@ -23,7 +23,7 @@ export interface KelvinItem {
   seen?: boolean;
 }
 
-export interface KelvinPrefs { speakMode: SpeakMode; quietUntil: string | null }
+export interface KelvinPrefs { speakMode: SpeakMode; quietUntil: string | null; tone?: 'FRIENDLY' | 'SHORT' | 'FORMAL' }
 
 export interface KelvinFeed {
   items: KelvinItem[];

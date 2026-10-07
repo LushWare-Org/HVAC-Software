@@ -189,3 +189,50 @@ body.kelvin-open .kv-pill .kv-pill-ask { display: none; }
 .kv-by { margin: 0; font-size: 12px; color: var(--t3); }
 
 .kv-panel .kv-ripple { display: none; }
+
+/* Plan cards: the steps in order. Unticked steps fade; after running, each shows what happened. */
+.kv-steps { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; counter-reset: step; }
+.kv-step { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; padding: 7px 8px; border-radius: 10px; transition: opacity 160ms var(--ease), background 160ms var(--ease); }
+.kv-step:hover { background: var(--bg-hover); }
+.kv-step.is-off { opacity: .45; }
+.kv-step input[type="checkbox"] { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--t1); cursor: pointer; }
+.kv-step-mark { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--t3); border: 1px solid var(--bd-md); }
+.kv-step.is-done .kv-step-mark { background: var(--green); border-color: var(--green); color: #fff; animation: kv-tick 300ms cubic-bezier(.2,1.4,.4,1); }
+.kv-step.is-failed .kv-step-mark { background: var(--amber); border-color: var(--amber); color: #fff; }
+.kv-step.is-skipped, .kv-step.is-not_run { opacity: .5; }
+.kv-step-body { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.kv-step-title { font-size: 13.5px; font-weight: 600; color: var(--t1); }
+.kv-step-lines { font-size: 12px; color: var(--t3); line-height: 1.45; }
+.kv-step-sends { display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--k-1900); }
+.kv-step-error { font-size: 12px; color: var(--amber); }
+/* Bulk cards: a count with tick all, a scrolling list, and what was left out. */
+.kv-steps-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; font-size: 12px; color: var(--t3); }
+.kv-steps.is-many { max-height: 340px; overflow-y: auto; overscroll-behavior: contain; margin-right: -4px; padding-right: 4px; }
+.kv-steps.is-many .kv-step { padding: 5px 8px; }
+.kv-card-notes { list-style: none; margin: 0; padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; border-radius: 10px; background: var(--bg-hover); font-size: 12px; line-height: 1.45; color: var(--t2); }
+.kv-card.is-undo::before { background: var(--t3); }
+.kv-card-actions .ops-btn svg { margin-right: 2px; }
+@keyframes kv-tick { from { transform: scale(.4) } }
+@media (prefers-reduced-motion: reduce) { .kv-step.is-done .kv-step-mark { animation: none; } }
+.kv-card .ops-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* What Kelvin remembers, and routines, on his desk. */
+.kv-memory { border-top: 1px solid var(--bd); padding-top: 16px; }
+.kv-prefs .kv-prefs-h2 { margin-top: 18px; }
+.kv-mem-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.kv-mem-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "text act" "meta act"; column-gap: 12px; align-items: center; padding: 8px 12px; border: 1px solid var(--bd); border-radius: var(--r-md); }
+.kv-mem-text { grid-area: text; font-size: 14px; color: var(--t1); overflow-wrap: anywhere; }
+.kv-mem-meta { grid-area: meta; font-size: 12px; color: var(--t3); }
+.kv-mem-list li > .kv-link, .kv-mem-actions { grid-area: act; }
+.kv-mem-actions { display: flex; gap: 12px; }
+.kv-link:disabled { opacity: .45; cursor: not-allowed; }
+/* Starter requests on the desk, the same keys as in the panel. */
+.kv-starters { display: flex; flex-wrap: wrap; gap: 8px; }
+.kv-chip { min-height: 36px; padding: 6px 12px; border: 1px solid var(--bd-md); border-bottom-width: 3px; border-radius: 10px; background: var(--bg-card); color: var(--t2); font: inherit; font-size: 12.5px; cursor: pointer; transition: transform 120ms var(--ease), border-color 120ms var(--ease); }
+.kv-chip:hover { border-color: var(--t3); }
+.kv-chip:active { transform: translateY(1px); }
+/* Kelvin's mark on the product's AI: his face and a label. */
+.kv-mark { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.kv-mark-label { font-weight: 600; color: var(--t1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kv-ask-btn { display: inline-flex; align-items: center; gap: 6px; }
+.kv-ask-btn .kv-face { transform: scale(.8); margin: -2px -2px -2px -4px; }

@@ -9,6 +9,7 @@ import IntakeStockModal from './IntakeStockModal'
 import TransferStockModal from './TransferStockModal'
 import CreatePurchaseOrderModal from './CreatePurchaseOrderModal'
 import { formatMoney } from '../../lib/format'
+import KelvinNotes from '../../kelvin/KelvinNotes'
 
 // ─── Status CSS maps ──────────────────────────────────────────────────────────
 
@@ -135,6 +136,8 @@ export default function Inventory() {
           </div>
         ))}
       </div>
+
+      <KelvinNotes page="inventory" />
 
       {/* Tabs */}
       <div className="page-tabs">

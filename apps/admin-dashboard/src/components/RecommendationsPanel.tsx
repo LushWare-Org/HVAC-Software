@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useRecommendations } from '../hooks/useAnalytics'
 import type { Recommendation } from '../types/api'
+import KelvinMark, { AskKelvin } from '../kelvin/KelvinMark'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -324,6 +325,7 @@ function RecommendationCard({
           <HelpCircle size={12} />
           Reason
         </button>
+        <AskKelvin request={`About your suggestion "${rec.title}": ${rec.reason} What should we do? Prepare it if you can.`} />
         <button
           className="btn btn-secondary btn-sm"
           style={{ width: 'fit-content', justifyContent: 'center' }}
@@ -421,8 +423,9 @@ export default function RecommendationsPanel({
         style={{ padding: '14px 18px', cursor: 'pointer' }}
       >
         <div className="flex items-center gap-2.5">
-          <AiBadge />
-          <div className="card-title text-[14px]" style={{ margin: 0 }}>AI recommendations</div>
+          <KelvinMark fallback={<><AiBadge /><div className="card-title text-[14px]" style={{ margin: 0 }}>AI recommendations</div></>}>
+            Kelvin's suggestions
+          </KelvinMark>
           {!isLoading && visible.length > 0 && (
             <span style={{
               fontSize: 11, fontWeight: 700,

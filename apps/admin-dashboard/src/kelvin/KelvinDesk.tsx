@@ -5,8 +5,9 @@ import { m } from 'motion/react'
 import { useAuth } from '../contexts/AuthContext'
 import { useKelvin } from './KelvinProvider'
 import KelvinFace from './KelvinFace'
+import KelvinMemory from './KelvinMemory'
 import { fetchToday } from './api'
-import { ago, greeting, suggestions } from './desk'
+import { byLine, greeting, suggestions } from './desk'
 import type { KelvinItem } from './types'
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }).toLowerCase()
@@ -72,6 +73,7 @@ export default function KelvinDesk() {
           </ol>
         </section>
       </div>
+      <KelvinMemory />
     </div>
   )
 }
@@ -84,7 +86,7 @@ function DeskItem({ item }: { item: KelvinItem }) {
       <p className="kv-item-title">{item.title}</p>
       {item.why && <p className="kv-item-why">{item.why}</p>}
       <span className="kv-heatline" aria-hidden="true" />
-      <p className="kv-by">{item.kind === 'BRIEF' ? "From Kelvin's morning brief" : `Found by Kelvin${ago(item.createdAt) ? `, ${ago(item.createdAt)}` : ''}`}</p>
+      <p className="kv-by">{byLine(item)}</p>
       <div className="kv-item-fixes">
         {item.fixes.map(f => <button key={f.request} type="button" className="ops-btn ops-btn-sm" onClick={() => k.applyFix(item, f)}>{f.label}</button>)}
         <button type="button" className="kv-link" onClick={() => k.dismiss(item)}>Dismiss</button>

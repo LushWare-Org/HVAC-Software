@@ -57,9 +57,11 @@ describe('KelvinLogService', () => {
   it('defaults preferences and validates the mode', async () => {
     const prisma = fakePrisma();
     const svc = new KelvinLogService(prisma as any);
-    expect(await svc.prefs('co', 'u')).toEqual({ speakMode: 'ALL', quietUntil: null });
+    expect(await svc.prefs('co', 'u')).toEqual({ speakMode: 'ALL', quietUntil: null, tone: 'FRIENDLY' });
     await expect(svc.setPrefs('co', 'u', { speakMode: 'LOUD' as any })).rejects.toThrow('speakMode');
     const saved = await svc.setPrefs('co', 'u', { speakMode: 'URGENT_ONLY', quietUntil: '2026-10-06T18:30:00.000Z' });
-    expect(saved).toEqual({ speakMode: 'URGENT_ONLY', quietUntil: '2026-10-06T18:30:00.000Z' });
+    expect(saved).toEqual({ speakMode: 'URGENT_ONLY', quietUntil: '2026-10-06T18:30:00.000Z', tone: 'FRIENDLY' });
+    await expect(svc.setPrefs('co', 'u', { tone: 'SHOUTY' as any })).rejects.toThrow('tone');
+    expect((await svc.setPrefs('co', 'u', { tone: 'SHORT' })).tone).toBe('SHORT');
   });
 });

@@ -30,7 +30,7 @@ describe('reassign_job', () => {
     expect(p.title).toBe('Give JOB-0412 to Kasun Fernando');
     expect(p.lines[1]).toMatch(/^From Nuwan Silva to Kasun Fernando, /);
     expect(p.lines).toContain('1 helper stays on the job.');
-    expect(p.args).toEqual({ jobId: 'j-1', technicianIds: ['t-k', 't-h'], leadTechnicianId: 't-k' });
+    expect(p.args).toMatchObject({ jobId: 'j-1', technicianIds: ['t-k', 't-h'], leadTechnicianId: 't-k' });
   });
 
   it('refuses once the technician is on the way, or when nobody is assigned yet', async () => {
@@ -47,6 +47,18 @@ describe('reassign_job', () => {
     await expect(tool('reassign_job').preview!({ jobId: 'j-1', technician: 'a' }, ctx, vague.http)).rejects.toThrow('No single technician');
   });
 
+  it('undo hands it back, unless it was given to someone else since', async () => {
+    const { http } = fakeHttp({ 'GET /jobs/j-1': job, 'GET /dispatch/jobs/j-1/crew': crew, 'GET /technicians': techs });
+    const p = await tool('reassign_job').preview!({ jobId: 'j-1', technician: 'kasun' }, ctx, http);
+    const back = tool('reassign_job').reverse!(p.args!, { done: true }, ctx)!;
+    expect(back).toEqual({ tool: 'reassign_job', args: { jobId: 'j-1', technician: 't-n', expectLeadId: 't-k' }, title: 'Give JOB-0412 back to Nuwan Silva' });
+    const kasunNow = { data: [{ assignment: { isLead: true }, technician: { id: 't-k', name: 'Kasun Fernando' } }, crew.data[1]] };
+    const ok = await tool('reassign_job').preview!(back.args, ctx, fakeHttp({ 'GET /jobs/j-1': job, 'GET /dispatch/jobs/j-1/crew': kasunNow, 'GET /technicians': techs }).http);
+    expect(ok.args).toMatchObject({ technicianIds: ['t-n', 't-h'], leadTechnicianId: 't-n' });
+    await expect(tool('reassign_job').preview!(back.args, ctx, fakeHttp({ 'GET /jobs/j-1': job, 'GET /dispatch/jobs/j-1/crew': crew }).http))
+      .rejects.toThrow('given to someone else since');
+  });
+
   it('changes the crew in one call', async () => {
     const { http, calls } = fakeHttp({ 'PATCH /dispatch/jobs/j-1/crew': {} });
     await tool('reassign_job').run({ jobId: 'j-1', technicianIds: ['t-k'], leadTechnicianId: 't-k' }, ctx, http);
@@ -59,6 +71,7 @@ describe('message_customer', () => {
     const { http, calls } = fakeHttp({ 'GET /jobs/j-1': job, 'POST /messaging/threads': { id: 'th' }, 'POST /messaging/threads/th/messages': {} });
     const p = await tool('message_customer').preview!({ jobId: 'j-1', message: 'Nuwan is running 20 minutes late.' }, ctx, http);
     expect(p.lines).toEqual(['About JOB-0412: AC repair', '"Nuwan is running 20 minutes late."']);
+    expect(tool('message_customer').sends!(p.args!)).toBe('Message to Sara Perera');
     await tool('message_customer').run(p.args!, ctx, http);
     expect(calls.slice(-2).map((c) => c.body)).toEqual([
       { customerId: 'c-1', customerName: 'Sara Perera', subject: 'About JOB-0412', jobId: 'j-1' },

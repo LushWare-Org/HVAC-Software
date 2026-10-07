@@ -94,7 +94,7 @@ describe('create_job', () => {
     const created = { id: 'j-new', jobNumber: 'JOB-0452' };
     const args = { dto: { customerId: 'c-rr', customerName: 'R&R Brothers (pvt) LTD', title: 'x', scheduledStart: 's', scheduledEnd: 'e', serviceLatitude: 6.9, serviceLongitude: 79.85 }, technicianId: 't-k', technicianName: 'Kasun' };
     const okRun = http({ 'POST jobs /jobs': created, 'POST scheduling /dispatch/assign/manual': {} });
-    expect(await CREATE_JOB.run(args, ctx, okRun.client)).toEqual({ done: true, jobId: 'j-new', jobNumber: 'JOB-0452', summary: 'Created JOB-0452 for R&R Brothers (pvt) LTD, with Kasun', recordRef: 'job:j-new' });
+    expect(await CREATE_JOB.run(args, ctx, okRun.client)).toEqual({ done: true, jobId: 'j-new', id: 'j-new', jobNumber: 'JOB-0452', customerId: 'c-rr', customerName: 'R&R Brothers (pvt) LTD', summary: 'Created JOB-0452 for R&R Brothers (pvt) LTD, with Kasun', recordRef: 'job:j-new' });
     const failRun = http({ 'POST jobs /jobs': created, 'POST scheduling /dispatch/assign/manual': Object.assign(new Error('busy'), { response: { status: 409, data: { error: 'Kasun is already booked' } } }) });
     const r: any = await CREATE_JOB.run(args, ctx, failRun.client);
     expect(r.summary).toBe('Created JOB-0452 for R&R Brothers (pvt) LTD. Assigning Kasun failed (Kasun is already booked), so it is in the unassigned list');
@@ -108,5 +108,29 @@ describe('create_job', () => {
     const out = await confirmAction(token, ctx, 'admin');
     expect(out).toMatchObject({ ok: true, message: 'Done: Created JOB-0452 for R&R.' });
     expect(add.mock.calls[0][1]).toMatchObject({ type: 'ACTION_DONE', action: 'create_job', summary: 'Created JOB-0452 for R&R', recordRef: 'job:j-new', confirmedBy: 'u' });
+  });
+});
+
+describe('create_job inside a plan', () => {
+  const scope = (rec: Record<string, unknown>) => ({ pending: (ref: string) => (ref.startsWith('@1') ? rec : undefined) });
+  const newCustomer = { customerId: '@1', firstName: 'R&R', lastName: 'Brothers', phone: '0771234567', email: 'ops@rr.lk', address: '12 Galle Rd', city: 'Colombo' };
+
+  it('uses a customer the plan creates earlier, keeping the reference for the run', async () => {
+    const p = await CREATE_JOB.preview!({ customerId: '@1.customerId', title: 'AC not cooling' }, ctx, http({}).client, scope(newCustomer));
+    expect(p.title).toBe('Create a job for R&R Brothers');
+    expect(p.lines).toContain('Customer: R&R Brothers (new)');
+    expect((p.args as any).dto).toMatchObject({ customerId: '@1.customerId', customerName: 'R&R Brothers', serviceAddress: '12 Galle Rd', customerPhone: '0771234567' });
+    expect(CREATE_JOB.provides!(p.args as any, p)).toMatchObject({ jobId: '@pending', customerName: 'R&R Brothers' });
+  });
+
+  it('books an agreement visit when given an agreement', async () => {
+    const p = await CREATE_JOB.preview!({ customerId: 'c-rr', title: 'Annual service', agreementId: 'ag-1' }, ctx, http({ 'GET crm /customers/c-rr': rr }).client);
+    expect((p.args as any).dto).toMatchObject({ agreementId: 'ag-1', isAgreementJob: true });
+    expect(p.lines).toContain('Part of a service agreement');
+  });
+
+  it('undo cancels the job it created', () => {
+    expect(CREATE_JOB.reverse!({ dto: { customerName: 'R&R' } }, { jobId: 'j-new', jobNumber: 'JOB-0452' }, ctx))
+      .toEqual({ tool: 'cancel_job', args: { jobId: 'j-new', reason: 'Undone in Kelvin' }, title: 'Cancel JOB-0452' });
   });
 });

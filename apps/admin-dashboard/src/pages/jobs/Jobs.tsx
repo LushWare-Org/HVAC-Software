@@ -16,6 +16,7 @@ import RecommendationsPanel from "../../components/RecommendationsPanel";
 import Avatar from "../../components/Avatar";
 import KelvinNotes from '../../kelvin/KelvinNotes'
 import { useKelvinContext } from '../../kelvin/useKelvinContext'
+import { KelvinIcon } from '../../kelvin/KelvinMark'
 
 const STATUS: Record<string, { label: string; css: string }> = {
   PENDING:     { label: "Pending",     css: "badge-amber" },
@@ -422,7 +423,7 @@ export default function Jobs() {
       {/* AI recommendation deep-link banner */}
       {utilizationFilterActive && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "color-mix(in srgb, var(--amber) 10%, transparent)", borderRadius: 8, marginBottom: 12, color: "var(--amber)", fontSize: 13, fontWeight: 500 }}>
-          <Sparkles size={14} />
+          <KelvinIcon fallback={<Sparkles size={14} />} />
           Showing jobs from the High Utilization recommendation — scheduled in the next {forecastDays} day{forecastDays !== 1 ? 's' : ''}.
           <button onClick={clearUtilizationFilter} style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4, color: "var(--amber)", background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
             <X size={12} /> Clear filter

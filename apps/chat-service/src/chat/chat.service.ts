@@ -8,7 +8,9 @@ import { PromptService, BotType } from '../prompts/prompt.service';
 import { signAction } from '../agent/action-token';
 import { toolsFor, toOpenAiTools, withoutKelvinOnly } from '../agent/registry';
 import { ServiceHttp, serviceErrorMessage } from '../agent/service-http';
-import { ToolRefusal, type AgentContext, type AgentTool } from '../agent/types';
+import { ToolRefusal, type ActionPreview, type AgentContext, type AgentTool } from '../agent/types';
+import { PLAN_TOOL } from '../agent/plan/plan';
+import { loadMind, mindPrompt } from '../kelvin/mind';
 
 export interface ChatTurn {
   role: 'user' | 'assistant';
@@ -26,7 +28,7 @@ const one = (v: unknown, max: number) => String(v ?? '').replace(/\s+/g, ' ').tr
 export type ChatEvent =
   | { type: 'chunk'; text: string }
   | { type: 'status'; text: string }
-  | { type: 'action'; action: { token: string; id: string; title: string; lines: string[] } };
+  | { type: 'action'; action: { token: string; id: string; title: string; lines: string[]; steps?: ActionPreview['steps']; notes?: string[] } };
 
 /** Tool rounds per message, so a confused model cannot loop forever. */
 const MAX_ROUNDS = 6;
@@ -80,6 +82,35 @@ export function contextPrompt(ctx: AgentContext, tools: AgentTool[], now = new D
       'After it is created, offer one sensible next step once.',
     );
   }
+  if (tools.some((t) => t.name === 'propose_plan')) {
+    parts.push(
+      '## Doing several things at once\n' +
+      '- When a request needs more than one change (e.g. a new customer, then a job, then a quote), use propose_plan with every step, so the person confirms once. ' +
+      'Refer to what an earlier step creates with "@N.customerId", "@N.jobId", "@N.quoteId" or "@N.invoiceId".\n' +
+      '- Look things up first (find_customers, search_price_book, find_open_times). If a customer already exists, use them instead of creating a new one.\n' +
+      '- Prices come only from the price book (search_price_book). Never invent a price: if an item is not there, ask the person for its price, ' +
+      'then use it with statedByPerson: true.\n' +
+      '- Sending a quote or invoice, and recording a payment, reach the customer (a payment emails a receipt at once). These cannot be undone, so say so in your sentence.\n' +
+      '- For a due service agreement, use find_agreements_due; if a visit is already waiting, schedule that job rather than creating another.\n' +
+      '- After a change runs, the person can undo it for 10 minutes from the card. If they ask to undo, tell them to press Undo on the card.',
+    );
+  }
+  if (tools.some((t) => t.name === 'customer_health')) {
+    parts.push(
+      '## What you already know\n' +
+      '- All the AI in this product is yours: the suggestions (get_suggestions), each customer\'s health and churn risk (customer_health), ' +
+      'stock levels (low_stock_items) and the morning brief. Use them for "who should we call?", "is this customer happy?" or "what should I focus on?", ' +
+      'then offer to prepare the action.',
+    );
+  }
+  if (tools.some((t) => t.name === 'fill_unassigned_jobs')) {
+    parts.push(
+      '## Many at once\n' +
+      '- For the same change to many jobs or invoices, use the bulk actions instead of listing steps yourself: fill_unassigned_jobs, move_technician_day, ' +
+      'hand_over_day, message_day_customers, chase_overdue_invoices. They pick the items and show one card with a tick box per item.\n' +
+      '- In your sentence, say how many are on the card and mention anything left out (the card\'s notes). Never list every item again in text.',
+    );
+  }
   if (page?.label) {
     const rec = page.record?.id
       ? ` with ${one(page.record.type, 20)} ${one(page.record.label, 120)} open (id ${one(page.record.id, 60)}). "This ${one(page.record.type, 20)}" means that one.`
@@ -87,6 +118,12 @@ export function contextPrompt(ctx: AgentContext, tools: AgentTool[], now = new D
     parts.push(`## On screen\nThe person is on the ${one(page.label, 40)} page${page.filter ? ` (filter: ${one(page.filter, 40)})` : ''}${rec}`);
   }
   return parts.join('\n\n');
+}
+
+/** The lines on a single action's card: a step that reaches the customer says so, since it can't be undone. */
+export function cardLines(tool: Pick<AgentTool, 'sends'>, preview: ActionPreview): string[] {
+  const sent = tool.sends?.((preview.args ?? {}) as Record<string, any>);
+  return sent ? [...preview.lines, `✉ ${sent}. This can't be undone.`] : preview.lines;
 }
 
 @Injectable()
@@ -126,9 +163,13 @@ export class ChatService {
     }
 
     const tools = withoutKelvinOnly(toolsFor(botType, ctx.role), settings.features);
+    // What the person typed, so a price "they gave" can be checked against their own words.
+    ctx.said = [...req.history.filter((t) => t.role === 'user').map((t) => t.content), req.message].join('\n').slice(-4000);
+    // Kelvin's notes, habits and tone: only for companies with Kelvin, and never blocking the chat.
+    const mind = tools.some((t) => t.name === 'remember') ? `\n\n${mindPrompt(await loadMind(http))}` : '';
     const model = this.llm.modelData;
     const messages: ChatCompletionMessageParam[] = [
-      { role: 'system', content: `${this.prompts.forBot(botType)}\n\n${contextPrompt(ctx, tools, new Date(), req.context)}` },
+      { role: 'system', content: `${this.prompts.forBot(botType)}\n\n${contextPrompt(ctx, tools, new Date(), req.context)}${mind}` },
       ...req.history.slice(-10).map((t) => ({ role: t.role, content: t.content }) as ChatCompletionMessageParam),
       { role: 'user', content: req.message },
     ];
@@ -193,11 +234,13 @@ export class ChatService {
 
       yield { type: 'status', text: `Preparing ${human(tool.name)}…` };
       const preview = await tool.preview!(args, ctx, http);
-      const { token, id } = signAction({ tool: tool.name, args: preview.args ?? args, title: preview.title, lines: preview.lines }, ctx);
-      yield { type: 'action', action: { token, id, title: preview.title, lines: preview.lines } };
+      const lines = preview.steps ? preview.lines : cardLines(tool, preview);
+      // A card with steps (propose_plan, or a bulk change) runs as a plan.
+      const { token, id } = signAction({ tool: preview.steps ? PLAN_TOOL : tool.name, args: preview.args ?? args, title: preview.title, lines }, ctx);
+      yield { type: 'action', action: { token, id, title: preview.title, lines, ...(preview.steps && { steps: preview.steps }), ...(preview.notes?.length && { notes: preview.notes }) } };
       return {
         status: 'awaiting_confirmation',
-        shownToPerson: { title: preview.title, details: preview.lines },
+        shownToPerson: { title: preview.title, details: preview.lines, ...(preview.notes?.length && { notes: preview.notes }) },
         note: 'Nothing has changed yet. The person will press Confirm or Cancel on the card.',
       };
     } catch (err) {

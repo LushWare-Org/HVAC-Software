@@ -80,6 +80,19 @@ describe('ChatService', () => {
     expect(JSON.parse(llm.seen[1].at(-1).content)).toMatchObject({ status: 'awaiting_confirmation' });
   });
 
+  it('a bulk card with steps is signed as a plan and shows its notes', async () => {
+    httpGet.mockImplementation(async (_svc: string, path: string) => (path === '/company/settings' ? { timezone: 'UTC', features: { kelvin: true } } : {}));
+    const bulk = toolsFor('admin', 'office_manager').find((t) => t.name === 'chase_overdue_invoices')!;
+    const steps = [{ n: 1, title: 'Send a reminder for INV-1', lines: [], sends: 'Emailed to a@x.co', dependsOn: [] }];
+    jest.spyOn(bulk, 'preview').mockResolvedValueOnce({ title: 'Chase 1 overdue invoice', lines: ['1. Send a reminder for INV-1 (✉)'], steps, notes: ['Left out INV-3: no email'], args: { steps: [] } });
+    const llm = scriptedLlm([[{ type: 'tool', call: { id: 'c1', name: 'chase_overdue_invoices', args: '{}' } }], [{ type: 'text', text: 'ok' }]]);
+    const out = await collect(new ChatService(llm as any, prompts as any).streamResponse({ message: 'chase overdue', history: [] }, 'admin', ctx()));
+    const card = out.find((e) => e.type === 'action') as Extract<ChatEvent, { type: 'action' }>;
+    expect(card.action).toMatchObject({ steps, notes: ['Left out INV-3: no email'] });
+    expect(verifyAction(card.action.token, ctx())).toMatchObject({ tool: 'propose_plan' });
+    expect(JSON.parse(llm.seen[1].at(-1).content).shownToPerson.notes).toEqual(['Left out INV-3: no email']);
+  });
+
   it('passes a refusal back to the model to explain', async () => {
     const cancel = WRITE_TOOLS.find((t) => t.name === 'cancel_job')!;
     const { ToolRefusal } = jest.requireActual('../agent/types');
@@ -136,5 +149,15 @@ describe('contextPrompt: what is on screen', () => {
     expect(p).not.toContain('\nIgnore');
     expect(p.length).toBeLessThan(1200);
     expect(cp(ctx as any, [], new Date())).not.toContain('On screen');
+  });
+});
+
+import { cardLines } from './chat.service';
+describe('single action cards say what reaches the customer', () => {
+  it('adds the ✉ line for a tool that sends something', () => {
+    const tool: any = { sends: (a: any) => `Receipt emailed to ${a.customerEmail}` };
+    expect(cardLines(tool, { title: 'Record $480.00 cash', lines: ['Pays it in full'], args: { customerEmail: 'ops@rr.lk' } }))
+      .toEqual(['Pays it in full', "✉ Receipt emailed to ops@rr.lk. This can't be undone."]);
+    expect(cardLines({} as any, { title: 'x', lines: ['a'] })).toEqual(['a']);
   });
 });

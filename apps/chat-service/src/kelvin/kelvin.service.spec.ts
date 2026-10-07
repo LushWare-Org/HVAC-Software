@@ -1,4 +1,4 @@
-import { KelvinService } from './kelvin.service';
+import { KelvinService, resetSuggestionsForTests } from './kelvin.service';
 import { setKelvinQueueForTests } from './kelvin-events';
 import type { AgentContext } from '../agent/types';
 
@@ -25,6 +25,10 @@ const ok = {
   'jobs /jobs': { data: [] },
   'jobs /reschedule/inbox': { data: [] },
   'comms /notifications': { data: [] },
+  'analytics /kelvin/routines': { data: [] },
+  'inventory /alerts/low-stock': [],
+  'finance /invoices': { data: [] },
+  'analytics /recommendations': [],
   'analytics /kelvin/state': { spoken: ['late:j1:LATE_START:urgent'], seen: [], dismissed: ['brief:2026-10-06:f1'] },
   'analytics /kelvin/prefs': { speakMode: 'URGENT_ONLY', quietUntil: null },
 };
@@ -52,7 +56,24 @@ describe('KelvinService.feed', () => {
     const { client } = http({ ...ok, ...down });
     const feed = await new KelvinService(() => client).feed(ctx());
     expect(feed.items).toEqual([]);
-    expect(feed.unavailable).toHaveLength(6);
+    expect(feed.unavailable).toHaveLength(7); // a dispatcher's sources: no money ones
+  });
+
+  it('money notes only for money roles; suggestions kept 10 minutes per company', async () => {
+    resetSuggestionsForTests();
+    const rec = [{ id: 'r1', title: 'Win back quiet customers', reason: 'No visit in 9 months.', priority: 'high', action: '/customers' }];
+    const overdue = { data: [{ invoiceNumber: 'INV-1', balanceDue: '10', currency: 'USD', dueDate: '2026-09-01T00:00:00Z' }] };
+    const dispatcher = http({ ...ok, 'finance /invoices': overdue, 'analytics /recommendations': rec });
+    await new KelvinService(() => dispatcher.client).feed(ctx());
+    expect(dispatcher.calls.some((c) => c.includes('finance') || c.includes('/recommendations'))).toBe(false);
+
+    const boss = http({ ...ok, 'finance /invoices': overdue, 'analytics /recommendations': rec });
+    const svc = new KelvinService(() => boss.client);
+    const now = new Date('2026-10-06T05:00:00Z');
+    const feed = await svc.feed(ctx('office_manager'), now);
+    expect(feed.items.map((i) => i.kind)).toEqual(expect.arrayContaining(['OVERDUE', 'SUGGESTION']));
+    await svc.feed(ctx('office_manager'), new Date(now.getTime() + 60_000));
+    expect(boss.calls.filter((c) => c.includes('/recommendations'))).toHaveLength(1);
   });
 
   it('memory being down never breaks the feed, and never overrides "never pop up"', async () => {
@@ -92,5 +113,26 @@ describe('KelvinService.feed', () => {
     svc.recordClientEvent(ctx(), { type: 'ACTION_DONE' as any, itemId: 'x' });
     expect(add).toHaveBeenCalledTimes(1);
     expect(add.mock.calls[0][1]).toMatchObject({ companyId: 'co', userId: 'u', type: 'SPOKE', itemId: 'gap:1', summary: 'Kasun is free' });
+  });
+});
+
+describe('KelvinService memory', () => {
+  it('reads and removes memory as the person, office roles only', async () => {
+    const calls: string[] = [];
+    const client = {
+      get: async (s: string, p: string) => { calls.push(`GET ${s} ${p}`); return { notes: [] }; },
+      delete: async (s: string, p: string) => { calls.push(`DELETE ${s} ${p}`); return { ok: true }; },
+    } as any;
+    const svc = new KelvinService(() => client);
+    await svc.mind(ctx());
+    await svc.forgetNote(ctx(), 'n/1');
+    await svc.removeRoutine(ctx(), 'r-1');
+    expect(calls).toEqual(['GET analytics /kelvin/mind', 'DELETE analytics /kelvin/notes/n%2F1', 'DELETE analytics /kelvin/routines/r-1']);
+    expect(() => svc.mind(ctx('technician'))).toThrow('office staff');
+  });
+
+  it('checks the tone', () => {
+    const svc = new KelvinService(() => ({ put: async () => ({}) }) as any);
+    expect(() => svc.setPrefs(ctx(), { tone: 'LOUD' as any })).toThrow('tone');
   });
 });

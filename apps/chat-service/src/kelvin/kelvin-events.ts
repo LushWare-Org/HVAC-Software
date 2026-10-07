@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { QueueName, createQueue, type Queue } from '@tscrm/queue';
 
-export type KelvinEventType = 'SHOWN' | 'SPOKE' | 'DISMISSED' | 'FIX_USED' | 'ACTION_DONE' | 'ACTION_FAILED';
+export type KelvinEventType = 'SHOWN' | 'SPOKE' | 'DISMISSED' | 'FIX_USED' | 'ACTION_DONE' | 'ACTION_FAILED' | 'STEP_SKIPPED';
 export interface KelvinEventInput {
   companyId: string;
   userId: string;

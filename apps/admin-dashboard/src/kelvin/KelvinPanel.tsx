@@ -5,7 +5,8 @@ import { queryClient } from '../lib/queryClient'
 import { useKelvin } from './KelvinProvider'
 import KelvinFace from './KelvinFace'
 import ActionCard from './ActionCard'
-import { confirmCard, streamChat, type ActionCardData } from './chatStream'
+import { confirmCard, streamChat, type ActionCardData, type UndoOffer } from './chatStream'
+import { countdown, isUndoCommand, skipList, toggleStep } from './plan'
 import { renderMarkdown } from './markdown'
 import { endOfLocalDay } from './speech'
 
@@ -35,6 +36,14 @@ export default function KelvinPanel() {
     const message = text.trim()
     if (!message || streaming) return
     setHistory(h => [...h, { role: 'user', content: message }])
+    // A plain "undo" uses the live undo card straight away; no need to ask the AI.
+    if (isUndoCommand(message)) {
+      setInput('')
+      const offer = lastUndo.current
+      if (offer && countdown(offer.expiresAt)) { lastUndo.current = null; pushUndo(offer) }
+      else setHistory(h => [...h, { role: 'assistant', content: "There's nothing to undo right now. Changes can be undone for 10 minutes after they run, from the card." }])
+      return
+    }
     setInput(''); setStreaming(true); setLive(''); setStatus('')
     try {
       const { text: reply, cards } = await streamChat({
@@ -61,17 +70,42 @@ export default function KelvinPanel() {
     if (p) void send(p)
   }, [k.panelOpen, k.pending]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const lastUndo = useRef<UndoOffer | null>(null)
+  const pushUndo = (offer: UndoOffer) =>
+    setHistory(h => [...h, { role: 'assistant', content: '', action: { token: offer.token, id: offer.id, title: offer.title, lines: offer.lines, state: 'pending', isUndo: true } }])
+
   const update = (id: string, patch: Partial<ActionCardData>) =>
     setHistory(h => h.map(t => (t.action?.id === id ? { ...t, action: { ...t.action, ...patch } } : t)))
 
   const confirm = useCallback(async (card: ActionCardData) => {
     update(card.id, { state: 'running' })
-    const { ok, message } = await confirmCard(card.token)
-    update(card.id, { state: ok ? 'done' : 'failed', result: message })
-    k.flashMood(ok ? 'pleased' : 'urgent')
-    setHistory(h => [...h, { role: 'assistant', content: ok ? `The person confirmed. ${message}` : `The person confirmed but it failed. ${message}`, hidden: true }])
-    if (ok) REFRESH_AFTER_ACTION.forEach(queryKey => queryClient.invalidateQueries({ queryKey }))
+    const skip = card.steps ? skipList(card.steps, new Set(card.ticked ?? [])) : []
+    const res = await confirmCard(card.token, skip)
+    update(card.id, { state: res.ok ? 'done' : 'failed', result: res.message, outcome: res.steps, undo: res.undo, cantUnsend: res.cantUnsend })
+    lastUndo.current = res.undo ?? null
+    k.flashMood(res.ok ? 'pleased' : 'urgent')
+    setHistory(h => [...h, { role: 'assistant', content: res.ok ? `The person confirmed. ${res.message}` : `The person confirmed but it did not all work. ${res.message}`, hidden: true }])
+    if (res.ok || res.steps?.some(o => o.status === 'done')) REFRESH_AFTER_ACTION.forEach(queryKey => queryClient.invalidateQueries({ queryKey }))
   }, [k])
+  const toggle = useCallback((card: ActionCardData, n: number, on: boolean) => {
+    if (!card.steps) return
+    update(card.id, { ticked: [...toggleStep(card.steps, new Set(card.ticked ?? []), n, on)] })
+  }, [])
+  const tickAll = useCallback((card: ActionCardData, on: boolean) => {
+    if (card.steps) update(card.id, { ticked: on ? card.steps.map(st => st.n) : [] })
+  }, [])
+  const undo = useCallback((card: ActionCardData) => {
+    if (!card.undo) return
+    const offer = card.undo
+    update(card.id, { undo: undefined })
+    if (lastUndo.current?.id === offer.id) lastUndo.current = null
+    pushUndo(offer)
+  }, [])
+  const retry = useCallback((card: ActionCardData) => {
+    const left = (card.outcome ?? []).filter(o => o.status === 'failed' || o.status === 'not_run')
+    if (!left.length) return
+    void send(`Continue from step ${left[0].n}: ${left.map(o => o.title).join('; ')}`)
+  }, [send])
   const cancel = useCallback((card: ActionCardData) => {
     update(card.id, { state: 'cancelled' })
     setHistory(h => [...h, { role: 'assistant', content: `The person pressed Cancel on "${card.title}". Nothing was changed.`, hidden: true }])
@@ -120,7 +154,7 @@ export default function KelvinPanel() {
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               >
                 {t.action
-                  ? <ActionCard card={t.action} onConfirm={confirm} onCancel={cancel} />
+                  ? <ActionCard card={t.action} onConfirm={confirm} onCancel={cancel} onToggle={toggle} onTickAll={tickAll} onUndo={undo} onRetry={retry} />
                   : t.role === 'user' ? t.content : renderMarkdown(t.content)}
               </m.div>
             ))}

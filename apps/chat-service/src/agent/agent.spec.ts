@@ -97,7 +97,7 @@ describe('reschedule_job preview', () => {
       expect.stringMatching(/^To: Thu 8 Oct, 9:00 am until 10:30 am$/i),
       'Nuwan Silva sees the new time in the technician app.',
     ]);
-    expect(p.args).toEqual({ jobId: 'j-1', start: '2026-10-08T05:00:00.000Z', end: '2026-10-08T06:30:00.000Z' });
+    expect(p.args).toEqual({ jobId: 'j-1', start: '2026-10-08T05:00:00.000Z', end: '2026-10-08T06:30:00.000Z', jobNumber: 'JOB-2026-0412', prevStart: '2026-10-07T05:00:00.000Z', prevEnd: '2026-10-07T06:30:00.000Z' });
   });
 
   it('refuses a finished job and an unreadable time', async () => {
@@ -160,6 +160,7 @@ describe('cancel_job and send_invoice', () => {
     expect(p.title).toBe('Send a reminder for INV-0042');
     expect(p.lines[0]).toBe('To: Sara Perera <sara@example.com>');
     expect(p.lines[1]).toMatch(/^Balance due: \$450\.00, due /);
+    expect(tool('send_invoice').sends!(p.args!)).toBe('Emailed to sara@example.com');
 
     for (const [over, msg] of [[{ status: 'VOID' }, 'void'], [{ status: 'PAID' }, 'already paid'], [{ customerEmail: null }, 'no email']] as const) {
       const h = fakeHttp({ 'GET finance /invoices/i-1': { ...inv, ...over } });
@@ -240,5 +241,55 @@ describe('Kelvin-only tools', () => {
     expect(withoutKelvinOnly(tools, {}).map((t) => t.name)).not.toContain('create_job');
     expect(withoutKelvinOnly(tools, { kelvin: false }).map((t) => t.name)).not.toContain('create_job');
     expect(withoutKelvinOnly(tools, { kelvin: true }).map((t) => t.name)).toContain('create_job');
+  });
+});
+
+describe('internal tools', () => {
+  it('are never offered to the model, but the plan engine can find them', () => {
+    const { AGENT_TOOLS } = require('./registry');
+    const fake = { name: 'hide_customer_test', description: '', parameters: { type: 'object', properties: {} }, kind: 'write', bots: ['admin'], internal: true, run: async () => ({}) };
+    AGENT_TOOLS.push(fake);
+    try {
+      expect(toolsFor('admin', 'office_manager').map((t: any) => t.name)).not.toContain('hide_customer_test');
+      expect(findTool('hide_customer_test', 'admin', 'office_manager')).toBeUndefined();
+      expect(findTool('hide_customer_test', 'admin', 'office_manager', { internal: true })?.name).toBe('hide_customer_test');
+    } finally {
+      AGENT_TOOLS.pop();
+    }
+  });
+});
+
+describe('release 3a: who sees which actions', () => {
+  const names = (role: string, features: unknown) => withoutKelvinOnly(toolsFor('admin', role), features).map((t) => t.name);
+  const money = ['create_quote', 'send_quote', 'convert_quote', 'create_invoice', 'record_payment', 'customer_balance', 'find_quotes'];
+  const office = ['propose_plan', 'create_customer', 'update_customer', 'search_price_book', 'find_agreements_due'];
+
+  it('an office manager of a Kelvin company gets everything; undo-only tools are never offered', () => {
+    const got = names('office_manager', { kelvin: true });
+    expect(got).toEqual(expect.arrayContaining([...money, ...office]));
+    for (const internal of ['hide_customer', 'restore_customer_details', 'delete_draft_quote', 'void_new_invoice']) expect(got).not.toContain(internal);
+  });
+
+  it('a dispatcher gets the office actions but no money actions', () => {
+    const got = names('dispatcher', { kelvin: true });
+    expect(got).toEqual(expect.arrayContaining(office));
+    for (const m of money) expect(got).not.toContain(m);
+  });
+
+  it('companies without Kelvin get none of the new actions', () => {
+    const got = names('office_manager', {});
+    for (const n of [...money, ...office]) expect(got).not.toContain(n);
+  });
+});
+
+describe('release 3a: Kelvin instructions', () => {
+  it('tell him to use a plan for several changes, price only from the price book, and that payments email a receipt', () => {
+    const { contextPrompt } = require('../chat/chat.service');
+    const tools = withoutKelvinOnly(toolsFor('admin', 'office_manager'), { kelvin: true });
+    const p: string = contextPrompt({ companyId: 'co', userId: 'u', role: 'office_manager', email: 'e', timezone: 'UTC' }, tools, new Date('2026-10-07T05:00:00Z'));
+    expect(p).toMatch(/propose_plan/);
+    expect(p).toMatch(/price book/i);
+    expect(p).toMatch(/never invent a price/i);
+    expect(p).toMatch(/receipt/i);
   });
 });

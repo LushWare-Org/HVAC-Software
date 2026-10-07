@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ago, greeting, suggestions } from './desk'
+import { ago, byLine, greeting, suggestions } from './desk'
 import type { KelvinItem } from './types'
 
 const it_ = (id: string, urgency: KelvinItem['urgency']): KelvinItem => ({ id, kind: 'LATE', urgency, title: id, fixes: [], audience: 'dispatch', createdAt: '' })
@@ -49,5 +49,14 @@ describe('ago', () => {
     expect(ago('2026-10-06T09:00:00Z', now)).toBe('3 hours ago')
     expect(ago('2026-10-04T12:00:00Z', now)).toBe('2 days ago')
     expect(ago('nonsense', now)).toBe('')
+  })
+})
+
+describe('byLine', () => {
+  const now = new Date('2026-10-08T10:00:00Z')
+  it('says where a note came from', () => {
+    expect(byLine({ kind: 'SUGGESTION', createdAt: now.toISOString() }, now)).toBe("From Kelvin's suggestions")
+    expect(byLine({ kind: 'ROUTINE', createdAt: now.toISOString() }, now)).toBe('One of your routines')
+    expect(byLine({ kind: 'OVERDUE', createdAt: '2026-10-08T09:00:00Z' }, now)).toBe('Found by Kelvin, 1 hour ago')
   })
 })

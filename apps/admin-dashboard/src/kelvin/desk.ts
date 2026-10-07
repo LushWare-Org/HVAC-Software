@@ -40,3 +40,12 @@ export function ago(iso: string, now = new Date()): string {
   if (s < 86400) return n(Math.round(s / 3600), 'hour')
   return n(Math.round(s / 86400), 'day')
 }
+
+/** Where a note came from, under its text. */
+export function byLine(item: Pick<KelvinItem, 'kind' | 'createdAt'>, now = new Date()): string {
+  if (item.kind === 'BRIEF') return "From Kelvin's morning brief"
+  if (item.kind === 'ROUTINE') return 'One of your routines'
+  if (item.kind === 'SUGGESTION') return "From Kelvin's suggestions"
+  const when = ago(item.createdAt, now)
+  return `Found by Kelvin${when ? `, ${when}` : ''}`
+}

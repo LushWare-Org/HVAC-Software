@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { CurrentUser, JwtAuthGuard } from '@tscrm/auth-client';
 import { AuthUser } from '@tscrm/types';
@@ -36,5 +36,20 @@ export class KelvinController {
   @Get('today')
   today(@CurrentUser() user: AuthUser, @Req() req: Request, @Query('since') since?: string) {
     return this.kelvin.today(agentContext(user, req).ctx, since);
+  }
+
+  @Get('mind')
+  mind(@CurrentUser() user: AuthUser, @Req() req: Request) {
+    return this.kelvin.mind(agentContext(user, req).ctx);
+  }
+
+  @Delete('notes/:id')
+  forgetNote(@CurrentUser() user: AuthUser, @Req() req: Request, @Param('id') id: string) {
+    return this.kelvin.forgetNote(agentContext(user, req).ctx, id);
+  }
+
+  @Delete('routines/:id')
+  removeRoutine(@CurrentUser() user: AuthUser, @Req() req: Request, @Param('id') id: string) {
+    return this.kelvin.removeRoutine(agentContext(user, req).ctx, id);
   }
 }

@@ -2,7 +2,7 @@ import {
   Controller, Post, Body, Res, Req, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { IsString, IsArray, IsOptional, IsIn, ValidateNested } from 'class-validator';
+import { IsString, IsArray, IsOptional, IsIn, IsInt, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
 import { AuthUser } from '@tscrm/types';
@@ -23,6 +23,10 @@ class ChatTurnDto {
 class ConfirmActionDto {
   @IsString()
   token!: string;
+
+  /** Plan steps the person unticked; the steps that need them are skipped too. */
+  @IsOptional() @IsArray() @IsInt({ each: true })
+  skip?: number[];
 }
 
 class PageRecordDto {
@@ -97,6 +101,6 @@ export class ChatController {
   @HttpCode(HttpStatus.OK)
   async confirm(@Body() body: ConfirmActionDto, @CurrentUser() user: AuthUser, @Req() req: Request) {
     const { botType, ctx } = agentContext(user, req);
-    return confirmAction(body.token, ctx, botType);
+    return confirmAction(body.token, ctx, botType, body.skip ?? []);
   }
 }

@@ -8,6 +8,8 @@ import { useExecuteFollowup, useExecuteRetention, useExecuteUpsell, useExecuteRe
 import { customerName } from '../types/api'
 import type { Customer, CustomerStatusSummary } from '../types/api'
 import { formatMoney } from '../lib/format'
+import KelvinFace from '../kelvin/KelvinFace'
+import { useKelvinOn } from '../kelvin/KelvinMark'
 
 const INACTIVE_ACTIONS = new Set(['no_action', 'no_upsell', 'no_opportunity'])
 
@@ -395,6 +397,7 @@ interface Props {
 }
 
 export default function CustomerRecommendationsModal({ customer, onClose }: Props) {
+  const kelvin = useKelvinOn()
   const statusQuery = useCustomerStatusSummary(customer.id)
   const summary = statusQuery.data
 
@@ -427,9 +430,9 @@ export default function CustomerRecommendationsModal({ customer, onClose }: Prop
           flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Sparkles size={18} style={{ color: '#fff' }} />
+            {kelvin ? <KelvinFace size={32} mood="idle" /> : <Sparkles size={18} style={{ color: '#fff' }} />}
             <div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>AI Recommendations</div>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{kelvin ? "Kelvin's suggestions" : 'AI Recommendations'}</div>
               <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, marginTop: 1 }}>{customerName(customer)}</div>
             </div>
           </div>

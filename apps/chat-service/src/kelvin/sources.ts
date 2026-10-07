@@ -1,3 +1,4 @@
+import { routineWhen } from '../agent/tools/kelvin-memory';
 import type { Audience, KelvinFix, KelvinItem, Urgency } from './types';
 
 export const DISPATCH_ROLES = new Set(['super_admin', 'company_admin', 'office_manager', 'dispatcher']);
@@ -116,6 +117,111 @@ export function mapNotices(res: any): KelvinItem[] {
     audience: 'all' as Audience,
     createdAt: String(n.createdAt ?? new Date().toISOString()),
   }));
+}
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** The date, weekday and minutes since midnight in a zone; null for an unknown zone. */
+function localNow(now: Date, timeZone: string) {
+  try {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+      timeZone, year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    }).formatToParts(now).map((p) => [p.type, p.value]));
+    return { date: `${parts.year}-${parts.month}-${parts.day}`, weekday: WEEKDAYS.indexOf(parts.weekday), minutes: Number(parts.hour) * 60 + Number(parts.minute) };
+  } catch {
+    return null;
+  }
+}
+
+/** Routines whose time has come today: each shows once a day with Run it, until the day ends. */
+export function mapRoutines(res: any, now: Date): KelvinItem[] {
+  return arr(res).flatMap((r) => {
+    const local = localNow(now, String(r?.timezone || 'UTC'));
+    const [h, m] = String(r?.time ?? '').split(':').map(Number);
+    if (!local || !Array.isArray(r?.days) || !r.days.includes(local.weekday) || !(local.minutes >= h * 60 + m)) return [];
+    const startOfDay = now.getTime() - (local.minutes * 60 + now.getUTCSeconds()) * 1000 - now.getUTCMilliseconds();
+    return [{
+      id: `routine:${r.id}:${local.date}`,
+      kind: 'ROUTINE' as const,
+      urgency: 'soon' as Urgency,
+      title: line(`Your routine: ${r.request}`),
+      why: routineWhen(r.days, r.time),
+      fixes: fixes([{ label: 'Run it', request: r.request }]),
+      anchor: { page: 'dashboard' as const },
+      audience: 'all' as Audience,
+      createdAt: new Date(startOfDay + (h * 60 + m) * 60_000).toISOString(),
+      expiresAt: new Date(startOfDay + 24 * 60 * 60_000).toISOString(),
+    }];
+  });
+}
+
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const DAY_MS = 86_400_000;
+
+/** Overdue invoices: one note for Finance, with how many, how much and the oldest. */
+export function mapOverdue(res: any, now: Date): KelvinItem[] {
+  const due = arr(res).filter((i) => i?.dueDate).sort((a, b) => Date.parse(a.dueDate) - Date.parse(b.dueDate));
+  if (!due.length) return [];
+  const currencies = new Set(due.map((i) => i.currency || 'USD'));
+  let total = '';
+  if (currencies.size === 1) {
+    const sum = due.reduce((a, i) => a + (Number(i.balanceDue) || 0), 0);
+    try { total = `, ${new Intl.NumberFormat('en-US', { style: 'currency', currency: [...currencies][0] }).format(sum)} in all`; } catch { /* unknown currency */ }
+  }
+  const oldest = due[0];
+  const late = Math.floor((now.getTime() - Date.parse(oldest.dueDate)) / DAY_MS);
+  return [{
+    id: `overdue:${now.toISOString().slice(0, 10)}:${due.length}`,
+    kind: 'OVERDUE',
+    urgency: 'soon' as Urgency,
+    title: line(`${plural(due.length, 'invoice')} ${due.length === 1 ? 'is' : 'are'} overdue${total}`),
+    why: line(`The oldest is ${oldest.invoiceNumber}${oldest.customerName ? ` for ${oldest.customerName}` : ''}, ${plural(late, 'day')} late.`, WHY_MAX),
+    fixes: [{ label: 'Chase them', request: 'Chase every overdue invoice' }],
+    anchor: { page: 'finance' as const },
+    audience: 'money' as Audience,
+    createdAt: now.toISOString(),
+  }];
+}
+
+/** Items below their reorder point: one note for Inventory, worst first. */
+export function mapLowStock(res: any, now: Date): KelvinItem[] {
+  const low = arr(res).filter((i) => i?.itemName);
+  if (!low.length) return [];
+  const named = low.slice(0, 3).map((i) => `${i.itemName} (${Number(i.currentQty) || 0} left)`);
+  const more = low.length > 3 ? ` and ${low.length - 3} more` : '';
+  return [{
+    id: `lowstock:${now.toISOString().slice(0, 10)}:${low.length}`,
+    kind: 'LOW_STOCK',
+    urgency: 'soon' as Urgency,
+    title: line(`${plural(low.length, 'item')} ${low.length === 1 ? 'is' : 'are'} below ${low.length === 1 ? 'its' : 'their'} reorder point`),
+    why: line(`${more ? named.join(', ') + more : named.join(', ').replace(/, ([^,]*)$/, ' and $1')}.`, WHY_MAX),
+    fixes: [{ label: 'What to reorder', request: 'Which items are low on stock, and how many should we reorder?' }],
+    anchor: { page: 'inventory' as const },
+    audience: 'all' as Audience,
+    createdAt: now.toISOString(),
+  }];
+}
+
+const PAGES = ['customers', 'finance', 'jobs', 'scheduling', 'inventory'] as const;
+
+/** The AI recommendations, high priority only, as notes on the page each one is about. */
+export function mapSuggestions(res: any, now: Date): KelvinItem[] {
+  return arr(res).filter((r) => r?.id && r.title && r.priority === 'high').slice(0, 3).map((r) => {
+    const path = String(r.action ?? '').replace(/^\//, '').split(/[/?#]/)[0];
+    const page = (PAGES as readonly string[]).includes(path) ? path as (typeof PAGES)[number] : 'dashboard';
+    const why = r.reason ? line(r.reason, WHY_MAX) : undefined;
+    return {
+      id: `suggest:${line(r.id, 80)}`,
+      kind: 'SUGGESTION' as const,
+      urgency: 'soon' as Urgency,
+      title: line(r.title),
+      ...(why && { why }),
+      fixes: fixes([{ label: 'Ask Kelvin', request: `About "${line(r.title)}"${why ? ` (${why})` : ''}: what should we do? Prepare it if you can.` }]),
+      anchor: { page: page as any },
+      audience: 'money' as Audience,
+      createdAt: now.toISOString(),
+    };
+  });
 }
 
 export function visibleTo(item: KelvinItem, role: string): boolean {

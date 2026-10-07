@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, m } from 'motion/react'
 import { KelvinContextForPages } from './KelvinProvider'
 import KelvinFace from './KelvinFace'
-import { ago } from './desk'
+import { byLine } from './desk'
 import type { KelvinItem } from './types'
 
 /** Short notes from Kelvin inside a page. New notes fly out of his corner to their place (move 2). */
-export default function KelvinNotes({ page, limit = 3 }: { page: 'dashboard' | 'jobs' | 'scheduling'; limit?: number }) {
+export default function KelvinNotes({ page, limit = 3 }: { page: 'dashboard' | 'jobs' | 'scheduling' | 'customers' | 'finance' | 'inventory'; limit?: number }) {
   const k = useContext(KelvinContextForPages)
-  const all = (k?.enabled ? k.feed?.items ?? [] : []).filter(i => i.urgency !== 'quiet' && (page === 'dashboard' || i.anchor?.page === page))
+  // Suggestions already have their own panel on the pages; notes would repeat them.
+  const all = (k?.enabled ? k.feed?.items ?? [] : []).filter(i => i.urgency !== 'quiet' && i.kind !== 'SUGGESTION' && (page === 'dashboard' || i.anchor?.page === page))
   const items = all.slice(0, limit)
   const seenOnce = useRef(new Set<string>())
   useEffect(() => { if (k && items.length) k.markSeen(items.map(i => i.id)) }, [items.map(i => i.id).join()]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -56,7 +57,7 @@ function Note({ item, fly }: { item: KelvinItem; fly: boolean }) {
         <p className="kv-item-title">{item.title}</p>
         {item.why && <p className="kv-item-why">{item.why}</p>}
         <span className="kv-heatline" aria-hidden="true" />
-        <p className="kv-by">{item.kind === 'BRIEF' ? "From Kelvin's morning brief" : `Found by Kelvin${ago(item.createdAt) ? `, ${ago(item.createdAt)}` : ''}`}</p>
+        <p className="kv-by">{byLine(item)}</p>
         <div className="kv-item-fixes">
           {item.fixes.map(f => <button key={f.request} type="button" className="ops-btn ops-btn-sm" onClick={() => k.applyFix(item, f)}>{f.label}</button>)}
           <button type="button" className="kv-link" onClick={() => k.dismiss(item)}>Dismiss</button>

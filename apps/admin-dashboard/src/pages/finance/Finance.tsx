@@ -12,6 +12,8 @@ import RecommendationsPanel from '../../components/RecommendationsPanel'
 import DocumentTemplatesTab from './DocumentTemplatesTab'
 import { humanizeStatus, normalizeStatus, formatMoney } from '../../lib/format'
 import ProjectComponentTag from '../projects/ProjectComponentTag'
+import KelvinNotes from '../../kelvin/KelvinNotes'
+import { KelvinIcon } from '../../kelvin/KelvinMark'
 
 function DocProjectCell({ projectId, componentId }: { projectId?: string; componentId?: string }) {
   if (!projectId) return <span className="text-3">—</span>
@@ -369,6 +371,7 @@ export default function Finance() {
       )}
 
       {!isExpanded && <RecommendationsPanel filterActions={['discount_20', 'increase_price', 'geo_target_discount']} />}
+      <KelvinNotes page="finance" />
 
       <div className="page-tabs">
         <button className={`tab-btn ${tab === 'invoices' ? 'active' : ''}`} onClick={() => setTab('invoices')}>
@@ -528,7 +531,7 @@ export default function Finance() {
         <div className="card anim-fade-in">
           {quoPendingAging && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'color-mix(in srgb, var(--amber) 10%, transparent)', borderRadius: 8, color: 'var(--amber)', fontSize: 13, margin: '0 0 8px' }}>
-              <Sparkles size={14} />
+              <KelvinIcon fallback={<Sparkles size={14} />} />
               Showing quotes from the Pending Quotes at Risk recommendation — sent/viewed, pending over 7 days.
               <button onClick={clearQuotePendingFilter} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--amber)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
                 <X size={12} /> Clear filter

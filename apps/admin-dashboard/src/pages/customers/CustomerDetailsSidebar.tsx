@@ -29,6 +29,8 @@ import ProjectsTab from './tabs/ProjectsTab'
 import ReviewsTab from './tabs/ReviewsTab'
 import ActivityTab from './tabs/ActivityTab'
 import AiIotTab from './tabs/AiIotTab'
+import KelvinFace from '../../kelvin/KelvinFace'
+import { AskKelvin, useKelvinOn } from '../../kelvin/KelvinMark'
 
 type TabType = 'overview' | 'equipment' | 'jobs' | 'agreements' | 'projects' | 'reviews' | 'activity' | 'ai-iot'
 
@@ -71,6 +73,7 @@ export default function CustomerDetailsSidebar({
 
   const customerId = person?.id ?? ''
   const statusSummaryQuery = useCustomerStatusSummary(customerId || undefined)
+  const kelvin = useKelvinOn()
 
   const customerJobsQuery = useJobs({ customerId: customerId || undefined, limit: 50 })
   const customerJobs = [...(customerJobsQuery.data?.data ?? [])].sort(
@@ -330,10 +333,12 @@ export default function CustomerDetailsSidebar({
               {/* AI health */}
               <div style={{ borderRadius: 13, border: '1px solid color-mix(in srgb, #7C3AED 25%, transparent)', background: 'linear-gradient(160deg, var(--blue-glow), color-mix(in srgb, #7C3AED 10%, transparent))', padding: 13 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 11 }}>
-                  <div style={{ width: 21, height: 21, borderRadius: 6, background: 'linear-gradient(135deg, #7C3AED, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Sparkles size={11} style={{ color: '#fff' }} />
-                  </div>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: '#4C1D95' }}>AI health</span>
+                  {kelvin ? <KelvinFace size={20} mood="idle" /> : (
+                    <div style={{ width: 21, height: 21, borderRadius: 6, background: 'linear-gradient(135deg, #7C3AED, #4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Sparkles size={11} style={{ color: '#fff' }} />
+                    </div>
+                  )}
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: '#4C1D95' }}>{kelvin ? "Kelvin's read" : 'AI health'}</span>
                 </div>
                 {statusSummaryQuery.data ? (() => {
                   const summary = statusSummaryQuery.data
@@ -362,6 +367,9 @@ export default function CustomerDetailsSidebar({
                       <div style={{ background: 'rgba(255,255,255,0.6)', borderRadius: 8, padding: '8px 10px' }}>
                         <div style={{ fontSize: 8.5, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Next step</div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--t1)' }}>{summary.proposedNextStep}</div>
+                      </div>
+                      <div style={{ marginTop: 10 }}>
+                        <AskKelvin request={`How is ${`${person?.firstName ?? ''} ${person?.lastName ?? ''}`.trim() || 'this customer'} doing (customer id ${customerId}), and what should we do next? Prepare it if you can.`} />
                       </div>
                     </>
                   )

@@ -80,24 +80,36 @@ export const WRITE_TOOLS: AgentTool[] = [
     preview: async (args, ctx, http) => {
       const job = await loadJob(http, args.jobId);
       if (CLOSED.has(job.status)) throw new ToolRefusal(`${job.jobNumber} is ${job.status.toLowerCase()}, so it cannot be rescheduled.`);
+      if (args.expectStart) {
+        // An undo: only move it back if nothing happened to it since.
+        if (['EN_ROUTE', 'ON_SITE'].includes(job.status)) throw new ToolRefusal(`${job.jobNumber}'s technician is already on the way, so I won't move it back.`);
+        if (!job.scheduledStart || Date.parse(job.scheduledStart) !== Date.parse(args.expectStart)) throw new ToolRefusal(`${job.jobNumber} was moved again since, so I won't move it back.`);
+      }
       const start = parseTime(args.start, 'start');
       const end = args.end ? parseTime(args.end, 'end') : new Date(start.getTime() + durationMs(job));
       if (end <= start) throw new ToolRefusal('The end has to be after the start.');
       return {
-        title: `Reschedule ${job.jobNumber}`,
+        title: args.expectStart ? `Move ${job.jobNumber} back` : `Reschedule ${job.jobNumber}`,
         lines: [
           jobLine(job),
           `From: ${when(job.scheduledStart, ctx)}`,
           `To: ${when(start.toISOString(), ctx)} until ${when(end.toISOString(), ctx).split(', ').pop()}`,
           ...(job.assignedToName ? [`${job.assignedToName} sees the new time in the technician app.`] : []),
         ],
-        args: { jobId: job.id, start: start.toISOString(), end: end.toISOString() },
+        args: {
+          jobId: job.id, start: start.toISOString(), end: end.toISOString(),
+          // Kept so undo can put it back.
+          jobNumber: job.jobNumber, prevStart: job.scheduledStart ?? null, prevEnd: job.scheduledEnd ?? null,
+        },
       };
     },
     run: async (args, _ctx, http) => {
       const job = await http.patch('jobs', `/jobs/${args.jobId}`, { scheduledStart: args.start, scheduledEnd: args.end });
       return { done: true, jobNumber: job?.jobNumber, scheduledStart: args.start };
     },
+    reverse: (a, _r, ctx) => (a.prevStart && a.prevEnd
+      ? { tool: 'reschedule_job', args: { jobId: a.jobId, start: a.prevStart, end: a.prevEnd, expectStart: a.start }, title: `Move ${a.jobNumber ?? 'the job'} back to ${when(a.prevStart, ctx)}` }
+      : null),
   },
   {
     name: 'assign_technician',
@@ -190,6 +202,7 @@ export const WRITE_TOOLS: AgentTool[] = [
     kind: 'write',
     bots: ['admin'],
     roles: MONEY,
+    sends: (a) => `Emailed to ${a.customerEmail ?? 'the customer'}`,
     preview: async (args, ctx, http) => {
       const inv = await http.get('finance', `/invoices/${args.invoiceId}`);
       if (!inv?.id) throw new ToolRefusal('That invoice was not found.');
@@ -204,12 +217,12 @@ export const WRITE_TOOLS: AgentTool[] = [
           `Balance due: ${money(inv.balanceDue, inv.currency)}${inv.dueDate ? `, due ${day(inv.dueDate, ctx)}` : ''}`,
           reminder ? `Last sent ${when(inv.sentAt, ctx)}.` : 'First time this invoice is sent.',
         ],
-        args: { invoiceId: inv.id },
+        args: { invoiceId: inv.id, invoiceNumber: inv.invoiceNumber, customerEmail: inv.customerEmail },
       };
     },
     run: async (args, _ctx, http) => {
       await http.patch('finance', `/invoices/${args.invoiceId}/send`);
-      return { done: true };
+      return { done: true, summary: `Sent ${args.invoiceNumber ?? 'the invoice'}` };
     },
   },
 ];

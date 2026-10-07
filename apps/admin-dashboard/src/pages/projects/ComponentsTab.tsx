@@ -35,6 +35,8 @@ import { useTechnicians } from '../../hooks/useScheduling'
 import Avatar from '../../components/Avatar'
 import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 import CustomerPickerWithCreate, { type PickedCustomer } from '../../components/CustomerPickerWithCreate'
+import KelvinFace from '../../kelvin/KelvinFace'
+import { useKelvinOn } from '../../kelvin/KelvinMark'
 
 // Consistent with every other consumer of this modal app-wide (ProjectDetail,
 // DayPlanner, Finance, AgreementDrawer, Topbar).
@@ -1214,6 +1216,7 @@ function EquipmentDetailModal({ componentId, equipment, onClose, onServiceVisit 
   onClose: () => void
   onServiceVisit: () => void
 }) {
+  const kelvin = useKelvinOn()
   const uploadImage = useUploadEquipmentImage(componentId)
   const updateEquipment = useUpdateComponentEquipment(componentId)
   const addErrorCode = useAddErrorCode(componentId)
@@ -1379,7 +1382,7 @@ function EquipmentDetailModal({ componentId, equipment, onClose, onServiceVisit 
           {hasNameplateSuggestion && (
             <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 9, background: 'var(--blue-dim)', border: '1px solid var(--blue)' }}>
               <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--blue)', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Sparkles size={12} /> Suggested from photo
+                {kelvin ? <KelvinFace size={20} mood="idle" /> : <Sparkles size={12} />} {kelvin ? 'Kelvin read this from the photo' : 'Suggested from photo'}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {(['brand', 'model', 'serialNo'] as const).map(field => suggestion?.[field] && (
@@ -1403,7 +1406,7 @@ function EquipmentDetailModal({ componentId, equipment, onClose, onServiceVisit 
           {pendingSuggestedCodes.length > 0 && (
             <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 9, background: 'var(--blue-dim)', border: '1px solid var(--blue)' }}>
               <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--blue)', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Sparkles size={12} /> Detected error codes
+                {kelvin ? <KelvinFace size={20} mood="idle" /> : <Sparkles size={12} />} {kelvin ? 'Kelvin spotted these error codes' : 'Detected error codes'}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {pendingSuggestedCodes.map(c => {
@@ -1450,7 +1453,7 @@ function EquipmentDetailModal({ componentId, equipment, onClose, onServiceVisit 
                     <span style={{ fontSize: 12.5, color: 'var(--t1)' }}>
                       <strong>{c.code}</strong>{c.meaning ? ` — ${c.meaning}` : ''}
                       <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: c.source === 'AI_SCAN' ? 'var(--blue)' : 'var(--t4)' }}>
-                        {c.source === 'AI_SCAN' ? 'AI' : 'Manual'}
+                        {c.source === 'AI_SCAN' ? (kelvin ? 'Kelvin' : 'AI') : 'Manual'}
                       </span>
                     </span>
                     <button className="btn btn-ghost btn-sm" onClick={() => deleteErrorCode.mutate({ equipmentId: equipment.id, codeId: c.id }, {

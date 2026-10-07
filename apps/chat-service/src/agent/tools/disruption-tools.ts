@@ -18,7 +18,7 @@ async function loadJob(http: ServiceHttp, jobId: unknown) {
   return job;
 }
 
-async function technicianByIdOrName(http: ServiceHttp, idOrName: unknown) {
+export async function technicianByIdOrName(http: ServiceHttp, idOrName: unknown) {
   const techs = list(await http.get('scheduling', '/technicians'));
   const q = String(idOrName ?? '').trim().toLowerCase();
   const tech = techs.find((t) => t.id === idOrName)
@@ -77,6 +77,8 @@ export const DISRUPTION_TOOLS: AgentTool[] = [
       const crew = list(await http.get('scheduling', `/dispatch/jobs/${job.id}/crew`));
       if (!crew.length) throw new ToolRefusal(`${job.jobNumber} has nobody assigned yet; assign someone instead.`);
       const lead = crew.find((m) => m.assignment?.isLead) ?? crew[0];
+      // An undo: only hand it back if nobody changed it since.
+      if (args.expectLeadId && lead.technician?.id !== args.expectLeadId) throw new ToolRefusal(`${job.jobNumber} was given to someone else since, so I won't hand it back.`);
       const next = await technicianByIdOrName(http, args.technician);
       if (next.id === lead.technician?.id) throw new ToolRefusal(`${next.name} already has ${job.jobNumber}.`);
       const helpers = crew.map((m) => m.technician?.id).filter((id: string) => id && id !== lead.technician?.id && id !== next.id);
@@ -88,13 +90,20 @@ export const DISRUPTION_TOOLS: AgentTool[] = [
           ...(helpers.length ? [helpers.length === 1 ? '1 helper stays on the job.' : `${helpers.length} helpers stay on the job.`] : []),
           `${next.name} gets it in the technician app; ${lead.technician?.name ?? 'the previous technician'} no longer sees it.`,
         ],
-        args: { jobId: job.id, technicianIds: [next.id, ...helpers], leadTechnicianId: next.id },
+        args: {
+          jobId: job.id, technicianIds: [next.id, ...helpers], leadTechnicianId: next.id,
+          // Kept so undo can hand it back.
+          jobNumber: job.jobNumber, nextName: next.name, prevLeadId: lead.technician?.id, prevLeadName: lead.technician?.name,
+        },
       };
     },
     run: async (args, _ctx, http) => {
       await http.patch('scheduling', `/dispatch/jobs/${args.jobId}/crew`, { technicianIds: args.technicianIds, leadTechnicianId: args.leadTechnicianId });
-      return { done: true };
+      return { done: true, summary: `Gave ${args.jobNumber ?? 'the job'} to ${args.nextName ?? 'the new technician'}` };
     },
+    reverse: (a) => (a.prevLeadId
+      ? { tool: 'reassign_job', args: { jobId: a.jobId, technician: a.prevLeadId, expectLeadId: a.leadTechnicianId }, title: `Give ${a.jobNumber ?? 'the job'} back to ${a.prevLeadName ?? 'the previous technician'}` }
+      : null),
   },
   {
     name: 'message_customer',
@@ -110,6 +119,7 @@ export const DISRUPTION_TOOLS: AgentTool[] = [
     kind: 'write',
     bots: ['admin'],
     roles: DISPATCH,
+    sends: (a) => `Message to ${a.customerName ?? 'the customer'}`,
     preview: async (args, _ctx: AgentContext, http) => {
       const job = await loadJob(http, args.jobId);
       const message = String(args.message ?? '').trim();
@@ -127,7 +137,7 @@ export const DISRUPTION_TOOLS: AgentTool[] = [
         customerId: args.customerId, customerName: args.customerName, subject: `About ${args.jobNumber}`, jobId: args.jobId,
       });
       await http.post('comms', `/messaging/threads/${thread.id}/messages`, { body: args.message });
-      return { done: true };
+      return { done: true, summary: `Messaged ${args.customerName ?? 'the customer'}` };
     },
   },
   {
@@ -216,7 +226,7 @@ function day(date: string, _ctx: AgentContext): string {
 }
 
 /** Whether a visit sits inside a day's new hours, compared in company time. */
-function inHours(startIso: string, endIso: string, from: string, to: string, ctx: AgentContext): boolean {
+export function inHours(startIso: string, endIso: string, from: string, to: string, ctx: AgentContext): boolean {
   const hm = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: ctx.timezone || 'UTC' });
   return !!startIso && hm(startIso) >= from && (!endIso || hm(endIso) <= to);
 }

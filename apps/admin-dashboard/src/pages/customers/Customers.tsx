@@ -32,6 +32,8 @@ import { customerName } from "../../types/api";
 import type { Customer } from "../../types/api";
 import { formatMoney } from '../../lib/format'
 import { useToast } from "../../contexts/ToastContext";
+import KelvinNotes from '../../kelvin/KelvinNotes'
+import { KelvinIcon } from '../../kelvin/KelvinMark'
 
 // ─── Status maps ──────────────────────────────────────────────────────────────
 
@@ -223,12 +225,13 @@ export default function Customers() {
         )}
 
         {!isExpanded && <RecommendationsPanel filterActions={['call', 'geo_target_discount']} />}
+        <KelvinNotes page="customers" />
 
         {/* Customers */}
         <div className="card anim-fade-in">
             {riskSegment && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'color-mix(in srgb, var(--amber) 10%, transparent)', borderRadius: 8, color: 'var(--amber)', fontSize: 13, margin: '0 0 8px' }}>
-                <Sparkles size={14} />
+                <KelvinIcon fallback={<Sparkles size={14} />} />
                 Showing customers from the Customer Retention Risk recommendation — active, high-value, churn probability ≥ 40%.
                 <button onClick={clearRiskFilter} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--amber)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
                   <X size={12} /> Clear filter

@@ -4,6 +4,8 @@ import { computeLeadStatusSummary, formatLeadPct, leadRiskColor } from "../pages
 import { leadName } from "../types/api";
 import type { Lead } from "../types/api";
 import { formatMoney } from '../lib/format'
+import KelvinFace from "../kelvin/KelvinFace"
+import { useKelvinOn } from "../kelvin/KelvinMark"
 
 type Priority = "low" | "medium" | "high";
 
@@ -65,6 +67,7 @@ function Section({
 }
 
 export default function LeadRecommendationsModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
+  const kelvin = useKelvinOn()
   const summary = computeLeadStatusSummary(lead);
   const channelLabel = summary.recommendedAction.channel === "whatsapp" ? "WhatsApp" : summary.recommendedAction.channel === "call" ? "Phone call" : "Email";
 
@@ -76,9 +79,9 @@ export default function LeadRecommendationsModal({ lead, onClose }: { lead: Lead
       >
         <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Sparkles size={18} style={{ color: "#fff" }} />
+            {kelvin ? <KelvinFace size={32} mood="idle" /> : <Sparkles size={18} style={{ color: "#fff" }} />}
             <div>
-              <div style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}>AI Lead Recommendations</div>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}>{kelvin ? "Kelvin's suggestions for this lead" : "AI Lead Recommendations"}</div>
               <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 1 }}>{leadName(lead)}</div>
             </div>
           </div>

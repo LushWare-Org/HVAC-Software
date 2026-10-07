@@ -1,7 +1,7 @@
 import axios, { type AxiosRequestConfig } from 'axios';
 import type { AgentContext } from './types';
 
-export type ServiceName = 'crm' | 'jobs' | 'scheduling' | 'finance' | 'comms' | 'analytics';
+export type ServiceName = 'crm' | 'jobs' | 'scheduling' | 'finance' | 'comms' | 'analytics' | 'inventory';
 
 const BASE: Record<ServiceName, () => string> = {
   crm: () => process.env.CRM_SERVICE_URL ?? 'http://localhost:3001',
@@ -10,6 +10,7 @@ const BASE: Record<ServiceName, () => string> = {
   finance: () => process.env.FINANCE_SERVICE_URL ?? 'http://localhost:3004',
   comms: () => process.env.COMMS_SERVICE_URL ?? 'http://localhost:3005',
   analytics: () => process.env.ANALYTICS_SERVICE_URL ?? 'http://localhost:3006',
+  inventory: () => process.env.INVENTORY_SERVICE_URL ?? 'http://localhost:3007',
 };
 
 /**

@@ -1,4 +1,5 @@
 import { ToolRefusal, type AgentTool } from '../types';
+import { isRef } from '../plan/refs';
 import { serviceErrorMessage } from '../service-http';
 import { when } from './write-tools';
 
@@ -59,6 +60,7 @@ export const CREATE_JOB: AgentTool = {
       durationMins: { type: 'number', description: 'Optional, default 90.' },
       technicianId: { type: 'string', description: 'Optional, from list_technicians or find_open_times.' },
       addressId: { type: 'string', description: 'Only when the customer has several sites; the id from the refusal message.' },
+      agreementId: { type: 'string', description: 'Set when booking a service-agreement visit (from find_agreements_due).' },
     },
     required: ['customerId', 'title'],
   },
@@ -66,12 +68,22 @@ export const CREATE_JOB: AgentTool = {
   bots: ['admin'],
   roles: DISPATCH,
   kelvinOnly: true,
-  preview: async (args, ctx, http) => {
+  signature: (a) => ({ start: a.dto?.scheduledStart ?? null, end: a.dto?.scheduledEnd ?? null, technicianId: a.technicianId ?? null, priority: a.dto?.priority }),
+  provides: (a) => ({ jobId: '@pending', jobNumber: '(new job)', customerId: a.dto?.customerId, customerName: a.dto?.customerName }),
+  reverse: (_a, r) => (r?.jobId ? { tool: 'cancel_job', args: { jobId: r.jobId, reason: 'Undone in Kelvin' }, title: `Cancel ${r.jobNumber ?? 'the new job'}` } : null),
+  preview: async (args, ctx, http, scope) => {
     let c: any;
-    try {
-      c = await http.get('crm', `/customers/${args.customerId}`);
-    } catch {
-      throw new ToolRefusal('That customer was not found. Find them with find_customers first.');
+    // In a plan the customer may be one an earlier step creates: use what it will create.
+    const pending = isRef(args.customerId) ? scope?.pending(args.customerId) : undefined;
+    if (isRef(args.customerId) && !pending) throw new ToolRefusal('The customer from the earlier step was not found.');
+    if (pending) {
+      c = { ...pending, id: args.customerId, isActive: true, addresses: [] };
+    } else {
+      try {
+        c = await http.get('crm', `/customers/${args.customerId}`);
+      } catch {
+        throw new ToolRefusal('That customer was not found. Find them with find_customers first.');
+      }
     }
     if (!c?.id) throw new ToolRefusal('That customer was not found. Find them with find_customers first.');
     if (c.isActive === false) throw new ToolRefusal(`${nameOf(c)} is inactive. Reactivate them in Customers first.`);
@@ -81,6 +93,12 @@ export const CREATE_JOB: AgentTool = {
     const priority = (PRIORITIES as readonly string[]).includes(args.priority) ? args.priority : 'NORMAL';
     const durationMins = Math.min(600, Math.max(15, Math.round(Number(args.durationMins) || 90)));
     const site = siteFor(c, args.addressId);
+    if (args.agreementId) {
+      // Due agreement visits are created by the system on its own: schedule that one instead of a duplicate.
+      const open = (await http.get('jobs', '/jobs', { agreementId: args.agreementId, limit: 20 }).catch(() => null));
+      const waiting = (Array.isArray(open) ? open : open?.data ?? []).find((j: any) => ['PENDING', 'SCHEDULED', 'EN_ROUTE', 'ON_SITE'].includes(j.status));
+      if (waiting) throw new ToolRefusal(`${waiting.jobNumber} is already waiting for this agreement. Schedule that job instead.`);
+    }
 
     let start: Date | undefined;
     if (args.start) {
@@ -111,18 +129,20 @@ export const CREATE_JOB: AgentTool = {
       ...(c.phone && { customerPhone: c.phone }), ...(c.email && { customerEmail: c.email }),
       ...site, title, ...(args.description && { description: clean(args.description, 2000) }),
       priority, estimatedDurationMins: durationMins,
+      ...(args.agreementId && { agreementId: String(args.agreementId), isAgreementJob: true }),
       ...(start && end && { scheduledStart: start.toISOString(), scheduledEnd: end.toISOString() }),
     };
     return {
       title: `Create a job for ${name}`,
       lines: [
-        `Customer: ${name}`,
+        `Customer: ${name}${pending ? ' (new)' : ''}`,
         `Job: ${title}`,
         ...(priority !== 'NORMAL' ? [`Priority: ${cap(priority)}`] : []),
         `Address: ${[site.serviceAddress, site.serviceCity].filter(Boolean).join(', ')}`,
         ...((site as any).serviceLatitude == null ? ['Map location: none on file, so travel time is not checked'] : []),
         `When: ${start ? when(start.toISOString(), ctx) : 'no time yet, it goes to the unassigned list'}`,
         `Technician: ${tech ? tech.name : 'nobody yet'}`,
+        ...(args.agreementId ? ['Part of a service agreement'] : []),
       ],
       args: { dto, ...(tech && { technicianId: tech.id, technicianName: tech.name }) },
     };
@@ -130,7 +150,10 @@ export const CREATE_JOB: AgentTool = {
   run: async (args, _ctx, http) => {
     const job = await http.post('jobs', '/jobs', args.dto);
     const base = `Created ${job.jobNumber} for ${args.dto.customerName}`;
-    const out = { done: true as const, jobId: job.id, jobNumber: job.jobNumber, recordRef: `job:${job.id}` };
+    const out = {
+      done: true as const, jobId: job.id, id: job.id, jobNumber: job.jobNumber,
+      customerId: args.dto.customerId, customerName: args.dto.customerName, recordRef: `job:${job.id}`,
+    };
     if (!args.technicianId) return { ...out, summary: base };
     try {
       await http.post('scheduling', '/dispatch/assign/manual', {

@@ -1,4 +1,4 @@
-import { mapBrief, mapDisruptions, mapEmergencies, mapGaps, mapNotices, mapReschedules, sortItems, visibleTo } from './sources';
+import { mapRoutines, mapOverdue, mapLowStock, mapSuggestions, mapBrief, mapDisruptions, mapEmergencies, mapGaps, mapNotices, mapReschedules, sortItems, visibleTo } from './sources';
 import type { KelvinItem } from './types';
 
 const now = new Date('2026-10-06T05:00:00.000Z');
@@ -106,5 +106,73 @@ describe('Kelvin sources', () => {
     expect(visibleTo(items[3], 'office_manager')).toBe(true);
     expect(visibleTo(items[1], 'technician')).toBe(false);
     expect(visibleTo(items[0], 'technician')).toBe(false);
+  });
+});
+
+describe('mapRoutines', () => {
+  const weekdays = { id: 'r-1', request: 'Chase invoices over 30 days overdue', days: [1, 2, 3, 4, 5], time: '08:00', timezone: 'Asia/Colombo' };
+
+  it('brings a routine up on its days, once its time has come, in its own time zone', () => {
+    // Wednesday 8 Oct 2026, 08:30 in Colombo (03:00 UTC).
+    const [item] = mapRoutines({ data: [weekdays] }, new Date('2026-10-08T03:00:00Z'));
+    expect(item).toMatchObject({
+      id: 'routine:r-1:2026-10-08', kind: 'ROUTINE', urgency: 'soon', title: 'Your routine: Chase invoices over 30 days overdue',
+      why: 'Every weekday at 8:00 am', fixes: [{ label: 'Run it', request: 'Chase invoices over 30 days overdue' }],
+    });
+    // Gone at the end of that day in Colombo (18:30 UTC).
+    expect(item.expiresAt).toBe('2026-10-08T18:30:00.000Z');
+  });
+
+  it('stays quiet before the time and on other days', () => {
+    expect(mapRoutines({ data: [weekdays] }, new Date('2026-10-08T02:00:00Z'))).toEqual([]); // 07:30 there
+    expect(mapRoutines({ data: [weekdays] }, new Date('2026-10-10T03:00:00Z'))).toEqual([]); // Saturday
+    expect(mapRoutines({ data: [{ ...weekdays, timezone: 'Not/AZone' }] }, new Date('2026-10-08T03:00:00Z'))).toEqual([]);
+  });
+});
+
+describe('notes for Finance, Inventory and Customers', () => {
+  const now = new Date('2026-10-08T03:00:00Z');
+
+  it('overdue invoices: one note with how many, how much and the oldest, to chase them', () => {
+    const [item] = mapOverdue({ data: [
+      { invoiceNumber: 'INV-0057', customerName: 'Bo Lee', balanceDue: '402', currency: 'USD', dueDate: '2026-09-26T00:00:00Z' },
+      { invoiceNumber: 'INV-0042', customerName: 'Acme HVAC', balanceDue: '2598.5', currency: 'USD', dueDate: '2026-07-01T00:00:00Z' },
+    ] }, now);
+    expect(item).toMatchObject({
+      id: 'overdue:2026-10-08:2', kind: 'OVERDUE', urgency: 'soon', audience: 'money', anchor: { page: 'finance' },
+      title: '2 invoices are overdue, $3,000.50 in all', why: 'The oldest is INV-0042 for Acme HVAC, 99 days late.',
+      fixes: [{ label: 'Chase them', request: 'Chase every overdue invoice' }],
+    });
+    expect(mapOverdue({ data: [] }, now)).toEqual([]);
+  });
+
+  it('leaves out the total when currencies differ', () => {
+    const [item] = mapOverdue({ data: [{ invoiceNumber: 'A', balanceDue: '1', currency: 'USD', dueDate: '2026-10-01T00:00:00Z' }, { invoiceNumber: 'B', balanceDue: '1', currency: 'LKR', dueDate: '2026-10-01T00:00:00Z' }] }, now);
+    expect(item.title).toBe('2 invoices are overdue');
+  });
+
+  it('low stock: one note naming the worst items', () => {
+    const [item] = mapLowStock([
+      { itemName: 'Filter 16x25', currentQty: 2, reorderPoint: 10, deficit: 8 },
+      { itemName: 'Capacitor 45/5', currentQty: 0, reorderPoint: 4, deficit: 4 },
+      { itemName: 'R410A 25 lb', currentQty: 1, reorderPoint: 3, deficit: 2 },
+      { itemName: 'Contactor', currentQty: 1, reorderPoint: 2, deficit: 1 },
+    ], now);
+    expect(item).toMatchObject({
+      id: 'lowstock:2026-10-08:4', kind: 'LOW_STOCK', anchor: { page: 'inventory' },
+      title: '4 items are below their reorder point',
+      why: 'Filter 16x25 (2 left), Capacitor 45/5 (0 left), R410A 25 lb (1 left) and 1 more.',
+    });
+    expect(mapLowStock([], now)).toEqual([]);
+  });
+
+  it("suggestions: only high-priority ones, on the page they're about, with Ask Kelvin", () => {
+    const items = mapSuggestions([
+      { id: 'r1', title: 'Win back 6 quiet customers', reason: 'No visit in 9 months.', priority: 'high', action: '/customers?filter=at-risk', actionLabel: 'View customers' },
+      { id: 'r2', title: 'Chase slow payers', reason: 'Payments are 12 days slower.', priority: 'high', action: '/finance', actionLabel: 'Open' },
+      { id: 'r3', title: 'Low priority', reason: 'x', priority: 'medium', action: '/customers' },
+    ], now);
+    expect(items.map((i) => [i.id, i.anchor?.page, i.kind])).toEqual([['suggest:r1', 'customers', 'SUGGESTION'], ['suggest:r2', 'finance', 'SUGGESTION']]);
+    expect(items[0].fixes).toEqual([{ label: 'Ask Kelvin', request: 'About "Win back 6 quiet customers" (No visit in 9 months.): what should we do? Prepare it if you can.' }]);
   });
 });

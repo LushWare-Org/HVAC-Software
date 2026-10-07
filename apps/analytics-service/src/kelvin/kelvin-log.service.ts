@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
-export const KELVIN_EVENT_TYPES = ['SHOWN', 'SPOKE', 'DISMISSED', 'FIX_USED', 'ACTION_DONE', 'ACTION_FAILED'] as const;
+export const KELVIN_EVENT_TYPES = ['SHOWN', 'SPOKE', 'DISMISSED', 'FIX_USED', 'ACTION_DONE', 'ACTION_FAILED', 'STEP_SKIPPED'] as const;
 export type KelvinEventType = (typeof KELVIN_EVENT_TYPES)[number];
 export const SPEAK_MODES = ['ALL', 'URGENT_ONLY', 'NEVER'] as const;
 export type SpeakMode = (typeof SPEAK_MODES)[number];
+export const TONES = ['FRIENDLY', 'SHORT', 'FORMAL'] as const;
+export type Tone = (typeof TONES)[number];
 
 export interface KelvinEventInput {
   companyId: string;
@@ -17,7 +19,7 @@ export interface KelvinEventInput {
   confirmedBy?: string;
 }
 
-export interface KelvinPrefsView { speakMode: SpeakMode; quietUntil: string | null }
+export interface KelvinPrefsView { speakMode: SpeakMode; quietUntil: string | null; tone: Tone }
 
 const RETENTION_DAYS = 90;
 const MAX_IDS = 200;
@@ -75,13 +77,14 @@ export class KelvinLogService implements OnModuleInit, OnModuleDestroy {
 
   async prefs(companyId: string, userId: string): Promise<KelvinPrefsView> {
     const row = await this.prisma.kelvinPrefs.findUnique({ where: { companyId_userId: { companyId, userId } } });
-    return { speakMode: (row?.speakMode as SpeakMode) ?? 'ALL', quietUntil: row?.quietUntil ? new Date(row.quietUntil).toISOString() : null };
+    return { speakMode: (row?.speakMode as SpeakMode) ?? 'ALL', quietUntil: row?.quietUntil ? new Date(row.quietUntil).toISOString() : null, tone: (row?.tone as Tone) ?? 'FRIENDLY' };
   }
 
-  async setPrefs(companyId: string, userId: string, input: { speakMode?: SpeakMode; quietUntil?: string | null }): Promise<KelvinPrefsView> {
+  async setPrefs(companyId: string, userId: string, input: { speakMode?: SpeakMode; quietUntil?: string | null; tone?: Tone }): Promise<KelvinPrefsView> {
     if (input.speakMode !== undefined && !SPEAK_MODES.includes(input.speakMode)) {
       throw new BadRequestException('speakMode must be ALL, URGENT_ONLY or NEVER');
     }
+    if (input.tone !== undefined && !TONES.includes(input.tone)) throw new BadRequestException('tone must be FRIENDLY, SHORT or FORMAL');
     let quietUntil: Date | null | undefined;
     if (input.quietUntil === null) quietUntil = null;
     else if (input.quietUntil !== undefined) {
@@ -91,13 +94,14 @@ export class KelvinLogService implements OnModuleInit, OnModuleDestroy {
     const update = {
       ...(input.speakMode !== undefined && { speakMode: input.speakMode }),
       ...(quietUntil !== undefined && { quietUntil }),
+      ...(input.tone !== undefined && { tone: input.tone }),
     };
     const row = await this.prisma.kelvinPrefs.upsert({
       where: { companyId_userId: { companyId, userId } },
-      create: { companyId, userId, speakMode: input.speakMode ?? 'ALL', quietUntil: quietUntil ?? null },
+      create: { companyId, userId, speakMode: input.speakMode ?? 'ALL', quietUntil: quietUntil ?? null, tone: input.tone ?? 'FRIENDLY' },
       update,
     });
-    return { speakMode: row.speakMode as SpeakMode, quietUntil: row.quietUntil ? new Date(row.quietUntil).toISOString() : null };
+    return { speakMode: row.speakMode as SpeakMode, quietUntil: row.quietUntil ? new Date(row.quietUntil).toISOString() : null, tone: (row.tone as Tone) ?? 'FRIENDLY' };
   }
 
   async purge(): Promise<void> {

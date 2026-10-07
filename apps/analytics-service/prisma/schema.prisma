@@ -90,8 +90,40 @@ model KelvinPrefs {
   userId     String    @map("user_id")
   speakMode  String    @default("ALL") @map("speak_mode")
   quietUntil DateTime? @map("quiet_until") @db.Timestamptz(3)
+  tone       String    @default("FRIENDLY")
   updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@id([companyId, userId])
   @@map("kelvin_prefs")
+}
+
+// Things Kelvin was asked to remember. userId null: for everyone in the company.
+model KelvinNote {
+  id            String   @id @default(uuid())
+  companyId     String   @map("company_id")
+  userId        String?  @map("user_id")
+  text          String
+  createdBy     String   @map("created_by")
+  createdByName String?  @map("created_by_name")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([companyId, userId])
+  @@map("kelvin_notes")
+}
+
+// A request Kelvin brings up on set days at a set time, for one person to run.
+model KelvinRoutine {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  userId    String   @map("user_id")
+  request   String
+  // Weekdays it comes up on, 0 = Sunday.
+  days      Int[]
+  // "08:00", in the time zone below.
+  time      String
+  timezone  String   @default("UTC")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([companyId, userId])
+  @@map("kelvin_routines")
 }
