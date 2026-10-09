@@ -12,12 +12,7 @@ import { useBookService } from '@/hooks/useMyJobs'
 import { useMyJobs } from '@/hooks/useMyJobs'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { Colors, FontSize, Radius, Spacing } from '@/constants/theme'
-
-/** Same morning/afternoon windows the web booking flow offers. */
-const WINDOWS = [
-  { key: 'morning', label: 'Morning', hour: 9, endHour: 12, range: '9am – 12pm' },
-  { key: 'afternoon', label: 'Afternoon', hour: 13, endHour: 17, range: '1pm – 5pm' },
-] as const
+import { WINDOWS, EXACT_TIMES, buildTiming, timeLabel, type WindowKey } from '@/lib/bookingTime'
 
 function nextDays(count = 7) {
   return Array.from({ length: count }, (_, i) => {
@@ -44,7 +39,10 @@ export default function BookService() {
   const [address, setAddress] = useState(lastJob?.serviceAddress ?? '')
   const [addressTouched, setAddressTouched] = useState(false)
   const [day, setDay] = useState<Date | null>(null)
-  const [windowKey, setWindowKey] = useState<(typeof WINDOWS)[number]['key']>('morning')
+  const [windowKey, setWindowKey] = useState<WindowKey>('morning')
+  // Windows are the easy default; some customers need one exact time (someone is only home then).
+  const [exactOn, setExactOn] = useState(false)
+  const [exactTime, setExactTime] = useState('10:00')
   const [locating, setLocating] = useState(false)
 
   const [region, setRegion] = useState<Region>({
@@ -82,9 +80,7 @@ export default function BookService() {
 
   const onSubmit = () => {
     if (!canSubmit || !day) return
-    const w = WINDOWS.find((x) => x.key === windowKey)!
-    const preferred = new Date(day)
-    preferred.setHours(w.hour, 0, 0, 0)
+    const timing = buildTiming({ day, exact: exactOn, windowKey, exactTime })
 
     book.mutate(
       {
@@ -93,7 +89,9 @@ export default function BookService() {
         serviceAddress: effectiveAddress.trim(),
         serviceLatitude: region.latitude,
         serviceLongitude: region.longitude,
-        preferredStart: preferred.toISOString(),
+        preferredStart: timing.preferredStart,
+        preferredEnd: timing.preferredEnd,
+        timeMode: timing.timeMode,
       },
       {
         onSuccess: (job) => {
@@ -157,8 +155,23 @@ export default function BookService() {
             })}
           </ScrollView>
 
-          <Text style={styles.label}>Preferred time</Text>
-          <View style={styles.windowRow}>
+          <Text style={styles.label}>{exactOn ? 'Arrival time' : 'Arrival window'}</Text>
+          {exactOn ? (
+            <>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayRow}>
+                {EXACT_TIMES.map((t) => {
+                  const active = exactTime === t
+                  return (
+                    <TouchableOpacity key={t} onPress={() => setExactTime(t)} style={[styles.timeChip, active && styles.chipActive]}>
+                      <Text style={[styles.timeChipText, active && styles.chipTextActive]}>{timeLabel(t)}</Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </ScrollView>
+              <Text style={styles.hint}>Between 7:00 AM and 7:00 PM. We will do our best to arrive at this time.</Text>
+            </>
+          ) : null}
+          <View style={[styles.windowRow, exactOn && { display: 'none' }]}>
             {WINDOWS.map((w) => {
               const active = windowKey === w.key
               return (
@@ -177,6 +190,10 @@ export default function BookService() {
               )
             })}
           </View>
+
+          <TouchableOpacity onPress={() => setExactOn((v) => !v)} accessibilityRole="button">
+            <Text style={styles.link}>{exactOn ? 'Pick a time window instead' : 'I need a specific time'}</Text>
+          </TouchableOpacity>
 
           <Text style={styles.label}>Service address</Text>
           <TextInput
@@ -265,9 +282,15 @@ const styles = StyleSheet.create({
   },
   dayChipDow: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: '600' },
   dayChipNum: { fontSize: FontSize.lg, color: Colors.textPrimary, fontWeight: '700' },
-  windowRow: { flexDirection: 'row', gap: Spacing.sm },
+  windowRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
+  timeChip: {
+    paddingHorizontal: Spacing.base, paddingVertical: Spacing.md, borderRadius: Radius.md, borderWidth: 1,
+    borderColor: Colors.border, backgroundColor: Colors.surface, marginRight: Spacing.sm,
+  },
+  timeChipText: { fontSize: FontSize.sm, fontWeight: '600', color: Colors.textPrimary },
   windowChip: {
-    flex: 1,
+    flexGrow: 1,
+    minWidth: '30%',
     padding: Spacing.base,
     borderRadius: Radius.md,
     borderWidth: 1,

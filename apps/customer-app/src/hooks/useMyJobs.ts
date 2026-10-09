@@ -63,9 +63,26 @@ export function useBookService() {
         priority: 'NORMAL',
         tags: ['portal-request', 'mobile-app'],
         scheduledStart: input.preferredStart,
+        // An arrival window keeps its whole range; an exact time has no end.
+        ...(input.timeMode === 'WINDOW' && input.preferredStart && input.preferredEnd
+          ? { scheduledEnd: input.preferredEnd, timeMode: 'WINDOW', windowStart: input.preferredStart, windowEnd: input.preferredEnd }
+          : { timeMode: 'EXACT' }),
         equipmentId: input.equipmentId || undefined,
       })
       return data as Job
+    },
+    onSuccess: invalidate,
+  })
+}
+
+/** The customer confirms the time their visit has now. */
+export function useConfirmVisit() {
+  const invalidate = useJobInvalidation()
+
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const { data } = await api.post(`/jobs/jobs/${jobId}/confirm-time`)
+      return data as { confirmed: boolean; already?: boolean }
     },
     onSuccess: invalidate,
   })

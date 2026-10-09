@@ -17,7 +17,10 @@ import { Card } from '@/components/Card'
 import { SectionHeader } from '@/components/SectionHeader'
 import { QuoteCard, rankQuote } from '@/components/QuoteCard'
 import { InvoiceCard, rankInvoice } from '@/components/InvoiceCard'
-import { formatDate } from '@/lib/format'
+import { formatVisit } from '@/lib/format'
+import { KelvinNotes } from '@/components/KelvinNotes'
+import { useConfirmVisit, useMyJobs } from '@/hooks/useMyJobs'
+import { canConfirm } from '@/lib/confirm'
 import { Colors, Eyebrow, FontSize, Radius, Shadow, Spacing } from '@/constants/theme'
 import type { Job } from '@/types/api'
 
@@ -64,10 +67,43 @@ function JobRow({ job }: { job: Job }) {
         <Text style={styles.jobTitle} numberOfLines={1}>
           {job.title || job.jobNumber || 'Service'}
         </Text>
-        <Text style={styles.jobWhen}>{formatDate(job.scheduledStart)}</Text>
+        <Text style={styles.jobWhen}>{formatVisit(job, 'Not scheduled')}</Text>
       </View>
       <StatusBadge status={job.status} />
     </TouchableOpacity>
+  )
+}
+
+/** Booked visits that are waiting for the customer to say "yes, that time works". */
+function ConfirmVisits() {
+  const { data } = useMyJobs()
+  const confirm = useConfirmVisit()
+  const waiting = (data?.data ?? []).filter(canConfirm).slice(0, 3)
+  if (!waiting.length) return null
+  return (
+    <Card style={styles.confirmCard}>
+      <Text style={styles.confirmTitle}>
+        {waiting.length === 1 ? 'Please confirm your visit' : 'Please confirm your visits'}
+      </Text>
+      {waiting.map((job) => (
+        <View key={job.id} style={styles.confirmRow}>
+          <TouchableOpacity style={styles.confirmInfo} onPress={() => router.push(`/job/${job.id}`)}>
+            <Text style={styles.jobTitle} numberOfLines={1}>{job.title}</Text>
+            <Text style={styles.jobWhen}>{formatVisit(job)}{job.assignedToName ? ` · ${job.assignedToName}` : ''}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.confirmBtn}
+            disabled={confirm.isPending}
+            onPress={() => confirm.mutate(job.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`Confirm ${job.title}`}
+          >
+            <Text style={styles.confirmBtnText}>Confirm</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+      <Text style={styles.confirmHint}>Need a different time? Open the visit and ask for another one.</Text>
+    </Card>
   )
 }
 
@@ -145,6 +181,8 @@ export default function Home() {
         </View>
 
         <View style={styles.body}>
+          <KelvinNotes />
+          <ConfirmVisits />
           {isError ? (
             <View style={styles.errorCard}>
               <Feather name="alert-triangle" size={16} color={Colors.danger} />
@@ -229,6 +267,13 @@ function StatCell({ label, value, onPress }: { label: string; value: number; onP
 }
 
 const styles = StyleSheet.create({
+  confirmCard: { padding: Spacing.base, marginBottom: Spacing.base, gap: Spacing.md },
+  confirmTitle: { fontSize: FontSize.base, fontWeight: '700', color: Colors.textPrimary },
+  confirmRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  confirmInfo: { flex: 1 },
+  confirmBtn: { backgroundColor: Colors.primary, borderRadius: Radius.pill, paddingHorizontal: 16, paddingVertical: 9 },
+  confirmBtnText: { color: Colors.textInverse, fontWeight: '700', fontSize: FontSize.sm },
+  confirmHint: { fontSize: FontSize.xs, color: Colors.textMuted },
   safe: { flex: 1, backgroundColor: Colors.heroBg },
   scroll: { paddingBottom: Spacing.xxl },
   hero: {

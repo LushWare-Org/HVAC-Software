@@ -7,14 +7,16 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '@/components/Text'
 import { useLocalSearchParams } from 'expo-router'
 import {
-  useMyJob, useCancelJob, useUpdatePreferredTime, useRequestReschedule,
+  useMyJob, useCancelJob, useUpdatePreferredTime, useRequestReschedule, useConfirmVisit,
   CUSTOMER_RESCHEDULE_REASONS, type CustomerRescheduleReason,
 } from '@/hooks/useMyJobs'
 import { StatusBadge } from '@/components/StatusBadge'
 import { ScreenHeader } from '@/components/ScreenHeader'
-import { formatDateTime, humanizeStatus } from '@/lib/format'
+import { formatDateTime, formatVisit, humanizeStatus } from '@/lib/format'
+import { canConfirm, isConfirmed } from '@/lib/confirm'
+import { Avatar } from '@/components/Avatar'
 import { availableActions } from '@/lib/jobActions'
-import { Colors, FontSize, Radius, Shadow, Spacing } from '@/constants/theme'
+import { Colors, FontSize, Radius, Shadow, Spacing, tint } from '@/constants/theme'
 
 /** Next few days, each with a morning/afternoon window, for proposing a time. */
 function nextSlots(count = 6) {
@@ -56,6 +58,7 @@ export default function JobDetail() {
   const cancelJob = useCancelJob()
   const updatePreferredTime = useUpdatePreferredTime()
   const requestReschedule = useRequestReschedule()
+  const confirmVisit = useConfirmVisit()
 
   const [picking, setPicking] = useState<null | 'PREFERRED' | 'RESCHEDULE'>(null)
   const [reasonCode, setReasonCode] = useState<CustomerRescheduleReason>('CUSTOMER_UNAVAILABLE')
@@ -158,11 +161,52 @@ export default function JobDetail() {
         ) : null}
 
         <View style={styles.card}>
-          <Row label="When" value={formatDateTime(job.scheduledStart)} />
+          <Row label={job.timeMode === 'WINDOW' ? 'Arrival window' : 'When'} value={formatVisit(job)} />
           <Row label="Technician" value={job.assignedToName || 'Not assigned yet'} />
           <Row label="Address" value={job.serviceAddress || '—'} />
           {job.description ? <Row label="Details" value={job.description} /> : null}
         </View>
+
+        {job.timeMode === 'WINDOW' && job.scheduledStart ? (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>
+              Your technician will arrive some time in this window. We will tell you the exact time on the day.
+            </Text>
+          </View>
+        ) : null}
+
+        {job.assignedToName && job.status === 'SCHEDULED' ? (
+          <View style={styles.techCard}>
+            <Avatar name={job.assignedToName} size={40} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.techName}>{job.assignedToName}</Text>
+              <Text style={styles.techRole}>Your technician for this visit</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {isConfirmed(job) && job.status === 'SCHEDULED' ? (
+          <View style={[styles.confirmed, { backgroundColor: tint(Colors.success, 0.1), borderColor: tint(Colors.success, 0.35) }]}>
+            <Text style={[styles.confirmedText, { color: Colors.success }]}>You confirmed this time. Thank you.</Text>
+          </View>
+        ) : null}
+
+        {canConfirm(job) ? (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              disabled={confirmVisit.isPending}
+              onPress={() =>
+                confirmVisit.mutate(job.id, {
+                  onError: (err: any) =>
+                    Alert.alert('Could not confirm', err?.response?.data?.message ?? 'Please try again.'),
+                })
+              }
+            >
+              <Text style={styles.primaryBtnText}>{confirmVisit.isPending ? 'Confirming…' : 'Confirm this time'}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
         {actions.length > 0 ? (
           <View style={styles.actions}>
@@ -257,6 +301,11 @@ export default function JobDetail() {
 }
 
 const styles = StyleSheet.create({
+  techCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.base, marginBottom: Spacing.md, ...Shadow.card },
+  techName: { fontSize: FontSize.base, fontWeight: '700', color: Colors.textPrimary },
+  techRole: { fontSize: FontSize.sm, color: Colors.textMuted },
+  confirmed: { borderWidth: 1, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.md },
+  confirmedText: { fontSize: FontSize.sm, fontWeight: '700' },
   safe: { flex: 1, backgroundColor: Colors.background },
   center: {
     flex: 1,

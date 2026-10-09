@@ -31,6 +31,13 @@ export interface Job {
   priority?: string
   scheduledStart?: string | null
   scheduledEnd?: string | null
+  /** WINDOW = the customer asked for an arrival window and no exact time is set yet. */
+  timeMode?: 'EXACT' | 'WINDOW' | null
+  windowStart?: string | null
+  windowEnd?: string | null
+  /** The start time the customer confirmed; it counts only while it equals scheduledStart. */
+  confirmedFor?: string | null
+  confirmedAt?: string | null
   completedAt?: string | null
   assignedToId?: string | null
   assignedToName?: string | null
@@ -65,6 +72,9 @@ export interface BookServiceInput {
   serviceLatitude?: number
   serviceLongitude?: number
   preferredStart?: string
+  /** Set with timeMode WINDOW: the whole arrival window the customer picked. */
+  preferredEnd?: string
+  timeMode?: 'EXACT' | 'WINDOW'
   equipmentId?: string
 }
 

@@ -1,57 +1,101 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 import { Text } from '@/components/Text'
-import { Colors, FontSize, Radius, Spacing } from '@/constants/theme'
+import { Colors, FontSize, Radius, tint } from '@/constants/theme'
 import { humanizeStatus } from '@/lib/format'
 
-/** Mirrors the portal's badge vocabulary so both clients read the same. */
-const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
-  PENDING: { bg: Colors.warningLight, fg: Colors.warning },
-  SCHEDULED: { bg: Colors.primaryLight, fg: Colors.primaryDark },
-  EN_ROUTE: { bg: Colors.infoLight, fg: Colors.info },
-  ON_SITE: { bg: Colors.infoLight, fg: Colors.info },
-  IN_PROGRESS: { bg: Colors.infoLight, fg: Colors.info },
-  COMPLETED: { bg: Colors.successLight, fg: Colors.success },
-  INVOICED: { bg: Colors.surfaceAlt, fg: Colors.textSecondary },
-  PAID: { bg: Colors.successLight, fg: Colors.success },
-  CANCELLED: { bg: Colors.dangerLight, fg: Colors.danger },
-  ON_HOLD: { bg: Colors.warningLight, fg: Colors.warning },
-  // Finance statuses reuse the same palette.
-  SENT: { bg: Colors.primaryLight, fg: Colors.primaryDark },
-  VIEWED: { bg: Colors.primaryLight, fg: Colors.primaryDark },
-  ACCEPTED: { bg: Colors.successLight, fg: Colors.success },
-  DECLINED: { bg: Colors.dangerLight, fg: Colors.danger },
-  OVERDUE: { bg: Colors.dangerLight, fg: Colors.danger },
-  PARTIALLY_PAID: { bg: Colors.warningLight, fg: Colors.warning },
-  VOID: { bg: Colors.surfaceAlt, fg: Colors.textMuted },
-  DRAFT: { bg: Colors.surfaceAlt, fg: Colors.textMuted },
-  // Agreement + project statuses reuse the same palette.
-  ACTIVE: { bg: Colors.successLight, fg: Colors.success },
-  PLANNING: { bg: Colors.infoLight, fg: Colors.info },
-  PENDING_RENEWAL: { bg: Colors.warningLight, fg: Colors.warning },
-  RENEWED: { bg: Colors.successLight, fg: Colors.success },
-  EXPIRED: { bg: Colors.dangerLight, fg: Colors.danger },
-  // Issue report statuses.
-  OPEN: { bg: Colors.dangerLight, fg: Colors.danger },
-  ACKNOWLEDGED: { bg: Colors.warningLight, fg: Colors.warning },
-  RESOLVED: { bg: Colors.successLight, fg: Colors.success },
+/**
+ * The same status labels as the portal: a small ring or symbol that shows how far something has
+ * got, inside a pill tinted with the status colour. Colour is never the only signal: there is
+ * always the word, and the ring changes shape (dashed, ring, dot, check, cross, pause).
+ */
+type Glyph = 'dashed' | 'ring' | 'dot' | 'check' | 'cross' | 'pause' | 'clock'
+interface Look { color: string; glyph: Glyph; label?: string }
+
+const LOOK: Record<string, Look> = {
+  PENDING: { color: Colors.warning, glyph: 'dashed' },
+  SCHEDULED: { color: Colors.primary, glyph: 'ring' },
+  EN_ROUTE: { color: Colors.info, glyph: 'dot' },
+  ON_SITE: { color: Colors.info, glyph: 'dot' },
+  IN_PROGRESS: { color: Colors.primary, glyph: 'dot' },
+  COMPLETED: { color: Colors.success, glyph: 'check' },
+  INVOICED: { color: Colors.violet, glyph: 'ring' },
+  PAID: { color: Colors.success, glyph: 'check' },
+  CANCELLED: { color: Colors.danger, glyph: 'cross' },
+  ON_HOLD: { color: Colors.textMuted, glyph: 'pause' },
+  // Quotes and invoices
+  DRAFT: { color: Colors.textMuted, glyph: 'dashed' },
+  SENT: { color: Colors.warning, glyph: 'ring', label: 'Waiting for you' },
+  VIEWED: { color: Colors.primary, glyph: 'dot' },
+  ACCEPTED: { color: Colors.success, glyph: 'check' },
+  DECLINED: { color: Colors.danger, glyph: 'cross' },
+  OVERDUE: { color: Colors.danger, glyph: 'clock' },
+  PARTIALLY_PAID: { color: Colors.primary, glyph: 'dot', label: 'Part paid' },
+  VOID: { color: Colors.textMuted, glyph: 'cross' },
+  EXPIRED: { color: Colors.danger, glyph: 'clock' },
+  CONVERTED: { color: Colors.success, glyph: 'check' },
+  // Agreements, projects, issue reports
+  ACTIVE: { color: Colors.success, glyph: 'dot' },
+  PLANNING: { color: Colors.info, glyph: 'dashed' },
+  PENDING_RENEWAL: { color: Colors.warning, glyph: 'clock' },
+  RENEWED: { color: Colors.success, glyph: 'check' },
+  OPEN: { color: Colors.danger, glyph: 'dashed' },
+  ACKNOWLEDGED: { color: Colors.warning, glyph: 'ring' },
+  RESOLVED: { color: Colors.success, glyph: 'check' },
 }
 
-export function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_STYLE[status] ?? { bg: Colors.surfaceAlt, fg: Colors.textSecondary }
+function Symbol({ glyph, color }: { glyph: Glyph; color: string }) {
+  if (glyph === 'check' || glyph === 'cross' || glyph === 'pause' || glyph === 'clock') {
+    const name = glyph === 'check' ? 'check' : glyph === 'cross' ? 'x' : glyph === 'pause' ? 'pause' : 'clock'
+    return (
+      <View style={[styles.ring, { borderColor: color, backgroundColor: glyph === 'check' ? color : 'transparent' }]}>
+        <Feather name={name} size={9} color={glyph === 'check' ? Colors.white : color} />
+      </View>
+    )
+  }
   return (
-    <View style={[styles.badge, { backgroundColor: s.bg }]}>
-      <Text style={[styles.text, { color: s.fg }]}>{humanizeStatus(status)}</Text>
+    <View style={[styles.ring, { borderColor: color, borderStyle: glyph === 'dashed' ? 'dashed' : 'solid' }]}>
+      {glyph === 'dot' ? <View style={[styles.dot, { backgroundColor: color }]} /> : null}
+    </View>
+  )
+}
+
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
+  const key = String(status ?? '').toUpperCase()
+  const look = LOOK[key] ?? { color: Colors.textSecondary, glyph: 'ring' as Glyph }
+  return (
+    <View
+      accessible
+      accessibilityLabel={`Status: ${label ?? look.label ?? humanizeStatus(key)}`}
+      style={[styles.badge, { backgroundColor: tint(look.color, 0.1), borderColor: tint(look.color, 0.4) }]}
+    >
+      <Symbol glyph={look.glyph} color={look.color} />
+      <Text style={styles.text}>{label ?? look.label ?? humanizeStatus(key)}</Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   badge: {
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     alignSelf: 'flex-start',
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+    paddingLeft: 7,
+    paddingRight: 10,
+    paddingVertical: 3,
   },
-  text: { fontSize: FontSize.xs, fontWeight: '700' },
+  ring: {
+    width: 15,
+    height: 15,
+    borderRadius: 8,
+    borderWidth: 1.8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dot: { width: 5, height: 5, borderRadius: 3 },
+  text: { fontSize: FontSize.xs, fontWeight: '600', color: Colors.textPrimary },
 })

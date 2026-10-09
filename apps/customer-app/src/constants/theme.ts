@@ -9,32 +9,33 @@ export const Colors = {
   primaryDark: '#1D4ED8',
   primaryLight: '#DBEAFE',
 
-  success: '#059669',
-  successLight: '#D1FAE5',
-  warning: '#D97706',
-  warningLight: '#FEF3C7',
-  danger: '#DC2626',
-  dangerLight: '#FEE2E2',
-  info: '#0891B2',
-  infoLight: '#CFFAFE',
+  // Same semantic colours as the portal's light theme.
+  success: '#047857',
+  successLight: '#E3F6EC',
+  warning: '#B45309',
+  warningLight: '#FEF1D6',
+  danger: '#D12C2C',
+  dangerLight: '#FDE8E8',
+  info: '#0E7490',
+  infoLight: '#DDF4F9',
   // Reserved for technician-thread accents and the Messages quick action —
   // keeps "a human is on the other end" visually distinct from money/status.
-  violet: '#7C3AED',
-  violetLight: '#EDE9FE',
+  violet: '#6D28D9',
+  violetLight: '#EFEAFD',
 
   white: '#FFFFFF',
-  // A soft blue tint (matches the portal's --bg-active) instead of flat gray —
-  // white cards need a canvas with some color in it to read as cards at all.
-  background: '#EEF2FF',
+  // A white page like the portal's light theme: cards keep their edge with a
+  // hairline border and a soft shadow instead of a tinted canvas.
+  background: '#FFFFFF',
   surface: '#FFFFFF',
-  surfaceAlt: '#F3F4F6',
-  border: '#E5E7EB',
+  surfaceAlt: '#F5F7FA',
+  border: '#E8EBF0',
   // Rounded hero bands (Home, screen headers) sit on solid brand blue.
   heroBg: '#2563EB',
 
-  textPrimary: '#111827',
-  textSecondary: '#4B5563',
-  textMuted: '#6B7280',
+  textPrimary: '#0F172A',
+  textSecondary: '#475569',
+  textMuted: '#64748B',
   textInverse: '#FFFFFF',
   disabled: '#D1D5DB',
 } as const
@@ -42,6 +43,8 @@ export const Colors = {
 /** One consistent elevation for cards — replaces ad-hoc flat 1px borders. */
 export const Shadow = {
   card: {
+    borderWidth: 1,
+    borderColor: '#E8EBF0',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
@@ -81,6 +84,13 @@ export const Fonts = {
   bold: 'Poppins_700Bold',
   '800': 'Poppins_800ExtraBold',
 } as const
+
+/** A colour with some opacity, as rgba: the soft tint behind a status colour. */
+export function tint(hex: string, alpha: number): string {
+  const h = hex.replace('#', '')
+  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`
+}
 
 export const Spacing = {
   xs: 4,

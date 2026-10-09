@@ -25,6 +25,32 @@ export function formatDateTime(iso?: string | null, fallback = 'Not scheduled'):
   return `${date} · ${time}`
 }
 
+/** "Morning 8:00 AM – 12:00 PM" for a visit booked as an arrival window; '' when there is none. */
+export function formatWindow(start?: string | null, end?: string | null): string {
+  if (!start || !end) return ''
+  const a = new Date(start)
+  const b = new Date(end)
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return ''
+  const t = (d: Date) => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  const h = a.getHours()
+  const name = h === 8 ? 'Morning' : h === 12 ? 'Afternoon' : h === 16 ? 'Evening' : ''
+  return `${name ? `${name} ` : ''}${t(a)} – ${t(b)}`
+}
+
+/** The visit's date plus its time, or its arrival window when the customer booked one. */
+export function formatVisit(job: {
+  scheduledStart?: string | null
+  timeMode?: string | null
+  windowStart?: string | null
+  windowEnd?: string | null
+}, fallback = 'Not scheduled'): string {
+  if (!job.scheduledStart) return fallback
+  if (job.timeMode === 'WINDOW' && job.windowStart && job.windowEnd) {
+    return `${formatDate(job.scheduledStart)} · ${formatWindow(job.windowStart, job.windowEnd)}`
+  }
+  return formatDateTime(job.scheduledStart, fallback)
+}
+
 /** Tenant currency is not resolved in the app yet; show the code the record carries. */
 export function formatMoney(
   value: string | number | null | undefined,

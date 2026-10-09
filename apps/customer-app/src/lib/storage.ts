@@ -57,6 +57,24 @@ export async function setBiometricEnabled(enabled: boolean): Promise<void> {
   await SecureStore.setItemAsync(BIOMETRIC_PREF_KEY, String(enabled))
 }
 
+const KELVIN_DISMISSED_KEY = 'cust_kelvin_dismissed'
+
+/** Kelvin notes the customer dismissed on this phone. */
+export async function getDismissedNotes(): Promise<string[]> {
+  try {
+    const raw = await SecureStore.getItemAsync(KELVIN_DISMISSED_KEY)
+    return raw ? (JSON.parse(raw) as string[]) : []
+  } catch {
+    return []
+  }
+}
+
+export async function setDismissedNotes(ids: string[]): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(KELVIN_DISMISSED_KEY, JSON.stringify(ids.slice(-100)))
+  } catch { /* storage unavailable: the notes just come back */ }
+}
+
 export async function clearAll(): Promise<void> {
   await Promise.all([removeToken(), removeUser()])
 }
