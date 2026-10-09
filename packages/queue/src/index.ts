@@ -65,6 +65,16 @@ export function createQueue(
   });
 }
 
+// ---- Worker settings for a metered Redis (Upstash bills every command) ----
+// An idle worker otherwise asks Redis for work every 5 s and checks for stalled
+// jobs every 30 s, around the clock, which alone can use up a monthly command
+// allowance. New jobs still wake the worker straight away (BullMQ's marker key),
+// so waiting longer when idle costs no delay.
+export const QUIET_WORKER = {
+  drainDelay: 60, // seconds to wait for work when the queue is empty (default 5)
+  stalledInterval: 5 * 60_000, // ms between stalled-job checks (default 30 s)
+} as const;
+
 // ---- Worker factory (used inside comms-service processors) ----
 export { Worker, Queue };
 export type { QueueOptions };

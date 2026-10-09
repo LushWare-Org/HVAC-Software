@@ -4,6 +4,10 @@ export interface CompanySettings {
   name: string;
   address: string | null;
   logoUrl: string | null;
+  /** Contact details shown in the footer of customer emails. */
+  phone?: string | null;
+  email?: string | null;
+  website?: string | null;
   /** ISO 4217, e.g. "USD" | "LKR". */
   currency: string;
   /** IANA zone, e.g. "Asia/Colombo". */
