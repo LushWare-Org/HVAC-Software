@@ -17,6 +17,7 @@ import type { Browser } from 'puppeteer-core';
 import { formatMoneySrv, formatDateSrv } from './format';
 import type { DocumentTemplateConfig } from '../document-templates/document-template.client';
 import { DEFAULT_ROWS, HERO_CANVAS_HEIGHT, type TemplateRow, type TemplateBlock } from './slots';
+import { pdfOptions, withPrintLayout, type PageSize } from './print-layout';
 
 // ── Money/date formatting lives in ./format (currency + timezone aware) ─────
 export interface PdfRenderOpts {
@@ -222,7 +223,7 @@ export class PdfService implements OnModuleDestroy {
     opts: PdfRenderOpts = DEFAULT_RENDER_OPTS, template?: DocumentTemplateConfig | null,
   ): Promise<Buffer> {
     const html = this.renderQuoteHtml(quote, companyName, companyAddress, opts, template);
-    return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false });
+    return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false, pageSize: template?.pageSize, docLabel: quote.quoteNumber });
   }
 
   async generateInvoicePdf(
@@ -233,7 +234,7 @@ export class PdfService implements OnModuleDestroy {
     template?: DocumentTemplateConfig | null,
   ): Promise<Buffer> {
     const html = this.renderInvoiceHtml(invoice, companyName, companyAddress, opts, template);
-    return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false });
+    return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false, pageSize: template?.pageSize, docLabel: invoice.invoiceNumber });
   }
 
   async generateAgreementPdf(
@@ -241,7 +242,7 @@ export class PdfService implements OnModuleDestroy {
     opts: PdfRenderOpts = DEFAULT_RENDER_OPTS, template?: DocumentTemplateConfig | null,
   ): Promise<Buffer> {
     const html = this.renderAgreementHtml(context, companyName, companyAddress, opts, template);
-    return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false });
+    return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false, pageSize: template?.pageSize, docLabel: context.name });
   }
 
   async generatePaymentReceiptPdf(
@@ -249,7 +250,7 @@ export class PdfService implements OnModuleDestroy {
     opts: PdfRenderOpts = DEFAULT_RENDER_OPTS, template?: DocumentTemplateConfig | null,
   ): Promise<Buffer> {
     const html = this.renderPaymentReceiptHtml(context, companyName, companyAddress, opts, template);
-    return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false });
+    return this.htmlToPdf(html, { showPageNumbers: template?.showPageNumbers ?? false, pageSize: template?.pageSize, docLabel: context.receiptNumber });
   }
 
   // ── HTML renderers ─────────────────────────────────────────────────────────
@@ -606,7 +607,7 @@ export class PdfService implements OnModuleDestroy {
     if (next) next();
   }
 
-  private async htmlToPdf(html: string, opts: { showPageNumbers?: boolean } = {}): Promise<Buffer> {
+  private async htmlToPdf(html: string, opts: { showPageNumbers?: boolean; pageSize?: PageSize | null; docLabel?: string | null } = {}): Promise<Buffer> {
     await this.acquireSlot();
     try {
       const browser = await this.getBrowser();
@@ -634,7 +635,7 @@ export class PdfService implements OnModuleDestroy {
         // 'domcontentloaded' is reliable for fully-inlined HTML templates and
         // avoids 30s timeouts caused by networkidle0 waiting for external
         // resources.
-        await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        await page.setContent(withPrintLayout(html, opts.pageSize), { waitUntil: 'domcontentloaded', timeout: 15000 });
         // 'domcontentloaded' doesn't wait for external <img> requests (logo/letterhead
         // URLs) to finish — without this, page.pdf() can snapshot before those images
         // arrive, silently dropping them from the output. Capped, because a
@@ -653,18 +654,7 @@ export class PdfService implements OnModuleDestroy {
           }),
           new Promise<void>((resolve) => { capTimer = setTimeout(resolve, PdfService.IMAGE_WAIT_MS); }),
         ]).finally(() => clearTimeout(capTimer));
-        const pdfBuffer = await page.pdf({
-          format: 'Letter',
-          printBackground: true,
-          margin: opts.showPageNumbers
-            ? { top: '0', right: '0', bottom: '24px', left: '0' }
-            : { top: '0', right: '0', bottom: '0', left: '0' },
-          displayHeaderFooter: !!opts.showPageNumbers,
-          headerTemplate: '<span></span>',
-          footerTemplate: opts.showPageNumbers
-            ? '<div style="width:100%;font-size:9px;text-align:center;color:#94a3b8;font-family:Arial,sans-serif;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>'
-            : '<span></span>',
-        });
+        const pdfBuffer = await page.pdf(pdfOptions(opts));
         return Buffer.from(pdfBuffer);
       } finally {
         // Close only the page, not the browser — the singleton lives on.

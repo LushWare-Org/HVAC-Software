@@ -14,6 +14,7 @@ import { DocumentTemplatesModule } from './document-templates/document-templates
 import { DocumentRenderModule } from './document-render/document-render.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import appConfig from './config/app.config';
+import { ProjectMoneyModule } from './project-money/project-money.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import appConfig from './config/app.config';
     InvoicesModule,
     PaymentsModule,
     ExpensesModule,
+    ProjectMoneyModule,
     QuickBooksModule,
   ],
 })

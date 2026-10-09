@@ -13,6 +13,8 @@ import { ExpenseCategory } from '../prisma/generated';
 
 class CreateExpenseBodyDto {
   @IsOptional() @IsString() jobId?: string;
+  /** A site cost for a project, not tied to one job. */
+  @IsOptional() @IsString() projectId?: string;
   @IsOptional() @IsString() technicianId?: string;
   @IsOptional() @IsEnum(ExpenseCategory) category?: ExpenseCategory;
   @IsString() description!: string;
@@ -33,6 +35,7 @@ export class ExpensesController {
   @Get()
   @ApiOperation({ summary: 'List expenses for this company' })
   @ApiQuery({ name: 'jobId', required: false })
+  @ApiQuery({ name: 'projectId', required: false, description: 'Expenses logged directly to a project' })
   @ApiQuery({ name: 'technicianId', required: false })
   @ApiQuery({ name: 'category', enum: ExpenseCategory, required: false })
   @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date — filters by expenseDate >= start of this day' })
@@ -40,6 +43,7 @@ export class ExpensesController {
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('jobId') jobId?: string,
+    @Query('projectId') projectId?: string,
     @Query('technicianId') technicianId?: string,
     @Query('category') category?: ExpenseCategory,
     @Query('page') page?: number,
@@ -47,7 +51,7 @@ export class ExpensesController {
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
-    return this.expensesService.findAll(user.companyId, { jobId, technicianId, category, page, limit, dateFrom, dateTo });
+    return this.expensesService.findAll(user.companyId, { jobId, projectId, technicianId, category, page, limit, dateFrom, dateTo });
   }
 
   @Get('job/:jobId/summary')

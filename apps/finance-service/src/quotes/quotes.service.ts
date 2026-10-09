@@ -25,6 +25,7 @@ import { QuoteStatus, DiscountType } from '../prisma/generated';
 import {
   nextInvoiceNumber, isInvoiceNumberTaken, INVOICE_NUMBER_MAX_ATTEMPTS,
 } from '../invoices/invoice-number';
+import { withJobProject } from '../common/job-project';
 
 // ── Valid status transitions ───────────────────────────────────────────────
 const QUOTE_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
@@ -126,6 +127,8 @@ export class QuotesService {
   // ── Create ───────────────────────────────────────────────────────────────
 
   async create(companyId: string, userId: string, dto: CreateQuoteDto) {
+    // A document for a project job belongs to that project, however it was created.
+    dto = await withJobProject(this.prisma, companyId, dto);
     const quoteNumber = await nextQuoteNumber(this.prisma, companyId);
     const { lineItems = [], taxRate = 0, discountType, discountValue, currency, ...rest } = dto;
     const resolvedCurrency = currency || (await this.companySettings.getSettings(companyId)).currency;

@@ -25,6 +25,7 @@ import { FinanceEventsPublisher } from '../realtime/finance-events.publisher';
 import { QuickBooksSyncService } from '../quickbooks/quickbooks-sync.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceStatus, PaymentStatus } from '../prisma/generated';
+import { withJobProject } from '../common/job-project';
 
 // ── Status transitions ────────────────────────────────────────────────────
 const INVOICE_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
@@ -127,6 +128,8 @@ export class InvoicesService {
   // ── Create ────────────────────────────────────────────────────────────────
 
   async create(companyId: string, userId: string, dto: CreateInvoiceDto) {
+    // A document for a project job belongs to that project, however it was created.
+    dto = await withJobProject(this.prisma, companyId, dto);
     const { lineItems = [], taxRate = 0, dueDate, dueDays = 30, currency, ...rest } = dto;
     const resolvedCurrency = currency || (await this.companySettings.getSettings(companyId)).currency;
     // Default customer name/email when not provided (e.g. when creating from a quote reference)

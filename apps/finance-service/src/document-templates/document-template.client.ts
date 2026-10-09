@@ -17,6 +17,8 @@ export interface DocumentTemplateConfig {
   footerText?: string | null;
   bankDetails?: string | null;
   showPageNumbers?: boolean;
+  /** Paper size for the PDF: A4 (default) or LETTER. */
+  pageSize?: 'A4' | 'LETTER' | null;
   letterheadImageUrl?: string | null;
   letterheadTopMarginPx?: number | null;
   letterheadBottomMarginPx?: number | null;

@@ -89,6 +89,7 @@ const mockPrisma = {
     count: jest.fn().mockResolvedValue(0),
   },
   $queryRaw: jest.fn().mockResolvedValue([{ maxNumber: 0 }]),
+  $queryRawUnsafe: jest.fn().mockResolvedValue([]),
   $transaction: jest.fn((args: any, _opts?: any) => {
     if (Array.isArray(args)) return Promise.all(args);
     return args(); // for callback form
@@ -239,6 +240,13 @@ describe('InvoicesService', () => {
       await service.create(COMPANY_ID, USER_ID, dto);
       expect(mockPrisma.invoice.create.mock.calls[0][0].data.invoiceNumber)
         .toMatch(/^INV-\d{4}-0010$/);
+    });
+
+    it("an invoice for a project job joins the job's project", async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([{ maxNumber: 0 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ projectId: 'p-mall', componentId: null }]);
+      await service.create(COMPANY_ID, USER_ID, { ...dto, jobId: 'j-1' } as any);
+      expect(mockPrisma.invoice.create.mock.calls[0][0].data).toMatchObject({ jobId: 'j-1', projectId: 'p-mall' });
     });
 
     it('starts at 0001 for a company with no invoices yet', async () => {

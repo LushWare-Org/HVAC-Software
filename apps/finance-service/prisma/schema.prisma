@@ -349,6 +349,7 @@ model Expense {
   id              String          @id @default(uuid())
   companyId       String
   jobId           String?         // cross-schema ref
+  projectId       String?         // cross-schema ref to crm.projects: a site cost not tied to one job
   technicianId    String?         // who submitted it
   category        ExpenseCategory @default(OTHER)
   description     String
@@ -363,6 +364,7 @@ model Expense {
   updatedAt       DateTime        @updatedAt
 
   @@index([companyId, jobId])
+  @@index([companyId, projectId])
   @@index([companyId, expenseDate])
   @@schema("finance")
 }

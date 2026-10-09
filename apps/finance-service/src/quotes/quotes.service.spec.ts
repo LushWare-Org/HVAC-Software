@@ -56,6 +56,7 @@ function makeQuote(overrides: Partial<any> = {}): any {
 // ── Mock PrismaService ────────────────────────────────────────────────────
 
 const mockPrisma: any = {
+  $queryRawUnsafe: jest.fn().mockResolvedValue([]),
   quote: {
     count: jest.fn(),
     findMany: jest.fn(),
@@ -144,6 +145,14 @@ describe('QuotesService', () => {
       expect(mockPrisma.quote.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ currency: 'LKR' }) }),
       );
+    });
+
+    it("a quote for a project job joins the job's project", async () => {
+      mockPrisma.quote.count.mockResolvedValue(0);
+      mockPrisma.quote.create.mockImplementation(({ data }: any) => Promise.resolve({ ...data, id: 'q-new' }));
+      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ projectId: 'p-mall', componentId: 'c-7' }]);
+      await service.create(COMPANY_ID, USER_ID, { customerId: 'c1', customerName: 'C', customerEmail: 'c@x.com', title: 'Q', currency: 'USD', jobId: 'j-1' } as any);
+      expect(mockPrisma.quote.create.mock.calls.at(-1)[0].data).toMatchObject({ jobId: 'j-1', projectId: 'p-mall', componentId: 'c-7' });
     });
 
     it('respects an explicit currency in the DTO without calling CompanySettingsClient', async () => {

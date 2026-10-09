@@ -8,6 +8,7 @@ import { clampPagination } from '@tscrm/types';
 
 export interface CreateExpenseDto {
   jobId?: string;
+  projectId?: string;
   technicianId?: string;
   category?: ExpenseCategory;
   description: string;
@@ -26,6 +27,7 @@ export class ExpensesService {
     companyId: string,
     params: {
       jobId?: string;
+      projectId?: string;
       technicianId?: string;
       category?: ExpenseCategory;
       page?: number;
@@ -34,7 +36,7 @@ export class ExpensesService {
       dateTo?: string;
     },
   ) {
-    const { jobId, technicianId, category, dateFrom, dateTo } = params;
+    const { jobId, projectId, technicianId, category, dateFrom, dateTo } = params;
     // 500 covers a full CSV export in one page, same ceiling used by invoices/quotes.
     const { page, limit, skip } = clampPagination({ page: params.page, limit: params.limit }, { maxLimit: 500 });
     const expenseDateFilter: { gte?: Date; lte?: Date } = {};
@@ -43,6 +45,7 @@ export class ExpensesService {
     const where = {
       companyId,
       ...(jobId ? { jobId } : {}),
+      ...(projectId ? { projectId } : {}),
       ...(technicianId ? { technicianId } : {}),
       ...(category ? { category } : {}),
       ...(dateFrom || dateTo ? { expenseDate: expenseDateFilter } : {}),
