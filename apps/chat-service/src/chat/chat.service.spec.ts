@@ -44,7 +44,7 @@ describe('ChatService', () => {
   });
 
   it('answers plainly when no tool is needed', async () => {
-    const llm = scriptedLlm([[{ type: 'text', text: 'Hello' }, { type: 'usage', inputTokens: 10, outputTokens: 2 }]]);
+    const llm = scriptedLlm([[{ type: 'text', text: 'Hello' }, { type: 'usage', inputTokens: 10, outputTokens: 2, provider: 'openai', model: 'gpt-4o' }]]);
     const out = await collect(new ChatService(llm as any, prompts as any).streamResponse({ message: 'hi', history: [] }, 'admin', ctx()));
     expect(out).toEqual([{ type: 'chunk', text: 'Hello' }]);
     expect(llm.seen[0][0].content).toContain('Asia/Dubai (UTC+04:00)');
@@ -93,6 +93,15 @@ describe('ChatService', () => {
     expect(JSON.parse(llm.seen[1].at(-1).content).shownToPerson.notes).toEqual(['Left out INV-3: no email']);
   });
 
+  it("sends a tool call's provider extras (Gemini's thought signature) back with it", async () => {
+    const find = READ_TOOLS.find((t) => t.name === 'find_jobs')!;
+    jest.spyOn(find, 'run').mockResolvedValueOnce([]);
+    const extra = { google: { thought_signature: 'sig' } };
+    const llm = scriptedLlm([[{ type: 'tool', call: { id: 'c1', name: 'find_jobs', args: '{}', extra } }], [{ type: 'text', text: 'None.' }]]);
+    await collect(new ChatService(llm as any, prompts as any).streamResponse({ message: 'jobs?', history: [] }, 'admin', ctx()));
+    expect(llm.seen[1].at(-2).tool_calls[0]).toMatchObject({ id: 'c1', extra_content: extra });
+  });
+
   it('passes a refusal back to the model to explain', async () => {
     const cancel = WRITE_TOOLS.find((t) => t.name === 'cancel_job')!;
     const { ToolRefusal } = jest.requireActual('../agent/types');
@@ -106,6 +115,20 @@ describe('ChatService', () => {
     const llm = scriptedLlm([[{ type: 'tool', call: { id: 'c1', name: 'send_invoice', args: '{}' } }], [{ type: 'text', text: 'ok' }]]);
     await collect(new ChatService(llm as any, prompts as any).streamResponse({ message: 'x', history: [] }, 'admin', { ...ctx(), role: 'dispatcher' }));
     expect(JSON.parse(llm.seen[1].at(-1).content)).toEqual({ error: 'send_invoice is not available to you.' });
+  });
+
+  it('a customer of a Kelvin company talks to Kelvin, in a customer voice', async () => {
+    const customer = () => ({ ...ctx(), role: 'customer', customerId: 'c-1' });
+    httpGet.mockImplementation(async (_s: string, p: string) => (p === '/company/settings' ? { name: 'Cool Air Co', timezone: 'UTC', features: { kelvin: true } } : {}));
+    const llm = scriptedLlm([[{ type: 'text', text: 'Hi' }]]);
+    await collect(new ChatService(llm as any, prompts as any).streamResponse({ message: 'hi', history: [] }, 'customer', customer()));
+    expect(llm.seen[0][0].content).toContain("You are Kelvin, Cool Air Co's assistant");
+    expect(llm.seen[0][0].content).not.toContain('What you were asked to remember');
+
+    httpGet.mockImplementation(async (_s: string, p: string) => (p === '/company/settings' ? { timezone: 'UTC', features: {} } : {}));
+    const plain = scriptedLlm([[{ type: 'text', text: 'Hi' }]]);
+    await collect(new ChatService(plain as any, prompts as any).streamResponse({ message: 'hi', history: [] }, 'customer', customer()));
+    expect(plain.seen[0][0].content).not.toContain('You are Kelvin');
   });
 
   it('says so, without calling the model, when AI is switched off for the company', async () => {

@@ -16,8 +16,12 @@ import { BULK_TOOLS } from './tools/office-bulk';
 import { MEMORY_TOOLS } from './tools/kelvin-memory';
 import { USUAL_TECHNICIAN_TOOL } from './tools/usual-tech';
 import { INSIGHT_TOOLS } from './tools/kelvin-insights';
+import { CUSTOMER_KELVIN_TOOLS } from './tools/customer-kelvin';
+import { TECHNICIAN_TOOLS } from './tools/technician-kelvin';
+import { TELEGRAM_TOOLS } from './tools/telegram-tools';
+import { VISIT_REMINDER_TOOLS } from './tools/visit-reminders';
 
-export const AGENT_TOOLS: AgentTool[] = [...READ_TOOLS, FIND_OPEN_TIMES, ...WRITE_TOOLS, CREATE_JOB, PROPOSE_PLAN, ...CUSTOMER_OFFICE_TOOLS, ...QUOTE_TOOLS, ...INVOICE_TOOLS, ...AGREEMENT_TOOLS, ...BULK_TOOLS, ...MEMORY_TOOLS, USUAL_TECHNICIAN_TOOL, ...INSIGHT_TOOLS, ...DISRUPTION_TOOLS, ...CUSTOMER_TOOLS];
+export const AGENT_TOOLS: AgentTool[] = [...READ_TOOLS, FIND_OPEN_TIMES, ...WRITE_TOOLS, CREATE_JOB, PROPOSE_PLAN, ...CUSTOMER_OFFICE_TOOLS, ...QUOTE_TOOLS, ...INVOICE_TOOLS, ...AGREEMENT_TOOLS, ...BULK_TOOLS, ...MEMORY_TOOLS, USUAL_TECHNICIAN_TOOL, ...INSIGHT_TOOLS, ...DISRUPTION_TOOLS, ...CUSTOMER_TOOLS, ...CUSTOMER_KELVIN_TOOLS, ...TECHNICIAN_TOOLS, ...TELEGRAM_TOOLS, ...VISIT_REMINDER_TOOLS];
 
 /** Tools this person may use: right bot, and their role is allowed. */
 function allowed(t: AgentTool, bot: BotType, role: string): boolean {

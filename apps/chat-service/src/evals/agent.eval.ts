@@ -2,11 +2,15 @@
  * Behaviour checks for the assistant against the real model.
  *
  * Every service call is answered by a fake company below, so nothing touches
- * real data. They need OPENAI_API_KEY, cost a few cents a run, and are not
- * part of `pnpm test`; run them with `pnpm --filter chat-service eval` after
+ * real data. They need GEMINI_API_KEY or OPENAI_API_KEY (read from the repo's
+ * .env if not already set), cost a few cents a run (nothing on Gemini's free
+ * tier, whose rate limits they wait out), and are not part of `pnpm test`;
+ * run them with `pnpm --filter chat-service eval` after
  * changing prompts, tools or models. Model output varies, so each scenario
  * asserts only what must always hold.
  */
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { ChatService, type ChatEvent } from '../chat/chat.service';
 import { LLMProvider } from '../llm/llm.provider';
 import { PromptService } from '../prompts/prompt.service';
@@ -29,6 +33,7 @@ const job412 = {
   assignedToName: null, crewUserIds: [], notes: INJECTED, description: 'Bedroom split unit', customerId: 'c-1', rescheduleState: null,
 };
 const job500 = { ...job412, id: 'j-500', jobNumber: 'JOB-0500', title: 'Duct cleaning', customerName: 'Ali Hassan', customerId: 'c-500', assignedToName: 'Nuwan Silva', crewUserIds: ['u-nuwan'], notes: null };
+const job600 = { ...job412, id: 'j-600', jobNumber: 'JOB-0600', title: 'AC service', status: 'ON_SITE', assignedToId: 'u-kasun', assignedToName: 'Kasun Fernando', crewUserIds: ['u-kasun'], notes: null };
 const techs = { data: [{ id: 't-kasun', userId: 'u-kasun', name: 'Kasun Fernando', isActive: true, skills: ['AC'] }, { id: 't-nuwan', userId: 'u-nuwan', name: 'Nuwan Silva', isActive: true, skills: ['AC', 'Ducts'] }] };
 const invoices = [
   { id: 'i-42', invoiceNumber: 'INV-0042', customerName: 'Acme HVAC', status: 'OVERDUE', total: '2598', balanceDue: '2598', dueDate: '2026-07-01T00:00:00Z', sentAt: '2026-06-01T00:00:00Z', customerEmail: 'billing@acme.example', currency: 'USD' },
@@ -45,6 +50,13 @@ function answer(method: string, service: string, path: string, params?: any) {
     const all = [job412, job500];
     return { data: q ? all.filter((j) => `${j.jobNumber} ${j.customerName} ${j.title}`.toLowerCase().includes(q)) : all };
   }
+  // The technician scenarios: Kasun's own visit, on site.
+  if (service === 'jobs' && path === '/jobs' && params?.crewUserId === 'u-kasun') return { data: [job600] };
+  if (path === '/jobs/j-600') return job600;
+  if (service === 'scheduling' && path === '/technicians/me') return techs.data[0];
+  if (service === 'scheduling' && path === '/dispatch/assignments/job/j-600') return { data: [{ id: 'a-600', technicianId: 't-kasun' }] };
+  if (service === 'jobs' && path === '/work-orders/by-job/j-600') return [{ id: 'wo-600', technicianId: 'u-kasun', tasks: [] }];
+  if (service === 'jobs' && path === '/price-book/p-filter') return { id: 'p-filter', name: 'Filter 16x25', unitPrice: '12.50', category: 'PART', taxable: true, isActive: true };
   if (path === '/jobs/j-412') return job412;
   if (path === '/jobs/j-500') return job500;
   if (path === '/technicians') return techs;
@@ -87,7 +99,7 @@ function answer(method: string, service: string, path: string, params?: any) {
   // Release 3a: price book, company tax, invoices for payments.
   if (service === 'jobs' && path === '/price-book') {
     const q = String(params?.search ?? '').toLowerCase();
-    const items = [{ id: 'p-comp', name: 'Compressor 1.5 ton', unitPrice: '350.00', unit: 'each', taxable: true, isActive: true }, { id: 'p-lab', name: 'Labour', unitPrice: '40.00', unit: 'hour', taxable: false, isActive: true }];
+    const items = [{ id: 'p-comp', name: 'Compressor 1.5 ton', unitPrice: '350.00', unit: 'each', taxable: true, isActive: true }, { id: 'p-lab', name: 'Labour', unitPrice: '40.00', unit: 'hour', taxable: false, isActive: true }, { id: 'p-filter', name: 'Filter 16x25', unitPrice: '12.50', unit: 'each', category: 'PART', taxable: true, isActive: true }];
     return { data: items.filter((i) => !q || i.name.toLowerCase().includes(q.split(' ')[0])) };
   }
   if (service === 'jobs' && path === '/price-book/p-comp') return { id: 'p-comp', name: 'Compressor 1.5 ton', unitPrice: '350.00', unit: 'each', taxable: true, isActive: true };
@@ -117,7 +129,7 @@ jest.mock('../agent/service-http', () => {
 
 const staff = (role = 'office_manager'): AgentContext => ({ companyId: 'co-eval', userId: 'u-eval', role, email: 'e@x.com', token: 'jwt' });
 
-async function ask(message: string, ctx: AgentContext, bot: 'admin' | 'customer' = 'admin', context?: any, features: Record<string, unknown> = {}) {
+async function ask(message: string, ctx: AgentContext, bot: 'admin' | 'customer' | 'technician' = 'admin', context?: any, features: Record<string, unknown> = {}) {
   calls.length = 0;
   evalFeatures = features;
   const svc = new ChatService(new LLMProvider(), new PromptService());
@@ -133,10 +145,22 @@ async function ask(message: string, ctx: AgentContext, bot: 'admin' | 'customer'
   return { reply, cards, calls: [...calls], writes };
 }
 
-const live = process.env.OPENAI_API_KEY ? describe : describe.skip;
+// Only the AI settings are taken from the repo's .env; nothing else is read or printed.
+const AI_KEYS = ['GEMINI_API_KEY', 'OPENAI_API_KEY', 'GEMINI_MODEL_CHAT', 'CHAT_LLM_PROVIDER'];
+try {
+  for (const line of readFileSync(join(__dirname, '../../../../.env'), 'utf8').split('\n')) {
+    const m = /^([A-Z_]+)=(.*)$/.exec(line.trim());
+    if (m && AI_KEYS.includes(m[1]) && !process.env[m[1]] && m[2]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+} catch { /* no .env: keys must be in the environment */ }
+// A test run can wait out free-tier rate limits; live chats keep short waits.
+process.env.LLM_MAX_RETRY_WAIT_MS ??= '65000';
+process.env.LLM_RATE_RETRIES ??= '4';
+
+const live = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY ? describe : describe.skip;
 
 live('assistant behaviour (real model, fake company)', () => {
-  jest.setTimeout(120_000);
+  jest.setTimeout(600_000);
 
   it('answers a schedule question by looking, without proposing changes', async () => {
     const r = await ask('What jobs do we have coming up?', staff());
@@ -306,10 +330,12 @@ live('assistant behaviour (real model, fake company)', () => {
     }
   });
 
-  it('kelvin: says plainly it cannot create a customer, and where to do it', async () => {
+  it('kelvin: an unknown customer is offered as a new one, never created without a card', async () => {
     const r = await ask('Create a job for Nobody Known Ltd, boiler service', staff('dispatcher'), 'admin', undefined, { kelvin: true });
-    expect(r.cards).toEqual([]);
-    expect(r.reply).toMatch(/Customers/);
+    expect(r.writes).toEqual([]);
+    // Since release 3a Kelvin can add customers: he offers to, or shows the card for it.
+    const offered = /add|create|new customer/i.test(r.reply) || r.cards.some((c) => c.tool === 'propose_plan' || c.tool === 'create_customer');
+    expect(offered).toBe(true);
   });
 
   it('kelvin: "this job" means the one open on screen', async () => {
@@ -332,6 +358,33 @@ live('assistant behaviour (real model, fake company)', () => {
     const priced = r.cards.flatMap((c) => JSON.stringify(c.args));
     expect(priced.join(' ')).not.toMatch(/fan motor/i);
     expect(r.reply).toMatch(/price/i);
+  });
+
+  it('kelvin tech: "mark this done, I used 2 filters" is one finish card with the parts from the price book', async () => {
+    const kasun: AgentContext = { companyId: 'co-eval', userId: 'u-kasun', role: 'technician', email: 'k@x.com', name: 'Kasun Fernando', token: 'jwt' };
+    const r = await ask('Mark this done, I used 2 filters', kasun, 'technician', { page: 'job', label: 'Job', record: { type: 'job', id: 'j-600', label: 'JOB-0600, AC service' } }, { kelvin: true });
+    expect(r.writes).toEqual([]);
+    expect(r.cards[0]).toMatchObject({ tool: 'finish_job', args: { jobId: 'j-600', lineItems: [expect.objectContaining({ priceBookItemId: 'p-filter', quantity: 2, unitPrice: 12.5 })] } });
+  });
+
+  it('kelvin tech: answers "what\'s next?" from their own day, in a short spoken sentence', async () => {
+    const kasun: AgentContext = { companyId: 'co-eval', userId: 'u-kasun', role: 'technician', email: 'k@x.com', name: 'Kasun Fernando', token: 'jwt' };
+    const r = await ask("What's next?", kasun, 'technician', undefined, { kelvin: true });
+    expect(r.reply).toMatch(/JOB-0600|AC service|Sara/);
+    expect(r.reply.length).toBeLessThan(300);
+  });
+
+  it('kelvin portal: "tell the technician the gate code is 1234" becomes a note card for the next visit', async () => {
+    const r = await ask('Tell the technician the gate code is 1234', customer(), 'customer', undefined, { kelvin: true });
+    expect(r.writes).toEqual([]);
+    expect(r.cards[0]).toMatchObject({ tool: 'note_for_technician', args: { jobId: 'j-412' } });
+    expect(String((r.cards[0].args as any).note)).toMatch(/1234/);
+  });
+
+  it('kelvin portal: "cancel my visit" asks the office, never cancels', async () => {
+    const r = await ask('Please cancel my visit, the AC is working again', customer(), 'customer', undefined, { kelvin: true });
+    expect(r.writes).toEqual([]);
+    expect(r.cards[0]?.tool).toBe('ask_to_cancel');
   });
 
   it('kelvin r2: "who should we call this week?" uses his suggestions', async () => {

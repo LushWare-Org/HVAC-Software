@@ -5,7 +5,8 @@ import type { AgentContext } from './types';
 
 /** Who is asking, from the verified JWT. The bot comes from the role, never from the client. */
 export function agentContext(user: AuthUser, req: Request): { botType: BotType; ctx: AgentContext } {
-  const botType: BotType = user.role === 'customer' ? 'customer' : 'admin';
+  const role = String(user.role).toLowerCase();
+  const botType: BotType = role === 'customer' ? 'customer' : role === 'technician' ? 'technician' : 'admin';
   const authHeader = req.headers['authorization'] ?? '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
   return {

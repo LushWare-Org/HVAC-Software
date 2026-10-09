@@ -1,6 +1,7 @@
 import { ToolRefusal, type AgentContext, type AgentTool } from '../types';
 import type { ServiceHttp } from '../service-http';
 import { when } from './write-tools';
+import { CHANNELS_PARAM, channelWords, channelsOf, sendDirect, sendsLine, type Channel } from './reach';
 
 const DISPATCH = ['super_admin', 'company_admin', 'office_manager', 'dispatcher'];
 const list = (res: any): any[] => (Array.isArray(res) ? res : res?.data ?? []);
@@ -107,37 +108,165 @@ export const DISRUPTION_TOOLS: AgentTool[] = [
   },
   {
     name: 'message_customer',
-    description: "Send a job's customer a message, for example that the technician is running late. Shows the exact wording first; the person confirms.",
+    description:
+      "Send a customer a message: in their portal inbox, by email, as a push notification, or any mix. Usually about a job " +
+      "(e.g. the technician is running late); pass customerId instead for anything else. Shows the exact wording first; the person confirms.",
     parameters: {
       type: 'object',
       properties: {
-        jobId: { type: 'string', description: 'Job id or job number.' },
+        jobId: { type: 'string', description: 'Job id or job number, when the message is about a job.' },
+        customerId: { type: 'string', description: 'Customer id from find_customers, when it is not about a job.' },
         message: { type: 'string', description: 'The message, polite and specific, signed off as the company.' },
+        subject: { type: 'string', description: 'Optional email subject / notification heading.' },
+        channels: CHANNELS_PARAM,
       },
-      required: ['jobId', 'message'],
+      required: ['message'],
     },
     kind: 'write',
     bots: ['admin'],
     roles: DISPATCH,
-    sends: (a) => `Message to ${a.customerName ?? 'the customer'}`,
+    sends: (a) => sendsLine(channelsOf(a.channels), a.customerName ?? 'the customer'),
     preview: async (args, _ctx: AgentContext, http) => {
-      const job = await loadJob(http, args.jobId);
       const message = String(args.message ?? '').trim();
       if (!message) throw new ToolRefusal('What should the message say?');
       if (message.length > 1000) throw new ToolRefusal('Keep the message under 1,000 characters.');
-      if (!job.customerId) throw new ToolRefusal(`${job.jobNumber} has no customer to message.`);
+      let customerId: string, customerName: string, email: string | null, job: any = null;
+      if (args.jobId) {
+        job = await loadJob(http, args.jobId);
+        if (!job.customerId) throw new ToolRefusal(`${job.jobNumber} has no customer to message.`);
+        customerId = job.customerId; customerName = job.customerName ?? 'the customer'; email = job.customerEmail ?? null;
+        if (!email) email = (await http.get('crm', `/customers/${customerId}`).catch(() => null))?.email ?? null;
+      } else if (args.customerId) {
+        const c = await http.get('crm', `/customers/${args.customerId}`).catch(() => null);
+        if (!c?.id) throw new ToolRefusal('That customer was not found. Find them with find_customers first.');
+        customerId = c.id; customerName = `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || 'the customer'; email = c.email ?? null;
+      } else throw new ToolRefusal('Which customer, or which job is it about?');
+
+      let channels = channelsOf(args.channels);
+      const notes: string[] = [];
+      if (channels.includes('email') && !email) {
+        channels = channels.filter((c) => c !== 'email');
+        notes.push(`${customerName} has no email address on file, so it won't be emailed.`);
+      }
+      if (!channels.length) throw new ToolRefusal(`${customerName} has no email address on file. Send it as a message or push instead?`);
+      const subject = String(args.subject ?? '').trim().slice(0, 120) || (job ? `About your visit (${job.jobNumber})` : 'A message from us');
       return {
-        title: `Message ${job.customerName ?? 'the customer'}`,
-        lines: [`About ${job.jobNumber}: ${job.title}`, `"${message}"`],
-        args: { customerId: job.customerId, customerName: job.customerName, jobId: job.id, jobNumber: job.jobNumber, message },
+        title: `Message ${customerName}`,
+        lines: [
+          ...(job ? [`About ${job.jobNumber}: ${job.title}`] : []),
+          `"${message}"`,
+          `Sends as: ${channelWords(channels)}${channels.includes('email') ? ` (to ${email})` : ''}.`,
+          ...(channels.includes('push') ? ['Push reaches them only if they turned on notifications in the app or portal.'] : []),
+          ...notes,
+        ],
+        args: { customerId, customerName, jobId: job?.id, jobNumber: job?.jobNumber, message, subject, channels },
       };
     },
     run: async (args, _ctx, http) => {
-      const thread = await http.post('comms', '/messaging/threads', {
-        customerId: args.customerId, customerName: args.customerName, subject: `About ${args.jobNumber}`, jobId: args.jobId,
+      const channels = channelsOf(args.channels);
+      const done: Channel[] = [];
+      if (channels.includes('message')) {
+        // The customer's conversation with the office; Kelvin is shown as the sender.
+        await http.post('comms', `/chat/customers/${args.customerId}/messages`, { body: args.message, jobId: args.jobId, via: 'kelvin' });
+        done.push('message');
+      }
+      const { sent, missed } = await sendDirect(http, {
+        to: 'customer', id: args.customerId, title: args.subject ?? 'A message from us', message: args.message, channels, jobId: args.jobId,
       });
-      await http.post('comms', `/messaging/threads/${thread.id}/messages`, { body: args.message });
-      return { done: true, summary: `Messaged ${args.customerName ?? 'the customer'}` };
+      done.push(...sent);
+      if (!done.length) throw new ToolRefusal(`Nothing reached ${args.customerName}. ${missed.join('. ')}.`);
+      return { done: true, summary: `${sendsLine(done, args.customerName ?? 'the customer')}: sent${missed.length ? `. ${missed.join('. ')}` : ''}` };
+    },
+  },
+  {
+    name: 'message_technician',
+    description:
+      'Send a technician a message from the office: an in-app notification in their app, a push to their phone, an email, or any mix. ' +
+      'For example a change to their day, or something to bring. The person confirms first.',
+    parameters: {
+      type: 'object',
+      properties: {
+        technician: { type: 'string', description: 'Name or id.' },
+        message: { type: 'string', description: 'The message, short and specific.' },
+        title: { type: 'string', description: 'Optional short heading, e.g. "Change to your 2pm".' },
+        channels: { ...CHANNELS_PARAM, description: CHANNELS_PARAM.description.replace('Defaults to ["message"]', 'Defaults to ["message","push"]') },
+        jobId: { type: 'string', description: 'Optional job the message is about.' },
+      },
+      required: ['technician', 'message'],
+    },
+    kind: 'write',
+    bots: ['admin'],
+    roles: DISPATCH,
+    sends: (a) => sendsLine(channelsOf(a.channels, ['message', 'push']), a.name ?? 'the technician'),
+    preview: async (args, _ctx: AgentContext, http) => {
+      const message = String(args.message ?? '').trim();
+      if (!message) throw new ToolRefusal('What should the message say?');
+      if (message.length > 1000) throw new ToolRefusal('Keep the message under 1,000 characters.');
+      const tech = await technicianByIdOrName(http, args.technician);
+      if (!tech.userId) throw new ToolRefusal(`${tech.name} has no login to send to.`);
+      const channels = channelsOf(args.channels, ['message', 'push']);
+      const title = String(args.title ?? '').trim().slice(0, 120) || 'Message from the office';
+      return {
+        title: `Message ${tech.name}`,
+        lines: [`"${message}"`, `Sends as: ${channelWords(channels)}.`],
+        args: { userId: tech.userId, name: tech.name, message, title, channels, jobId: args.jobId ? String(args.jobId) : undefined },
+      };
+    },
+    run: async (args, _ctx, http) => {
+      const channels = channelsOf(args.channels, ['message', 'push']);
+      const done: Channel[] = [];
+      if (channels.includes('message')) {
+        // The technician's conversation with the office (they get a push from it too).
+        const conv = await http.post('comms', '/chat/conversations/tech-office', { techUserId: args.userId });
+        await http.post('comms', `/chat/conversations/${conv.id}/messages`, { body: args.message, jobId: args.jobId, via: 'kelvin' });
+        done.push('message');
+      }
+      const { sent, missed } = await sendDirect(http, { to: 'staff', id: args.userId, title: args.title, message: args.message, channels, jobId: args.jobId });
+      done.push(...sent);
+      if (!done.length) throw new ToolRefusal(`Nothing reached ${args.name}. ${missed.join('. ')}.`);
+      return { done: true, summary: `${sendsLine(done, args.name)}: sent${missed.length ? `. ${missed.join('. ')}` : ''}` };
+    },
+  },
+  {
+    name: 'request_location',
+    description:
+      "Ask a job's customer to mark where the visit is on a map. They get a link by in-app message, email and/or push; their pin " +
+      'goes straight onto the job. Use when a job has no map location (Smart Assign cannot measure distance without it). The person confirms first.',
+    parameters: {
+      type: 'object',
+      properties: {
+        jobId: { type: 'string', description: 'Job id or job number.' },
+        channels: { ...CHANNELS_PARAM, description: CHANNELS_PARAM.description.replace('Defaults to ["message"]', 'Defaults to all three') },
+      },
+      required: ['jobId'],
+    },
+    kind: 'write',
+    bots: ['admin'],
+    roles: DISPATCH,
+    sends: (a) => `Location request: ${sendsLine(channelsOf(a.channels, ['message', 'email', 'push']), a.customerName ?? 'the customer')}`,
+    preview: async (args, _ctx: AgentContext, http) => {
+      const job = await loadJob(http, args.jobId);
+      if (!job.customerId) throw new ToolRefusal(`${job.jobNumber} has no customer to ask.`);
+      if (['COMPLETED', 'INVOICED', 'PAID', 'CANCELLED'].includes(job.status)) throw new ToolRefusal(`${job.jobNumber} is already done, so its location isn't needed.`);
+      const channels = channelsOf(args.channels, ['message', 'email', 'push']);
+      const has = Number(job.serviceLatitude) || Number(job.serviceLongitude);
+      return {
+        title: `Ask ${job.customerName ?? 'the customer'} where ${job.jobNumber} is`,
+        lines: [
+          `${job.jobNumber}: ${job.title}`,
+          has ? 'It already has a map pin; their answer will replace it.' : 'It has no map location yet.',
+          `They get a link to drop a pin, by ${channelWords(channels)}. The link works for 14 days.`,
+        ],
+        args: { jobId: job.id, jobNumber: job.jobNumber, customerName: job.customerName, channels },
+      };
+    },
+    run: async (args, _ctx, http) => {
+      const res = await http.post('jobs', `/jobs/${args.jobId}/location-request`, { channels: channelsOf(args.channels, ['message', 'email', 'push']) });
+      const results = Object.entries(res?.results ?? {}) as Array<[Channel, string]>;
+      const sent = results.filter(([, r]) => r === 'sent').map(([c]) => c);
+      const missed = results.filter(([, r]) => r !== 'sent' && r !== 'with-message').map(([c, r]) => `${c}: ${r === 'no-device' ? 'notifications not turned on' : r === 'no-email' ? 'no email on file' : 'failed'}`);
+      if (!sent.length) throw new ToolRefusal(`The request didn't reach ${args.customerName}. ${missed.join('; ')}. The link is ${res?.url}`);
+      return { done: true, summary: `Asked ${args.customerName} where ${args.jobNumber} is (${channelWords(sent)})${missed.length ? `. Not sent: ${missed.join('; ')}` : ''}` };
     },
   },
   {

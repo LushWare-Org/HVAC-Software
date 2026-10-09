@@ -3,7 +3,7 @@ import type { ChatCompletionMessageParam } from 'openai/resources/chat/completio
 import { createAiGuard, createQueueUsageRecorder, estimateCostUsd } from '@tscrm/ai';
 import { createRedisConnection } from '@tscrm/queue';
 import { isFeatureEnabled } from '@tscrm/types';
-import { LLMProvider } from '../llm/llm.provider';
+import { LLMProvider, type ToolCall } from '../llm/llm.provider';
 import { PromptService, BotType } from '../prompts/prompt.service';
 import { signAction } from '../agent/action-token';
 import { toolsFor, toOpenAiTools, withoutKelvinOnly } from '../agent/registry';
@@ -47,6 +47,20 @@ export function utcOffset(timeZone: string, at = new Date()): string {
   } catch {
     return '+00:00';
   }
+}
+
+/** Kelvin for a company's customers: same name, a calmer customer-facing voice. */
+export function customerKelvinPrompt(company?: string): string {
+  const who = company?.trim() ? `${one(company, 80)}'s assistant` : "the company's assistant";
+  return (
+    `## You are Kelvin\nYou are Kelvin, ${who} for its customers. Warm, plain and brief: a sentence or two.\n` +
+    '- Help with their own visits, quotes, invoices and equipment, and prepare changes on a card they confirm.\n' +
+    '- Notes for the technician (gate codes, pets, parking): note_for_technician. Phone or address: update_my_details. ' +
+    'Cancelling: ask_to_cancel, which asks the office. After a finished visit, offer leave_review once.\n' +
+    '- For "how did my last visit go?", look at their finished visits (get_my_jobs) and summarise in a sentence.\n' +
+    '- If they want a person, offer to message the office (message_office) and say the office will reply in Messages.\n' +
+    '- Never mention other customers, staff schedules or internal notes.'
+  );
 }
 
 /** The part of the system prompt that changes every request: the clock, and how to act. */
@@ -139,7 +153,7 @@ export class ChatService {
   ) {}
 
   /** Company time zone and feature switches, read as the person. Never blocks the chat. */
-  private async settings(http: ServiceHttp): Promise<{ timezone?: string; features?: unknown }> {
+  private async settings(http: ServiceHttp): Promise<{ name?: string; timezone?: string; features?: unknown }> {
     try {
       return await http.get('crm', '/company/settings');
     } catch {
@@ -166,7 +180,10 @@ export class ChatService {
     // What the person typed, so a price "they gave" can be checked against their own words.
     ctx.said = [...req.history.filter((t) => t.role === 'user').map((t) => t.content), req.message].join('\n').slice(-4000);
     // Kelvin's notes, habits and tone: only for companies with Kelvin, and never blocking the chat.
-    const mind = tools.some((t) => t.name === 'remember') ? `\n\n${mindPrompt(await loadMind(http))}` : '';
+    const kelvinOn = (settings.features as Record<string, unknown> | undefined)?.kelvin === true;
+    let mind = '';
+    if (tools.some((t) => t.name === 'remember')) mind = `\n\n${mindPrompt(await loadMind(http))}`;
+    else if (botType === 'customer' && kelvinOn) mind = `\n\n${customerKelvinPrompt(settings.name)}`;
     const model = this.llm.modelData;
     const messages: ChatCompletionMessageParam[] = [
       { role: 'system', content: `${this.prompts.forBot(botType)}\n\n${contextPrompt(ctx, tools, new Date(), req.context)}${mind}` },
@@ -177,21 +194,23 @@ export class ChatService {
     const started = Date.now();
     const usage = { inputTokens: 0, outputTokens: 0 };
     let ok = true;
+    // Who actually answered: Gemini or the OpenAI backup, for the cost record.
+    let answeredBy: { provider: 'gemini' | 'openai'; model: string } = { provider: 'openai', model };
     try {
       for (let round = 0; round < MAX_ROUNDS; round++) {
         let text = '';
-        let call: { id: string; name: string; args: string } | null = null;
+        let call: ToolCall | null = null;
         for await (const ev of this.llm.stream(model, messages, toOpenAiTools(tools))) {
           if (ev.type === 'text') { text += ev.text; yield { type: 'chunk', text: ev.text }; }
           else if (ev.type === 'tool') call = ev.call;
-          else { usage.inputTokens += ev.inputTokens; usage.outputTokens += ev.outputTokens; }
+          else { usage.inputTokens += ev.inputTokens; usage.outputTokens += ev.outputTokens; answeredBy = { provider: ev.provider, model: ev.model }; }
         }
         if (!call) return;
 
         messages.push({
           role: 'assistant',
           content: text || null,
-          tool_calls: [{ id: call.id, type: 'function', function: { name: call.name, arguments: call.args || '{}' } }],
+          tool_calls: [{ id: call.id, type: 'function', function: { name: call.name, arguments: call.args || '{}' }, ...(call.extra && { extra_content: call.extra }) } as any],
         });
         const result = yield* this.runTool(call, tools, ctx, http);
         messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result).slice(0, MAX_TOOL_CHARS) });
@@ -203,8 +222,8 @@ export class ChatService {
     } finally {
       this.recordUsage?.({
         at: new Date().toISOString(), task: `chat-${botType}`, companyId: ctx.companyId, ok,
-        provider: 'openai', model, attempts: 1, latencyMs: Date.now() - started, usage,
-        costUsd: estimateCostUsd('openai', model, usage) ?? undefined,
+        provider: answeredBy.provider, model: answeredBy.model, attempts: 1, latencyMs: Date.now() - started, usage,
+        costUsd: estimateCostUsd(answeredBy.provider, answeredBy.model, usage) ?? undefined,
       });
     }
   }

@@ -1,5 +1,5 @@
 import {
-  Controller, Post, Body, Res, Req, UseGuards, HttpCode, HttpStatus,
+  Controller, Post, Body, Res, Req, UseGuards, HttpCode, HttpStatus, Logger,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { IsString, IsArray, IsOptional, IsIn, IsInt, ValidateNested } from 'class-validator';
@@ -8,6 +8,7 @@ import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
 import { AuthUser } from '@tscrm/types';
 import { ChatService, ChatTurn } from './chat.service';
 import { confirmAction } from '../agent/action-runner';
+import { chatErrorMessage } from './chat-error';
 import { agentContext } from '../agent/context';
 import type { AgentContext } from '../agent/types';
 import { BotType } from '../prompts/prompt.service';
@@ -57,6 +58,8 @@ class ChatRequestDto {
 @UseGuards(JwtAuthGuard)
 @Controller('')
 export class ChatController {
+  private readonly logger = new Logger(ChatController.name);
+
   constructor(private readonly chatService: ChatService) {}
 
   @Post('message')
@@ -90,7 +93,8 @@ export class ChatController {
 
       res.write('data: [DONE]\n\n');
     } catch (err: any) {
-      res.write(`data: ${JSON.stringify({ error: 'Chat service error. Please try again.' })}\n\n`);
+      this.logger.warn(`Chat failed for ${ctx.userId} (company=${ctx.companyId}): ${err?.status ?? ''} ${err?.message ?? err}`);
+      res.write(`data: ${JSON.stringify({ error: chatErrorMessage(err) })}\n\n`);
     } finally {
       res.end();
     }

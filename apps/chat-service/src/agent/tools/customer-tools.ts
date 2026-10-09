@@ -18,7 +18,7 @@ const money = (n: unknown, currency?: string) =>
 /** Looks like "JOB-0412" or "Q-0042" rather than an id. */
 export const looksLikeNumber = (v: unknown) => /^[A-Z]{1,6}-[\w-]+$/i.test(String(v ?? '')) && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(String(v));
 
-async function myJob(http: ServiceHttp, ctx: AgentContext, jobId: unknown) {
+export async function myJob(http: ServiceHttp, ctx: AgentContext, jobId: unknown) {
   if (!jobId) throw new ToolRefusal('Which visit? Look it up first.');
   let job: any = null;
   try {
@@ -284,14 +284,11 @@ export const CUSTOMER_TOOLS: AgentTool[] = [
       return {
         title: 'Message the office',
         lines: [...(job ? [`About: ${job.jobNumber}, ${job.title}`] : []), `"${message}"`],
-        args: { message, jobId: job?.id, subject: job ? `About ${job.jobNumber}` : 'Message from the assistant' },
+        args: { message, jobId: job?.id },
       };
     },
     run: async (args, ctx, http) => {
-      const thread = await http.post('comms', '/messaging/threads', {
-        customerId: ctx.customerId, customerName: ctx.name, subject: args.subject, jobId: args.jobId,
-      });
-      await http.post('comms', `/messaging/threads/${thread.id}/messages`, { body: args.message });
+      await http.post('comms', '/chat/office/messages', { body: args.message, jobId: args.jobId });
       return { done: true };
     },
   },

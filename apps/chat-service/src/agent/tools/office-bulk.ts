@@ -4,6 +4,7 @@
  * on its own; an item that can't be changed is left out with its reason. The
  * card runs as a plan, so re-checks before running and undo work as usual.
  */
+import { CHANNELS_PARAM, channelsOf } from './reach';
 import { MAX_STEPS, previewPlan, type PlanInput } from '../plan/plan';
 import type { ServiceHttp } from '../service-http';
 import { ToolRefusal, type ActionPreview, type AgentContext, type AgentTool } from '../types';
@@ -264,6 +265,7 @@ export const BULK_TOOLS: AgentTool[] = [
         date: { type: 'string', description: 'The day, YYYY-MM-DD.' },
         technician: { type: 'string', description: "Optional: only this technician's customers (name or id)." },
         message: { type: 'string', description: 'The message, polite and specific, signed off as the company.' },
+        channels: CHANNELS_PARAM,
       },
       required: ['date', 'message'],
     },
@@ -281,7 +283,8 @@ export const BULK_TOOLS: AgentTool[] = [
         .filter((j) => !CLOSED.includes(j.status) && j.customerId && !seen.has(j.customerId) && seen.add(j.customerId));
       if (!jobs.length) throw new ToolRefusal(`No customers to message on ${tech ? `${tech.name}'s ` : ''}${dayName(date)}.`);
       const { items, notes: more } = cap(jobs, 'customers');
-      const steps = items.map((j) => ({ tool: 'message_customer', args: { jobId: j.id, message }, label: j.jobNumber }));
+      const channels = channelsOf(args.channels);
+      const steps = items.map((j) => ({ tool: 'message_customer', args: { jobId: j.id, message, channels }, label: j.jobNumber }));
       return bulkCard(`Message ${plural(steps.length, 'customer')} on ${tech ? `${tech.name}'s ` : ''}${dayName(date)}`, steps, ctx, http, [], more);
     },
     run: notRun,

@@ -38,6 +38,11 @@ export class KelvinController {
     return this.kelvin.today(agentContext(user, req).ctx, since);
   }
 
+  @Get('portal')
+  portal(@CurrentUser() user: AuthUser, @Req() req: Request) {
+    return this.kelvin.portal(agentContext(user, req).ctx);
+  }
+
   @Get('mind')
   mind(@CurrentUser() user: AuthUser, @Req() req: Request) {
     return this.kelvin.mind(agentContext(user, req).ctx);

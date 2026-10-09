@@ -122,19 +122,15 @@ describe('quotes', () => {
 });
 
 describe('message_office', () => {
-  it('shows the exact wording, then opens a thread and posts it', async () => {
+  it("shows the exact wording, then posts it to the customer's office conversation", async () => {
     const { http, calls } = fakeHttp({
       'GET jobs /jobs/j-1': job(),
-      'POST comms /messaging/threads': { id: 'th-1' },
-      'POST comms /messaging/threads/th-1/messages': {},
+      'POST comms /chat/office/messages': { conversationId: 'cv-1' },
     });
     const p = await tool('message_office').preview!({ message: 'The gate code is 4512.', jobId: 'j-1' }, ctx, http);
     expect(p.lines).toEqual(['About: JOB-0412, AC not cooling', '"The gate code is 4512."']);
     await tool('message_office').run(p.args!, ctx, http);
-    expect(calls.slice(-2).map((c) => [c.path, c.body])).toEqual([
-      ['/messaging/threads', { customerId: 'c-1', customerName: 'Sara Perera', subject: 'About JOB-0412', jobId: 'j-1' }],
-      ['/messaging/threads/th-1/messages', { body: 'The gate code is 4512.' }],
-    ]);
+    expect(calls.slice(-1).map((c) => [c.path, c.body])).toEqual([['/chat/office/messages', { body: 'The gate code is 4512.', jobId: 'j-1' }]]);
   });
 
   it('refuses an empty or very long message', async () => {

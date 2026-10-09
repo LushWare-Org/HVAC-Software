@@ -202,6 +202,28 @@ export function mapLowStock(res: any, now: Date): KelvinItem[] {
   }];
 }
 
+/** Booked visits in the next day or so that the customer has not confirmed: one card, with a way to remind them. */
+export function mapUnconfirmed(res: any, now: Date): KelvinItem[] {
+  const soon = now.getTime() + 30 * 3_600_000;
+  const same = (a: unknown, b: unknown) => !!a && !!b && new Date(String(a)).getTime() === new Date(String(b)).getTime();
+  const open = arr(res).filter((j) => j?.id && j.status === 'SCHEDULED' && j.assignedToId && j.scheduledStart
+    && Date.parse(j.scheduledStart) > now.getTime() && Date.parse(j.scheduledStart) <= soon && !same(j.scheduledStart, j.confirmedFor));
+  if (!open.length) return [];
+  const names = open.slice(0, 3).map((j) => String(j.customerName ?? 'A customer'));
+  const more = open.length > 3 ? ` and ${open.length - 3} more` : '';
+  return [{
+    id: `unconfirmed:${now.toISOString().slice(0, 10)}:${open.length}`,
+    kind: 'NOTICE',
+    urgency: 'soon' as Urgency,
+    title: line(`${plural(open.length, 'visit')} in the next day ${open.length === 1 ? 'is' : 'are'} not confirmed yet`),
+    why: line(`${names.join(', ')}${more} ${open.length === 1 ? "hasn't" : "haven't"} confirmed. A reminder usually settles it.`, WHY_MAX),
+    fixes: [{ label: 'Remind them', request: 'Remind the customers and technicians about the visits in the next 24 hours that are not confirmed yet, by in-app message, email and push.' }],
+    anchor: { page: 'scheduling' as const },
+    audience: 'dispatch' as Audience,
+    createdAt: now.toISOString(),
+  }];
+}
+
 const PAGES = ['customers', 'finance', 'jobs', 'scheduling', 'inventory'] as const;
 
 /** The AI recommendations, high priority only, as notes on the page each one is about. */

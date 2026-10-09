@@ -2,8 +2,9 @@ import { BadRequestException, ForbiddenException, Injectable, Logger } from '@ne
 import { ServiceHttp } from '../agent/service-http';
 import type { AgentContext } from '../agent/types';
 import { publishKelvinEvent, type KelvinEventType } from './kelvin-events';
-import { DISPATCH_ROLES, MONEY_ROLES, mapBrief, mapDisruptions, mapEmergencies, mapGaps, mapLowStock, mapNotices, mapOverdue, mapReschedules, mapRoutines, mapSuggestions, sortItems, visibleTo } from './sources';
+import { DISPATCH_ROLES, MONEY_ROLES, mapBrief, mapDisruptions, mapEmergencies, mapGaps, mapLowStock, mapNotices, mapOverdue, mapReschedules, mapRoutines, mapSuggestions, mapUnconfirmed, sortItems, visibleTo } from './sources';
 import type { KelvinFeed, KelvinItem, KelvinPrefs } from './types';
+import { mapCustomerNotes, type CustomerNote } from './portal';
 
 type Http = Pick<ServiceHttp, 'get' | 'post' | 'put' | 'delete'>;
 
@@ -36,6 +37,7 @@ const SOURCES: Source[] = [
   { name: 'freed time', load: async (h) => mapGaps(await h.get('scheduling', '/dispatch/gaps')) },
   { name: 'emergency jobs', load: async (h, now) => mapEmergencies(await h.get('jobs', '/jobs', { status: 'PENDING', limit: 100 }), now) },
   { name: 'reschedule requests', load: async (h) => mapReschedules(await h.get('jobs', '/reschedule/inbox', { scope: 'action', limit: 20 })) },
+  { name: 'visits to confirm', load: async (h, now) => mapUnconfirmed(await h.get('jobs', '/jobs', { status: 'SCHEDULED', dateFrom: now.toISOString(), dateTo: new Date(now.getTime() + 30 * 3_600_000).toISOString(), limit: 100 }), now) },
   { name: 'notifications', load: async (h) => mapNotices(await h.get('comms', '/notifications', { limit: 20 })) },
   { name: 'your routines', load: async (h, now) => mapRoutines(await h.get('analytics', '/kelvin/routines'), now) },
   { name: 'overdue invoices', roles: MONEY_ROLES, load: async (h, now) => mapOverdue(await h.get('finance', '/invoices', { status: 'OVERDUE', limit: 100 }), now) },
@@ -134,6 +136,20 @@ export class KelvinService {
   removeRoutine(ctx: AgentContext, id: string) {
     this.officeOnly(ctx);
     return this.httpFor(ctx).delete('analytics', `/kelvin/routines/${encodeURIComponent(id)}`);
+  }
+
+  /** A customer's notes for the portal Dashboard, read as the customer. Parts that fail are left out. */
+  async portal(ctx: AgentContext, now = new Date()): Promise<{ notes: CustomerNote[] }> {
+    if (ctx.role.toLowerCase() !== 'customer' || !ctx.customerId) throw new ForbiddenException('These notes are for customers.');
+    const http = this.httpFor(ctx);
+    const soft = <T>(p: Promise<T>) => within(p, this.timeoutMs).catch(() => undefined);
+    const [settings, jobs, quotes, invoices] = await Promise.all([
+      soft(http.get('crm', '/company/settings')),
+      soft(http.get('jobs', '/jobs', { limit: 50 })),
+      soft(http.get('finance', '/quotes', { limit: 20 })),
+      soft(http.get('finance', '/invoices', { limit: 50 })),
+    ]);
+    return { notes: mapCustomerNotes({ jobs, quotes, invoices }, now, (settings as any)?.timezone || 'UTC') };
   }
 
   private officeOnly(ctx: AgentContext) {

@@ -61,7 +61,7 @@ describe('action tokens', () => {
 });
 
 describe('tool access', () => {
-  const names = (bot: 'admin' | 'customer', role: string) => toolsFor(bot, role).map((t) => t.name);
+  const names = (bot: 'admin' | 'customer' | 'technician', role: string) => toolsFor(bot, role).map((t) => t.name);
 
   it('gives customers only customer tools, never staff ones', () => {
     const n = names('customer', 'customer');
@@ -83,6 +83,14 @@ describe('tool access', () => {
   it('gives technicians no admin tools at all', () => {
     expect(names('admin', 'technician')).toEqual([]);
     expect(findTool('cancel_job', 'admin', 'TECHNICIAN')).toBeUndefined();
+  });
+
+  it('technicians have their own Kelvin tools, and only those', () => {
+    const n = names('technician', 'technician');
+    expect(n).toEqual(expect.arrayContaining(['my_day', 'job_brief', 'van_stock', 'find_part', 'start_route', 'arrived', 'log_parts', 'finish_job', 'add_job_note', 'message_office_tech']));
+    for (const t of toolsFor('technician', 'technician')) { expect(t.bots).toEqual(['technician']); expect(t.kelvinOnly).toBe(true); }
+    expect(names('technician', 'dispatcher')).toEqual([]);
+    expect(names('technician', 'customer')).toEqual([]);
   });
 });
 
@@ -182,6 +190,14 @@ describe('confirmAction', () => {
     expect(out).toEqual({ ok: true, message: 'Done: Cancel JOB-1.', actionId: id });
     expect(run).toHaveBeenCalledWith({ jobId: 'j-1', reason: 'r' }, ctx, expect.anything());
     expect((run.mock.calls[0][2] as any).aiAction).toBe(id);
+  });
+
+  it('passes on where to navigate when an action says so (a technician on the way)', async () => {
+    const tctx = { ...ctx, role: 'technician' };
+    const start = findTool('start_route', 'technician', 'technician')!;
+    jest.spyOn(start, 'run').mockResolvedValue({ done: true, summary: 'On the way to JOB-1', navigateTo: '12 Marina Walk' });
+    const { token } = signAction({ tool: 'start_route', args: {}, title: 'On the way to JOB-1', lines: [] }, tctx);
+    expect(await confirmAction(token, tctx, 'technician')).toMatchObject({ ok: true, navigateTo: '12 Marina Walk' });
   });
 
   it('re-checks the role at confirm time', async () => {

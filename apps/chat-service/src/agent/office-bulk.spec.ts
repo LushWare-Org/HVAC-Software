@@ -151,7 +151,7 @@ describe('message_day_customers', () => {
     const jobs = [job(1, { assignedToId: 'u-n' }), job(2, { assignedToId: 'u-n', customerId: 'c-1', customerName: 'Customer 1' }), job(3, { assignedToId: 'u-n' })];
     const routes = { 'GET scheduling /technicians': techs, 'GET jobs /jobs': { data: jobs }, ...Object.fromEntries(jobs.map((j) => [`GET jobs /jobs/${j.id}`, j])) };
     const p = await tool('message_day_customers').preview!({ technician: 'Nuwan', date: '2026-10-08', message: 'Nuwan is running about 30 minutes late today.' }, ctx, http(routes).client);
-    expect(p.steps!.map((s) => s.sends)).toEqual(['Message to Customer 1', 'Message to Customer 3']);
+    expect(p.steps!.map((s) => s.sends)).toEqual(['In-app message to Customer 1', 'In-app message to Customer 3']);
   });
 
   it('refuses an empty message', async () => {

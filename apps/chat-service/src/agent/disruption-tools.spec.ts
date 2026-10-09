@@ -68,15 +68,68 @@ describe('reassign_job', () => {
 
 describe('message_customer', () => {
   it("shows the wording and posts to the job's customer", async () => {
-    const { http, calls } = fakeHttp({ 'GET /jobs/j-1': job, 'POST /messaging/threads': { id: 'th' }, 'POST /messaging/threads/th/messages': {} });
+    const { http, calls } = fakeHttp({ 'GET /jobs/j-1': job, 'POST /chat/customers/c-1/messages': { conversationId: 'cv' } });
     const p = await tool('message_customer').preview!({ jobId: 'j-1', message: 'Nuwan is running 20 minutes late.' }, ctx, http);
-    expect(p.lines).toEqual(['About JOB-0412: AC repair', '"Nuwan is running 20 minutes late."']);
-    expect(tool('message_customer').sends!(p.args!)).toBe('Message to Sara Perera');
+    expect(p.lines).toEqual(['About JOB-0412: AC repair', '"Nuwan is running 20 minutes late."', 'Sends as: in-app message.']);
+    expect(tool('message_customer').sends!(p.args!)).toBe('In-app message to Sara Perera');
     await tool('message_customer').run(p.args!, ctx, http);
-    expect(calls.slice(-2).map((c) => c.body)).toEqual([
-      { customerId: 'c-1', customerName: 'Sara Perera', subject: 'About JOB-0412', jobId: 'j-1' },
-      { body: 'Nuwan is running 20 minutes late.' },
+    expect(calls.filter((c) => c.method === 'POST').map((c) => [c.path, c.body])).toEqual([
+      ['/chat/customers/c-1/messages', { body: 'Nuwan is running 20 minutes late.', jobId: 'j-1', via: 'kelvin' }],
     ]);
+  });
+
+  it('also emails and pushes when asked, and says honestly what could not be sent', async () => {
+    const { http, calls } = fakeHttp({
+      'GET /jobs/j-1': { ...job, customerEmail: 'sara@x.lk' },
+      'POST /chat/customers/c-1/messages': { conversationId: 'cv' },
+      'POST /notifications/direct': { name: 'Sara Perera', results: { email: 'sent' } },
+    });
+    const p = await tool('message_customer').preview!({ jobId: 'j-1', message: 'Running late.', channels: ['message', 'email', 'push'] }, ctx, http);
+    expect(p.lines).toContain('Sends as: in-app message, email, push notification (to sara@x.lk).');
+    const out: any = await tool('message_customer').run(p.args!, ctx, http);
+    // With a chat message, the push rides along with it: not sent twice.
+    expect(calls.find((c) => c.path === '/notifications/direct')!.body).toMatchObject({
+      to: 'customer', id: 'c-1', channels: ['email'], jobId: 'j-1', title: 'About your visit (JOB-0412)', message: 'Running late.',
+    });
+    expect(out.summary).toBe('In-app message and email to Sara Perera: sent. The push goes with the message if they have notifications on');
+  });
+
+  it('drops email when there is no address, and refuses when nothing is left', async () => {
+    const { http } = fakeHttp({ 'GET /jobs/j-1': job, 'GET /customers/c-1': { id: 'c-1', email: null } });
+    const p = await tool('message_customer').preview!({ jobId: 'j-1', message: 'Hi', channels: ['email', 'push'] }, ctx, http);
+    expect(p.args!.channels).toEqual(['push']);
+    expect(p.lines).toContain("Sara Perera has no email address on file, so it won't be emailed.");
+    await expect(tool('message_customer').preview!({ jobId: 'j-1', message: 'Hi', channels: ['email'] }, ctx, http)).rejects.toThrow('no email address');
+  });
+
+  it('can message a customer without a job', async () => {
+    const { http } = fakeHttp({ 'GET /customers/c-9': { id: 'c-9', firstName: 'Yumeth', lastName: 'Sumathipala', email: 'y@x.lk' } });
+    const p = await tool('message_customer').preview!({ customerId: 'c-9', message: 'Your annual service is due.', channels: ['email'] }, ctx, http);
+    expect(p.title).toBe('Message Yumeth Sumathipala');
+    expect(p.args).toMatchObject({ customerId: 'c-9', channels: ['email'], subject: 'A message from us' });
+  });
+});
+
+describe('message_technician', () => {
+  const people = { data: [{ id: 't-r', userId: 'u-r', name: 'RP Tech', isActive: true }] };
+
+  it("messages them in their office chat by default, which also pushes", async () => {
+    const { http, calls } = fakeHttp({
+      'GET /technicians': people, 'POST /chat/conversations/tech-office': { id: 'cv-t' }, 'POST /chat/conversations/cv-t/messages': {},
+    });
+    const p = await tool('message_technician').preview!({ technician: 'RP', message: 'Bring the ladder.' }, ctx, http);
+    expect(p.lines).toEqual(['"Bring the ladder."', 'Sends as: in-app message, push notification.']);
+    const out: any = await tool('message_technician').run(p.args!, ctx, http);
+    expect(calls.find((c) => c.path === '/chat/conversations/tech-office')!.body).toEqual({ techUserId: 'u-r' });
+    expect(calls.find((c) => c.path === '/chat/conversations/cv-t/messages')!.body).toMatchObject({ body: 'Bring the ladder.', via: 'kelvin' });
+    expect(calls.some((c) => c.path === '/notifications/direct')).toBe(false);
+    expect(out.summary).toBe('In-app message to RP Tech: sent. The push goes with the message if they have notifications on');
+  });
+
+  it('fails plainly when nothing reaches them', async () => {
+    const { http } = fakeHttp({ 'GET /technicians': people, 'POST /notifications/direct': { results: { email: 'no-email' } } });
+    const p = await tool('message_technician').preview!({ technician: 'RP', message: 'Hi', channels: ['email'] }, ctx, http);
+    await expect(tool('message_technician').run(p.args!, ctx, http)).rejects.toThrow('Nothing reached RP Tech. No email: no email address on file.');
   });
 });
 
@@ -135,5 +188,24 @@ describe('set_technician_availability', () => {
     const back = fakeHttp({ 'DELETE /dispatch/availability/t-n/2026-10-07': undefined });
     await tool('set_technician_availability').run({ technicianId: 't-n', dates: ['2026-10-07'], status: 'normal' }, ctx, back.http);
     expect(back.calls[0]).toMatchObject({ method: 'DELETE', path: '/dispatch/availability/t-n/2026-10-07' });
+  });
+});
+
+describe('request_location', () => {
+  it('asks the customer by every channel and reports what reached them', async () => {
+    const { http, calls } = fakeHttp({
+      'GET /jobs/j-1': job,
+      'POST /jobs/j-1/location-request': { url: 'https://p/share-location/t', results: { message: 'sent', email: 'sent', push: 'no-device' } },
+    });
+    const p = await tool('request_location').preview!({ jobId: 'j-1' }, ctx, http);
+    expect(p.lines).toContain('It has no map location yet.');
+    const out: any = await tool('request_location').run(p.args!, ctx, http);
+    expect(calls.find((c) => c.path === '/jobs/j-1/location-request')!.body).toEqual({ channels: ['message', 'email', 'push'] });
+    expect(out.summary).toBe('Asked Sara Perera where JOB-0412 is (in-app message, email). Not sent: push: notifications not turned on');
+  });
+
+  it('refuses a finished job', async () => {
+    const { http } = fakeHttp({ 'GET /jobs/j-1': { ...job, status: 'COMPLETED' } });
+    await expect(tool('request_location').preview!({ jobId: 'j-1' }, ctx, http)).rejects.toThrow('already done');
   });
 });

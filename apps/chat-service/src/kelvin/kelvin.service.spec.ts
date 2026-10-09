@@ -56,7 +56,7 @@ describe('KelvinService.feed', () => {
     const { client } = http({ ...ok, ...down });
     const feed = await new KelvinService(() => client).feed(ctx());
     expect(feed.items).toEqual([]);
-    expect(feed.unavailable).toHaveLength(7); // a dispatcher's sources: no money ones
+    expect(feed.unavailable).toHaveLength(8); // a dispatcher's sources: no money ones
   });
 
   it('money notes only for money roles; suggestions kept 10 minutes per company', async () => {
@@ -134,5 +134,25 @@ describe('KelvinService memory', () => {
   it('checks the tone', () => {
     const svc = new KelvinService(() => ({ put: async () => ({}) }) as any);
     expect(() => svc.setPrefs(ctx(), { tone: 'LOUD' as any })).toThrow('tone');
+  });
+});
+
+describe('KelvinService portal notes', () => {
+  it('reads the customer\'s own records as them, and skips parts that fail', async () => {
+    const calls: string[] = [];
+    const client = { get: async (s: string, p: string) => {
+      calls.push(`${s} ${p}`);
+      if (p === '/quotes') throw new Error('down');
+      if (p === '/company/settings') return { timezone: 'UTC' };
+      if (p === '/jobs') return { data: [{ id: 'j-1', jobNumber: 'JOB-1', title: 'AC', status: 'EN_ROUTE', assignedToName: 'Kasun F' }] };
+      return { data: [] };
+    } } as any;
+    const out = await new KelvinService(() => client).portal({ ...ctx('customer'), customerId: 'c-1' });
+    expect(out.notes.map((n) => n.title)).toEqual(['Kasun is on the way']);
+    expect(calls.sort()).toEqual(['crm /company/settings', 'finance /invoices', 'finance /quotes', 'jobs /jobs']);
+  });
+
+  it('is for customers only', async () => {
+    await expect(new KelvinService(() => ({}) as any).portal(ctx('dispatcher'))).rejects.toThrow('for customers');
   });
 });

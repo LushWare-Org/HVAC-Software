@@ -21,6 +21,8 @@ export interface ActionOutcome {
   undo?: UndoOffer;
   /** Steps that sent something to a customer: these cannot be undone. */
   cantUnsend?: string[];
+  /** An address the app should open directions to (a technician starting their route). */
+  navigateTo?: string;
 }
 
 /**
@@ -73,7 +75,8 @@ export async function confirmAction(token: string, ctx: AgentContext, bot: BotTy
     const back = tool.reverse?.(action.args, result, ctx);
     const undo = back ? undoOffer([back], ctx) : undefined;
     const sent = tool.sends?.(action.args);
-    return { ok: true, message: `Done: ${summary}.`, actionId: action.id, ...(undo && { undo }), ...(sent && { cantUnsend: [action.title] }) };
+    const navigateTo = typeof result?.navigateTo === 'string' && result.navigateTo ? result.navigateTo : undefined;
+    return { ok: true, message: `Done: ${summary}.`, actionId: action.id, ...(undo && { undo }), ...(sent && { cantUnsend: [action.title] }), ...(navigateTo && { navigateTo }) };
   } catch (err) {
     const reason = err instanceof ToolRefusal ? err.message : serviceErrorMessage(err);
     logger.warn(`AI action ${action.id} failed: ${action.tool} by ${ctx.userId}: ${reason}`);
