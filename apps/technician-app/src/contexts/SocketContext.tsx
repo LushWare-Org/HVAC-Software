@@ -1,13 +1,7 @@
 /**
- * SocketContext — single Socket.IO connection for the entire app session.
- *
- * One connection is created when the user authenticates and torn down on logout.
- * All screens share the same socket via useSocketContext() instead of creating
- * individual connections (which caused duplicate events and wasted connections).
- *
- * The listener-forwarding pattern (msgListeners / typingListeners sets) means
- * callbacks registered via onNewMessage / onTyping survive socket reconnects
- * automatically — no need to re-register after a disconnect.
+ * SocketContext — one Socket.IO connection (comms /chat) for job, stock and
+ * notification alerts, for the whole session. Chat itself has its own
+ * connection (comms /messages, see src/chat/useChat.ts).
  *
  * URL derivation: Socket.IO path is /socket.io/ (proxied by nginx → comms-service).
  * The WS base URL is derived from the API base URL by stripping /api, so a single
@@ -20,13 +14,11 @@ import React, {
   useEffect,
   useRef,
   useState,
-  useCallback,
 } from 'react'
 import { io, Socket } from 'socket.io-client'
 import Constants from 'expo-constants'
 import { useAuth } from './AuthContext'
 import { queryClient } from '@/lib/queryClient'
-import type { ThreadMessage } from '@/types/api'
 
 // ── Real-time query invalidation map ─────────────────────────────────────────
 // Server events → which React Query keys to invalidate. Any listed event the
@@ -54,7 +46,7 @@ function getDefaultApiBaseUrl(): string {
   return __DEV__ ? 'http://localhost:80/api' : DEFAULT_API_BASE_URL
 }
 
-function getWsBaseUrl(): string {
+export function getWsBaseUrl(): string {
   // Explicit override wins
   const explicit =
     Constants.expoConfig?.extra?.wsBaseUrl ?? process.env.EXPO_PUBLIC_WS_BASE_URL
@@ -70,21 +62,8 @@ function getWsBaseUrl(): string {
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type NewMsgData = { threadId: string; message: ThreadMessage }
-type TypingData = {
-  threadId: string
-  userId: string
-  userName: string
-  isTyping: boolean
-}
-
 interface SocketContextType {
   isConnected: boolean
-  joinThread: (threadId: string) => void
-  leaveThread: (threadId: string) => void
-  sendTyping: (threadId: string, isTyping: boolean) => void
-  onNewMessage: (cb: (data: NewMsgData) => void) => () => void
-  onTyping: (cb: (data: TypingData) => void) => () => void
 }
 
 const SocketContext = createContext<SocketContextType | null>(null)
@@ -96,9 +75,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const socketRef = useRef<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
 
-  // Stable callback sets — persist across socket reconnects
-  const msgListeners = useRef(new Set<(data: NewMsgData) => void>())
-  const typingListeners = useRef(new Set<(data: TypingData) => void>())
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
@@ -115,13 +91,8 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     const socket = io(`${wsBase}/chat`, {
       path: '/socket.io/',
       transports: ['websocket', 'polling'],
+      // Identity comes only from the login token.
       auth: { token },
-      query: {
-        companyId: user?.companyId ?? '',
-        userId:    user?.id        ?? '',
-        userName:  user?.name      ?? '',
-        userRole:  user?.role      ?? '',
-      },
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,
@@ -140,22 +111,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     socket.on('connect_error', (err) => {
       // Warn silently — reconnect will retry
       console.warn('[WS] Connect error:', err.message)
-    })
-
-    // Forward events to all registered listeners.
-    // This single socket.on() survives internal socket reconnects because
-    // socket.io-client reuses the same Socket object across reconnects.
-    socket.on('new_message', (data: NewMsgData) => {
-      msgListeners.current.forEach((cb) => cb(data))
-      // Invalidate ONLY the thread list (not individual thread details) so
-      // the open chat screen isn't needlessly re-fetched — onNewMessage
-      // already updates that cache in-place.
-      queryClient.invalidateQueries({
-        predicate: (q) => q.queryKey[0] === 'threads' && q.queryKey[1] !== 'detail',
-      })
-    })
-    socket.on('user_typing', (data: TypingData) => {
-      typingListeners.current.forEach((cb) => cb(data))
     })
 
     // Real-time query invalidation — any event in EVENT_TO_QUERY_KEYS triggers
@@ -178,42 +133,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, token, user?.id, user?.companyId])
 
-  const joinThread = useCallback((threadId: string) => {
-    socketRef.current?.emit('join_thread', { threadId })
-  }, [])
-
-  const leaveThread = useCallback((threadId: string) => {
-    socketRef.current?.emit('leave_thread', { threadId })
-  }, [])
-
-  const sendTyping = useCallback((threadId: string, isTyping: boolean) => {
-    socketRef.current?.emit('typing', { threadId, isTyping })
-  }, [])
-
-  // Add / remove listeners from the stable set
-  const onNewMessage = useCallback(
-    (cb: (data: NewMsgData) => void) => {
-      msgListeners.current.add(cb)
-      return () => {
-        msgListeners.current.delete(cb)
-      }
-    },
-    [],
-  )
-
-  const onTyping = useCallback(
-    (cb: (data: TypingData) => void) => {
-      typingListeners.current.add(cb)
-      return () => {
-        typingListeners.current.delete(cb)
-      }
-    },
-    [],
-  )
-
   return (
     <SocketContext.Provider
-      value={{ isConnected, joinThread, leaveThread, sendTyping, onNewMessage, onTyping }}
+      value={{ isConnected }}
     >
       {children}
     </SocketContext.Provider>

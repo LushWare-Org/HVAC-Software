@@ -6,6 +6,7 @@ import { StatusBadge } from './StatusBadge'
 import { PriorityBadge } from './PriorityBadge'
 import { formatTimeWindow, formatDate } from '@/utils/format'
 import type { Job } from '@/types/api'
+import { isMissedJob, missedLabel } from '@/utils/jobHelpers'
 
 interface JobCardProps {
   job: Job
@@ -15,6 +16,7 @@ interface JobCardProps {
 
 export function JobCard({ job, showDate = false, assignment }: JobCardProps) {
   const router = useRouter()
+  const missed = isMissedJob(job)
 
   return (
     <TouchableOpacity
@@ -30,6 +32,12 @@ export function JobCard({ job, showDate = false, assignment }: JobCardProps) {
 
       {/* Title */}
       <Text style={styles.title} numberOfLines={1}>{job.title}</Text>
+
+      {missed && (
+        <View style={styles.missedPill} accessibilityLabel={missedLabel(job.scheduledStart)}>
+          <Text style={styles.missedText}>⚠ {missedLabel(job.scheduledStart)}</Text>
+        </View>
+      )}
 
       {/* Customer + address */}
       {job.customerName && (
@@ -51,7 +59,7 @@ export function JobCard({ job, showDate = false, assignment }: JobCardProps) {
         <View style={styles.timeRow}>
           <Text style={styles.timeIcon}>🕐</Text>
           <Text style={styles.timeText}>
-            {showDate && `${formatDate(job.scheduledStart)} · `}
+            {(showDate || missed) && `${formatDate(job.scheduledStart)} · `}
             {formatTimeWindow(job.scheduledStart, job.scheduledEnd)}
           </Text>
         </View>
@@ -83,6 +91,8 @@ export function JobCard({ job, showDate = false, assignment }: JobCardProps) {
 }
 
 const styles = StyleSheet.create({
+  missedPill: { alignSelf: 'flex-start', marginBottom: 6, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: '#FEF3C7' },
+  missedText: { fontSize: 11.5, fontWeight: '700', color: '#B45309' },
   card: {
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,

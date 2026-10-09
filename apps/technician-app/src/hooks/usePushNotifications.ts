@@ -70,6 +70,10 @@ async function getExpoPushToken(): Promise<string | null> {
 
 function invalidateForPush(data: Record<string, unknown> | undefined) {
   const type = data?.type
+  if (type === 'chat') {
+    queryClient.invalidateQueries({ queryKey: ['chat'] })
+    return
+  }
   if (type === 'job_assigned') {
     queryClient.invalidateQueries({ queryKey: ['jobs'] })
     queryClient.invalidateQueries({ queryKey: ['assignments'] })
@@ -109,7 +113,10 @@ export function usePushNotifications() {
       const data = resp.notification.request.content.data as Record<string, unknown>
       invalidateForPush(data)
       const jobId = data?.jobId
-      if (typeof jobId === 'string' && jobId) {
+      // A chat message opens its conversation.
+      if (data?.type === 'chat' && typeof data.conversationId === 'string') {
+        router.push(`/message/${data.conversationId}`)
+      } else if (typeof jobId === 'string' && jobId) {
         router.push(`/job/${jobId}`)
       } else {
         router.push('/(tabs)/notifications')

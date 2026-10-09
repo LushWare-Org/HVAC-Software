@@ -90,6 +90,34 @@ export function isCompletedJob(status: JobStatus): boolean {
   return ['COMPLETED', 'INVOICED', 'PAID'].includes(status)
 }
 
+/** The device's calendar date as YYYY-MM-DD (not UTC: an 11 PM job in UTC+5:30 would carry tomorrow's date). */
+export const localDateStr = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+export const jobLocalDate = (iso?: string | null) => (iso ? localDateStr(new Date(iso)) : null)
+
+/** Work the technician is doing right now. It stays on Today whatever its date. */
+export const isInProgressJob = (status: JobStatus) => ['EN_ROUTE', 'ON_SITE', 'IN_PROGRESS'].includes(status)
+
+/**
+ * A MISSED job: assigned and still open, but its day has passed without it being done.
+ * Different from Today (do now), Upcoming (do later) and Completed (done), so it
+ * gets its own place instead of hiding in any of them.
+ */
+export function isMissedJob(job: { status: JobStatus; scheduledStart?: string | null }, today = localDateStr(new Date())): boolean {
+  if (isCompletedJob(job.status) || job.status === 'CANCELLED' || isInProgressJob(job.status)) return false
+  const day = jobLocalDate(job.scheduledStart)
+  return !!day && day < today
+}
+
+/** "Missed yesterday" / "Missed 3 days ago". */
+export function missedLabel(scheduledStart: string | null | undefined, today = localDateStr(new Date())): string {
+  const day = jobLocalDate(scheduledStart)
+  if (!day) return 'Missed'
+  const days = Math.round((new Date(`${today}T00:00:00`).getTime() - new Date(`${day}T00:00:00`).getTime()) / 86_400_000)
+  return days <= 1 ? 'Missed yesterday' : `Missed ${days} days ago`
+}
+
 /**
  * Sort jobs by scheduled start time
  */

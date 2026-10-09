@@ -10,6 +10,9 @@ import { SocketProvider, useSocketContext } from '@/contexts/SocketContext'
 import { queryClient } from '@/lib/queryClient'
 import { setupQueryPersistence } from '@/lib/queryPersistence'
 import { Colors } from '@/constants/theme'
+import { KelvinProvider } from '@/kelvin/KelvinProvider'
+import { useChatRealtime } from '@/chat/useChat'
+import KelvinLayer from '@/kelvin/KelvinLayer'
 // Side-effect import: registers the background location task with TaskManager.
 // This MUST happen during module evaluation — the OS can wake the task on a
 // cold start before any component renders, and an unregistered task is
@@ -30,8 +33,7 @@ function ForegroundRefresher() {
         if (__DEV__) console.log('[AppState] Foreground — refetching critical queries')
         queryClient.invalidateQueries({ queryKey: ['jobs'] })
         queryClient.invalidateQueries({ queryKey: ['assignments'] })
-        queryClient.invalidateQueries({ queryKey: ['threads'] })
-        queryClient.invalidateQueries({ queryKey: ['notifications'] })
+          queryClient.invalidateQueries({ queryKey: ['notifications'] })
         queryClient.invalidateQueries({ queryKey: ['inventory'] })
       }
       appState.current = next
@@ -65,6 +67,8 @@ function QueryCachePersister() {
  */
 function RealtimeSync() {
   const { isConnected } = useSocketContext()
+  // Chat has its own live connection (comms /messages): messages, read receipts and the tab badge.
+  useChatRealtime()
   const wasConnected = useRef(false)
 
   useEffect(() => {
@@ -72,7 +76,6 @@ function RealtimeSync() {
       if (__DEV__) console.log('[WS] (Re)connected — pulling fresh data')
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
       queryClient.invalidateQueries({ queryKey: ['assignments'] })
-      queryClient.invalidateQueries({ queryKey: ['threads'] })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['inventory'] })
     }
@@ -115,38 +118,41 @@ export default function RootLayout() {
           <AuthProvider>
             {/* Single socket connection for the entire auth session */}
             <SocketProvider>
-              <SessionGuard />
-              <ForegroundRefresher />
-              <RealtimeSync />
-              <StatusBar style="dark" />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: Colors.background },
-                  animation: 'slide_from_right',
-                }}
-              >
-                <Stack.Screen name="index" />
-                <Stack.Screen name="login"                options={{ animation: 'fade' }} />
-                <Stack.Screen name="signup"               options={{ animation: 'slide_from_right' }} />
-                <Stack.Screen name="pending-approval"     options={{ animation: 'fade' }} />
-                <Stack.Screen name="force-reset-password" options={{ animation: 'fade', gestureEnabled: false }} />
-                <Stack.Screen name="setup-location"       options={{ animation: 'fade', gestureEnabled: false }} />
-                {/* No swipe-back from the dashboard: there is nothing behind it a technician should land on. */}
-                <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
-                <Stack.Screen
-                  name="job/[id]"
-                  options={{ headerShown: false, animation: 'slide_from_right' }}
-                />
-                <Stack.Screen
-                  name="message/[id]"
-                  options={{ headerShown: false, animation: 'slide_from_right' }}
-                />
-                <Stack.Screen
-                  name="expense/create"
-                  options={{ headerShown: false, presentation: 'modal' }}
-                />
-              </Stack>
+              <KelvinProvider>
+                <SessionGuard />
+                <ForegroundRefresher />
+                <RealtimeSync />
+                <StatusBar style="dark" />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: Colors.background },
+                    animation: 'slide_from_right',
+                  }}
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="login"                options={{ animation: 'fade' }} />
+                  <Stack.Screen name="signup"               options={{ animation: 'slide_from_right' }} />
+                  <Stack.Screen name="pending-approval"     options={{ animation: 'fade' }} />
+                  <Stack.Screen name="force-reset-password" options={{ animation: 'fade', gestureEnabled: false }} />
+                  <Stack.Screen name="setup-location"       options={{ animation: 'fade', gestureEnabled: false }} />
+                  {/* No swipe-back from the dashboard: there is nothing behind it a technician should land on. */}
+                  <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+                  <Stack.Screen
+                    name="job/[id]"
+                    options={{ headerShown: false, animation: 'slide_from_right' }}
+                  />
+                  <Stack.Screen
+                    name="message/[id]"
+                    options={{ headerShown: false, animation: 'slide_from_right' }}
+                  />
+                  <Stack.Screen
+                    name="expense/create"
+                    options={{ headerShown: false, presentation: 'modal' }}
+                  />
+                </Stack>
+                <KelvinLayer />
+              </KelvinProvider>
             </SocketProvider>
           </AuthProvider>
         </QueryClientProvider>

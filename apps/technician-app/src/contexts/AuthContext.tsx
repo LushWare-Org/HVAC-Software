@@ -3,6 +3,7 @@ import { AppState } from 'react-native'
 import api, { setAuthHeader } from '@/lib/api'
 import { setGpsAuthHeader } from '@/lib/gpsClient'
 import { clearPersistedQueryCache } from '@/lib/queryPersistence'
+import { queryClient } from '@/lib/queryClient'
 import { stopBackgroundLocation } from '@/lib/backgroundLocation'
 import * as storage from '@/lib/storage'
 import type { TechUser, LoginResponse } from '@/types/api'
@@ -171,6 +172,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // The OS task outlives the React tree, so signing out has to tear it down
     // explicitly — otherwise a signed-out phone keeps reporting its position.
     await stopBackgroundLocation()
+    // Everything cached belongs to the person who just left: the next person to sign in on this
+    // phone must never see it (company name, jobs, messages), in memory or on disk.
+    queryClient.clear()
     clearPersistedQueryCache()
     await storage.clearAll()
   }
@@ -185,6 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (u.role.toLowerCase() !== 'technician') {
         throw new Error('This app is for technicians only.')
       }
+      queryClient.clear() // never start a new sign-in on someone else's cached data
       await _setSession(access_token, u)
       return { status: 'APPROVED', mustResetPassword: !!u.mustResetPassword }
     } catch (err: any) {

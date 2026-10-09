@@ -38,6 +38,8 @@ import { useJobDetail, useUpdateJobStatus, useUpdateJob, useUpdateCustomFields }
 import { useWorkOrdersByJob, useCompleteTask, useAddLineItem, useRemoveLineItem, usePriceBook, useCheckIn, useCheckOut, useEnsureMyWorkOrder } from '@/hooks/useWorkOrders'
 import { useJobAssignments, useUpdateAssignmentStatus } from '@/hooks/useSchedule'
 import { useCustomerDetail } from '@/hooks/useCustomer'
+import { useKelvinScreenJob } from '@/kelvin/KelvinProvider'
+import { ProjectJobCard } from '@/components/ProjectJobCard'
 import { useLocations, useMyVanLocation, useVanStock, useReturnStock, toNumber } from '@/hooks/useInventory'
 
 import {
@@ -80,6 +82,8 @@ export default function JobDetailScreen() {
 
   // Data
   const { data: job, isLoading: jobLoading, refetch, error: jobError } = useJobDetail(id)
+  // Kelvin knows which job is open, so "this job" means it.
+  useKelvinScreenJob(job ? { id: job.id, jobNumber: job.jobNumber, customerName: job.customerName ?? undefined, title: job.title } : null)
   const { data: workOrders } = useWorkOrdersByJob(id)
   const { data: assignments } = useJobAssignments(id)
   const { data: customer } = useCustomerDetail(job?.customerId)
@@ -362,6 +366,9 @@ function OverviewTab({
           <Text style={styles.description}>{job.description}</Text>
         )}
       </View>
+
+      {/* Project: which project and house/unit this visit is for */}
+      {job.projectId ? <ProjectJobCard projectId={job.projectId} componentId={job.componentId} /> : null}
 
       {/* Map Preview */}
       {(() => {

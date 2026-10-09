@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   View,
+  Image,
   Text,
   TextInput,
   TouchableOpacity,
@@ -68,10 +69,10 @@ export default function LoginScreen() {
 
           <View style={styles.brandSection}>
             <View style={styles.logoCircle}>
-              <Text style={styles.logoIcon}>🔧</Text>
+              <Image source={require('../assets/logo.png')} style={{ width: '70%', height: '70%' }} resizeMode="contain" />
             </View>
-            <Text style={styles.brandTitle}>T&S Technician</Text>
-            <Text style={styles.brandSubtitle}>Field Service Management</Text>
+            <Text style={styles.brandTitle}>HVACtor.ai</Text>
+            <Text style={styles.brandSubtitle}>Technician app</Text>
           </View>
 
           <View style={styles.formCard}>
@@ -133,7 +134,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.footer}>Trade & Service CRM v1.0</Text>
+          <Text style={styles.footer}>HVACtor.ai · Field v1.1</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -145,7 +146,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: Spacing.xl, paddingVertical: Spacing['2xl'] },
   brandSection: { alignItems: 'center', marginBottom: Spacing['3xl'] },
-  logoCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.base },
+  logoCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.white, justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.base },
   logoIcon: { fontSize: 36 },
   brandTitle: { fontSize: FontSize['2xl'], fontWeight: FontWeight.bold, color: Colors.white, marginBottom: Spacing.xs },
   brandSubtitle: { fontSize: FontSize.base, color: Colors.textMuted },

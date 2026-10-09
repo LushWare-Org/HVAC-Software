@@ -1,9 +1,8 @@
 import { useEffect } from 'react'
 import { useRouter } from 'expo-router'
-import { View, ActivityIndicator, StyleSheet } from 'react-native'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTechnicianProfile } from '@/hooks/useProfile'
-import { Colors } from '@/constants/theme'
+import { AppLoader } from '@/components/AppLoader'
 
 /**
  * Root index — redirect based on auth state.
@@ -36,18 +35,5 @@ export default function Index() {
     }
   }, [isAuthenticated, isInitializing, mustResetPassword, techProfile.isLoading, techProfile.data])
 
-  return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color={Colors.primary} />
-    </View>
-  )
+  return <AppLoader />
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.darkBackground,
-  },
-})

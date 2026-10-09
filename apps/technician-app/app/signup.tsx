@@ -186,8 +186,8 @@ export default function SignupScreen() {
           <TouchableOpacity onPress={() => step > 1 ? setStep(s => s - 1) : router.back()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
-          <View style={styles.logoCircle}><Text style={styles.logoIcon}>🔧</Text></View>
-          <Text style={styles.brandTitle}>Join T&S</Text>
+          <View style={styles.logoCircle}><Image source={require('../assets/logo.png')} style={{ width: '70%', height: '70%' }} resizeMode="contain" /></View>
+          <Text style={styles.brandTitle}>Join HVACtor.ai</Text>
         </View>
 
         {/* Progress dots */}
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: Spacing.sm, position: 'relative' },
   backBtn: { position: 'absolute', left: Spacing.xl, padding: Spacing.sm },
   backIcon: { fontSize: 22, color: Colors.textSecondary },
-  logoCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', marginRight: 8 },
+  logoCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.white, justifyContent: 'center', alignItems: 'center', marginRight: 8 },
   logoIcon: { fontSize: 18 },
   brandTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.white },
 

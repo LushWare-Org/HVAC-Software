@@ -1,5 +1,5 @@
 // ============================================================
-// T&S Technician App — Design Tokens
+// HVACtor.ai Field App — Design Tokens
 // ============================================================
 
 export const Colors = {

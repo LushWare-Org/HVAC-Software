@@ -23,11 +23,13 @@ import { uploadPendingAvatarIfAny } from '@/hooks/useAvatar'
 import { AvatarReminderBanner } from '@/components/AvatarReminderBanner'
 import { JobCard } from '@/components/JobCard'
 import { ActiveJobHero } from '@/components/ActiveJobHero'
+import KelvinNextCard from '@/kelvin/KelvinNextCard'
+import { ProjectTodayCard } from '@/components/ProjectTodayCard'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ActionButton } from '@/components/ActionButton'
 import { formatDate, getInitials } from '@/utils/format'
-import { isActiveJob, sortByScheduledTime, getNavigationUrl } from '@/utils/jobHelpers'
+import { isActiveJob, isInProgressJob, isMissedJob, jobLocalDate, localDateStr, missedLabel, sortByScheduledTime, getNavigationUrl } from '@/utils/jobHelpers'
 import type { Job, DispatchAssignment } from '@/types/api'
 
 export default function HomeScreen() {
@@ -42,22 +44,21 @@ export default function HomeScreen() {
   const { data: me } = useUserProfile()
   const { data: company } = useCompanyBranding()
 
-  // Filter today's jobs — only show truly today's work + in-progress jobs
-  const todayStr = new Date().toISOString().slice(0, 10)
+  // Today's jobs: work in progress, today's schedule (the phone's calendar day), and unscheduled pending jobs.
+  // Earlier-dated jobs that were never done are "missed": counted on their own card below, not mixed into Today.
+  const todayStr = localDateStr(new Date())
   const todaysJobs = useMemo(() => {
     if (!jobsData?.data) return []
     return sortByScheduledTime(
       jobsData.data.filter((j) => {
-        // Currently in-progress always shows
-        if (j.status === 'EN_ROUTE' || j.status === 'ON_SITE' || j.status === 'IN_PROGRESS') return true
-        // Scheduled for today
-        if (j.scheduledStart?.startsWith(todayStr)) return true
-        // No schedule but still pending
+        if (isInProgressJob(j.status)) return true
+        if (jobLocalDate(j.scheduledStart) === todayStr) return true
         if (!j.scheduledStart && j.status === 'PENDING') return true
         return false
       }),
     )
   }, [jobsData, todayStr])
+  const missedJobs = useMemo(() => (jobsData?.data ?? []).filter((j) => isMissedJob(j, todayStr)), [jobsData, todayStr])
 
   // Assignment map for distance info
   const assignmentMap = useMemo(() => {
@@ -151,6 +152,9 @@ export default function HomeScreen() {
         {/* The job in progress comes first: it is what the technician needs next. */}
         {activeJob && <ActiveJobHero job={activeJob} assignment={assignmentMap[activeJob.id]} />}
 
+        <KelvinNextCard active={activeJob} next={nextJob} />
+        <ProjectTodayCard />
+
         {/* Photo reminder — shown each launch until a profile photo exists */}
         <AvatarReminderBanner />
 
@@ -213,6 +217,28 @@ export default function HomeScreen() {
           </View>
         )}
 
+        {/* Missed: assigned, past their day, still open. Kept apart from Today so Today means today. */}
+        {missedJobs.length > 0 && (
+          <TouchableOpacity
+            style={styles.missedCard}
+            activeOpacity={0.8}
+            onPress={() => router.push({ pathname: '/(tabs)/jobs', params: { tab: 'missed' } })}
+            accessibilityRole="button"
+            accessibilityLabel={`${missedJobs.length} missed jobs. Open them.`}
+          >
+            <Text style={styles.missedIcon}>⚠️</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.missedTitle}>
+                {missedJobs.length === 1 ? '1 missed job' : `${missedJobs.length} missed jobs`}
+              </Text>
+              <Text style={styles.missedSub}>
+                {missedLabel(missedJobs[0].scheduledStart, todayStr)}{missedJobs.length > 1 ? ' and more' : ''}. Tap to see them.
+              </Text>
+            </View>
+            <Text style={styles.missedArrow}>›</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Today's Schedule */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -247,6 +273,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  missedCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginBottom: 14, padding: 14, minHeight: 56, borderRadius: 14, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FCD34D' },
+  missedIcon: { fontSize: 22 },
+  missedTitle: { fontSize: 15, fontWeight: '700', color: '#92400E' },
+  missedSub: { fontSize: 12.5, color: '#B45309', marginTop: 2 },
+  missedArrow: { fontSize: 26, color: '#B45309' },
   safe: {
     flex: 1,
     backgroundColor: Colors.background,

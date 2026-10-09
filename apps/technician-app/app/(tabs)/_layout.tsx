@@ -4,7 +4,7 @@ import { Text, View, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Colors, FontSize, FontWeight } from '@/constants/theme'
 import { useUnreadCount } from '@/hooks/useNotifications'
-import { useUnreadThreadsCount } from '@/hooks/useMessages'
+import { useChatUnreadTotal } from '@/chat/useChat'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 
 // Vector icons (not emoji): consistent cross-platform rendering, tintable via
@@ -34,7 +34,7 @@ function NotificationTabIcon({ focused }: { focused: boolean }) {
 }
 
 function MessagesTabIcon({ focused }: { focused: boolean }) {
-  const unreadCount = useUnreadThreadsCount()
+  const unreadCount = useChatUnreadTotal()
 
   return (
     <View>

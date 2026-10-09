@@ -1,411 +1,171 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+/**
+ * One conversation. A bubble is mine when its senderMemberKey equals the
+ * conversation's myMemberKey; office messages show who wrote them.
+ */
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  Animated,
-  Easing,
-  Modal,
+  ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme'
-import { useThreadDetail, useSendMessage, useMarkThreadRead, useDeleteThread } from '@/hooks/useMessages'
-import { useSocketContext } from '@/contexts/SocketContext'
-import { useAuth } from '@/contexts/AuthContext'
+import { chatLive, fetchOlder, useChatAction, useConversation, useMarkChatRead, useSendChat } from '@/chat/useChat'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { formatTime, getInitials } from '@/utils/format'
-import { useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/queryClient'
-import type { ThreadMessage, MessageThread } from '@/types/api'
+import type { ChatMessage } from '@/types/api'
 
-// ── Typing indicator dots (3 animated dots) ──────────────────────────────────
-
-function TypingDots() {
-  const dot1 = useRef(new Animated.Value(0)).current
-  const dot2 = useRef(new Animated.Value(0)).current
-  const dot3 = useRef(new Animated.Value(0)).current
-
-  useEffect(() => {
-    const anim = (dot: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, {
-            toValue: -6,
-            duration: 300,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 300,
-            easing: Easing.in(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ]),
-      )
-    const a = anim(dot1, 0)
-    const b = anim(dot2, 150)
-    const c = anim(dot3, 300)
-    a.start()
-    b.start()
-    c.start()
-    return () => { a.stop(); b.stop(); c.stop() }
-  }, [])
-
-  return (
-    <View style={typingStyles.row}>
-      {[dot1, dot2, dot3].map((dot, i) => (
-        <Animated.View
-          key={i}
-          style={[typingStyles.dot, { transform: [{ translateY: dot }] }]}
-        />
-      ))}
-    </View>
-  )
+const dayLabel = (iso: string) => {
+  const d = new Date(iso); const now = new Date()
+  if (d.toDateString() === now.toDateString()) return 'Today'
+  const y = new Date(now); y.setDate(now.getDate() - 1)
+  if (d.toDateString() === y.toDateString()) return 'Yesterday'
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-const typingStyles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: Colors.textMuted,
-  },
-})
-
-// ── Main screen ───────────────────────────────────────────────────────────────
-
-export default function MessageDetailScreen() {
+export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  const { user } = useAuth()
-  const qc = useQueryClient()
-  const flatListRef = useRef<FlatList>(null)
+  const detail = useConversation(id ?? null)
+  const send = useSendChat()
+  const markRead = useMarkChatRead()
+  const action = useChatAction()
+  const d = detail.data
+  const [text, setText] = useState('')
+  const [older, setOlder] = useState<ChatMessage[]>([])
+  const [olderMore, setOlderMore] = useState<boolean | null>(null)
+  const [loadingOlder, setLoadingOlder] = useState(false)
+  const [typing, setTyping] = useState<string | null>(null)
+  const listRef = useRef<FlatList<ChatMessage>>(null)
+  const typingSent = useRef(0)
 
-  const [messageText, setMessageText] = useState('')
-  // Map of userId → userName for people currently typing (exclude self)
-  const [typingUsers, setTypingUsers] = useState<Record<string, string>>({})
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const typingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
-
-  const { data: thread, isLoading } = useThreadDetail(id ?? '')
-  const sendMessageMutation = useSendMessage()
-  const markRead = useMarkThreadRead()
-  const deleteThreadMutation = useDeleteThread()
-
-  const { isConnected, joinThread, leaveThread, onNewMessage, onTyping, sendTyping } = useSocketContext()
-
-  // ── Join / leave thread room ──────────────────────────────────────────────
+  useEffect(() => { if (id) chatLive.focus(id); return () => { chatLive.focus(null) } }, [id])
   useEffect(() => {
-    if (!id) return
-    if (isConnected) joinThread(id)
-    return () => { if (id) leaveThread(id) }
-  }, [id, isConnected, joinThread, leaveThread])
+    if (!d || !id) return
+    const me = d.members.find((m) => m.isMe)
+    if (me && me.lastReadSeq < d.lastSeq) markRead.mutate({ conversationId: id, seq: d.lastSeq })
+  }, [id, d?.lastSeq]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => chatLive.onTyping((e) => { if (e.conversationId === id && e.memberKey !== d?.myMemberKey) setTyping(e.typing ? e.name : null) }), [id, d?.myMemberKey])
+  useEffect(() => { if (!typing) return; const t = setTimeout(() => setTyping(null), 5000); return () => clearTimeout(t) }, [typing])
 
-  // ── Listen for incoming messages via WebSocket ────────────────────────────
-  useEffect(() => {
-    if (!id) return
-    const unsub = onNewMessage(({ threadId, message }) => {
-      if (threadId !== id) return
-      qc.setQueryData<MessageThread>(queryKeys.threadDetail(id), (old) => {
-        if (!old) return old
-        const existing = old.messages ?? []
-        // Skip duplicates (optimistic or already present)
-        if (existing.some((m) => m.id === message.id)) return old
-        // Also skip if we have a temp message with same body (our own send)
-        const hasTempMatch = existing.some(
-          (m) => m.id.startsWith('temp-') && m.body === message.body,
-        )
-        if (hasTempMatch) return old
-        return {
-          ...old,
-          messages: [...existing, message],
-          lastMessageBody: message.body,
-          lastMessageAt: message.createdAt,
-        }
-      })
-      // Scroll to bottom on new message
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 80)
-    })
-    return unsub
-  }, [id, onNewMessage, qc])
+  const messages = useMemo(() => {
+    if (!d) return []
+    return [...older.filter((m) => !d.messages.some((x) => x.id === m.id)), ...d.messages]
+  }, [d, older])
+  // Newest at the bottom: the list is inverted, so it gets the reverse.
+  const inverted = useMemo(() => [...messages].reverse(), [messages])
 
-  // ── Listen for typing events ──────────────────────────────────────────────
-  useEffect(() => {
-    if (!id) return
-    const unsub = onTyping(({ threadId, userId, userName, isTyping: typing }) => {
-      if (threadId !== id) return
-      if (userId === user?.id) return // ignore self
-      setTypingUsers((prev) => {
-        const next = { ...prev }
-        if (typing) {
-          next[userId] = userName
-          // Auto-clear if no follow-up typing event in 3 s
-          clearTimeout(typingTimers.current[userId])
-          typingTimers.current[userId] = setTimeout(() => {
-            setTypingUsers((p) => { const n = { ...p }; delete n[userId]; return n })
-          }, 3000)
-        } else {
-          clearTimeout(typingTimers.current[userId])
-          delete next[userId]
-        }
-        return next
-      })
-    })
-    return () => {
-      unsub()
-      // Clear all timers on unmount
-      Object.values(typingTimers.current).forEach(clearTimeout)
-    }
-  }, [id, onTyping, user?.id])
-
-  // ── Mark thread as read on open ───────────────────────────────────────────
-  useEffect(() => {
-    if (id && thread?.unreadCount && thread.unreadCount > 0) {
-      markRead.mutate(id)
-    }
-  }, [id, thread?.unreadCount])
-
-  // ── Scroll to bottom when messages change ────────────────────────────────
-  useEffect(() => {
-    if ((thread?.messages?.length ?? 0) > 0) {
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 50)
-    }
-  // Depend on actual message count, not a boolean expression
-  }, [thread?.messages?.length])
-
-  // ── Send ──────────────────────────────────────────────────────────────────
-  const handleSend = useCallback(async () => {
-    if (!messageText.trim() || !id) return
-    const text = messageText.trim()
-    setMessageText('')
-    sendTyping(id, false) // stop typing indicator
+  const loadOlder = useCallback(async () => {
+    if (!id || loadingOlder || !messages.length) return
+    const more = olderMore ?? d?.hasMore
+    if (!more) return
+    setLoadingOlder(true)
     try {
-      await sendMessageMutation.mutateAsync({ threadId: id, body: text })
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 80)
-    } catch {
-      setMessageText(text) // restore on failure
+      const res = await fetchOlder(id, messages[0].seq)
+      setOlder((o) => [...res.data, ...o])
+      setOlderMore(res.hasMore)
+    } finally {
+      setLoadingOlder(false)
     }
-  }, [messageText, id, sendMessageMutation, sendTyping])
+  }, [id, loadingOlder, messages, olderMore, d?.hasMore])
 
-  // ── Thread meta ───────────────────────────────────────────────────────────
-  const isStaffThread = !thread?.customerId && (thread?.participantIds?.length ?? 0) > 0
-  const threadDisplayName = isStaffThread
-    ? (() => {
-        // Staff↔staff: show the other participant's name(s) so each side sees
-        // "Colleague Name" not the thread subject
-        const others = (thread?.participantNames ?? []).filter((n) => n !== user?.name)
-        return others.length > 0
-          ? others.join(', ')
-          : (thread?.subject ?? 'Team Chat')
-      })()
-    : // Customer thread: tech always sees the customer's name, not the subject
-      (thread?.customerName ?? thread?.customerPhone ?? 'Customer')
-
-  const messages = thread?.messages ?? []
-
-  // Names of people currently typing
-  const typingNames = Object.values(typingUsers)
-  const typingLabel =
-    typingNames.length === 1
-      ? `${typingNames[0]} is typing`
-      : typingNames.length > 1
-      ? 'Several people are typing'
-      : null
-
-  // ── Render message bubble ─────────────────────────────────────────────────
-  const renderMessage = ({ item, index }: { item: ThreadMessage; index: number }) => {
-    const isMine = isStaffThread
-      ? item.senderId === user?.id
-      : item.direction === 'OUTBOUND'
-
-    // Group: show avatar only for first message in a consecutive block from same sender
-    const prevItem = messages[index - 1]
-    const isFirstInGroup =
-      !prevItem ||
-      (isStaffThread
-        ? prevItem.senderId !== item.senderId
-        : prevItem.direction !== item.direction)
-
+  if (detail.isLoading && !d) return <LoadingSpinner message="Loading conversation..." />
+  if (detail.isError || !d) {
     return (
-      <View style={[styles.msgRow, isMine ? styles.msgRowRight : styles.msgRowLeft]}>
-        {/* Avatar on left side for inbound */}
-        {!isMine && (
-          <View style={[styles.msgAvatar, !isFirstInGroup && styles.msgAvatarHidden]}>
-            {isFirstInGroup ? (
-              <Text style={styles.msgAvatarText}>
-                {getInitials(item.senderName ?? threadDisplayName)}
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.center}>
+          <Text style={styles.muted}>This conversation isn't available.</Text>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}><Text style={styles.backBtnText}>Go back</Text></TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  const others = d.members.filter((m) => !m.isMe)
+  const seenUpTo = others.length ? Math.max(...others.map((m) => m.lastReadSeq)) : 0
+  const lastMine = [...messages].reverse().find((m) => m.senderMemberKey === d.myMemberKey && !m.pending)
+
+  const submit = () => {
+    const body = text.trim()
+    if (!body || !id) return
+    send.mutate({ conversationId: id, body })
+    setText('')
+    chatLive.typing(id, false)
+  }
+
+  const menu = () => Alert.alert(d.title, undefined, [
+    { text: d.muted ? 'Turn notifications on' : 'Mute notifications', onPress: () => action.mutate({ conversationId: id!, action: d.muted ? 'unmute' : 'mute' }) },
+    ...(d.myMemberKey !== 'office' ? [{ text: 'Hide from my list', style: 'destructive' as const, onPress: () => action.mutate({ conversationId: id!, action: 'hide' }, { onSuccess: () => router.back() }) }] : []),
+    { text: 'Cancel', style: 'cancel' as const },
+  ])
+
+  const renderItem = ({ item: m, index }: { item: ChatMessage; index: number }) => {
+    const prev = inverted[index + 1] // older neighbour
+    const mine = m.senderMemberKey === d.myMemberKey
+    const newDay = !prev || new Date(prev.createdAt).toDateString() !== new Date(m.createdAt).toDateString()
+    const showName = !mine && (!prev || prev.senderName !== m.senderName || prev.senderMemberKey !== m.senderMemberKey || newDay)
+    return (
+      <View>
+        {newDay && <Text style={styles.day}>{dayLabel(m.createdAt)}</Text>}
+        <View style={[styles.msgRow, mine ? styles.right : styles.left, showName && { marginTop: 8 }]}>
+          <View style={{ maxWidth: '82%' }}>
+            {showName && <Text style={styles.sender}>{m.senderKind === 'KELVIN' ? '✨ Kelvin' : m.senderName}</Text>}
+            <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs, m.pending && { opacity: 0.7 }]}>
+              {m.jobNumber ? <Text style={[styles.jobChip, mine && { color: '#dbeafe' }]}>About {m.jobNumber}</Text> : null}
+              <Text style={[styles.body, mine && styles.bodyMine, m.deletedAt && { fontStyle: 'italic' }]}>
+                {m.deletedAt ? 'Message deleted' : linkify(m.body, mine)}
               </Text>
-            ) : null}
-          </View>
-        )}
-
-        <View style={styles.bubbleWrapper}>
-          {/* Sender name in staff/group thread */}
-          {!isMine && isFirstInGroup && isStaffThread && item.senderName && (
-            <Text style={styles.senderLabel}>{item.senderName}</Text>
-          )}
-
-          <View style={[styles.bubble, isMine ? styles.bubbleOut : styles.bubbleIn]}>
-            <Text style={[styles.bubbleText, isMine && styles.bubbleTextOut]}>
-              {item.body}
-            </Text>
-            <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeOut]}>
-              {formatTime(item.createdAt)}
-              {isMine && item.status === 'SENT'      && '  ✓'}
-              {isMine && item.status === 'DELIVERED' && '  ✓✓'}
-              {isMine && item.status === 'READ'      && '  ✓✓'}
-              {isMine && item.status === 'FAILED'    && '  ✗'}
-            </Text>
+            </View>
+            <View style={[styles.meta, mine && { justifyContent: 'flex-end' }]}>
+              {m.failed ? (
+                <Pressable onPress={() => send.mutate({ conversationId: id!, body: m.body, clientId: m.clientId ?? undefined })} hitSlop={10}>
+                  <Text style={[styles.metaText, { color: Colors.danger }]}>Not sent. Tap to retry</Text>
+                </Pressable>
+              ) : (
+                <Text style={styles.metaText}>
+                  {m.pending ? 'Sending…' : formatTime(m.createdAt)}{m.editedAt && !m.deletedAt ? ' · edited' : ''}
+                  {mine && m.id === lastMine?.id ? (seenUpTo >= m.seq ? '  ✓✓ Seen' : '  ✓ Sent') : ''}
+                </Text>
+              )}
+            </View>
           </View>
         </View>
       </View>
     )
   }
 
-  if (isLoading) {
-    return <LoadingSpinner fullScreen message="Loading conversation..." />
-  }
-
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* ── Header ── */}
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-          <Text style={styles.backText}>‹</Text>
-        </TouchableOpacity>
-        <View style={[styles.headerAvatar, isStaffThread && styles.headerAvatarStaff]}>
-          <Text style={styles.headerAvatarText}>{getInitials(threadDisplayName)}</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn} accessibilityLabel="Back"><Text style={styles.headerBack}>‹</Text></TouchableOpacity>
+        <View style={styles.headerAvatar}><Text style={styles.headerAvatarText}>{getInitials(d.title)}</Text></View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle} numberOfLines={1}>{d.title}</Text>
+          <Text style={[styles.headerSub, typing && { color: Colors.primary }]} numberOfLines={1}>{typing ? `${typing} is typing…` : d.subtitle}</Text>
         </View>
-        <View style={styles.headerInfo}>
-          <Text style={styles.headerName} numberOfLines={1}>
-            {threadDisplayName}
-          </Text>
-          <View style={styles.headerStatusRow}>
-            <View style={[styles.statusDot, isConnected ? styles.statusDotOnline : styles.statusDotOffline]} />
-            <Text style={[styles.headerStatus, isConnected ? styles.headerStatusOnline : styles.headerStatusOffline]}>
-              {isConnected ? 'Connected' : 'Reconnecting…'}
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          onPress={() => setShowDeleteConfirm(true)}
-          hitSlop={8}
-          style={styles.deleteBtn}
-        >
-          <Text style={styles.deleteBtnText}>🗑</Text>
-        </TouchableOpacity>
+        <TouchableOpacity onPress={menu} style={styles.headerBtn} accessibilityLabel="Conversation options"><Text style={styles.headerMenu}>⋯</Text></TouchableOpacity>
       </View>
 
-      {/* ── Delete confirmation modal ── */}
-      <Modal
-        visible={showDeleteConfirm}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDeleteConfirm(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Delete Conversation</Text>
-            <Text style={styles.modalBody}>
-              This will permanently delete all messages in this conversation. You can always start a new one.
-            </Text>
-            <View style={styles.modalBtns}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnCancel]}
-                onPress={() => setShowDeleteConfirm(false)}
-              >
-                <Text style={styles.modalBtnCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnDelete]}
-                disabled={deleteThreadMutation.isPending}
-                onPress={() => {
-                  if (!id) return
-                  deleteThreadMutation.mutate(id, {
-                    onSuccess: () => {
-                      setShowDeleteConfirm(false)
-                      router.back()
-                    },
-                    onError: () => setShowDeleteConfirm(false),
-                  })
-                }}
-              >
-                <Text style={styles.modalBtnDeleteText}>
-                  {deleteThreadMutation.isPending ? 'Deleting…' : 'Delete Forever'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── Messages + input ── */}
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={0}>
         <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={renderMessage}
-          contentContainerStyle={styles.messagesList}
-          showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
-          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-          ListEmptyComponent={
-            <View style={styles.emptyMessages}>
-              <Text style={styles.emptyText}>No messages yet. Say hello! 👋</Text>
-            </View>
-          }
+          ref={listRef}
+          data={inverted}
+          inverted
+          keyExtractor={(m) => m.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: Spacing.md }}
+          onEndReached={loadOlder}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingOlder ? <ActivityIndicator style={{ margin: 12 }} color={Colors.primary} /> : null}
+          ListEmptyComponent={<View style={[styles.center, { transform: [{ scaleY: -1 }] }]}>{detail.isPlaceholderData ? <ActivityIndicator color={Colors.primary} /> : <Text style={styles.muted}>No messages yet. Say hello.</Text>}</View>}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
         />
-
-        {/* Typing indicator */}
-        {typingLabel && (
-          <View style={styles.typingRow}>
-            <TypingDots />
-            <Text style={styles.typingLabel}>{typingLabel}</Text>
-          </View>
-        )}
-
-        {/* Input bar */}
-        <View style={styles.inputBar}>
+        <View style={styles.composer}>
           <TextInput
-            style={styles.messageInput}
-            value={messageText}
-            onChangeText={(text) => {
-              setMessageText(text)
-              if (id) sendTyping(id, text.length > 0)
-            }}
-            placeholder="Type a message..."
-            placeholderTextColor={Colors.textMuted}
-            multiline
-            maxLength={2000}
-            returnKeyType="default"
-            blurOnSubmit={false}
+            style={styles.input} value={text} multiline maxLength={4000} placeholder={`Message ${d.title}`} placeholderTextColor={Colors.textMuted}
+            onChangeText={(v) => { setText(v); if (id && Date.now() - typingSent.current > 2500) { typingSent.current = Date.now(); chatLive.typing(id, true) } }}
           />
-          <TouchableOpacity
-            style={[styles.sendBtn, (!messageText.trim() || sendMessageMutation.isPending) && styles.sendBtnDisabled]}
-            onPress={handleSend}
-            disabled={!messageText.trim() || sendMessageMutation.isPending}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.sendBtnText}>
-              {sendMessageMutation.isPending ? '⏳' : '➤'}
-            </Text>
+          <TouchableOpacity style={[styles.send, !text.trim() && { opacity: 0.5 }]} onPress={submit} disabled={!text.trim()} accessibilityLabel="Send">
+            <Text style={styles.sendText}>➤</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -413,238 +173,42 @@ export default function MessageDetailScreen() {
   )
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+/** Links (e.g. a customer's location link) open in the browser. */
+function linkify(text: string, mine: boolean) {
+  return text.split(/(https?:\/\/[^\s]+)/g).map((p, i) => (/^https?:\/\//.test(p)
+    ? <Text key={i} style={{ textDecorationLine: 'underline', color: mine ? Colors.white : Colors.primary }} onPress={() => Linking.openURL(p)}>{p}</Text>
+    : p))
+}
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  flex: { flex: 1 },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  backBtn: { paddingRight: Spacing.sm, paddingVertical: 4 },
-  backText: { fontSize: 30, color: Colors.primary, lineHeight: 34 },
-  headerAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-  headerAvatarStaff: { backgroundColor: '#7C3AED' },
-  headerAvatarText: { color: Colors.white, fontSize: FontSize.sm, fontWeight: FontWeight.bold },
-  headerInfo: { flex: 1 },
-  headerName: { fontSize: FontSize.md, fontWeight: FontWeight.semibold, color: Colors.textPrimary },
-  headerStatusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  statusDot: { width: 7, height: 7, borderRadius: 4, marginRight: 5 },
-  statusDotOnline: { backgroundColor: Colors.success },
-  statusDotOffline: { backgroundColor: Colors.textMuted },
-  headerStatus: { fontSize: FontSize.xs },
-  headerStatusOnline: { color: Colors.success },
-  headerStatusOffline: { color: Colors.textMuted },
-
-  // Messages list
-  messagesList: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-    flexGrow: 1,
-    justifyContent: 'flex-end',
-  },
-  msgRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-    maxWidth: '82%',
-  },
-  msgRowLeft: { alignSelf: 'flex-start' },
-  msgRowRight: { alignSelf: 'flex-end', flexDirection: 'row-reverse' },
-
-  msgAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: Colors.disabled,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.sm,
-    marginTop: 2,
-  },
-  msgAvatarHidden: { backgroundColor: 'transparent' },
-  msgAvatarText: { fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white },
-
-  bubbleWrapper: { flex: 1 },
-  senderLabel: {
-    fontSize: 11,
-    fontWeight: FontWeight.semibold,
-    color: Colors.primary,
-    marginBottom: 3,
-    marginLeft: 2,
-  },
-  bubble: {
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    maxWidth: '100%',
-  },
-  bubbleIn: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderBottomLeftRadius: 4,
-  },
-  bubbleOut: {
-    backgroundColor: Colors.primary,
-    borderBottomRightRadius: 4,
-  },
-  bubbleText: {
-    fontSize: FontSize.base,
-    color: Colors.textPrimary,
-    lineHeight: 21,
-  },
-  bubbleTextOut: { color: Colors.white },
-  bubbleTime: {
-    fontSize: 10,
-    color: Colors.textMuted,
-    marginTop: 5,
-    alignSelf: 'flex-end',
-  },
-  bubbleTimeOut: { color: 'rgba(255,255,255,0.65)' },
-
-  // Empty
-  emptyMessages: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 80,
-  },
-  emptyText: { fontSize: FontSize.sm, color: Colors.textMuted },
-
-  // Typing indicator
-  typingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.base,
-    paddingVertical: 6,
-    gap: 8,
-  },
-  typingLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    fontStyle: 'italic',
-  },
-
-  // Input
-  inputBar: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    backgroundColor: Colors.surface,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingBottom: Platform.OS === 'ios' ? Spacing.lg : Spacing.sm,
-    gap: Spacing.sm,
-  },
-  messageInput: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    borderRadius: 22,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
-    fontSize: FontSize.base,
-    color: Colors.textPrimary,
-    maxHeight: 120,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    lineHeight: 20,
-  },
-  sendBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendBtnDisabled: { backgroundColor: Colors.disabled },
-  sendBtnText: { fontSize: 18, color: Colors.white },
-
-  // Delete button in header
-  deleteBtn: {
-    paddingLeft: Spacing.sm,
-    paddingVertical: 4,
-  },
-  deleteBtnText: { fontSize: 18 },
-
-  // Delete confirmation modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.lg,
-  },
-  modalBox: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.xl,
-    width: '100%',
-    maxWidth: 340,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  modalTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: '#ef4444',
-    marginBottom: Spacing.sm,
-  },
-  modalBody: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: Spacing.xl,
-  },
-  modalBtns: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    justifyContent: 'flex-end',
-  },
-  modalBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: BorderRadius.md,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  modalBtnCancel: {
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  modalBtnCancelText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semibold,
-    color: Colors.textSecondary,
-  },
-  modalBtnDelete: {
-    backgroundColor: '#ef4444',
-  },
-  modalBtnDeleteText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semibold,
-    color: Colors.white,
-  },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl },
+  muted: { color: Colors.textMuted, fontSize: FontSize.sm, textAlign: 'center' },
+  backBtn: { marginTop: Spacing.md, paddingHorizontal: 18, paddingVertical: 12, borderRadius: BorderRadius.md, backgroundColor: Colors.primary },
+  backBtnText: { color: Colors.white, fontWeight: FontWeight.semibold },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.sm, paddingVertical: Spacing.sm, backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: Spacing.sm },
+  headerBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  headerBack: { fontSize: 32, color: Colors.primary, marginTop: -4 },
+  headerMenu: { fontSize: 24, color: Colors.textSecondary },
+  headerAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
+  headerAvatarText: { color: Colors.white, fontWeight: FontWeight.semibold },
+  headerTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.textPrimary },
+  headerSub: { fontSize: FontSize.xs, color: Colors.textMuted },
+  day: { textAlign: 'center', fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: FontWeight.semibold, marginVertical: Spacing.sm },
+  msgRow: { flexDirection: 'row', marginTop: 2 },
+  left: { justifyContent: 'flex-start' },
+  right: { justifyContent: 'flex-end' },
+  sender: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: FontWeight.semibold, marginLeft: 6, marginBottom: 2 },
+  bubble: { paddingHorizontal: 12, paddingVertical: 9, borderRadius: 16 },
+  bubbleMine: { backgroundColor: Colors.primary, borderTopRightRadius: 6 },
+  bubbleTheirs: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderTopLeftRadius: 6 },
+  jobChip: { fontSize: 11, fontWeight: FontWeight.bold, color: Colors.textMuted, marginBottom: 2 },
+  body: { fontSize: FontSize.base, color: Colors.textPrimary, lineHeight: 21 },
+  bodyMine: { color: Colors.white },
+  meta: { flexDirection: 'row', marginTop: 2, marginHorizontal: 6 },
+  metaText: { fontSize: 11, color: Colors.textMuted },
+  composer: { flexDirection: 'row', alignItems: 'flex-end', padding: Spacing.sm, gap: Spacing.sm, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.border },
+  input: { flex: 1, minHeight: 48, maxHeight: 140, borderRadius: 22, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 16, paddingTop: 13, paddingBottom: 13, fontSize: FontSize.base, color: Colors.textPrimary, backgroundColor: Colors.background },
+  send: { width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
+  sendText: { color: Colors.white, fontSize: 20 },
 })

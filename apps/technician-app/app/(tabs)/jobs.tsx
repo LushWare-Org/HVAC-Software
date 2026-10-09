@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -9,35 +9,34 @@ import {
   RefreshControl,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useLocalSearchParams } from 'expo-router'
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme'
 import { useMyJobs } from '@/hooks/useJobs'
 import { JobCard } from '@/components/JobCard'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { isActiveJob, isCompletedJob, sortByScheduledTime } from '@/utils/jobHelpers'
+import { isCompletedJob, isInProgressJob, isMissedJob, jobLocalDate, localDateStr, sortByScheduledTime } from '@/utils/jobHelpers'
 import type { Job } from '@/types/api'
 
-type TabKey = 'today' | 'upcoming' | 'completed'
+type TabKey = 'today' | 'missed' | 'upcoming' | 'completed'
 
 const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: 'today', label: 'Today', icon: '📅' },
+  { key: 'missed', label: 'Missed', icon: '⚠️' },
   { key: 'upcoming', label: 'Upcoming', icon: '⏭️' },
   { key: 'completed', label: 'Completed', icon: '✅' },
 ]
 
 export default function JobsScreen() {
-  const [activeTab, setActiveTab] = useState<TabKey>('today')
+  // The Home screen's "Missed" card opens this tab straight on Missed.
+  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>()
+  const [activeTab, setActiveTab] = useState<TabKey>(tabParam === 'missed' ? 'missed' : 'today')
+  useEffect(() => { if (tabParam === 'missed') setActiveTab('missed') }, [tabParam])
   const [search, setSearch] = useState('')
 
   const { data: jobsData, isLoading, refetch } = useMyJobs({ limit: 100 })
 
-  // LOCAL calendar date, not UTC. `toISOString()` gave the UTC date, so an
-  // 11 PM job (UTC+5:30) carried tomorrow's UTC date and landed in the wrong
-  // tab. All bucketing below compares dates in the device's timezone.
-  const localDateStr = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   const todayStr = localDateStr(new Date())
-  const jobLocalDate = (iso?: string | null) => (iso ? localDateStr(new Date(iso)) : null)
 
   const filteredJobs = useMemo(() => {
     if (!jobsData?.data) return []
@@ -47,22 +46,22 @@ export default function JobsScreen() {
     // Tab filter
     switch (activeTab) {
       case 'today':
+        // Only what is for today: work in progress, today's schedule, and jobs with no date yet.
+        // Past-dated open jobs are "Missed", shown on their own tab so Today stays honest.
         jobs = jobs.filter((j) => {
           if (isCompletedJob(j.status) || j.status === 'CANCELLED') return false
-          // Currently in-progress jobs always show in Today
-          if (j.status === 'EN_ROUTE' || j.status === 'ON_SITE' || j.status === 'IN_PROGRESS') return true
+          if (isInProgressJob(j.status)) return true
           const jobDate = jobLocalDate(j.scheduledStart)
-          // No schedule yet → needs attention today
-          if (!jobDate) return true
-          // Today's schedule, plus OVERDUE (past-dated, still open) jobs —
-          // previously these vanished from every tab.
-          return jobDate <= todayStr
+          return !jobDate || jobDate === todayStr
         })
+        break
+      case 'missed':
+        jobs = jobs.filter((j) => isMissedJob(j, todayStr))
         break
       case 'upcoming':
         jobs = jobs.filter((j) => {
           if (isCompletedJob(j.status) || j.status === 'CANCELLED') return false
-          if (j.status === 'EN_ROUTE' || j.status === 'ON_SITE' || j.status === 'IN_PROGRESS') return false
+          if (isInProgressJob(j.status)) return false
           const jobDate = jobLocalDate(j.scheduledStart)
           // Future local dates only (not today)
           return !!jobDate && jobDate > todayStr
@@ -85,6 +84,8 @@ export default function JobsScreen() {
       )
     }
 
+    // Missed: the longest-waiting first.
+    if (activeTab === 'missed') return sortByScheduledTime(jobs)
     return activeTab === 'completed'
       ? [...jobs].sort((a, b) => {
           const aDate = a.completedAt ?? a.updatedAt
@@ -93,6 +94,8 @@ export default function JobsScreen() {
         })
       : sortByScheduledTime(jobs)
   }, [jobsData, activeTab, search, todayStr])
+
+  const missedCount = useMemo(() => (jobsData?.data ?? []).filter((j) => isMissedJob(j, todayStr)).length, [jobsData, todayStr])
 
   const [refreshing, setRefreshing] = useState(false)
   const onRefresh = async () => {
@@ -123,14 +126,14 @@ export default function JobsScreen() {
 
       {/* Tabs */}
       <View style={styles.tabRow}>
-        {TABS.map((tab) => (
+        {TABS.filter((tab) => tab.key !== 'missed' || missedCount > 0 || activeTab === 'missed').map((tab) => (
           <TouchableOpacity
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key)}
           >
             <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-              {tab.icon} {tab.label}
+              {tab.icon} {tab.label}{tab.key === 'missed' && missedCount > 0 ? ` (${missedCount})` : ''}
             </Text>
           </TouchableOpacity>
         ))}
@@ -151,18 +154,22 @@ export default function JobsScreen() {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <EmptyState
-              icon={activeTab === 'completed' ? '📊' : '📋'}
+              icon={activeTab === 'completed' ? '📊' : activeTab === 'missed' ? '✅' : '📋'}
               title={
                 activeTab === 'today'
                   ? 'No jobs for today'
-                  : activeTab === 'upcoming'
-                    ? 'No upcoming jobs'
-                    : 'No completed jobs yet'
+                  : activeTab === 'missed'
+                    ? 'Nothing missed'
+                    : activeTab === 'upcoming'
+                      ? 'No upcoming jobs'
+                      : 'No completed jobs yet'
               }
               subtitle={
                 search
                   ? 'Try adjusting your search terms'
-                  : 'Jobs assigned to you will appear here'
+                  : activeTab === 'missed'
+                    ? 'You are all caught up.'
+                    : 'Jobs assigned to you will appear here'
               }
             />
           }

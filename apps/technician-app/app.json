@@ -2,7 +2,7 @@
   "expo": {
     "name": "HVACtor.ai Field",
     "slug": "ts-technician",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "scheme": "tstechnician",
     "userInterfaceStyle": "automatic",
@@ -39,7 +39,12 @@
         "android.permission.FOREGROUND_SERVICE_LOCATION",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/adaptive-icon-mono.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "plugins": [
       "expo-router",
@@ -64,8 +69,30 @@
         }
       ],
       "expo-task-manager",
-      "expo-splash-screen",
-      "expo-font"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#FFFFFF"
+          }
+        }
+      ],
+      "expo-font",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow HVACtor.ai Field to use the microphone so you can talk to Kelvin hands-free.",
+          "speechRecognitionPermission": "Allow HVACtor.ai Field to turn what you say to Kelvin into text.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -82,6 +109,8 @@
     },
     "updates": {
       "url": "https://u.expo.dev/87133be4-26f3-4643-b295-3582ce56a37b"
-    }
+    },
+    "icon": "./assets/icon.png",
+    "backgroundColor": "#FFFFFF"
   }
 }
