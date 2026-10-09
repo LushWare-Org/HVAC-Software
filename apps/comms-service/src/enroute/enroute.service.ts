@@ -1,13 +1,18 @@
 /**
  * EnRouteNotificationService — tells the customer their technician is on the way.
  *
- * Triggered by scheduling-service when an assignment transitions to EN_ROUTE.
- * Sends an email (technician photo + arrival window) and a short SMS through the
- * existing notification pipeline, so both land in delivery history. Every failure
- * is logged and swallowed — the technician's status update must never feel broken
- * because a notification could not go out.
+ * Triggered two ways, whichever happens: scheduling-service when an assignment
+ * is marked EN_ROUTE, and job-service (via the job-status event) when the
+ * technician app marks the job itself EN_ROUTE. Sends an email (technician photo
+ * + arrival window), a short SMS, and an in-app message (which also reaches the
+ * customer's Telegram, photo included). Once per job per half hour, so the two
+ * triggers never double up. Every failure is logged and swallowed: the
+ * technician's status update must never feel broken because a notification
+ * could not go out.
  */
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JobUpdatesService } from '../job-updates/job-updates.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CompanySettingsClient } from '../company-settings/company-settings.client';
 import { EnRouteNotificationDto } from './dto/enroute.dto';
@@ -18,6 +23,25 @@ const CRM_SERVICE_URL = process.env.CRM_SERVICE_URL ?? 'http://localhost:3001';
 // Timezone used to render the arrival window in the customer's local time.
 const COMPANY_TIMEZONE = process.env.COMPANY_TIMEZONE ?? 'America/Chicago';
 const DEDUPE_TTL_MS = 30 * 60 * 1000;
+
+/** Same rule as scheduling-service's estimateETAWindow, minus the road router: straight line at 30 km/h, +15%, a 20-minute window. */
+export function estimateEtaWindow(
+  tech: { lat: number; lng: number } | null, job: { lat: number; lng: number } | null,
+  scheduledStart: Date | null, scheduledEnd: Date | null, now: Date,
+): { start: Date; end: Date } | null {
+  if (tech && job) {
+    const R = 6371, rad = (d: number) => (d * Math.PI) / 180;
+    const dLat = rad(job.lat - tech.lat), dLng = rad(job.lng - tech.lng);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(tech.lat)) * Math.cos(rad(job.lat)) * Math.sin(dLng / 2) ** 2;
+    const km = 2 * R * Math.asin(Math.sqrt(h));
+    const arrival = new Date(now.getTime() + (km / 30) * 3600_000 * 1.15);
+    let start = new Date(Math.floor(arrival.getTime() / 600_000) * 600_000);
+    if (start < now) start = new Date(Math.floor(now.getTime() / 60_000) * 60_000);
+    return { start, end: new Date(start.getTime() + 20 * 60_000) };
+  }
+  if (scheduledStart) return { start: new Date(scheduledStart), end: scheduledEnd ? new Date(scheduledEnd) : new Date(new Date(scheduledStart).getTime() + 3600_000) };
+  return null;
+}
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -33,15 +57,18 @@ export class EnRouteNotificationService {
   constructor(
     private readonly notifications: NotificationsService,
     private readonly companySettings: CompanySettingsClient,
+    @Optional() private readonly prisma?: PrismaService,
+    @Optional() private readonly jobUpdates?: JobUpdatesService,
   ) {}
 
   async notify(companyId: string, dto: EnRouteNotificationDto): Promise<{ email: boolean; sms: boolean; deduped: boolean }> {
-    const last = this.sentAt.get(dto.assignmentId);
+    // Keyed by job, not assignment: both triggers (scheduling and job-service) must collapse into one.
+    const last = this.sentAt.get(dto.jobId);
     if (last && Date.now() - last < DEDUPE_TTL_MS) {
-      this.logger.log(`En-route notification for assignment ${dto.assignmentId} suppressed (already sent)`);
+      this.logger.log(`En-route notification for job ${dto.jobId} suppressed (already sent)`);
       return { email: false, sms: false, deduped: true };
     }
-    this.sentAt.set(dto.assignmentId, Date.now());
+    this.sentAt.set(dto.jobId, Date.now());
     this.pruneDedupe();
 
     const settings = await this.companySettings.getSettings(companyId);
@@ -57,8 +84,64 @@ export class EnRouteNotificationService {
     const [email, sms] = await Promise.all([
       this.sendEmail(companyId, dto, window, avatarUrl, companyName, crew),
       this.sendSms(companyId, dto, window, companyName),
+      this.jobUpdates?.post({
+        companyId, customerId: dto.customerId ?? (await this.customerOf(companyId, dto.jobId)), jobId: dto.jobId, status: 'EN_ROUTE',
+        jobTitle: dto.jobTitle, technicianName: crew.length > 1 ? `${dto.techName} and ${crew.length - 1} other${crew.length > 2 ? 's' : ''}` : dto.techName,
+        arrivalWindow: window, techPhotoUrl: avatarUrl,
+      }),
     ]);
     return { email, sms, deduped: false };
+  }
+
+  private async customerOf(companyId: string, jobId: string): Promise<string | null> {
+    if (!this.prisma) return null;
+    const rows = await this.prisma.$queryRawUnsafe<Array<{ customerId: string | null }>>(
+      `SELECT "customerId" FROM jobs.jobs WHERE id = $1 AND "companyId" = $2`, jobId, companyId,
+    ).catch(() => []);
+    return rows[0]?.customerId ?? null;
+  }
+
+  /**
+   * The technician app marked the JOB en route (job-service), which doesn't go
+   * through scheduling-service's assignment flow. Gather the same facts here (the
+   * lead technician, their last position, the job's place and time) and send the
+   * same notification. If scheduling already sent it, the dedupe absorbs this.
+   */
+  async notifyFromJob(companyId: string, jobId: string): Promise<{ email: boolean; sms: boolean; deduped: boolean } | null> {
+    if (!this.prisma) return null;
+    const rows = await this.prisma.$queryRawUnsafe<Array<{
+      assignmentId: string | null; techUserId: string | null; techName: string | null; techLat: number | null; techLng: number | null; lastSeen: Date | null;
+      title: string; serviceAddress: string | null; customerId: string | null; customerName: string | null; customerEmail: string | null; customerPhone: string | null;
+      lat: number | null; lng: number | null; scheduledStart: Date | null; scheduledEnd: Date | null; assignedToId: string | null; assignedToName: string | null;
+    }>>(
+      `SELECT a.id::text AS "assignmentId", t.user_id AS "techUserId", t.name AS "techName",
+              ST_Y(t.current_location) AS "techLat", ST_X(t.current_location) AS "techLng", t.last_seen_at AS "lastSeen",
+              j.title, j."serviceAddress", j."customerId", j."customerName", j."customerEmail", j."customerPhone",
+              j."serviceLatitude" AS lat, j."serviceLongitude" AS lng, j."scheduledStart", j."scheduledEnd", j."assignedToId", j."assignedToName"
+         FROM jobs.jobs j
+         LEFT JOIN scheduling.dispatch_assignments a ON a.job_id = j.id AND a.company_id = j."companyId" AND a.status::text <> 'CANCELLED'
+         LEFT JOIN scheduling.technicians t ON t.id = a.technician_id
+        WHERE j.id = $1 AND j."companyId" = $2
+        ORDER BY a.is_lead DESC NULLS LAST, a.assigned_at DESC NULLS LAST
+        LIMIT 1`,
+      jobId, companyId,
+    );
+    const r = rows[0];
+    if (!r) return null;
+    const techUserId = r.techUserId ?? r.assignedToId;
+    const techName = r.techName ?? r.assignedToName;
+    if (!techUserId || !techName) return null;
+    // A position counts only if it's fresh; otherwise fall back to the booked time.
+    const fresh = r.techLat != null && r.techLng != null && r.lastSeen && Date.now() - new Date(r.lastSeen).getTime() < 30 * 60_000;
+    const eta = estimateEtaWindow(fresh ? { lat: Number(r.techLat), lng: Number(r.techLng) } : null,
+      r.lat != null && r.lng != null ? { lat: Number(r.lat), lng: Number(r.lng) } : null, r.scheduledStart, r.scheduledEnd, new Date());
+    return this.notify(companyId, {
+      assignmentId: r.assignmentId ?? jobId, jobId, jobTitle: r.title, techUserId, techName,
+      serviceAddress: r.serviceAddress ?? undefined, customerName: r.customerName ?? undefined,
+      customerEmail: r.customerEmail ?? undefined, customerPhone: r.customerPhone ?? undefined,
+      customerId: r.customerId ?? undefined,
+      etaStart: eta?.start.toISOString(), etaEnd: eta?.end.toISOString(),
+    } as EnRouteNotificationDto);
   }
 
   private pruneDedupe() {

@@ -18,7 +18,10 @@
  *  - Supports simple equality only (no nested/regex — keep it simple for now).
  */
 
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
+import { EnRouteNotificationService } from '../enroute/enroute.service';
+import { JobUpdatesService } from '../job-updates/job-updates.service';
+import { VisitRemindersService } from '../visit-reminders/visit-reminders.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TemplatesService } from '../templates/templates.service';
@@ -29,134 +32,69 @@ import {
   UpdateAutomationRuleDto,
   AutomationTriggerEnum,
   JobStatusChangedEvent,
+  JobScheduleChangedEvent,
   InvoiceSentEvent,
   PaymentReceivedEvent,
   QuoteApprovedEvent,
   AppointmentBookedEvent,
 } from './dto/automation.dto';
 
-function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+import { jobScheduleEmail } from './job-schedule.email';
+import { brandFromSettings, renderEmail, type EmailBrand } from '../email/email-layout';
 
-// Solid brand colors — no gradients. Chosen per event so the mail's tone
-// matches what happened (blue = informational, amber = in progress/on site,
-// green = success, red = cancelled).
+const PORTAL_URL = (process.env.CUSTOMER_PORTAL_URL ?? 'https://tscrm-demo-customer.web.app').replace(/\/$/, '');
+
+// Solid colours per event: blue informs, amber is in progress or on hold, green is done, red is cancelled.
 const JOB_EVENT_STYLE: Record<string, { accent: string; eyebrow: string }> = {
-  PENDING:   { accent: '#2563EB', eyebrow: 'Service request received' },
-  SCHEDULED: { accent: '#2563EB', eyebrow: 'Visit scheduled' },
+  PENDING:   { accent: '#2563EB', eyebrow: 'Request received' },
   ON_SITE:   { accent: '#7C3AED', eyebrow: 'Technician on site' },
   COMPLETED: { accent: '#059669', eyebrow: 'Job completed' },
   ON_HOLD:   { accent: '#D97706', eyebrow: 'Visit on hold' },
   CANCELLED: { accent: '#DC2626', eyebrow: 'Job cancelled' },
 };
 
-function jobStatusEmailHtml(event: JobStatusChangedEvent, companyName: string): { subject: string; html: string } | null {
+/** The status emails (request received, on site, completed, on hold, cancelled), in the shared layout. */
+export function jobStatusEmailHtml(event: JobStatusChangedEvent, brand: EmailBrand): { subject: string; html: string } | null {
   const style = JOB_EVENT_STYLE[event.jobStatus];
   if (!style) return null;
-
-  const jobLabel = event.jobTitle ? esc(event.jobTitle) : `Job ${event.jobNumber ?? event.jobId.slice(-6).toUpperCase()}`;
+  const ref = event.jobTitle || `Job ${event.jobNumber ?? event.jobId.slice(-6).toUpperCase()}`;
   const when = event.scheduledAt
     ? new Date(event.scheduledAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
     : null;
-
-  let title: string;
-  let subject: string;
-  let bodyHtml: string;
+  const base = { brand, accent: style.accent, eyebrow: style.eyebrow, greeting: `Hi ${event.customerName},` };
+  const facts = [
+    { label: 'Service', value: ref },
+    ...(event.jobNumber ? [{ label: 'Reference', value: event.jobNumber }] : []),
+    ...(event.jobAddress ? [{ label: 'Address', value: event.jobAddress }] : []),
+  ];
+  const portal = { label: 'Open your portal', url: PORTAL_URL };
 
   switch (event.jobStatus) {
     case 'PENDING':
-      title = 'Your service request has been received';
-      subject = `We've received your service request — ${jobLabel}`;
-      bodyHtml = `
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
-        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
-          Thanks for reaching out to ${esc(companyName)}. We've logged your request for <strong>${jobLabel}</strong> and our team will schedule it shortly.
-        </p>
-        ${event.jobAddress ? `<div style="border:1px solid #2563EB33;background:#2563EB0d;border-radius:12px;padding:16px 18px;"><p style="margin:0;font-size:11.5px;font-weight:700;text-transform:uppercase;color:#2563EB;letter-spacing:0.06em;margin-bottom:6px;">Service address</p><p style="margin:0;font-size:13.5px;color:#111827;">${esc(event.jobAddress)}</p></div>` : ''}
-      `;
-      break;
-    case 'SCHEDULED':
-      title = 'Your visit is scheduled';
-      subject = `Your visit is scheduled — ${jobLabel}`;
-      bodyHtml = `
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
-        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;"><strong>${jobLabel}</strong> has been scheduled with ${esc(companyName)}.</p>
-        <div style="border:1px solid #2563EB33;background:#2563EB0d;border-radius:12px;padding:16px 18px;">
-          ${when ? `<p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111827;">${esc(when)}</p>` : ''}
-          ${event.jobAddress ? `<p style="margin:0;font-size:13.5px;color:#4B5563;">${esc(event.jobAddress)}</p>` : ''}
-        </div>
-      `;
-      break;
+      return { subject: `We have your request: ${ref}`, html: renderEmail({ ...base, title: 'Your service request has been received',
+        intro: [`Thanks for contacting ${brand.name}. We have logged your request and our team will schedule it shortly.`], facts,
+        outro: ['We will email you again as soon as a technician and a time are arranged.'] }) };
     case 'ON_SITE':
-      title = 'Your technician has arrived';
-      subject = `${event.technicianName ?? 'Your technician'} has arrived — ${jobLabel}`;
-      bodyHtml = `
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
-        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
-          <strong>${esc(event.technicianName ?? 'Your technician')}</strong> has arrived and is now working on <strong>${jobLabel}</strong>.
-        </p>
-      `;
-      break;
+      return { subject: `${event.technicianName ?? 'Your technician'} has arrived: ${ref}`, html: renderEmail({ ...base, title: 'Your technician has arrived',
+        intro: [`${event.technicianName ?? 'Your technician'} has arrived and is starting work on your service.`], facts,
+        person: event.technicianName ? { name: event.technicianName, role: 'Your technician' } : undefined }) };
     case 'COMPLETED':
-      title = 'Your job is complete';
-      subject = `Job complete — ${jobLabel}`;
-      bodyHtml = `
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
-        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
-          <strong>${jobLabel}</strong> has been completed. Thank you for choosing ${esc(companyName)}.
-        </p>
-        <div style="border:1px solid #05966933;background:#0596690d;border-radius:12px;padding:16px 18px;">
-          <p style="margin:0;font-size:13px;line-height:1.6;color:#4B5563;">You can view your invoice and job history any time from your customer portal.</p>
-        </div>
-      `;
-      break;
+      return { subject: `Job complete: ${ref}`, html: renderEmail({ ...base, title: 'Your job is complete',
+        intro: [`Your service with ${brand.name} has been completed. Thank you for choosing us.`], facts: [...facts, ...(when ? [{ label: 'Scheduled', value: when }] : [])],
+        callout: { tone: 'good', text: 'You can see your invoice and job history at any time in your customer portal.' }, ctas: [portal] }) };
     case 'ON_HOLD':
-      title = 'Your visit has been put on hold';
-      subject = `Your visit is on hold — ${jobLabel}`;
-      bodyHtml = `
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
-        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;">
-          <strong>${jobLabel}</strong> with ${esc(companyName)} has been placed on hold for now. We'll reach out as soon as it's ready to reschedule.
-        </p>
-        ${event.statusNote ? `<div style="border:1px solid #D9770633;background:#D977060d;border-radius:12px;padding:16px 18px;"><p style="margin:0;font-size:11.5px;font-weight:700;text-transform:uppercase;color:#D97706;letter-spacing:0.06em;margin-bottom:6px;">Reason</p><p style="margin:0;font-size:13.5px;color:#111827;">${esc(event.statusNote)}</p></div>` : ''}
-        <p style="margin:18px 0 0;font-size:13.5px;line-height:1.7;color:#4B5563;">Questions in the meantime? Reply to this email or contact us and we'll help.</p>
-      `;
-      break;
+      return { subject: `Your visit is on hold: ${ref}`, html: renderEmail({ ...base, title: 'Your visit has been put on hold',
+        intro: [`${ref} has been placed on hold for now. We will reach out as soon as it is ready to be rescheduled.`], facts,
+        callout: event.statusNote ? { tone: 'warn', text: `Reason: ${event.statusNote}` } : undefined,
+        outro: ['Questions in the meantime? Reply to this email and we will help.'] }) };
     case 'CANCELLED':
-      title = 'Your job was cancelled';
-      subject = `Job cancelled — ${jobLabel}`;
-      bodyHtml = `
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">Hi ${esc(event.customerName)},</p>
-        <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4B5563;"><strong>${jobLabel}</strong> has been cancelled.</p>
-        ${event.cancellationReason ? `<div style="border:1px solid #DC262633;background:#DC26260d;border-radius:12px;padding:16px 18px;"><p style="margin:0;font-size:13px;color:#4B5563;">${esc(event.cancellationReason)}</p></div>` : ''}
-        <p style="margin:18px 0 0;font-size:13.5px;line-height:1.7;color:#4B5563;">If this wasn't expected, reply to this email or contact us and we'll help reschedule.</p>
-      `;
-      break;
+      return { subject: `Job cancelled: ${ref}`, html: renderEmail({ ...base, title: 'Your job was cancelled',
+        intro: [`${ref} has been cancelled.`], facts,
+        callout: event.cancellationReason ? { tone: 'warn', text: `Reason: ${event.cancellationReason}` } : undefined,
+        outro: ['If this was not expected, reply to this email and we will help you book another time.'] }) };
     default:
       return null;
   }
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<body style="margin:0;background:#F3F4F6;padding:32px 18px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111827;">
-  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(15,23,42,0.06);">
-    <div style="padding:28px 32px;background:${style.accent};">
-      <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.78);margin-bottom:8px;">${style.eyebrow}</div>
-      <h1 style="margin:0;font-size:21px;color:#ffffff;">${title}</h1>
-    </div>
-    <div style="padding:30px 32px;">
-      ${bodyHtml}
-      <p style="margin:26px 0 0;font-size:12.5px;line-height:1.7;color:#6B7280;border-top:1px solid #E5E7EB;padding-top:16px;">
-        Sent by ${esc(companyName)} · Powered by HVACtor.ai
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
-
-  return { subject, html };
 }
 
 @Injectable()
@@ -168,6 +106,9 @@ export class AutomationService {
     private readonly notifications: NotificationsService,
     private readonly templates: TemplatesService,
     private readonly companySettings: CompanySettingsClient,
+    @Optional() private readonly enRoute?: EnRouteNotificationService,
+    @Optional() private readonly jobUpdates?: JobUpdatesService,
+    @Optional() private readonly visitReminders?: VisitRemindersService,
   ) {}
 
   // ── Rule CRUD ─────────────────────────────────────────────────────────────
@@ -237,12 +178,31 @@ export class AutomationService {
       scheduledAt: event.scheduledAt ?? '',
     };
 
-    // NOTE: EN_ROUTE customer email is intentionally NOT sent from here.
-    // scheduling-service already triggers the richer EnRouteNotificationService
-    // (tech photo, real ETA window) via POST /notifications/en-route — sending
-    // a second, plainer email here would double-notify the customer.
-    if (event.customerEmail && event.jobStatus !== 'EN_ROUTE') {
-      const rendered = jobStatusEmailHtml(event, (await this.companySettings.getSettings(event.companyId)).name || 'HVACtor.ai');
+    // EN_ROUTE gets the richer notification (technician photo + arrival window, by email,
+    // SMS, in-app and Telegram). scheduling-service sends it when the assignment moves;
+    // when the technician app moves the job itself, only this event fires, so send it
+    // from here. The en-route service sends once per job, whichever trigger comes first.
+    if (event.jobStatus === 'EN_ROUTE') {
+      void this.enRoute?.notifyFromJob(event.companyId, event.jobId).catch((err: unknown) => {
+        this.logger.warn(`En-route notification failed: ${err instanceof Error ? err.message : String(err)}`);
+      });
+    } else if (event.jobStatus !== 'SCHEDULED') {
+      // Every other customer-visible change also goes into their chat with the office
+      // (portal, app, and Telegram when linked). SCHEDULED is announced by
+      // processJobScheduleChanged, together with the technician and the time.
+      const settings = await this.companySettings.getSettings(event.companyId);
+      void this.jobUpdates?.post({
+        companyId: event.companyId, customerId: event.customerId, jobId: event.jobId, status: event.jobStatus,
+        jobTitle: event.jobTitle, technicianName: event.technicianName,
+        scheduledLabel: event.scheduledAt ? new Date(event.scheduledAt).toLocaleString('en-GB', {
+          weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: settings.timezone || 'UTC',
+        }) : null,
+        note: event.jobStatus === 'CANCELLED' ? event.cancellationReason : event.statusNote,
+      });
+    }
+
+    if (event.customerEmail && event.jobStatus !== 'EN_ROUTE' && event.jobStatus !== 'SCHEDULED') {
+      const rendered = jobStatusEmailHtml(event, brandFromSettings(await this.companySettings.getSettings(event.companyId)));
       if (rendered) {
         await this.notifications.sendEmail({
           companyId: event.companyId,
@@ -260,6 +220,56 @@ export class AutomationService {
     }
 
     await this.executeRules(event.companyId, AutomationTrigger.JOB_STATUS_CHANGED, event as any, context);
+  }
+
+  /**
+   * A booked visit got a technician and a time, or one of them changed: tell the customer by
+   * email, in the chat (portal, app, push, and Telegram when linked), with a way to ask for
+   * another time. Each channel is tried on its own, so one failing never blocks the rest.
+   */
+  async processJobScheduleChanged(event: JobScheduleChangedEvent) {
+    this.logger.log(`Automation: JOB_SCHEDULE_CHANGED — job ${event.jobId} ${event.change}`);
+    const settings = await this.companySettings.getSettings(event.companyId);
+    const zone = settings.timezone || 'UTC';
+    const day = (iso?: string) => (iso ? new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: zone }) : '');
+    const clock = (iso?: string) => (iso ? new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: zone }) : '');
+    const whenLabel = event.scheduledAt ? `${day(event.scheduledAt)}, ${clock(event.scheduledAt)}` : 'a time we will confirm';
+    const windowLabel = event.windowStart && event.windowEnd ? `${day(event.windowStart)}, between ${clock(event.windowStart)} and ${clock(event.windowEnd)}` : null;
+    const previousLabel = event.previousScheduledAt ? `${day(event.previousScheduledAt)}, ${clock(event.previousScheduledAt)}` : null;
+
+    void this.jobUpdates?.postSchedule({
+      companyId: event.companyId, customerId: event.customerId, jobId: event.jobId, change: event.change,
+      jobTitle: event.jobTitle, technicianName: event.technicianName, whenLabel, windowLabel, previousLabel,
+      startAtIso: event.scheduledAt,
+    });
+
+    // The technicians: the one who lost the job is told, and so is the one whose time moved.
+    // (A new technician hears about the job from the assignment itself.)
+    const techBase = {
+      companyId: event.companyId, jobId: event.jobId, jobTitle: event.jobTitle, jobNumber: event.jobNumber,
+      customerName: event.customerName, address: event.jobAddress,
+    };
+    if ((event.change === 'TECH_CHANGED' || event.change === 'TIME_AND_TECH_CHANGED') && event.previousTechnicianUserId) {
+      void this.visitReminders?.tellTechnician({ ...techBase, techUserId: event.previousTechnicianUserId, kind: 'REMOVED', previousLabel });
+    }
+    if (event.change === 'TIME_CHANGED' && event.technicianUserId) {
+      void this.visitReminders?.tellTechnician({ ...techBase, techUserId: event.technicianUserId, techName: event.technicianName, kind: 'TIME_CHANGED', whenLabel: windowLabel ?? whenLabel, previousLabel });
+    }
+
+    if (event.customerEmail) {
+      const mail = jobScheduleEmail({
+        event, brand: brandFromSettings(settings), whenLabel, windowLabel, previousLabel,
+        rescheduleUrl: `${PORTAL_URL}/jobs?reschedule=${encodeURIComponent(event.jobId)}`,
+        confirmUrl: `${PORTAL_URL}/jobs?confirm=${encodeURIComponent(event.jobId)}`,
+      });
+      await this.notifications.sendEmail({
+        companyId: event.companyId, customerId: event.customerId, jobId: event.jobId,
+        recipientId: event.customerId, recipientName: event.customerName, recipientEmail: event.customerEmail,
+        subject: mail.subject, htmlBody: mail.html,
+      }).catch((err: unknown) => {
+        this.logger.warn(`Schedule email failed: ${err instanceof Error ? err.message : String(err)}`);
+      });
+    }
   }
 
   async processInvoiceSent(event: InvoiceSentEvent) {

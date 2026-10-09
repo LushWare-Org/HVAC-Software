@@ -62,6 +62,12 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
         client.handshake.headers?.authorization?.replace('Bearer ', '');
 
       if (!token) {
+        // Local test shortcut only: identity from headers/query is never trusted in production.
+        if (process.env.BYPASS_AUTH !== 'true' || process.env.NODE_ENV === 'production') {
+          this.logger.warn(`Client ${client.id} — no auth token`);
+          client.disconnect(true);
+          return;
+        }
         // Dev bypass: check for test headers
         const companyId =
           (client.handshake.headers['x-test-company-id'] as string) ??
@@ -126,11 +132,21 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
   // ── Join / leave thread rooms ───────────────────────────────────────────
 
   @SubscribeMessage('join_thread')
-  handleJoinThread(
+  async handleJoinThread(
     @ConnectedSocket() client: AuthSocket,
     @MessageBody() data: { threadId: string },
   ) {
-    if (!data.threadId) return;
+    if (!data?.threadId || !client.companyId || !client.userId) return;
+    // Only someone who may read the thread can listen to it.
+    try {
+      await this.messagingService.findThread(
+        client.companyId, data.threadId,
+        (client.userRole ?? '').toLowerCase() === 'customer' ? client.customerId : undefined,
+        { userId: client.userId, role: client.userRole, customerId: client.customerId },
+      );
+    } catch {
+      return { event: 'error', message: 'Thread not found' };
+    }
     const room = `thread:${data.threadId}`;
     client.join(room);
     this.logger.debug(`${client.userName} joined ${room}`);
@@ -215,7 +231,7 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
     @ConnectedSocket() client: AuthSocket,
     @MessageBody() data: { threadId: string; isTyping: boolean },
   ) {
-    if (!data.threadId) return;
+    if (!data?.threadId || !client.rooms.has(`thread:${data.threadId}`)) return;
     client.to(`thread:${data.threadId}`).emit('user_typing', {
       threadId: data.threadId,
       userId: client.userId,
@@ -236,7 +252,8 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
       await this.messagingService.markThreadRead(
         client.companyId,
         data.threadId,
-        client.customerId,
+        (client.userRole ?? '').toLowerCase() === 'customer' ? client.customerId ?? undefined : undefined,
+        { userId: client.userId!, role: client.userRole, customerId: client.customerId },
       );
       return { success: true };
     } catch {

@@ -5,13 +5,13 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { QueueName } from '@tscrm/queue';
+import { QueueName, QUIET_WORKER } from '@tscrm/queue';
 import { PushService } from '../../push/push.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DeliveryStatus } from '../../prisma/generated';
 import type { PushJobPayload } from '../notifications.service';
 
-@Processor(QueueName.SEND_PUSH)
+@Processor(QueueName.SEND_PUSH, QUIET_WORKER)
 export class PushProcessor extends WorkerHost {
   private readonly logger = new Logger(PushProcessor.name);
 

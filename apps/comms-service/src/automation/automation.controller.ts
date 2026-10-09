@@ -28,11 +28,13 @@ import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard, CurrentUser } from '@tscrm/auth-client';
 import { AuthUser } from '@tscrm/types';
 import { AutomationService } from './automation.service';
+import { VisitRemindersService, type VisitReminderEvent } from '../visit-reminders/visit-reminders.service';
 import {
   CreateAutomationRuleDto,
   UpdateAutomationRuleDto,
   AutomationTriggerEnum,
   JobStatusChangedEvent,
+  JobScheduleChangedEvent,
   InvoiceSentEvent,
   PaymentReceivedEvent,
   QuoteApprovedEvent,
@@ -96,6 +98,7 @@ export class AutomationEventsController {
   constructor(
     private readonly service: AutomationService,
     private readonly config: ConfigService,
+    private readonly reminders: VisitRemindersService,
   ) {}
 
   private verifyInternalKey(key: string) {
@@ -114,6 +117,29 @@ export class AutomationEventsController {
   ) {
     this.verifyInternalKey(key);
     await this.service.processJobStatusChanged(event);
+    return { processed: true };
+  }
+
+  @Post('visit-reminder')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send a reminder about a booked visit to the customer and/or technician (called by job-service)' })
+  async onVisitReminder(
+    @Headers('x-internal-api-key') key: string,
+    @Body() event: VisitReminderEvent,
+  ) {
+    this.verifyInternalKey(key);
+    return this.reminders.send(event);
+  }
+
+  @Post('job-schedule-changed')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Tell the customer their visit was booked or changed (called by job-service)' })
+  async onJobScheduleChanged(
+    @Headers('x-internal-api-key') key: string,
+    @Body() event: JobScheduleChangedEvent,
+  ) {
+    this.verifyInternalKey(key);
+    await this.service.processJobScheduleChanged(event);
     return { processed: true };
   }
 

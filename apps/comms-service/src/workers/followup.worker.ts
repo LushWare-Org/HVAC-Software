@@ -1,11 +1,11 @@
 ﻿import { Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { QueueName } from '@tscrm/queue';
+import { QueueName, QUIET_WORKER } from '@tscrm/queue';
 import type { FollowupAction, FollowupJobPayload } from '@tscrm/types';
 import type { Job } from 'bullmq';
 import { NotificationsService } from '../notifications/notifications.service';
 
-@Processor(QueueName.FOLLOWUP)
+@Processor(QueueName.FOLLOWUP, QUIET_WORKER)
 export class FollowupWorker extends WorkerHost {
   private readonly logger = new Logger(FollowupWorker.name);
 

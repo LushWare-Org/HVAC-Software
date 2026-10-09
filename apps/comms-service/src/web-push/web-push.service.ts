@@ -61,6 +61,12 @@ export class WebPushService implements OnModuleInit {
     });
   }
 
+  /** True when this user has turned on browser notifications somewhere and push is configured. */
+  async hasSubscription(userId: string): Promise<boolean> {
+    if (!this.enabled) return false;
+    return (await this.prisma.webPushSubscription.count({ where: { userId } })) > 0;
+  }
+
   async sendToUser(userId: string, payload: WebPushPayload): Promise<void> {
     if (!this.enabled) return;
 

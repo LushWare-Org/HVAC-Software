@@ -10,13 +10,13 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { QueueName } from '@tscrm/queue';
+import { QueueName, QUIET_WORKER } from '@tscrm/queue';
 import { SmsService } from '../../sms/sms.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DeliveryStatus } from '../../prisma/generated';
 import type { SmsJobPayload } from '../notifications.service';
 
-@Processor(QueueName.SEND_SMS)
+@Processor(QueueName.SEND_SMS, QUIET_WORKER)
 export class SmsProcessor extends WorkerHost {
   private readonly logger = new Logger(SmsProcessor.name);
 

@@ -23,12 +23,15 @@ export interface CustomerPushInput {
  * update is enough for it.
  */
 const JOB_STATUS_COPY: Record<string, { title: string; body: string }> = {
-  SCHEDULED: { title: 'Your service is scheduled', body: 'Tap to see the details.' },
+  // SCHEDULED is announced (with the technician and time) by the schedule notice, which pushes too.
   EN_ROUTE: { title: 'Your technician is on the way', body: 'Tap to track the visit.' },
   ON_SITE: { title: 'Your technician has arrived', body: 'Work is starting shortly.' },
   COMPLETED: { title: 'Service completed', body: 'Tap to review the visit.' },
   CANCELLED: { title: 'Your service was cancelled', body: 'Tap for details.' },
 };
+
+/** Job statuses that already get their own push (so other channels don't push them twice). */
+export const PUSHED_JOB_STATUSES = new Set(Object.keys(JOB_STATUS_COPY));
 
 /** Only staff-initiated changes push — the customer already knows their own actions. */
 const QUOTE_COPY: Record<string, { title: string; body: string }> = {

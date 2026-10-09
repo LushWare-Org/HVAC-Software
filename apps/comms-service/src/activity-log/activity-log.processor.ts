@@ -1,6 +1,6 @@
 import { Injectable, Logger, Optional, OnModuleDestroy } from '@nestjs/common';
 import { Worker } from 'bullmq';
-import { createRedisConnection, QueueName } from '@tscrm/queue';
+import { createRedisConnection, QueueName, QUIET_WORKER } from '@tscrm/queue';
 import type { ActivityLogEvent } from '@tscrm/types';
 import { PrismaService } from '../prisma/prisma.service';
 import { CompanyNameCacheService } from './company-name-cache.service';
@@ -30,7 +30,10 @@ export class ActivityLogProcessor implements OnModuleDestroy {
       worker ??
       new Worker(QueueName.ACTIVITY_LOG, async (job) => this.handleEvent(job.data as ActivityLogEvent), {
         connection: createRedisConnection(),
+        ...QUIET_WORKER,
       });
+    // Without a listener, a Redis error raised by the worker would crash the process.
+    this.worker.on('error', (err) => this.logger.warn(`Activity log worker: ${err.message}`));
     this.worker.on('failed', (job, err) => {
       this.logger.error(`Activity-log job ${job?.id} failed: ${err.message}`);
     });

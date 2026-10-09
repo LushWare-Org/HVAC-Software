@@ -24,6 +24,27 @@ import { EmailService } from '../email/email.service';
 import { CreateThreadDto, SendMessageDto, TwilioInboundWebhookDto } from './dto/messaging.dto';
 import { MessageDirection, ThreadStatus, Channel } from '../prisma/generated';
 
+const OFFICE_ROLES = ['super_admin', 'company_admin', 'office_manager', 'dispatcher'];
+
+export interface ThreadViewer { userId: string; role?: string; customerId?: string | null }
+
+/**
+ * Who may see an old-style thread (kept for app versions that predate /chat):
+ * customers their own; office roles the office↔customer threads; anyone else
+ * only threads that list them as a participant.
+ */
+export function canAccessThread(
+  t: { customerId: string | null; participantIds: string[]; subject: string | null },
+  v: ThreadViewer,
+): boolean {
+  const role = (v.role ?? '').toLowerCase();
+  if (role === 'customer') return !!v.customerId && t.customerId === v.customerId;
+  const pids = t.participantIds ?? [];
+  if (pids.includes(v.userId)) return true;
+  const officeThread = !!t.customerId && pids.length === 0 && !(t.subject ?? '').startsWith('Chat with Technician:');
+  return OFFICE_ROLES.includes(role) && officeThread;
+}
+
 const MESSAGES_INCLUDE = {
   messages: { orderBy: { createdAt: 'asc' as const } },
 };
@@ -40,7 +61,9 @@ export class MessagingService {
 
   // ── Threads ───────────────────────────────────────────────────────────────
 
-  async createThread(companyId: string, dto: CreateThreadDto, creatorId?: string) {
+  async createThread(companyId: string, dto: CreateThreadDto, creatorId?: string, creatorRole?: string) {
+    // Customers can't add staff to their threads.
+    if ((creatorRole ?? '').toLowerCase() === 'customer') dto = { ...dto, participantIds: [], participantNames: [] };
     const isCustomerThread = !!dto.customerId;
 
     if (isCustomerThread) {
@@ -116,9 +139,11 @@ export class MessagingService {
       limit?: number;
       customerId?: string;
       userId?: string;
+      role?: string;
     },
   ) {
     const { status, page = 1, limit = 20, customerId, userId } = params;
+    const isOfficeRole = OFFICE_ROLES.includes((params.role ?? '').toLowerCase());
     const skip = (page - 1) * limit;
 
     let where: any = {
@@ -148,8 +173,8 @@ export class MessagingService {
         companyId,
         ...(status ? { status } : {}),
         OR: [
-          // Rule A: admin-created customer thread — no participant list, NOT a customer-initiated tech chat
-          {
+          // Rule A (office roles only): admin-created customer thread — no participant list, NOT a customer-initiated tech chat
+          ...(isOfficeRole ? [{
             customerId: { not: null },
             participantIds: { isEmpty: true },
             // Exclude "Chat with Technician: X" threads started by the customer portal
@@ -157,7 +182,7 @@ export class MessagingService {
               { subject: null },
               { subject: { not: { startsWith: 'Chat with Technician:' } } },
             ],
-          },
+          }] : []),
           // Rules B / C / D: explicit participant list — caller must be in it
           { participantIds: { has: userId } },
         ],
@@ -183,7 +208,7 @@ export class MessagingService {
     };
   }
 
-  async findThread(companyId: string, id: string, customerId?: string) {
+  async findThread(companyId: string, id: string, customerId?: string, viewer?: ThreadViewer) {
     const thread = await this.prisma.messageThread.findFirst({
       where: {
         id,
@@ -192,7 +217,7 @@ export class MessagingService {
       },
       include: MESSAGES_INCLUDE,
     });
-    if (!thread) throw new NotFoundException(`Thread ${id} not found`);
+    if (!thread || (viewer && !canAccessThread(thread, viewer))) throw new NotFoundException(`Thread ${id} not found`);
     return this.enrichThread(thread);
   }
 
@@ -207,6 +232,7 @@ export class MessagingService {
     id: string,
     userId?: string,
     customerId?: string,
+    viewerRole?: string,
   ) {
     const thread = await this.prisma.messageThread.findFirst({
       where: {
@@ -217,18 +243,19 @@ export class MessagingService {
     });
     if (!thread) throw new NotFoundException(`Thread ${id} not found`);
 
-    // Participant check: if participantIds is non-empty, caller must be listed.
-    const pids = thread.participantIds ?? [];
-    if (pids.length > 0 && userId && !pids.includes(userId)) {
-      throw new ForbiddenException('You are not a participant in this thread');
+    // Deleting erases the conversation for everyone, so only the office may, and
+    // only on threads it can see. Customers and technicians: hide it in the new chat instead.
+    if (!userId || !canAccessThread(thread, { userId, role: viewerRole, customerId })) throw new NotFoundException(`Thread ${id} not found`);
+    if (!OFFICE_ROLES.includes((viewerRole ?? '').toLowerCase())) {
+      throw new ForbiddenException('Conversations can only be removed by the office');
     }
 
     await this.prisma.messageThread.delete({ where: { id } });
     return { deleted: true, id };
   }
 
-  async updateThreadStatus(companyId: string, id: string, status: ThreadStatus, customerId?: string) {
-    await this.findThread(companyId, id, customerId);
+  async updateThreadStatus(companyId: string, id: string, status: ThreadStatus, customerId?: string, viewer?: ThreadViewer) {
+    await this.findThread(companyId, id, customerId, viewer);
     return this.prisma.messageThread.update({
       where: { id },
       data: { status },
@@ -236,8 +263,8 @@ export class MessagingService {
     });
   }
 
-  async markThreadRead(companyId: string, id: string, customerId?: string) {
-    await this.findThread(companyId, id, customerId);
+  async markThreadRead(companyId: string, id: string, customerId?: string, viewer?: ThreadViewer) {
+    await this.findThread(companyId, id, customerId, viewer);
     return this.prisma.messageThread.update({
       where: { id },
       data: { unreadCount: 0 },
@@ -257,7 +284,7 @@ export class MessagingService {
     senderCustomerId?: string,
   ) {
     const customerScope = senderRole?.toLowerCase() === 'customer' ? senderCustomerId : undefined;
-    const thread = await this.findThread(companyId, threadId, customerScope);
+    const thread = await this.findThread(companyId, threadId, customerScope, { userId: senderId, role: senderRole, customerId: senderCustomerId });
 
     if (!dto.body?.trim()) {
       throw new BadRequestException('Message body is required');

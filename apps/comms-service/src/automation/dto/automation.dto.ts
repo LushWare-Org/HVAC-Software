@@ -60,6 +60,29 @@ export interface JobStatusChangedEvent {
   statusNote?: string;
 }
 
+/** A booked visit got a technician and a time, or one of them changed. */
+export interface JobScheduleChangedEvent {
+  companyId: string;
+  jobId: string;
+  change: 'SCHEDULED' | 'TIME_CHANGED' | 'TECH_CHANGED' | 'TIME_AND_TECH_CHANGED';
+  customerId: string;
+  customerName: string;
+  customerEmail?: string;
+  jobTitle?: string;
+  jobNumber?: string;
+  jobAddress?: string;
+  technicianName?: string;
+  scheduledAt?: string;
+  scheduledEnd?: string;
+  /** Set when the customer booked an arrival window and no exact time is fixed. */
+  windowStart?: string;
+  windowEnd?: string;
+  previousScheduledAt?: string;
+  /** Users (not technician records): who has the job now, and who had it before. */
+  technicianUserId?: string;
+  previousTechnicianUserId?: string;
+}
+
 export interface InvoiceSentEvent {
   companyId: string;
   invoiceId: string;

@@ -13,7 +13,9 @@
  * Every failure is logged and swallowed — assignment must never fail because
  * a notification could not go out.
  */
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { CompanySettingsClient } from '../company-settings/company-settings.client';
+import { brandFromSettings, renderEmail, type EmailBrand } from '../email/email-layout';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagingGateway } from '../messaging/messaging.gateway';
 import { JobAssignedDto } from './dto/job-assigned.dto';
@@ -42,6 +44,7 @@ export class JobAssignedNotificationService {
   constructor(
     private readonly notifications: NotificationsService,
     private readonly gateway: MessagingGateway,
+    @Optional() private readonly settings: CompanySettingsClient = new CompanySettingsClient(),
   ) {}
 
   async notify(companyId: string, dto: JobAssignedDto) {
@@ -111,7 +114,7 @@ export class JobAssignedNotificationService {
           recipientName: dto.techName,
           recipientEmail: user.email,
           subject: `New job assigned: ${dto.jobTitle}`,
-          htmlBody: this.emailHtml(dto, when),
+          htmlBody: this.emailHtml(dto, when, brandFromSettings(await this.settings.getSettings(companyId).catch(() => null))),
         }).catch((err) => {
           this.logger.warn(`job-assigned email failed: ${err.message}`);
           return null;
@@ -122,37 +125,18 @@ export class JobAssignedNotificationService {
     return { deduped: false };
   }
 
-  private emailHtml(dto: JobAssignedDto, when: string): string {
-    // Solid violet — matches the technician-account color used elsewhere in the system. No gradients.
-    const rows = [
-      { label: 'Job', value: esc(dto.jobTitle), bold: true },
-      dto.customerName ? { label: 'Customer', value: esc(dto.customerName) } : null,
-      dto.address ? { label: 'Address', value: esc(dto.address) } : null,
-      { label: 'Scheduled', value: esc(when) },
-    ].filter(Boolean) as { label: string; value: string; bold?: boolean }[];
-
-    return `
-<!DOCTYPE html>
-<html>
-<body style="margin:0;background:#F3F4F6;padding:32px 18px;font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#111827;">
-  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(15,23,42,0.06);">
-    <div style="padding:28px 32px;background:#7C3AED;">
-      <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.78);margin-bottom:8px;">Dispatch</div>
-      <h1 style="margin:0;font-size:21px;color:#ffffff;">New job assigned</h1>
-    </div>
-    <div style="padding:30px 32px;">
-      <div style="border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;margin:0 0 20px;">
-        ${rows.map((r, i) => `
-          <div style="display:flex;padding:11px 16px;${i > 0 ? 'border-top:1px solid #E5E7EB;' : ''}background:${i % 2 === 0 ? '#F9FAFB' : '#ffffff'};">
-            <span style="flex:0 0 110px;font-size:12px;color:#6B7280;">${r.label}</span>
-            <span style="font-size:13.5px;color:#111827;${r.bold ? 'font-weight:700;' : ''}">${r.value}</span>
-          </div>`).join('')}
-      </div>
-      <p style="margin:0;font-size:13px;line-height:1.7;color:#6B7280;">Open the technician app for full details and to update your status.</p>
-    </div>
-  </div>
-</body>
-</html>`;
+  private emailHtml(dto: JobAssignedDto, when: string, brand: EmailBrand): string {
+    return renderEmail({
+      brand, accent: '#7C3AED', eyebrow: 'Dispatch', title: 'New job assigned',
+      greeting: `Hi ${(dto.techName ?? 'there').split(' ')[0]},`, intro: ['You have been given a new job.'],
+      facts: [
+        { label: 'Job', value: dto.jobTitle },
+        { label: 'Scheduled', value: when },
+        ...(dto.customerName ? [{ label: 'Customer', value: dto.customerName }] : []),
+        ...(dto.address ? [{ label: 'Address', value: dto.address }] : []),
+      ],
+      outro: ['Open the technician app for the full details and to update your status.'],
+    });
   }
 
   private async fetchTechUser(companyId: string, techUserId: string): Promise<TechUser | null> {

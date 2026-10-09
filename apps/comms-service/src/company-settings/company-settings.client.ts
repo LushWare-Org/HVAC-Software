@@ -74,6 +74,41 @@ export class CompanySettingsClient {
     }
   }
 
+  /**
+   * Who to reach and how: name, email, and the portal login (for push) of a
+   * customer, or the same for a staff member. Null when not found.
+   */
+  async getContact(
+    companyId: string,
+    to: 'customer' | 'staff',
+    id: string,
+  ): Promise<{ name: string; email: string | null; userId: string | null; pushToken: string | null; avatarUrl?: string | null } | null> {
+    const get = async <T>(path: string): Promise<T | null> => {
+      const res = await fetch(`${CRM_SERVICE_URL}${path}`, { headers: this.authHeaders(companyId), signal: AbortSignal.timeout(5_000) });
+      if (!res.ok) return null;
+      return (await res.json()) as T;
+    };
+    try {
+      if (to === 'staff') {
+        const u = await get<{ id: string; name?: string; email?: string; pushToken?: string | null; avatarUrl?: string | null }>(`/users/${encodeURIComponent(id)}`);
+        if (!u) return null;
+        return { name: u.name ?? '', email: u.email ?? null, userId: u.id, pushToken: u.pushToken ?? null, avatarUrl: u.avatarUrl ?? null };
+      }
+      const c = await get<{ firstName?: string; lastName?: string; email?: string | null }>(`/customers/${encodeURIComponent(id)}`);
+      if (!c) return null;
+      const portal = await get<{ id: string; pushToken?: string | null } | null>(`/customers/${encodeURIComponent(id)}/portal-user`);
+      return {
+        name: [c.firstName, c.lastName].filter(Boolean).join(' ').trim(),
+        email: c.email ?? null,
+        userId: portal?.id ?? null,
+        pushToken: portal?.pushToken ?? null,
+      };
+    } catch (err) {
+      this.logger.warn(`contact lookup failed for ${to} ${id}: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
   private authHeaders(companyId: string): Record<string, string> {
     // Same service-to-service pattern as comms enroute → crm: dev bypass
     // headers when BYPASS_AUTH, otherwise a short-lived HS256 system token

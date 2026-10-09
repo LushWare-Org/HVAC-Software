@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import * as express from 'express';
 import { NestFactory } from '@nestjs/core';
+import { RedisIoAdapter } from './redis-io.adapter';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ActivityLogInterceptor } from '@tscrm/activity-log';
@@ -9,6 +10,9 @@ import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const io = new RedisIoAdapter(app);
+  await io.connect();
+  app.useWebSocketAdapter(io);
 
   // Allow larger payloads for requests with base64 PDF attachments.
   app.use(json({ limit: '25mb' }));

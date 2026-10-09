@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import { BullModule, InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { QueueName } from '@tscrm/queue';
@@ -41,6 +41,15 @@ export class EquipmentAutomationModule implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
+    // Like every start-up use of Redis: log and carry on, never stop the service starting.
+    try {
+      await this.scheduleRepeatables();
+    } catch (err) {
+      new Logger('EquipmentAutomation').warn(`Could not schedule marketing automations (Redis): ${(err as Error).message}`);
+    }
+  }
+
+  private async scheduleRepeatables() {
     const existing = await this.queue.getRepeatableJobs();
     const jobNames = new Set(existing.map((j) => j.name));
 

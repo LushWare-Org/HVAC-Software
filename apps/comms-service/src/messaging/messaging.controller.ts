@@ -47,7 +47,7 @@ export class MessagingController {
     const effectiveDto = user.role === Role.CUSTOMER
       ? { ...dto, customerId: user.customerId!, customerName: dto.customerName || user.name || user.email }
       : dto;
-    return this.service.createThread(user.companyId, effectiveDto, user.userId);
+    return this.service.createThread(user.companyId, effectiveDto, user.userId, user.role);
   }
 
   @Get('threads')
@@ -65,6 +65,7 @@ export class MessagingController {
       limit: Number(limit),
       customerId,
       userId: user.userId,
+      role: user.role,
     });
   }
 
@@ -72,14 +73,14 @@ export class MessagingController {
   @ApiOperation({ summary: 'Get thread with all messages' })
   findThread(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
-    return this.service.findThread(user.companyId, id, customerId);
+    return this.service.findThread(user.companyId, id, customerId, { userId: user.userId, role: user.role, customerId: user.customerId });
   }
 
   @Delete('threads/:id')
   @ApiOperation({ summary: 'Permanently delete a thread and all its messages' })
   deleteThread(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
-    return this.service.deleteThread(user.companyId, id, user.userId, customerId);
+    return this.service.deleteThread(user.companyId, id, user.userId, customerId, user.role);
   }
 
   @Patch('threads/:id/status')
@@ -90,14 +91,14 @@ export class MessagingController {
     @Body() dto: UpdateThreadStatusDto,
   ) {
     const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
-    return this.service.updateThreadStatus(user.companyId, id, dto.status as ThreadStatus, customerId);
+    return this.service.updateThreadStatus(user.companyId, id, dto.status as ThreadStatus, customerId, { userId: user.userId, role: user.role, customerId: user.customerId });
   }
 
   @Patch('threads/:id/read')
   @ApiOperation({ summary: 'Mark all messages in thread as read (resets unreadCount)' })
   markRead(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     const customerId = user.role === Role.CUSTOMER ? user.customerId : undefined;
-    return this.service.markThreadRead(user.companyId, id, customerId);
+    return this.service.markThreadRead(user.companyId, id, customerId, { userId: user.userId, role: user.role, customerId: user.customerId });
   }
 
   // ── Messages ──────────────────────────────────────────────────────────────

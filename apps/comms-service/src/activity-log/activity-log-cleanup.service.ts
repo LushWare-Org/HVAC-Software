@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Worker } from 'bullmq';
-import { createRedisConnection, createQueue, QueueName } from '@tscrm/queue';
+import { createRedisConnection, createQueue, QueueName, QUIET_WORKER } from '@tscrm/queue';
 import { PrismaService } from '../prisma/prisma.service';
 
 const RETENTION_DAYS = 90;
@@ -30,17 +30,28 @@ export class ActivityLogCleanupService implements OnModuleInit, OnModuleDestroy 
   }
 
   async onModuleInit() {
+    // Never let Redis stop the service from starting (e.g. a hosted Redis that hit its
+    // request allowance): without this, one failed command here took all of comms down,
+    // emails and chat included. The nightly cleanup simply waits for the next start.
     const cleanupQueue = createQueue(QueueName.ACTIVITY_LOG_CLEANUP);
-    await cleanupQueue.add(
-      CLEANUP_JOB_NAME,
-      {},
-      { repeat: { pattern: '0 3 * * *' }, jobId: CLEANUP_JOB_NAME },
-    );
-    await cleanupQueue.close();
+    try {
+      await cleanupQueue.add(
+        CLEANUP_JOB_NAME,
+        {},
+        { repeat: { pattern: '0 3 * * *' }, jobId: CLEANUP_JOB_NAME },
+      );
+    } catch (err) {
+      this.logger.warn(`Could not schedule the nightly activity-log cleanup (Redis): ${(err as Error).message}`);
+    } finally {
+      await cleanupQueue.close().catch(() => undefined);
+    }
 
     this.worker = new Worker(QueueName.ACTIVITY_LOG_CLEANUP, async () => this.runCleanup(), {
       connection: createRedisConnection(),
+        ...QUIET_WORKER,
     });
+    // Without a listener, a Redis error raised by the worker would crash the process.
+    this.worker.on('error', (err) => this.logger.warn(`Activity-log cleanup worker: ${err.message}`));
   }
 
   async onModuleDestroy() {

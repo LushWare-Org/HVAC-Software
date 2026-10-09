@@ -16,6 +16,9 @@ import { JobAssignedModule } from './job-assigned/job-assigned.module';
 import { TemplatesModule } from './templates/templates.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { CustomerEventsModule } from './customer-events/customer-events.module';
+import { DirectNotifyModule } from './direct-notify/direct-notify.module';
+import { ChatModule } from './chat/chat.module';
+import { TelegramModule } from './telegram/telegram.module';
 import { CustomerNotificationsModule } from './customer-notifications/customer-notifications.module';
 import { AutomationModule } from './automation/automation.module';
 import { MarketingModule } from './marketing/marketing.module';
@@ -75,6 +78,9 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
     MessagingModule,
     CustomerEventsModule,
     CustomerNotificationsModule,
+    DirectNotifyModule,
+    ChatModule,
+    TelegramModule,
     AutomationModule,
     MarketingModule,
     WebPushModule,

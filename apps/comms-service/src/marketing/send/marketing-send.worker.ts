@@ -1,7 +1,7 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { QueueName } from '@tscrm/queue';
+import { QueueName, QUIET_WORKER } from '@tscrm/queue';
 import { SmsService } from '../../sms/sms.service';
 import { EmailService } from '../../email/email.service';
 import { SuppressionService } from '../suppression/suppression.service';
@@ -36,7 +36,7 @@ export interface ReviewEmailPayload {
 
 const CLICK_BASE = process.env.MARKETING_CLICK_BASE_URL ?? 'http://localhost:3000';
 
-@Processor(QueueName.MARKETING_SEND)
+@Processor(QueueName.MARKETING_SEND, QUIET_WORKER)
 export class MarketingSendWorker extends WorkerHost {
   private readonly logger = new Logger(MarketingSendWorker.name);
 

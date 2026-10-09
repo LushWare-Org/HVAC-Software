@@ -5,14 +5,14 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { QueueName } from '@tscrm/queue';
+import { QueueName, QUIET_WORKER } from '@tscrm/queue';
 import { EmailService } from '../../email/email.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DeliveryStatus } from '../../prisma/generated';
 import { CompanySettingsClient } from '../../company-settings/company-settings.client';
 import type { EmailJobPayload } from '../notifications.service';
 
-@Processor(QueueName.SEND_EMAIL)
+@Processor(QueueName.SEND_EMAIL, QUIET_WORKER)
 export class EmailProcessor extends WorkerHost {
   private readonly logger = new Logger(EmailProcessor.name);
 

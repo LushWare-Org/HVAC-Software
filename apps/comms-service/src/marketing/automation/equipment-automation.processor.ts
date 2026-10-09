@@ -1,7 +1,7 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { QueueName } from '@tscrm/queue';
+import { QueueName, QUIET_WORKER } from '@tscrm/queue';
 import { EquipmentAutomationService } from './equipment-automation.service';
 import { EmailService } from '../../email/email.service';
 import { SuppressionService } from '../suppression/suppression.service';
@@ -24,7 +24,7 @@ export interface AutomationEmailPayload {
   htmlBody: string;
 }
 
-@Processor(QueueName.EQUIPMENT_AUTOMATION)
+@Processor(QueueName.EQUIPMENT_AUTOMATION, QUIET_WORKER)
 export class EquipmentAutomationProcessor extends WorkerHost {
   private readonly logger = new Logger(EquipmentAutomationProcessor.name);
 

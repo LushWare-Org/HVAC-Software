@@ -30,6 +30,10 @@ export class EnRouteNotificationDto {
   @IsOptional() @IsString()
   customerName?: string;
 
+  /** Optional: lets the in-app update reach the right conversation without a lookup. */
+  @IsOptional() @IsString()
+  customerId?: string;
+
   @IsOptional() @IsString()
   customerEmail?: string;
 

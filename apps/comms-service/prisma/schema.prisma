@@ -110,23 +110,23 @@ model Notification {
 // ── MessageThread — conversation between company and a customer, or staff ──
 
 model MessageThread {
-  id               String        @id @default(uuid())
+  id               String       @id @default(uuid())
   companyId        String
   customerId       String?
   customerName     String?
   customerPhone    String?
   customerEmail    String?
-  participantIds   String[]      @default([])
-  participantNames String[]      @default([])
+  participantIds   String[]     @default([])
+  participantNames String[]     @default([])
   subject          String?
   jobId            String?
-  status           ThreadStatus  @default(ACTIVE)
-  unreadCount      Int           @default(0)
+  status           ThreadStatus @default(ACTIVE)
+  unreadCount      Int          @default(0)
   lastMessageAt    DateTime?
   lastMessageBody  String?
   messages         Message[]
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   @@index([companyId, customerId])
   @@index([companyId, status])
@@ -262,4 +262,201 @@ model ActivityLog {
   @@index([status, createdAt])
   @@index([createdAt])
   @@map("activity_logs")
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Chat — in-app conversations between the office, technicians and customers.
+//
+// Replaces MessageThread/Message (kept until the move is verified). Who a
+// conversation is with is a stored kind plus a member list, never guessed from
+// its subject; "mine" is the sender's id; unread is per member, never shared.
+// ════════════════════════════════════════════════════════════════════════════
+
+enum ConversationKind {
+  CUSTOMER_OFFICE // a customer and the office (shared team inbox)
+  CUSTOMER_TECH // a customer and one technician, private to them
+  TECH_OFFICE // a technician and the office (shared team inbox)
+  STAFF_DIRECT // two staff members
+  STAFF_GROUP // several staff members
+}
+
+enum ChatMemberKind {
+  STAFF
+  CUSTOMER
+  OFFICE // the shared office seat in CUSTOMER_OFFICE / TECH_OFFICE conversations
+}
+
+enum ChatSenderKind {
+  STAFF
+  CUSTOMER
+  SYSTEM
+  KELVIN
+}
+
+model Conversation {
+  id                 String           @id @default(uuid())
+  companyId          String
+  kind               ConversationKind
+  customerId         String?
+  customerName       String?
+  title              String?
+  // One conversation per pair: "office|<customerId>", "tech|<techUserId>|<customerId>",
+  // "techoffice|<techUserId>", "dm|<userA>|<userB>". Null for groups.
+  pairKey            String?
+  createdById        String?
+  lastSeq            Int              @default(0)
+  lastMessageAt      DateTime?
+  lastMessagePreview String?
+  lastSenderName     String?
+  archivedAt         DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  members            ChatMember[]
+  messages           ChatMessage[]
+
+  @@unique([companyId, pairKey])
+  @@index([companyId, kind, customerId])
+  @@index([companyId, lastMessageAt])
+}
+
+model ChatMember {
+  id             String         @id @default(uuid())
+  conversationId String
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  companyId      String
+  kind           ChatMemberKind
+  // STAFF: the CompanyUser id. CUSTOMER: "customer:<customerId>". OFFICE: "office".
+  memberKey      String
+  userId         String?
+  customerId     String?
+  name           String
+  role           String?
+  lastReadSeq    Int            @default(0)
+  lastReadAt     DateTime?
+  mutedUntil     DateTime?
+  hiddenAt       DateTime?
+  joinedAt       DateTime       @default(now())
+  leftAt         DateTime?
+
+  @@unique([conversationId, memberKey])
+  @@index([companyId, memberKey])
+  @@index([companyId, customerId])
+}
+
+model ChatMessage {
+  id              String         @id @default(uuid())
+  conversationId  String
+  conversation    Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  companyId       String
+  seq             Int
+  senderKind      ChatSenderKind
+  // The member who sent it ("office" for any office reply in a shared inbox).
+  // "Mine" and unread both compare against this, so every app agrees.
+  senderMemberKey String
+  senderUserId    String?
+  senderName      String
+  senderRole      String?
+  body            String
+  attachments     Json?
+  jobId           String?
+  jobNumber       String?
+  // The sender's own id for this message, so a retry never posts it twice.
+  clientId        String?
+  editedAt        DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime       @default(now())
+
+  @@unique([conversationId, seq])
+  @@unique([conversationId, clientId])
+  @@index([conversationId, createdAt])
+  @@index([companyId, createdAt])
+}
+
+// ── Telegram add-on ───────────────────────────────────────────────────────
+// Each company may connect its own Telegram bot. Customers and technicians
+// link their Telegram chat once (a one-time code via /start); after that the
+// bot mirrors their in-app conversation with the office both ways. The in-app
+// conversation stays the full record; Telegram is only another way to read
+// and reply.
+
+model TelegramBot {
+  id            String    @id @default(uuid())
+  companyId     String    @unique
+  botUserId     String
+  username      String
+  displayName   String
+  // The bot token, encrypted (AES-256-GCM). Never returned by the API.
+  tokenEnc      String
+  // Telegram sends it back on every webhook call, so we know a call is real.
+  webhookSecret String
+  enabled       Boolean   @default(true)
+  // Office staff may get new inbox messages on their own Telegram (company-wide switch).
+  officeAlerts  Boolean   @default(true)
+  // "webhook" when Telegram can reach us; "polling" for local development.
+  mode          String    @default("webhook")
+  pollOffset    BigInt    @default(0)
+  lastError     String?
+  lastErrorAt   DateTime?
+  connectedById String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model TelegramLink {
+  id           String    @id @default(uuid())
+  companyId    String
+  botId        String
+  // Telegram's chat id (can exceed 32 bits, so kept as text).
+  chatId       String
+  // CUSTOMER or STAFF; memberKey matches ChatMember.memberKey.
+  memberKind   String
+  memberKey    String
+  customerId   String?
+  userId       String?
+  name         String
+  tgUsername   String?
+  tgName       String?
+  // Also send our phone push when Telegram already notifies them.
+  alsoPush     Boolean   @default(false)
+  // Office staff alert settings: { alertScope: "all" | "mine", quietFrom?: "HH:MM", quietTo?: "HH:MM" }.
+  prefs        Json?
+  linkedAt     DateTime  @default(now())
+  unlinkedAt   DateTime?
+  unlinkReason String?
+
+  @@unique([botId, chatId])
+  @@index([companyId, memberKey])
+  @@index([companyId, customerId])
+}
+
+model TelegramLinkCode {
+  id         String    @id @default(uuid())
+  companyId  String
+  // sha256 of the code; the code itself only lives in the link we hand out.
+  codeHash   String    @unique
+  memberKind String
+  memberKey  String
+  customerId String?
+  userId     String?
+  name       String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([companyId, memberKey])
+}
+
+model TelegramDelivery {
+  id          String   @id @default(uuid())
+  companyId   String
+  messageId   String
+  linkId      String
+  chatId      String
+  tgMessageId Int?
+  status      String
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@unique([messageId, linkId])
+  @@index([messageId])
 }
