@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, Optional } from '@nestjs/common';
 import { Worker } from 'bullmq';
-import { QueueName, createRedisConnection } from '@tscrm/queue';
+import { QueueName, createRedisConnection, QUIET_WORKER } from '@tscrm/queue';
 import { AiUsageService, type AiUsageEvent } from './ai-usage.service';
 
 /** The one consumer of the ai-usage queue that every service's AI gateway publishes to. */
@@ -18,7 +18,10 @@ export class AiUsageProcessor implements OnModuleDestroy {
       worker ??
       new Worker(QueueName.AI_USAGE, async (job) => this.usage.record(job.data as AiUsageEvent), {
         connection: createRedisConnection(),
+        ...QUIET_WORKER,
       });
+    // Without a listener, a Redis error raised by the worker would crash the process.
+    this.worker.on('error', (err) => this.logger.warn(`AI usage worker: ${err.message}`));
     this.worker.on('failed', (job, err) => {
       this.logger.error(`AI usage job ${job?.id} failed: ${err.message}`);
     });
