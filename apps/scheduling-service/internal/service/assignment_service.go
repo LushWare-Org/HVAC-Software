@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -41,6 +42,14 @@ type AssignmentService struct {
 	hub        *ws.Hub
 	roster     RosterGate                 // nil-safe: no gate when unset
 	crewRepo   *repository.CrewRepository // nil-safe: solo notification when unset
+	slots      *SlotService               // nil-safe: window jobs are not fitted to a time when unset
+}
+
+// WithSlots lets assigning a job booked as an arrival window find the time inside
+// that window the technician is actually free.
+func (s *AssignmentService) WithSlots(sl *SlotService) *AssignmentService {
+	s.slots = sl
+	return s
 }
 
 // WithCrew lets the en-route notification name every technician on the job
@@ -66,31 +75,89 @@ func (s *AssignmentService) WithRosterGate(gate RosterGate) *AssignmentService {
 	return s
 }
 
-// rosterState loads the rostered-tech map and the job's own projectId for the
-// assignment date. Fail-open: a roster read error logs and disables the gate
-// for this call rather than blocking dispatch.
-func (s *AssignmentService) rosterState(
+// jobContext loads what the roster and location rules need: the technicians a
+// project has reserved on the job's day (in the company's time zone), the job's
+// facts, and whether to rank from live positions. Fail-open: a read error logs
+// and disables the roster gate for this call rather than blocking dispatch.
+func (s *AssignmentService) jobContext(
 	ctx context.Context,
 	companyID, jobID string,
 	scheduledStart *string,
-) (map[string]models.RosterInfo, string, string) {
-	date := rosterDate(scheduledStart)
-	if s.roster == nil {
-		return nil, "", date
+) (rostered map[string]models.RosterInfo, facts models.JobFacts, date string, live bool) {
+	now := time.Now()
+	if s.roster != nil {
+		f, err := s.roster.JobFacts(ctx, companyID, jobID)
+		if err != nil {
+			fmt.Printf("[WARN] job facts lookup failed: %v\n", err)
+		} else {
+			facts = f
+		}
 	}
-	rostered, err := s.roster.RosteredTechUserIDs(ctx, companyID, date)
+	date = jobDay(facts, scheduledStart, now)
+	live = usesLivePosition(facts, scheduledStart, now)
+	if s.roster == nil {
+		return nil, facts, date, live
+	}
+	r, err := s.roster.RosteredTechUserIDs(ctx, companyID, date)
 	if err != nil {
 		fmt.Printf("[WARN] roster lookup failed (gate disabled for this call): %v\n", err)
-		return nil, "", date
+		return nil, facts, date, live
 	}
-	jobProjectID, err := s.roster.JobProjectID(ctx, companyID, jobID)
-	if err != nil {
-		jobProjectID = ""
+	return r, facts, date, live
+}
+
+// noLocationRadiusKm: with no job location every technician is a candidate.
+const noLocationRadiusKm = 40000
+
+// jobPoint is where the job is: the request's coordinates, else the job's own.
+// ok is false when neither has one; a (0, 0) point is treated as missing.
+func (s *AssignmentService) jobPoint(ctx context.Context, companyID, jobID string, lat, lng float64) (float64, float64, bool) {
+	if lat != 0 || lng != 0 {
+		return lat, lng, true
 	}
-	return rostered, jobProjectID, date
+	info, err := s.assignRepo.GetJobEnRouteInfo(ctx, companyID, jobID)
+	if err == nil && info.Latitude != nil && info.Longitude != nil && (*info.Latitude != 0 || *info.Longitude != 0) {
+		return *info.Latitude, *info.Longitude, true
+	}
+	return 0, 0, false
+}
+
+// unlocated: without a job location, distance can't count for anyone; everyone
+// is scored as if at the edge of the radius, so workload and rating decide.
+func unlocated(cands []repository.TechnicianWithDistance, maxKm float64) []repository.TechnicianWithDistance {
+	for i := range cands {
+		cands[i].DistanceKm, cands[i].Located = maxKm, false
+	}
+	return cands
 }
 
 // commsBaseURL returns the base URL for the comms service.
+// jobServiceBaseURL is where job-service listens (JOB_SERVICE_URL, else local dev).
+func jobServiceBaseURL() string {
+	if u := os.Getenv("JOB_SERVICE_URL"); u != "" {
+		return strings.TrimRight(u, "/")
+	}
+	return "http://localhost:3002"
+}
+
+// announceSchedule asks job-service to tell the customer about their visit's time and
+// technician. job-service decides whether anything actually changed, so calling it after
+// every assignment is safe. Runs in the background; a failure only logs.
+func (s *AssignmentService) announceSchedule(companyID, jobID string) {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		req, _ := http.NewRequestWithContext(ctx, "POST", jobServiceBaseURL()+"/jobs/"+jobID+"/announce-schedule", nil)
+		req.Header.Set("Authorization", "Bearer "+systemToken(companyID))
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			fmt.Printf("[WARN] schedule announce failed for job %s: %v\n", jobID, err)
+			return
+		}
+		resp.Body.Close()
+	}()
+}
+
 func commsBaseURL() string {
 	if u := os.Getenv("COMMS_SERVICE_URL"); u != "" {
 		return u
@@ -219,25 +286,42 @@ func (s *AssignmentService) AssignJob(
 	dispatcherUserID *string,
 	req models.AssignJobRequest,
 ) (*models.AssignResponse, error) {
-	// 1. Find candidates within the max radius
+	rostered, facts, _, live := s.jobContext(ctx, companyID, req.JobID, req.ScheduledStart)
+	emergency := isEmergency(facts.Priority)
+
+	// 1. Find candidates within the max radius, measured from where each
+	// technician is now (today / emergencies) or starts their day (later days).
+	// A job with no location has no distance to measure: everyone is a candidate.
+	jobLat, jobLng, located := s.jobPoint(ctx, companyID, req.JobID, req.JobLatitude, req.JobLongitude)
+	radius := s.cfg.MaxDistanceKm
+	if !located {
+		radius = noLocationRadiusKm
+	}
 	candidates, err := s.techRepo.FindCandidatesNearby(
 		ctx, companyID,
-		req.JobLatitude, req.JobLongitude,
-		s.cfg.MaxDistanceKm,
+		jobLat, jobLng,
+		radius,
 		req.RequiredSkills,
+		live, time.Now().Add(-livePositionFreshness),
 	)
 	if err != nil {
 		return nil, err
 	}
+	if !located {
+		candidates = unlocated(candidates, s.cfg.MaxDistanceKm)
+	}
 
-	// Project roster gate — rostered techs are reserved capacity that day
-	rostered, jobProjectID, _ := s.rosterState(ctx, companyID, req.JobID, req.ScheduledStart)
-	candidates = filterRosteredCandidates(candidates, rostered, jobProjectID)
+	// Project roster gate: rostered techs are reserved capacity that day.
+	// An emergency keeps them in the list, labelled, for the dispatcher to decide.
+	if !emergency {
+		candidates = filterRosteredCandidates(candidates, rostered, facts.ProjectID)
+	}
 
 	if len(candidates) == 0 {
 		return &models.AssignResponse{
-			AutoAssigned: false,
-			Suggestions:  []models.ScoredTechnician{},
+			AutoAssigned:       false,
+			Suggestions:        []models.ScoredTechnician{},
+			JobLocationMissing: !located,
 		}, nil
 	}
 
@@ -262,24 +346,52 @@ func (s *AssignmentService) AssignJob(
 			partsScore = s.checkPartsAvailability(companyID, c.Technician.ID, req.RequiredParts)
 		}
 		st := scoreTechnician(c, activeJobs, s.cfg, partsScore, hasParts)
+		st.LocationSource = c.LocationSource
+		if !located {
+			st.LocationSource = "none"
+		}
 		scored = append(scored, st)
 	}
+	if emergency {
+		markRosteredScored(scored, rostered, facts.ProjectID)
+	}
 
-	// 4. Sort descending by total score
-	sort.Slice(scored, func(i, j int) bool {
+	// A job booked as an arrival window: find where each technician is free inside it.
+	if isWindowJob(facts) {
+		for i := range scored {
+			start, known := s.windowFit(ctx, companyID, facts, scored[i].Technician.ID, jobLat, jobLng, located)
+			if !known {
+				continue
+			}
+			fits := start != nil
+			scored[i].FitsWindow, scored[i].SuggestedStart = &fits, start
+		}
+	}
+
+	// 4. Sort: technicians free inside the window first, then descending by total score
+	sort.SliceStable(scored, func(i, j int) bool {
+		if fi, fj := fitsRank(scored[i]), fitsRank(scored[j]); fi != fj {
+			return fi > fj
+		}
 		return scored[i].Score > scored[j].Score
 	})
 
 	best := scored[0]
 
-	// 5. Auto-assign if top score meets threshold
-	if best.Score >= s.cfg.AutoAssignThreshold {
+	// 5. Auto-assign only when the company has turned it on (AUTO_ASSIGN_ENABLED)
+	// and the top score meets the threshold. Otherwise these are suggestions and
+	// the dispatcher confirms. Never for someone a project has reserved.
+	if s.cfg.AutoAssignEnabled && located && best.Score >= s.cfg.AutoAssignThreshold && best.OnProject == nil && fitsRank(best) == 1 {
 		// Cancel any existing active assignment before creating the new one.
 		// Reassigning a job must not leave a ghost "ASSIGNED" row for the old tech.
 		if _, err := s.assignRepo.CancelActiveForJob(ctx, companyID, req.JobID); err != nil {
 			return nil, fmt.Errorf("failed to cancel existing assignment: %w", err)
 		}
 		parsedStart, parsedEnd := parseTimes(req.ScheduledStart, req.ScheduledEnd)
+		fitted := fittedTimes(facts, best.SuggestedStart)
+		if fitted != nil {
+			parsedStart, parsedEnd = &fitted[0], &fitted[1]
+		}
 		assignment, err := s.assignRepo.Create(
 			ctx,
 			companyID, req.JobID, best.Technician.ID,
@@ -316,6 +428,8 @@ func (s *AssignmentService) AssignJob(
 			}
 			s.sendAssignmentNotification(companyID, techUserID, techName, req.JobID, jobTitle)
 		}
+		s.applyFittedTime(ctx, companyID, req.JobID, fitted)
+		s.announceSchedule(companyID, req.JobID)
 
 		return &models.AssignResponse{
 			AutoAssigned: true,
@@ -330,8 +444,9 @@ func (s *AssignmentService) AssignJob(
 	}
 
 	return &models.AssignResponse{
-		AutoAssigned: false,
-		Suggestions:  top,
+		AutoAssigned:       false,
+		Suggestions:        top,
+		JobLocationMissing: !located,
 	}, nil
 }
 
@@ -344,15 +459,26 @@ func (s *AssignmentService) ManualAssign(
 	dispatcherUserID string,
 	req models.ManualAssignRequest,
 ) (*models.DispatchAssignment, error) {
+	rostered, facts, gateDate, live := s.jobContext(ctx, companyID, req.JobID, req.ScheduledStart)
+
 	// Compute score for record-keeping even if dispatcher overrode it
+	jobLat, jobLng, located := s.jobPoint(ctx, companyID, req.JobID, req.JobLatitude, req.JobLongitude)
+	radius := s.cfg.MaxDistanceKm * 2 // wider radius for manual (dispatcher may know better)
+	if !located {
+		radius = noLocationRadiusKm
+	}
 	candidates, err := s.techRepo.FindCandidatesNearby(
 		ctx, companyID,
-		req.JobLatitude, req.JobLongitude,
-		s.cfg.MaxDistanceKm*2, // wider radius for manual (dispatcher may know better)
+		jobLat, jobLng,
+		radius,
 		nil,
+		live, time.Now().Add(-livePositionFreshness),
 	)
 	if err != nil {
 		return nil, err
+	}
+	if !located {
+		candidates = unlocated(candidates, s.cfg.MaxDistanceKm)
 	}
 
 	var score *float64
@@ -360,8 +486,10 @@ func (s *AssignmentService) ManualAssign(
 
 	for _, c := range candidates {
 		if c.Technician.ID == req.TechnicianID {
-			d := c.DistanceKm
-			distanceKm = &d
+			if c.Located {
+				d := c.DistanceKm
+				distanceKm = &d
+			}
 			activeJobs, _ := s.techRepo.CountActiveJobsForTechnicians(ctx, companyID, []string{req.TechnicianID})
 			st := scoreTechnician(c, activeJobs[req.TechnicianID], s.cfg, 0, false)
 			score = &st.Score
@@ -369,12 +497,12 @@ func (s *AssignmentService) ManualAssign(
 		}
 	}
 
-	// Project roster gate — reject a tech reserved by a project that day
-	// (jobs belonging to the same project are exempt).
-	rostered, jobProjectID, gateDate := s.rosterState(ctx, companyID, req.JobID, req.ScheduledStart)
-	if len(rostered) > 0 {
+	// Project roster gate: reject a tech reserved by a project that day. Jobs of
+	// the same project are exempt, and so are emergencies: the dispatcher chose
+	// to pull this person off the project.
+	if len(rostered) > 0 && !isEmergency(facts.Priority) {
 		techUserID, _, _ := s.assignRepo.GetTechnicianUserInfo(ctx, req.TechnicianID)
-		if blk := rosterBlock(rostered, techUserID, jobProjectID, gateDate); blk != nil {
+		if blk := rosterBlock(rostered, techUserID, facts.ProjectID, gateDate); blk != nil {
 			return nil, blk
 		}
 	}
@@ -387,6 +515,15 @@ func (s *AssignmentService) ManualAssign(
 	}
 
 	parsedStart, parsedEnd := parseTimes(req.ScheduledStart, req.ScheduledEnd)
+	// A window job with no time given: put it where this technician is free inside the window.
+	var fitted []time.Time
+	if parsedStart == nil && isWindowJob(facts) {
+		if start, known := s.windowFit(ctx, companyID, facts, req.TechnicianID, jobLat, jobLng, located); known {
+			if fitted = fittedTimes(facts, start); fitted != nil {
+				parsedStart, parsedEnd = &fitted[0], &fitted[1]
+			}
+		}
+	}
 	assignment, err := s.assignRepo.Create(
 		ctx,
 		companyID, req.JobID, req.TechnicianID,
@@ -421,6 +558,8 @@ func (s *AssignmentService) ManualAssign(
 		}
 		s.sendAssignmentNotification(companyID, techUserID, techName, req.JobID, jobTitle)
 	}
+	s.applyFittedTime(ctx, companyID, req.JobID, fitted)
+	s.announceSchedule(companyID, req.JobID)
 
 	return assignment, nil
 }

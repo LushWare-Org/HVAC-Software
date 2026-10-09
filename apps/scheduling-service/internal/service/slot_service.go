@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/tscrm/scheduling-service/internal/models"
 	"github.com/tscrm/scheduling-service/internal/repository"
 	"github.com/tscrm/scheduling-service/internal/slots"
 )
@@ -53,6 +54,8 @@ type SlotQuery struct {
 	Skill        string
 	TechIDs      []string
 	Limit        int
+	// NotBefore keeps offers at or after this time (e.g. the start of an arrival window).
+	NotBefore time.Time
 }
 
 type SlotResult struct {
@@ -72,8 +75,40 @@ const (
 )
 
 type SlotService struct {
-	src SlotSource
-	now func() time.Time
+	src    SlotSource
+	now    func() time.Time
+	roster RosterGate // nil-safe: no roster check when unset
+}
+
+// WithRosterGate leaves out technicians rostered on a project for the day:
+// a new booking is not part of any project, so they are not free for it.
+func (s *SlotService) WithRosterGate(gate RosterGate) *SlotService {
+	s.roster = gate
+	return s
+}
+
+// withRosterDays marks each technician's rostered days as off. byDate is
+// date (YYYY-MM-DD) -> technician user id -> the project they are on.
+func withRosterDays(techs []slots.Tech, byDate map[string]map[string]models.RosterInfo) []slots.Tech {
+	if len(byDate) == 0 {
+		return techs
+	}
+	out := make([]slots.Tech, len(techs))
+	for i, t := range techs {
+		for date, rostered := range byDate {
+			if _, on := rostered[t.UserID]; !on || t.UserID == "" {
+				continue
+			}
+			hours := make(map[string]slots.DayHours, len(t.Hours)+1)
+			for d, h := range t.Hours {
+				hours[d] = h
+			}
+			hours[date] = slots.DayHours{Off: true}
+			t.Hours = hours
+		}
+		out[i] = t
+	}
+	return out
 }
 
 func NewSlotService(src SlotSource) *SlotService {
@@ -127,6 +162,16 @@ func (s *SlotService) Find(ctx context.Context, companyID string, q SlotQuery) (
 		return nil, err
 	}
 	techs = withShifts(techs, shifts, loc)
+	if s.roster != nil {
+		byDate := map[string]map[string]models.RosterInfo{}
+		for _, d := range window {
+			// A failed roster lookup fails open, as it does on assign.
+			if rostered, err := s.roster.RosteredTechUserIDs(ctx, companyID, d.Date); err == nil && len(rostered) > 0 {
+				byDate[d.Date] = rostered
+			}
+		}
+		techs = withRosterDays(techs, byDate)
+	}
 	bookings, err := s.src.Bookings(ctx, companyID, window[0].Open, window[len(window)-1].Close)
 	if err != nil {
 		return nil, err
@@ -138,6 +183,9 @@ func (s *SlotService) Find(ctx context.Context, companyID string, q SlotQuery) (
 	}
 	if q.Lat != nil && q.Lng != nil {
 		req.At = &slots.Point{Lat: *q.Lat, Lng: *q.Lng}
+	}
+	if q.NotBefore.After(req.NotBefore) {
+		req.NotBefore = q.NotBefore
 	}
 	found := slots.Find(req, techs, bookings)
 	if found == nil {

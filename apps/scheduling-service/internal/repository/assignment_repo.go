@@ -303,6 +303,15 @@ func (r *AssignmentRepository) CancelActiveForJob(ctx context.Context, companyID
 	return tag.RowsAffected(), nil
 }
 
+// SetJobExactTime gives a job booked as an arrival window the exact time it was fitted
+// into. The customer's window stays on the job as what they asked for.
+func (r *AssignmentRepository) SetJobExactTime(ctx context.Context, companyID, jobID string, start, end time.Time) error {
+	_, err := r.db.Exec(ctx, `
+		UPDATE jobs.jobs SET "scheduledStart" = $3, "scheduledEnd" = $4, "timeMode" = 'EXACT', "updatedAt" = NOW()
+		WHERE id = $1 AND "companyId" = $2`, jobID, companyID, start, end)
+	return err
+}
+
 // SyncJobAssignment updates the job in the jobs schema to reflect the new assignment.
 // Uses cross-schema query since all services share the same PostgreSQL instance.
 func (r *AssignmentRepository) SyncJobAssignment(ctx context.Context, companyID, jobID, techUserID, techName string) error {

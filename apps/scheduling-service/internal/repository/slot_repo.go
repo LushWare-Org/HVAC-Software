@@ -32,7 +32,7 @@ func (r *SlotRepository) CompanyTimezone(ctx context.Context, companyID string) 
 // ActiveTechnicians with where each starts the day: home base, else last known position.
 func (r *SlotRepository) ActiveTechnicians(ctx context.Context, companyID string) ([]slots.Tech, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT id, name, COALESCE(skills, ARRAY[]::text[]), max_daily_jobs,
+		SELECT id, COALESCE(user_id, ''), name, COALESCE(skills, ARRAY[]::text[]), max_daily_jobs,
 		       ST_Y(COALESCE(base_location, current_location)::geometry),
 		       ST_X(COALESCE(base_location, current_location)::geometry)
 		FROM   scheduling.technicians
@@ -46,7 +46,7 @@ func (r *SlotRepository) ActiveTechnicians(ctx context.Context, companyID string
 	for rows.Next() {
 		var t slots.Tech
 		var lat, lng *float64
-		if err := rows.Scan(&t.ID, &t.Name, &t.Skills, &t.MaxDailyJobs, &lat, &lng); err != nil {
+		if err := rows.Scan(&t.ID, &t.UserID, &t.Name, &t.Skills, &t.MaxDailyJobs, &lat, &lng); err != nil {
 			return nil, err
 		}
 		if lat != nil && lng != nil {

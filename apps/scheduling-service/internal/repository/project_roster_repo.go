@@ -68,24 +68,65 @@ func (r *ProjectRosterRepository) RosteredTechUserIDs(
 	return out, rows.Err()
 }
 
-// JobProjectID returns the project a job belongs to ("" when unlinked) so
-// project-owned jobs are exempt from the roster block.
-func (r *ProjectRosterRepository) JobProjectID(
-	ctx context.Context,
-	companyID string,
-	jobID string,
-) (string, error) {
-	var projectID *string
+// JobFacts returns the job's project, priority and scheduled start, plus the
+// company's time zone, in one read. Project-owned jobs are exempt from the
+// roster block, emergencies may use rostered technicians, and the time zone
+// decides which day the job is on.
+func (r *ProjectRosterRepository) JobFacts(ctx context.Context, companyID, jobID string) (models.JobFacts, error) {
+	var f models.JobFacts
+	var projectID, priority, tz *string
+	var mode *string
+	var dur *int
 	err := r.db.QueryRow(ctx, `
-		SELECT "projectId" FROM jobs.jobs
-		WHERE id = $1 AND "companyId" = $2`,
+		SELECT j."projectId", j.priority::text, j."scheduledStart", c.timezone,
+		       j."timeMode", j."windowStart", j."windowEnd", j."estimatedDurationMins"
+		FROM jobs.jobs j
+		LEFT JOIN crm.companies c ON c.id = j."companyId"
+		WHERE j.id = $1 AND j."companyId" = $2`,
 		jobID, companyID,
-	).Scan(&projectID)
+	).Scan(&projectID, &priority, &f.ScheduledStart, &tz, &mode, &f.WindowStart, &f.WindowEnd, &dur)
 	if err != nil {
-		return "", err
+		return f, err
 	}
-	if projectID == nil {
-		return "", nil
+	if mode != nil {
+		f.TimeMode = *mode
 	}
-	return *projectID, nil
+	if dur != nil {
+		f.DurationMins = *dur
+	}
+	if projectID != nil {
+		f.ProjectID = *projectID
+	}
+	if priority != nil {
+		f.Priority = *priority
+	}
+	if tz != nil {
+		f.Timezone = *tz
+	}
+	return f, nil
+}
+
+// TechUserIDs maps scheduling technician ids to their crm user ids.
+func (r *ProjectRosterRepository) TechUserIDs(ctx context.Context, companyID string, techIDs []string) (map[string]string, error) {
+	out := map[string]string{}
+	if len(techIDs) == 0 {
+		return out, nil
+	}
+	rows, err := r.db.Query(ctx, `
+		SELECT id, COALESCE(user_id, '') FROM scheduling.technicians
+		WHERE company_id = $1 AND id = ANY($2)`,
+		companyID, techIDs,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id, userID string
+		if err := rows.Scan(&id, &userID); err != nil {
+			return nil, err
+		}
+		out[id] = userID
+	}
+	return out, rows.Err()
 }

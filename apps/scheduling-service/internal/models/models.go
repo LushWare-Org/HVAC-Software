@@ -169,6 +169,16 @@ type ScoredTechnician struct {
 	WorkloadScore float64    `json:"workloadScore"`
 	RatingScore   float64    `json:"ratingScore"`
 	PartsScore    float64    `json:"partsScore"`
+	// LocationSource says where DistanceKm was measured from: "live" (a recent GPS fix),
+	// "base" (where they start their day), "last_known" (an old fix, no base set) or "none".
+	LocationSource string `json:"locationSource,omitempty"`
+	// OnProject is set when the technician is rostered on a project that day and is only
+	// offered because the job is an emergency. The dispatcher decides.
+	OnProject *RosterInfo `json:"onProject,omitempty"`
+	// For a job booked as an arrival window: the earliest time inside the window this
+	// technician is free, and whether there is such a time at all.
+	SuggestedStart *time.Time `json:"suggestedStart,omitempty"`
+	FitsWindow     *bool      `json:"fitsWindow,omitempty"`
 }
 
 // AssignResponse — result of POST /dispatch/assign
@@ -176,6 +186,8 @@ type AssignResponse struct {
 	AutoAssigned bool                `json:"autoAssigned"`
 	Assignment   *DispatchAssignment `json:"assignment,omitempty"`  // set when autoAssigned=true
 	Suggestions  []ScoredTechnician  `json:"suggestions,omitempty"` // set when autoAssigned=false
+	// The job has no map location, so distance played no part in the ranking.
+	JobLocationMissing bool `json:"jobLocationMissing,omitempty"`
 }
 
 // GPSUpdateRequest — POST /gps (from technician mobile app)
@@ -261,6 +273,21 @@ type TechOnProjectError struct {
 	Date        string `json:"date"`
 }
 
+// JobFacts is what the roster and location rules need to know about a job.
+type JobFacts struct {
+	ProjectID      string
+	Priority       string
+	ScheduledStart *time.Time
+	// TimeMode is WINDOW when the customer asked for an arrival window and no exact
+	// time is set yet. WindowStart/End are that window; DurationMins the visit length.
+	TimeMode     string
+	WindowStart  *time.Time
+	WindowEnd    *time.Time
+	DurationMins int
+	// Company time zone (IANA), so "which day" and "today" mean the company's day.
+	Timezone string
+}
+
 func (e *TechOnProjectError) Error() string {
 	return "technician is rostered on project " + e.ProjectName + " on " + e.Date
 }
@@ -323,4 +350,7 @@ type CrewCandidate struct {
 	DistanceFromBase  bool               `json:"distanceFromBase"`
 	ActiveJobsThatDay int                `json:"activeJobsThatDay"`
 	Conflicts         []ScheduleConflict `json:"conflicts"`
+	// Same meaning as on ScoredTechnician.
+	LocationSource string      `json:"locationSource,omitempty"`
+	OnProject      *RosterInfo `json:"onProject,omitempty"`
 }

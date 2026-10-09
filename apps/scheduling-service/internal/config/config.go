@@ -23,6 +23,10 @@ type Config struct {
 	Auth0Audience string
 
 	// Scoring thresholds (Phase 1)
+	// AutoAssignEnabled: off by default, so Smart Assign only suggests and the
+	// dispatcher confirms. AUTO_ASSIGN_ENABLED=true assigns the top pick by itself
+	// when it scores at least AutoAssignThreshold.
+	AutoAssignEnabled   bool
 	AutoAssignThreshold float64 // default 90.0 — auto-assign when top score ≥ this
 	MaxDistanceKm       float64 // default 50.0 — max radius considered "reachable"
 	MaxActiveJobs       int     // default 5  — used in workload scoring denominator
@@ -45,6 +49,7 @@ func Load() *Config {
 		RedisURL:            getEnvOrDefault("REDIS_URL", "redis://localhost:6379"),
 		Auth0Domain:         requireEnv("AUTH0_DOMAIN"),
 		Auth0Audience:       requireEnv("AUTH0_AUDIENCE"),
+		AutoAssignEnabled:   getEnvOrDefault("AUTO_ASSIGN_ENABLED", "false") == "true",
 		AutoAssignThreshold: 90.0,
 		MaxDistanceKm:       50.0,
 		MaxActiveJobs:       5,

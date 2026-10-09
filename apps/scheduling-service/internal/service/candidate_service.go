@@ -37,6 +37,14 @@ type CandidateService struct {
 	conflictRepo *repository.ConflictRepository
 	assignRepo   *repository.AssignmentRepository
 	cfg          *config.Config
+	roster       RosterGate // nil-safe: no roster filter when unset
+}
+
+// WithRosterGate leaves out technicians reserved on another project that day,
+// the same rule the assign step enforces.
+func (s *CandidateService) WithRosterGate(gate RosterGate) *CandidateService {
+	s.roster = gate
+	return s
 }
 
 func NewCandidateService(
@@ -45,7 +53,7 @@ func NewCandidateService(
 	assignRepo *repository.AssignmentRepository,
 	cfg *config.Config,
 ) *CandidateService {
-	return &CandidateService{techRepo, conflictRepo, assignRepo, cfg}
+	return &CandidateService{techRepo: techRepo, conflictRepo: conflictRepo, assignRepo: assignRepo, cfg: cfg}
 }
 
 // Candidates ranks technicians for a job window, each carrying what a dispatcher
@@ -64,8 +72,20 @@ func (s *CandidateService) Candidates(
 		lat, lng = *info.Latitude, *info.Longitude
 	}
 
+	// Today's work and emergencies rank from where people are now; later days
+	// from where they start. The roster day is the company's day.
+	var facts models.JobFacts
+	if s.roster != nil {
+		if f, err := s.roster.JobFacts(ctx, companyID, jobID); err == nil {
+			facts = f
+		}
+	}
+	startISO := start.UTC().Format(time.RFC3339)
+	now := time.Now()
+	live := usesLivePosition(facts, &startISO, now)
+
 	rowsFound, err := s.techRepo.FindCrewCandidates(
-		ctx, companyID, lat, lng, s.cfg.MaxDistanceKm*2, 20)
+		ctx, companyID, lat, lng, s.cfg.MaxDistanceKm*2, 20, live, now.Add(-livePositionFreshness))
 	if err != nil {
 		return nil, err
 	}
@@ -103,10 +123,24 @@ func (s *CandidateService) Candidates(
 			Technician:        n.Technician,
 			Score:             st.Score,
 			BaseDistanceKm:    n.BaseDistanceKm,
-			DistanceFromBase:  n.FromBase,
+			DistanceFromBase:  n.LocationSource == "base",
+			LocationSource:    n.LocationSource,
 			ActiveJobsThatDay: activeJobs[n.Technician.ID],
 			Conflicts:         conflicts[n.Technician.ID],
 		})
+	}
+
+	// Project crews are reserved capacity: don't suggest someone the assign step
+	// would refuse. For an emergency they stay in, labelled, for the dispatcher to
+	// decide. A failed roster lookup fails open, as it does on assign.
+	if s.roster != nil {
+		if rostered, err := s.roster.RosteredTechUserIDs(ctx, companyID, jobDay(facts, &startISO, now)); err == nil {
+			if isEmergency(facts.Priority) {
+				markRosteredCrew(out, rostered, facts.ProjectID)
+			} else {
+				out = dropRosteredCrew(out, rostered, facts.ProjectID)
+			}
+		}
 	}
 
 	SortCandidates(out)

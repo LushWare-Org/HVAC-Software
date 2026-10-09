@@ -372,3 +372,15 @@ func (r *CrewRepository) SetBaseLocation(ctx context.Context, companyID, userID 
 		companyID, userID, lng, lat)
 	return err
 }
+
+// DeactivateByUser takes a technician out of scheduling when their crm user is
+// removed. Their history stays (past assignments, GPS trail); they just stop
+// appearing as someone who can be dispatched.
+func (r *CrewRepository) DeactivateByUser(ctx context.Context, companyID, userID string) error {
+	_, err := r.db.Exec(ctx, `
+		UPDATE scheduling.technicians
+		SET    is_active = false, updated_at = NOW()
+		WHERE  company_id = $1 AND user_id = $2 AND is_active`,
+		companyID, userID)
+	return err
+}

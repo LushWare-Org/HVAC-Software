@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tscrm/scheduling-service/internal/models"
 	"github.com/tscrm/scheduling-service/internal/repository"
 	"github.com/tscrm/scheduling-service/internal/slots"
 )
@@ -78,5 +79,39 @@ func TestSlotServiceClampsAndFallsBack(t *testing.T) {
 
 	if _, err := svc.Find(context.Background(), "co", SlotQuery{From: "next week"}); err == nil {
 		t.Error("a malformed date should be an error")
+	}
+}
+
+type fakeRoster struct {
+	byDate map[string]map[string]models.RosterInfo
+}
+
+func (f fakeRoster) RosteredTechUserIDs(_ context.Context, _ string, date string) (map[string]models.RosterInfo, error) {
+	return f.byDate[date], nil
+}
+func (f fakeRoster) JobFacts(context.Context, string, string) (models.JobFacts, error) {
+	return models.JobFacts{}, nil
+}
+
+func TestSlotServiceSkipsTechniciansRosteredOnAProject(t *testing.T) {
+	// Kasun is on the Mall project on Tuesday 6 Oct, free on Wednesday.
+	src := &fakeSlotSource{tz: "Asia/Dubai", techs: []slots.Tech{{ID: "k", UserID: "u-kasun", Name: "Kasun"}}}
+	svc := NewSlotService(src).WithRosterGate(fakeRoster{byDate: map[string]map[string]models.RosterInfo{
+		"2026-10-06": {"u-kasun": {ProjectID: "p-mall", ProjectName: "Colombo Mall"}},
+	}})
+	svc.now = func() time.Time { return time.Date(2026, 10, 6, 0, 0, 0, 0, time.UTC) }
+
+	res, err := svc.Find(context.Background(), "co", SlotQuery{Days: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dubai, _ := time.LoadLocation("Asia/Dubai")
+	for _, s := range res.Slots {
+		if s.Start.In(dubai).Format("2006-01-02") == "2026-10-06" {
+			t.Fatalf("offered Kasun on a day he is rostered on a project: %s", s.Start)
+		}
+	}
+	if len(res.Slots) == 0 {
+		t.Fatal("expected Wednesday times with Kasun")
 	}
 }

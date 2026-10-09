@@ -50,22 +50,24 @@ func main() {
 	// ── 5. Wire services ─────────────────────────────────────────────────
 	rosterRepo := repository.NewProjectRosterRepository(db)
 	crewRepo := repository.NewCrewRepository(db)
+	slotRepo := repository.NewSlotRepository(db)
+	slotSvc := service.NewSlotService(slotRepo).WithRosterGate(rosterRepo)
 	assignSvc := service.NewAssignmentService(cfg, techRepo, assignRepo, hub).
 		WithRosterGate(rosterRepo).
-		WithCrew(crewRepo)
+		WithCrew(crewRepo).
+		WithSlots(slotSvc)
 
 	// ── 6. Wire handlers ─────────────────────────────────────────────────
 	healthH := handler.NewHealthHandler(db, redisClient)
 	techH := handler.NewTechnicianHandler(techRepo)
 	dispatchH := handler.NewDispatchHandler(assignSvc, assignRepo)
 	conflictRepo := repository.NewConflictRepository(db)
-	candidateSvc := service.NewCandidateService(techRepo, conflictRepo, assignRepo, cfg)
+	candidateSvc := service.NewCandidateService(techRepo, conflictRepo, assignRepo, cfg).WithRosterGate(rosterRepo)
 	simSvc := service.NewGPSSimService(techRepo, assignRepo, crewRepo, hub)
-	crewH := handler.NewCrewHandler(crewRepo, candidateSvc, simSvc, hub)
+	crewH := handler.NewCrewHandler(crewRepo, candidateSvc, simSvc, hub).WithRosterCheck(rosterRepo)
 	gpsH := handler.NewGPSHandler(techRepo, assignRepo, hub)
 	wsH := handler.NewWebSocketHandler(hub)
-	slotRepo := repository.NewSlotRepository(db)
-	slotH := handler.NewSlotHandler(service.NewSlotService(slotRepo))
+	slotH := handler.NewSlotHandler(slotSvc)
 	disruptionH := handler.NewDisruptionHandler(service.NewDisruptionService(slotRepo))
 	availabilityH := handler.NewAvailabilityHandler(slotRepo, hub)
 	gapH := handler.NewGapHandler(service.NewGapService(slotRepo))
@@ -124,6 +126,8 @@ func main() {
 	// Note: role values MUST match @tscrm/types Role enum (lowercase snake_case injected by Auth0 Action)
 	// Base location, pushed by crm-service when a technician sets or changes it.
 	r.PATCH("/technicians/by-user/:userId/base-location", auth, crewH.SetBaseLocation)
+	// Pushed by crm-service when a team member is deleted, so they leave the dispatch board.
+	r.PATCH("/technicians/by-user/:userId/deactivate", auth, crewH.DeactivateTechnician)
 
 	tech := r.Group("/technicians", auth)
 	{

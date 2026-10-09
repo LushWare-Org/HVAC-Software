@@ -36,7 +36,9 @@ type Point struct{ Lat, Lng float64 }
 
 // Tech is a technician who could take the visit.
 type Tech struct {
-	ID           string
+	ID string
+	// UserID is their CompanyUser id: project rosters are keyed by it.
+	UserID       string
 	Name         string
 	Skills       []string
 	MaxDailyJobs int

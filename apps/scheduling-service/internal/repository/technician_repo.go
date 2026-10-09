@@ -204,36 +204,42 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 	jobLat, jobLng float64,
 	maxDistanceKm float64,
 	requiredSkills []string,
+	preferLive bool,
+	freshSince time.Time,
 ) ([]TechnicianWithDistance, error) {
 
+	// Where each technician is measured from (see LocationRule): a recent GPS fix
+	// when preferLive, otherwise where they start their day, falling back to the
+	// last fix. Technicians with no location at all stay in, at the far edge, so
+	// they can still be chosen but never outrank someone who can be located.
 	// ST_DistanceSphere works on plain geometry (SRID 4326) and returns metres
-	// without requiring a ::geography cast — avoids SQLSTATE 42704 when the
-	// PostGIS 'geography' type is not in the connection's search_path.
+	// without requiring a ::geography cast.
 	rows, err := r.db.Query(ctx, `
 		SELECT sub.id, sub.company_id, sub.user_id, sub.name, sub.phone, sub.avatar_url,
 		       sub.skills, sub.max_daily_jobs, sub.is_active, sub.rating, sub.total_ratings,
 		       sub.last_seen_at, sub.created_at, sub.updated_at,
-		       sub.distance_km,
-		       sub.lat, sub.lng
+		       sub.distance_km, sub.src,
+		       ST_Y(sub.at::geometry), ST_X(sub.at::geometry)
 		FROM (
 		  SELECT t.id, t.company_id, t.user_id, t.name, t.phone, t.avatar_url,
 		         t.skills, t.max_daily_jobs, t.is_active, t.rating, t.total_ratings,
 		         t.last_seen_at, t.created_at, t.updated_at,
-		         ST_DistanceSphere(
-		           t.current_location,
-		           ST_SetSRID(ST_MakePoint($3, $2), 4326)
-		         ) / 1000.0 AS distance_km,
-		         ST_Y(t.current_location::geometry) AS lat,
-		         ST_X(t.current_location::geometry) AS lng
+		         CASE WHEN $5 AND t.current_location IS NOT NULL AND t.last_seen_at >= $6 THEN t.current_location
+		              ELSE COALESCE(t.base_location, t.current_location) END AS at,
+		         CASE WHEN $5 AND t.current_location IS NOT NULL AND t.last_seen_at >= $6 THEN 'live'
+		              WHEN t.base_location IS NOT NULL THEN 'base'
+		              WHEN t.current_location IS NOT NULL THEN 'last_known'
+		              ELSE 'none' END AS src,
+		         ST_DistanceSphere(CASE WHEN $5 AND t.current_location IS NOT NULL AND t.last_seen_at >= $6 THEN t.current_location
+		              ELSE COALESCE(t.base_location, t.current_location) END, ST_SetSRID(ST_MakePoint($3, $2), 4326)) / 1000.0 AS distance_km
 		  FROM scheduling.technicians t
 		  WHERE t.company_id = $1
 		    AND t.is_active = TRUE
-		    AND t.current_location IS NOT NULL
 		) sub
-		WHERE sub.distance_km <= $4
-		ORDER BY sub.distance_km ASC
+		WHERE sub.distance_km IS NULL OR sub.distance_km <= $4
+		ORDER BY sub.distance_km ASC NULLS LAST
 		LIMIT 20`,
-		companyID, jobLat, jobLng, maxDistanceKm,
+		companyID, jobLat, jobLng, maxDistanceKm, preferLive, freshSince,
 	)
 	if err != nil {
 		return nil, err
@@ -244,7 +250,7 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 	for rows.Next() {
 		var twd TechnicianWithDistance
 		var skills []string
-		var lat, lng *float64
+		var lat, lng, dist *float64
 		err := rows.Scan(
 			&twd.Technician.ID, &twd.Technician.CompanyID, &twd.Technician.UserID,
 			&twd.Technician.Name, &twd.Technician.Phone, &twd.Technician.AvatarURL,
@@ -253,7 +259,7 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 			&twd.Technician.Rating, &twd.Technician.TotalRatings,
 			&twd.Technician.LastSeenAt,
 			&twd.Technician.CreatedAt, &twd.Technician.UpdatedAt,
-			&twd.DistanceKm,
+			&dist, &twd.LocationSource,
 			&lat, &lng,
 		)
 		if err != nil {
@@ -261,7 +267,17 @@ func (r *TechnicianRepository) FindCandidatesNearby(
 		}
 		twd.Technician.Skills = skills
 		if lat != nil && lng != nil {
-			twd.Technician.CurrentLocation = &models.GeoPoint{Lat: *lat, Lng: *lng}
+			p := &models.GeoPoint{Lat: *lat, Lng: *lng}
+			if twd.LocationSource == "base" {
+				twd.Technician.BaseLocation = p
+			} else {
+				twd.Technician.CurrentLocation = p
+			}
+		}
+		// No location at all: kept, but at the edge of the search radius.
+		twd.DistanceKm, twd.Located = maxDistanceKm, false
+		if dist != nil {
+			twd.DistanceKm, twd.Located = *dist, true
 		}
 
 		// Apply skills filter in Go (avoids GIN index interference with spatial index)
@@ -436,6 +452,10 @@ func (r *TechnicianRepository) UpdateRating(ctx context.Context, technicianID st
 type TechnicianWithDistance struct {
 	Technician models.Technician
 	DistanceKm float64
+	// "live", "base", "last_known" or "none": which point DistanceKm is from.
+	LocationSource string
+	// False when the technician has no location at all; DistanceKm is then the search radius.
+	Located bool
 }
 
 func scanTechnician(row pgx.Row) (*models.Technician, error) {
@@ -511,24 +531,24 @@ func hasRequiredSkills(techSkills []string, required []string) bool {
 type CrewCandidateRow struct {
 	Technician     models.Technician
 	BaseDistanceKm *float64
-	// FromBase is false when the distance fell back to the live position, so
-	// callers can say which number they are showing.
-	FromBase bool
+	// "live", "base", "last_known" or "none": which point the distance is from.
+	LocationSource string
 }
 
-// FindCrewCandidates ranks technicians for a crew by distance from where they
-// start their day.
+// FindCrewCandidates ranks technicians for a crew by distance.
 //
-// Distinct from FindCandidatesNearby, which measures from the live position and
-// is right for dispatching something happening now. For a job days away, where a
-// van is parked at this moment predicts nothing; where the technician sets off
-// from does.
+// For a job on a later day, where a van is parked at this moment predicts
+// nothing; where the technician sets off from does. For today's work and
+// emergencies (preferLive) a recent GPS fix is used instead, falling back to
+// their base when there is no recent fix.
 func (r *TechnicianRepository) FindCrewCandidates(
 	ctx context.Context,
 	companyID string,
 	jobLat, jobLng float64,
 	maxDistanceKm float64,
 	limit int,
+	preferLive bool,
+	freshSince time.Time,
 ) ([]CrewCandidateRow, error) {
 	if limit <= 0 {
 		limit = 20
@@ -537,20 +557,19 @@ func (r *TechnicianRepository) FindCrewCandidates(
 		SELECT sub.id, sub.company_id, sub.user_id, sub.name, sub.phone, sub.avatar_url,
 		       sub.skills, sub.max_daily_jobs, sub.is_active, sub.rating, sub.total_ratings,
 		       sub.last_seen_at, sub.created_at, sub.updated_at,
-		       sub.distance_km, sub.from_base, sub.base_lat, sub.base_lng
+		       sub.distance_km, sub.src, ST_Y(sub.at::geometry), ST_X(sub.at::geometry)
 		FROM (
 		  SELECT t.id, t.company_id, t.user_id, t.name, t.phone, t.avatar_url,
 		         t.skills, t.max_daily_jobs, t.is_active, t.rating, t.total_ratings,
 		         t.last_seen_at, t.created_at, t.updated_at,
-		         CASE WHEN COALESCE(t.base_location, t.current_location) IS NULL THEN NULL
-		              ELSE ST_DistanceSphere(
-		                     COALESCE(t.base_location, t.current_location),
-		                     ST_SetSRID(ST_MakePoint($3, $2), 4326)
-		                   ) / 1000.0
-		         END AS distance_km,
-		         (t.base_location IS NOT NULL) AS from_base,
-		         ST_Y(COALESCE(t.base_location, t.current_location)::geometry) AS base_lat,
-		         ST_X(COALESCE(t.base_location, t.current_location)::geometry) AS base_lng
+		         CASE WHEN $6 AND t.current_location IS NOT NULL AND t.last_seen_at >= $7 THEN t.current_location
+		              ELSE COALESCE(t.base_location, t.current_location) END AS at,
+		         CASE WHEN $6 AND t.current_location IS NOT NULL AND t.last_seen_at >= $7 THEN 'live'
+		              WHEN t.base_location IS NOT NULL THEN 'base'
+		              WHEN t.current_location IS NOT NULL THEN 'last_known'
+		              ELSE 'none' END AS src,
+		         ST_DistanceSphere(CASE WHEN $6 AND t.current_location IS NOT NULL AND t.last_seen_at >= $7 THEN t.current_location
+		              ELSE COALESCE(t.base_location, t.current_location) END, ST_SetSRID(ST_MakePoint($3, $2), 4326)) / 1000.0 AS distance_km
 		  FROM scheduling.technicians t
 		  WHERE t.company_id = $1
 		    AND t.is_active = TRUE
@@ -558,7 +577,7 @@ func (r *TechnicianRepository) FindCrewCandidates(
 		WHERE sub.distance_km IS NULL OR sub.distance_km <= $4
 		ORDER BY sub.distance_km ASC NULLS LAST
 		LIMIT $5`,
-		companyID, jobLat, jobLng, maxDistanceKm, limit,
+		companyID, jobLat, jobLng, maxDistanceKm, limit, preferLive, freshSince,
 	)
 	if err != nil {
 		return nil, err
@@ -576,7 +595,7 @@ func (r *TechnicianRepository) FindCrewCandidates(
 			&skills, &c.Technician.MaxDailyJobs, &c.Technician.IsActive,
 			&c.Technician.Rating, &c.Technician.TotalRatings, &c.Technician.LastSeenAt,
 			&c.Technician.CreatedAt, &c.Technician.UpdatedAt,
-			&c.BaseDistanceKm, &c.FromBase, &lat, &lng,
+			&c.BaseDistanceKm, &c.LocationSource, &lat, &lng,
 		); err != nil {
 			return nil, err
 		}

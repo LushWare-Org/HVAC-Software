@@ -20,6 +20,14 @@ type CrewHandler struct {
 	candidate *service.CandidateService
 	sim       *service.GPSSimService
 	hub       *ws.Hub
+	roster    service.CrewRosterSource // nil-safe: no roster check when unset
+}
+
+// WithRosterCheck refuses a crew with someone reserved on another project that
+// day, the same rule a single assignment gets.
+func (h *CrewHandler) WithRosterCheck(src service.CrewRosterSource) *CrewHandler {
+	h.roster = src
+	return h
 }
 
 func NewCrewHandler(
@@ -50,6 +58,19 @@ func (h *CrewHandler) SetCrew(c *gin.Context) {
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+	if h.roster != nil {
+		// A failed roster lookup fails open, as it does on assign.
+		if block, err := service.CheckCrew(c.Request.Context(), h.roster, claims.CompanyID, c.Param("jobId"), in.TechnicianIDs); err == nil && block != nil {
+			c.JSON(http.StatusConflict, gin.H{
+				"code":        "TECH_ON_PROJECT",
+				"projectId":   block.ProjectID,
+				"projectName": block.ProjectName,
+				"date":        block.Date,
+				"error":       block.Error(),
+			})
+			return
+		}
 	}
 	err := h.crewRepo.SetCrew(c.Request.Context(), claims.CompanyID, c.Param("jobId"),
 		claims.UserID, claims.Name, in)
@@ -157,6 +178,18 @@ func (h *CrewHandler) SetBaseLocation(c *gin.Context) {
 	if err := h.crewRepo.SetBaseLocation(
 		c.Request.Context(), claims.CompanyID, c.Param("userId"), *body.Lat, *body.Lng,
 	); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// DeactivateTechnician is called by crm-service when a team member is deleted,
+// keyed by CompanyUser id like SetBaseLocation. Idempotent: deactivating someone
+// already inactive, or never in scheduling, still succeeds.
+func (h *CrewHandler) DeactivateTechnician(c *gin.Context) {
+	claims := middleware.GetClaims(c)
+	if err := h.crewRepo.DeactivateByUser(c.Request.Context(), claims.CompanyID, c.Param("userId")); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
