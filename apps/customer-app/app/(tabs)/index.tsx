@@ -10,7 +10,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useSocket } from '@/contexts/SocketContext'
 import { useCustomerHome } from '@/hooks/useCustomerHome'
 import { useMyInvoices, useMyQuotes } from '@/hooks/useMyFinance'
-import { useUnreadNotificationsCount, useUnreadThreadsCount } from '@/hooks/useMyMessages'
+import { useUnreadNotificationsCount } from '@/hooks/useMyMessages'
+import { useChatUnreadTotal } from '@/chat/useChat'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Card } from '@/components/Card'
 import { SectionHeader } from '@/components/SectionHeader'
@@ -89,7 +90,7 @@ export default function Home() {
     activeJobs, totalJobs, openInvoices, pendingQuotes,
     recentJobs, isLoading, isError, refetch,
   } = useCustomerHome()
-  const unreadThreads = useUnreadThreadsCount()
+  const unreadThreads = useChatUnreadTotal()
   const unreadNotifications = useUnreadNotificationsCount()
   const messagesBadge = unreadThreads + unreadNotifications
 

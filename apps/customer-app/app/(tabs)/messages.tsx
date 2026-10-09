@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import {
   ActivityIndicator, FlatList, Modal, RefreshControl, StyleSheet, TouchableOpacity, View,
 } from 'react-native'
@@ -7,18 +7,16 @@ import { Text } from '@/components/Text'
 import { Feather } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import {
-  useCreateMyThread,
   useMarkAllMyNotificationsRead,
   useMarkMyNotificationRead,
   useMyNotifications,
-  useMyThreads,
   useUnreadNotificationsCount,
 } from '@/hooks/useMyMessages'
-import { useMyJobs } from '@/hooks/useMyJobs'
-import { useAuth } from '@/contexts/AuthContext'
-import { getInitials, getThreadTitle, isTechThread, sortThreads } from '@/lib/threadActions'
+import { useChatContacts, useConversations, useOpenConversation } from '@/chat/useChat'
+import { TelegramCard } from '@/chat/TelegramCard'
+import { getInitials } from '@/lib/threadActions'
 import { Colors, FontSize, Radius, Shadow, Spacing } from '@/constants/theme'
-import type { MessageThread, Notification } from '@/types/api'
+import type { ChatConversation, Notification } from '@/types/api'
 
 type Segment = 'CHAT' | 'NOTIFICATIONS'
 
@@ -37,50 +35,30 @@ function fmtTime(iso?: string): string {
  * Quotes/Invoices — the two are read in the same sitting but act differently.
  */
 export default function Messages() {
-  const { user } = useAuth()
   const [segment, setSegment] = useState<Segment>('CHAT')
   const [showNewChat, setShowNewChat] = useState(false)
 
-  const threadsQ = useMyThreads()
+  const threadsQ = useConversations()
   const notificationsQ = useMyNotifications(50)
   const unreadNotifications = useUnreadNotificationsCount()
   const markRead = useMarkMyNotificationRead()
   const markAllRead = useMarkAllMyNotificationsRead()
-  const createThread = useCreateMyThread()
-  const jobsQ = useMyJobs()
+  const createThread = useOpenConversation()
+  const contactsQ = useChatContacts()
 
-  const threads = useMemo(() => sortThreads(threadsQ.data?.data ?? []), [threadsQ.data])
+  // Newest first comes from the server.
+  const threads = threadsQ.data?.data ?? []
   const notifications = notificationsQ.data?.data ?? []
 
-  const assignedTechs = useMemo(() => {
-    const seen = new Set<string>()
-    const techs: string[] = []
-    for (const job of jobsQ.data?.data ?? []) {
-      const name = job.assignedToName
-      if (name && !seen.has(name)) {
-        seen.add(name)
-        techs.push(name)
-      }
-    }
-    return techs
-  }, [jobsQ.data])
+  // Technicians who have visited this customer: the only ones they can message privately.
+  const assignedTechs = contactsQ.data?.technicians ?? []
 
   const startAdminChat = () => {
-    createThread.mutate(
-      { customerId: user?.customerId, customerName: user?.name },
-      { onSuccess: (thread) => { setShowNewChat(false); router.push(`/thread/${thread.id}`) } },
-    )
+    createThread.mutate({ with: 'office' }, { onSuccess: (d) => { setShowNewChat(false); router.push(`/thread/${d.id}`) } })
   }
 
-  const startTechChat = (techName: string) => {
-    createThread.mutate(
-      {
-        customerId: user?.customerId,
-        customerName: user?.name,
-        subject: `Chat with Technician: ${techName}`,
-      },
-      { onSuccess: (thread) => { setShowNewChat(false); router.push(`/thread/${thread.id}`) } },
-    )
+  const startTechChat = (techUserId: string) => {
+    createThread.mutate({ with: 'technician', techUserId }, { onSuccess: (d) => { setShowNewChat(false); router.push(`/thread/${d.id}`) } })
   }
 
   return (
@@ -123,6 +101,7 @@ export default function Messages() {
               onRefresh={threadsQ.refetch}
             />
           }
+          ListHeaderComponent={<TelegramCard />}
           renderItem={({ item }) => <ThreadRow thread={item} />}
           ListEmptyComponent={
             <Empty query={threadsQ} kind="conversations" onStart={() => setShowNewChat(true)} />
@@ -184,28 +163,31 @@ export default function Messages() {
                 <Feather name="headphones" size={16} color={Colors.primary} />
               </View>
               <View style={styles.rowMain}>
-                <Text style={styles.rowTitle}>Support</Text>
+                <Text style={styles.rowTitle}>{contactsQ.data?.office.name ?? 'The office'}</Text>
                 <Text style={styles.rowPreview}>Questions, billing, account help</Text>
               </View>
             </TouchableOpacity>
 
-            {assignedTechs.map((name) => (
+            {assignedTechs.map((t) => (
               <TouchableOpacity
-                key={name}
+                key={t.userId}
                 style={styles.modalOption}
                 disabled={createThread.isPending}
-                onPress={() => startTechChat(name)}
+                onPress={() => startTechChat(t.userId)}
               >
                 <View style={[styles.avatar, styles.avatarTech]}>
-                  <Text style={[styles.avatarText, styles.avatarTextTech]}>{getInitials(name)}</Text>
+                  <Text style={[styles.avatarText, styles.avatarTextTech]}>{getInitials(t.name)}</Text>
                 </View>
                 <View style={styles.rowMain}>
-                  <Text style={styles.rowTitle}>{name}</Text>
+                  <Text style={styles.rowTitle}>{t.name}</Text>
                   <Text style={styles.rowPreview}>Technician</Text>
                 </View>
               </TouchableOpacity>
             ))}
 
+            {createThread.isError ? (
+              <Text style={styles.emptyText}>{(createThread.error as any)?.response?.data?.message ?? "Couldn't open that conversation."}</Text>
+            ) : null}
             {createThread.isPending ? (
               <ActivityIndicator color={Colors.primary} style={{ marginTop: Spacing.sm }} />
             ) : null}
@@ -220,26 +202,25 @@ export default function Messages() {
   )
 }
 
-function ThreadRow({ thread }: { thread: MessageThread }) {
-  const title = getThreadTitle(thread)
-  const tech = isTechThread(thread)
-  const unread = thread.unreadCount ?? 0
+function ThreadRow({ thread }: { thread: ChatConversation }) {
+  const tech = thread.kind === 'CUSTOMER_TECH'
+  const unread = thread.unread
   return (
-    <TouchableOpacity style={styles.row} onPress={() => router.push(`/thread/${thread.id}`)}>
+    <TouchableOpacity style={styles.row} onPress={() => router.push(`/thread/${thread.id}`)} accessibilityLabel={`${thread.title}${unread ? `, ${unread} unread` : ''}`}>
       <View style={[styles.avatar, tech && styles.avatarTech]}>
-        <Text style={[styles.avatarText, tech && styles.avatarTextTech]}>
-          {getInitials(title)}
-        </Text>
+        {tech
+          ? <Text style={[styles.avatarText, styles.avatarTextTech]}>{getInitials(thread.title)}</Text>
+          : <Feather name="headphones" size={16} color={Colors.primary} />}
       </View>
       <View style={styles.rowMain}>
         <View style={styles.rowTop}>
           <Text style={[styles.rowTitle, unread > 0 && styles.rowTitleUnread]} numberOfLines={1}>
-            {title}
+            {thread.title}
           </Text>
-          <Text style={styles.rowTime}>{fmtTime(thread.lastMessageAt ?? thread.updatedAt)}</Text>
+          <Text style={styles.rowTime}>{fmtTime(thread.lastMessageAt ?? thread.createdAt)}</Text>
         </View>
         <Text style={styles.rowPreview} numberOfLines={1}>
-          {thread.lastMessageBody || 'No messages yet'}
+          {thread.lastMessagePreview || thread.subtitle}
         </Text>
       </View>
       {unread > 0 ? (

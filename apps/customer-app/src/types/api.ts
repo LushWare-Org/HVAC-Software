@@ -309,3 +309,59 @@ export interface ContractorPost {
   publishedAt?: string
   createdAt: string
 }
+
+// ─── Chat (comms /chat) ──────────────────────────────────────────────────────
+export type ChatKind = 'CUSTOMER_OFFICE' | 'CUSTOMER_TECH' | 'TECH_OFFICE' | 'STAFF_DIRECT' | 'STAFF_GROUP'
+
+export interface ChatConversation {
+  id: string
+  kind: ChatKind
+  /** How it reads for me: the customer's name, the technician's, a colleague's, or the group's. */
+  title: string
+  subtitle: string
+  customerId: string | null
+  /** The other staff member (technician↔office, direct and customer↔technician chats). */
+  peerUserId: string | null
+  /** My seat in it: my user id, or "office" in shared inboxes. A message is mine when senderMemberKey equals this. */
+  myMemberKey: string
+  unread: number
+  lastSeq: number
+  lastMessageAt: string | null
+  lastMessagePreview: string | null
+  lastSenderName: string | null
+  muted: boolean
+  archived: boolean
+  createdAt: string
+}
+
+export interface ChatAttachment { url: string; name?: string; type?: string; size?: number }
+
+export interface ChatMessage {
+  id: string
+  conversationId: string
+  seq: number
+  senderKind: 'STAFF' | 'CUSTOMER' | 'SYSTEM' | 'KELVIN'
+  senderMemberKey: string
+  senderUserId: string | null
+  senderName: string
+  senderRole: string | null
+  body: string
+  attachments: ChatAttachment[] | null
+  jobId: string | null
+  jobNumber: string | null
+  clientId: string | null
+  editedAt: string | null
+  deletedAt: string | null
+  createdAt: string
+  /** Only on messages this screen is still sending. */
+  pending?: boolean
+  failed?: boolean
+}
+
+export interface ChatMemberInfo { memberKey: string; kind: 'STAFF' | 'CUSTOMER' | 'OFFICE'; name: string; role: string | null; lastReadSeq: number; isMe: boolean }
+
+export interface ChatDetail extends ChatConversation {
+  members: ChatMemberInfo[]
+  messages: ChatMessage[]
+  hasMore: boolean
+}

@@ -1,11 +1,12 @@
 import React from 'react'
 import { Tabs } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
-import { useUnreadThreadsCount, useUnreadNotificationsCount } from '@/hooks/useMyMessages'
+import { useUnreadNotificationsCount } from '@/hooks/useMyMessages'
+import { useChatUnreadTotal } from '@/chat/useChat'
 import { Colors } from '@/constants/theme'
 
 export default function TabsLayout() {
-  const unreadThreads = useUnreadThreadsCount()
+  const unreadThreads = useChatUnreadTotal()
   const unreadNotifications = useUnreadNotificationsCount()
   const messagesBadge = unreadThreads + unreadNotifications
 

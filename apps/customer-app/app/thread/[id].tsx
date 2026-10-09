@@ -1,210 +1,164 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+/**
+ * One conversation, with the office or a technician. A bubble is mine when its
+ * senderMemberKey equals the conversation's myMemberKey.
+ */
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet,
-  TextInput, TouchableOpacity, View,
+  ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, TextInput, TouchableOpacity, View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Text } from '@/components/Text'
 import { Feather } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
-import { useAuth } from '@/contexts/AuthContext'
-import { useSocket } from '@/contexts/SocketContext'
-import {
-  useMarkMyThreadRead, useMyThread, useSendMyThreadMessage,
-} from '@/hooks/useMyMessages'
-import { queryClient } from '@/lib/queryClient'
-import { getInitials, getThreadTitle, isTechThread } from '@/lib/threadActions'
+import { Text } from '@/components/Text'
 import { Colors, FontSize, Radius, Spacing } from '@/constants/theme'
-import type { ThreadMessage } from '@/types/api'
+import { chatLive, fetchOlder, useChatAction, useConversation, useMarkChatRead, useSendChat } from '@/chat/useChat'
+import { getInitials } from '@/lib/threadActions'
+import type { ChatMessage } from '@/types/api'
 
-function fmtTime(iso?: string): string {
-  if (!iso) return ''
-  return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+const dayLabel = (iso: string) => {
+  const d = new Date(iso); const now = new Date()
+  if (d.toDateString() === now.toDateString()) return 'Today'
+  const y = new Date(now); y.setDate(now.getDate() - 1)
+  if (d.toDateString() === y.toDateString()) return 'Yesterday'
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-export default function ThreadDetail() {
+export default function Thread() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { user } = useAuth()
-  const { isConnected, joinThread, leaveThread, sendTyping, onNewMessage, onTyping } = useSocket()
-
-  const { data: thread, isLoading, isError, refetch } = useMyThread(id)
-  const sendMutation = useSendMyThreadMessage()
-  const markRead = useMarkMyThreadRead()
-
+  const detail = useConversation(id ?? null)
+  const send = useSendChat()
+  const markRead = useMarkChatRead()
+  const action = useChatAction()
+  const d = detail.data
   const [text, setText] = useState('')
-  const [typingUser, setTypingUser] = useState<string | null>(null)
-  const listRef = useRef<FlatList>(null)
-  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const typingSentRef = useRef(false)
+  const [older, setOlder] = useState<ChatMessage[]>([])
+  const [olderMore, setOlderMore] = useState<boolean | null>(null)
+  const [loadingOlder, setLoadingOlder] = useState(false)
+  const [typing, setTyping] = useState<string | null>(null)
+  const typingSent = useRef(0)
 
-  const messages = thread?.messages ?? []
-
+  useEffect(() => { if (id) chatLive.focus(id); return () => { chatLive.focus(null) } }, [id])
   useEffect(() => {
-    if (!id) return
-    joinThread(id)
-    return () => leaveThread(id)
-  }, [id, joinThread, leaveThread])
+    if (!d || !id) return
+    const me = d.members.find((m) => m.isMe)
+    if (me && me.lastReadSeq < d.lastSeq) markRead.mutate({ conversationId: id, seq: d.lastSeq })
+  }, [id, d?.lastSeq]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => chatLive.onTyping((e) => { if (e.conversationId === id && e.memberKey !== d?.myMemberKey) setTyping(e.typing ? e.name : null) }), [id, d?.myMemberKey])
+  useEffect(() => { if (!typing) return; const t = setTimeout(() => setTyping(null), 5000); return () => clearTimeout(t) }, [typing])
 
-  useEffect(() => {
-    if (id && (thread?.unreadCount ?? 0) > 0) markRead.mutate(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, thread?.unreadCount])
+  const messages = useMemo(() => (d ? [...older.filter((m) => !d.messages.some((x) => x.id === m.id)), ...d.messages] : []), [d, older])
+  const inverted = useMemo(() => [...messages].reverse(), [messages])
 
-  useEffect(() => {
-    const unsub = onNewMessage(({ threadId, message }) => {
-      if (threadId !== id) return
-      queryClient.setQueryData(['threads', 'detail', threadId], (old: any) => {
-        if (!old) return old
-        const msgs: ThreadMessage[] = old.messages ?? []
-        if (msgs.find((m) => m.id === message.id)) return old
-        return { ...old, messages: [...msgs, message] }
-      })
-      queryClient.invalidateQueries({ queryKey: ['threads', 'list'] })
-    })
-    return unsub
-  }, [onNewMessage, id])
-
-  useEffect(() => {
-    const unsub = onTyping(({ threadId, userName, isTyping }) => {
-      if (threadId !== id) return
-      if (isTyping) {
-        setTypingUser(userName)
-        if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-        typingTimerRef.current = setTimeout(() => setTypingUser(null), 3000)
-      } else {
-        setTypingUser(null)
-        if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-      }
-    })
-    return unsub
-  }, [onTyping, id])
-
-  const handleTypingChange = useCallback((val: string) => {
-    setText(val)
-    if (!id) return
-    if (!typingSentRef.current) {
-      typingSentRef.current = true
-      sendTyping(id, true)
+  const loadOlder = useCallback(async () => {
+    if (!id || loadingOlder || !messages.length || !(olderMore ?? d?.hasMore)) return
+    setLoadingOlder(true)
+    try {
+      const res = await fetchOlder(id, messages[0].seq)
+      setOlder((o) => [...res.data, ...o])
+      setOlderMore(res.hasMore)
+    } finally {
+      setLoadingOlder(false)
     }
-    if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-    typingTimerRef.current = setTimeout(() => {
-      typingSentRef.current = false
-      sendTyping(id, false)
-    }, 2000)
-  }, [id, sendTyping])
+  }, [id, loadingOlder, messages, olderMore, d?.hasMore])
 
-  const send = () => {
+  if (detail.isLoading && !d) {
+    return <SafeAreaView style={[styles.safe, styles.center]}><ActivityIndicator color={Colors.primary} /></SafeAreaView>
+  }
+  if (detail.isError || !d) {
+    return (
+      <SafeAreaView style={[styles.safe, styles.center]}>
+        <Text style={styles.muted}>This conversation isn't available.</Text>
+        <TouchableOpacity style={styles.retry} onPress={() => router.back()}><Text style={styles.retryText}>Go back</Text></TouchableOpacity>
+      </SafeAreaView>
+    )
+  }
+
+  const tech = d.kind === 'CUSTOMER_TECH'
+  const others = d.members.filter((m) => !m.isMe)
+  const seenUpTo = others.length ? Math.max(...others.map((m) => m.lastReadSeq)) : 0
+  const lastMine = [...messages].reverse().find((m) => m.senderMemberKey === d.myMemberKey && !m.pending)
+
+  const submit = () => {
     const body = text.trim()
-    if (!id || !body) return
-    sendMutation.mutate({ threadId: id, body })
+    if (!body || !id) return
+    send.mutate({ conversationId: id, body })
     setText('')
-    typingSentRef.current = false
-    if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-    sendTyping(id, false)
+    chatLive.typing(id, false)
   }
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.center} edges={['top']}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </SafeAreaView>
-    )
-  }
-
-  if (isError || !thread) {
-    return (
-      <SafeAreaView style={styles.center} edges={['top']}>
-        <Text style={styles.errorText}>Could not load this conversation.</Text>
-        <TouchableOpacity style={styles.secondaryBtn} onPress={() => refetch()}>
-          <Text style={styles.secondaryBtnText}>Try again</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    )
-  }
-
-  const title = getThreadTitle(thread)
-  const tech = isTechThread(thread)
+  const menu = () => Alert.alert(d.title, undefined, [
+    { text: d.muted ? 'Turn notifications on' : 'Mute notifications', onPress: () => action.mutate({ conversationId: id!, action: d.muted ? 'unmute' : 'mute' }) },
+    { text: 'Hide from my list', style: 'destructive', onPress: () => action.mutate({ conversationId: id!, action: 'hide' }, { onSuccess: () => router.back() }) },
+    { text: 'Cancel', style: 'cancel' },
+  ])
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.back}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
+        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
           <Feather name="chevron-left" size={26} color={Colors.primary} />
         </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <View style={[styles.avatar, tech && styles.avatarTech]}>
-            <Text style={[styles.avatarText, tech && styles.avatarTextTech]}>
-              {getInitials(title)}
-            </Text>
-          </View>
-          <View>
-            <Text style={styles.headerTitle}>{title}</Text>
-            <Text style={styles.headerSubtitle}>
-              {tech ? 'Technician' : 'Support Team'} · {isConnected ? 'Live' : 'Connecting…'}
-            </Text>
-          </View>
+        <View style={[styles.avatar, tech && styles.avatarTech]}>
+          {tech ? <Text style={[styles.avatarText, styles.avatarTextTech]}>{getInitials(d.title)}</Text> : <Feather name="headphones" size={16} color={Colors.primary} />}
         </View>
-        <View style={styles.headerSpacer} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle} numberOfLines={1}>{d.title}</Text>
+          <Text style={[styles.headerSub, typing ? { color: Colors.primary } : null]} numberOfLines={1}>{typing ? `${typing} is typing…` : d.subtitle}</Text>
+        </View>
+        <TouchableOpacity onPress={menu} style={styles.iconBtn} accessibilityLabel="Conversation options">
+          <Feather name="more-horizontal" size={22} color={Colors.textSecondary} />
+        </TouchableOpacity>
       </View>
 
-      <FlatList
-        ref={listRef}
-        data={messages}
-        keyExtractor={(m) => m.id}
-        contentContainerStyle={styles.messages}
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No messages yet. Say hello 👋</Text>
-        }
-        renderItem={({ item }) => {
-          const mine = item.direction === 'INBOUND' || item.senderId === user?.id
-          return (
-            <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : styles.bubbleRowTheirs]}>
-              {!mine && item.senderName ? (
-                <Text style={styles.senderName}>{item.senderName}</Text>
-              ) : null}
-              <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                <Text style={[styles.bubbleText, mine && styles.bubbleTextMine]}>{item.body}</Text>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <FlatList
+          data={inverted}
+          inverted
+          keyExtractor={(m) => m.id}
+          contentContainerStyle={styles.messages}
+          onEndReached={loadOlder}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingOlder ? <ActivityIndicator style={{ margin: 12 }} color={Colors.primary} /> : null}
+          ListEmptyComponent={<View style={{ transform: [{ scaleY: -1 }] }}>{detail.isPlaceholderData ? <ActivityIndicator color={Colors.primary} style={{ margin: 24 }} /> : <Text style={styles.muted}>No messages yet. Say hello 👋</Text>}</View>}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item: m, index }) => {
+            const prev = inverted[index + 1]
+            const mine = m.senderMemberKey === d.myMemberKey
+            const newDay = !prev || new Date(prev.createdAt).toDateString() !== new Date(m.createdAt).toDateString()
+            const showName = !mine && (!prev || prev.senderName !== m.senderName || prev.senderMemberKey !== m.senderMemberKey || newDay)
+            return (
+              <View>
+                {newDay ? <Text style={styles.day}>{dayLabel(m.createdAt)}</Text> : null}
+                <View style={[styles.bubbleRow, mine ? styles.mine : styles.theirs]}>
+                  {showName ? <Text style={styles.senderName}>{m.senderKind === 'KELVIN' ? 'Kelvin' : m.senderName}</Text> : null}
+                  <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs, m.pending ? { opacity: 0.7 } : null]}>
+                    {m.jobNumber ? <Text style={[styles.jobChip, mine ? { color: Colors.primaryLight } : null]}>About {m.jobNumber}</Text> : null}
+                    <Text style={[styles.bubbleText, mine && styles.bubbleTextMine, m.deletedAt ? { fontStyle: 'italic' } : null]}>
+                      {m.deletedAt ? 'Message deleted' : linkify(m.body, mine)}
+                    </Text>
+                  </View>
+                  {m.failed ? (
+                    <Pressable onPress={() => send.mutate({ conversationId: id!, body: m.body, clientId: m.clientId ?? undefined })} hitSlop={10}>
+                      <Text style={[styles.bubbleTime, { color: Colors.danger }]}>Not sent. Tap to retry</Text>
+                    </Pressable>
+                  ) : (
+                    <Text style={styles.bubbleTime}>
+                      {m.pending ? 'Sending…' : fmtTime(m.createdAt)}{m.editedAt && !m.deletedAt ? ' · edited' : ''}
+                      {mine && m.id === lastMine?.id ? (seenUpTo >= m.seq ? ' · Seen' : ' · Sent') : ''}
+                    </Text>
+                  )}
+                </View>
               </View>
-              <Text style={styles.bubbleTime}>{fmtTime(item.createdAt)}</Text>
-            </View>
-          )
-        }}
-        ListFooterComponent={
-          typingUser ? (
-            <View style={[styles.bubbleRow, styles.bubbleRowTheirs]}>
-              <Text style={styles.senderName}>{typingUser} is typing…</Text>
-            </View>
-          ) : null
-        }
-      />
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
+            )
+          }}
+        />
         <View style={styles.composer}>
           <TextInput
-            style={styles.input}
-            value={text}
-            onChangeText={handleTypingChange}
-            placeholder="Type your message…"
-            placeholderTextColor={Colors.textMuted}
-            multiline
+            style={styles.input} value={text} multiline maxLength={4000} placeholder="Type your message…" placeholderTextColor={Colors.textMuted}
+            onChangeText={(v) => { setText(v); if (id && Date.now() - typingSent.current > 2500) { typingSent.current = Date.now(); chatLive.typing(id, true) } }}
           />
-          <TouchableOpacity
-            style={[styles.sendBtn, (!text.trim() || sendMutation.isPending) && styles.sendBtnDisabled]}
-            disabled={!text.trim() || sendMutation.isPending}
-            onPress={send}
-            accessibilityRole="button"
-            accessibilityLabel="Send message"
-          >
+          <TouchableOpacity style={[styles.send, !text.trim() && { opacity: 0.5 }]} onPress={submit} disabled={!text.trim()} accessibilityLabel="Send">
             <Feather name="send" size={18} color={Colors.textInverse} />
           </TouchableOpacity>
         </View>
@@ -213,75 +167,41 @@ export default function ThreadDetail() {
   )
 }
 
+/** Links in messages (e.g. "where should we come?") open in the browser. */
+function linkify(text: string, mine: boolean) {
+  return text.split(/(https?:\/\/[^\s]+)/g).map((p, i) => (/^https?:\/\//.test(p)
+    ? <Text key={i} style={{ textDecorationLine: 'underline', color: mine ? Colors.textInverse : Colors.primary }} onPress={() => Linking.openURL(p)}>{p}</Text>
+    : p))
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  center: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Colors.background, gap: Spacing.base,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  back: { width: 44, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
-  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flex: 1 },
-  headerSpacer: { width: 44 },
-  avatar: {
-    width: 34, height: 34, borderRadius: 17,
-    backgroundColor: Colors.primaryLight,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  avatarTech: { backgroundColor: '#EDE9FE' },
-  avatarText: { fontSize: FontSize.xs, fontWeight: '700', color: Colors.primary },
-  avatarTextTech: { color: '#7C3AED' },
+  center: { alignItems: 'center', justifyContent: 'center', padding: Spacing.xl },
+  muted: { color: Colors.textMuted, fontSize: FontSize.sm, textAlign: 'center', padding: Spacing.xl },
+  retry: { marginTop: Spacing.md, backgroundColor: Colors.primary, borderRadius: Radius.md, paddingHorizontal: 18, paddingVertical: 12 },
+  retryText: { color: Colors.textInverse, fontWeight: '700' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingHorizontal: Spacing.sm, paddingVertical: Spacing.sm, backgroundColor: Colors.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border },
+  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  avatarTech: { backgroundColor: Colors.violetLight },
+  avatarText: { fontSize: FontSize.sm, fontWeight: '700', color: Colors.primary },
+  avatarTextTech: { color: Colors.violet },
   headerTitle: { fontSize: FontSize.base, fontWeight: '700', color: Colors.textPrimary },
-  headerSubtitle: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 1 },
-  messages: { padding: Spacing.base, paddingBottom: Spacing.lg, flexGrow: 1 },
-  emptyText: { color: Colors.textMuted, fontSize: FontSize.sm, textAlign: 'center', marginTop: Spacing.xl },
-  bubbleRow: { marginBottom: Spacing.sm, maxWidth: '78%' },
-  bubbleRowMine: { alignSelf: 'flex-end', alignItems: 'flex-end' },
-  bubbleRowTheirs: { alignSelf: 'flex-start', alignItems: 'flex-start' },
-  senderName: { fontSize: FontSize.xs, color: Colors.textMuted, marginBottom: 3, paddingHorizontal: 4 },
-  bubble: { borderRadius: Radius.lg, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
-  bubbleMine: { backgroundColor: Colors.primary, borderBottomRightRadius: 4 },
-  bubbleTheirs: { backgroundColor: Colors.surfaceAlt, borderBottomLeftRadius: 4 },
-  bubbleText: { fontSize: FontSize.sm, color: Colors.textPrimary, lineHeight: 20 },
+  headerSub: { fontSize: FontSize.xs, color: Colors.textMuted },
+  messages: { padding: Spacing.md },
+  day: { textAlign: 'center', fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: '600', marginVertical: Spacing.sm },
+  bubbleRow: { marginTop: 4, maxWidth: '84%' },
+  mine: { alignSelf: 'flex-end', alignItems: 'flex-end' },
+  theirs: { alignSelf: 'flex-start', alignItems: 'flex-start' },
+  senderName: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: '600', marginBottom: 2, marginLeft: 6 },
+  bubble: { borderRadius: 16, paddingHorizontal: 12, paddingVertical: 9 },
+  bubbleMine: { backgroundColor: Colors.primary, borderTopRightRadius: 6 },
+  bubbleTheirs: { backgroundColor: Colors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border, borderTopLeftRadius: 6 },
+  jobChip: { fontSize: 11, fontWeight: '700', color: Colors.textMuted, marginBottom: 2 },
+  bubbleText: { fontSize: FontSize.base, color: Colors.textPrimary, lineHeight: 21 },
   bubbleTextMine: { color: Colors.textInverse },
-  bubbleTime: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 3, paddingHorizontal: 4 },
-  composer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: Spacing.sm,
-    padding: Spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    fontSize: FontSize.sm,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.background,
-    maxHeight: 100,
-  },
-  sendBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: Colors.primary,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  sendBtnDisabled: { backgroundColor: Colors.disabled },
-  errorText: { color: Colors.danger, fontSize: FontSize.base },
-  secondaryBtn: { paddingVertical: Spacing.base, alignItems: 'center' },
-  secondaryBtnText: { color: Colors.textSecondary, fontWeight: '600', fontSize: FontSize.sm },
+  bubbleTime: { fontSize: 11, color: Colors.textMuted, marginTop: 2, marginHorizontal: 6 },
+  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.sm, padding: Spacing.sm, backgroundColor: Colors.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.border },
+  input: { flex: 1, minHeight: 46, maxHeight: 140, borderRadius: 22, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, fontSize: FontSize.base, color: Colors.textPrimary, backgroundColor: Colors.background },
+  send: { width: 46, height: 46, borderRadius: 23, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
 })

@@ -11,7 +11,6 @@ export const EVENT_TO_QUERY_KEYS: Record<string, string[][]> = {
   job_changed: [['jobs'], ['dashboard']],
   quote_changed: [['quotes'], ['dashboard']],
   invoice_changed: [['invoices'], ['dashboard']],
-  message_new: [['threads'], ['notifications']],
 }
 
 export const CUSTOMER_EVENTS: string[] = Object.keys(EVENT_TO_QUERY_KEYS)

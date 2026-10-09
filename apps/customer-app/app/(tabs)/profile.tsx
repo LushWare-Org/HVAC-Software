@@ -8,6 +8,7 @@ import { router } from 'expo-router'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSocket } from '@/contexts/SocketContext'
 import { getInitials } from '@/lib/threadActions'
+import { TelegramCard } from '@/chat/TelegramCard'
 import { Colors, FontSize, Radius, Shadow, Spacing } from '@/constants/theme'
 
 const MORE_LINKS = [
@@ -39,6 +40,8 @@ export default function Profile() {
             <Text style={styles.email}>{user?.email ?? '—'}</Text>
           </View>
         </View>
+
+        <TelegramCard inset={false} />
 
         <View style={styles.card}>
           {MORE_LINKS.map(({ label, icon, href }, i) => (

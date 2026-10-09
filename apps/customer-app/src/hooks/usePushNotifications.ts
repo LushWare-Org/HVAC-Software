@@ -68,6 +68,9 @@ function invalidateForPush(data: Record<string, unknown> | undefined): void {
     case 'invoice':
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       break
+    case 'chat':
+      queryClient.invalidateQueries({ queryKey: ['chat'] })
+      break
     default:
       break
   }
@@ -76,6 +79,11 @@ function invalidateForPush(data: Record<string, unknown> | undefined): void {
 
 /** Deep-links a tapped push to the screen it is about. */
 function routeForPush(data: Record<string, unknown> | undefined): void {
+  // A chat message opens its conversation.
+  if (data?.type === 'chat' && typeof data.conversationId === 'string') {
+    router.push(`/thread/${data.conversationId}` as never)
+    return
+  }
   const jobId = data?.jobId
   if (typeof jobId === 'string' && jobId) {
     router.push(`/job/${jobId}` as never)

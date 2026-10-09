@@ -22,6 +22,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { queryClient } from '@/lib/queryClient'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { SocketProvider } from '@/contexts/SocketContext'
+import { useChatRealtime } from '@/chat/useChat'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
@@ -45,6 +46,8 @@ function useAppStateRefetch() {
 function AppShell() {
   useAppStateRefetch()
   usePushNotifications()
+  // Chat's own live connection: new messages, read receipts and the tab badge.
+  useChatRealtime()
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />

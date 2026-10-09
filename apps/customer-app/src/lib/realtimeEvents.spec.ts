@@ -3,7 +3,7 @@ import { EVENT_TO_QUERY_KEYS, CUSTOMER_EVENTS, invalidateForEvent } from './real
 describe('realtime event mapping', () => {
   it('maps every M1 customer event', () => {
     expect([...CUSTOMER_EVENTS].sort()).toEqual(
-      ['invoice_changed', 'job_changed', 'message_new', 'quote_changed'],
+      ['invoice_changed', 'job_changed', 'quote_changed'],
     )
   })
 
@@ -19,13 +19,6 @@ describe('realtime event mapping', () => {
     invalidateForEvent({ invalidateQueries } as never, 'invoice_changed')
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['invoices'] })
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['dashboard'] })
-  })
-
-  it('invalidates threads and notifications for message_new', () => {
-    const invalidateQueries = jest.fn()
-    invalidateForEvent({ invalidateQueries } as never, 'message_new')
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['threads'] })
-    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['notifications'] })
   })
 
   it('ignores an unknown event rather than invalidating everything', () => {
