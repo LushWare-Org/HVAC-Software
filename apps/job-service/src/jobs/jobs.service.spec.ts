@@ -593,6 +593,19 @@ describe('JobsService — realtime events for edits and deletes', () => {
     }));
   });
 
+  it('turns an arrival-window job into an exact time when a dispatcher moves its start', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue({ ...makeJob(JobStatusDto.PENDING), timeMode: 'WINDOW', scheduledStart: new Date('2026-10-05T08:00:00.000Z') });
+    await service.update(COMPANY_ID, JOB_ID, { scheduledStart: '2026-10-05T10:30:00.000Z' });
+    expect(mockPrisma.job.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ timeMode: 'EXACT' }) }));
+  });
+
+  it('keeps the window when an edit re-sends the same start', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue({ ...makeJob(JobStatusDto.PENDING), timeMode: 'WINDOW', scheduledStart: new Date('2026-10-05T08:00:00.000Z') });
+    await service.update(COMPANY_ID, JOB_ID, { scheduledStart: '2026-10-05T08:00:00.000Z' });
+    const data = mockPrisma.job.update.mock.calls.at(-1)[0].data;
+    expect(data.timeMode).toBeUndefined();
+  });
+
   it('publishes ASSIGNMENT when an edit changes the lead technician', async () => {
     await service.patchFields(COMPANY_ID, JOB_ID, { assignedToId: 'tech-2', assignedToName: 'Sam' }, { actor: { userId: 'user-9' } });
     expect(mockEvents.publish).toHaveBeenCalledWith(COMPANY_ID, expect.objectContaining({ change: 'ASSIGNMENT' }));
@@ -814,5 +827,53 @@ describe('JobsService — updatePreferredTime', () => {
     await expect(
       service.updatePreferredTime(makeAuthUser(Role.DISPATCHER), JOB_ID, { preferredStart: future }),
     ).resolves.toBeDefined();
+  });
+});
+
+describe('JobsService — addCustomerNote', () => {
+  let service: JobsService;
+  const CUSTOMER = 'cust-001';
+  const customer = (customerId = CUSTOMER) => ({ ...makeAuthUser(Role.CUSTOMER), customerId, name: 'Sara Perera' }) as any;
+  const job = (overrides: Record<string, unknown> = {}) => ({ id: JOB_ID, status: 'SCHEDULED', customerId: CUSTOMER, notes: 'Bedroom unit', ...overrides });
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    mockPrisma.job.update.mockImplementation(({ data }: any) => ({ id: JOB_ID, ...data }));
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        JobsService,
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: JobEventsPublisher, useValue: mockEvents },
+        { provide: RedisCacheService, useValue: mockCache },
+        { provide: CrmClient, useValue: mockCrmClient },
+      ],
+    }).compile();
+    service = module.get(JobsService);
+  });
+
+  it('adds the customer\'s note to their own upcoming visit, labelled as theirs', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(job());
+    await service.addCustomerNote(customer(), JOB_ID, { note: '  Gate code is 1234.\n Dog in the yard. ' });
+    const data = mockPrisma.job.update.mock.calls[0][0].data;
+    expect(data.notes).toMatch(/^Bedroom unit\n\nFrom the customer \(\d{4}-\d{2}-\d{2}\): Gate code is 1234\. Dog in the yard\.$/);
+    expect(Object.keys(data)).toEqual(['notes']);
+  });
+
+  it('refuses someone else\'s job, finished visits, and empty or long notes', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(job({ customerId: 'other' }));
+    await expect(service.addCustomerNote(customer(), JOB_ID, { note: 'x' })).rejects.toThrow('your own');
+    mockPrisma.job.findFirst.mockResolvedValue(job({ status: 'COMPLETED' }));
+    await expect(service.addCustomerNote(customer(), JOB_ID, { note: 'x' })).rejects.toThrow('already');
+    mockPrisma.job.findFirst.mockResolvedValue(job());
+    await expect(service.addCustomerNote(customer(), JOB_ID, { note: '   ' })).rejects.toThrow('empty');
+    await expect(service.addCustomerNote(customer(), JOB_ID, { note: 'x'.repeat(301) })).rejects.toThrow('300');
+    mockPrisma.job.findFirst.mockResolvedValue(job({ notes: 'y'.repeat(3900) }));
+    await expect(service.addCustomerNote(customer(), JOB_ID, { note: 'x'.repeat(200) })).rejects.toThrow('full');
+    expect(mockPrisma.job.update).not.toHaveBeenCalled();
+  });
+
+  it('is for customers only', async () => {
+    mockPrisma.job.findFirst.mockResolvedValue(job());
+    await expect(service.addCustomerNote(makeAuthUser(Role.DISPATCHER) as any, JOB_ID, { note: 'x' })).rejects.toThrow('customers');
   });
 });

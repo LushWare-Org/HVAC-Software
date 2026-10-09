@@ -63,3 +63,8 @@ export class UpdateJobStatusDto {
   @ApiPropertyOptional({ description: 'Admin override — bypasses the state machine. Requires super_admin/company_admin/office_manager.' })
   @IsOptional() @IsBoolean() force?: boolean;
 }
+
+/** A customer's note for the technician on their own visit. */
+export class CustomerNoteDto {
+  @ApiProperty({ description: 'e.g. "Gate code is 1234".' }) @IsString() @MaxLength(300) note!: string;
+}

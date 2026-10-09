@@ -1,44 +1,29 @@
-import { Injectable, Logger, Optional, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import axios, { type AxiosInstance } from 'axios';
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { VisitCareService } from '../jobs/visit-care.service';
 
-const COMMS_URL = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
-const SWEEP_INTERVAL_MS = 15 * 60 * 1000; // every 15 min
-const LOOKAHEAD_MS = 24 * 60 * 60 * 1000; // jobs starting within 24h
+const SWEEP_INTERVAL_MS = 5 * 60 * 1000; // every 5 minutes
 
 /**
- * Appointment reminders.
+ * Visit reminders, to the customer and the technician: the evening before and a few hours
+ * ahead. A sweep rather than delayed jobs: it re-reads the current booking every run, so a
+ * moved or cancelled visit needs no cancelling. Each reminder is claimed per start time on
+ * the job itself, so repeated sweeps (or two copies of this service) send it once.
  *
- * A sweep rather than delayed jobs: it re-reads current job state every run, so
- * a reschedule or cancellation needs no cancellation bookkeeping. Idempotency
- * is comms' job via dedupeKey, which is keyed on the scheduled DATE — so a
- * rescheduled booking legitimately earns a new reminder while repeated sweeps
- * of an unchanged booking do not.
- *
- * This lives in job-service because the sweep spans every tenant, which is one
- * local query here versus enumerate-companies-then-N-HTTP-calls from comms.
+ * Lives in job-service because the sweep spans every tenant: one local query here versus
+ * enumerating companies and calling over HTTP from comms.
  */
 @Injectable()
 export class RemindersService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RemindersService.name);
   private timer?: ReturnType<typeof setInterval>;
 
-  constructor(
-    private readonly prisma: PrismaService,
-    // @Optional() is required, not cosmetic: TypeScript emits `Function` as this
-    // parameter's design:type, so without it Nest tries to resolve an
-    // AxiosInstance provider at boot and the whole module fails to load. The
-    // default value alone does not stop that lookup.
-    @Optional() private readonly http: AxiosInstance = axios,
-  ) {}
+  constructor(private readonly care: VisitCareService) {}
 
   onModuleInit() {
     // Set on a standby copy of this service, so two copies never both send.
-    if (process.env.DISABLE_SCHEDULED_TASKS === 'true') return;
+    if (process.env.DISABLE_SCHEDULED_TASKS === 'true' || process.env.NODE_ENV === 'test') return;
     this.timer = setInterval(() => {
-      this.sweep().catch((err: Error) =>
-        this.logger.warn(`reminder sweep failed: ${err.message}`),
-      );
+      this.sweep().catch((err: Error) => this.logger.warn(`reminder sweep failed: ${err.message}`));
     }, SWEEP_INTERVAL_MS);
     // Never hold the process open just for reminders.
     this.timer.unref?.();
@@ -48,55 +33,7 @@ export class RemindersService implements OnModuleInit, OnModuleDestroy {
     if (this.timer) clearInterval(this.timer);
   }
 
-  async sweep(): Promise<{ scanned: number; sent: number }> {
-    const now = new Date();
-    const until = new Date(now.getTime() + LOOKAHEAD_MS);
-
-    const jobs = await this.prisma.job.findMany({
-      where: {
-        status: 'SCHEDULED',
-        scheduledStart: { gte: now, lte: until },
-      },
-      select: {
-        id: true,
-        companyId: true,
-        customerId: true,
-        title: true,
-        scheduledStart: true,
-      },
-    });
-
-    let sent = 0;
-    for (const job of jobs) {
-      if (!job.customerId) continue;
-      const day = job.scheduledStart!.toISOString().slice(0, 10);
-      try {
-        await this.http.post(
-          `${COMMS_URL}/notifications/customer-push`,
-          {
-            companyId: job.companyId,
-            customerId: job.customerId,
-            title: 'Reminder: service tomorrow',
-            body: job.title ? `${job.title} — tap for details.` : 'Tap for details.',
-            data: { type: 'job_reminder', jobId: job.id },
-            jobId: job.id,
-            dedupeKey: `job-reminder:${job.id}:${day}`,
-          },
-          {
-            timeout: 8_000,
-            // comms requires this for service-to-service pushes: the endpoint
-            // has no user context, so the shared key is what proves the caller
-            // is one of our services and not anyone who found the URL.
-            headers: { 'x-internal-api-key': process.env.INTERNAL_API_KEY ?? '' },
-          },
-        );
-        sent += 1;
-      } catch (err) {
-        // One bad tenant must not abort the sweep for everyone else.
-        this.logger.warn(`reminder for job ${job.id} failed: ${(err as Error).message}`);
-      }
-    }
-
-    return { scanned: jobs.length, sent };
+  sweep() {
+    return this.care.sweep();
   }
 }

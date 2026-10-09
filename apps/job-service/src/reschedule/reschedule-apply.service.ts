@@ -108,6 +108,9 @@ export class RescheduleApplyService {
           // the job returns to the dispatch queue to be re-assigned.
           assignedToId: null,
           assignedToName: null,
+          // Back in the queue: the next assignment is announced as a fresh booking.
+          notifiedStart: null,
+          notifiedTechId: null,
           status: 'PENDING' as any,
           rescheduleState: null,
         },

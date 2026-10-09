@@ -1,4 +1,5 @@
 import {
+  Optional,
   Injectable,
   Logger,
   NotFoundException,
@@ -14,6 +15,7 @@ import { UpdateJobStatusDto, JobStatusDto, STATUS_TRANSITIONS } from './dto/upda
 import { AuthUser, PaginatedResponse, Role, clampPagination } from '@tscrm/types';
 import { JobEventsPublisher } from '../realtime/job-events.publisher';
 import { CrmClient } from './crm.client';
+import { ScheduleNoticeService } from './schedule-notice.service';
 import { serviceAuthHeaders } from '@tscrm/auth-client';
 
 // Roles allowed to correct a job's status outside the normal forward-moving
@@ -34,7 +36,18 @@ export class JobsService {
     private cache: RedisCacheService,
     private readonly events: JobEventsPublisher,
     private readonly crmClient: CrmClient,
+    @Optional() private readonly scheduleNotice?: ScheduleNoticeService,
   ) {}
+
+  /** Same as announceSchedule, but waits for the outcome (used by the endpoint scheduling-service calls). */
+  async announceScheduleNow(companyId: string, jobId: string) {
+    return this.scheduleNotice ? this.scheduleNotice.announce(companyId, jobId) : { sent: false };
+  }
+
+  /** Tell the customer if their booked visit now has a different time or technician. Never blocks. */
+  private announceSchedule(companyId: string, jobId: string) {
+    void this.scheduleNotice?.announce(companyId, jobId);
+  }
 
   // ============================================================
   // CREATE
@@ -58,6 +71,8 @@ export class JobsService {
               priority: (rest.priority ?? 'NORMAL') as any,
               scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
               scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
+              windowStart: rest.windowStart ? new Date(rest.windowStart) : undefined,
+              windowEnd: rest.windowEnd ? new Date(rest.windowEnd) : undefined,
               createdByUserId: user.userId,
               statusHistory: {
                 create: {
@@ -326,6 +341,13 @@ export class JobsService {
     const currentStatus = job.status as JobStatusDto;
     const newStatus = dto.status;
 
+    // Assigning through the scheduling board already marks the job SCHEDULED. The board then
+    // asks for SCHEDULED again; that is not an error, it is the moment to tell the customer.
+    if (currentStatus === JobStatusDto.SCHEDULED && newStatus === JobStatusDto.SCHEDULED) {
+      this.announceSchedule(companyId, jobId);
+      return this.prisma.job.findFirst({ where: { id: jobId, companyId } });
+    }
+
     // Guard: validate the transition is allowed — unless an admin is
     // deliberately correcting a mistake (dto.force). PAID stays immutable
     // either way: it means money has actually been received and recorded
@@ -398,6 +420,7 @@ export class JobsService {
       JobStatusDto.EN_ROUTE, JobStatusDto.SCHEDULED, JobStatusDto.ON_SITE,
       JobStatusDto.COMPLETED, JobStatusDto.CANCELLED, JobStatusDto.ON_HOLD,
     ];
+    if (newStatus === JobStatusDto.SCHEDULED) this.announceSchedule(companyId, jobId);
     if (NOTIFIABLE_STATUSES.includes(newStatus)) {
       const commsBase = process.env.COMMS_SERVICE_URL || 'http://localhost:3005';
       const payload = {
@@ -545,6 +568,33 @@ export class JobsService {
    * endpoint is locked down to a strict whitelist for customers precisely so a
    * customer can never write `scheduledStart` directly on a committed job.
    */
+  /**
+   * A customer's note for the technician on their own upcoming visit ("gate code
+   * is 1234"). Appended to the job notes the technician sees, labelled as the
+   * customer's; nothing else on the job can be changed this way.
+   */
+  async addCustomerNote(user: AuthUser, jobId: string, dto: { note?: string }) {
+    if (user.role !== Role.CUSTOMER) throw new ForbiddenException('Notes from here are for customers');
+    const note = String(dto?.note ?? '').replace(/\s+/g, ' ').trim();
+    if (!note) throw new BadRequestException('The note is empty');
+    if (note.length > 300) throw new BadRequestException('Keep the note under 300 characters');
+    const job = await this.prisma.job.findFirst({
+      where: { id: jobId, companyId: user.companyId },
+      select: { id: true, status: true, customerId: true, notes: true },
+    });
+    if (!job) throw new NotFoundException(`Job ${jobId} not found`);
+    if (job.customerId !== user.customerId) throw new ForbiddenException('You can only add notes to your own visits');
+    if (!['PENDING', 'SCHEDULED', 'EN_ROUTE'].includes(job.status as string)) {
+      throw new BadRequestException('This visit has already happened, so a note can no longer be added');
+    }
+    const line = `From the customer (${new Date().toISOString().slice(0, 10)}): ${note}`;
+    const notes = job.notes ? `${job.notes}\n\n${line}` : line;
+    if (notes.length > 4000) throw new BadRequestException('The notes for this visit are full. Message the office instead.');
+    const updated = await this.prisma.job.update({ where: { id: jobId }, data: { notes } });
+    await this.invalidateStatsCache(user.companyId);
+    return updated;
+  }
+
   async updatePreferredTime(
     user: AuthUser,
     jobId: string,
@@ -606,7 +656,9 @@ export class JobsService {
     const updated = await this.prisma.$transaction(async (tx) => {
       const result = await tx.job.update({
         where: { id: jobId },
-        data: { scheduledStart: start, scheduledEnd: resolvedEnd },
+        data: dto.window
+          ? { scheduledStart: start, scheduledEnd: resolvedEnd, timeMode: 'WINDOW', windowStart: start, windowEnd: resolvedEnd }
+          : { scheduledStart: start, scheduledEnd: resolvedEnd, timeMode: 'EXACT', windowStart: null, windowEnd: null },
       });
 
       // Recorded in the job's own history so a dispatcher picking this up later
@@ -640,6 +692,17 @@ export class JobsService {
     return updated;
   }
 
+  /**
+   * A job that was booked as an arrival window becomes an exact time once a dispatcher
+   * moves its start. Saving a form that re-sends the same start changes nothing.
+   */
+  private async timeModeAfterMove(id: string, newStart?: string): Promise<'EXACT' | undefined> {
+    if (!newStart) return undefined;
+    const cur = await this.prisma.job.findFirst({ where: { id }, select: { scheduledStart: true, timeMode: true } });
+    if (!cur || cur.timeMode !== 'WINDOW') return undefined;
+    return cur.scheduledStart?.getTime() === new Date(newStart).getTime() ? undefined : 'EXACT';
+  }
+
   // ============================================================
   // PATCH FIELDS  (used by combined PATCH /jobs/:id endpoint)
   // Accepts extra non-schema fields like gpsTrackingEnabled/completedAt
@@ -670,10 +733,12 @@ export class JobsService {
     await this.findOwnership(companyId, id);
     // Strip fields that don't exist on the Prisma Job model
     const { gpsTrackingEnabled: _gps, ...rest } = data;
+    const timeMode = await this.timeModeAfterMove(id, rest.scheduledStart);
     const updated = await this.prisma.job.update({
       where: { id },
       data: {
         ...rest,
+        timeMode,
         priority: rest.priority as any,
         scheduledStart: rest.scheduledStart ? new Date(rest.scheduledStart) : undefined,
         scheduledEnd: rest.scheduledEnd ? new Date(rest.scheduledEnd) : undefined,
@@ -681,6 +746,7 @@ export class JobsService {
       },
     });
     if (!opts.silent) this.publishEdit(companyId, updated, rest, opts.actor);
+    if (rest.scheduledStart !== undefined || rest.assignedToId !== undefined) this.announceSchedule(companyId, id);
     return updated;
   }
 
@@ -716,10 +782,12 @@ export class JobsService {
     actor?: JobActor,
   ) {
     await this.findOne(companyId, id);
+    const timeMode = await this.timeModeAfterMove(id, data.scheduledStart);
     const updated = await this.prisma.job.update({
       where: { id },
       data: {
         ...data,
+        timeMode,
         priority: data.priority as any,
         scheduledStart: data.scheduledStart ? new Date(data.scheduledStart) : undefined,
         scheduledEnd: data.scheduledEnd ? new Date(data.scheduledEnd) : undefined,
@@ -729,6 +797,35 @@ export class JobsService {
     // dropdown goes through here) — the cached stat counts must not lag it.
     await this.invalidateStatsCache(companyId);
     this.publishEdit(companyId, updated, data, actor);
+    if (data.scheduledStart !== undefined || data.assignedToId !== undefined) this.announceSchedule(companyId, id);
+    return updated;
+  }
+
+  /**
+   * Puts a job on the map: from the customer's own pin (share-location link or
+   * portal), so dispatch can measure distance. The address text is only filled
+   * in when the job had none; the pin is what routing uses.
+   */
+  async setServiceLocation(
+    companyId: string,
+    jobId: string,
+    loc: { lat: number; lng: number; address?: string },
+    actor?: JobActor,
+  ) {
+    const job = await this.prisma.job.findFirst({ where: { id: jobId, companyId }, select: { id: true, serviceAddress: true, internalNotes: true } });
+    if (!job) throw new NotFoundException(`Job ${jobId} not found`);
+    const address = String(loc.address ?? '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    const line = `Location shared by the customer on the map (${new Date().toISOString().slice(0, 10)}).`;
+    const updated = await this.prisma.job.update({
+      where: { id: jobId },
+      data: {
+        serviceLatitude: loc.lat,
+        serviceLongitude: loc.lng,
+        ...(address && !job.serviceAddress?.trim() ? { serviceAddress: address } : {}),
+        internalNotes: job.internalNotes ? `${job.internalNotes}\n${line}` : line,
+      },
+    });
+    this.publishEdit(companyId, updated, { serviceLatitude: loc.lat }, actor);
     return updated;
   }
 

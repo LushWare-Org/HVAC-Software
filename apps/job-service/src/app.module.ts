@@ -10,6 +10,7 @@ import { RemindersModule } from './reminders/reminders.module';
 import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { RescheduleModule } from './reschedule/reschedule.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { LocationRequestsModule } from './location-requests/location-requests.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -22,6 +23,7 @@ import appConfig from './config/app.config';
     AuthModule,
     PrismaModule,
     RealtimeModule,
+    LocationRequestsModule,
     HealthModule,
     TradeTemplatesModule,
     PriceBookModule,

@@ -1,7 +1,7 @@
 import {
   IsString, IsOptional, IsEnum, IsArray,
   IsDateString, IsNumber, MaxLength, IsBoolean, Length,
-  IsInt, Min, Max,
+  IsInt, Min, Max, IsIn,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -38,6 +38,10 @@ export class CreateJobDto {
   @ApiPropertyOptional() @IsOptional() @IsString() assignedToName?: string;
   @ApiPropertyOptional() @IsOptional() @IsDateString() scheduledStart?: string;
   @ApiPropertyOptional() @IsOptional() @IsDateString() scheduledEnd?: string;
+  @ApiPropertyOptional({ description: 'EXACT (default) or WINDOW: the customer asked for an arrival window.' })
+  @IsOptional() @IsIn(['EXACT', 'WINDOW']) timeMode?: 'EXACT' | 'WINDOW';
+  @ApiPropertyOptional() @IsOptional() @IsDateString() windowStart?: string;
+  @ApiPropertyOptional() @IsOptional() @IsDateString() windowEnd?: string;
   @ApiPropertyOptional({ description: 'Expected on-site minutes; drives day-plan packing. Defaults to 90 when omitted.' })
   @IsOptional() @IsInt() @Min(5) @Max(1440) estimatedDurationMins?: number;
   /** Optional target crew size. Guidance for smart assign and the "n of m"

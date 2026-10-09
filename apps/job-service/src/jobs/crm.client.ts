@@ -29,6 +29,23 @@ export class CrmClient {
     }
   }
 
+  private readonly zones = new Map<string, { zone: string; until: number }>();
+
+  /** The company's IANA time zone (cached for ten minutes). Falls back to UTC. */
+  async getTimezone(companyId: string): Promise<string> {
+    const hit = this.zones.get(companyId);
+    if (hit && hit.until > Date.now()) return hit.zone;
+    try {
+      const res = await axios.get(`${CRM_URL}/company/settings`, { timeout: 8_000, headers: this.serviceHeaders(companyId) });
+      const zone = res.data?.timezone || 'UTC';
+      this.zones.set(companyId, { zone, until: Date.now() + 10 * 60_000 });
+      return zone;
+    } catch (err: any) {
+      this.logger.warn(`Could not fetch the time zone for ${companyId}, using UTC: ${err.message}`);
+      return 'UTC';
+    }
+  }
+
   /** Tenant's current default currency, for jobs created without an explicit one. Fails open to USD. */
   async getDefaultCurrency(companyId: string): Promise<string> {
     try {

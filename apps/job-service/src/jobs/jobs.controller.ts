@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Put, Patch, Delete,
-  Param, Body, Query, UseGuards, HttpCode, HttpStatus,
+  Param, Body, Query, UseGuards, HttpCode, HttpStatus, Optional,
   DefaultValuePipe, ParseIntPipe, ForbiddenException, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
@@ -9,8 +9,9 @@ import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client
 import { Role, AuthUser } from '@tscrm/types';
 import { JobsService } from './jobs.service';
 import { CrmClient } from './crm.client';
+import { VisitCareService } from './visit-care.service';
 import { CreateJobDto, JobPriorityDto } from './dto/create-job.dto';
-import { UpdateJobStatusDto, JobStatusDto, UpdatePreferredTimeDto } from './dto/update-job-status.dto';
+import { UpdateJobStatusDto, JobStatusDto, UpdatePreferredTimeDto, CustomerNoteDto } from './dto/update-job-status.dto';
 
 class UpdateJobDto {
   @IsOptional() @IsString() title?: string;
@@ -85,6 +86,7 @@ export class JobsController {
   constructor(
     private readonly jobsService: JobsService,
     private readonly crmClient: CrmClient,
+    @Optional() private readonly care?: VisitCareService,
   ) {}
 
   // ---- Stats (dashboard) ----
@@ -239,6 +241,45 @@ export class JobsController {
     return this.jobsService.update(user.companyId, id, dto, actorOf(user));
   }
 
+  // ---- Confirm the booked time ----
+  // The customer taps "Confirm this time"; the office can also confirm for them after a phone call.
+  @Post(':id/confirm-time')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
+  @ApiOperation({ summary: 'Confirm the visit time (customer, or the office on their behalf)' })
+  confirmTime(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.care!.confirm(user.companyId, id, user);
+  }
+
+  // ---- Send a reminder now ----
+  // Used by Kelvin and the office. channels: message (in-app, Telegram, push), email, push.
+  @Post(':id/send-reminder')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Send a reminder about this visit to the customer and/or technician' })
+  async sendReminder(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body: { audience?: 'customer' | 'technician' | 'both'; channels?: Array<'message' | 'email' | 'push'> },
+  ) {
+    await this.jobsService.findOwnership(user.companyId, id);
+    const audience = ['customer', 'technician', 'both'].includes(String(body?.audience)) ? body!.audience : 'both';
+    const channels = Array.isArray(body?.channels) ? body!.channels.filter((c) => ['message', 'email', 'push'].includes(c)) : undefined;
+    return this.care!.sendReminder(user.companyId, id, { kind: 'MANUAL', audience, channels });
+  }
+
+  // ---- Tell the customer about their booked time and technician ----
+  // Called by scheduling-service after it assigns someone. Safe to call twice: the customer
+  // is only told when the time or the technician differs from what they were last told.
+  @Post(':id/announce-schedule')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER)
+  @ApiOperation({ summary: 'Notify the customer of the job\'s booked time and technician (once per change)' })
+  async announceSchedule(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    await this.jobsService.findOwnership(user.companyId, id);
+    return this.jobsService.announceScheduleNow(user.companyId, id);
+  }
+
   // ---- Combined PATCH (fields + optional status in one call) ----
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.TECHNICIAN, Role.CUSTOMER)
@@ -293,6 +334,14 @@ export class JobsController {
   }
 
   // ---- Customer: change the requested time on an uncommitted job ----
+  @Post(':id/customer-note')
+  @Roles(Role.CUSTOMER)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "A customer's note for the technician on their own upcoming visit" })
+  addCustomerNote(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: CustomerNoteDto) {
+    return this.jobsService.addCustomerNote(user, id, dto);
+  }
+
   @Patch(':id/preferred-time')
   @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
   @HttpCode(HttpStatus.OK)

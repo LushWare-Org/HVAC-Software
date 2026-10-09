@@ -216,6 +216,21 @@ model Job {
   requiredTechCount Int?
   scheduledStart DateTime?
   scheduledEnd   DateTime?
+  /// EXACT = a specific time; WINDOW = the customer asked for an arrival window and the
+  /// dispatcher has not picked an exact time yet. windowStart/End keep what they asked for.
+  timeMode       String    @default("EXACT")
+  windowStart    DateTime?
+  windowEnd      DateTime?
+  /// What the customer was last told about the visit, so a change is announced once.
+  notifiedStart  DateTime?
+  notifiedTechId String?
+  noticeDueAt    DateTime?
+  notifiedAt     DateTime?
+  /// The customer confirmed this start time (confirmedFor). A different start is unconfirmed again.
+  confirmedAt    DateTime?
+  confirmedFor   DateTime?
+  remindedEveFor  DateTime?
+  remindedSoonFor DateTime?
   actualStart    DateTime?
   actualEnd      DateTime?
 
