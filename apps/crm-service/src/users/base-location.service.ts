@@ -57,6 +57,37 @@ export class BaseLocationService {
     }
   }
 
+  /** Takes a deleted team member out of scheduling. Never throws; the nightly sweep catches misses. */
+  async deactivate(companyId: string, userId: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.schedulingUrl()}/technicians/by-user/${userId}/deactivate`, {
+        method: 'PATCH',
+        headers: this.headers(companyId),
+      });
+      return res.ok;
+    } catch (err) {
+      this.logger.warn(`scheduling deactivate failed for ${userId}: ${(err as Error).message}`);
+      return false;
+    }
+  }
+
+  /** Deactivates active scheduling technicians whose team member no longer exists (deleted before this existed, or while scheduling was down). */
+  async sweepOrphans(): Promise<{ deactivated: number; failed: number }> {
+    const orphans = (await this.prisma.$queryRaw`
+      SELECT t.company_id AS "companyId", t.user_id AS "userId"
+      FROM scheduling.technicians t
+      WHERE t.is_active
+        AND NOT EXISTS (SELECT 1 FROM crm.company_users u WHERE u.id::text = t.user_id AND u."companyId" = t.company_id)
+    `) as Array<{ companyId: string; userId: string }>;
+    let deactivated = 0;
+    let failed = 0;
+    for (const o of orphans) {
+      if (await this.deactivate(o.companyId, o.userId)) deactivated++;
+      else failed++;
+    }
+    return { deactivated, failed };
+  }
+
   /** Repairs drift left by pushes that failed while scheduling was unreachable. */
   async reconcileAll(): Promise<{ synced: number; failed: number }> {
     const users = await this.prisma.companyUser.findMany({
@@ -87,6 +118,8 @@ export class BaseLocationService {
   @Cron('0 30 2 * * *')
   async nightlyReconcile(): Promise<void> {
     if (process.env.DISABLE_SCHEDULED_TASKS === 'true') return;
+    const sweep = await this.sweepOrphans();
+    if (sweep.deactivated || sweep.failed) this.logger.log(`orphan technician sweep: ${sweep.deactivated} deactivated, ${sweep.failed} failed`);
     const { synced, failed } = await this.reconcileAll();
     if (failed > 0) {
       this.logger.warn(`base location reconcile left ${failed} technician(s) unsynced`);

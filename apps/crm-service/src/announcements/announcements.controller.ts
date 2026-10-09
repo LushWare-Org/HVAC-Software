@@ -5,7 +5,9 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
-import { IsString, IsOptional, IsBoolean, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsIn, MaxLength } from 'class-validator';
+
+export const ANNOUNCEMENT_ICONS = ['megaphone', 'telegram', 'sparkles', 'gift', 'wrench', 'calendar', 'alert', 'leaf'];
 import { AnnouncementsService } from './announcements.service';
 
 class AnnouncementBodyDto {
@@ -14,6 +16,11 @@ class AnnouncementBodyDto {
   @IsOptional() @IsString() linkUrl?: string;
   @IsOptional() @IsString() @MaxLength(40) linkLabel?: string;
   @IsOptional() @IsString() @MaxLength(20) accentColor?: string;
+  @IsOptional() @IsIn(ANNOUNCEMENT_ICONS) icon?: string;
+  @IsOptional() @IsIn(['link', 'telegram', 'none']) ctaAction?: string;
+  @IsOptional() @IsIn(['card', 'spotlight']) style?: string;
+  @IsOptional() @IsBoolean() dismissible?: boolean;
+  @IsOptional() @IsBoolean() pinned?: boolean;
   @IsOptional() @IsBoolean() isActive?: boolean;
   @IsOptional() @IsString() activeFrom?: string;
   @IsOptional() @IsString() activeTo?: string;
@@ -25,6 +32,11 @@ class CreateAnnouncementDto {
   @IsOptional() @IsString() linkUrl?: string;
   @IsOptional() @IsString() @MaxLength(40) linkLabel?: string;
   @IsOptional() @IsString() @MaxLength(20) accentColor?: string;
+  @IsOptional() @IsIn(ANNOUNCEMENT_ICONS) icon?: string;
+  @IsOptional() @IsIn(['link', 'telegram', 'none']) ctaAction?: string;
+  @IsOptional() @IsIn(['card', 'spotlight']) style?: string;
+  @IsOptional() @IsBoolean() dismissible?: boolean;
+  @IsOptional() @IsBoolean() pinned?: boolean;
   @IsOptional() @IsBoolean() isActive?: boolean;
   @IsOptional() @IsString() activeFrom?: string;
   @IsOptional() @IsString() activeTo?: string;

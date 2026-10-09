@@ -31,6 +31,7 @@ export interface UpsertProjectInput {
   startDate?: string | null;
   targetEndDate?: string | null;
   budget?: number | null;
+  labourRatePerHour?: number | null;
   requiredHeadcount?: number | null;
   siteAddress?: string | null;
   latitude?: number | null;
@@ -148,6 +149,7 @@ export class ProjectsService {
         startDate: input.startDate ? new Date(input.startDate) : null,
         targetEndDate: input.targetEndDate ? new Date(input.targetEndDate) : null,
         budget: input.budget ?? null,
+        labourRatePerHour: input.labourRatePerHour ?? null,
         requiredHeadcount: input.requiredHeadcount ?? null,
         siteAddress: input.siteAddress ?? null,
         latitude: input.latitude ?? null,
@@ -203,7 +205,7 @@ export class ProjectsService {
 
     const data: any = {};
     for (const key of [
-      'customerId', 'name', 'description', 'category', 'status', 'budget', 'requiredHeadcount',
+      'customerId', 'name', 'description', 'category', 'status', 'budget', 'labourRatePerHour', 'requiredHeadcount',
       'siteAddress', 'latitude', 'longitude', 'workingDays', 'baseTeamUserIds', 'notes',
     ] as const) {
       if (input[key] !== undefined) data[key] = input[key];

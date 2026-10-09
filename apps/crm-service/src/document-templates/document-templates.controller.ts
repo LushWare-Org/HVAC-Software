@@ -24,6 +24,7 @@ class UpsertTemplateDto {
   @IsOptional() @IsString() footerText?: string;
   @IsOptional() @IsString() bankDetails?: string;
   @IsOptional() @IsBoolean() showPageNumbers?: boolean;
+  @IsOptional() @IsIn(['A4', 'LETTER']) pageSize?: 'A4' | 'LETTER';
   @IsOptional() @IsString() letterheadImageUrl?: string;
   @IsOptional() @IsInt() letterheadTopMarginPx?: number;
   @IsOptional() @IsInt() letterheadBottomMarginPx?: number;

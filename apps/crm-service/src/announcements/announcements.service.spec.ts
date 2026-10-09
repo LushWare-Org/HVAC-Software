@@ -52,3 +52,19 @@ describe('AnnouncementsService', () => {
     await expect(svc.remove('co-2', 'a-1')).rejects.toBeInstanceOf(NotFoundException)
   })
 })
+
+describe('announcement options', () => {
+  it('defaults: megaphone, a button only when there is a link, a slim card, dismissible, not pinned', async () => {
+    const prisma: any = { companyAnnouncement: { create: jest.fn(({ data }: any) => Promise.resolve(data)) } }
+    const svc = new AnnouncementsService(prisma)
+    expect(await svc.create('co-1', { title: 'Hi' })).toEqual(expect.objectContaining({ icon: 'megaphone', ctaAction: 'none', style: 'card', dismissible: true, pinned: false }))
+    expect((await svc.create('co-1', { title: 'Hi', linkUrl: 'https://x' })).ctaAction).toBe('link')
+    expect((await svc.create('co-1', { title: 'On Telegram', ctaAction: 'telegram', icon: 'telegram' })).ctaAction).toBe('telegram')
+  })
+
+  it('pinned announcements come first in the portal', async () => {
+    const prisma: any = { companyAnnouncement: { findMany: jest.fn().mockResolvedValue([]) } }
+    await new AnnouncementsService(prisma).getActiveMany('co-1')
+    expect(prisma.companyAnnouncement.findMany.mock.calls[0][0].orderBy).toEqual([{ pinned: 'desc' }, { createdAt: 'desc' }])
+  })
+})

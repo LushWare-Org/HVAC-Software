@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { BaseLocationService } from './base-location.service';
 import { StorageService } from '../storage/storage.service';
 
 describe('UsersService avatar', () => {
@@ -29,6 +30,7 @@ describe('UsersService avatar', () => {
         UsersService,
         { provide: PrismaService, useValue: prisma },
         { provide: StorageService, useValue: storage },
+        { provide: BaseLocationService, useValue: { deactivate: jest.fn() } },
       ],
     }).compile();
     service = module.get(UsersService);

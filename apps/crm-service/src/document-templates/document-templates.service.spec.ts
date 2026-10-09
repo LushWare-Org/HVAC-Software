@@ -86,6 +86,21 @@ describe('DocumentTemplatesService', () => {
       expect(prisma.documentTemplate.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { rows } });
     });
 
+    it('paper size: A4 unless the template chooses Letter; anything else is refused', async () => {
+      prisma.documentTemplate.create.mockResolvedValue({ id: 't1' });
+      await service.create(CO, { documentType: 'INVOICE', name: 'Std', mode: 'BUILDER' });
+      expect(prisma.documentTemplate.create.mock.calls[0][0].data.pageSize).toBe('A4');
+      await service.create(CO, { documentType: 'INVOICE', name: 'US', mode: 'BUILDER', pageSize: 'LETTER' });
+      expect(prisma.documentTemplate.create.mock.calls[1][0].data.pageSize).toBe('LETTER');
+      await expect(service.create(CO, { documentType: 'INVOICE', name: 'X', mode: 'BUILDER', pageSize: 'A3' as any })).rejects.toThrow('pageSize');
+
+      prisma.documentTemplate.findFirst.mockResolvedValue({ id: 't1', companyId: CO });
+      prisma.documentTemplate.update.mockResolvedValue({ id: 't1' });
+      await service.update(CO, 't1', { pageSize: 'LETTER' });
+      expect(prisma.documentTemplate.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { pageSize: 'LETTER' } });
+      await expect(service.update(CO, 't1', { pageSize: 'A5' as any })).rejects.toThrow('pageSize');
+    });
+
     it('subsequent templates default to non-default', async () => {
       prisma.documentTemplate.count.mockResolvedValue(1);
       prisma.documentTemplate.create.mockResolvedValue({ id: 't2', companyId: CO, documentType: 'INVOICE', isDefault: false });

@@ -75,7 +75,7 @@ export class CustomersController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'type', required: false, type: String })
-  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiQuery({ name: 'isActive', required: false, type: String, description: 'true (default), false, or all' })
   @ApiQuery({ name: 'tags', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String })
   @ApiQuery({ name: 'sortDir', required: false, type: String })
@@ -92,7 +92,7 @@ export class CustomersController {
     @Query('sortDir') sortDir?: string,
     @Query('riskSegment') riskSegment?: string,
   ) {
-    const active = isActive === 'false' ? false : isActive === 'true' ? true : undefined;
+    const active = isActive === 'all' ? 'all' : isActive === 'false' ? false : isActive === 'true' ? true : undefined;
     const tags = tagsParam ? tagsParam.split(',').map(t => t.trim()).filter(Boolean) : undefined;
     const dir = sortDir === 'asc' ? 'asc' : 'desc';
     return this.customersService.findAll(user.companyId, page, limit, search, type, active, tags, sortBy, dir, riskSegment);

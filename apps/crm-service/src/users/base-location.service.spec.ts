@@ -1,7 +1,7 @@
 import { BaseLocationService } from './base-location.service';
 
 describe('BaseLocationService', () => {
-  const prisma = { companyUser: { findMany: jest.fn() } } as any;
+  const prisma = { companyUser: { findMany: jest.fn() }, $queryRaw: jest.fn() } as any;
   let svc: BaseLocationService;
 
   beforeEach(() => {
@@ -49,5 +49,21 @@ describe('BaseLocationService', () => {
       .mockResolvedValueOnce({ ok: true })
       .mockResolvedValueOnce({ ok: false });
     await expect(svc.reconcileAll()).resolves.toEqual({ synced: 1, failed: 1 });
+  });
+
+  it('deactivate calls scheduling for that user, and never throws when it is down', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
+    await expect(svc.deactivate('co-1', 'u-9')).resolves.toBe(true);
+    const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
+    expect(url).toContain('/technicians/by-user/u-9/deactivate');
+    expect(init.method).toBe('PATCH');
+    (global.fetch as jest.Mock).mockRejectedValue(new Error('ECONNREFUSED'));
+    await expect(svc.deactivate('co-1', 'u-9')).resolves.toBe(false);
+  });
+
+  it('the nightly sweep deactivates technicians whose team member is gone', async () => {
+    prisma.$queryRaw.mockResolvedValue([{ companyId: 'co-1', userId: 'ghost-1' }, { companyId: 'co-2', userId: 'ghost-2' }]);
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ ok: false });
+    await expect(svc.sweepOrphans()).resolves.toEqual({ deactivated: 1, failed: 1 });
   });
 });

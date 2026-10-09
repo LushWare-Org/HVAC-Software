@@ -6,6 +6,11 @@ import { Prisma } from '../prisma/generated';
 
 const DOCUMENT_TYPES = ['INVOICE', 'QUOTE', 'AGREEMENT', 'PAYMENT_RECEIPT'];
 const MODES = ['BUILDER', 'LETTERHEAD'];
+const PAGE_SIZES = ['A4', 'LETTER'];
+
+function checkPageSize(size: unknown) {
+  if (size !== undefined && !PAGE_SIZES.includes(size as string)) throw new BadRequestException(`pageSize must be one of ${PAGE_SIZES.join(', ')}`);
+}
 
 export interface UpsertTemplateInput {
   documentType: 'INVOICE' | 'QUOTE' | 'AGREEMENT' | 'PAYMENT_RECEIPT';
@@ -20,6 +25,7 @@ export interface UpsertTemplateInput {
   footerText?: string | null;
   bankDetails?: string | null;
   showPageNumbers?: boolean;
+  pageSize?: 'A4' | 'LETTER';
   rows?: Array<{ id: string; blocks: Array<{ id: string; slot: string; widthPct: number; style?: Record<string, unknown> }> }> | null;
   letterheadImageUrl?: string | null;
   letterheadTopMarginPx?: number;
@@ -61,6 +67,7 @@ export class DocumentTemplatesService {
     if (input.mode && !MODES.includes(input.mode)) {
       throw new BadRequestException(`mode must be one of ${MODES.join(', ')}`);
     }
+    checkPageSize(input.pageSize);
 
     const existingCount = await this.prisma.documentTemplate.count({
       where: { companyId, documentType: input.documentType },
@@ -82,6 +89,7 @@ export class DocumentTemplatesService {
         footerText: input.footerText ?? null,
         bankDetails: input.bankDetails ?? null,
         showPageNumbers: input.showPageNumbers ?? true,
+        pageSize: input.pageSize ?? 'A4',
         rows: (input.rows as Prisma.InputJsonValue[] | undefined) ?? undefined,
         letterheadImageUrl: input.letterheadImageUrl ?? null,
         letterheadTopMarginPx: input.letterheadTopMarginPx ?? 140,
@@ -95,10 +103,11 @@ export class DocumentTemplatesService {
     if (input.mode && !MODES.includes(input.mode)) {
       throw new BadRequestException(`mode must be one of ${MODES.join(', ')}`);
     }
+    checkPageSize(input.pageSize);
     const data: any = {};
     for (const key of [
       'name', 'mode', 'companyName', 'companyAddress', 'logoUrl', 'logoPosition', 'accentColor', 'headerText', 'footerText',
-      'bankDetails', 'showPageNumbers', 'letterheadImageUrl', 'letterheadTopMarginPx', 'letterheadBottomMarginPx', 'rows',
+      'bankDetails', 'showPageNumbers', 'pageSize', 'letterheadImageUrl', 'letterheadTopMarginPx', 'letterheadBottomMarginPx', 'rows',
     ] as const) {
       if (input[key] !== undefined) data[key] = input[key];
     }

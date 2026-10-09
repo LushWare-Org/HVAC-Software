@@ -541,6 +541,7 @@ model DocumentTemplate {
   footerText      String?
   bankDetails     String?
   showPageNumbers Boolean  @default(true)
+  pageSize        String   @default("A4") // A4 | LETTER — the PDF's paper size
   rows            Json?    // custom row/block arrangement from the drag-positioned slot layout builder; null = use the document type's default arrangement
 
   letterheadImageUrl       String?
@@ -602,6 +603,15 @@ model CompanyAnnouncement {
   linkUrl     String?
   linkLabel   String?
   accentColor String    @default("#1a73e8")
+  // megaphone | telegram | sparkles | gift | wrench | calendar | alert | leaf
+  icon        String    @default("megaphone")
+  // What the button does: "link" opens linkUrl, "telegram" starts the customer's
+  // Telegram connect, "none" shows no button.
+  ctaAction   String    @default("link")
+  // "card" (a slim strip) or "spotlight" (a bigger, coloured panel).
+  style       String    @default("card")
+  dismissible Boolean   @default(true)
+  pinned      Boolean   @default(false)
   isActive    Boolean   @default(true)
   activeFrom  DateTime?
   activeTo    DateTime?
@@ -876,6 +886,7 @@ model Project {
   startDate         DateTime?
   targetEndDate     DateTime?
   budget            Decimal?  @db.Decimal(12, 2)
+  labourRatePerHour Decimal?  @db.Decimal(10, 2) // blended crew cost per person-hour, for project cost tracking
   requiredHeadcount Int?
   siteAddress       String?
   latitude          Float?

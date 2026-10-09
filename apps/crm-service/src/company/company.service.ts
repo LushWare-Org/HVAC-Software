@@ -95,7 +95,7 @@ export class CompanyService {
   async getSettings(companyId: string): Promise<CompanySettings> {
     const company = await this.prisma.company.findUnique({
       where: { id: companyId },
-      select: { id: true, name: true, address: true, logoUrl: true, currency: true, timezone: true, features: true },
+      select: { id: true, name: true, address: true, logoUrl: true, phone: true, email: true, website: true, currency: true, timezone: true, features: true },
     });
     if (!company) throw new NotFoundException('Company not found');
     return {
@@ -103,6 +103,9 @@ export class CompanyService {
       name: company.name,
       address: company.address,
       logoUrl: company.logoUrl,
+      phone: company.phone,
+      email: company.email,
+      website: company.website,
       currency: company.currency,
       timezone: company.timezone,
       features: (company.features ?? {}) as Record<string, unknown>,

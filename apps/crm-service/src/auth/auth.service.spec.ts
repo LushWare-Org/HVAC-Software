@@ -12,8 +12,10 @@ function makePrisma() {
     customer: {
       findFirst: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
       create: jest.fn(),
     },
+    $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
     companyUser: {
       findFirst: jest.fn(),
       create: jest.fn(),
@@ -260,7 +262,7 @@ describe('AuthService — login with the same email in multiple companies', () =
 
   beforeEach(async () => {
     prisma = {
-      customer: { findFirst: jest.fn() },
+      customer: { findFirst: jest.fn().mockResolvedValue({ id: 'cust-1' }) },
       companyUser: { findMany: jest.fn(), update: jest.fn().mockResolvedValue({}) },
       userLoginEvent: { create: jest.fn().mockResolvedValue({}) },
       $executeRaw: jest.fn().mockResolvedValue(undefined),
@@ -309,5 +311,29 @@ describe('AuthService — login with the same email in multiple companies', () =
     ]);
 
     await expect(service.login('shared@example.com', 'wrong-password')).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('opens only a customer that still exists, never a deleted one that once used the login', async () => {
+    const hash = await bcrypt.hash('pw', 12);
+    prisma.companyUser.findMany.mockResolvedValue([
+      { id: 'login-1', companyId: 'co-a', email: 'p@x.com', passwordHash: hash, role: 'customer', isActive: true, name: 'P' },
+    ]);
+    prisma.customer.findFirst.mockResolvedValue({ id: 'seeded' });
+    const result = await service.login('p@x.com', 'pw');
+    expect(prisma.customer.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { companyId: 'co-a', auth0UserId: 'login-1', isActive: true } }));
+    expect(result.user.customerId).toBe('seeded');
+
+    prisma.customer.findFirst.mockResolvedValue(null);
+    await expect(service.login('p@x.com', 'pw')).rejects.toThrow('no longer active');
+  });
+
+  it('a deactivated account with the same password never shadows the live one', async () => {
+    const hash = await bcrypt.hash('same', 12);
+    prisma.companyUser.findMany.mockResolvedValue([
+      { id: 'old', companyId: 'co-old', email: 'p@x.com', passwordHash: hash, role: 'customer', isActive: false, name: 'Old' },
+      { id: 'live', companyId: 'co-live', email: 'p@x.com', passwordHash: hash, role: 'customer', isActive: true, name: 'Live' },
+    ]);
+    const result = await service.login('p@x.com', 'same');
+    expect(result.user.companyId).toBe('co-live');
   });
 });

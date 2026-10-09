@@ -93,7 +93,7 @@ export class CustomersService {
     limitInput: number | string = 20,
     search?: string,
     type?: string,
-    isActive?: boolean,
+    isActive?: boolean | 'all',
     tags?: string[],
     sortBy?: string,
     sortDir?: 'asc' | 'desc',
@@ -108,7 +108,8 @@ export class CustomersService {
 
     const where: any = {
       companyId,
-      isActive: isActive !== undefined ? isActive : true,
+      // Active customers unless asked otherwise; 'all' lists active and inactive (removed) together.
+      isActive: isActive === 'all' ? undefined : (isActive ?? true),
       NOT: this.provisionalPortalSignupFilter,
       ...(type && { type: type as any }),
       ...(tags && tags.length > 0 && { tags: { hasSome: tags } }),
@@ -217,21 +218,59 @@ export class CustomersService {
    * CompanyUser.id, so the portal-account status ("pending first login") has to
    * be batch-fetched and merged in manually rather than via `include`.
    */
-  private async attachPortalStatus<T extends { auth0UserId: string | null }>(
+  private async attachPortalStatus<T extends { id: string; companyId?: string; auth0UserId: string | null }>(
     customers: T[],
-  ): Promise<(T & { mustResetPassword: boolean; lastLoginAt: Date | null })[]> {
+  ): Promise<(T & { mustResetPassword: boolean; lastLoginAt: Date | null; totalRevenue: number; outstanding: number; invoiceCount: number })[]> {
     const userIds = customers.map((c) => c.auth0UserId).filter((id): id is string => !!id);
-    const users = userIds.length
-      ? await this.prisma.companyUser.findMany({
-          where: { id: { in: userIds } },
-          select: { id: true, mustResetPassword: true, lastLoginAt: true },
-        })
-      : [];
+    const [users, money] = await Promise.all([
+      userIds.length
+        ? this.prisma.companyUser.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, mustResetPassword: true, lastLoginAt: true },
+          })
+        : Promise.resolve([]),
+      this.revenueFor(customers),
+    ]);
     const byId = new Map(users.map((u) => [u.id, u]));
     return customers.map((c) => {
       const u = c.auth0UserId ? byId.get(c.auth0UserId) : undefined;
-      return { ...c, mustResetPassword: u?.mustResetPassword ?? false, lastLoginAt: u?.lastLoginAt ?? null };
+      const m = money.get(c.id);
+      return {
+        ...c,
+        mustResetPassword: u?.mustResetPassword ?? false,
+        lastLoginAt: u?.lastLoginAt ?? null,
+        totalRevenue: m?.paid ?? 0,
+        outstanding: m?.due ?? 0,
+        invoiceCount: m?.count ?? 0,
+      };
     });
+  }
+
+  /**
+   * What each customer has paid us (revenue) and still owes (outstanding), from their invoices.
+   * Revenue is money actually received; drafts and voided invoices never count as owed.
+   * If the finance data can't be read, the list still loads, with zeros.
+   */
+  private async revenueFor(customers: Array<{ id: string; companyId?: string }>): Promise<Map<string, { paid: number; due: number; count: number }>> {
+    const out = new Map<string, { paid: number; due: number; count: number }>();
+    const companyId = customers[0]?.companyId;
+    if (!companyId || !customers.length) return out;
+    try {
+      const rows = await this.prisma.$queryRawUnsafe<Array<{ customerId: string; paid: number; due: number; n: number }>>(
+        `SELECT "customerId",
+                COALESCE(SUM("amountPaid"), 0)::float AS paid,
+                COALESCE(SUM("balanceDue") FILTER (WHERE status::text NOT IN ('VOID', 'DRAFT')), 0)::float AS due,
+                COUNT(*) FILTER (WHERE status::text <> 'VOID')::int AS n
+           FROM finance."Invoice"
+          WHERE "companyId" = $1 AND "customerId" = ANY($2::text[])
+          GROUP BY "customerId"`,
+        companyId, customers.map((c) => c.id),
+      );
+      for (const r of rows) out.set(r.customerId, { paid: Number(r.paid), due: Number(r.due), count: Number(r.n) });
+    } catch {
+      /* finance not reachable: show the list without money rather than not at all */
+    }
+    return out;
   }
 
   private async findAllRawSorted(
@@ -240,18 +279,18 @@ export class CustomersService {
     limitInput: number | string,
     search?: string,
     type?: string,
-    isActive?: boolean,
+    isActive?: boolean | 'all',
     tags?: string[],
     sortBy: 'installDate' | 'warranty' | 'tag' = 'installDate',
     dir: 'asc' | 'desc' = 'asc',
   ): Promise<PaginatedResponse<unknown>> {
     const { page, limit, skip } = clampPagination({ page: pageInput, limit: limitInput });
-    const active = isActive !== undefined ? isActive : true;
+    const active = isActive === 'all' ? null : (isActive ?? true);
     const dirSql = dir === 'asc' ? Prisma.sql`ASC` : Prisma.sql`DESC`;
 
     const conditions: Prisma.Sql[] = [
       Prisma.sql`c.company_id = ${companyId}`,
-      Prisma.sql`c.is_active = ${active}`,
+      ...(active === null ? [] : [Prisma.sql`c.is_active = ${active}`]),
       Prisma.sql`NOT (c.source = 'portal' AND c.engagement_status = 'INACTIVE' AND 'portal-signup' = ANY(c.tags))`,
     ];
     if (type) conditions.push(Prisma.sql`c.type = ${type}`);
@@ -375,10 +414,11 @@ export class CustomersService {
       });
     }
 
-    // Soft delete — preserve history
+    // Soft delete: the record stays (marked inactive) for history, but lets go of its
+    // portal login, so a new customer with the same email never opens this one.
     return this.prisma.customer.update({
       where: { id },
-      data: { isActive: false },
+      data: { isActive: false, auth0UserId: null },
     });
   }
 
@@ -411,7 +451,24 @@ export class CustomersService {
       },
     });
 
-    return { total, residential, commercial, withAgreements };
+    const inactive = await this.prisma.customer.count({
+      where: { companyId, isActive: false, NOT: this.provisionalPortalSignupFilter },
+    });
+    // Money received from active customers, and what they still owe (not counting drafts or voided invoices).
+    let totalRevenue = 0, outstanding = 0;
+    try {
+      const rows = await this.prisma.$queryRawUnsafe<Array<{ paid: number; due: number }>>(
+        `SELECT COALESCE(SUM(i."amountPaid"), 0)::float AS paid,
+                COALESCE(SUM(i."balanceDue") FILTER (WHERE i.status::text NOT IN ('VOID', 'DRAFT')), 0)::float AS due
+           FROM finance."Invoice" i
+           JOIN crm.customers c ON c.id = i."customerId" AND c."companyId" = i."companyId"
+          WHERE i."companyId" = $1 AND c."isActive" = true`,
+        companyId,
+      );
+      totalRevenue = Number(rows[0]?.paid ?? 0);
+      outstanding = Number(rows[0]?.due ?? 0);
+    } catch { /* finance not reachable */ }
+    return { total, inactive, residential, commercial, withAgreements, totalRevenue, outstanding, avgRevenue: total ? totalRevenue / total : 0 };
   }
 
   async getStatusSummary(companyId: string, id: string) {
@@ -723,9 +780,10 @@ export class CustomersService {
   }
 
   async findMe(companyId: string, userId: string, customerId?: string) {
+    // A deleted (inactive) customer is never served, even to an old login token.
     const whereClause = customerId
-      ? { companyId, id: customerId }
-      : { companyId, auth0UserId: userId };
+      ? { companyId, id: customerId, isActive: true }
+      : { companyId, auth0UserId: userId, isActive: true };
     const customer = await this.prisma.customer.findFirst({
       where: whereClause,
       include: {

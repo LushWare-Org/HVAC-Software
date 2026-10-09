@@ -66,7 +66,10 @@ export class AuthService {
    * was reused across tenants).
    */
   async login(email: string, password: string, platform?: string, rememberMe = false) {
-    const candidates = await this.prisma.companyUser.findMany({ where: { email: email.toLowerCase() } });
+    const all = await this.prisma.companyUser.findMany({ where: { email: email.toLowerCase() } });
+    // Active accounts first: a deactivated account with the same password (e.g. a
+    // deleted customer at another company) must not shadow the live one.
+    const candidates = [...all.filter((c) => c.isActive), ...all.filter((c) => !c.isActive)];
 
     let user: (typeof candidates)[number] | undefined;
     for (const candidate of candidates) {
@@ -122,11 +125,17 @@ export class AuthService {
 
     let customerId: string | undefined;
     if (user.role === 'customer') {
+      // Only a customer who still exists: a deleted (inactive) customer that once
+      // used this login must never be the one the login opens.
       const customer = await this.prisma.customer.findFirst({
-        where: { companyId: user.companyId, auth0UserId: user.id },
+        where: { companyId: user.companyId, auth0UserId: user.id, isActive: true },
+        orderBy: { updatedAt: 'desc' },
         select: { id: true },
       });
-      customerId = customer?.id;
+      if (!customer) {
+        throw new UnauthorizedException('This portal account is no longer active. Please contact your service provider.');
+      }
+      customerId = customer.id;
     }
 
     const tokenPayload: Record<string, any> = {
@@ -289,7 +298,11 @@ export class AuthService {
       });
     }
 
-    await this.prisma.customer.update({ where: { id: customer.id }, data: { auth0UserId: user.id } });
+    // A reused login is let go by any deleted customer that once held it, so it opens only this one.
+    await this.prisma.$transaction([
+      this.prisma.customer.updateMany({ where: { companyId, auth0UserId: user.id, isActive: false, id: { not: customer.id } }, data: { auth0UserId: null } }),
+      this.prisma.customer.update({ where: { id: customer.id }, data: { auth0UserId: user.id } }),
+    ]);
 
     const company = await this.prisma.company.findUnique({ where: { id: companyId }, select: { name: true } });
     await this.emailService.sendWelcomeCustomer({
@@ -670,20 +683,56 @@ export class AuthService {
    * Issues a fresh temp password (the original was never persisted in plaintext,
    * so it cannot be recovered) and re-sends the welcome email.
    */
-  async resendWelcomeEmail(companyId: string, customerId: string) {
+  /**
+   * Admin: give a customer their portal login, or send it again.
+   *
+   *  - Has a login → a fresh temporary password by email (the old one stops working).
+   *  - No login yet → one is created and emailed (this is how imported or seeded customers get access).
+   *  - Their email already signs in as a DIFFERENT customer → 409 EMAIL_IN_USE naming that customer,
+   *    unless moveLogin is set, which moves that login to this customer (the other one loses portal access).
+   *  - Their email belongs to a team member → refused; one email can't be both.
+   */
+  async resendWelcomeEmail(companyId: string, customerId: string, opts: { moveLogin?: boolean } = {}) {
     const customer = await this.prisma.customer.findFirst({ where: { id: customerId, companyId } });
     if (!customer) throw new BadRequestException('Customer not found');
-    if (!customer.auth0UserId) {
-      throw new BadRequestException('This customer does not have a portal account yet');
-    }
-    if (!customer.email) {
-      throw new BadRequestException('Customer has no email address on file');
-    }
+    if (!customer.email) throw new BadRequestException('Add an email address for this customer first');
+    const email = customer.email.toLowerCase();
+    const name = `${customer.firstName} ${customer.lastName}`.trim();
 
-    const user = await this.prisma.companyUser.findFirst({
-      where: { id: customer.auth0UserId, companyId, isActive: true },
-    });
-    if (!user) throw new BadRequestException('Portal account not found for this customer');
+    let user = customer.auth0UserId
+      ? await this.prisma.companyUser.findFirst({ where: { id: customer.auth0UserId, companyId, isActive: true } })
+      : null;
+
+    if (!user) {
+      const holder = await this.prisma.companyUser.findFirst({ where: { companyId, email, isActive: true } });
+      if (holder && holder.role !== 'customer') {
+        throw new ConflictException(`${email} signs in as a team member (${holder.name}), so it can't also be a customer login. Use a different email for this customer.`);
+      }
+      if (holder) {
+        const other = await this.prisma.customer.findFirst({ where: { companyId, auth0UserId: holder.id, id: { not: customer.id }, isActive: true } });
+        if (other && !opts.moveLogin) {
+          throw new ConflictException({
+            code: 'EMAIL_IN_USE',
+            message: `${email} already signs in as ${`${other.firstName} ${other.lastName}`.trim()}. Move that login to ${name}? ${`${other.firstName} ${other.lastName}`.trim()} would lose portal access.`,
+            otherCustomerName: `${other.firstName} ${other.lastName}`.trim(),
+          });
+        }
+        // Move (or adopt an orphaned) login to this customer.
+        await this.prisma.$transaction([
+          this.prisma.customer.updateMany({ where: { companyId, auth0UserId: holder.id }, data: { auth0UserId: null } }),
+          this.prisma.customer.update({ where: { id: customer.id }, data: { auth0UserId: holder.id } }),
+          this.prisma.companyUser.update({ where: { id: holder.id }, data: { name, phone: customer.phone ?? undefined } }),
+        ]);
+        user = holder;
+      } else {
+        const { alreadyProvisioned } = await this.provisionPortalAccountForCustomer(companyId, { ...customer, email });
+        return {
+          success: true,
+          created: !alreadyProvisioned,
+          message: `Portal login created and emailed to ${customer.email}`,
+        };
+      }
+    }
 
     const tempPassword = generateTempPassword();
     const passwordHash = await bcrypt.hash(tempPassword, 12);
@@ -695,13 +744,13 @@ export class AuthService {
     const company = await this.prisma.company.findUnique({ where: { id: companyId }, select: { name: true } });
     await this.emailService.sendWelcomeCustomer({
       to: customer.email,
-      name: `${customer.firstName} ${customer.lastName}`.trim(),
+      name,
       tempPassword,
       companyName: company?.name ?? APP_NAME,
       companyId,
     });
 
-    return { success: true, message: `Welcome email resent to ${customer.email}` };
+    return { success: true, created: false, message: `Login details sent to ${customer.email}` };
   }
 
   /**

@@ -6,7 +6,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles, CurrentUser } from '@tscrm/auth-client';
 import { Role, AuthUser } from '@tscrm/types';
 import {
-  IsString, IsOptional, IsNumber, IsArray, IsBoolean, MaxLength,
+  IsString, IsOptional, IsNumber, Min, IsArray, IsBoolean, MaxLength,
 } from 'class-validator';
 import { ProjectsService } from './projects.service';
 
@@ -26,6 +26,7 @@ class CreateProjectDto {
   @IsOptional() @IsString() startDate?: string;
   @IsOptional() @IsString() targetEndDate?: string;
   @IsOptional() @IsNumber() budget?: number;
+  @IsOptional() @IsNumber() @Min(0) labourRatePerHour?: number;
   @IsOptional() @IsNumber() requiredHeadcount?: number;
   @IsOptional() @IsString() siteAddress?: string;
   @IsOptional() @IsNumber() latitude?: number;
@@ -44,6 +45,7 @@ class UpdateProjectDto {
   @IsOptional() @IsString() startDate?: string;
   @IsOptional() @IsString() targetEndDate?: string;
   @IsOptional() @IsNumber() budget?: number;
+  @IsOptional() @IsNumber() @Min(0) labourRatePerHour?: number;
   @IsOptional() @IsNumber() requiredHeadcount?: number;
   @IsOptional() @IsString() siteAddress?: string;
   @IsOptional() @IsNumber() latitude?: number;
@@ -60,6 +62,8 @@ class SetRosterDayDto {
 }
 
 const STAFF_WRITE = [Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER];
+// Reading the company's projects: staff, and technicians who work on them. Customers use /projects/mine.
+const STAFF_READ = [...STAFF_WRITE, Role.TECHNICIAN];
 
 @ApiTags('Projects')
 @ApiBearerAuth()
@@ -71,6 +75,7 @@ export class ProjectsController {
   // Static routes MUST precede ':id'.
 
   @Get('rosters')
+  @Roles(...STAFF_READ)
   @ApiOperation({ summary: 'All projects with a crew rostered on a date (Day Planner band)' })
   rostersByDate(@CurrentUser() user: AuthUser, @Query('date') date: string) {
     return this.projects.rostersByDate(user.companyId, date);
@@ -84,6 +89,7 @@ export class ProjectsController {
   }
 
   @Get()
+  @Roles(...STAFF_READ)
   @ApiOperation({ summary: 'List projects (filters: status, customerId, search)' })
   list(
     @CurrentUser() user: AuthUser,
@@ -108,6 +114,7 @@ export class ProjectsController {
   }
 
   @Get(':id')
+  @Roles(...STAFF_READ)
   @ApiOperation({ summary: 'Project detail (includes linked agreements)' })
   findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.projects.findOne(user.companyId, id);
@@ -135,6 +142,7 @@ export class ProjectsController {
   }
 
   @Get(':id/roster')
+  @Roles(...STAFF_READ)
   @ApiOperation({ summary: 'Effective roster per date for a range' })
   roster(
     @CurrentUser() user: AuthUser,

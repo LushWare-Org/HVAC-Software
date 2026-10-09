@@ -215,8 +215,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...STAFF_WRITE)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Admin: resend customer portal welcome email with a fresh temp password' })
-  resendWelcomeEmail(@CurrentUser() user: AuthUser, @Param('customerId') customerId: string) {
-    return this.authService.resendWelcomeEmail(user.companyId, customerId);
+  @ApiOperation({ summary: "Admin: send a customer their portal login (creates one if they don't have it)" })
+  resendWelcomeEmail(@CurrentUser() user: AuthUser, @Param('customerId') customerId: string, @Body() body: { moveLogin?: boolean } = {}) {
+    return this.authService.resendWelcomeEmail(user.companyId, customerId, { moveLogin: body?.moveLogin === true });
   }
 }

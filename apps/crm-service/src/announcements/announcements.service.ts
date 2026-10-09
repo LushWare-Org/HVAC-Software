@@ -7,6 +7,11 @@ export interface AnnouncementDto {
   linkUrl?: string;
   linkLabel?: string;
   accentColor?: string;
+  icon?: string;
+  ctaAction?: string;
+  style?: string;
+  dismissible?: boolean;
+  pinned?: boolean;
   isActive?: boolean;
   activeFrom?: string | null;
   activeTo?: string | null;
@@ -19,12 +24,12 @@ export class AnnouncementsService {
   list(companyId: string) {
     return this.prisma.companyAnnouncement.findMany({
       where: { companyId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
       take: 100,
     });
   }
 
-  /** All currently-active announcements for the portal carousel (newest first, max 5). */
+  /** All currently-active announcements for the portal carousel (pinned first, then newest; max 5). */
   getActiveMany(companyId: string) {
     const now = new Date();
     return this.prisma.companyAnnouncement.findMany({
@@ -34,7 +39,7 @@ export class AnnouncementsService {
         OR: [{ activeFrom: null }, { activeFrom: { lte: now } }],
         AND: [{ OR: [{ activeTo: null }, { activeTo: { gte: now } }] }],
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
       take: 5,
     });
   }
@@ -48,6 +53,11 @@ export class AnnouncementsService {
         linkUrl: dto.linkUrl,
         linkLabel: dto.linkLabel,
         accentColor: dto.accentColor ?? '#1a73e8',
+        icon: dto.icon ?? 'megaphone',
+        ctaAction: dto.ctaAction ?? (dto.linkUrl ? 'link' : 'none'),
+        style: dto.style ?? 'card',
+        dismissible: dto.dismissible ?? true,
+        pinned: dto.pinned ?? false,
         isActive: dto.isActive ?? true,
         activeFrom: dto.activeFrom ? new Date(dto.activeFrom) : null,
         activeTo: dto.activeTo ? new Date(dto.activeTo) : null,
@@ -70,6 +80,11 @@ export class AnnouncementsService {
         ...(dto.linkUrl !== undefined && { linkUrl: dto.linkUrl }),
         ...(dto.linkLabel !== undefined && { linkLabel: dto.linkLabel }),
         ...(dto.accentColor !== undefined && { accentColor: dto.accentColor }),
+        ...(dto.icon !== undefined && { icon: dto.icon }),
+        ...(dto.ctaAction !== undefined && { ctaAction: dto.ctaAction }),
+        ...(dto.style !== undefined && { style: dto.style }),
+        ...(dto.dismissible !== undefined && { dismissible: dto.dismissible }),
+        ...(dto.pinned !== undefined && { pinned: dto.pinned }),
         ...(dto.isActive !== undefined && { isActive: dto.isActive }),
         ...(dto.activeFrom !== undefined && {
           activeFrom: dto.activeFrom ? new Date(dto.activeFrom) : null,

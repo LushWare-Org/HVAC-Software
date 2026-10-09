@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '../prisma/generated';
+import { BaseLocationService } from './base-location.service';
 import { StorageService } from '../storage/storage.service';
 import { clampPagination } from '@tscrm/types';
 import { requireJwtSecret } from '@tscrm/auth-client';
@@ -22,6 +23,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly baseLocation: BaseLocationService,
   ) {}
 
   async findAll(companyId: string, params: { role?: string; search?: string; isActive?: boolean; page?: number; limit?: number; slim?: boolean }) {
@@ -381,8 +383,11 @@ export class UsersService {
   }
 
   async remove(companyId: string, id: string) {
-    await this.findOne(companyId, id);
-    return this.prisma.companyUser.delete({ where: { id } });
+    const user = await this.findOne(companyId, id);
+    const removed = await this.prisma.companyUser.delete({ where: { id } });
+    // A deleted technician must also leave the dispatch board; soft-fails, the nightly sweep retries.
+    if (user.role === 'technician') await this.baseLocation.deactivate(companyId, id);
+    return removed;
   }
 
   async getLoginHistory(companyId: string, userId: string) {

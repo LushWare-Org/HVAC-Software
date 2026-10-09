@@ -109,7 +109,7 @@ export class ProjectComponentsController {
   }
 
   @Get(':id')
-  @Roles(...STAFF_WRITE)
+  @Roles(...STAFF_WRITE, Role.TECHNICIAN)
   @ApiOperation({ summary: 'Component detail (owner, account status, equipment/issue counts)' })
   findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.components.findOne(user.companyId, id);
@@ -147,7 +147,7 @@ export class ProjectComponentsController {
   // ── Equipment (scoped to this component) ────────────────────────────────
 
   @Get(':id/equipment')
-  @Roles(...STAFF_WRITE, Role.CUSTOMER)
+  @Roles(...STAFF_WRITE, Role.TECHNICIAN, Role.CUSTOMER)
   @ApiOperation({ summary: 'List equipment for a component' })
   async listEquipment(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     await this.assertReadAccess(user, id);
