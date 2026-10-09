@@ -146,6 +146,8 @@ export interface DocumentTemplate {
   footerText?: string | null
   bankDetails?: string | null
   showPageNumbers: boolean
+  /** Paper size for the PDF. */
+  pageSize?: 'A4' | 'LETTER'
   letterheadImageUrl?: string | null
   letterheadTopMarginPx?: number | null
   letterheadBottomMarginPx?: number | null
@@ -166,6 +168,7 @@ export interface UpsertTemplateInput {
   footerText?: string
   bankDetails?: string
   showPageNumbers?: boolean
+  pageSize?: 'A4' | 'LETTER'
   letterheadImageUrl?: string
   letterheadTopMarginPx?: number
   letterheadBottomMarginPx?: number

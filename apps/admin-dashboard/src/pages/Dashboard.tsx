@@ -23,10 +23,11 @@ import MorningBrief from './dashboard/MorningBrief'
 import RunningBehind from './dashboard/RunningBehind'
 import FreedTime from './dashboard/FreedTime'
 import ComponentIssuesAlert from '../components/ComponentIssuesAlert'
+import Avatar from '../components/Avatar'
 import AddJobModal from './jobs/AddJobModal'
 import type { Job, Technician } from '../types/api'
 import { ago, buildAttention, buildLiveMoves, buildStages, buildTechRows, clock, minutesSince, todaysJobs, type LiveMove, type StageKey, type TechState } from './dashboard/opsData'
-import KelvinNotes from '../kelvin/KelvinNotes'
+import KelvinDigest from '../kelvin/KelvinDigest'
 import { isKelvinOn } from '../kelvin/KelvinProvider'
 import { useKelvinContext } from '../kelvin/useKelvinContext'
 import { useCompanySettings } from '../hooks/useCompanySettings'
@@ -112,7 +113,8 @@ function LiveNow({ moves }: { moves: LiveMove[] }) {
                             <li key={m.techId}>
                                 <Link to="/scheduling?view=active" className="ops-live-row">
                                     <span className={`ops-live-icon ${m.state === 'EN_ROUTE' ? 'is-driving' : 'is-onsite'}`} aria-hidden="true">
-                                        {m.state === 'EN_ROUTE' ? <Navigation size={15} /> : <Wrench size={15} />}
+                                        <Avatar name={m.name} avatarUrl={m.avatarUrl ?? undefined} size={40} radius={20} fontSize={14} />
+                                        <span className="ops-live-badge">{m.state === 'EN_ROUTE' ? <Navigation size={10} /> : <Wrench size={10} />}</span>
                                     </span>
                                     <span className="ops-live-body">
                                         <span className="ops-live-line">
@@ -202,7 +204,7 @@ export default function Dashboard() {
         <div className="ops anim-fade-up">
             <ComponentIssuesAlert />
             {BRIEF_ROLES.has(String(user?.role ?? '').toLowerCase()) && (isKelvinOn(settings?.features)
-              ? <KelvinNotes page="dashboard" limit={5} />
+              ? <KelvinDigest page="dashboard" />
               : <><RunningBehind /><FreedTime /><MorningBrief /></>)}
 
             <section aria-label="Today" className="ops-panel ops-today">

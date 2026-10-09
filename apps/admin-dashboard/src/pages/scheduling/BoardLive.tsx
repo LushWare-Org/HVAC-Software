@@ -1,18 +1,25 @@
 /**
- * BoardLive — "See all jobs" cockpit: unassigned queue + live map + live
- * technician rail, all visible at once. Composes existing Dispatch pieces
- * (DispatchMap, availability tiers) into the new persistent 3-column layout;
- * does not duplicate their internals.
+ * BoardLive — "See all jobs": the live map filling the board, a small
+ * technicians control on it, and the jobs waiting for a technician docked
+ * underneath as decision cards (the best technician for each, one click to give
+ * it to them). Composes DispatchMap; does not duplicate its internals.
+ *
+ * Everything the dispatcher sets up here (dock open, full view, and the map's
+ * own filters and position inside DispatchMap) is remembered across pages,
+ * tabs and windows.
  */
-import { lazy, Suspense, useState } from 'react'
-import { Loader2, Zap, Users, Phone, Maximize2, Minimize2 } from 'lucide-react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronDown, ChevronUp, Loader2, Maximize2, Minimize2, Search, Users, Zap } from 'lucide-react'
 import type { Job, Technician, ScoredTechnician, DispatchAssignment } from '../../types/api'
 import Avatar from '../../components/Avatar'
 import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 import { getTechAvailability, AVAIL_META, type AvailabilityTier } from './availability'
-import ProjectComponentTag from '../projects/ProjectComponentTag'
+import { usePersistentState } from '../../lib/usePersistentState'
+import { bestFits, jobUrgency, sortByUrgency, whenNeeded, type Fit } from './boardFit'
+import './boardLive.css'
 
 const DispatchMap = lazy(() => import('../dispatch/DispatchMap'))
+const isBool = (v: unknown): v is boolean => typeof v === 'boolean'
 
 export default function BoardLive({
   pendingJobs, assignedJobs, unassignedJobs, techs, loginMap, assignmentByJobId, allAssignments,
@@ -36,97 +43,23 @@ export default function BoardLive({
   smartSuggestions: ScoredTechnician[] | null
   onSelectTech: (tech: Technician) => void
 }) {
-  const withAvail = techs.map(t => ({ t, avail: getTechAvailability(t, loginMap[t.userId]) as AvailabilityTier }))
-  const counts = {
-    online: withAvail.filter(x => x.avail === 'ONLINE').length,
-    available: withAvail.filter(x => x.avail === 'AVAILABLE').length,
-    away: withAvail.filter(x => x.avail === 'AWAY').length,
-    offline: withAvail.filter(x => x.avail === 'OFFLINE').length,
-  }
-  const [mapExpanded, setMapExpanded] = useState(false)
+  const [mapExpanded, setMapExpanded] = usePersistentState<boolean>('board.fullView', false, isBool)
+  const [dockOpen, setDockOpen] = usePersistentState<boolean>('board.dockOpen', true, isBool)
 
-  // Leaflet only recalculates its tile layout on a real `window resize`
-  // event (or an explicit invalidateSize() call it doesn't expose to us here
-  // since DispatchMap is reused as-is). Toggling mapExpanded resizes the
-  // map's container via CSS, which Leaflet has no way to notice on its own —
-  // without this nudge, tiles outside the map's *original* size never load,
-  // which is exactly the "some parts not visible" bug. Firing a synthetic
-  // resize during and after the 0.2s CSS transition covers both the
-  // mid-transition and final container size.
-  const toggleMapExpanded = () => {
-    setMapExpanded(e => !e)
+  // Leaflet only re-measures on a window resize, so nudge it when the map's box changes.
+  const nudgeMap = () => {
     window.dispatchEvent(new Event('resize'))
     setTimeout(() => window.dispatchEvent(new Event('resize')), 220)
   }
+  useEffect(nudgeMap, [mapExpanded, dockOpen])
+
+  const queue = useMemo(() => sortByUrgency(pendingJobs), [pendingJobs])
+  const fits = useMemo(() => bestFits(queue, techs, loginMap, allAssignments), [queue, techs, loginMap, allAssignments])
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: mapExpanded ? '1fr' : 'minmax(0,300px) 1fr minmax(0,340px)', gap: 14, height: mapExpanded ? '90vh' : 'max(620px, calc(100vh - 190px))', transition: 'height 0.2s ease' }}>
-      {/* Unassigned queue */}
-      {!mapExpanded && (
-      <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '13px 15px 9px', borderBottom: '1px solid var(--bd)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>Unassigned now</span>
-          <span style={{ fontSize: 10, fontWeight: 700, background: 'color-mix(in srgb, var(--amber) 18%, transparent)', color: 'var(--amber)', padding: '2px 8px', borderRadius: 10 }}>
-            {pendingJobs.length}
-          </span>
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: 11, display: 'flex', flexDirection: 'column', gap: 9 }}>
-          {pendingJobs.length === 0 ? (
-            <p style={{ fontSize: 12, color: 'var(--t4)', textAlign: 'center', padding: '20px 0' }}>Nothing waiting for dispatch.</p>
-          ) : pendingJobs.map(job => (
-            <div key={job.id} onClick={() => onOpenJob(job, assignmentByJobId[job.id])} style={{ border: '1px solid var(--bd)', borderLeft: `3px solid ${job.serviceLatitude && job.serviceLongitude ? 'var(--t4)' : 'var(--amber)'}`, borderRadius: 11, padding: '10px 11px', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
-                <span style={{ fontSize: 8, fontWeight: 700, color: job.priority === 'EMERGENCY' || job.priority === 'HIGH' ? '#1D4ED8' : '#6B7280', background: job.priority === 'EMERGENCY' || job.priority === 'HIGH' ? '#DBEAFE' : '#F3F4F6', padding: '1px 5px', borderRadius: 3 }}>{job.priority}</span>
-                {job.serviceLatitude && job.serviceLongitude && (
-                  <span style={{ fontSize: 8, fontWeight: 700, color: '#166534', background: '#DCFCE7', padding: '1px 5px', borderRadius: 3 }}>GPS</span>
-                )}
-                <RescheduleBadge state={job.rescheduleState} size="sm" />
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t1)' }}>{job.title}</div>
-              <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 3 }}>{job.customerName ?? '—'} · {job.serviceAddress ?? job.customerAddress ?? 'No address'}</div>
-              {job.projectId && (
-                <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>
-                  <ProjectComponentTag projectId={job.projectId} componentId={job.componentId} />
-                </div>
-              )}
-              <button
-                onClick={e => { e.stopPropagation(); onSmartAssign(job) }}
-                disabled={isAssigning && smartAssigningJobId === job.id}
-                style={{ width: '100%', marginTop: 8, background: 'linear-gradient(90deg,#F59E0B,#F97316)', color: '#fff', border: 'none', borderRadius: 7, padding: 6, fontSize: 10.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
-              >
-                {isAssigning && smartAssigningJobId === job.id ? <Loader2 size={11} className="spin" /> : <Zap size={11} />} Smart-assign
-              </button>
-              <select
-                defaultValue=""
-                onClick={e => e.stopPropagation()}
-                onChange={e => { if (e.target.value) onManualAssign(job.id, e.target.value); e.target.value = '' }}
-                style={{ width: '100%', marginTop: 5, fontSize: 10.5, border: '1px solid var(--bd)', borderRadius: 6, padding: '4px 6px', background: 'var(--bg-card)', color: 'var(--t2)' }}
-              >
-                <option value="" disabled>Assign manually…</option>
-                {techs.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-            </div>
-          ))}
-        </div>
-      </div>
-      )}
-
-      {/* Live map — the expand toggle gets its own header strip, never
-          overlapping DispatchMap's own internal KPI/filter row */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 10px', borderBottom: '1px solid var(--bd)', flexShrink: 0 }}>
-          <button
-            onClick={toggleMapExpanded}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-card-2)', border: '1px solid var(--bd)',
-              borderRadius: 8, padding: '6px 12px', fontSize: 11.5, fontWeight: 600, color: 'var(--t2)', cursor: 'pointer',
-            }}
-          >
-            {mapExpanded ? <><Minimize2 size={13} /> Exit full view</> : <><Maximize2 size={13} /> Full view</>}
-          </button>
-        </div>
-        <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-        <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><Loader2 size={24} className="spin" style={{ color: 'var(--t3)' }} /></div>}>
+    <div className="bl" style={{ height: mapExpanded ? '90vh' : 'max(640px, calc(100vh - 190px))' }}>
+      <section className="bl-map card" aria-label="Live map">
+        <Suspense fallback={<div className="bl-loading"><Loader2 size={24} className="spin" /></div>}>
           <DispatchMap
             technicians={techs}
             assignedJobs={assignedJobs}
@@ -142,49 +75,176 @@ export default function BoardLive({
             smartSuggestions={smartSuggestions}
           />
         </Suspense>
+        {/* Top right, clear of the map's own full-screen button. */}
+        <div className="bl-top">
+          <TechniciansControl techs={techs} loginMap={loginMap} allAssignments={allAssignments} onSelectTech={onSelectTech} />
+          <button type="button" className="dm-pill" onClick={() => setMapExpanded(e => !e)} aria-pressed={mapExpanded}>
+            {mapExpanded ? <><Minimize2 size={13} /> Exit full view</> : <><Maximize2 size={13} /> Full view</>}
+          </button>
         </div>
-      </div>
+      </section>
 
-      {/* Live tech rail */}
       {!mapExpanded && (
-      <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '13px 15px 9px', borderBottom: '1px solid var(--bd)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10B981' }} /> Technicians · live
-          </span>
-        </div>
-        <div style={{ padding: '9px 15px', display: 'flex', gap: 12, borderBottom: '1px solid var(--bd)', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 10.5, color: 'var(--t3)' }}><b style={{ color: '#059669' }}>{counts.online}</b> online</span>
-          <span style={{ fontSize: 10.5, color: 'var(--t3)' }}><b style={{ color: '#2563EB' }}>{counts.available}</b> avail</span>
-          <span style={{ fontSize: 10.5, color: 'var(--t3)' }}><b style={{ color: '#D97706' }}>{counts.away}</b> away</span>
-          <span style={{ fontSize: 10.5, color: 'var(--t3)' }}><b style={{ color: '#6B7280' }}>{counts.offline}</b> off</span>
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 15px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {withAvail.map(({ t, avail }) => {
-            const meta = AVAIL_META[avail]
-            return (
-              <div key={t.id} onClick={() => onSelectTech(t)} style={{ border: '1px solid var(--bd)', borderLeft: `3px solid ${meta.color}`, borderRadius: 11, padding: '10px 11px', cursor: 'pointer', opacity: meta.dim }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <div style={{ position: 'relative' }}>
-                    <Avatar name={t.name} avatarUrl={t.avatarUrl} size={30} radius={15} fontSize={11} />
-                    <span style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, borderRadius: '50%', background: meta.color, border: '2px solid var(--bg-card)' }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--t1)' }}>{t.name}</div>
-                    <div style={{ fontSize: 9.5, color: meta.color }}>{meta.label}{t.phone ? ` · ${t.phone}` : ''}</div>
-                  </div>
-                  {t.phone && <Phone size={11} style={{ color: 'var(--t4)', flexShrink: 0 }} />}
-                </div>
+        <section className={`bl-dock card${dockOpen ? '' : ' is-closed'}`} aria-label="Jobs waiting for a technician">
+          <header className="bl-dock-head">
+            <h2>Unassigned</h2>
+            <span className="bl-count">{queue.length}</span>
+            {queue.length > 0 && <span className="bl-sub">Most urgent first. Each card shows the best technician for it.</span>}
+            <span style={{ flex: 1 }} />
+            <button type="button" className="dm-icon-btn bl-toggle" onClick={() => setDockOpen(o => !o)} aria-expanded={dockOpen}>
+              {dockOpen ? <><ChevronDown size={15} /> Hide</> : <><ChevronUp size={15} /> Show</>}
+            </button>
+          </header>
+          {dockOpen && (
+            queue.length === 0 ? (
+              <p className="bl-empty">Nothing is waiting for a technician.</p>
+            ) : (
+              <div className="bl-cards" role="list">
+                {queue.map(job => (
+                  <DecisionCard
+                    key={job.id} job={job} fit={fits[job.id]}
+                    busy={isAssigning && smartAssigningJobId === job.id}
+                    onOpen={() => onOpenJob(job, assignmentByJobId[job.id])}
+                    onGive={(techId) => onManualAssign(job.id, techId)}
+                    onSmart={() => onSmartAssign(job)}
+                  />
+                ))}
               </div>
             )
-          })}
-          {withAvail.length === 0 && (
-            <p style={{ fontSize: 12, color: 'var(--t4)', textAlign: 'center', padding: '20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-              <Users size={24} style={{ opacity: 0.3 }} /> No technicians registered
-            </p>
           )}
+        </section>
+      )}
+    </div>
+  )
+}
+
+// ─── One waiting job: who should take it, and one click to give it to them ───
+
+function DecisionCard({ job, fit, busy, onOpen, onGive, onSmart }: {
+  job: Job; fit?: Fit; busy: boolean; onOpen: () => void; onGive: (techId: string) => void; onSmart: () => void
+}) {
+  const urgency = jobUrgency(job)
+  const when = whenNeeded(job)
+  const area = (job.serviceAddress ?? job.customerAddress ?? '').split(',').map(x => x.trim()).filter(Boolean).pop()
+  const best = fit?.ranked[0]
+  return (
+    <article className={`bl-card is-${urgency}`} role="listitem">
+      <button type="button" className="bl-card-open" onClick={onOpen} aria-label={`Open ${job.title}`}>
+        <span className={`bl-tag is-${when.tone}`}>{when.label}</span>
+        <span className="bl-title">{job.title}</span>
+        <span className="bl-meta">{[job.customerName, area].filter(Boolean).join(' · ') || 'No address yet'}</span>
+      </button>
+      <RescheduleBadge state={job.rescheduleState} size="sm" />
+      {best ? (
+        <div className="bl-best">
+          <Avatar name={best.tech.name} avatarUrl={best.tech.avatarUrl} size={26} radius={13} fontSize={10} />
+          <span><b>{best.tech.name}</b> is the best fit<span className="bl-why">{best.why}</span></span>
         </div>
+      ) : (
+        <div className="bl-best is-none">No technician is free right now.</div>
+      )}
+      <div className="bl-actions">
+        {best && (
+          <button type="button" className="btn btn-primary btn-sm bl-give" onClick={() => onGive(best.tech.id)}>
+            Give to {best.tech.name.split(' ')[0]}
+          </button>
+        )}
+        <select
+          aria-label={`Give ${job.title} to someone else`}
+          defaultValue=""
+          onChange={e => { if (e.target.value) onGive(e.target.value); e.target.value = '' }}
+          className="bl-other"
+        >
+          <option value="" disabled>{best ? 'Someone else' : 'Choose a technician'}</option>
+          {(fit?.ranked ?? []).slice(best ? 1 : 0).map(r => <option key={r.tech.id} value={r.tech.id}>{r.tech.name}{r.km != null ? ` · ${r.km < 1 ? '<1' : Math.round(r.km)} km` : ''}</option>)}
+          {(fit?.unavailable ?? []).map(t => <option key={t.id} value={t.id}>{t.name} · offline</option>)}
+        </select>
+        <button type="button" className="bl-smart" onClick={onSmart} disabled={busy} title="Let HVACtor score every technician for this job">
+          {busy ? <Loader2 size={12} className="spin" /> : <Zap size={12} />} Smart
+        </button>
       </div>
+    </article>
+  )
+}
+
+// ─── Technicians: a small button on the map, and a list that scales to any team size ───
+
+type TechFilter = 'all' | 'free' | 'busy' | 'off'
+
+function TechniciansControl({ techs, loginMap, allAssignments, onSelectTech }: {
+  techs: Technician[]; loginMap: Record<string, string>; allAssignments: DispatchAssignment[]; onSelectTech: (t: Technician) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState('')
+  const [filter, setFilter] = useState<TechFilter>('all')
+  const box = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [open])
+
+  const rows = useMemo(() => techs.map(t => {
+    const avail = getTechAvailability(t, loginMap[t.userId]) as AvailabilityTier
+    const mine = allAssignments.filter(a => a.technicianId === t.id)
+    const driving = mine.find(a => a.status === 'EN_ROUTE')
+    const onSite = mine.find(a => a.status === 'ON_SITE')
+    const queued = mine.filter(a => a.status === 'ASSIGNED').length
+    const state: Exclude<TechFilter, 'all'> = avail === 'OFFLINE' ? 'off' : driving || onSite ? 'busy' : 'free'
+    const line = driving ? 'On the way to a job' : onSite ? 'On site' : avail === 'OFFLINE' ? 'Offline' : queued ? `Free · ${queued} job${queued === 1 ? '' : 's'} later` : 'Free'
+    return { t, avail, state, line }
+  }), [techs, loginMap, allAssignments])
+
+  const counts = { free: rows.filter(r => r.state === 'free').length, busy: rows.filter(r => r.state === 'busy').length, off: rows.filter(r => r.state === 'off').length }
+  const shown = rows.filter(r => (filter === 'all' || r.state === filter) && (!q.trim() || r.t.name.toLowerCase().includes(q.trim().toLowerCase())))
+  const faces = [...rows].sort((a, b) => (a.state === 'off' ? 1 : 0) - (b.state === 'off' ? 1 : 0)).slice(0, 3)
+
+  return (
+    <div className="bl-techs" ref={box}>
+      <button type="button" className="dm-pill bl-techs-btn" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen(o => !o)}>
+        <span className="bl-faces" aria-hidden="true">
+          {faces.map(({ t, avail }) => (
+            <span key={t.id} className="bl-face" style={{ boxShadow: `0 0 0 2px ${AVAIL_META[avail].color}` }}>
+              <Avatar name={t.name} avatarUrl={t.avatarUrl} size={22} radius={11} fontSize={9} />
+            </span>
+          ))}
+          {rows.length > 3 && <span className="bl-more">+{rows.length - 3}</span>}
+        </span>
+        {rows.length ? <span><b>{counts.free}</b> free · <b>{counts.busy}</b> on a job</span> : <span>No technicians</span>}
+        <ChevronDown size={13} />
+      </button>
+      {open && (
+        <div className="bl-techs-panel" role="dialog" aria-label="Technicians">
+          <label className="bl-search"><Search size={13} /><input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Find a technician" aria-label="Find a technician" /></label>
+          <div className="bl-filters" role="radiogroup" aria-label="Show">
+            {([['all', `All ${rows.length}`], ['free', `Free ${counts.free}`], ['busy', `On a job ${counts.busy}`], ['off', `Offline ${counts.off}`]] as Array<[TechFilter, string]>).map(([k, label]) => (
+              <button key={k} type="button" role="radio" aria-checked={filter === k} className={filter === k ? 'is-on' : ''} onClick={() => setFilter(k)}>{label}</button>
+            ))}
+          </div>
+          <div className="bl-tech-list">
+            {shown.map(({ t, avail, line }) => (
+              <button key={t.id} type="button" className="bl-tech" onClick={() => { setOpen(false); onSelectTech(t) }} style={{ opacity: AVAIL_META[avail].dim }}>
+                <span style={{ position: 'relative', flexShrink: 0 }}>
+                  <Avatar name={t.name} avatarUrl={t.avatarUrl} size={30} radius={15} fontSize={11} />
+                  <span className="bl-tech-dot" style={{ background: AVAIL_META[avail].color }} />
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span className="bl-tech-name">{t.name}</span>
+                  <span className="bl-tech-line" style={{ color: AVAIL_META[avail].color }}>{line}</span>
+                </span>
+              </button>
+            ))}
+            {!shown.length && (
+              <p className="bl-empty" style={{ padding: '18px 8px' }}>
+                {rows.length ? 'Nobody matches.' : <><Users size={20} style={{ opacity: .4, display: 'block', margin: '0 auto 6px' }} />No technicians yet. Add them in Team.</>}
+              </p>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

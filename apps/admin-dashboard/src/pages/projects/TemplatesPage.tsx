@@ -193,9 +193,9 @@ export default function TemplatesPage() {
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
         <button className="btn btn-ghost btn-sm" onClick={() => navigate('/projects')}><ArrowLeft size={14} /></button>
-        <h1 style={{ fontSize: 20, fontWeight: 800, color: '#F1F5F9', margin: 0 }}>Project Templates</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--t1)', margin: 0 }}>Project Templates</h1>
       </div>
-      <p style={{ fontSize: 12.5, color: '#94A3B8', margin: '0 0 20px 46px' }}>
+      <p style={{ fontSize: 12.5, color: 'var(--t3)', margin: '0 0 20px 46px' }}>
         Reusable structures for your projects — define the component types once, use them across any number of projects.
       </p>
 

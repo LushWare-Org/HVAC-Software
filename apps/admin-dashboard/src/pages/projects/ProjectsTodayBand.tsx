@@ -1,9 +1,7 @@
 /**
  * ProjectsTodayBand — Day Planner strip: which projects are running on the
  * selected day and who's on each crew. Rostered techs are reserved capacity.
- *
- * DEMO: reads the mock store; "Manage roster" deep-links to the project's
- * roster tab. Real impl swaps the data source, same layout.
+ * "Manage roster" deep-links to the project's roster tab.
  */
 import { useNavigate } from 'react-router-dom'
 import { HardHat, MapPin, ChevronRight } from 'lucide-react'

@@ -5,6 +5,7 @@
  * this component receives `date` as a prop instead of owning it. Same data
  * sources and mutations as the original Day Planner — nothing reimplemented.
  */
+import api from '../../lib/api'
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react'
 import TechAvatar, { TechChip } from '../../components/TechAvatar'
 import {
@@ -16,7 +17,6 @@ import { techOnProjectMessage, useRostersByDate, toDateKey } from '../projects/p
 import ProjectComponentTag from '../projects/ProjectComponentTag'
 import CrewControlCenter from './crew/CrewControlCenter'
 import { useServiceAgreements, type Agreement } from '../../hooks/useAgreements'
-import { useCreateThread, useSendThreadMessage } from '../../hooks/useComms'
 import { useToast } from '../../contexts/ToastContext'
 import type { Job, Technician } from '../../types/api'
 import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
@@ -26,6 +26,7 @@ import AgreementDrawer from '../agreements/AgreementDrawer'
 import ProjectsTodayBand from '../projects/ProjectsTodayBand'
 import { formatMoney } from '../../lib/format'
 import { queryClient } from '../../lib/queryClient'
+import { useMapEngine } from '../../components/map/kit/provider'
 import {
   buildDayPlan, jobCoords,
   DAY_START_H, DAY_END_H, DEFAULT_DURATION_MIN,
@@ -130,7 +131,11 @@ export default function BoardPlan({
   const [applying, setApplying] = useState(false)
   // Per-row progress while a plan is being applied.
   const [applyState, setApplyState] = useState<Record<string, 'pending' | 'working' | 'done' | 'failed'>>({})
-  const [mapExpanded, setMapExpanded] = useState(false)
+  const [expandedState, setMapExpanded] = useState(false)
+  // Google Maps brings its own full-screen and map/satellite controls, so ours
+  // only show on the standard (Leaflet) map, including when Google falls back.
+  const ownMapControls = useMapEngine() === 'leaflet'
+  const mapExpanded = ownMapControls && expandedState
 
   // Leaflet only recalculates its tile layout on a real `window resize`
   // event — toggling mapExpanded resizes the container via CSS, which
@@ -158,8 +163,6 @@ export default function BoardPlan({
     for (const r of dayRosters ?? []) for (const uid of r.techUserIds) m.set(uid, r.name)
     return m
   }, [dayRosters])
-  const createThread = useCreateThread()
-  const sendMessage = useSendThreadMessage()
 
   const techs = techsQuery.data ?? []
   const dayStart = date
@@ -401,22 +404,20 @@ export default function BoardPlan({
     setOutreachTarget(a)
   }
 
+  const [outreachSending, setOutreachSending] = useState(false)
   const sendOutreach = async () => {
     const a = outreachTarget
     if (!a?.customer) return
+    setOutreachSending(true)
     try {
-      const thread = await createThread.mutateAsync({
-        customerId: a.customerId,
-        customerName: `${a.customer.firstName} ${a.customer.lastName}`.trim(),
-        customerEmail: a.customer.email ?? undefined,
-        customerPhone: a.customer.phone ?? undefined,
-        subject: `Service date offer — ${fmtDay(date)}`,
-      })
-      await sendMessage.mutateAsync({ threadId: thread.id, body: outreachText, notifyEmail: true, emailSubject: `Service date offer — ${fmtDay(date)}` })
+      // Into the customer's conversation with the office, with an email copy.
+      await api.post(`/comms/chat/customers/${a.customerId}/messages`, { body: outreachText, alsoEmail: true })
       toast.showSuccess('Message sent — watch Communications for their reply')
       setOutreachTarget(null)
     } catch (e: any) {
       toast.showError(e?.response?.data?.message ?? 'Could not send the message')
+    } finally {
+      setOutreachSending(false)
     }
   }
 
@@ -432,17 +433,19 @@ export default function BoardPlan({
 
       <div style={{ display: 'grid', gridTemplateColumns: mapExpanded ? '1fr' : 'minmax(0, 1fr) 360px', gap: 14, alignItems: 'start' }}>
         <div className="card" style={{ padding: 0, height: mapExpanded ? '82vh' : 460, overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'height 0.2s ease' }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 10px', borderBottom: '1px solid var(--bd)', flexShrink: 0 }}>
-            <button
-              onClick={toggleMapExpanded}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-card-2)', border: '1px solid var(--bd)',
-                borderRadius: 8, padding: '6px 12px', fontSize: 11.5, fontWeight: 600, color: 'var(--t2)', cursor: 'pointer',
-              }}
-            >
-              {mapExpanded ? <><Minimize2 size={13} /> Exit full view</> : <><Maximize2 size={13} /> Full view</>}
-            </button>
-          </div>
+          {ownMapControls && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 10px', borderBottom: '1px solid var(--bd)', flexShrink: 0 }}>
+              <button
+                onClick={toggleMapExpanded}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-card-2)', border: '1px solid var(--bd)',
+                  borderRadius: 8, padding: '6px 12px', fontSize: 11.5, fontWeight: 600, color: 'var(--t2)', cursor: 'pointer',
+                }}
+              >
+                {mapExpanded ? <><Minimize2 size={13} /> Exit full view</> : <><Maximize2 size={13} /> Full view</>}
+              </button>
+            </div>
+          )}
           <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
             {loading ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -884,8 +887,8 @@ export default function BoardPlan({
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '12px 20px', borderTop: '1px solid var(--bd)', flexShrink: 0 }}>
               <button className="btn btn-secondary" onClick={() => setOutreachTarget(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={sendOutreach} disabled={createThread.isPending || sendMessage.isPending || !outreachText.trim()}>
-                {(createThread.isPending || sendMessage.isPending) ? <><Loader2 size={13} className="spin" /> Sending…</> : <><Send size={13} /> Send offer</>}
+              <button className="btn btn-primary" onClick={sendOutreach} disabled={outreachSending || !outreachText.trim()}>
+                {outreachSending ? <><Loader2 size={13} className="spin" /> Sending…</> : <><Send size={13} /> Send offer</>}
               </button>
             </div>
           </div>

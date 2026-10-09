@@ -12,7 +12,7 @@ import RecommendationsPanel from '../../components/RecommendationsPanel'
 import DocumentTemplatesTab from './DocumentTemplatesTab'
 import { humanizeStatus, normalizeStatus, formatMoney } from '../../lib/format'
 import ProjectComponentTag from '../projects/ProjectComponentTag'
-import KelvinNotes from '../../kelvin/KelvinNotes'
+import KelvinDigest from '../../kelvin/KelvinDigest'
 import { KelvinIcon } from '../../kelvin/KelvinMark'
 
 function DocProjectCell({ projectId, componentId }: { projectId?: string; componentId?: string }) {
@@ -371,7 +371,7 @@ export default function Finance() {
       )}
 
       {!isExpanded && <RecommendationsPanel filterActions={['discount_20', 'increase_price', 'geo_target_discount']} />}
-      <KelvinNotes page="finance" />
+      <KelvinDigest page="finance" />
 
       <div className="page-tabs">
         <button className={`tab-btn ${tab === 'invoices' ? 'active' : ''}`} onClick={() => setTab('invoices')}>

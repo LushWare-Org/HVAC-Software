@@ -1,40 +1,22 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-    MessageSquare, Send, Bell, Plus, Search,
-    Paperclip, Smile, Check, CheckCheck, AlertCircle, RefreshCw, Archive,
-    Loader2, Megaphone, Info, CheckCircle2, AlertTriangle, XCircle, Wifi, WifiOff,
-    Trash2, Activity,
+    MessageSquare, Send, Bell, Check, AlertCircle, RefreshCw, Loader2, Megaphone, Info, CheckCircle2, AlertTriangle, XCircle, Activity,
 } from 'lucide-react'
 import {
-    useThreads,
-    useThread,
-    useSendThreadMessage,
-    useMarkThreadRead,
-    useUpdateThreadStatus,
     useNotifications,
     useMarkNotificationRead,
     useMarkAllNotificationsRead,
     useSendInAppNotification,
-    useDeleteThread,
 } from '../hooks/useComms'
-import { useSocket } from '../hooks/useSocket'
-import { queryClient } from '../lib/queryClient'
+import { useChatUnread, useConversations } from '../hooks/useChat'
 import { useCustomers } from '../hooks/useCustomers'
 import { useTeamMembers } from '../hooks/useTeam'
 import { useAuth } from '../contexts/AuthContext'
-import type { Customer, MessageThread, ThreadStatus } from '../types/api'
-import NewMessageModal from './communications/NewMessageModal'
+import type { Customer } from '../types/api'
+import ChatPanel from './communications/ChatPanel'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getInitials(name: string) {
-    return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-}
-
-function fmtTime(iso: string) {
-    return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-}
 
 function fmtSmartDate(iso: string) {
     const d = new Date(iso)
@@ -74,12 +56,6 @@ const NOTIF_TYPE_BADGE: Record<string, string> = {
     sent:    'bg-slate-50 text-slate-700 border-slate-200',
 }
 
-const THREAD_STATUS_BADGE: Record<ThreadStatus, string> = {
-    ACTIVE:   'badge-green',
-    RESOLVED: 'badge-neutral',
-    SPAM:     'badge-red',
-}
-
 const BROADCAST_ROLE_OPTIONS = [
     { id: 'all', label: 'All Users' },
     { id: 'technician', label: 'Technicians' },
@@ -106,133 +82,35 @@ export default function Communications() {
     const location = useLocation()
     const navigate = useNavigate()
     const [activeTab, setActiveTab]           = useState('messages')
-    const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
-    const [messageText, setMessageText]       = useState('')
-    const [searchQuery, setSearchQuery]       = useState('')
-    const [isNewMessageOpen, setIsNewMessageOpen] = useState(false)
-    const [newMsgInitialTech, setNewMsgInitialTech] = useState<string | null>(null)
     const [notificationTitle, setNotificationTitle] = useState('')
     const [notificationBody, setNotificationBody] = useState('')
     const [notificationType, setNotificationType] = useState('info')
     const [selectedRoles, setSelectedRoles] = useState<string[]>(['customer'])
     const [sendSuccessMsg, setSendSuccessMsg] = useState('')
-    const [typingUser, setTypingUser] = useState<string | null>(null)
-    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-    const messagesEndRef = useRef<HTMLDivElement>(null)
-    const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const typingSentRef = useRef(false)
 
-    // ── WebSocket ────────────────────────────────────────────────────────────────
-    const { isConnected, joinThread, leaveThread, sendTyping, onNewMessage, onTyping, onThreadsChanged } = useSocket()
-
-    // Join/leave thread room on selection
-    useEffect(() => {
-        if (!selectedThreadId) return
-        joinThread(selectedThreadId)
-        return () => { leaveThread(selectedThreadId) }
-    }, [selectedThreadId, joinThread, leaveThread])
-
-    // Real-time: patch query cache when a new message arrives
-    useEffect(() => {
-        const unsub = onNewMessage(({ threadId, message }) => {
-            queryClient.setQueryData(['threads', threadId], (old: any) => {
-                if (!old) return old
-                const msgs: any[] = old.messages ?? []
-                if (msgs.find((m: any) => m.id === message.id)) return old
-                return { ...old, messages: [...msgs, message] }
-            })
-            queryClient.invalidateQueries({ queryKey: ['threads'] })
-        })
-        return unsub
-    }, [onNewMessage])
-
-    // Real-time: company-wide signal (messages in threads we haven't joined) —
-    // refreshes the threads list + unread badge instead of tight polling.
-    useEffect(() => {
-        const unsub = onThreadsChanged(() => {
-            queryClient.invalidateQueries({ queryKey: ['threads'] })
-        })
-        return unsub
-    }, [onThreadsChanged])
-
-    // Real-time: typing indicator from others
-    useEffect(() => {
-        const unsub = onTyping(({ threadId, userName, isTyping }) => {
-            if (threadId !== selectedThreadId) return
-            if (isTyping) {
-                setTypingUser(userName)
-                if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-                typingTimerRef.current = setTimeout(() => setTypingUser(null), 3000)
-            } else {
-                setTypingUser(null)
-                if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-            }
-        })
-        return unsub
-    }, [onTyping, selectedThreadId])
-
-    const handleTypingChange = useCallback((val: string) => {
-        setMessageText(val)
-        if (!selectedThreadId) return
-        if (!typingSentRef.current) {
-            typingSentRef.current = true
-            sendTyping(selectedThreadId, true)
-        }
-        if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-        typingTimerRef.current = setTimeout(() => {
-            typingSentRef.current = false
-            sendTyping(selectedThreadId, false)
-        }, 2000)
-    }, [selectedThreadId, sendTyping])
-
-    // Auto-open new message modal when navigated here with a technician target
+    // Opened from elsewhere (e.g. a job's "Message technician"): start or open that conversation.
+    const [openWith, setOpenWith] = useState<{ with: 'technician'; techUserId: string } | { with: 'customer'; customerId: string } | null>(null)
     useEffect(() => {
         const nav = location.state as any
-        if (nav?.chatWithTech) {
-            setNewMsgInitialTech(nav.chatWithTech)
-            setIsNewMessageOpen(true)
+        if (nav?.chatWith) {
+            setActiveTab('messages')
+            setOpenWith(nav.chatWith)
             navigate('/communications', { replace: true, state: {} })
         }
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── API queries ──────────────────────────────────────────────────────────────
-    const threadsQuery   = useThreads({ limit: 100 })
-    const threadQuery    = useThread(selectedThreadId)
     const notifsQuery    = useNotifications(50)
-    const sendMutation      = useSendThreadMessage()
-    const markReadMutation  = useMarkThreadRead()
     const markNotifRead     = useMarkNotificationRead()
     const markAllRead       = useMarkAllNotificationsRead()
-    const updateStatus      = useUpdateThreadStatus()
-    const deleteThread      = useDeleteThread()
     const sendInAppNotification = useSendInAppNotification()
     const teamQuery = useTeamMembers({ page: 1, limit: 200, isActive: true })
     const customersQuery = useCustomers({ page: 1, limit: 200, isActive: true })
 
-    // Client-side privacy guard — mirrors the backend's findThreads() logic so
-    // any stale cache entries are also filtered before rendering.
-    //
-    // Thread visibility rules (same as backend):
-    //   A) Customer thread, empty participantIds, NOT a "Chat with Technician:" subject
-    //      → admin-created support thread, always visible to admin
-    //   B) Customer thread started by the customer portal for a tech chat
-    //      → subject starts with "Chat with Technician:", PRIVATE — admin never sees these
-    //   C) Tech-created customer thread (participantIds = [techId]) → only visible if admin is in the list
-    //   D) Staff-only thread → only visible if admin's userId is in participantIds
-    const allThreadsRaw: MessageThread[] = threadsQuery.data?.data ?? []
-    const allThreads = allThreadsRaw.filter((t) => {
-      const pids: string[] = (t as any).participantIds ?? []
-      const subject: string = (t as any).subject ?? ''
-      const isCustomerThread = !!(t as any).customerId
-      const isTechChatSubject = subject.startsWith('Chat with Technician:')
-
-      if (isCustomerThread && pids.length === 0 && !isTechChatSubject) {
-        // Rule A: admin-created support thread — no participant restriction, not a tech-chat
-        return true
-      }
-      // Rules B / C / D: explicit participant list OR tech-chat — must include this admin
-      return user?.id ? pids.includes(user.id) : false
-    })
+    // Office chat: counts for the strip above the tabs.
+    const chatList = useConversations()
+    const chatUnread = useChatUnread()
+    const conversations = chatList.data?.data ?? []
     const notifications = notifsQuery.data?.data ?? []
     const inboxNotifications = notifications.filter((n) => n.type !== 'sent')
     const sentNotifications = notifications.filter((n) => n.type === 'sent')
@@ -285,64 +163,6 @@ export default function Communications() {
 
     const canSubmitNotification = canBroadcast && notificationTitle.trim() && notificationBody.trim() && resolvedRecipients.length > 0
 
-    // ── Filter and sort thread list ──────────────────────────────────────────────
-    function getThreadDisplayName(t: MessageThread): string {
-        // Customer thread → always lead with the customer's name so admins can scan
-        // the list by person. Subject (if any) is shown separately as the preview line.
-        if (t.customerName) return t.customerName
-        if (t.customerPhone) return t.customerPhone
-        if (t.customerEmail) return t.customerEmail
-        // Staff / internal thread → prefer the subject, then the other participants' names
-        if ((t as any).subject) return (t as any).subject
-        if ((t as any).participantNames?.length) {
-            const others = (t as any).participantNames.filter((n: string) => n && n !== user?.name)
-            return others.length ? others.join(', ') : 'Team Chat'
-        }
-        return 'Unknown'
-    }
-
-    function getThreadSubtitle(t: MessageThread): string | null {
-        // Secondary line under the name: subject for customer threads, role hint for staff
-        if (t.customerName && (t as any).subject) return (t as any).subject as string
-        return null
-    }
-
-    const filteredThreads = allThreads
-        .filter(t => {
-            const name = getThreadDisplayName(t)
-            return name.toLowerCase().includes(searchQuery.toLowerCase())
-        })
-        .sort((a, b) => {
-            const la = a.lastMessageAt ?? a.updatedAt
-            const lb = b.lastMessageAt ?? b.updatedAt
-            return lb.localeCompare(la)
-        })
-
-    const selectedThread = threadQuery.data ?? null
-
-    // Mark thread read when selecting it
-    useEffect(() => {
-        if (selectedThreadId && (selectedThread?.unreadCount ?? 0) > 0) {
-            markReadMutation.mutate(selectedThreadId)
-        }
-    }, [selectedThreadId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Auto-scroll to bottom of message list
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [selectedThread?.messages?.length])
-
-    // ── Send message ─────────────────────────────────────────────────────────────
-    const handleSend = () => {
-        if (!messageText.trim() || !selectedThreadId) return
-        sendMutation.mutate({ threadId: selectedThreadId, body: messageText.trim() })
-        setMessageText('')
-        // Clear typing indicator
-        typingSentRef.current = false
-        if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-        sendTyping(selectedThreadId, false)
-    }
-
     const toggleRole = (roleId: string) => {
         setSelectedRoles((current) => {
             if (roleId === 'all') {
@@ -380,19 +200,15 @@ export default function Communications() {
         )
     }
 
-    const activeThreads   = allThreads.filter(t => (t as any).status === 'ACTIVE').length
-    const resolvedThreads = allThreads.filter(t => (t as any).status === 'RESOLVED').length
-    const unreadThreads   = allThreads.filter(t => (t as any).unreadCount > 0).length
-
     return (
         <div className="anim-fade-up">
             {/* ── KPI strip — CM1 ──────────────────────────────────────────────── */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
                 {[
-                    { label: 'Total Threads',   value: threadsQuery.isLoading ? '—' : allThreads.length,   icon: MessageSquare, grad: 'kpi-grad-blue',   onClick: () => setActiveTab('messages') },
-                    { label: 'Unread',          value: threadsQuery.isLoading ? '—' : unreadThreads,       icon: Bell,          grad: 'kpi-grad-amber',  onClick: () => setActiveTab('messages') },
-                    { label: 'Active',          value: threadsQuery.isLoading ? '—' : activeThreads,       icon: Activity,      grad: 'kpi-grad-green',  onClick: () => setActiveTab('messages') },
-                    { label: 'Resolved',        value: threadsQuery.isLoading ? '—' : resolvedThreads,     icon: CheckCircle2,  grad: 'kpi-grad-violet', onClick: () => setActiveTab('messages') },
+                    { label: 'Conversations', value: chatList.isLoading ? '—' : conversations.length, icon: MessageSquare, grad: 'kpi-grad-blue', onClick: () => setActiveTab('messages') },
+                    { label: 'Unread', value: chatUnread.isLoading ? '—' : (chatUnread.data?.total ?? 0), icon: Bell, grad: 'kpi-grad-amber', onClick: () => setActiveTab('messages') },
+                    { label: 'Customers', value: chatList.isLoading ? '—' : conversations.filter(c => c.kind === 'CUSTOMER_OFFICE').length, icon: Activity, grad: 'kpi-grad-green', onClick: () => setActiveTab('messages') },
+                    { label: 'Technicians', value: chatList.isLoading ? '—' : conversations.filter(c => c.kind === 'TECH_OFFICE').length, icon: CheckCircle2, grad: 'kpi-grad-violet', onClick: () => setActiveTab('messages') },
                 ].map(k => (
                     <div key={k.label} className="kpi-card" style={{ cursor: 'pointer' }} onClick={k.onClick}>
                         <div className="kpi-card-top">
@@ -420,280 +236,7 @@ export default function Communications() {
             <div className="anim-fade-up delay-1">
 
                 {/* ── Messages tab ─────────────────────────────────────────────── */}
-                {activeTab === 'messages' && (
-                    <div className="card h-[calc(100vh-170px)] overflow-hidden flex flex-row p-0 m-0">
-
-                        {/* Thread / conversation list */}
-                        <div className="w-[320px] border-r border-[var(--bd)] flex flex-col bg-[var(--bg-card)] shrink-0">
-                            <div className="p-4 border-b border-[var(--bd)] shrink-0">
-                                <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--t4)]" />
-                                        <input
-                                            placeholder="Search conversations..."
-                                            className="w-full pl-9 pr-3 py-2 text-sm bg-transparent border border-[var(--bd)] rounded-[var(--r)] focus:border-[var(--blue)] outline-none text-[var(--t1)]"
-                                            value={searchQuery}
-                                            onChange={e => setSearchQuery(e.target.value)}
-                                        />
-                                    </div>
-                                    <button className="btn btn-primary btn-sm px-2" title="New Message" onClick={() => { setNewMsgInitialTech(null); setIsNewMessageOpen(true) }}>
-                                        <Plus size={16} />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 overflow-auto">
-                                {/* Loading */}
-                                {threadsQuery.isLoading && Array.from({ length: 5 }).map((_, i) => (
-                                    <div key={i} className="flex items-center gap-3 p-4">
-                                        <Skeleton h={38} w="38px" />
-                                        <div className="flex-1 flex flex-col gap-1.5">
-                                            <Skeleton h={12} />
-                                            <Skeleton h={10} />
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {/* Error */}
-                                {threadsQuery.isError && (
-                                    <div style={{ padding: 16, color: 'var(--red)', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        <div className="flex items-center gap-2"><AlertCircle size={14} /> Failed to load conversations.</div>
-                                        <button onClick={() => threadsQuery.refetch()} style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--red)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, padding: 0 }}>
-                                            <RefreshCw size={12} /> Retry
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Thread rows */}
-                                {!threadsQuery.isLoading && filteredThreads.map(thread => {
-                                    const name       = getThreadDisplayName(thread)
-                                    const subtitle   = getThreadSubtitle(thread)  // subject shown under customer name
-                                    const isStaff    = !thread.customerId && ((thread as any).participantIds?.length ?? 0) > 0
-                                    const isSelected = selectedThreadId === thread.id
-                                    const unread     = thread.unreadCount ?? 0
-                                    const lastTime   = thread.lastMessageAt ?? thread.updatedAt
-
-                                    return (
-                                        <div
-                                            key={thread.id}
-                                            className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors border-l-[3px] ${isSelected ? 'bg-[var(--blue-glow)] border-[var(--blue)]' : 'border-transparent'}`}
-                                            onClick={() => setSelectedThreadId(thread.id)}
-                                        >
-                                            <div className={`w-[38px] h-[38px] rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${isStaff ? 'bg-purple-100 text-purple-600' : 'bg-[var(--blue-dim)] text-[var(--blue)]'}`}>
-                                                {getInitials(name)}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between mb-0.5">
-                                                    <p className={`font-medium text-sm text-[var(--t1)] truncate ${unread > 0 ? 'font-semibold' : ''}`}>
-                                                        {name}
-                                                    </p>
-                                                    <span className="text-xs text-[var(--t4)] whitespace-nowrap ml-2">{fmtTime(lastTime)}</span>
-                                                </div>
-                                                {/* Subject line (e.g. "Chat with Technician: Carlos") under customer name */}
-                                                {subtitle && (
-                                                    <p className="text-[11px] text-[var(--blue)] truncate mb-0.5 font-medium">{subtitle}</p>
-                                                )}
-                                                {thread.lastMessageBody && (
-                                                    <p className="text-[13px] text-[var(--t3)] truncate">{thread.lastMessageBody}</p>
-                                                )}
-                                                <div className="flex items-center gap-1.5 mt-1">
-                                                    <span className="text-[10px] text-[var(--t4)] uppercase font-semibold">{isStaff ? 'TEAM' : (thread.channel ?? 'IN_APP')}</span>
-                                                    {thread.status !== 'ACTIVE' && (
-                                                        <span className={`badge ${THREAD_STATUS_BADGE[thread.status]} text-[9px] px-1.5 py-0`}>{thread.status}</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            {unread > 0 && (
-                                                <div className="bg-[var(--blue)] text-white text-[10px] font-bold px-[7px] py-[1px] rounded-full shrink-0">
-                                                    {unread}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )
-                                })}
-
-                                {!threadsQuery.isLoading && !threadsQuery.isError && filteredThreads.length === 0 && (
-                                    <div className="flex flex-col items-center justify-center h-40 text-[var(--t4)] text-sm gap-2">
-                                        <MessageSquare size={24} />
-                                        <span>No conversations yet</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Message thread area */}
-                        <div className="flex-1 flex flex-col bg-[var(--bg-card)] min-w-0">
-                            {selectedThread ? (
-                                <>
-                                    {/* Header */}
-                                    <div className="p-4 border-b border-[var(--bd)] flex items-center justify-between shrink-0 h-[73px]">
-                                        <div className="flex items-center gap-3">
-                                            {(() => {
-                                                const detailIsStaff = !selectedThread.customerId && ((selectedThread as any).participantIds?.length ?? 0) > 0
-                                                const detailName = getThreadDisplayName(selectedThread as any)
-                                                const detailSubject = getThreadSubtitle(selectedThread as any)
-                                                return (
-                                                    <>
-                                                        <div className={`w-[38px] h-[38px] rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${detailIsStaff ? 'bg-purple-100 text-purple-600' : 'bg-[var(--blue-dim)] text-[var(--blue)]'}`}>
-                                                            {getInitials(detailName)}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-semibold text-[var(--t1)] text-[15px]">{detailName}</p>
-                                                            {detailSubject && (
-                                                                <p className="text-xs text-[var(--blue)] mt-px font-medium">{detailSubject}</p>
-                                                            )}
-                                                            <p className="text-xs text-[var(--t3)] mt-px">
-                                                                {detailIsStaff ? 'Team Chat' : `${selectedThread.channel ?? 'IN_APP'} · ${selectedThread.customerPhone ?? selectedThread.customerEmail ?? 'In-app chat'}`}
-                                                            </p>
-                                                        </div>
-                                                    </>
-                                                )
-                                            })()}
-                                        </div>
-                                        <div className="flex gap-2 items-center">
-                                            <span title={isConnected ? 'Real-time connected' : 'Connecting...'} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: isConnected ? 'var(--green)' : 'var(--t4)' }}>
-                                                {isConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
-                                                {isConnected ? 'Live' : 'Connecting'}
-                                            </span>
-                                            {selectedThread.status === 'ACTIVE' && (
-                                                <button
-                                                    className="topbar-icon-btn"
-                                                    title="Resolve conversation"
-                                                    onClick={() => updateStatus.mutate({ threadId: selectedThread.id, status: 'RESOLVED' })}
-                                                >
-                                                    <Archive size={16} />
-                                                </button>
-                                            )}
-                                            <button
-                                                className="topbar-icon-btn"
-                                                title="Delete conversation"
-                                                style={{ color: 'var(--red)' }}
-                                                onClick={() => setDeleteConfirmId(selectedThread.id)}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Messages */}
-                                    <div className="flex-1 overflow-auto p-5 flex flex-col gap-5">
-                                        {threadQuery.isLoading && (
-                                            <div className="flex flex-col gap-4">
-                                                {Array.from({ length: 3 }).map((_, i) => (
-                                                    <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-                                                        <div className="max-w-[60%]"><Skeleton h={50} /></div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {!threadQuery.isLoading && (selectedThread.messages ?? []).map(msg => {
-                                            const detailIsStaff2 = !selectedThread.customerId && ((selectedThread as any).participantIds?.length ?? 0) > 0
-                                            // For customer↔staff threads: OUTBOUND = staff sent, INBOUND = customer sent.
-                                            // For staff↔staff threads: use senderId to determine who sent — never use
-                                            // senderName because two users can share the same name.
-                                            const isOutbound = detailIsStaff2
-                                                ? msg.senderId === user?.id
-                                                : msg.direction === 'OUTBOUND'
-                                            return (
-                                                <div key={msg.id} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
-                                                    <div className={`max-w-[75%] p-[14px] rounded-2xl ${isOutbound ? 'bg-[var(--blue)] text-white rounded-tr-sm' : 'bg-[var(--bg-card-2)] text-[var(--t1)] rounded-tl-sm'}`}>
-                                                        {!isOutbound && msg.senderName && (
-                                                            <p className="text-[12px] font-semibold mb-1 text-[var(--blue)]">{msg.senderName}</p>
-                                                        )}
-                                                        <p className="text-[14px] leading-relaxed">{msg.body}</p>
-                                                        <div className={`flex items-center gap-1 mt-1.5 justify-end ${isOutbound ? 'text-blue-100' : 'text-[var(--t4)]'}`}>
-                                                            <span className="text-[11px]">{fmtTime(msg.createdAt)}</span>
-                                                            {isOutbound && (
-                                                                msg.status === 'READ'
-                                                                    ? <CheckCheck size={14} className="ml-0.5" />
-                                                                    : <Check size={14} className="ml-0.5" />
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )
-                                        })}
-
-                                        {!threadQuery.isLoading && (selectedThread.messages?.length ?? 0) === 0 && (
-                                            <div className="flex items-center justify-center h-24 text-[var(--t4)] text-sm">
-                                                No messages yet — start the conversation below.
-                                            </div>
-                                        )}
-                                        {typingUser && (
-                                            <div className="flex justify-start">
-                                                <div className="flex items-center gap-2 px-4 py-2 rounded-2xl rounded-tl-sm bg-[var(--bg-card-2)] text-[var(--t3)]" style={{ fontSize: 13 }}>
-                                                    <span className="flex gap-0.5">
-                                                        <span style={{ animation: 'typingDot 1.2s ease-in-out infinite', animationDelay: '0ms' }}>●</span>
-                                                        <span style={{ animation: 'typingDot 1.2s ease-in-out infinite', animationDelay: '200ms' }}>●</span>
-                                                        <span style={{ animation: 'typingDot 1.2s ease-in-out infinite', animationDelay: '400ms' }}>●</span>
-                                                    </span>
-                                                    <span>{typingUser} is typing…</span>
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div ref={messagesEndRef} />
-                                    </div>
-
-                                    {/* Composer */}
-                                    <div className="p-4 border-t border-[var(--bd)] bg-[var(--bg-surface)] shrink-0">
-                                        <div className="flex items-end gap-2 bg-[var(--bg-card)] border border-[var(--bd)] rounded-[var(--r)] p-1.5 focus-within:border-[var(--blue)] focus-within:ring-1 focus-within:ring-[var(--blue)] transition-all">
-                                            <button className="topbar-icon-btn shrink-0 border-transparent hover:border-transparent hover:bg-transparent text-[var(--t4)] hover:text-[var(--t2)] mb-0.5">
-                                                <Paperclip size={20} />
-                                            </button>
-                                            <textarea
-                                                placeholder="Type your message..."
-                                                className="flex-1 bg-transparent border-0 p-2 text-[14px] text-[var(--t1)] outline-none min-h-[40px] max-h-32 resize-none"
-                                                value={messageText}
-                                                onChange={e => handleTypingChange(e.target.value)}
-                                                onKeyDown={e => {
-                                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                                        e.preventDefault()
-                                                        handleSend()
-                                                    }
-                                                }}
-                                                disabled={selectedThread.status !== 'ACTIVE'}
-                                            />
-                                            <button className="topbar-icon-btn shrink-0 border-transparent hover:border-transparent hover:bg-transparent text-[var(--t4)] hover:text-[var(--t2)] mb-0.5 mr-1">
-                                                <Smile size={20} />
-                                            </button>
-                                            <button
-                                                className="btn btn-primary shrink-0 h-[40px] w-[40px] p-0 flex items-center justify-center rounded-[var(--r-sm)] mb-0.5 transition-opacity"
-                                                onClick={handleSend}
-                                                disabled={!messageText.trim() || sendMutation.isPending || selectedThread.status !== 'ACTIVE'}
-                                                style={{ opacity: (!messageText.trim() || sendMutation.isPending || selectedThread.status !== 'ACTIVE') ? 0.6 : 1 }}
-                                            >
-                                                <Send size={18} className="translate-x-[1px]" />
-                                            </button>
-                                        </div>
-                                        {sendMutation.isError && (
-                                            <p className="text-xs text-[var(--red)] mt-1 pl-1">Failed to send message. Please try again.</p>
-                                        )}
-                                        {selectedThread.status !== 'ACTIVE' && (
-                                            <p className="text-xs text-[var(--t4)] mt-1 pl-1">
-                                                This conversation is {selectedThread.status.toLowerCase()}.{' '}
-                                                <button
-                                                    className="text-[var(--blue)] hover:underline"
-                                                    onClick={() => updateStatus.mutate({ threadId: selectedThread.id, status: 'ACTIVE' })}
-                                                >
-                                                    Reopen
-                                                </button>
-                                            </p>
-                                        )}
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center text-[var(--t4)] bg-[var(--bg-surface)]">
-                                    <div className="w-20 h-20 rounded-full bg-[var(--bg-card-2)] flex items-center justify-center mb-5 shadow-inner">
-                                        <MessageSquare size={36} className="text-[var(--t3)]" />
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-[var(--t1)] mb-1">Your Messages</h3>
-                                    <p className="text-[14px]">Select a conversation from the sidebar to view messages.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
+                {activeTab === 'messages' && <ChatPanel openWith={openWith} onOpened={() => setOpenWith(null)} />}
 
                 {/* ── Notifications tab ────────────────────────────────────────── */}
                 {activeTab === 'notifications' && (
@@ -930,59 +473,6 @@ export default function Communications() {
             </div>
 
             {/* ── Delete Confirmation Modal ─────────────────────────────── */}
-            {deleteConfirmId && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setDeleteConfirmId(null)}>
-                    <div className="bg-[var(--bg-card)] rounded-[var(--r)] shadow-xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                                <Trash2 size={18} className="text-red-600" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-[var(--t1)] text-[15px]">Delete Conversation</h3>
-                                <p className="text-xs text-[var(--t3)] mt-0.5">This will permanently delete all messages.</p>
-                            </div>
-                        </div>
-                        <p className="text-sm text-[var(--t2)] mb-5">
-                            Are you sure you want to delete this conversation? This action cannot be undone and all messages will be lost.
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button className="btn btn-secondary" onClick={() => setDeleteConfirmId(null)}>Cancel</button>
-                            <button
-                                className="btn"
-                                style={{ background: 'var(--red)', color: '#fff', borderColor: 'var(--red)' }}
-                                disabled={deleteThread.isPending}
-                                onClick={() => {
-                                    deleteThread.mutate(deleteConfirmId, {
-                                        onSuccess: () => {
-                                            setDeleteConfirmId(null)
-                                            setSelectedThreadId(null)
-                                        },
-                                        onError: () => setDeleteConfirmId(null),
-                                    })
-                                }}
-                            >
-                                {deleteThread.isPending ? <Loader2 size={14} className="animate-spin mr-2" /> : <Trash2 size={14} className="mr-2" />}
-                                Delete Forever
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ── New Message Modal ─────────────────────────────────────── */}
-            {isNewMessageOpen && (
-                <NewMessageModal
-                    onClose={() => { setIsNewMessageOpen(false); setNewMsgInitialTech(null) }}
-                    onThreadCreated={(threadId) => {
-                        setIsNewMessageOpen(false)
-                        setNewMsgInitialTech(null)
-                        setSelectedThreadId(threadId)
-                        setActiveTab('messages')
-                    }}
-                    initialTechName={newMsgInitialTech}
-                />
-            )}
-
             <style>{`
                 @keyframes typingDot {
                     0%, 60%, 100% { opacity: 0.2; transform: scale(0.8); }

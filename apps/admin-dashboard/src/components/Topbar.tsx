@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bell, Search, Sun, Moon, Monitor, ChevronDown, ChevronLeft, ChevronRight, User, Settings as SettingsIcon, LogOut, Calendar, CalendarDays, Plus, ArrowRight, Download, RefreshCw, Menu, UserPlus } from 'lucide-react'
+import { Bell, Search, Sun, Moon, Monitor, ChevronDown, ChevronLeft, ChevronRight, User, Settings as SettingsIcon, LogOut, Calendar, CalendarDays, Plus, ArrowRight, Download, RefreshCw, Menu } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -14,6 +14,7 @@ import AddQuoteModal from '../pages/finance/AddQuoteModal'
 import TechnicianDetailModal from '../pages/scheduling/TechnicianDetailModal'
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '../hooks/useComms'
 import KelvinPill from '../kelvin/KelvinPill'
+import { COMPACT_MAIN_WIDTH, useMainWidth } from '../lib/useMainWidth'
 
 function useDropdown() {
     const [open, setOpen] = useState(false)
@@ -226,6 +227,9 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
     const btnPrimary = `${btnBase} bg-[var(--blue)] text-white shadow-[0_1px_2px_rgba(37,99,235,0.2)] hover:bg-[#1D4ED8] hover:shadow-[0_2px_4px_rgba(37,99,235,0.3)] hover:-translate-y-[1px] active:translate-y-0 active:shadow-[0_1px_2px_rgba(37,99,235,0.2)]`
     const btnSecondary = `${btnBase} bg-[var(--bg-card)] text-[var(--t2)] border border-[var(--bd-md)] shadow-[var(--shadow-xs)] hover:bg-[var(--bg-hover)] hover:text-[var(--t1)] hover:border-[var(--bd-lg)]`
 
+    // Compact by the room the page really has (Kelvin's panel takes ~400 px), not the window size.
+    const compact = useMainWidth() < COMPACT_MAIN_WIDTH
+
     const getPageActions = () => {
         switch (pathname) {
             case '/': return (
@@ -237,14 +241,15 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
             case '/jobs': return <button className={`${btnPrimary} ${btnSm}`} id="btn-create-job" onClick={() => setIsAddJobOpen(true)}><Plus size={13} /> Create Job</button>
             case '/scheduling': return (
                 <>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 h-[28px] rounded-full text-[11px] font-semibold ${
+                    <span role="status" title={schedulingWsStatus === 'connected' ? 'Live updates on' : schedulingWsStatus === 'connecting' ? 'Connecting to live updates' : 'Live updates offline'}
+                        aria-label={schedulingWsStatus === 'connected' ? 'Live updates on' : schedulingWsStatus === 'connecting' ? 'Connecting to live updates' : 'Live updates offline'}
+                        className={`inline-flex items-center gap-1.5 px-2.5 h-[28px] rounded-full text-[11px] font-semibold ${
                         schedulingWsStatus === 'connected' ? 'bg-emerald-50 text-emerald-700' : schedulingWsStatus === 'connecting' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
                     }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${schedulingWsStatus === 'connected' ? 'bg-emerald-500' : schedulingWsStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`} />
-                        {schedulingWsStatus === 'connected' ? 'Live' : schedulingWsStatus === 'connecting' ? 'Connecting…' : 'Offline'}
+                        {!compact && <span>{schedulingWsStatus === 'connected' ? 'Live' : schedulingWsStatus === 'connecting' ? 'Connecting…' : 'Offline'}</span>}
                     </span>
-                    <button className={`${btnSecondary} ${btnSm}`} onClick={() => window.dispatchEvent(new CustomEvent('scheduling-open-add-technician'))}><UserPlus size={13} /> Add Technician</button>
-                    <button className={`${btnPrimary} ${btnSm}`} onClick={() => window.dispatchEvent(new CustomEvent('scheduling-open-create-job'))}><Plus size={13} /> Create Job</button>
+                    <button className={`${btnPrimary} ${btnSm}`} title="Create job" aria-label="Create job" onClick={() => window.dispatchEvent(new CustomEvent('scheduling-open-create-job'))}><Plus size={13} />{!compact && ' Create Job'}</button>
                 </>
             )
             case '/finance': return (
@@ -253,7 +258,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                 </>
             )
             case '/analytics': return <button className={`${btnPrimary} ${btnSm}`}><Download size={13} /> Export Report</button>
-            case '/team': return <button className={`${btnPrimary} ${btnSm}`}><Plus size={13} /> Add Team Member</button>
+            case '/team': return <button className={`${btnPrimary} ${btnSm}`} onClick={() => window.dispatchEvent(new CustomEvent('team-open-add-member'))}><Plus size={13} /> Add Team Member</button>
             default: return null
         }
     }
@@ -273,7 +278,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
 
     return (
         <>
-            <header className={`admin-topbar h-20 border-b flex items-center justify-between px-6 gap-6 flex-shrink-0 sticky top-0 z-30 transition-colors duration-300 ${topbarBg}`}>
+            <header className={`admin-topbar${pathname === '/scheduling' && schedulingScope === 'plan' ? ' is-planning' : ''}${compact ? ' is-compact' : ''} h-20 border-b flex items-center justify-between px-6 gap-6 flex-shrink-0 sticky top-0 z-30 transition-colors duration-300 ${topbarBg}`}>
                 <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
                     {showMenu && (
                         <button
@@ -296,15 +301,19 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                     <h2 className={`text-2xl font-bold tracking-tight truncate ${isLight ? 'text-slate-900' : 'text-[var(--t1)]'}`}>
                         {headerParams.title}
                     </h2>
-                    <div className={`hidden sm:flex items-center gap-1.5 text-sm mt-1 font-medium ${isLight ? 'text-slate-500' : 'text-[var(--t3)]'}`}>
+                    <div className={`${compact ? 'hidden' : 'hidden sm:flex'} items-center gap-1.5 text-sm mt-1 font-medium ${isLight ? 'text-slate-500' : 'text-[var(--t3)]'}`}>
                         <Calendar size={14} />
                         <span>{dateStr}</span>
                     </div>
                     </div>
 
                     {pathname === '/scheduling' && schedulingSubTab === 'board' && (
-                        <div className={`flex items-center gap-1 rounded-xl p-1 ml-6 flex-shrink-0 ${isLight ? 'bg-slate-100' : 'bg-[var(--bg-input)]'}`}>
+                        // Below 1440 px, and always while planning a day (the date stepper needs the room), the labels shorten
+                        // (tooltips and screen-reader names keep the full words) so everything stays on one row.
+                        <div className={`flex items-center gap-1 rounded-xl p-1 flex-shrink-0 ${compact ? 'ml-1' : 'ml-3 min-[1440px]:ml-6'} ${isLight ? 'bg-slate-100' : 'bg-[var(--bg-input)]'}`}>
                             <button
+                                title="See all jobs"
+                                aria-label="See all jobs"
                                 onClick={() => window.dispatchEvent(new CustomEvent('scheduling-set-scope', { detail: 'live' }))}
                                 className={`flex items-center gap-2 px-3.5 h-[34px] rounded-lg text-[13px] font-semibold transition-all duration-150 ${
                                     schedulingScope === 'live'
@@ -313,9 +322,12 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                                 }`}
                             >
                                 <span className={`w-1.5 h-1.5 rounded-full ${schedulingScope === 'live' ? 'bg-white' : 'bg-emerald-500'}`} />
-                                See all jobs
+                                <span className={schedulingScope === 'plan' || compact ? 'hidden' : 'hidden min-[1440px]:inline'}>See all jobs</span>
+                                <span className={schedulingScope === 'plan' || compact ? '' : 'min-[1440px]:hidden'}>All</span>
                             </button>
                             <button
+                                title="Plan a day"
+                                aria-label="Plan a day"
                                 onClick={() => window.dispatchEvent(new CustomEvent('scheduling-set-scope', { detail: 'plan' }))}
                                 className={`flex items-center gap-2 px-3.5 h-[34px] rounded-lg text-[13px] font-semibold transition-all duration-150 ${
                                     schedulingScope === 'plan'
@@ -324,7 +336,8 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                                 }`}
                             >
                                 <CalendarDays size={14} />
-                                Plan a day
+                                <span className={schedulingScope === 'plan' || compact ? 'hidden' : 'hidden min-[1440px]:inline'}>Plan a day</span>
+                                <span className={schedulingScope === 'plan' || compact ? '' : 'min-[1440px]:hidden'}>Plan</span>
                             </button>
                         </div>
                     )}
@@ -468,7 +481,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps = {}) {
                                 <div className="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-lg text-white text-[13px] font-bold flex-shrink-0 shadow-sm">
                                     {currentUser.initials}
                                 </div>
-                                <div className="hidden sm:flex flex-col items-start pr-1">
+                                <div className="tb-user-text hidden min-[1180px]:flex flex-col items-start pr-1">
                                     <span className={`text-[14px] font-semibold leading-tight ${isLight ? 'text-slate-800' : 'text-[var(--t1)]'}`}>
                                         {currentUser.name}
                                     </span>

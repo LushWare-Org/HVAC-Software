@@ -2,8 +2,6 @@
  * ProjectDetail — one engagement, everything about it.
  * Tabs: Overview · Crew roster (signature: 7-day strip with day-by-day
  * swaps and reserved-capacity messaging) · Jobs · Agreements · Finances.
- *
- * DEMO: reads/writes the mock store; roster edits update live.
  */
 import { useEffect, useMemo, useState, Suspense, lazy } from 'react'
 import { createPortal } from 'react-dom'
@@ -13,7 +11,7 @@ import {
   ArrowLeft, Pencil, MapPin, CalendarRange, Users2, FileSignature,
   Wrench, Wallet, LayoutList, HardHat, Plus, RotateCcw, X, Moon,
   AlertTriangle, StickyNote, CalendarClock, Loader2, Link2, Unlink, UserPlus, Layers, ChevronRight,
-  User, Mail, ExternalLink, Settings2, UserX,
+  User, Mail, ExternalLink, Settings2, UserX, HardHat as CrewIcon,
 } from 'lucide-react'
 import api from '../../lib/api'
 import { useToast } from '../../contexts/ToastContext'
@@ -32,12 +30,17 @@ import AddTechnicianModal from '../../components/AddTechnicianModal'
 import AddJobModal from '../jobs/AddJobModal'
 import AddQuoteModal from '../finance/AddQuoteModal'
 import AddInvoiceModal from '../finance/AddInvoiceModal'
+import AddExpenseModal from '../finance/AddExpenseModal'
+import ProjectMoneyCard from './ProjectMoneyCard'
 import AgreementEditorModal from '../agreements/AgreementEditorModal'
 import type { Agreement } from '../../hooks/useAgreements'
 import type { Job } from '../../types/api'
 import ComponentsTab from './ComponentsTab'
 import ComponentIssuesAlert from '../../components/ComponentIssuesAlert'
 import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
+import { useTechnicians } from '../../hooks/useScheduling'
+import { useSetCrew } from '../../hooks/useCrew'
+import { dayCrewFor, needsCrew } from './crew'
 
 // Consistent with every other consumer of this modal (DayPlanner, Finance,
 // AgreementDrawer, Topbar) — lazy-loaded, same component app-wide.
@@ -112,10 +115,10 @@ export default function ProjectDetail() {
         </button>
         <div style={{ flex: 1, minWidth: 240 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: 19, fontWeight: 700, color: '#F1F5F9', margin: 0 }}>{project.name}</h1>
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{project.name}</h1>
             <ProjectStatusBadge status={project.status} />
           </div>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 5, fontSize: 12.5, color: '#94A3B8' }}>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 5, fontSize: 12.5, color: 'var(--t3)' }}>
             {project.customerName ? (
               <span>{project.customerName}</span>
             ) : (
@@ -653,7 +656,51 @@ const PRIORITY_CSS: Record<string, string> = {
 }
 
 // ── Jobs ─────────────────────────────────────────────────────────────────────
+const AUTO_CREW_KEY = 'projects:newJobsGetDayCrew'
+const readAutoCrew = () => { try { return localStorage.getItem(AUTO_CREW_KEY) !== 'off' } catch { return true } }
+
 function JobsTab({ project: p }: { project: Project }) {
+  const { showSuccess, showError } = useToast()
+  const setCrew = useSetCrew()
+  const techsQ = useTechnicians()
+  const [autoCrew, setAutoCrewState] = useState(readAutoCrew)
+  const [assigning, setAssigning] = useState(false)
+  const setAutoCrew = (on: boolean) => { setAutoCrewState(on); try { localStorage.setItem(AUTO_CREW_KEY, on ? 'on' : 'off') } catch { /* private window */ } }
+
+  // The crew rostered on each waiting job's day, so jobs go to the people already reserved for the site.
+  const schedIdByUser = useMemo(() => new Map((techsQ.data ?? []).filter(t => t.userId).map(t => [t.userId, t.id])), [techsQ.data])
+  const waiting = p.jobs.filter(needsCrew)
+  const dayKeys = waiting.map(j => toDateKey(new Date(j.scheduledStart!))).sort()
+  const rosterQ = useProjectRoster(waiting.length ? p.id : undefined, dayKeys[0] ?? '', dayKeys[dayKeys.length - 1] ?? '')
+  const crewFor = (j: { scheduledStart?: string | null }, roster = rosterQ.data ?? []) => dayCrewFor(j, roster, p.baseTeamUserIds, schedIdByUser)
+  const crewable = waiting.filter(j => crewFor(j))
+
+  /** Gives one job its day's crew; fetches that day's roster when it isn't loaded (a job just created). */
+  const giveCrew = async (job: { id: string; scheduledStart?: string | null }) => {
+    let crew = crewFor(job)
+    if (!crew && job.scheduledStart) {
+      const key = toDateKey(new Date(job.scheduledStart))
+      const res = await api.get(`/crm/projects/${p.id}/roster`, { params: { from: key, to: key } }).catch(() => null)
+      crew = crewFor(job, res?.data ?? [])
+    }
+    if (!crew) return false
+    await setCrew.mutateAsync({ jobId: job.id, technicianIds: crew.technicianIds, leadTechnicianId: crew.leadTechnicianId })
+    return true
+  }
+
+  const giveCrews = async (jobs: Array<{ id: string; scheduledStart?: string | null; title?: string }>) => {
+    setAssigning(true)
+    let done = 0
+    const failed: string[] = []
+    for (const j of jobs) {
+      try { if (await giveCrew(j)) done++ } catch (e: any) { failed.push(`${j.title ?? 'A job'}: ${e?.response?.data?.message ?? e?.response?.data?.error ?? 'could not be assigned'}`) }
+    }
+    setAssigning(false)
+    invalidateProjectLinks(p.id)
+    if (done) showSuccess(`${done} job${done === 1 ? '' : 's'} given to the day's crew.`, 'Crew assigned')
+    if (failed.length) showError(failed.join(' '), 'Some jobs were not assigned')
+  }
+
   const [showLinker, setShowLinker] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [viewJob, setViewJob] = useState<ProjectJob | null>(null)
@@ -687,7 +734,17 @@ function JobsTab({ project: p }: { project: Project }) {
           <div className="card-title">Jobs in this project</div>
           <div className="card-subtitle">Discrete billable visits — each still flows through dispatch as usual</div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--t3)' }} title="A job created here with a date goes straight to that day's rostered crew">
+            <input type="checkbox" checked={autoCrew} onChange={e => setAutoCrew(e.target.checked)} />
+            New jobs get the day's crew
+          </label>
+          {crewable.length > 0 && (
+            <button className="btn btn-secondary btn-sm" disabled={assigning} onClick={() => void giveCrews(crewable)}
+              title="Give each waiting job the crew rostered for its day">
+              {assigning ? <Loader2 size={12} className="animate-spin" /> : <CrewIcon size={12} />} Give crews to {crewable.length} job{crewable.length === 1 ? '' : 's'}
+            </button>
+          )}
           <button className="btn btn-secondary btn-sm" onClick={() => setShowLinker(v => !v)} disabled={!p.customerId}
             title={!p.customerId ? 'Add a customer to this project first' : undefined}>
             <Link2 size={12} /> {showLinker ? 'Close' : 'Link existing'}
@@ -758,6 +815,18 @@ function JobsTab({ project: p }: { project: Project }) {
                   )}
                 </p>
               </div>
+              {needsCrew(j) && (() => {
+                const crew = crewFor(j)
+                return crew ? (
+                  <span role="button" tabIndex={0} className="btn btn-secondary btn-sm"
+                    title={`Give this job to ${crew.userIds.map(u => techById(u)?.name ?? 'a technician').join(', ')}`}
+                    onClick={e => { e.stopPropagation(); if (!assigning) void giveCrews([j]) }}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); if (!assigning) void giveCrews([j]) } }}
+                    style={{ flexShrink: 0, opacity: assigning ? 0.6 : 1 }}>
+                    <CrewIcon size={12} /> Give to crew ({crew.userIds.length})
+                  </span>
+                ) : null
+              })()}
               <span className={`badge ${JOB_BADGE[j.status] ?? 'badge-neutral'}`}>{j.status.replace('_', ' ')}</span>
               <span title="Unlink from project" onClick={e => { e.stopPropagation(); linkJob.mutate({ jobId: j.id, projectId: null }) }}
                 style={{ padding: 6, borderRadius: 8, display: 'flex', opacity: linkJob.isPending ? 0.5 : 1 }}>
@@ -794,7 +863,10 @@ function JobsTab({ project: p }: { project: Project }) {
         lockedCustomer={p.customerId ? { id: p.customerId, name: p.customerName ?? '—', address: p.siteAddress, lat: p.latitude, lng: p.longitude } : undefined}
         lockedProject={{ id: p.id, name: p.name, templateType: p.templateType, templateId: p.templateId, componentTypesSnapshot: p.componentTypesSnapshot }}
         contextLabel={p.name}
-        onCreated={() => invalidateProjectLinks(p.id)}
+        onCreated={(job) => {
+          invalidateProjectLinks(p.id)
+          if (autoCrew && job?.id && job.scheduledStart) void giveCrews([{ id: job.id, scheduledStart: job.scheduledStart, title: job.title }])
+        }}
       />
     </div>
   )
@@ -1045,9 +1117,7 @@ function AgreementsTab({ project: p }: { project: Project }) {
 // ── Finances ─────────────────────────────────────────────────────────────────
 function FinancesTab({ project: p }: { project: Project }) {
   const fin = projectFinances(p)
-  const budget = p.budget ?? 0
-  const overBudget = budget > 0 && fin.invoiced > budget
-  const budgetPct = budget > 0 ? Math.round((fin.invoiced / budget) * 100) : 0
+  const [showAddExpense, setShowAddExpense] = useState(false)
 
   const { data: customer } = useCustomer(p.customerId ?? '')
   const presetCustomer = p.customerId ? { id: p.customerId, name: p.customerName ?? '—', email: customer?.email } : undefined
@@ -1079,19 +1149,7 @@ function FinancesTab({ project: p }: { project: Project }) {
         ))}
       </div>
 
-      {budget > 0 && (
-        <div className="card" style={{ padding: '14px 18px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Budget utilisation
-            </span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: overBudget ? 'var(--red)' : 'var(--t1)' }}>
-              {fmtMoney(fin.invoiced)} of {fmtMoney(budget)} ({budgetPct}%)
-            </span>
-          </div>
-          <ProgressBar pct={budgetPct} color={overBudget ? 'var(--red)' : budgetPct > 85 ? 'var(--amber)' : 'var(--green)'} height={8} />
-        </div>
-      )}
+      <ProjectMoneyCard projectId={p.id} onAddExpense={() => setShowAddExpense(true)} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
         <FinanceList title="Quotes" docs={p.quotes} paidStatus="ACCEPTED" actionLabel="New quote" onAction={() => setShowCreateQuote(true)} disabled={!p.customerId} componentById={componentById} />
@@ -1102,6 +1160,13 @@ function FinancesTab({ project: p }: { project: Project }) {
         isOpen={showCreateQuote}
         onClose={() => setShowCreateQuote(false)}
         presetCustomer={presetCustomer}
+        projectId={p.id}
+        contextLabel={p.name}
+        onCreated={() => invalidateProjectLinks(p.id)}
+      />
+      <AddExpenseModal
+        isOpen={showAddExpense}
+        onClose={() => setShowAddExpense(false)}
         projectId={p.id}
         contextLabel={p.name}
         onCreated={() => invalidateProjectLinks(p.id)}

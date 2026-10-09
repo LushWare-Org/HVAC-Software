@@ -32,7 +32,7 @@ import JobStatusSpine from "./JobStatusSpine";
 import JobVitalsRail from "./JobVitalsRail";
 import CrewControlCenter from "../scheduling/crew/CrewControlCenter";
 import { useCrew } from "../../hooks/useCrew";
-import { formatMoney } from '../../lib/format'
+import { formatArrivalWindow, formatMoney } from '../../lib/format'
 import GpsSimulationControl from '../../components/GpsSimulationControl'
 import JobStatusOverrideMenu from "../../components/JobStatusOverrideMenu";
 import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
@@ -196,7 +196,8 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
 
   const handleChatWithTech = () => {
     onClose()
-    navigate('/communications', { state: { chatWithTech: job.assignedToName } })
+    if (!job.assignedToId) return
+    navigate('/communications', { state: { chatWith: { with: 'technician', techUserId: job.assignedToId } } })
   };
 
   const quickTransition = (newStatus: string) => {
@@ -1220,6 +1221,13 @@ export default function JobDetailModal({ isOpen, onClose, job: propJob, onCreate
                       <Calendar size={11} /> Scheduled Start
                     </label>
                     <input value={job.scheduledStart ? new Date(job.scheduledStart).toLocaleString() : "—"} disabled className={inputView} />
+                    {job.windowStart && job.windowEnd && (
+                      <p className="text-xs text-gray-400">
+                        {job.timeMode === 'WINDOW' ? 'Customer asked for an arrival window: ' : 'Customer first asked for: '}
+                        {formatArrivalWindow(job.windowStart, job.windowEnd)}
+                        {job.timeMode === 'WINDOW' ? '. Set an exact time when you schedule it.' : '.'}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">

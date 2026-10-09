@@ -114,6 +114,15 @@
 .kv-corner-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 .kv-corner-btn.kv-hop { animation: kv-hop 700ms cubic-bezier(.2,.8,.2,1); }
 .kv-bubble-region { position: absolute; bottom: 4px; display: flex; }
+.kv-corner.on-top .kv-bubble-region { bottom: auto; top: 4px; }
+/* While he is dragged: the edge he will land on glows. */
+.kv-edge-hint { position: fixed; z-index: 999; pointer-events: none; border-radius: 999px;
+  background: linear-gradient(var(--hint-dir, 90deg), transparent, color-mix(in srgb, var(--blue) 55%, transparent), transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--blue) 45%, transparent); }
+.kv-edge-hint.is-left, .kv-edge-hint.is-right { top: 96px; bottom: 24px; width: 4px; --hint-dir: 180deg; }
+.kv-edge-hint.is-left { left: 6px; } .kv-edge-hint.is-right { right: 6px; }
+.kv-edge-hint.is-top, .kv-edge-hint.is-bottom { left: 16px; right: 16px; height: 4px; }
+.kv-edge-hint.is-top { top: 88px; } .kv-edge-hint.is-bottom { bottom: 10px; }
 .kv-corner.is-right .kv-bubble-region { right: 70px; justify-content: flex-end; }
 .kv-corner.is-left .kv-bubble-region { left: 70px; justify-content: flex-start; }
 .kv-bubble { width: max-content; max-width: 280px; background: var(--bg-card); color: var(--t1); border-radius: 14px; padding: 9px 12px 9px 14px; display: flex; flex-direction: column; gap: 2px;
@@ -142,10 +151,10 @@ body.kelvin-open .kv-corner { display: none; }
 .kv-item { background: var(--bg-card); border: 1px solid var(--bd); border-left: 3px solid var(--t1); border-radius: var(--r-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
 .kv-item.is-urgent { border-left-color: var(--amber); }
 .kv-item.is-quiet { border-left-color: var(--bd-md); }
-.kv-item-tag { font-size: 12px; font-weight: 600; color: var(--amber); }
-.kv-item-title { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--t1); }
+.kv-item-tag { align-self: flex-start; font-size: 11.5px; font-weight: 600; color: var(--amber); background: var(--amber-dim); border-radius: 999px; padding: 2px 9px; }
+.kv-item-title { margin: 0; font-size: 14.5px; font-weight: 600; line-height: 1.4; letter-spacing: -0.005em; color: var(--t1); }
 .kv-item-why { margin: 0; font-size: 13px; color: var(--t2); }
-.kv-item-fixes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.kv-item-fixes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
 .kv-item-fixes .ops-btn { min-height: 40px; height: auto; white-space: normal; text-align: left; }
 .kv-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .kv-log li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--bd); font-size: 13px; color: var(--t2); }
@@ -160,9 +169,10 @@ body.kelvin-open .kv-corner { display: none; }
 .kv-prefs-opts small { font-size: 12px; color: var(--t3); }
 @media (max-width: 860px) { .kv-desk-cols { grid-template-columns: minmax(0, 1fr); } .kv-desk-hello h1 { font-size: 20px; } }
 
-.kv-notes { display: flex; flex-direction: column; gap: 8px; }
-.kv-note { display: flex; gap: 10px; align-items: flex-start; background: var(--bg-card); border: 1px solid var(--bd); border-left: 3px solid var(--t1); border-radius: var(--r-md); padding: 12px 14px; }
-.kv-note.is-urgent { border-left-color: var(--amber); }
+.kv-notes { display: flex; flex-direction: column; gap: 10px; }
+.kv-note { display: flex; gap: 14px; align-items: flex-start; background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-xl); box-shadow: var(--card-shadow, none); padding: 16px 20px; }
+.kv-note.is-urgent { border-color: color-mix(in srgb, var(--amber) 32%, var(--bd)); background: color-mix(in srgb, var(--amber) 4%, var(--bg-card)); }
+.kv-note > :first-child { margin-top: 2px; }
 .kv-note-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
 
 /* Room at the bottom of every page so Kelvin's corner never covers the last row. */
@@ -180,7 +190,9 @@ body.kelvin-on .page { padding-bottom: 96px; }
 .kv-pill-ask kbd { font: inherit; font-size: 11px; border: 1px solid var(--bd); border-radius: 6px; padding: 1px 6px; color: var(--t3); }
 /* Make room: the "Ask anything" half goes first, then the name. */
 body.kelvin-open .kv-pill .kv-pill-ask { display: none; }
-@media (max-width: 1100px) { .kv-pill .kv-pill-ask { display: none; } }
+@media (max-width: 1439px) { .kv-pill .kv-pill-ask { display: none; } }
+/* Planning a day on Scheduling: the date stepper needs the room. */
+.admin-topbar.is-planning .kv-pill .kv-pill-ask { display: none; }
 @media (max-width: 900px) { .kv-pill .kv-pill-name { display: none; } .kv-pill .kv-pill-who { padding: 0 6px 0 5px; } }
 @media (max-width: 640px) { .kv-pill { height: 40px; } .kv-pill .kv-pill-count { display: none; } }
 
@@ -236,3 +248,65 @@ body.kelvin-open .kv-pill .kv-pill-ask { display: none; }
 .kv-mark-label { font-weight: 600; color: var(--t1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kv-ask-btn { display: inline-flex; align-items: center; gap: 6px; }
 .kv-ask-btn .kv-face { transform: scale(.8); margin: -2px -2px -2px -4px; }
+
+/* ── Digest: a card per note, two columns ──────────────────────────────── */
+.kv-dg { min-width: 0; max-width: 100%; background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-xl); box-shadow: var(--card-shadow, none); margin-bottom: 16px; }
+.kv-dg-head { position: relative; display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--bd); overflow: hidden; border-radius: var(--r-xl) var(--r-xl) 0 0; }
+.kv-dg-head h2 { margin: 0; font-size: 14px; font-weight: 600; color: var(--t1); }
+.kv-dg-num { font-variant-numeric: tabular-nums; display: inline-block; min-width: 1ch; }
+.kv-dg-sp { flex: 1; }
+.kv-dg-head .kv-link { padding: 0; min-height: 0; }
+.kv-dg-scan { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; overflow: hidden; pointer-events: none; }
+.kv-dg-scan::after { content: ""; position: absolute; inset: 0; width: 30%; background: linear-gradient(90deg, transparent, var(--blue), transparent); animation: kv-dg-sweep 1.4s ease-in-out 2; transform: translateX(-100%); }
+@keyframes kv-dg-sweep { to { transform: translateX(340%); } }
+.kv-dg-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding: 12px; align-items: start; }
+.kv-dg-col { display: flex; flex-direction: column; min-width: 0; }
+.kv-dg-col .kv-dg-row { margin-bottom: 10px; }
+.kv-dg-col .kv-dg-row:last-child { margin-bottom: 0; }
+/* Kelvin's eyes still turn to a hovered card, but without the heavy outline the old cards get. */
+.kv-dg-row.kelvin-looked { outline: none; }
+.kv-dg-row { min-width: 0; position: relative; background: var(--bg-card); border: 1px solid var(--bd); border-radius: 12px; transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease; }
+.kv-dg-row.is-urgent { border-color: color-mix(in srgb, var(--amber) 34%, var(--bd)); }
+.kv-dg-row:hover { border-color: var(--bd-lg); }
+.kv-dg-row.is-peek { z-index: 6; border-color: var(--bd-lg); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.kv-dg-row.is-open { background: var(--bg-card-2); }
+.kv-dg-row.is-open.is-urgent { background: color-mix(in srgb, var(--amber) 5%, var(--bg-card)); }
+.kv-dg-line { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 62px; padding: 12px 14px 12px 16px; border: 0; background: transparent; border-radius: 12px; font: inherit; color: var(--t1); text-align: left; cursor: pointer; }
+.kv-dg-line:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.kv-dg-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.kv-dg-title { font-size: 13.5px; font-weight: 600; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.005em; }
+.kv-dg-row.is-open .kv-dg-title { white-space: normal; }
+.kv-dg-meta { font-size: 12px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kv-dg-face { position: relative; display: inline-flex; flex: none; width: 24px; height: 24px; align-items: center; justify-content: center; border-radius: 50%; }
+.kv-dg-face.is-hot::before { content: ""; position: absolute; inset: 0; border-radius: 50%; animation: kv-dg-pulse 2.2s ease-out infinite; }
+.kv-dg-tag { font-size: 11px; font-weight: 600; color: var(--t3); background: var(--bg-hover); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.kv-dg-tag.is-hot { color: var(--amber); background: var(--amber-dim); }
+.kv-dg-chev { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; color: var(--t3); }
+.kv-dg-line:hover .kv-dg-chev { background: var(--bg-hover); color: var(--t1); }
+.kv-dg-more { overflow: hidden; }
+.kv-dg-in { margin: 0 14px; padding: 12px 0 14px; border-top: 1px solid var(--bd); display: flex; flex-direction: column; gap: 12px; }
+.kv-dg-block { display: flex; flex-direction: column; gap: 3px; }
+.kv-dg-block p { margin: 0 0 0 27px; font-size: 13px; line-height: 1.5; color: var(--t2); max-width: 78ch; }
+.kv-dg-label { display: inline-flex; align-items: center; gap: 7px; margin-left: -2px; font-size: 11.5px; font-weight: 600; color: var(--t3); }
+.kv-dg-foot-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding-top: 10px; border-top: 1px dashed var(--bd); }
+.kv-dg-src { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--t3); }
+.kv-dg-src-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); opacity: .7; }
+.kv-dg-acts { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.kv-dg-dismiss { border: 0; background: none; padding: 6px 4px; font: inherit; font-size: 12px; color: var(--t3); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.kv-dg-dismiss:hover { color: var(--t1); }
+.kv-caret { display: inline-block; width: 6px; height: 13px; margin-left: 2px; vertical-align: -2px; background: var(--blue); animation: kv-dg-blink .8s steps(1) infinite; }
+@keyframes kv-dg-blink { 50% { opacity: 0; } }
+/* Peek: floats over the cards below without moving them. */
+.kv-dg-peek { position: absolute; left: -1px; right: -1px; top: 100%; margin-top: -1px; background: var(--bg-card); border: 1px solid var(--bd-lg); border-top: 0; border-radius: 0 0 12px 12px; box-shadow: 0 12px 24px rgba(15, 23, 42, 0.10); }
+.kv-dg-ping { position: absolute; inset: -1px; border: 2px solid var(--blue); border-radius: 12px; pointer-events: none; }
+.kv-dg-more-link { display: block; padding: 4px 18px 12px; }
+.kv-dg-toast { position: fixed; z-index: 400; width: 320px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; background: var(--bg-card); border: 1px solid var(--bd); border-top: 3px solid var(--amber); border-radius: 14px; box-shadow: 0 16px 38px rgba(15, 23, 42, 0.25); }
+.kv-dg-toast-top { display: flex; align-items: center; }
+.kv-dg-x { border: 0; background: none; color: var(--t3); cursor: pointer; padding: 4px; border-radius: 6px; display: inline-flex; }
+.kv-dg-x:hover { background: var(--bg-hover); color: var(--t1); }
+.kv-dg-drain { display: block; height: 3px; border-radius: 2px; background: var(--bd); overflow: hidden; margin-top: 6px; }
+.kv-dg-drain i { display: block; height: 100%; background: var(--amber); animation: kv-dg-drain 4s linear forwards; }
+@keyframes kv-dg-drain { from { width: 100%; } to { width: 0; } }
+@keyframes kv-dg-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--amber) 50%, transparent); } 70%, 100% { box-shadow: 0 0 0 8px transparent; } }
+@media (max-width: 760px) { .kv-dg-list { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .kv-dg-face.is-hot::before, .kv-caret, .kv-dg-scan::after { animation: none; } }

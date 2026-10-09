@@ -1,235 +1,77 @@
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Wrench, Clock, CheckCircle, FileText, Search, AlertTriangle,
-  Maximize2, Minimize2, Edit2,
-  ChevronLeft, ChevronRight, RefreshCw, AlertCircle,
-  Zap, CalendarDays, Shield, Trash2, Sparkles, X,
+  Wrench, Clock, CheckCircle, FileText, AlertTriangle, Search,
+  Maximize2, Minimize2, ChevronLeft, ChevronRight, RefreshCw, AlertCircle,
+  Zap, Trash2, Sparkles, X,
 } from "lucide-react";
 import { useJobs, useJobStats, useDeleteJob } from "../../hooks/useJobs";
 import { useTechnicians } from "../../hooks/useScheduling";
 import { useProjectsFull } from "../projects/projectsApi";
-import ProjectComponentTag from "../projects/ProjectComponentTag";
 import type { Job } from "../../types/api";
-import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
 import RecommendationsPanel from "../../components/RecommendationsPanel";
 import Avatar from "../../components/Avatar";
-import KelvinNotes from '../../kelvin/KelvinNotes'
+import KelvinDigest from '../../kelvin/KelvinDigest'
 import { useKelvinContext } from '../../kelvin/useKelvinContext'
 import { KelvinIcon } from '../../kelvin/KelvinMark'
+import { usePersistentState } from "../../lib/usePersistentState";
+import JobFilterMenu, { type FilterOption } from "./JobFilterMenu";
+import JobFilterChips from "./JobFilterChips";
+import JobsTable, { OPEN_STATUS_SET } from "./JobsTable";
+import { DONE_STATUSES, OPEN_STATUSES, PRIORITIES, PRIORITY_RANK, PriorityLabel, StatusLabel, priorityWord, statusWord } from "./jobLabels";
+import "./jobsTable.css";
 
-const STATUS: Record<string, { label: string; css: string }> = {
-  PENDING:     { label: "Pending",     css: "badge-amber" },
-  SCHEDULED:   { label: "Scheduled",   css: "badge-violet" },
-  EN_ROUTE:    { label: "En Route",    css: "badge-blue" },
-  ON_SITE:     { label: "In Progress", css: "badge-blue" },
-  IN_PROGRESS: { label: "In Progress", css: "badge-blue" },
-  COMPLETED:   { label: "Completed",   css: "badge-green" },
-  INVOICED:    { label: "Invoiced",    css: "badge-cyan" },
-  PAID:        { label: "Paid",        css: "badge-green" },
-  CANCELLED:   { label: "Cancelled",   css: "badge-red" },
-  ON_HOLD:     { label: "On Hold",     css: "badge-neutral" },
-};
-
-const PRIORITY_CSS: Record<string, string> = {
-  LOW: "badge-neutral", NORMAL: "badge-neutral", HIGH: "badge-amber",
-  URGENT: "badge-red", EMERGENCY: "badge-red",
-};
-
-const PRIORITY_ORDER: Record<string, number> = {
-  EMERGENCY: 0, URGENT: 1, HIGH: 2, NORMAL: 3, LOW: 4,
-};
-
-const ACTIVE_STATUSES = new Set(["PENDING", "SCHEDULED", "EN_ROUTE", "ON_SITE", "IN_PROGRESS", "ON_HOLD"]);
-
-const ACTIVE_STATUS_CHIPS = [
-  { status: "PENDING",     label: "Pending",     color: "#d97706", bg: "rgba(217,119,6,0.08)" },
-  { status: "SCHEDULED",   label: "Scheduled",   color: "#7c3aed", bg: "rgba(124,58,237,0.08)" },
-  { status: "EN_ROUTE",    label: "En Route",    color: "#2563eb", bg: "rgba(37,99,235,0.08)" },
-  { status: "ON_SITE",     label: "In Progress", color: "#0284c7", bg: "rgba(2,132,199,0.08)" },
-  { status: "ON_HOLD",     label: "On Hold",     color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
-];
-
-const PRIORITY_CHIPS = [
-  { priority: "EMERGENCY", label: "Emergency", color: "#dc2626", bg: "rgba(220,38,38,0.08)" },
-  { priority: "URGENT",    label: "Urgent",    color: "#ea580c", bg: "rgba(234,88,12,0.08)" },
-  { priority: "HIGH",      label: "High",      color: "#d97706", bg: "rgba(217,119,6,0.08)" },
-  { priority: "NORMAL",    label: "Normal",    color: "#6b7280", bg: "rgba(107,114,128,0.08)" },
-  { priority: "LOW",       label: "Low",       color: "#9ca3af", bg: "rgba(156,163,175,0.08)" },
-];
+type Tab = "active" | "missed" | "completed";
+const isTab = (v: unknown): v is Tab => v === "active" || v === "missed" || v === "completed";
+const UNASSIGNED = "__none__";
+const PAGE_SIZE = 15;
 
 function Skeleton({ h = 14 }: { h?: number }) {
   return <div style={{ width: "100%", height: h, background: "var(--bg-hover)", borderRadius: 4 }} />;
 }
 
-function TechAvatar({ name, avatarUrl }: { name?: string | null; avatarUrl?: string | null }) {
-  if (!name) return <span className="text-sm text-4">Unassigned</span>;
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-      <Avatar name={name} avatarUrl={avatarUrl} size={24} radius={7} fontSize={9} />
-      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--t2)" }}>{name}</span>
-    </div>
-  );
-}
-
-function SortArrow() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ display: "inline-block", marginLeft: 3, verticalAlign: "middle" }}>
-      <path d="M5 2L8.5 7H1.5L5 2Z" fill="currentColor" opacity="0.9" />
-    </svg>
-  );
-}
-
-function JobProjectCell({ job }: { job: Job }) {
-  if (!job.projectId) return <span className="text-xs text-4">—</span>;
-  return <ProjectComponentTag projectId={job.projectId} componentId={job.componentId} />;
-}
-
-function JobTable({ jobs, loading, onView, onDelete, sortMode, avatarByUserId }: {
-  jobs: Job[]; loading: boolean; onView: (j: Job) => void; onDelete: (j: Job) => void;
-  sortMode?: 'priority' | 'date'; avatarByUserId: Record<string, string | undefined>;
-}) {
-  return (
-    <table className="data-table">
-      <thead>
-        <tr>
-          <th>Job ID</th>
-          <th>Customer</th>
-          <th>Service</th>
-          <th>Project / House</th>
-          <th>Technician</th>
-          <th style={sortMode === 'date' ? { color: "var(--blue)", fontWeight: 700 } : undefined}>
-            Scheduled {sortMode === 'date' && <SortArrow />}
-          </th>
-          <th style={sortMode === 'priority' ? { color: "var(--blue)", fontWeight: 700 } : undefined}>
-            Priority {sortMode === 'priority' && <SortArrow />}
-          </th>
-          <th>Status</th>
-          <th>Amount</th>
-          <th className="sticky-actions">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {loading && Array.from({ length: 5 }).map((_, i) => (
-          <tr key={i}>{Array.from({ length: 10 }).map((_, j) => <td key={j}><Skeleton /></td>)}</tr>
-        ))}
-        {!loading && jobs.length === 0 && (
-          <tr><td colSpan={10}>
-            <div className="empty-state">
-              <div className="empty-icon"><Wrench size={22} /></div>
-              <div className="empty-title">No jobs found</div>
-            </div>
-          </td></tr>
-        )}
-        {!loading && jobs.map(j => {
-          const s = STATUS[j.status] ?? { label: j.status, css: "badge-neutral" };
-          const amount = j.finalAmount ?? j.estimatedAmount ?? 0;
-          const isUrgent = j.priority === "EMERGENCY" || j.priority === "URGENT";
-          return (
-            <tr
-              key={j.id}
-              onClick={() => onView(j)}
-              className="cursor-pointer hover:bg-[var(--bg-hover)] transition-colors group"
-              style={isUrgent ? { borderLeft: "3px solid var(--red)" } : undefined}
-            >
-              <td><span className="td-mono td-primary">{j.id.slice(0, 8)}…</span></td>
-              <td>
-                <div className="cell-user"><div>
-                  <div className="cell-name">{j.customerName ?? "—"}</div>
-                  <div className="cell-email">{j.serviceAddress ?? j.customerAddress ?? ""}</div>
-                </div></div>
-              </td>
-              <td>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-500">{j.title}</span>
-                  {j.hasPartShortage && (
-                    <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#d97706', fontWeight: 800, letterSpacing: '0.04em', flexShrink: 0 }}>⚠ PARTS</span>
-                  )}
-                </div>
-                {j.description && (
-                  <div className="text-xs text-4 mt-0.5 truncate" style={{ maxWidth: 160 }}>{j.description}</div>
-                )}
-              </td>
-              <td><JobProjectCell job={j} /></td>
-              <td><TechAvatar name={j.assignedToName} avatarUrl={j.assignedToId ? avatarByUserId[j.assignedToId] : undefined} /></td>
-              <td>
-                {j.scheduledStart ? (
-                  <>
-                    <div className="text-sm font-500 text-[var(--t3)]">
-                      {new Date(j.scheduledStart).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </div>
-                    <div className="text-xs text-4 mt-0.5">
-                      {new Date(j.scheduledStart).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                    </div>
-                  </>
-                ) : <span className="text-xs text-4">—</span>}
-              </td>
-              <td>
-                <span className={`badge ${PRIORITY_CSS[j.priority ?? "NORMAL"] ?? "badge-neutral"}`}>
-                  {(j.priority ?? "NORMAL").toLowerCase()}
-                </span>
-              </td>
-              <td className="text-center"><span className={`badge ${s.css}`}>{s.label}</span>{j.rescheduleState && <div style={{ marginTop: 3 }}><RescheduleBadge state={j.rescheduleState} size="sm" /></div>}</td>
-              <td className="text-right td-primary font-600">${Number(amount).toLocaleString()}</td>
-              <td className="sticky-actions">
-                <div className="flex items-center gap-0.5 justify-center">
-                  <button
-                    className="flex items-center justify-center p-1.5 text-[var(--amber)] hover:bg-amber-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer"
-                    title="Edit Job"
-                    onClick={e => { e.stopPropagation(); onView(j); }}
-                  >
-                    <Edit2 size={15} />
-                  </button>
-                  <button
-                    className="flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors border-0 bg-transparent cursor-pointer"
-                    title="Delete Job"
-                    onClick={e => { e.stopPropagation(); onDelete(j); }}
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  );
-}
+const dayStart = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
+const when = (j: Job) => (j.scheduledStart ? new Date(j.scheduledStart).getTime() : null);
 
 export default function Jobs() {
   const navigate = useNavigate();
+  const [tab, setTab] = usePersistentState<Tab>("jobs.tab", "active", isTab);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  useKelvinContext({ page: 'jobs', label: 'Jobs', ...(filterStatus !== 'all' ? { filter: filterStatus } : {}) });
-  const [filterPriority, setFilterPriority] = useState("all");
+  const [statusSel, setStatusSel] = useState<string[]>([]);
+  const [prioritySel, setPrioritySel] = useState<string[]>([]);
+  const [techSel, setTechSel] = useState<string[]>([]);
   const [filterAgreement, setFilterAgreement] = useState(false);
+  const [filterAsked, setFilterAsked] = useState(false);
   const [filterProjectId, setFilterProjectId] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const [pastPage, setPastPage] = useState(1);
-  const [pastStatusFilter, setPastStatusFilter] = useState("all");
-  const [sortMode, setSortMode] = useState<'priority' | 'date'>('priority');
+  const [page, setPage] = useState(1);
+  const [sortMode, setSortMode] = useState<"priority" | "date">("priority");
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
   const [forecastDays, setForecastDays] = useState<number>(7);
   const [utilizationFilterActive, setUtilizationFilterActive] = useState(false);
-  const PAST_PER_PAGE = 10;
+  useKelvinContext({ page: "jobs", label: "Jobs", ...(statusSel.length ? { filter: statusSel.join(",") } : {}) });
 
-  // ── AI recommendation deep-link ─────────────────────────────────────────────
-  // "Filter" on the high-utilization recommendation lands here as
-  // ?filter=high_utilization&forecastDays=N — restricts to exactly the jobs
-  // scheduled in that forecast window (mirrors InsightDataService.getUtilizationFacts).
+  // Switching tab starts that tab's own status filter fresh (a "Paid" filter means nothing among open jobs).
+  const chooseTab = (t: Tab) => { setTab(t); setStatusSel([]); setPage(1); };
+
+  // ── Deep links ──────────────────────────────────────────────────────────────
+  // /jobs?status=EN_ROUTE opens the right tab already filtered; the high-utilization
+  // recommendation lands here as ?filter=high_utilization&forecastDays=N.
   const [searchParams, setSearchParams] = useSearchParams();
-  // Deep links from the dashboard: /jobs?status=EN_ROUTE opens the list filtered.
   useEffect(() => {
-    const status = searchParams.get('status')
-    if (status) setFilterStatus(status.toUpperCase())
+    const status = searchParams.get("status")?.toUpperCase();
+    if (status) {
+      setTab(DONE_STATUSES.includes(status) ? "completed" : "active");
+      setStatusSel([status]);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   useEffect(() => {
-    if (searchParams.get('filter') === 'high_utilization') {
+    if (searchParams.get("filter") === "high_utilization") {
       setUtilizationFilterActive(true);
-      const days = Number(searchParams.get('forecastDays'));
+      setTab("active");
+      const days = Number(searchParams.get("forecastDays"));
       if (Number.isFinite(days) && days > 0) setForecastDays(days);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -237,8 +79,8 @@ export default function Jobs() {
 
   const clearUtilizationFilter = () => {
     const next = new URLSearchParams(searchParams);
-    next.delete('filter');
-    next.delete('forecastDays');
+    next.delete("filter");
+    next.delete("forecastDays");
     setSearchParams(next);
     setUtilizationFilterActive(false);
   };
@@ -253,111 +95,102 @@ export default function Jobs() {
     for (const p of allProjects) map.set(p.id, p.name);
     return map;
   }, [allProjects]);
-  // Only projects that actually have a job here get listed — avoids a giant
-  // dropdown of every project in the company when most have no jobs yet.
+  // Only projects that actually have a job here get listed.
   const projectsWithJobs = useMemo(() => {
     const ids = new Set((jobsQuery.data?.data ?? []).map(j => j.projectId).filter(Boolean) as string[]);
-    return [...ids].map(id => ({ id, name: projectNameById.get(id) ?? 'Project' })).sort((a, b) => a.name.localeCompare(b.name));
+    return [...ids].map(id => ({ id, name: projectNameById.get(id) ?? "Project" })).sort((a, b) => a.name.localeCompare(b.name));
   }, [jobsQuery.data, projectNameById]);
 
   const stats = statsQuery.data;
   const allJobs: Job[] = jobsQuery.data?.data ?? [];
+  const technicians = techniciansQuery.data ?? [];
   const avatarByUserId = useMemo(() => {
     const map: Record<string, string | undefined> = {};
-    for (const t of techniciansQuery.data ?? []) if (t.userId) map[t.userId] = t.avatarUrl;
+    for (const t of technicians) if (t.userId) map[t.userId] = t.avatarUrl;
     return map;
-  }, [techniciansQuery.data]);
+  }, [technicians]);
 
-  const { activeJobs, pastJobs, activeStatusCounts, activePriorityCounts } = useMemo(() => {
-    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+  // ── The three groups: coming up, missed, finished ───────────────────────────
+  const groups = useMemo(() => {
+    const today = dayStart();
+    const upcoming = (j: Job) => OPEN_STATUS_SET.has(j.status) && (when(j) === null || (when(j) as number) >= today);
+    const missed = allJobs
+      .filter(j => OPEN_STATUS_SET.has(j.status) && !upcoming(j))
+      .sort((a, b) => (when(a) ?? 0) - (when(b) ?? 0));
+    const finished = allJobs
+      .filter(j => !OPEN_STATUS_SET.has(j.status))
+      .sort((a, b) => (when(b) ?? 0) - (when(a) ?? 0));
+    return { active: allJobs.filter(upcoming), missed, finished };
+  }, [allJobs]);
 
-    const isActiveUpcoming = (j: Job) => {
-      if (!ACTIVE_STATUSES.has(j.status)) return false;
-      if (!j.scheduledStart) return true;
-      return new Date(j.scheduledStart).getTime() >= todayStart.getTime();
-    };
+  const base = tab === "active" ? groups.active : tab === "missed" ? groups.missed : groups.finished;
 
-    // Past jobs from ALL jobs — not affected by active-section filters
-    const past = allJobs
-      .filter(j => !isActiveUpcoming(j))
-      .sort((a, b) => {
-        const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : 0;
-        const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : 0;
-        return db - da;
-      });
+  const matches = (j: Job, skip?: "status" | "priority" | "tech") =>
+    (skip === "status" || !statusSel.length || statusSel.includes(j.status)) &&
+    (skip === "priority" || !prioritySel.length || prioritySel.includes(j.priority ?? "NORMAL")) &&
+    (skip === "tech" || !techSel.length || techSel.includes(j.assignedToId ?? UNASSIGNED)) &&
+    (!filterProjectId || j.projectId === filterProjectId);
 
-    // Base active pool for chip counts (no filters)
-    const activeBase = allJobs.filter(isActiveUpcoming);
-    const statusCounts: Record<string, number> = {};
-    const priorityCounts: Record<string, number> = {};
-    for (const j of activeBase) {
-      statusCounts[j.status] = (statusCounts[j.status] ?? 0) + 1;
-      const p = j.priority ?? "NORMAL";
-      priorityCounts[p] = (priorityCounts[p] ?? 0) + 1;
-    }
-
-    // Active jobs with filters applied
-    let filtered = activeBase;
-    if (filterStatus !== "all") filtered = filtered.filter(j => j.status === filterStatus);
-    if (filterPriority !== "all") filtered = filtered.filter(j => (j.priority ?? "NORMAL") === filterPriority);
-    if (filterAgreement) filtered = filtered.filter(j => j.isAgreementJob);
-    if (utilizationFilterActive) {
-      const now = new Date();
-      const windowEnd = new Date(now.getTime() + forecastDays * 86_400_000);
-      filtered = filtered.filter(j => {
-        if (!j.scheduledStart) return false;
-        const t = new Date(j.scheduledStart).getTime();
-        return t >= now.getTime() && t < windowEnd.getTime();
-      });
-    }
-    if (filterProjectId) filtered = filtered.filter(j => j.projectId === filterProjectId);
-
-    const active = [...filtered].sort((a, b) => {
-      if (sortMode === 'date') {
-        const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : null;
-        const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : null;
-        if (da !== null && db === null) return -1;
-        if (da === null && db !== null) return 1;
-        if (da === null && db === null) return 0;
-        return (da ?? 0) - (db ?? 0);
+  const shown = useMemo(() => {
+    let list = base.filter(j => matches(j));
+    if (tab === "active") {
+      if (filterAgreement) list = list.filter(j => j.isAgreementJob);
+      if (filterAsked) list = list.filter(j => !!j.rescheduleState);
+      if (utilizationFilterActive) {
+        const now = Date.now();
+        const end = now + forecastDays * 86_400_000;
+        list = list.filter(j => { const t = when(j); return t !== null && t >= now && t < end; });
       }
-      const pa = PRIORITY_ORDER[a.priority ?? "NORMAL"] ?? 3;
-      const pb = PRIORITY_ORDER[b.priority ?? "NORMAL"] ?? 3;
-      if (pa !== pb) return pa - pb;
-      const da = a.scheduledStart ? new Date(a.scheduledStart).getTime() : null;
-      const db = b.scheduledStart ? new Date(b.scheduledStart).getTime() : null;
-      const aToday = da ? (da >= todayStart.getTime() && da <= todayEnd.getTime()) : false;
-      const bToday = db ? (db >= todayStart.getTime() && db <= todayEnd.getTime()) : false;
-      if (aToday && !bToday) return -1;
-      if (!aToday && bToday) return 1;
-      // Within same priority and same today/non-today bucket:
-      // dated jobs rise above unscheduled ones
-      if (da === null && db !== null) return 1;
-      if (da !== null && db === null) return -1;
-      if (da === null && db === null) return 0;
-      return (da ?? 0) - (db ?? 0); // both non-null here: ascending (nearest first)
-    });
+      const today = dayStart();
+      const todayEnd = today + 86_400_000 - 1;
+      list = [...list].sort((a, b) => {
+        const da = when(a), db = when(b);
+        if (sortMode === "date") {
+          if (da !== null && db === null) return -1;
+          if (da === null && db !== null) return 1;
+          return (da ?? 0) - (db ?? 0);
+        }
+        const pa = PRIORITY_RANK[a.priority ?? "NORMAL"] ?? 3;
+        const pb = PRIORITY_RANK[b.priority ?? "NORMAL"] ?? 3;
+        if (pa !== pb) return pa - pb;
+        const aToday = da !== null && da >= today && da <= todayEnd;
+        const bToday = db !== null && db >= today && db <= todayEnd;
+        if (aToday !== bToday) return aToday ? -1 : 1;
+        if (da === null && db !== null) return 1;
+        if (da !== null && db === null) return -1;
+        return (da ?? 0) - (db ?? 0);
+      });
+    }
+    return list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [base, tab, statusSel, prioritySel, techSel, filterProjectId, filterAgreement, filterAsked, utilizationFilterActive, forecastDays, sortMode]);
 
-    return { activeJobs: active, pastJobs: past, activeStatusCounts: statusCounts, activePriorityCounts: priorityCounts };
+  useEffect(() => { setPage(1); }, [tab, statusSel, prioritySel, techSel, filterProjectId, search]);
+  const pages = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
+  // A shrinking list (a job moved tabs, a filter applied) must never leave you on a page that no longer exists.
+  const current = Math.min(page, pages);
+  const rows = shown.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
-  }, [allJobs, filterStatus, filterPriority, filterAgreement, sortMode, utilizationFilterActive, filterProjectId, forecastDays]);
-
-
-  const filteredPastJobs = pastStatusFilter === "all"
-    ? pastJobs
-    : pastStatusFilter === "OVERDUE"
-      ? pastJobs.filter(j => ACTIVE_STATUSES.has(j.status))
-      : pastJobs.filter(j => j.status === pastStatusFilter);
-  const pastPageData = filteredPastJobs.slice((pastPage - 1) * PAST_PER_PAGE, pastPage * PAST_PER_PAGE);
-  const pastTotalPages = Math.max(1, Math.ceil(filteredPastJobs.length / PAST_PER_PAGE));
-
-  // Past section counts — these now sum to pastJobs.length
-  const completedCount = pastJobs.filter(j => j.status === "COMPLETED").length;
-  const invoicedCount  = pastJobs.filter(j => j.status === "INVOICED").length;
-  const paidCount      = pastJobs.filter(j => j.status === "PAID").length;
-  const cancelledCount = pastJobs.filter(j => j.status === "CANCELLED").length;
-  const overdueCount   = pastJobs.filter(j => ACTIVE_STATUSES.has(j.status)).length;
+  // ── Filter menus: each option is drawn the way the table draws it, with its count in this tab ──
+  const count = (pick: (j: Job) => string, skip: "status" | "priority" | "tech") => {
+    const m: Record<string, number> = {};
+    for (const j of base) if (matches(j, skip)) m[pick(j)] = (m[pick(j)] ?? 0) + 1;
+    return m;
+  };
+  const statusCounts = count(j => j.status, "status");
+  const priorityCounts = count(j => j.priority ?? "NORMAL", "priority");
+  const techCounts = count(j => j.assignedToId ?? UNASSIGNED, "tech");
+  const statusOptions: FilterOption[] = (tab === "completed" ? DONE_STATUSES : OPEN_STATUSES).map(s => ({ value: s, text: statusWord(s), node: <StatusLabel status={s} bare />, count: statusCounts[s] ?? 0 }));
+  const priorityOptions: FilterOption[] = PRIORITIES.map(p => ({ value: p, text: priorityWord(p), node: <PriorityLabel priority={p} />, count: priorityCounts[p] ?? 0 }));
+  const techOptions: FilterOption[] = [
+    ...technicians.filter(t => t.userId).map(t => ({
+      value: t.userId as string, text: t.name, count: techCounts[t.userId as string] ?? 0,
+      node: <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Avatar name={t.name} avatarUrl={t.avatarUrl} size={22} radius={11} fontSize={9} />{t.name}</span>,
+    })),
+    { value: UNASSIGNED, text: "Unassigned", count: techCounts[UNASSIGNED] ?? 0, node: <span style={{ color: "var(--t3)" }}>Unassigned</span> },
+  ];
+  const anyFilter = statusSel.length || prioritySel.length || techSel.length || filterProjectId || filterAgreement || filterAsked;
+  const clearAll = () => { setStatusSel([]); setPrioritySel([]); setTechSel([]); setFilterProjectId(""); setFilterAgreement(false); setFilterAsked(false); };
 
   const handleViewJob = (job: Job) => {
     window.dispatchEvent(new CustomEvent("open-job-detail", { detail: job }));
@@ -372,7 +205,12 @@ export default function Jobs() {
     }
   };
 
-  const urgentCount = activeJobs.filter(j => j.priority === "EMERGENCY" || j.priority === "URGENT").length;
+  const urgentCount = groups.active.filter(j => j.priority === "EMERGENCY" || j.priority === "URGENT").length;
+  const emptyFor: Record<Tab, { title: string; sub: string }> = {
+    active: { title: "No upcoming or active jobs", sub: anyFilter ? "Nothing matches these filters." : "New jobs will appear here." },
+    missed: { title: "Nothing missed", sub: anyFilter ? "Nothing matches these filters." : "Every assigned job was done, moved or cancelled." },
+    completed: { title: "No finished jobs yet", sub: anyFilter ? "Nothing matches these filters." : "Completed, invoiced, paid and cancelled jobs show here." },
+  };
 
   return (
     <div className="anim-fade-up">
@@ -380,10 +218,10 @@ export default function Jobs() {
       {!isExpanded && (
         <div className="kpi-grid mb-5">
           {[
-            { icon: Wrench, v: stats ? (stats.pending + stats.scheduled + stats.inProgress).toString() : "—", l: "Open Jobs", loading: statsQuery.isLoading, onClick: () => setFilterStatus("all") },
-            { icon: AlertTriangle, v: stats ? stats.pending.toString() : "—", l: "Pending", loading: statsQuery.isLoading, onClick: () => setFilterStatus("PENDING") },
-            { icon: CheckCircle, v: stats ? (stats.completed ?? 0).toString() : "—", l: "Completed", loading: statsQuery.isLoading, onClick: () => setFilterStatus("COMPLETED") },
-            { icon: FileText, v: stats ? stats.invoiced.toString() : "—", l: "Awaiting Invoice", loading: statsQuery.isLoading, onClick: () => navigate('/finance') },
+            { icon: Wrench, v: stats ? (stats.pending + stats.scheduled + stats.inProgress).toString() : "—", l: "Open Jobs", loading: statsQuery.isLoading, onClick: () => { chooseTab("active"); } },
+            { icon: AlertTriangle, v: stats ? stats.pending.toString() : "—", l: "Pending", loading: statsQuery.isLoading, onClick: () => { setTab("active"); setStatusSel(["PENDING"]); } },
+            { icon: CheckCircle, v: stats ? (stats.completed ?? 0).toString() : "—", l: "Completed", loading: statsQuery.isLoading, onClick: () => { setTab("completed"); setStatusSel(["COMPLETED"]); } },
+            { icon: FileText, v: stats ? stats.invoiced.toString() : "—", l: "Awaiting Invoice", loading: statsQuery.isLoading, onClick: () => navigate("/finance") },
             { icon: Clock, v: "—", l: "Avg Job Duration", loading: false, onClick: undefined },
           ].map((k) => (
             <div key={k.l} className="kpi-card" style={{ padding: "14px 16px", borderRadius: "var(--r-lg)", cursor: k.onClick ? "pointer" : "default" }} onClick={k.onClick}>
@@ -432,17 +270,16 @@ export default function Jobs() {
       )}
 
       {/* Urgent banner */}
-      {urgentCount > 0 && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "var(--red-dim)", borderRadius: 8, marginBottom: 12, color: "var(--red)", fontSize: 13, fontWeight: 500 }}>
+      {urgentCount > 0 && tab === "active" && (
+        <div className="jt-urgent-note">
           <Zap size={14} />
           {urgentCount} urgent/emergency job{urgentCount > 1 ? "s" : ""} — shown at the top of the list
         </div>
       )}
 
-      <KelvinNotes page="jobs" />
+      <KelvinDigest page="jobs" />
 
-      {/* Active / Upcoming Jobs */}
-      <div className="card anim-fade-up delay-2 mb-4">
+      <div className="card anim-fade-up delay-2 mb-4" style={{ overflow: "visible" }}>
         {jobsQuery.isError && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "var(--red-dim)", borderRadius: 8, color: "var(--red)", fontSize: 13, margin: "0 0 4px" }}>
             <AlertCircle size={14} /> Failed to load jobs.
@@ -452,252 +289,78 @@ export default function Jobs() {
           </div>
         )}
 
-        <div className="card-body" style={{ paddingBottom: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontWeight: 700, fontSize: 15, color: "var(--t1)" }}>Upcoming & Active Jobs</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--t3)", background: "var(--bg-hover)", padding: "2px 9px", borderRadius: 12 }}>
-                {jobsQuery.isLoading ? "…" : activeJobs.length}
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                <div style={{ display: "flex", background: "var(--bg-hover)", borderRadius: 8, padding: 2 }}>
-                  <button
-                    onClick={() => setSortMode('priority')}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
-                      fontSize: 12, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s",
-                      background: sortMode === 'priority' ? "var(--card)" : "transparent",
-                      color: sortMode === 'priority' ? "var(--t1)" : "var(--t3)",
-                      boxShadow: sortMode === 'priority' ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-                    }}
-                  >
-                    <Shield size={12} /> Priority
-                  </button>
-                  <button
-                    onClick={() => setSortMode('date')}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
-                      fontSize: 12, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s",
-                      background: sortMode === 'date' ? "var(--card)" : "transparent",
-                      color: sortMode === 'date' ? "var(--t1)" : "var(--t3)",
-                      boxShadow: sortMode === 'date' ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-                    }}
-                  >
-                    <CalendarDays size={12} /> Date
-                  </button>
-                </div>
-                <div style={{ fontSize: 10, color: "var(--t4)", letterSpacing: "0.01em" }}>
-                  {sortMode === 'priority'
-                    ? "Emergency → Urgent → High, then nearest date"
-                    : "Nearest scheduled date first · unscheduled last"}
-                </div>
-              </div>
-              <button className="btn btn-secondary btn-sm flex items-center gap-1.5" style={{ padding: "0 12px", fontWeight: 600, marginBottom: 16 }} onClick={() => setIsExpanded(!isExpanded)}>
-                {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
+        {/* Tabs */}
+        <div className="jt-tabs">
+          <div className="jt-tablist" role="tablist" aria-label="Jobs">
+            {([
+              ["active", "Upcoming and active", groups.active.length, false],
+              ["missed", "Missed", groups.missed.length, true],
+              ["completed", "Completed", groups.finished.length, false],
+            ] as Array<[Tab, string, number, boolean]>).map(([key, label, n, warn]) => (
+              <button key={key} type="button" role="tab" aria-selected={tab === key} className={`jt-tab${tab === key ? " is-on" : ""}`} onClick={() => chooseTab(key)}>
+                {label} <span className={`jt-n${warn && n > 0 ? " is-warn" : ""}`}>{jobsQuery.isLoading ? "…" : n}</span>
               </button>
-            </div>
+            ))}
           </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <div className="filter-search" style={{ maxWidth: 320 }}>
-                <Search size={13} color="var(--t4)" />
-                <input
-                  placeholder="Search jobs, customers, services…"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
-              </div>
-              {projectsWithJobs.length > 0 && (
-                <select
-                  className="select"
-                  style={{ maxWidth: 220, fontSize: 12.5 }}
-                  value={filterProjectId}
-                  onChange={e => setFilterProjectId(e.target.value)}
-                >
-                  <option value="">All projects</option>
-                  {projectsWithJobs.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              )}
-            </div>
-            {/* Status chips */}
-            <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--t4)", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 2, whiteSpace: "nowrap" }}>Status</span>
-              {ACTIVE_STATUS_CHIPS.map(chip => {
-                const count = activeStatusCounts[chip.status] ?? 0;
-                const isActive = filterStatus === chip.status;
-                return (
-                  <button
-                    key={chip.status}
-                    onClick={() => setFilterStatus(f => f === chip.status ? "all" : chip.status)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "4px 10px", borderRadius: 20,
-                      border: `1px solid ${isActive ? chip.color : "transparent"}`,
-                      background: isActive ? chip.bg : "var(--bg-hover)",
-                      color: isActive ? chip.color : "var(--t3)",
-                      cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
-                      opacity: count === 0 ? 0.4 : 1,
-                    }}
-                  >
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: chip.color, flexShrink: 0 }} />
-                    {chip.label}
-                    <span style={{ fontWeight: 700 }}>{jobsQuery.isLoading ? "…" : count}</span>
-                  </button>
-                );
-              })}
-              {filterStatus !== "all" && (
-                <button onClick={() => setFilterStatus("all")} style={{ padding: "4px 10px", borderRadius: 20, border: "1px solid var(--bd)", background: "none", color: "var(--t4)", cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>
-                  Clear
-                </button>
-              )}
-            </div>
-            {/* Priority chips */}
-            <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--t4)", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 2, whiteSpace: "nowrap" }}>Priority</span>
-              {PRIORITY_CHIPS.map(chip => {
-                const count = activePriorityCounts[chip.priority] ?? 0;
-                const isActive = filterPriority === chip.priority;
-                return (
-                  <button
-                    key={chip.priority}
-                    onClick={() => setFilterPriority(f => f === chip.priority ? "all" : chip.priority)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "4px 10px", borderRadius: 20,
-                      border: `1px solid ${isActive ? chip.color : "transparent"}`,
-                      background: isActive ? chip.bg : "var(--bg-hover)",
-                      color: isActive ? chip.color : "var(--t3)",
-                      cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
-                      opacity: count === 0 ? 0.4 : 1,
-                    }}
-                  >
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: chip.color, flexShrink: 0 }} />
-                    {chip.label}
-                    <span style={{ fontWeight: 700 }}>{jobsQuery.isLoading ? "…" : count}</span>
-                  </button>
-                );
-              })}
-              {filterPriority !== "all" && (
-                <button onClick={() => setFilterPriority("all")} style={{ padding: "4px 10px", borderRadius: 20, border: "1px solid var(--bd)", background: "none", color: "var(--t4)", cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>
-                  Clear
-                </button>
-              )}
-              <button
-                onClick={() => setFilterAgreement(v => !v)}
-                title="Only jobs auto-created from service agreements"
-                style={{
-                  display: "flex", alignItems: "center", gap: 5, marginLeft: 8,
-                  padding: "4px 10px", borderRadius: 20,
-                  border: `1px solid ${filterAgreement ? "var(--green)" : "transparent"}`,
-                  background: filterAgreement ? "var(--green-dim)" : "var(--bg-hover)",
-                  color: filterAgreement ? "var(--green)" : "var(--t3)",
-                  cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
-                }}
-              >
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--green)", flexShrink: 0 }} />
-                Agreement
-                <span style={{ fontWeight: 700 }}>
-                  {jobsQuery.isLoading ? "…" : allJobs.filter(j => j.isAgreementJob).length}
-                </span>
-              </button>
-            </div>
-          </div>
+          <span style={{ flex: 1 }} />
+          <button className="btn btn-secondary btn-sm" style={{ marginBottom: 10, gap: 6, display: "inline-flex", alignItems: "center" }} onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? <><Minimize2 size={14} /> Collapse</> : <><Maximize2 size={14} /> Expand</>}
+          </button>
         </div>
 
-        <div className="card-body-flush">
-          <div className="table-container jobs-table-container">
-            <JobTable jobs={activeJobs} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} sortMode={sortMode} avatarByUserId={avatarByUserId} />
-          </div>
-        </div>
-      </div>
+        {tab === "missed" && groups.missed.length > 0 && (
+          <p style={{ margin: 0, padding: "14px 24px 0", fontSize: 13, color: "var(--t3)" }}>
+            Assigned, but their day has passed and they are still open. Open one to reschedule it, give it to someone else, mark it complete, or cancel it.
+          </p>
+        )}
 
-      {/* Completed Jobs Section */}
-      <div className="card anim-fade-up delay-3" style={{ borderTop: "3px solid var(--green, #10b981)" }}>
-        {/* Section header */}
-        <div className="card-body" style={{ paddingBottom: 0 }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 16 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(16,185,129,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <CheckCircle size={15} color="#10b981" />
-                </div>
-                <span style={{ fontWeight: 700, fontSize: 15, color: "var(--t1)" }}>Completed Jobs</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#10b981", background: "rgba(16,185,129,0.1)", padding: "2px 9px", borderRadius: 12, border: "1px solid rgba(16,185,129,0.2)" }}>
-                  {jobsQuery.isLoading ? "…" : pastJobs.length} total
-                </span>
-              </div>
-              {/* Funnel stats row */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                {[
-                  { label: "Completed", count: completedCount, color: "#10b981", bg: "rgba(16,185,129,0.08)", status: "COMPLETED" },
-                  { label: "Invoiced", count: invoicedCount, color: "#0891b2", bg: "rgba(8,145,178,0.08)", status: "INVOICED" },
-                  { label: "Paid", count: paidCount, color: "#7c3aed", bg: "rgba(124,58,237,0.08)", status: "PAID" },
-                  { label: "Cancelled", count: cancelledCount, color: "#dc2626", bg: "rgba(220,38,38,0.08)", status: "CANCELLED" },
-                  ...(overdueCount > 0 ? [{ label: "Overdue", count: overdueCount, color: "#ea580c", bg: "rgba(234,88,12,0.08)", status: "OVERDUE" }] : []),
-                ].map(s => (
-                  <button
-                    key={s.status}
-                    onClick={() => { setPastStatusFilter(f => f === s.status ? "all" : s.status); setPastPage(1); }}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "4px 10px", borderRadius: 20, border: `1px solid ${pastStatusFilter === s.status ? s.color : "transparent"}`,
-                      background: pastStatusFilter === s.status ? s.bg : "var(--bg-hover)",
-                      color: pastStatusFilter === s.status ? s.color : "var(--t3)",
-                      cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 600, transition: "all 0.15s",
-                    }}
-                  >
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
-                    {s.label}
-                    <span style={{ fontWeight: 700 }}>{jobsQuery.isLoading ? "…" : s.count}</span>
-                  </button>
-                ))}
-                {pastStatusFilter !== "all" && (
-                  <button
-                    onClick={() => { setPastStatusFilter("all"); setPastPage(1); }}
-                    style={{ padding: "4px 10px", borderRadius: 20, border: "1px solid var(--bd)", background: "none", color: "var(--t4)", cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}
-                  >
-                    Clear filter
-                  </button>
-                )}
-              </div>
-            </div>
-            <div style={{ fontSize: 11, color: "var(--t4)", textAlign: "right", marginTop: 4 }}>
-              Most recent first
-            </div>
-          </div>
-        </div>
-
-        <div className="card-body-flush">
-          {filteredPastJobs.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--t4)" }}>
-              <CheckCircle size={32} style={{ margin: "0 auto 10px", opacity: 0.3, display: "block" }} />
-              <div style={{ fontSize: 13, fontWeight: 500 }}>No {pastStatusFilter !== "all" ? pastStatusFilter.toLowerCase() : "completed"} jobs yet</div>
-            </div>
-          ) : (
-            <div className="table-container jobs-table-container">
-              <JobTable jobs={pastPageData} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} avatarByUserId={avatarByUserId} />
-            </div>
+        {/* Filters: the same bar in every tab, with the options that make sense for it */}
+        <div className="jf-bar">
+          <label className="jf-search">
+            <Search size={14} aria-hidden="true" />
+            <input placeholder="Search jobs, customers, services" aria-label="Search jobs" value={search} onChange={e => setSearch(e.target.value)} />
+          </label>
+          <JobFilterMenu label="Technician" options={techOptions} selected={techSel} onChange={setTechSel} />
+          {projectsWithJobs.length > 0 && (
+            <select className="select jf-select" aria-label="Project" value={filterProjectId} onChange={e => setFilterProjectId(e.target.value)}>
+              <option value="">All projects</option>
+              {projectsWithJobs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
           )}
+          {tab === "active" && (
+            <>
+              <button type="button" className={`jf-toggle${filterAgreement ? " is-on" : ""}`} aria-pressed={filterAgreement} onClick={() => setFilterAgreement(v => !v)} title="Only jobs created from service agreements">
+                Agreement visits <b style={{ fontWeight: 600 }}>{allJobs.filter(j => j.isAgreementJob && OPEN_STATUS_SET.has(j.status)).length}</b>
+              </button>
+              <button type="button" className={`jf-toggle${filterAsked ? " is-on" : ""}`} aria-pressed={filterAsked} onClick={() => setFilterAsked(v => !v)} title="Customers who asked for another time and are waiting for an answer">
+                Customer asked to change <b style={{ fontWeight: 600 }}>{allJobs.filter(j => !!j.rescheduleState && OPEN_STATUS_SET.has(j.status)).length}</b>
+              </button>
+              <span className="jf-seg" role="radiogroup" aria-label="Sort by">
+                <button type="button" role="radio" aria-checked={sortMode === "priority"} className={sortMode === "priority" ? "is-on" : ""} onClick={() => setSortMode("priority")}>Most urgent first</button>
+                <button type="button" role="radio" aria-checked={sortMode === "date"} className={sortMode === "date" ? "is-on" : ""} onClick={() => setSortMode("date")}>Soonest first</button>
+              </span>
+            </>
+          )}
+          {anyFilter ? <button type="button" className="jf-clear" onClick={clearAll}>Clear all filters</button> : null}
+        </div>
+        <div className="jc-wrap">
+          <JobFilterChips label="Status" options={statusOptions} selected={statusSel} onChange={setStatusSel} loading={jobsQuery.isLoading} />
+          <JobFilterChips label="Priority" options={priorityOptions} selected={prioritySel} onChange={setPrioritySel} loading={jobsQuery.isLoading} />
         </div>
 
-        <div className="card-footer" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderTop: "1px solid var(--bd)" }}>
+        <div className="jt-wrap">
+          <JobsTable jobs={rows} loading={jobsQuery.isLoading} onView={handleViewJob} onDelete={setDeleteTarget} avatarByUserId={avatarByUserId} empty={emptyFor[tab]} />
+        </div>
+
+        <div className="jt-foot">
           <span style={{ fontSize: 13, color: "var(--t3)" }}>
-            {filteredPastJobs.length > 0
-              ? `Showing ${(pastPage - 1) * PAST_PER_PAGE + 1}–${Math.min(pastPage * PAST_PER_PAGE, filteredPastJobs.length)} of ${filteredPastJobs.length}`
-              : "0 jobs"}
+            {shown.length === 0 ? "0 jobs" : `Showing ${(current - 1) * PAGE_SIZE + 1}–${Math.min(current * PAGE_SIZE, shown.length)} of ${shown.length}`}
           </span>
-          {pastTotalPages > 1 && (
+          {pages > 1 && (
             <div className="flex items-center gap-2">
-              <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setPastPage(p => Math.max(1, p - 1))} disabled={pastPage === 1}><ChevronLeft size={18} /></button>
-              <span style={{ fontSize: 13, color: "var(--t2)", margin: "0 4px" }}>Page {pastPage} of {pastTotalPages}</span>
-              <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} onClick={() => setPastPage(p => Math.min(pastTotalPages, p + 1))} disabled={pastPage === pastTotalPages}><ChevronRight size={18} /></button>
+              <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} aria-label="Previous page" onClick={() => setPage(Math.max(1, current - 1))} disabled={current === 1}><ChevronLeft size={18} /></button>
+              <span style={{ fontSize: 13, color: "var(--t2)", margin: "0 4px" }}>Page {current} of {pages}</span>
+              <button className="btn btn-secondary btn-sm flex items-center justify-center p-1" style={{ width: 32, height: 32 }} aria-label="Next page" onClick={() => setPage(Math.min(pages, current + 1))} disabled={current === pages}><ChevronRight size={18} /></button>
             </div>
           )}
         </div>

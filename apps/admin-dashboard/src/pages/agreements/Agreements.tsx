@@ -139,10 +139,10 @@ export default function Agreements() {
         <div>
           {/* On-canvas header: the page canvas is dark navy in every theme, so this
               text must always be light (var(--t1) is near-black in light theme). */}
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#F1F5F9', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             <FileSignature size={20} style={{ color: 'var(--blue)' }} /> Service Agreements
           </h1>
-          <p style={{ fontSize: 13, color: '#94A3B8', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--t3)', margin: '4px 0 0' }}>
             Maintenance plans and contracts — recurring visits are scheduled from these automatically
           </p>
         </div>

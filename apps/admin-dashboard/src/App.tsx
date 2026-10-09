@@ -1,3 +1,4 @@
+import { useChatRealtime } from './hooks/useChat'
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -151,6 +152,9 @@ function AuthenticatedApp() {
 
   // Prime tenant currency/timezone for the format helpers (once per session).
   useCompanySettings()
+
+  // One live chat connection for the whole dashboard: badges and open conversations stay current on every page.
+  useChatRealtime()
 
   // Prime the technician directory so TechAvatar can resolve a photo anywhere,
   // including the many surfaces that only hold a job's `assignedToId`/name.

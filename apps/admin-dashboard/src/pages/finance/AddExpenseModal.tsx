@@ -9,6 +9,11 @@ import type { Job } from "../../types/api";
 interface AddExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** A site cost for this project, not tied to one job. */
+  projectId?: string;
+  /** Shown under the title, e.g. the project's name. */
+  contextLabel?: string;
+  onCreated?: () => void;
 }
 
 // Backend enum: PARTS | FUEL | TOOLS | SUBCONTRACTOR | OTHER
@@ -23,7 +28,7 @@ const CATEGORIES = [
 const inputClass =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none";
 
-export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProps) {
+export default function AddExpenseModal({ isOpen, onClose, projectId, contextLabel, onCreated }: AddExpenseModalProps) {
   const { showError, showSuccess, showInfo } = useToast();
   const [error, setError] = useState("");
   const [category, setCategory] = useState("PARTS");
@@ -69,10 +74,12 @@ export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProp
         expenseDate: date,
         description: description || "Expense",
         jobId: jobId || undefined,
+        projectId: projectId || undefined,
       } as any,
       {
         onSuccess: () => {
           showSuccess("Expense logged successfully.", "Expense Saved");
+          onCreated?.();
           handleClose();
         },
         onError: (err: any) => {
@@ -90,7 +97,7 @@ export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProp
         <div className="bg-gradient-to-r from-amber-600 to-amber-700 px-8 py-5 flex items-center justify-between rounded-t-xl shrink-0">
           <div className="text-white">
             <h2 className="text-xl font-bold">Log Expense</h2>
-            <p className="text-amber-100 text-sm mt-0.5">Record a new business expense</p>
+            <p className="text-amber-100 text-sm mt-0.5">{contextLabel ? `A cost for ${contextLabel}` : 'Record a new business expense'}</p>
           </div>
           <button onClick={handleClose} className="text-amber-100 hover:text-white p-1 hover:bg-amber-500 rounded-lg cursor-pointer bg-transparent border-0">
             <X className="h-5 w-5" />

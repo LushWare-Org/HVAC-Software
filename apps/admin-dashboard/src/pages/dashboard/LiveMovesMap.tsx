@@ -1,70 +1,55 @@
 /**
  * Small live map for the dashboard: technicians driving to or working at a job,
- * their job pins, and the road driven so far. Loaded lazily so Leaflet stays out
- * of the dashboard's main chunk.
+ * their job pins, and the road driven so far. Drawn with the shared map kit, so it
+ * is the company's own map (Google when switched on, Leaflet otherwise) and the pins
+ * look exactly like the scheduling board's. Loaded lazily to keep it out of the
+ * dashboard's main chunk.
  */
-import { Fragment, useEffect, useMemo } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { Fragment, useMemo } from 'react'
 import TripTrail from '../../components/map/TripTrail'
+import { BaseMap, Pin, TechPin, type LatLng } from '../../components/map/kit'
+import { JOB_PIN, jobPinHtml } from '../../lib/maps/pins'
 import type { LiveMove } from './opsData'
 
-// Leaflet writes colours as SVG attributes, where CSS variables do not resolve.
+// Same colours as the Live now list, so a row and its pin read as one thing.
 const EN_ROUTE = '#0891B2'
 const ON_SITE = '#D97706'
 
-/** Re-frames only when someone starts or stops moving, never on each GPS fix. */
-function FitToMoves({ moves }: { moves: LiveMove[] }) {
-  const map = useMap()
-  const who = moves.map(m => m.techId).sort().join(',')
-  useEffect(() => {
-    const pts = moves.flatMap(m => [m.techPos, m.jobPos].filter(Boolean) as [number, number][])
-    if (pts.length === 1) map.setView(pts[0], 14)
-    else if (pts.length > 1) map.fitBounds(L.latLngBounds(pts), { padding: [28, 28], maxZoom: 15 })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [who, map])
-  return null
-}
-
-/** Leaflet only measures its box once; redraw tiles when the panel resizes. */
-function KeepSized() {
-  const map = useMap()
-  useEffect(() => {
-    const ro = new ResizeObserver(() => map.invalidateSize())
-    ro.observe(map.getContainer())
-    return () => ro.disconnect()
-  }, [map])
-  return null
-}
-
 export default function LiveMovesMap({ moves }: { moves: LiveMove[] }) {
-  const center = useMemo<[number, number]>(() => moves.find(m => m.techPos)?.techPos ?? moves.find(m => m.jobPos)?.jobPos ?? [6.9271, 79.8612], [moves])
+  const points = useMemo(() => moves.flatMap(m => [m.techPos, m.jobPos].filter(Boolean) as LatLng[]), [moves])
+  // Re-frames only when someone starts or stops moving, never on each GPS fix.
+  const refitKey = moves.map(m => m.techId).sort().join(',')
+  const center: LatLng = points[0] ?? [6.9271, 79.8612]
   return (
-    <MapContainer center={center} zoom={13} className="ops-live-map" scrollWheelZoom={false} attributionControl={false}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <KeepSized />
-      <FitToMoves moves={moves} />
-      {moves.map(m => {
-        const color = m.state === 'EN_ROUTE' ? EN_ROUTE : ON_SITE
-        return (
-          <Fragment key={m.techId}>
-            {m.state === 'EN_ROUTE' && m.techPos && m.enRouteAt && (
-              <TripTrail technicianId={m.techId} enRouteAt={m.enRouteAt} techPos={m.techPos} weight={3.5} />
-            )}
-            {m.jobPos && (
-              <CircleMarker center={m.jobPos} radius={6} pathOptions={{ color, weight: 3, fillColor: '#fff', fillOpacity: 1 }}>
-                <Tooltip direction="top">{m.job.jobNumber}{m.job.customer ? `, ${m.job.customer}` : ''}</Tooltip>
-              </CircleMarker>
-            )}
-            {m.techPos && (
-              <CircleMarker center={m.techPos} radius={9} pathOptions={{ color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }}>
-                <Tooltip permanent direction="right" offset={[10, 0]} className="ops-live-label">{m.name.split(' ')[0]}</Tooltip>
-              </CircleMarker>
-            )}
-          </Fragment>
-        )
-      })}
-    </MapContainer>
+    <div className="ops-live-map">
+      <BaseMap center={center} zoom={13} fit={points} refitKey={refitKey} style={{ height: '100%', width: '100%' }}>
+        {moves.map(m => {
+          const color = m.state === 'EN_ROUTE' ? EN_ROUTE : ON_SITE
+          return (
+            <Fragment key={m.techId}>
+              {m.state === 'EN_ROUTE' && m.techPos && m.enRouteAt && (
+                <TripTrail technicianId={m.techId} enRouteAt={m.enRouteAt} techPos={m.techPos} weight={3.5} />
+              )}
+              {m.jobPos && (
+                <Pin
+                  position={m.jobPos}
+                  html={jobPinHtml(m.trade, m.state === 'EN_ROUTE' ? 'enroute' : 'onsite')}
+                  width={JOB_PIN.width} height={JOB_PIN.height} anchor={[JOB_PIN.anchorX, JOB_PIN.anchorY]}
+                  zIndex={300}
+                  popup={<div style={{ fontSize: 12, lineHeight: 1.45 }}><b>{m.job.jobNumber}</b>{m.job.customer ? <><br />{m.job.customer}</> : null}{m.job.address ? <><br /><span style={{ color: '#64748B' }}>{m.job.address}</span></> : null}</div>}
+                />
+              )}
+              {m.techPos && (
+                <TechPin
+                  position={m.techPos} name={m.name} avatarUrl={m.avatarUrl} color={color}
+                  workload={m.workload} maxJobs={m.maxJobs} speedKmh={m.state === 'EN_ROUTE' ? 20 : 0}
+                  popup={<div style={{ fontSize: 12, lineHeight: 1.45 }}><b>{m.name}</b><br />{m.state === 'EN_ROUTE' ? 'On the way to' : 'Working on'} {m.job.jobNumber}</div>}
+                />
+              )}
+            </Fragment>
+          )
+        })}
+      </BaseMap>
+    </div>
   )
 }

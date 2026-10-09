@@ -362,10 +362,10 @@ export default function SystemActivity() {
       {/* Header — on-canvas: always light text (canvas is dark navy in all themes) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#F1F5F9', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             <Radio size={20} style={{ color: 'var(--blue)' }} /> System Activity
           </h1>
-          <p style={{ fontSize: 13, color: '#94A3B8', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--t3)', margin: '4px 0 0' }}>
             Every action, every tenant, in real time — the trial-monitoring feed. Super admin only.
           </p>
         </div>

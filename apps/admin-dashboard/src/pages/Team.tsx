@@ -1,5 +1,5 @@
 import { Edit2, Trash2, Lock, Users, Shield, Briefcase, Maximize2, Minimize2, Search, ChevronLeft, ChevronRight, Mail, Phone, X, Loader2, AlertCircle, RefreshCw, UserPlus, MapPin, CheckCircle, XCircle, Clock } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
     useTeamMembers,
     useCreateTeamMember,
@@ -37,6 +37,12 @@ export default function Team() {
     const [page, setPage] = useState(1)
     const [isAddOpen, setIsAddOpen] = useState(false)
     const [isAddTechOpen, setIsAddTechOpen] = useState(false)
+    // The top bar's "Add Team Member" opens the same form as the page's Add Member button.
+    useEffect(() => {
+        const open = () => setIsAddOpen(true)
+        window.addEventListener('team-open-add-member', open)
+        return () => window.removeEventListener('team-open-add-member', open)
+    }, [])
     const [editMember, setEditMember] = useState<TeamMember | null>(null)
     const itemsPerPage = 10
 

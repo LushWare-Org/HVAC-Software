@@ -1,10 +1,7 @@
 /**
  * Projects — long-running customer engagements (Lotus Tower-scale contracts,
  * housing schemes) with dedicated day-by-day crews.
- *
- * DEMO: reads the in-memory mock store (projectsMock.ts). The page structure
- * (filters → KPI strip → project cards) is final; swapping mocks for real
- * hooks later doesn't change this file's layout.
+ * Reads live data through projectsApi.ts.
  */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -71,10 +68,10 @@ export default function Projects() {
       {/* Header — on-canvas: always light text (canvas is dark navy in all themes) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#F1F5F9', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             <FolderKanban size={20} style={{ color: 'var(--blue)' }} /> Projects
           </h1>
-          <p style={{ fontSize: 13, color: '#94A3B8', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--t3)', margin: '4px 0 0' }}>
             Long-running engagements with dedicated crews — installations, retrofits, housing schemes
           </p>
         </div>

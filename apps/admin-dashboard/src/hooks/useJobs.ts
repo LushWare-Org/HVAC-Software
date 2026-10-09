@@ -134,6 +134,19 @@ function invalidateJobViews() {
   queryClient.invalidateQueries({ queryKey: ['projects'] })
 }
 
+export type ReachChannel = 'message' | 'email' | 'push'
+export type ReachResult = 'sent' | 'no-email' | 'no-device' | 'failed' | 'with-message'
+
+/** Ask the customer to drop a pin for a visit; the link goes by the chosen channels. */
+export function useRequestJobLocation() {
+  return useMutation({
+    mutationFn: async ({ jobId, channels }: { jobId: string; channels: ReachChannel[] }) => {
+      const res = await api.post(`/jobs/jobs/${jobId}/location-request`, { channels })
+      return res.data as { url: string; results: Partial<Record<ReachChannel, ReachResult>> }
+    },
+  })
+}
+
 export function useCreateJob() {
   return useMutation({
     mutationFn: async (data: Record<string, unknown>) => {

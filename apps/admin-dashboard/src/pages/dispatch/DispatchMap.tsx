@@ -1,64 +1,30 @@
 /**
  * DispatchMap — operational map for technicians and jobs.
- * Lazy-loaded from DispatchBoard to avoid loading Leaflet on initial page load.
+ * Lazy-loaded from DispatchBoard to keep the map engine out of the first page load.
+ * Draws on Leaflet, or Google Maps for companies that have it switched on (components/map/kit).
  *
  * Features:
- *  1. Auto-fit bounds on load
- *  2. Technician pins color-coded by availability tier (ONLINE/AVAILABLE/AWAY/OFFLINE)
+ *  1. Auto-fit bounds on load, and the view is remembered
+ *  2. Technician pins: round photo, ring of job slots, availability colour; they glide between GPS fixes
  *  3. Quick-assign from unassigned job popups
  *  4. Missing-coordinates warning badge
- *  5. Workload badge on technician markers
- *  6. Job priority coloring
- *  7. Today / Week / All scope toggle
- *  8. Routing lines while EN_ROUTE only; cleared once the job is ON_SITE
+ *  5. Job pins: colour = trade, corner badge = stage, dashed = unassigned, ring = priority (lib/maps/pins)
+ *  6. Today / Week / All scope toggle
+ *  7. Routing lines while EN_ROUTE only; cleared once the job is ON_SITE
  *  Plus: toggleable map layers (live techs, stale techs, assigned jobs, unassigned jobs, routes)
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { MapContainer, Marker, Popup, TileLayer, Tooltip, Polyline, useMap } from 'react-leaflet'
+import { useState, useMemo } from 'react'
+import { ChevronDown, ChevronUp, Info, Layers } from 'lucide-react'
+import { usePersistentState } from '../../lib/usePersistentState'
+import './dispatchMap.css'
 import { useQuery } from '@tanstack/react-query'
 import { createMapViewStore } from '../../lib/mapView'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 import type { DispatchAssignment, Job, ScoredTechnician, Technician } from '../../types/api'
 import { useLocations, useLocationStock, decimalToNumber } from '../../hooks/useInventory'
 import TripTrail, { ROUTE_DRIVEN } from '../../components/map/TripTrail'
-
-// Fix default marker icon (Leaflet + bundler issue)
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow })
-
-// ─── CSS animations (module-level — must run outside React tree for Leaflet) ─────
-;(() => {
-  if (typeof document === 'undefined') return
-  const id = 'dmap-animations'
-  if (document.getElementById(id)) return
-  const style = document.createElement('style')
-  style.id = id
-  style.textContent = `
-    @keyframes dmap-pulse {
-      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
-      50%      { box-shadow: 0 0 0 7px rgba(16,185,129,0); }
-    }
-    .dmap-online-ring { animation: dmap-pulse 1.8s ease-in-out infinite; }
-    @keyframes dmap-pop { from { transform: scale(0.6) translateY(4px); opacity:0; } to { transform: scale(1) translateY(0); opacity:1; } }
-    .dmap-marker { animation: dmap-pop 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
-    .dmap-tip {
-      background: white; border: 1px solid #e2e8f0; border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.18); padding: 6px 9px;
-      font: 500 11px/1.45 sans-serif; color: #334155;
-      max-width: 220px; white-space: normal;
-    }
-    .dmap-tip.leaflet-tooltip-top::before { border-top-color: white; }
-    .dmap-tip .dt-title { font-weight: 700; font-size: 11.5px; color: #0f172a; }
-    .dmap-tip .dt-sub { color: #64748b; }
-  `
-  document.head.appendChild(style)
-})()
+import { BaseMap, Line, Pin, TechPin } from '../../components/map/kit'
+import { JOB_PIN, STAGE_COLOR, STAGE_LABEL, TRADE_COLOR, TRADE_LABEL, jobPinHtml, stageOf, tradeOf, urgencyOf, type Trade } from '../../lib/maps/pins'
 
 // ─── Availability tier (duplicated from DispatchBoard — no circular dep allowed) ─
 type AvailTier = 'ONLINE' | 'AVAILABLE' | 'AWAY' | 'OFFLINE'
@@ -103,9 +69,9 @@ function jobInScope(job: Job, scope: ScopeFilter): boolean {
   if (scope === 'today') {
     return d.toDateString() === now.toDateString()
   }
-  const weekEnd = new Date(now)
-  weekEnd.setDate(now.getDate() + 7)
-  return d >= now || d.toDateString() === now.toDateString()
+  const start = new Date(now); start.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(start); weekEnd.setDate(start.getDate() + 7)
+  return d >= start && d < weekEnd
 }
 
 // ─── Coordinate helpers ──────────────────────────────────────────────────────────
@@ -115,73 +81,6 @@ function parseCoords(job: Job): { lat: number; lng: number } | null {
   const lng = Number.parseFloat(job.serviceLongitude)
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
   return { lat, lng }
-}
-
-// ─── Custom marker factories ─────────────────────────────────────────────────────
-
-function techIcon(tier: AvailTier, workload: number, maxJobs: number): L.DivIcon {
-  const c = AVAIL[tier].color
-  const isOnline = tier === 'ONLINE'
-  const pct = maxJobs > 0 ? Math.round((workload / maxJobs) * 100) : 0
-  const wColor = pct >= 100 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#10b981'
-  return L.divIcon({
-    className: '',
-    iconSize: [40, 46],
-    iconAnchor: [20, 46],
-    popupAnchor: [0, -46],
-    html: `<div class="dmap-marker" style="position:relative;width:40px;height:46px;">
-      <div class="${isOnline ? 'dmap-online-ring' : ''}" style="
-        width:36px;height:36px;border-radius:50%;
-        background:${c};border:2.5px solid white;
-        box-shadow:0 2px 8px rgba(0,0,0,0.22);
-        display:flex;align-items:center;justify-content:center;
-        position:absolute;top:0;left:2px;
-      ">
-        <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='white' stroke='white' stroke-width='1'>
-          <circle cx='12' cy='8' r='4'/><path d='M20 21a8 8 0 0 0-16 0'/>
-        </svg>
-      </div>
-      <!-- tail -->
-      <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:10px solid ${c};"></div>
-      <!-- workload badge -->
-      <div style="
-        position:absolute;top:-4px;right:-2px;
-        background:${wColor};color:white;
-        font-size:9px;font-weight:700;
-        width:16px;height:16px;border-radius:50%;
-        display:flex;align-items:center;justify-content:center;
-        border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.2);
-      ">${workload}</div>
-    </div>`,
-  })
-}
-
-function jobIcon(priority: string, assigned: boolean, status?: string): L.DivIcon {
-  const pc = PRIORITY_COLOR[priority] ?? '#f59e0b'
-  const fill = assigned ? pc : 'white'
-  const stroke = pc
-  const isEnRoute = status === 'EN_ROUTE'
-  const isOnSite  = status === 'ON_SITE'
-  const badge = isEnRoute ? '🚗' : isOnSite ? '🔧' : assigned ? '✓' : '!'
-  const ringColor = isOnSite ? '#7c3aed' : isEnRoute ? '#d97706' : assigned ? pc : '#e5e7eb'
-
-  return L.divIcon({
-    className: '',
-    iconSize: [34, 42],
-    iconAnchor: [17, 42],
-    popupAnchor: [0, -42],
-    html: `<div class="dmap-marker" style="position:relative;width:34px;height:42px;">
-      <div style="
-        width:30px;height:30px;border-radius:50%;
-        background:${fill};border:2.5px solid ${stroke};
-        box-shadow:0 2px 8px rgba(0,0,0,0.2),0 0 0 3px ${ringColor}33;
-        display:flex;align-items:center;justify-content:center;
-        position:absolute;top:0;left:2px;
-        font-size:12px;line-height:1;
-      ">${badge}</div>
-      <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:12px solid ${stroke};"></div>
-    </div>`,
-  })
 }
 
 // ─── Road routing via OSRM public API ────────────────────────────────────────────
@@ -251,87 +150,20 @@ function RoutePolyline({ techPos, jobPos }: {
   if (isLoading || !roadCoords) {
     // Straight line while OSRM is loading or unreachable. Dashed and faint so it
     // never passes for a real road route.
-    return (
-      <Polyline
-        positions={[techPos, jobPos]}
-        pathOptions={{ color, weight: 2, opacity: 0.4, dashArray: '4 6' }}
-      />
-    )
+    return <Line positions={[techPos, jobPos]} color={color} weight={2} opacity={0.4} dash="4 6" />
   }
 
   return (
     <>
       {/* Subtle halo for contrast against map tiles */}
-      <Polyline
-        positions={roadCoords}
-        pathOptions={{ color: '#fff', weight: 7, opacity: 0.6 }}
-      />
-
+      <Line positions={roadCoords} color="#fff" weight={7} opacity={0.6} />
       {/* Still to drive */}
-      <Polyline
-        positions={roadCoords}
-        pathOptions={{
-          color,
-          weight: 3.5,
-          opacity: 0.9,
-          dashArray: '10 6',
-          lineCap: 'round',
-          lineJoin: 'round',
-        }}
-      />
+      <Line positions={roadCoords} color={color} weight={3.5} opacity={0.9} dash="10 6" />
     </>
   )
 }
 
 const dispatchMapView = createMapViewStore('dispatch')
-
-/**
- * Restores the last view, or fits all points the first time.
- *
- * Must be rendered inside MapContainer. Runs once on mount: re-fitting whenever
- * `points` changed would yank the map back every time a technician moved, which
- * is the same frustration in a different disguise.
- */
-function RememberView({ points }: { points: [number, number][] }) {
-  const map = useMap()
-
-  useEffect(() => {
-    const saved = dispatchMapView.read()
-    if (saved) {
-      map.setView(saved.center, saved.zoom, { animate: false })
-    } else if (points.length === 1) {
-      map.setView(points[0], 13)
-    } else if (points.length > 1) {
-      const bounds = L.latLngBounds(points.map(p => L.latLng(p[0], p[1])))
-      map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 })
-    }
-
-    const save = () => {
-      // Leaflet reads positions off live DOM nodes, so this throws if it runs
-      // while the map is being torn down. Guarded rather than trusted: an
-      // uncaught throw here kills the React unmount and blanks the whole page.
-      try {
-        const c = map.getCenter()
-        dispatchMapView.write({ center: [c.lat, c.lng], zoom: map.getZoom() })
-      } catch {
-        /* map already going away — the last moveend already saved the view */
-      }
-    }
-    map.on('moveend', save)
-    map.on('zoomend', save)
-    return () => {
-      // Deliberately NOT saving here. Calling map.getCenter() during teardown
-      // reads _leaflet_pos off an element Leaflet has already removed, which
-      // threw and blanked the page when switching sub-tabs. Nothing is lost:
-      // Leaflet fires moveend at the end of every pan and zoom, so the view is
-      // already stored before any unmount can happen.
-      map.off('moveend', save)
-      map.off('zoomend', save)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  return null
-}
 
 // ─── Van inventory summary (inside technician popup) ─────────────────────────────
 function VanInventorySummary({ technicianId }: { technicianId: string }) {
@@ -396,13 +228,18 @@ interface Props {
 // ─── Layer toggle keys ────────────────────────────────────────────────────────────
 type LayerKey = 'liveTechs' | 'staleTechs' | 'assignedJobs' | 'unassignedJobs' | 'routes'
 
-const LAYERS: { key: LayerKey; label: string; color: string }[] = [
-  { key: 'liveTechs',     label: 'Live Techs',      color: '#10b981' },
-  { key: 'staleTechs',    label: 'Stale Techs',     color: '#f59e0b' },
-  { key: 'assignedJobs',  label: 'Assigned Jobs',   color: '#6366f1' },
-  { key: 'unassignedJobs',label: 'Unassigned Jobs', color: '#ef4444' },
-  { key: 'routes',        label: 'Routes',          color: '#8b5cf6' },
+const LAYERS: { key: LayerKey; label: string; color: string; group: 'Technicians' | 'Jobs' | 'Extras' }[] = [
+  { key: 'liveTechs',      label: 'Live',              color: '#10b981', group: 'Technicians' },
+  { key: 'staleTechs',     label: 'Not seen for 8 h+', color: '#f59e0b', group: 'Technicians' },
+  { key: 'assignedJobs',   label: 'Booked',            color: '#6366f1', group: 'Jobs' },
+  { key: 'unassignedJobs', label: 'Need a technician', color: '#ef4444', group: 'Jobs' },
+  { key: 'routes',         label: 'Routes',            color: '#8b5cf6', group: 'Extras' },
 ]
+const DEFAULT_LAYERS: Record<LayerKey, boolean> = { liveTechs: true, staleTechs: true, assignedJobs: true, unassignedJobs: true, routes: true }
+const isScope = (v: unknown): v is ScopeFilter => v === 'today' || v === 'week' || v === 'all'
+const isLayers = (v: unknown): v is Record<LayerKey, boolean> =>
+  !!v && typeof v === 'object' && LAYERS.every(l => typeof (v as Record<string, unknown>)[l.key] === 'boolean')
+const isBool = (v: unknown): v is boolean => typeof v === 'boolean'
 
 // ─── Main component ──────────────────────────────────────────────────────────────
 export default function DispatchMap({
@@ -418,15 +255,14 @@ export default function DispatchMap({
   isAssigning,
   smartAssigningJobId,
 }: Props) {
-  const [scope, setScope] = useState<ScopeFilter>('all')
+  // Remembered across pages, tabs and windows: what the dispatcher set up stays set up.
+  const [scope, setScope] = usePersistentState<ScopeFilter>('dispatch.scope', 'all', isScope)
   // "Job details" mode: every plotted job shows a permanent floating detail bar
   // (same info as its click popup) so the whole board is readable at a glance.
-  const [showDetails, setShowDetails] = useState(false)
-  const [layers, setLayers] = useState<Record<LayerKey, boolean>>({
-    liveTechs: true, staleTechs: true,
-    assignedJobs: true, unassignedJobs: true,
-    routes: true,
-  })
+  const [showDetails, setShowDetails] = usePersistentState<boolean>('dispatch.labels', false, isBool)
+  const [layers, setLayers] = usePersistentState<Record<LayerKey, boolean>>('dispatch.layers', DEFAULT_LAYERS, isLayers)
+  const [panelOpen, setPanelOpen] = usePersistentState<boolean>('dispatch.panelOpen', true, isBool)
+  const [keyOpen, setKeyOpen] = useState(false)
 
   const toggleLayer = (key: LayerKey) => setLayers(l => ({ ...l, [key]: !l[key] }))
 
@@ -544,99 +380,7 @@ export default function DispatchMap({
   const noGPSTechs    = technicians.filter(t => !t.currentLocation).length
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', minHeight: 0 }}>
-
-      {/* ── Stats row ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
-        {[
-          { label: 'Live Techs',      value: onlineCount,                      sub: 'on map · < 8h',   color: '#10b981', bg: '#f0fdf4', border: '#bbf7d0' },
-          { label: 'Stale Techs',     value: staleCount,                       sub: 'on map · ≥ 8h',   color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-          { label: 'Assigned Jobs',   value: assignedJobs.length,              sub: `${assignedWithCoords.length} plotted`,   color: '#6366f1', bg: '#f5f3ff', border: '#ddd6fe' },
-          { label: 'Unassigned Jobs', value: unassignedJobs.length,            sub: `${unassignedWithCoords.length} plotted`, color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
-        ].map(s => (
-          <div key={s.label} style={{ borderRadius: 10, border: `1px solid ${s.border}`, background: s.bg, padding: '10px 14px' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: s.color }}>{s.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: s.color, lineHeight: 1.2, marginTop: 2 }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{s.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Controls row ──────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        {/* Scope toggle */}
-        <div style={{ display: 'flex', gap: 0, borderRadius: 8, overflow: 'hidden', border: '1px solid #e5e7eb', background: 'white' }}>
-          {(['today', 'week', 'all'] as ScopeFilter[]).map(s => (
-            <button
-              key={s}
-              onClick={() => setScope(s)}
-              style={{
-                padding: '5px 12px', fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 0,
-                background: scope === s ? '#2563eb' : 'white',
-                color: scope === s ? 'white' : '#6b7280',
-                borderRight: s !== 'all' ? '1px solid #e5e7eb' : 'none',
-                transition: 'all 0.15s',
-              }}
-            >
-              {s === 'today' ? 'Today' : s === 'week' ? 'This Week' : 'All Jobs'}
-            </button>
-          ))}
-        </div>
-
-        {/* Layer toggles */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {LAYERS.map(({ key, label, color }) => {
-            const on = layers[key]
-            return (
-              <button
-                key={key}
-                onClick={() => toggleLayer(key)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '4px 10px', fontSize: 10, fontWeight: 600,
-                  borderRadius: 20, cursor: 'pointer',
-                  border: `1.5px solid ${on ? color : '#d1d5db'}`,
-                  background: on ? color + '15' : 'white',
-                  color: on ? color : '#9ca3af',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: on ? color : '#d1d5db', transition: 'background 0.15s' }} />
-                {label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* "Job details" toggle — permanent info bars on every plotted job */}
-        <button
-          onClick={() => setShowDetails(v => !v)}
-          title={showDetails ? 'Hide job detail bars' : 'Show every job\'s details on the map'}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            padding: '4px 10px', fontSize: 10, fontWeight: 700,
-            borderRadius: 20, cursor: 'pointer',
-            border: `1.5px solid ${showDetails ? '#2563eb' : '#d1d5db'}`,
-            background: showDetails ? '#2563eb' : 'white',
-            color: showDetails ? 'white' : '#6b7280',
-            transition: 'all 0.15s',
-          }}
-        >
-          Job details {showDetails ? 'ON' : 'OFF'}
-        </button>
-
-        {/* Missing coords warning */}
-        {missingCoords > 0 && (
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#d97706', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '4px 9px', fontWeight: 600 }}>
-            ⚠ {missingCoords} job{missingCoords !== 1 ? 's' : ''} hidden — no coordinates
-          </div>
-        )}
-        {noGPSTechs > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#9ca3af', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 9px', fontWeight: 500 }}>
-            {noGPSTechs} tech{noGPSTechs !== 1 ? 's' : ''} without GPS
-          </div>
-        )}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
 
       {/* ── Map ─────────────────────────────────────────────────────────────────── */}
       {/* zIndex: 0 traps the Leaflet panes/controls in their own stacking context
@@ -647,43 +391,98 @@ export default function DispatchMap({
           clicking the map scrolled it into view, pushing the stat cards out of
           sight with no scrollbar to bring them back. Filling the space leaves
           nothing to scroll. minHeight keeps it usable on short windows. */}
-      <div style={{ position: 'relative', zIndex: 0, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--bd)', flex: 1, minHeight: 280, boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
-        <MapContainer
-          center={defaultCenter}
-          zoom={12}
-          style={{ height: '100%', width: '100%' }}
-          scrollWheelZoom
-        >
-          {/* OpenStreetMap standard tiles.
-              Previously CartoDB Positron, which was nicer to look at but now
-              stamps "API KEY REQUIRED" across every tile: CARTO made basemap
-              access keyed. OSM needs no key and is what MapPicker, PlannerMap
-              and CrewMapInner already use, so all five maps now match. */}
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <RememberView points={allPoints} />
+      <div style={{ position: 'relative', zIndex: 0, overflow: 'hidden', flex: 1, minHeight: 280 }}>
+        {/* What's on the map: a small panel floating on it, below the map's own top-left
+            control (Google's Map/Satellite, Leaflet's zoom). Folds into a pill. */}
+        <div className="dm-panel" style={{ position: 'absolute', left: 10, top: 84, zIndex: 1000 }}>
+          {panelOpen ? (
+            <div style={{ width: 196, background: 'var(--bg-card)', color: 'var(--t1)', border: '1px solid var(--bd)', borderRadius: 12, padding: 8, boxShadow: '0 8px 24px rgba(15,23,42,.18)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 4px 6px' }}>
+                <span style={{ fontSize: 12, fontWeight: 700 }}>On the map</span>
+                <button type="button" onClick={() => setPanelOpen(false)} aria-label="Fold the map panel" className="dm-icon-btn"><ChevronUp size={14} /></button>
+              </div>
+              <div role="radiogroup" aria-label="Which dates" style={{ display: 'flex', background: 'var(--bg-card-2)', borderRadius: 8, padding: 2, marginBottom: 4 }}>
+                {(['today', 'week', 'all'] as ScopeFilter[]).map(sc => (
+                  <button key={sc} type="button" role="radio" aria-checked={scope === sc} onClick={() => setScope(sc)}
+                    style={{ flex: 1, border: 0, borderRadius: 6, padding: '5px 0', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                      background: scope === sc ? 'var(--bg-card)' : 'transparent', color: scope === sc ? 'var(--t1)' : 'var(--t3)',
+                      boxShadow: scope === sc ? '0 1px 2px rgba(0,0,0,.12)' : 'none' }}>
+                    {sc === 'today' ? 'Today' : sc === 'week' ? 'Week' : 'All'}
+                  </button>
+                ))}
+              </div>
+              {(['Technicians', 'Jobs', 'Extras'] as const).map(group => (
+                <div key={group}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--t3)', padding: '5px 6px 1px' }}>{group}</div>
+                  {LAYERS.filter(l => l.group === group).map(({ key, label, color }) => {
+                    const count = key === 'liveTechs' ? onlineCount : key === 'staleTechs' ? staleCount : key === 'assignedJobs' ? scopedAssigned.length : key === 'unassignedJobs' ? scopedUnassigned.length : null
+                    return (
+                      <label key={key} className="dm-layer" style={{ opacity: layers[key] ? 1 : 0.55 }}>
+                        <input type="checkbox" checked={layers[key]} onChange={() => toggleLayer(key)} />
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                        <span style={{ flex: 1 }}>{label}</span>
+                        {count !== null && <b style={{ fontSize: 12 }}>{count}</b>}
+                      </label>
+                    )
+                  })}
+                  {group === 'Extras' && (
+                    <label className="dm-layer" style={{ opacity: showDetails ? 1 : 0.55 }}>
+                      <input type="checkbox" checked={showDetails} onChange={() => setShowDetails(v => !v)} />
+                      <span style={{ flex: 1 }}>Labels on every job</span>
+                    </label>
+                  )}
+                </div>
+              ))}
+              {(missingCoords > 0 || noGPSTechs > 0) && (
+                <div style={{ fontSize: 10.5, color: 'var(--amber)', padding: '6px 6px 2px', lineHeight: 1.4 }}>
+                  {missingCoords > 0 && <div>{missingCoords} job{missingCoords !== 1 ? 's' : ''} not shown (no location)</div>}
+                  {noGPSTechs > 0 && <div style={{ color: 'var(--t3)' }}>{noGPSTechs} technician{noGPSTechs !== 1 ? 's' : ''} without GPS</div>}
+                </div>
+              )}
+            </div>
+          ) : (
+            <button type="button" onClick={() => setPanelOpen(true)} className="dm-pill" aria-label="Show the map panel">
+              <Layers size={13} /> {scope === 'today' ? 'Today' : scope === 'week' ? 'This week' : 'All'} · {LAYERS.filter(l => layers[l.key]).length} on <ChevronDown size={13} />
+            </button>
+          )}
+        </div>
 
+        {/* Map key, on demand instead of a legend row that got cut off */}
+        <div style={{ position: 'absolute', left: 10, bottom: 28, zIndex: 1000 }}>
+          {keyOpen && (
+            <div style={{ marginBottom: 6, width: 250, background: 'var(--bg-card)', color: 'var(--t2)', border: '1px solid var(--bd)', borderRadius: 12, padding: '10px 12px', boxShadow: '0 8px 24px rgba(15,23,42,.18)', fontSize: 11, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <b style={{ fontSize: 12, color: 'var(--t1)' }}>Map key</b>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
+                {(['ONLINE','AVAILABLE','AWAY','OFFLINE'] as AvailTier[]).map(tier => (
+                  <span key={tier} style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: AVAIL[tier].color }} />{AVAIL[tier].label}</span>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 16, borderTop: `3.5px solid ${ROUTE_DRIVEN}` }} /> Driven so far</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 16, borderTop: `2.5px dashed ${ROUTE_AHEAD}` }} /> Still to drive</span>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
+                {(['hvac', 'plumbing', 'electrical', 'agreement'] as Trade[]).map(t => (
+                  <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: TRADE_COLOR[t] }} />{TRADE_LABEL[t]}</span>
+                ))}
+              </div>
+              <span style={{ color: 'var(--t3)', lineHeight: 1.45 }}>The badge shows the stage ({Object.values(STAGE_LABEL).join(', ')}). A dashed pin has nobody yet; a red pulse is an emergency.</span>
+            </div>
+          )}
+          <button type="button" className="dm-pill" aria-expanded={keyOpen} onClick={() => setKeyOpen(v => !v)}><Info size={13} /> Map key</button>
+        </div>
+
+        <BaseMap center={defaultCenter} zoom={12} fit={allPoints} viewStore={dispatchMapView}>
           {/* ── Routing lines (road-following via OSRM) ────────────────────── */}
           {layers.routes && routeLines.map(({ techPos, jobPos, technicianId }) => (
-            <RoutePolyline
-              key={`route-${technicianId}`}
-              techPos={techPos}
-              jobPos={jobPos}
-            />
+            <RoutePolyline key={`route-${technicianId}`} techPos={techPos} jobPos={jobPos} />
           ))}
           {/* Drawn after the route ahead so the driven path sits on top. */}
           {layers.routes && routeLines.map(({ techPos, technicianId, enRouteAt }) => (
-            <TripTrail
-              key={`trip-${technicianId}-${enRouteAt ?? 'none'}`}
-              technicianId={technicianId}
-              enRouteAt={enRouteAt}
-              techPos={techPos}
-            />
+            <TripTrail key={`trip-${technicianId}-${enRouteAt ?? 'none'}`} technicianId={technicianId} enRouteAt={enRouteAt} techPos={techPos} />
           ))}
 
-          {/* ── Live technician markers ───────────────────────────────────────── */}
+          {/* ── Live technicians: round photo, ring of job slots, glide while driving ── */}
           {layers.liveTechs && liveTechs.map(({ t, tier }) => {
             const loc = t.currentLocation!
             const workload = activeJobCountByTech[t.id] ?? 0
@@ -695,47 +494,49 @@ export default function DispatchMap({
               : `${Math.floor(secondsAgo / 3600)}h ago`
 
             return (
-              <Marker
+              <TechPin
                 key={`tech-live-${t.id}`}
                 position={[loc.lat, loc.lng]}
-                icon={techIcon(tier, workload, t.maxDailyJobs)}
-              >
-                <Popup maxWidth={240}>
-                  <div style={{ fontSize: 12, minWidth: 190 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <strong style={{ fontSize: 13 }}>{t.name}</strong>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: AVAIL[tier].color + '20', color: AVAIL[tier].color, borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 700 }}>
-                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: AVAIL[tier].color }} />
-                        {AVAIL[tier].label.toUpperCase()}
-                      </span>
-                    </div>
-                    {t.phone && <div style={{ color: '#6b7280', marginBottom: 3 }}>{t.phone}</div>}
-                    {t.speedKmh !== undefined && (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 4, background: t.speedKmh > 3 ? '#DBEAFE' : '#F3F4F6', color: t.speedKmh > 3 ? '#1D4ED8' : '#6B7280', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
-                        {t.speedKmh > 3 ? `● MOVING · ${t.speedKmh.toFixed(0)} km/h` : '○ STATIONARY'}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 4, fontSize: 11 }}>
-                      <span style={{ color: '#374151' }}>⭐ {t.rating.toFixed(1)}</span>
-                      <span style={{ color: workload >= t.maxDailyJobs ? '#ef4444' : '#374151' }}>
-                        📋 {workload}/{t.maxDailyJobs} jobs
-                      </span>
-                      {t.batteryPct !== undefined && (
-                        <span style={{ color: t.batteryPct < 20 ? '#ef4444' : '#374151' }}>🔋 {t.batteryPct}%</span>
-                      )}
-                    </div>
-                    {t.skills?.length > 0 && (
-                      <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 4 }}>{t.skills.join(', ')}</div>
-                    )}
-                    {ageLabel && <div style={{ color: '#9ca3af', fontSize: 10 }}>GPS updated {ageLabel}</div>}
-                    <VanInventorySummary technicianId={t.id} />
-                  </div>
-                </Popup>
-              </Marker>
+                name={t.name} avatarUrl={t.avatarUrl} color={AVAIL[tier].color}
+                workload={workload} maxJobs={t.maxDailyJobs}
+                speedKmh={t.speedKmh} headingDeg={t.headingDeg}
+                popupWidth={240}
+                popup={
+    <div style={{ fontSize: 12, minWidth: 190 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+        <strong style={{ fontSize: 13 }}>{t.name}</strong>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: AVAIL[tier].color + '20', color: AVAIL[tier].color, borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 700 }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: AVAIL[tier].color }} />
+          {AVAIL[tier].label.toUpperCase()}
+        </span>
+      </div>
+      {t.phone && <div style={{ color: '#6b7280', marginBottom: 3 }}>{t.phone}</div>}
+      {t.speedKmh !== undefined && (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 4, background: t.speedKmh > 3 ? '#DBEAFE' : '#F3F4F6', color: t.speedKmh > 3 ? '#1D4ED8' : '#6B7280', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
+          {t.speedKmh > 3 ? `● MOVING · ${t.speedKmh.toFixed(0)} km/h` : '○ STATIONARY'}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 4, fontSize: 11 }}>
+        <span style={{ color: '#374151' }}>⭐ {t.rating.toFixed(1)}</span>
+        <span style={{ color: workload >= t.maxDailyJobs ? '#ef4444' : '#374151' }}>
+          📋 {workload}/{t.maxDailyJobs} jobs
+        </span>
+        {t.batteryPct !== undefined && (
+          <span style={{ color: t.batteryPct < 20 ? '#ef4444' : '#374151' }}>🔋 {t.batteryPct}%</span>
+        )}
+      </div>
+      {t.skills?.length > 0 && (
+        <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 4 }}>{t.skills.join(', ')}</div>
+      )}
+      {ageLabel && <div style={{ color: '#9ca3af', fontSize: 10 }}>GPS updated {ageLabel}</div>}
+      <VanInventorySummary technicianId={t.id} />
+    </div>
+                }
+              />
             )
           })}
 
-          {/* ── Stale technician markers ──────────────────────────────────────── */}
+          {/* ── Stale technicians (no recent GPS) ───────────────────────────────── */}
           {layers.staleTechs && staleTechs.map(({ t, tier }) => {
             const loc = t.currentLocation!
             const workload = activeJobCountByTech[t.id] ?? 0
@@ -748,26 +549,26 @@ export default function DispatchMap({
               : 'Unknown'
 
             return (
-              <Marker
+              <TechPin
                 key={`tech-stale-${t.id}`}
                 position={[loc.lat, loc.lng]}
-                icon={techIcon(tier, workload, t.maxDailyJobs)}
-                opacity={0.55}
-              >
-                <Popup maxWidth={220}>
-                  <div style={{ fontSize: 12, minWidth: 180 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <strong style={{ fontSize: 13 }}>{t.name}</strong>
-                      <span style={{ background: '#f3f4f6', color: '#6b7280', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>
-                        {AVAIL[tier].label.toUpperCase()}
-                      </span>
-                    </div>
-                    {t.phone && <div style={{ color: '#6b7280', marginBottom: 4 }}>{t.phone}</div>}
-                    <div style={{ color: '#9ca3af', fontSize: 10, fontStyle: 'italic' }}>Last seen: {staleAgo}</div>
-                    <div style={{ marginTop: 4, fontSize: 11, color: '#6b7280' }}>⚠ Stale location — may have moved</div>
-                  </div>
-                </Popup>
-              </Marker>
+                name={t.name} avatarUrl={t.avatarUrl} color={AVAIL[tier].color}
+                workload={workload} maxJobs={t.maxDailyJobs} stale
+                popupWidth={220}
+                popup={
+    <div style={{ fontSize: 12, minWidth: 180 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+        <strong style={{ fontSize: 13 }}>{t.name}</strong>
+        <span style={{ background: '#f3f4f6', color: '#6b7280', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>
+          {AVAIL[tier].label.toUpperCase()}
+        </span>
+      </div>
+      {t.phone && <div style={{ color: '#6b7280', marginBottom: 4 }}>{t.phone}</div>}
+      <div style={{ color: '#9ca3af', fontSize: 10, fontStyle: 'italic' }}>Last seen: {staleAgo}</div>
+      <div style={{ marginTop: 4, fontSize: 11, color: '#6b7280' }}>⚠ Stale location — may have moved</div>
+    </div>
+                }
+              />
             )
           })}
 
@@ -776,49 +577,51 @@ export default function DispatchMap({
             const assignment = assignmentByJobId[job.id]
             const tech = technicians.find(t => t.id === assignment?.technicianId)
             const techName = tech?.name ?? assignment?.technicianName ?? job.assignedToName ?? '—'
+            const stage = stageOf(job, true, assignment?.status)
 
             return (
-              <Marker
-                key={`assigned-${job.id}-${showDetails}`}
+              <Pin
+                key={`assigned-${job.id}`}
                 position={[c.lat, c.lng]}
-                icon={jobIcon(job.priority, true, assignment?.status)}
-              >
-                {showDetails && (
-                  <Tooltip permanent direction="top" offset={[0, -42]} className="dmap-tip">
-                    <div className="dt-title">{job.title}</div>
-                    {job.customerName && <div className="dt-sub">{job.customerName}</div>}
-                    <div style={{ color: '#059669', fontWeight: 600 }}>
-                      {assignment?.status === 'EN_ROUTE' ? '🚗 En route' : assignment?.status === 'ON_SITE' ? '🔧 On site' : '✓ Assigned'} · {techName}
+                html={jobPinHtml(tradeOf(job), stage, urgencyOf(job.priority))}
+                width={JOB_PIN.width} height={JOB_PIN.height} anchor={[JOB_PIN.anchorX, JOB_PIN.anchorY]}
+                popupWidth={240}
+                label={showDetails ? (
+                  <>
+                    <div className="t">{job.title}</div>
+                    {job.customerName && <div className="s">{job.customerName}</div>}
+                    <div style={{ color: STAGE_COLOR[stage], fontWeight: 600 }}>
+                      {STAGE_LABEL[stage]} · {techName}
                     </div>
-                  </Tooltip>
-                )}
-                <Popup maxWidth={240}>
-                  <div style={{ fontSize: 12, minWidth: 190 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{job.title}</div>
-                    <div style={{ color: '#6b7280', marginBottom: 2 }}>{job.customerName ?? '—'}</div>
-                    <div style={{ color: '#6b7280', marginBottom: 6, fontSize: 11 }}>{job.serviceAddress ?? '—'}</div>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
-                      <span style={{ background: (PRIORITY_COLOR[job.priority] ?? '#f59e0b') + '20', color: PRIORITY_COLOR[job.priority] ?? '#f59e0b', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 700 }}>
-                        {job.priority}
-                      </span>
-                      {assignment && (
-                        <span style={{ background: '#ede9fe', color: '#7c3aed', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>
-                          {assignment.status === 'EN_ROUTE' ? '🚗 En Route' : assignment.status === 'ON_SITE' ? '🔧 On Site' : '✓ Assigned'}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ color: '#10b981', fontWeight: 600, fontSize: 11, marginBottom: 8 }}>Technician: {techName}</div>
-                    {onOpenJob && (
-                      <button
-                        onClick={() => onOpenJob(job, assignment)}
-                        style={{ width: '100%', padding: '6px 0', borderRadius: 6, border: '1px solid #e5e7eb', background: '#f9fafb', color: '#374151', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
-                      >
-                        View Job Details →
-                      </button>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
+                  </>
+                ) : undefined}
+                popup={
+    <div style={{ fontSize: 12, minWidth: 190 }}>
+      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{job.title}</div>
+      <div style={{ color: '#6b7280', marginBottom: 2 }}>{job.customerName ?? '—'}</div>
+      <div style={{ color: '#6b7280', marginBottom: 6, fontSize: 11 }}>{job.serviceAddress ?? '—'}</div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+        <span style={{ background: (PRIORITY_COLOR[job.priority] ?? '#f59e0b') + '20', color: PRIORITY_COLOR[job.priority] ?? '#f59e0b', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 700 }}>
+          {job.priority}
+        </span>
+        {assignment && (
+          <span style={{ background: '#ede9fe', color: '#7c3aed', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>
+            {assignment.status === 'EN_ROUTE' ? '🚗 En Route' : assignment.status === 'ON_SITE' ? '🔧 On Site' : '✓ Assigned'}
+          </span>
+        )}
+      </div>
+      <div style={{ color: '#10b981', fontWeight: 600, fontSize: 11, marginBottom: 8 }}>Technician: {techName}</div>
+      {onOpenJob && (
+        <button
+          onClick={() => onOpenJob(job, assignment)}
+          style={{ width: '100%', padding: '6px 0', borderRadius: 6, border: '1px solid #e5e7eb', background: '#f9fafb', color: '#374151', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+        >
+          View Job Details →
+        </button>
+      )}
+    </div>
+                }
+              />
             )
           })}
 
@@ -826,111 +629,84 @@ export default function DispatchMap({
           {layers.unassignedJobs && unassignedWithCoords.map(({ j: job, c }) => {
             const isAssigningThis = smartAssigningJobId === job.id
             return (
-              <Marker
-                key={`unassigned-${job.id}-${showDetails}`}
+              <Pin
+                key={`unassigned-${job.id}`}
                 position={[c.lat, c.lng]}
-                icon={jobIcon(job.priority, false)}
-              >
-                {showDetails && (
-                  <Tooltip permanent direction="top" offset={[0, -42]} className="dmap-tip">
-                    <div className="dt-title">{job.title}</div>
-                    {job.customerName && <div className="dt-sub">{job.customerName}</div>}
-                    <div style={{ color: '#d97706', fontWeight: 600 }}>
+                html={jobPinHtml(tradeOf(job), 'unassigned', urgencyOf(job.priority))}
+                width={JOB_PIN.width} height={JOB_PIN.height} anchor={[JOB_PIN.anchorX, JOB_PIN.anchorY]}
+                popupWidth={250}
+                label={showDetails ? (
+                  <>
+                    <div className="t">{job.title}</div>
+                    {job.customerName && <div className="s">{job.customerName}</div>}
+                    <div style={{ color: STAGE_COLOR.unassigned, fontWeight: 600 }}>
                       ! Unassigned · {job.priority}
                     </div>
-                  </Tooltip>
-                )}
-                <Popup maxWidth={250}>
-                  <div style={{ fontSize: 12, minWidth: 200 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{job.title}</div>
-                    <div style={{ color: '#6b7280', marginBottom: 2 }}>{job.customerName ?? '—'}</div>
-                    <div style={{ color: '#6b7280', marginBottom: 6, fontSize: 11 }}>{job.serviceAddress ?? '—'}</div>
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                      <span style={{ background: (PRIORITY_COLOR[job.priority] ?? '#f59e0b') + '20', color: PRIORITY_COLOR[job.priority] ?? '#f59e0b', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 700 }}>
-                        {job.priority}
-                      </span>
-                      <span style={{ background: '#fef3c7', color: '#d97706', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>
-                        Awaiting assignment
-                      </span>
-                    </div>
+                  </>
+                ) : undefined}
+                popup={
+    <div style={{ fontSize: 12, minWidth: 200 }}>
+      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{job.title}</div>
+      <div style={{ color: '#6b7280', marginBottom: 2 }}>{job.customerName ?? '—'}</div>
+      <div style={{ color: '#6b7280', marginBottom: 6, fontSize: 11 }}>{job.serviceAddress ?? '—'}</div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+        <span style={{ background: (PRIORITY_COLOR[job.priority] ?? '#f59e0b') + '20', color: PRIORITY_COLOR[job.priority] ?? '#f59e0b', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 700 }}>
+          {job.priority}
+        </span>
+        <span style={{ background: '#fef3c7', color: '#d97706', borderRadius: 20, padding: '2px 7px', fontSize: 10, fontWeight: 600 }}>
+          Awaiting assignment
+        </span>
+      </div>
 
-                    {/* Quick manual assign */}
-                    {onAssign && technicians.length > 0 && (
-                      <div style={{ marginBottom: 6 }}>
-                        <div style={{ fontSize: 10, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Manual Assign:</div>
-                        <select
-                          defaultValue=""
-                          onChange={e => { if (e.target.value) { onAssign(job.id, e.target.value); e.target.value = '' } }}
-                          style={{ width: '100%', padding: '5px 8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 11, cursor: 'pointer', background: 'white' }}
-                        >
-                          <option value="" disabled>Select technician…</option>
-                          {technicians.map(t => (
-                            <option key={t.id} value={t.id}>{t.name} ({activeJobCountByTech[t.id] ?? 0}/{t.maxDailyJobs})</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+      {/* Quick manual assign */}
+      {onAssign && technicians.length > 0 && (
+        <div style={{ marginBottom: 6 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#374151', marginBottom: 3 }}>Manual Assign:</div>
+          <select
+            defaultValue=""
+            onChange={e => { if (e.target.value) { onAssign(job.id, e.target.value); e.target.value = '' } }}
+            style={{ width: '100%', padding: '5px 8px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 11, cursor: 'pointer', background: 'white' }}
+          >
+            <option value="" disabled>Select technician…</option>
+            {technicians.map(t => (
+              <option key={t.id} value={t.id}>{t.name} ({activeJobCountByTech[t.id] ?? 0}/{t.maxDailyJobs})</option>
+            ))}
+          </select>
+        </div>
+      )}
 
-                    {/* Smart assign button */}
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {onSmartAssign && (
-                        <button
-                          onClick={() => onSmartAssign(job)}
-                          disabled={isAssigning || isAssigningThis}
-                          style={{
-                            flex: 1, padding: '6px 0', borderRadius: 6, border: 0, cursor: 'pointer',
-                            background: isAssigningThis ? '#fde68a' : 'linear-gradient(135deg,#f59e0b,#d97706)',
-                            color: 'white', fontSize: 11, fontWeight: 700,
-                          }}
-                        >
-                          {isAssigningThis ? '⏳ Assigning…' : '⚡ Smart Assign'}
-                        </button>
-                      )}
-                      {onOpenJob && (
-                        <button
-                          onClick={() => onOpenJob(job)}
-                          style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#f9fafb', color: '#374151', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
-                        >
-                          Details
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
+      {/* Smart assign button */}
+      <div style={{ display: 'flex', gap: 6 }}>
+        {onSmartAssign && (
+          <button
+            onClick={() => onSmartAssign(job)}
+            disabled={isAssigning || isAssigningThis}
+            style={{
+              flex: 1, padding: '6px 0', borderRadius: 6, border: 0, cursor: 'pointer',
+              background: isAssigningThis ? '#fde68a' : 'linear-gradient(135deg,#f59e0b,#d97706)',
+              color: 'white', fontSize: 11, fontWeight: 700,
+            }}
+          >
+            {isAssigningThis ? '⏳ Assigning…' : '⚡ Smart Assign'}
+          </button>
+        )}
+        {onOpenJob && (
+          <button
+            onClick={() => onOpenJob(job)}
+            style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#f9fafb', color: '#374151', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+          >
+            Details
+          </button>
+        )}
+      </div>
+    </div>
+                }
+              />
             )
           })}
-        </MapContainer>
+        </BaseMap>
       </div>
 
-      {/* ── Legend ──────────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 11, color: '#6b7280' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#374151' }}>Technicians:</div>
-        {(['ONLINE','AVAILABLE','AWAY','OFFLINE'] as AvailTier[]).map(tier => (
-          <span key={tier} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: AVAIL[tier].color, display: 'inline-block' }} />
-            {AVAIL[tier].label}
-          </span>
-        ))}
-        <span style={{ width: 1, background: '#e5e7eb', height: 14, alignSelf: 'center' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#374151' }}>Routes:</div>
-        {/* Both lines belong to the current trip only, and both go once the
-            technician is marked arrived. */}
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 16, borderTop: `3.5px solid ${ROUTE_DRIVEN}`, display: 'inline-block' }} /> Driven so far
-        </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 16, borderTop: `2.5px dashed ${ROUTE_AHEAD}`, display: 'inline-block' }} /> Still to drive
-        </span>
-        <span style={{ width: 1, background: '#e5e7eb', height: 14, alignSelf: 'center' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#374151' }}>Priority:</div>
-        {Object.entries(PRIORITY_COLOR).map(([p, c]) => (
-          <span key={p} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: c, display: 'inline-block' }} />
-            {p.charAt(0) + p.slice(1).toLowerCase()}
-          </span>
-        ))}
-      </div>
     </div>
   )
 }

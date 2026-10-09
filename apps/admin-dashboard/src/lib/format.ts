@@ -105,3 +105,32 @@ export function humanizeStatus(value: string | null | undefined): string {
 export function normalizeStatus(value: string | null | undefined): string {
   return String(value ?? '').trim().toUpperCase()
 }
+
+/**
+ * A job's dollar figure. Jobs store `estimatedValue` (a Decimal, so it arrives as a string);
+ * `finalAmount` / `estimatedAmount` are older names kept for rows that still carry them.
+ * Returns null when nothing is set, so callers can show "—" instead of a false 0.
+ */
+export function jobAmount(j: { finalAmount?: unknown; estimatedValue?: unknown; estimatedAmount?: unknown } | null | undefined): number | null {
+  for (const v of [j?.finalAmount, j?.estimatedValue, j?.estimatedAmount]) {
+    if (v != null && v !== '' && Number.isFinite(Number(v))) return Number(v)
+  }
+  return null
+}
+
+/** "4.2 km from where they are now" — what the distance on a suggestion means. */
+export function distanceLabel(km: number | null | undefined, src?: 'live' | 'base' | 'last_known' | 'none'): string {
+  if (src === 'none' || km == null) return 'location unknown'
+  const from = src === 'live' ? 'from where they are now' : src === 'last_known' ? 'from last known position' : 'from base'
+  return `${km.toFixed(1)} km ${from}`
+}
+
+/** "Morning 8:00 AM – 12:00 PM" for an arrival window; the part of day is named when it matches one of the portal's windows. */
+export function formatArrivalWindow(start?: string | null, end?: string | null): string {
+  if (!start || !end) return ''
+  const a = new Date(start), b = new Date(end)
+  const t = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  const h = a.getHours()
+  const name = h === 8 ? 'Morning' : h === 12 ? 'Afternoon' : h === 16 ? 'Evening' : ''
+  return `${name ? name + ' ' : ''}${t(a)} – ${t(b)}`
+}

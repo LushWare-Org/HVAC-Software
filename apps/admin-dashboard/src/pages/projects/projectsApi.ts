@@ -104,6 +104,8 @@ export interface Project {
   startDate?: string
   targetEndDate?: string
   budget?: number // dollars
+  /** Blended crew cost per person-hour, for cost tracking. */
+  labourRatePerHour?: number
   requiredHeadcount?: number
   siteAddress?: string
   latitude?: number
@@ -225,6 +227,7 @@ function mapApiProject(raw: any): ProjectBase {
     startDate: raw.startDate ? String(raw.startDate).slice(0, 10) : undefined,
     targetEndDate: raw.targetEndDate ? String(raw.targetEndDate).slice(0, 10) : undefined,
     budget: raw.budget != null ? Number(raw.budget) : undefined,
+    labourRatePerHour: raw.labourRatePerHour != null ? Number(raw.labourRatePerHour) : undefined,
     requiredHeadcount: raw.requiredHeadcount ?? undefined,
     siteAddress: raw.siteAddress ?? undefined,
     latitude: raw.latitude ?? undefined,
@@ -497,6 +500,7 @@ export interface UpsertProjectInput {
   startDate?: string
   targetEndDate?: string
   budget?: number
+  labourRatePerHour?: number
   requiredHeadcount?: number
   siteAddress?: string
   latitude?: number
@@ -563,6 +567,7 @@ export function useUpdateCustomerSettings(projectId: string) {
       (await api.patch(`/crm/projects/${projectId}/customer-settings`, settings)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'detail'] })
+  queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'money'] })
       invalidateProjects()
     },
   })

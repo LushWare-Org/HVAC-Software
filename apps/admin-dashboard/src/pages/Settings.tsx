@@ -9,10 +9,17 @@ import { useImportBatches, useImportRollback } from '../hooks/useImport'
 import { useQBStatus, useQBAuthUrl, useQBDisconnect } from '../hooks/useFinance'
 import { ISO_CURRENCIES, currencyInfo } from '../lib/currencies'
 import PortalBannerSettings from './settings/PortalBannerSettings'
+import TelegramSettings from './settings/TelegramSettings'
+import TelegramMark from '../components/TelegramMark'
 
 export default function Settings() {
-    const [tab, setTab] = useState<'profile' | 'company' | 'finance' | 'notifications' | 'appearance' | 'security' | 'templates' | 'portal' | 'ai-agents' | 'integrations'>('profile')
+    type Tab = 'profile' | 'company' | 'finance' | 'notifications' | 'appearance' | 'security' | 'templates' | 'portal' | 'telegram' | 'ai-agents' | 'integrations'
     const [searchParams, setSearchParams] = useSearchParams()
+    // ?tab=telegram (or portal, …) opens that tab, e.g. from a link in Messages.
+    const TABS: Tab[] = ['profile', 'company', 'finance', 'notifications', 'appearance', 'security', 'templates', 'portal', 'telegram', 'ai-agents', 'integrations']
+    const tabParam = () => { const t = searchParams.get('tab') as Tab | null; return t && TABS.includes(t) ? t : null }
+    const [tab, setTab] = useState<Tab>(() => tabParam() ?? 'profile')
+    useEffect(() => { const t = tabParam(); if (t) setTab(t) }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
     const { theme, setTheme } = useTheme()
     const { showSuccess, showError } = useToast()
 
@@ -205,6 +212,9 @@ export default function Settings() {
                 </button>
                 <button className={`tab-btn ${tab === 'portal' ? 'active' : ''}`} onClick={() => setTab('portal')}>
                     <Megaphone size={14} /> Portal
+                </button>
+                <button className={`tab-btn ${tab === 'telegram' ? 'active' : ''}`} onClick={() => setTab('telegram')}>
+                    <TelegramMark size={14} /> Telegram
                 </button>
                 <button className={`tab-btn ${tab === 'ai-agents' ? 'active' : ''}`} onClick={() => setTab('ai-agents')}>
                     <Bot size={14} /> AI Agents
@@ -473,6 +483,8 @@ export default function Settings() {
             {tab === 'templates' && <JobTemplatesTab />}
 
             {tab === 'portal' && <PortalBannerSettings />}
+
+            {tab === 'telegram' && <TelegramSettings />}
 
             {/* AI Agents */}
             {tab === 'ai-agents' && <AiAgentsTab automaticFollowupEnabled={companyForm.automaticFollowupEnabled} onToggle={toggleAutomaticFollowup} />}

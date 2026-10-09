@@ -1,5 +1,5 @@
 /**
- * useAnnouncements.ts — Customer-portal banner announcements (admin CRUD)
+ * useAnnouncements.ts: customer-portal announcements (admin CRUD)
  * Routes → nginx /api/crm/announcements/*
  */
 import { useQuery, useMutation } from '@tanstack/react-query'
@@ -13,11 +13,20 @@ export interface Announcement {
   linkUrl?: string
   linkLabel?: string
   accentColor: string
+  icon: AnnouncementIcon
+  ctaAction: AnnouncementAction
+  style: AnnouncementStyle
+  dismissible: boolean
+  pinned: boolean
   isActive: boolean
   activeFrom?: string
   activeTo?: string
   createdAt: string
 }
+
+export type AnnouncementIcon = 'megaphone' | 'telegram' | 'sparkles' | 'gift' | 'wrench' | 'calendar' | 'alert' | 'leaf'
+export type AnnouncementAction = 'link' | 'telegram' | 'none'
+export type AnnouncementStyle = 'card' | 'spotlight'
 
 export interface AnnouncementInput {
   title?: string
@@ -25,6 +34,11 @@ export interface AnnouncementInput {
   linkUrl?: string
   linkLabel?: string
   accentColor?: string
+  icon?: AnnouncementIcon
+  ctaAction?: AnnouncementAction
+  style?: AnnouncementStyle
+  dismissible?: boolean
+  pinned?: boolean
   isActive?: boolean
   activeFrom?: string
   activeTo?: string

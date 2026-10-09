@@ -22,21 +22,19 @@ import {
     Menu, X, LogOut, Shield, Package, Megaphone, Upload, FileSignature, FolderKanban,
     ChevronLeft, Plus, Radio,
 } from 'lucide-react'
-import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import { usePendingTechnicians } from '../hooks/useTeam'
-import { useUnreadThreadsCount } from '../hooks/useComms'
+import { useChatUnread } from '../hooks/useChat'
 import { useCompany } from '../hooks/useSettings'
 
 interface Props { collapsed: boolean; onToggle: () => void; mobileOpen?: boolean }
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     const loc = useLocation()
-    const { theme } = useTheme()
     const { user: authUser, logout } = useAuth()
     const pendingQuery = usePendingTechnicians()
     const pendingCount = pendingQuery.data?.total ?? 0
-    const unreadMessages = useUnreadThreadsCount()
+    const unreadMessages = useChatUnread().data?.total ?? 0
     const companyQuery = useCompany()
     const company = companyQuery.data
 
@@ -46,7 +44,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
         initials: (authUser?.name ?? 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
     }
 
-    const isLight = theme === 'light'
+    const isLight = false // Mist sidebar follows the theme in light, dark and black
     const isMobileMode = mobileOpen !== undefined
     const mobileClass = isMobileMode
         ? (mobileOpen ? 'mobile-visible' : 'mobile-hidden')
@@ -59,14 +57,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
         mobileClass,
         isLight
             ? 'bg-gradient-to-b from-slate-900 to-slate-800 text-white'
-            : 'bg-[var(--bg-surface)] text-[var(--t2)]',
+            : 'bg-[var(--bg-sidebar)] text-[var(--t2)]',
         isLight ? 'border-r border-slate-700' : 'border-r border-[var(--bd)]'
     ].join(' ')
 
     const headerBorder = isLight ? 'border-slate-700' : 'border-b border-[var(--bd)]'
     const navItemBase = 'flex items-center rounded-lg cursor-pointer text-[15px] font-medium transition-colors duration-150 select-none whitespace-nowrap overflow-hidden no-underline'
-    const navItemActive = isLight ? 'bg-slate-600 text-white' : 'bg-[var(--bg-active)] text-[var(--blue)] font-semibold'
-    const navItemInactive = isLight ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-[var(--t3)] hover:bg-[var(--bg-hover)] hover:text-[var(--t2)]'
+    const navItemActive = isLight ? 'bg-slate-600 text-white' : 'bg-[var(--sb-active)] text-[var(--blue)] font-semibold'
+    const navItemInactive = isLight ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-[var(--t3)] hover:bg-[var(--sb-hover)] hover:text-[var(--t1)]'
     const footerBorder = isLight ? 'border-slate-700' : 'border-t border-[var(--bd)]'
     const loggedInCard = isLight ? 'bg-slate-700 rounded-lg p-3' : 'px-3.5 py-3 rounded-xl bg-[var(--bg-card-2)] border border-[var(--bd)]'
     const loggedInLabel = isLight ? 'text-[11px] text-slate-400 mb-0.5' : 'text-[11px] text-[var(--t4)] mb-1 tracking-wide'
@@ -149,7 +147,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                             style={{ background: 'var(--bg-card-2)', padding: 2 }}
                         />
                     ) : (
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0 font-bold text-white text-xl overflow-hidden shadow-lg">
+                        <div className="w-11 h-11 rounded-xl bg-[var(--blue)] flex items-center justify-center flex-shrink-0 font-bold text-white text-xl overflow-hidden">
                             {(company?.name ?? 'H')[0].toUpperCase()}
                         </div>
                     )}
@@ -225,7 +223,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                                                 position: 'absolute', top: -3, right: -3,
                                                 width: 8, height: 8, borderRadius: '50%',
                                                 background: '#ef4444',
-                                                boxShadow: '0 0 0 2px var(--bg-surface)',
+                                                boxShadow: '0 0 0 2px var(--bg-sidebar)',
                                             }} />
                                         )}
                                     </span>

@@ -36,6 +36,30 @@ interface TeamFilters {
   limit?: number
 }
 
+/**
+ * Shows a just-created team member in every cached Team list straight away,
+ * then refetches for the real rows. Without this, a new technician only appears
+ * after the 5-minute cache window or a reload, even though it is already saved.
+ */
+export function addToTeamCache(member: Pick<TeamMember, 'id' | 'name' | 'email' | 'role'> & Partial<TeamMember>) {
+  const now = new Date().toISOString()
+  const row: TeamMember = {
+    companyId: '', isActive: true, approvalStatus: 'APPROVED', skills: [], createdAt: now, updatedAt: now, ...member,
+  }
+  queryClient.setQueriesData<PaginatedResponse<TeamMember>>(
+    {
+      predicate: (q) => {
+        const f = q.queryKey[1] as TeamFilters | string | undefined
+        return q.queryKey[0] === 'team' && !!f && typeof f === 'object' && (!f.role || f.role === row.role) && (f.isActive === undefined || f.isActive === row.isActive)
+      },
+    },
+    (old) => (old && Array.isArray(old.data) && !old.data.some((m) => m.id === row.id)
+      ? { ...old, data: [row, ...old.data], total: (old.total ?? old.data.length) + 1 }
+      : old),
+  )
+  queryClient.invalidateQueries({ queryKey: ['team'] })
+}
+
 export function useTeamMembers(filters: TeamFilters = {}) {
   return useQuery<PaginatedResponse<TeamMember>>({
     queryKey: ['team', filters],
@@ -70,8 +94,8 @@ export function useCreateTeamMember() {
       const res = await api.post('/crm/users', data)
       return res.data as TeamMember
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['team'] })
+    onSuccess: (member, vars) => {
+      addToTeamCache({ ...member, name: member?.name ?? vars.name, email: member?.email ?? vars.email, role: member?.role ?? vars.role ?? 'office_manager' })
       queryClient.invalidateQueries({ queryKey: ['scheduling', 'technicians'] })
     },
   })

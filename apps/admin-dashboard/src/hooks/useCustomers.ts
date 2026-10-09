@@ -15,7 +15,8 @@ interface CustomerFilters {
   limit?: number
   search?: string
   type?: string
-  isActive?: boolean
+  /** true (default), false, or 'all' for active and inactive together. */
+  isActive?: boolean | 'all'
   tags?: string[]
   sortBy?: string
   sortDir?: 'asc' | 'desc'
@@ -66,6 +67,26 @@ export function useCustomers(filters: CustomerFilters = {}) {
   return useQuery<PaginatedResponse<Customer>>({
     queryKey: ['customers', filters],
     queryFn: () => fetchCustomers(filters),
+  })
+}
+
+export interface CustomerStats {
+  total: number
+  inactive: number
+  residential: number
+  commercial: number
+  withAgreements: number
+  totalRevenue: number
+  outstanding: number
+  avgRevenue: number
+}
+
+/** Headline numbers for the Customers page: counts per filter, and money received and owed. */
+export function useCustomerStats() {
+  return useQuery<CustomerStats>({
+    queryKey: ['customer-stats'],
+    queryFn: async () => (await api.get('/crm/customers/stats')).data,
+    staleTime: 60_000,
   })
 }
 
@@ -154,11 +175,17 @@ export function useDeleteCustomer() {
   })
 }
 
+/**
+ * Send a customer their portal login: creates one if they have none, otherwise
+ * emails fresh login details. moveLogin takes over a login another customer
+ * holds with the same email (only after the admin agrees).
+ */
 export function useResendWelcomeEmail() {
   return useMutation({
-    mutationFn: async (customerId: string) => {
-      const res = await api.post(`/crm/auth/customers/${customerId}/resend-welcome-email`)
-      return res.data as { success: boolean; message: string }
+    mutationFn: async (v: string | { customerId: string; moveLogin?: boolean }) => {
+      const { customerId, moveLogin } = typeof v === 'string' ? { customerId: v, moveLogin: false } : v
+      const res = await api.post(`/crm/auth/customers/${customerId}/resend-welcome-email`, moveLogin ? { moveLogin: true } : {})
+      return res.data as { success: boolean; created?: boolean; message: string }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })

@@ -58,7 +58,11 @@ export interface Customer {
   updatedAt: string
   // computed in list endpoint
   totalJobs?: number
+  /** Money this customer has paid, from their invoices. */
   totalRevenue?: number
+  /** What they still owe (not counting drafts or voided invoices). */
+  outstanding?: number
+  invoiceCount?: number
   lastServiceDate?: string
   // portal account status (merged from CompanyUser via auth0UserId)
   auth0UserId?: string
@@ -322,9 +326,17 @@ export interface Job {
   jobTypeName?: string
   scheduledStart?: string
   scheduledEnd?: string
+  /** WINDOW = the customer asked for an arrival window and no exact time is set yet. */
+  timeMode?: 'EXACT' | 'WINDOW'
+  windowStart?: string | null
+  windowEnd?: string | null
+  /** The start time the customer confirmed; it counts only while it equals scheduledStart. */
+  confirmedFor?: string | null
+  confirmedAt?: string | null
   estimatedDurationMins?: number
   completedAt?: string
   estimatedAmount?: number
+  estimatedValue?: number | string
   finalAmount?: number
   tags: string[]
   agreementId?: string
@@ -619,9 +631,20 @@ export interface ScoredTechnician {
   distanceScore: number
   workloadScore: number
   ratingScore: number
+  /** Where distanceKm is measured from: a recent GPS fix, their base, an old fix, or nothing. */
+  locationSource?: LocationSource
+  /** Set only for emergencies: this technician is rostered on a project that day. */
+  onProject?: { projectId: string; projectName: string }
+  /** Job booked as an arrival window: the earliest time inside it this technician is free, and whether there is one. */
+  suggestedStart?: string
+  fitsWindow?: boolean
 }
 
+export type LocationSource = 'live' | 'base' | 'last_known' | 'none'
+
 export interface AssignResponse {
+  /** The job has no map location, so distance played no part in the ranking. */
+  jobLocationMissing?: boolean
   autoAssigned: boolean
   assignment?: DispatchAssignment
   suggestions?: ScoredTechnician[]
@@ -1065,4 +1088,65 @@ export interface CrewCandidate {
   /** Arrives as null (not []) when the technician is free. Always read it as
    *  (conflicts ?? []) or the happy path throws. */
   conflicts: ScheduleConflict[] | null
+  locationSource?: LocationSource
+  /** Set only for emergencies: this technician is rostered on a project that day. */
+  onProject?: { projectId: string; projectName: string }
+}
+
+// ─── Chat (comms /chat) ──────────────────────────────────────────────────────
+export type ChatKind = 'CUSTOMER_OFFICE' | 'CUSTOMER_TECH' | 'TECH_OFFICE' | 'STAFF_DIRECT' | 'STAFF_GROUP'
+
+export interface ChatConversation {
+  id: string
+  kind: ChatKind
+  /** How it reads for me: the customer's name, the technician's, a colleague's, or the group's. */
+  title: string
+  subtitle: string
+  customerId: string | null
+  /** The other staff member (technician↔office, direct and customer↔technician chats). */
+  peerUserId: string | null
+  /** My seat in it: my user id, or "office" in shared inboxes. A message is mine when senderMemberKey equals this. */
+  myMemberKey: string
+  unread: number
+  lastSeq: number
+  lastMessageAt: string | null
+  lastMessagePreview: string | null
+  lastSenderName: string | null
+  muted: boolean
+  archived: boolean
+  createdAt: string
+}
+
+export interface ChatAttachment { url: string; name?: string; type?: string; size?: number }
+
+export interface ChatMessage {
+  id: string
+  conversationId: string
+  seq: number
+  senderKind: 'STAFF' | 'CUSTOMER' | 'SYSTEM' | 'KELVIN'
+  senderMemberKey: string
+  senderUserId: string | null
+  senderName: string
+  senderRole: string | null
+  body: string
+  attachments: ChatAttachment[] | null
+  jobId: string | null
+  jobNumber: string | null
+  clientId: string | null
+  editedAt: string | null
+  deletedAt: string | null
+  createdAt: string
+  /** Staff only: whether it also reached the other person's Telegram. */
+  telegram?: 'sent' | 'failed' | null
+  /** Only on messages this screen is still sending. */
+  pending?: boolean
+  failed?: boolean
+}
+
+export interface ChatMemberInfo { memberKey: string; kind: 'STAFF' | 'CUSTOMER' | 'OFFICE'; name: string; role: string | null; lastReadSeq: number; isMe: boolean; onTelegram?: boolean }
+
+export interface ChatDetail extends ChatConversation {
+  members: ChatMemberInfo[]
+  messages: ChatMessage[]
+  hasMore: boolean
 }

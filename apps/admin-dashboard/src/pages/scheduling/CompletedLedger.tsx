@@ -7,7 +7,7 @@
 import { useMemo } from 'react'
 import { TechChip } from '../../components/TechAvatar'
 import { CheckCircle2 } from 'lucide-react'
-import { formatMoney } from '../../lib/format'
+import { formatMoney, jobAmount } from '../../lib/format'
 
 interface CompletedRow {
   job: any
@@ -26,7 +26,7 @@ export default function CompletedLedger({ rows, onOpen }: { rows: CompletedRow[]
     completed: CompletedRow[]; invoiced: CompletedRow[]; paid: CompletedRow[]
     groups: Array<[string, { rows: CompletedRow[]; total: number }]>
   } => {
-    const amountOf = (j: any) => Number(j.finalAmount ?? j.estimatedAmount ?? 0)
+    const amountOf = (j: any) => (jobAmount(j) ?? 0)
     const completed = rows.filter(r => r.job?.status === 'COMPLETED')
     const invoiced = rows.filter(r => r.job?.status === 'INVOICED')
     const paid = rows.filter(r => r.job?.status === 'PAID')
@@ -49,9 +49,9 @@ export default function CompletedLedger({ rows, onOpen }: { rows: CompletedRow[]
     return { completed, invoiced, paid, groups: Array.from(byDay.entries()) }
   }, [rows])
 
-  const completedAmt = completed.reduce((s, r) => s + Number(r.job.finalAmount ?? r.job.estimatedAmount ?? 0), 0)
-  const invoicedAmt = invoiced.reduce((s, r) => s + Number(r.job.finalAmount ?? r.job.estimatedAmount ?? 0), 0)
-  const paidAmt = paid.reduce((s, r) => s + Number(r.job.finalAmount ?? r.job.estimatedAmount ?? 0), 0)
+  const completedAmt = completed.reduce((s, r) => s + (jobAmount(r.job) ?? 0), 0)
+  const invoicedAmt = invoiced.reduce((s, r) => s + (jobAmount(r.job) ?? 0), 0)
+  const paidAmt = paid.reduce((s, r) => s + (jobAmount(r.job) ?? 0), 0)
   const totalCompletedValue = completedAmt + invoicedAmt + paidAmt
 
   const STATUS_TONE: Record<string, { color: string; bg: string }> = {
@@ -121,7 +121,7 @@ export default function CompletedLedger({ rows, onOpen }: { rows: CompletedRow[]
                         size={20} fontSize={11.5} fallback="—"
                       />
                       <span><span style={{ fontSize: 9, fontWeight: 700, color: tone.color, background: tone.bg, padding: '2px 8px', borderRadius: 8 }}>{job.status}</span></span>
-                      <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: 'var(--t1)' }}>{formatMoney(job.finalAmount ?? job.estimatedAmount ?? 0, { decimals: 0 })}</span>
+                      <span style={{ textAlign: 'right', fontSize: 12, fontWeight: 700, color: 'var(--t1)' }}>{formatMoney(jobAmount(job) ?? 0, { decimals: 0 })}</span>
                     </div>
                   )
                 })}

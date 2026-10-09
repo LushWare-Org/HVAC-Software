@@ -25,6 +25,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import api from '../lib/api'
 import { queryClient } from '../lib/queryClient'
+import { addToTeamCache } from './useTeam'
 import { useAuth } from '../contexts/AuthContext'
 import type {
   Technician,
@@ -575,7 +576,18 @@ export function useProvisionTechnicianAccount() {
 
       return { crm: crmRes.data, scheduling: schedRes.data }
     },
-    onSuccess: () => {
+    onSuccess: (result, vars) => {
+      // The account is saved, so the Team list must show it now, not after a reload.
+      addToTeamCache({
+        id: result.crm.userId4Scheduling, name: vars.name, email: vars.email, phone: vars.phone, role: 'technician',
+        skills: vars.skills ?? [], latitude: vars.latitude, longitude: vars.longitude,
+      })
+      queryClient.invalidateQueries({ queryKey: ['scheduling', 'technicians'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory'] })
+    },
+    // Step 1 can succeed and step 2 fail: the login exists either way, so refresh the lists then too.
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ['team'] })
       queryClient.invalidateQueries({ queryKey: ['scheduling', 'technicians'] })
     },
   })

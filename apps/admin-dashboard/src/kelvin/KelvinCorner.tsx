@@ -5,14 +5,13 @@ import { useKelvin } from './KelvinProvider'
 import KelvinFace from './KelvinFace'
 import { isBusy, nextToSpeak, overlayOpen, SpokenStore } from './speech'
 import type { KelvinItem } from './types'
-import { Placement, snap, type Side } from './placement'
+import { Placement, panelSide, pointFor, snap, type Edge, type Place } from './placement'
 
 const SHOW_MS = 6000
 const SIZE = 60
-const EDGE = 16
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-const xFor = (side: Side) => (side === 'left' ? EDGE : window.innerWidth - SIZE - EDGE - 8)
-const yDefault = () => window.innerHeight - SIZE - 24
+const vp = () => ({ width: window.innerWidth, height: window.innerHeight })
+const at = (p: Place) => pointFor(p, vp(), SIZE)
 const hopKey = (userId: string) => `kelvin:hop:${userId}`
 
 /** Page modals: whatever sits on top at the centre of the screen, and its parents. A modal's
@@ -35,31 +34,40 @@ export default function KelvinCorner() {
   const [bubble, setBubble] = useState<KelvinItem | null>(null)
   const [hover, setHover] = useState(false)
   const [hop, setHop] = useState(false)
-  // Where he lives: a side edge and a height, remembered per person. Dragging or throwing him
-  // springs him to the nearer edge with a little squash as he lands.
-  const x = useMotionValue(xFor(k.side))
-  const y = useMotionValue(Placement.load(k.userId).y ?? yDefault())
+  // Where he lives: any edge of the screen and a spot along it, remembered per person. Dragging
+  // or throwing him springs him to the nearest edge with a little squash as he lands; while he is
+  // in the air, the edge he'll land on glows.
+  const [place, setPlace] = useState<Place>(() => Placement.load(k.userId))
+  const [aim, setAim] = useState<Edge | null>(null)
+  const x = useMotionValue(at(place).x)
+  const y = useMotionValue(at(place).y)
   const scaleX = useMotionValue(1)
   const scaleY = useMotionValue(1)
   const drag = useDragControls()
   const dragged = useRef(false)
   useEffect(() => {
-    const fit = () => { x.set(xFor(k.side)); y.set(Math.min(y.get(), window.innerHeight - SIZE - 24)) }
+    const fit = () => { const p = at(place); x.set(p.x); y.set(p.y); k.setSide(panelSide(place, vp(), SIZE)) }
     fit()
     window.addEventListener('resize', fit)
     return () => window.removeEventListener('resize', fit)
-  }, [k.side]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [place]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const land = (vx: number, vy: number) => {
-    const to = snap({ x: x.get(), y: y.get(), vx: vx / 60, vy: vy / 60 }, { width: window.innerWidth, height: window.innerHeight }, SIZE)
-    k.setSide(to.side)
-    Placement.save(k.userId, { side: to.side, y: to.y })
-    if (reduceMotion()) { x.set(xFor(to.side)); y.set(to.y); return }
+    setAim(null)
+    const to = snap({ x: x.get(), y: y.get(), vx: vx / 60, vy: vy / 60 }, vp(), SIZE)
+    const p = at(to)
+    setPlace(to)
+    k.setSide(panelSide(to, vp(), SIZE))
+    Placement.save(k.userId, to)
+    if (reduceMotion()) { x.set(p.x); y.set(p.y); return }
     const spring = { type: 'spring' as const, stiffness: 380, damping: 24 }
-    animate(x, xFor(to.side), { ...spring, velocity: vx })
-    animate(y, to.y, { ...spring, velocity: vy })
-    animate(scaleX, [1, 1.16, 0.94, 1], { duration: 0.55, times: [0, 0.35, 0.7, 1] })
-    animate(scaleY, [1, 0.86, 1.06, 1], { duration: 0.55, times: [0, 0.35, 0.7, 1] })
+    animate(x, p.x, { ...spring, velocity: vx })
+    animate(y, p.y, { ...spring, velocity: vy })
+    // Squashes against the wall he hits: sideways on the left and right, up and down on the top and bottom.
+    const across = [1, 1.16, 0.94, 1], along = [1, 0.86, 1.06, 1]
+    const sideways = to.edge === 'left' || to.edge === 'right'
+    animate(scaleX, sideways ? along : across, { duration: 0.55, times: [0, 0.35, 0.7, 1] })
+    animate(scaleY, sideways ? across : along, { duration: 0.55, times: [0, 0.35, 0.7, 1] })
   }
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -103,8 +111,21 @@ export default function KelvinCorner() {
 
   const left = k.side === 'left'
   return (
+    <>
+    <AnimatePresence>
+      {aim && (
+        <m.div
+          key={aim}
+          className={`kv-edge-hint is-${aim}`}
+          aria-hidden="true"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, transition: { duration: 0.15 } }}
+          exit={{ opacity: 0, transition: { duration: 0.2 } }}
+        />
+      )}
+    </AnimatePresence>
     <m.div
-      className={`kv-corner is-${k.side}`}
+      className={`kv-corner is-${k.side} on-${place.edge}`}
       style={{ x, y }}
       drag
       dragListener={false}
@@ -112,6 +133,10 @@ export default function KelvinCorner() {
       dragMomentum={false}
       dragElastic={0.12}
       onDragStart={() => { dragged.current = true; setBubble(null) }}
+      onDrag={(_, info) => {
+        const next = snap({ x: x.get(), y: y.get(), vx: info.velocity.x / 60, vy: info.velocity.y / 60 }, vp(), SIZE).edge
+        if (next !== aim) setAim(next)
+      }}
       onDragEnd={(_, info) => { land(info.velocity.x, info.velocity.y); setTimeout(() => { dragged.current = false }, 0) }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
@@ -141,12 +166,14 @@ export default function KelvinCorner() {
           style={{ scaleX, scaleY }}
           onPointerDown={e => drag.start(e)}
           onClick={() => { if (!dragged.current) open() }}
-          aria-label="Open Kelvin (⌘K). Drag to move him."
+          aria-label="Open Kelvin (⌘K). Drag him to any edge of the screen."
+          whileTap={{ scale: 1.08 }}
           transition={{ duration: 0.32 }}
         >
           <KelvinFace size={48} mood={k.mood} lookAt={k.lookTarget} follow="near" />
         </m.button>
       )}
     </m.div>
+    </>
   )
 }

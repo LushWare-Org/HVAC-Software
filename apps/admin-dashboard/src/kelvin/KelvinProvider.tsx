@@ -3,11 +3,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { useCompanySettings } from '../hooks/useCompanySettings'
 import { useDispatchWebSocket } from '../hooks/useScheduling'
-import { useSocket } from '../hooks/useSocket'
+import { chatLive, useChatRealtime } from '../hooks/useChat'
 import { ASK_ASSISTANT_EVENT } from '../lib/assistant'
 import { fetchFeed, postEvent, savePrefs } from './api'
 import { SpokenStore } from './speech'
-import { Placement, type Side } from './placement'
+import { Placement, panelSide, type Side } from './placement'
 import type { Mood } from './KelvinFace'
 import type { KelvinFeed, KelvinFix, KelvinItem, KelvinPrefs, PageContext } from './types'
 
@@ -64,7 +64,7 @@ function useKelvinState() {
 
   const [panelOpen, setPanelOpen] = useState(false)
   // The side Kelvin lives on; his panel opens there too.
-  const [side, setSide] = useState<Side>(() => Placement.load(user?.id ?? '').side)
+  const [side, setSide] = useState<Side>(() => panelSide(Placement.load(user?.id ?? ''), { width: window.innerWidth, height: window.innerHeight }, 60))
   const [pending, setPending] = useState<string | null>(null)
   const [page, setPage] = useState<PageContext | null>(null)
   const [moodFlash, setMoodFlash] = useState<Mood | null>(null)
@@ -179,9 +179,9 @@ export const KelvinPageContext = createContext<{ enabled: boolean; setPage: (p: 
 /** Opens the live channels and asks for a refresh on the important ones. Mounted only when Kelvin is on. */
 function KelvinLiveSignals({ refresh }: { refresh: () => void }) {
   useDispatchWebSocket((e) => { if (LIVE.has(e.type)) refresh() })
-  // The socket is created after mount, so subscribe again once it connects.
-  const { onThreadsChanged, isConnected } = useSocket()
-  useEffect(() => onThreadsChanged(() => refresh()), [onThreadsChanged, isConnected, refresh])
+  // A new chat message can change what Kelvin flags. The chat socket opens in the app shell.
+  const connected = useChatRealtime()
+  useEffect(() => chatLive.onMessage(() => refresh()), [connected, refresh])
   return null
 }
 

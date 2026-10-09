@@ -1,0 +1,43 @@
+/* Customers table: the Jobs row-card design (jobsTable.css), with its own columns. */
+.ct-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) 128px minmax(0, 1fr) 104px 92px minmax(0, 1fr) 112px 92px 168px; column-gap: 12px; align-items: center; }
+.ct-row .jt-main { cursor: pointer; }
+.ct-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--c); }
+.ct-active { --c: var(--green); }
+.ct-inactive { --c: var(--t4); }
+.ct-person { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ct-person-text { min-width: 0; }
+.ct-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.ct-tag { font-size: 11.5px; font-weight: 500; color: var(--blue); background: color-mix(in srgb, var(--blue) 9%, transparent); border-radius: 999px; padding: 2px 9px; max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-tag.is-more { color: var(--t3); background: var(--bg-card-2); max-width: none; }
+.ct-warn { display: block; margin-top: 2px; max-width: 100%; font-size: 11px; font-weight: 600; color: var(--amber); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-due { font-size: 12px; color: var(--amber); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ct-add { font: inherit; font-size: 12.5px; color: var(--blue); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.ct-add:hover { text-decoration: underline; }
+.ct-sw { display: inline-flex; align-items: center; gap: 8px; }
+.ct-sw-t { font-size: 12px; font-weight: 500; color: var(--t3); }
+.ct-switch { position: relative; width: 38px; height: 22px; border-radius: 999px; border: 0; background: var(--bd-lg); cursor: pointer; transition: background 160ms ease; padding: 0; flex-shrink: 0; }
+.ct-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25); transition: transform 160ms ease; }
+.ct-switch[aria-checked="true"] { background: var(--blue); }
+.ct-switch[aria-checked="true"]::after { transform: translateX(16px); }
+.ct-switch:disabled { opacity: 0.55; cursor: not-allowed; }
+.ct-switch:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.ct-actions { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.ct-icon { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 8px; color: var(--t3); cursor: pointer; flex-shrink: 0; }
+.ct-icon:hover { background: var(--bg-card-2); color: var(--t1); }
+.ct-icon.is-ai:hover { color: var(--violet); background: color-mix(in srgb, var(--violet) 10%, transparent); }
+.ct-icon.is-warn { color: var(--amber); }
+.ct-icon.is-del:hover { color: var(--red); background: var(--red-dim); }
+.ct-icon:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.ct-icon:disabled { opacity: 0.5; cursor: progress; }
+.ct-phone { color: var(--t1); text-decoration: none; font-size: 13.5px; white-space: nowrap; }
+.ct-phone:hover { color: var(--blue); text-decoration: underline; }
+.ct-avatar { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 12px; font-weight: 600; color: #fff; }
+@media (max-width: 1500px) {
+  .ct-grid { grid-template-columns: minmax(0, 1.5fr) 124px minmax(0, 1fr) 104px 92px minmax(0, 1fr) 108px 168px; }
+  .ct-since { display: none; }
+}
+@media (max-width: 1380px) {
+  .ct-grid { grid-template-columns: minmax(0, 1.6fr) 124px minmax(0, 1fr) 104px 92px 108px 168px; }
+  .ct-tags-col { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .ct-switch, .ct-switch::after { transition: none; } }

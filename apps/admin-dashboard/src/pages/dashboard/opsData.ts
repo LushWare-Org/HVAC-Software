@@ -1,4 +1,5 @@
 import type { DispatchAssignment, Job, Technician } from '../../types/api'
+import { tradeOf, type Trade } from '../../lib/maps/pins'
 
 const LATE_AFTER_MIN = 15
 
@@ -199,6 +200,11 @@ export interface LiveMove {
   etaMin: number | null
   /** When the last GPS fix arrived, null when there has never been one. */
   gpsAt: string | null
+  /** For the map pins: the technician's photo and load, and the kind of work. */
+  avatarUrl: string | null
+  workload: number
+  maxJobs: number
+  trade: Trade
 }
 
 /** City driving: roads run about 1.3x the straight line, at about 30 km/h. */
@@ -260,6 +266,10 @@ export function buildLiveMoves(jobs: Job[], techs: Technician[], assignments: Di
       etaMin: km === null ? null : Math.max(1, Math.round((km * ROAD_FACTOR / CITY_KMH) * 60)),
       // Live updates carry locationUpdatedAt; a fresh load only has lastSeenAt.
       gpsAt: tech.locationUpdatedAt ?? tech.lastSeenAt ?? null,
+      avatarUrl: tech.avatarUrl ?? null,
+      workload: assignments.filter(x => x.technicianId === tech.id && ['ASSIGNED', 'EN_ROUTE', 'ON_SITE'].includes(x.status)).length,
+      maxJobs: tech.maxDailyJobs || 6,
+      trade: tradeOf(j as any),
     }
     const held = byTech.get(tech.id)
     if (!held || t(row) > t(held) || (t(row) === t(held) && row.state === 'EN_ROUTE')) byTech.set(tech.id, row)

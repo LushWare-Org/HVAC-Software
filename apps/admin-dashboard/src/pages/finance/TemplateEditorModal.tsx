@@ -345,6 +345,7 @@ export default function TemplateEditorModal({ documentType, template, onClose }:
   const [footerText, setFooterText] = useState(template?.footerText ?? '')
   const [bankDetails, setBankDetails] = useState(template?.bankDetails ?? '')
   const [showPageNumbers, setShowPageNumbers] = useState(template?.showPageNumbers ?? true)
+  const [pageSize, setPageSize] = useState<'A4' | 'LETTER'>(template?.pageSize ?? 'A4')
   const [letterheadImageUrl, setLetterheadImageUrl] = useState(template?.letterheadImageUrl ?? '')
   const [topMargin, setTopMargin] = useState(template?.letterheadTopMarginPx ?? 140)
   const [bottomMargin, setBottomMargin] = useState(template?.letterheadBottomMarginPx ?? 100)
@@ -368,11 +369,12 @@ export default function TemplateEditorModal({ documentType, template, onClose }:
     footerText: footerText || undefined,
     bankDetails: bankDetails || undefined,
     showPageNumbers,
+    pageSize,
     letterheadImageUrl: letterheadImageUrl || undefined,
     letterheadTopMarginPx: topMargin,
     letterheadBottomMarginPx: bottomMargin,
     rows,
-  }), [mode, companyName, companyAddress, logoUrl, logoPosition, accentColor, headerText, footerText, bankDetails, showPageNumbers, letterheadImageUrl, topMargin, bottomMargin, rows])
+  }), [mode, companyName, companyAddress, logoUrl, logoPosition, accentColor, headerText, footerText, bankDetails, showPageNumbers, pageSize, letterheadImageUrl, topMargin, bottomMargin, rows])
 
   // Debounced live preview — re-renders ~400ms after the last edit.
   useEffect(() => {
@@ -546,6 +548,14 @@ export default function TemplateEditorModal({ documentType, template, onClose }:
               <label style={lbl}>Bank details</label>
               <textarea style={{ ...inp, minHeight: 56, resize: 'vertical' }} value={bankDetails} placeholder="Account name, number, routing…" onChange={e => setBankDetails(e.target.value)} />
               <p style={{ fontSize: 11, color: 'var(--t4)', margin: '6px 0 0' }}>Shown in its own "Payment details" section, not the footer.</p>
+            </div>
+            <div>
+              <label style={lbl} htmlFor="tpl-page-size">Paper size</label>
+              <select id="tpl-page-size" style={inp} value={pageSize} onChange={e => setPageSize(e.target.value as 'A4' | 'LETTER')}>
+                <option value="A4">A4 (210 × 297 mm)</option>
+                <option value="LETTER">US Letter (8.5 × 11 in)</option>
+              </select>
+              <p style={{ fontSize: 11, color: 'var(--t4)', margin: '6px 0 0' }}>The PDF prints on this paper. Long documents continue on the next page with the table headings repeated; totals, notes and payment details are never split.</p>
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--t2)' }}>
               <input type="checkbox" checked={showPageNumbers} onChange={e => setShowPageNumbers(e.target.checked)} />

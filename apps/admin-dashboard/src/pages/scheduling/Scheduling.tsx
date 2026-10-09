@@ -33,7 +33,8 @@ import { humanizeStatus } from '../../lib/format'
 import { describeLiveEvent, type JobRef } from './liveToasts'
 import { useJobs, useUpdateJobStatus } from '../../hooks/useJobs'
 import type { Job, Technician, AssignResponse, ScoredTechnician } from '../../types/api'
-import AddTechnicianModal from '../../components/AddTechnicianModal'
+import { distanceLabel } from '../../lib/format'
+import RequestLocationButton from '../../components/RequestLocationButton'
 import AddJobModal from '../jobs/AddJobModal'
 import JobDetailModal from '../jobs/JobDetailModal'
 import TechnicianDetailPanel from '../dispatch/TechnicianDetailPanel'
@@ -50,7 +51,7 @@ import BoardPlan, { type PlanStats } from './BoardPlan'
 import ActiveControlTower from './ActiveControlTower'
 import CompletedLedger from './CompletedLedger'
 import Roster from './Roster'
-import KelvinNotes from '../../kelvin/KelvinNotes'
+import KelvinDigest from '../../kelvin/KelvinDigest'
 import { useKelvinContext } from '../../kelvin/useKelvinContext'
 
 type Scope = 'live' | 'plan'
@@ -79,7 +80,6 @@ export default function Scheduling() {
   const [planStats, setPlanStats] = useState<PlanStats>({ jobs: 0, unassigned: 0, opportunities: 0, backlog: 0 })
   const [autoScheduleRequestId, setAutoScheduleRequestId] = useState(0)
 
-  const [showAddTech, setShowAddTech] = useState(false)
   const [showCreateJob, setShowCreateJob] = useState(false)
   const [selectedTech, setSelectedTech] = useState<Technician | null>(null)
   const toast = useToast()
@@ -91,6 +91,7 @@ export default function Scheduling() {
   const [pendingJobLat, setPendingJobLat] = useState(0)
   const [pendingJobLng, setPendingJobLng] = useState(0)
   const [noTechsWarning, setNoTechsWarning] = useState('')
+  const [locationMissingJob, setLocationMissingJob] = useState<Job | null>(null)
 
   // Changes made elsewhere (a technician in the field, another dispatcher)
   // announce themselves as toasts. jobsRef is read at event time so the toast
@@ -117,12 +118,9 @@ export default function Scheduling() {
 
   useEffect(() => {
     const openCreateJob = () => setShowCreateJob(true)
-    const openAddTech = () => setShowAddTech(true)
     window.addEventListener('scheduling-open-create-job', openCreateJob)
-    window.addEventListener('scheduling-open-add-technician', openAddTech)
     return () => {
       window.removeEventListener('scheduling-open-create-job', openCreateJob)
-      window.removeEventListener('scheduling-open-add-technician', openAddTech)
     }
   }, [])
 
@@ -242,21 +240,26 @@ export default function Scheduling() {
 
   const handleSmartAssign = (job: Job) => {
     setError(''); setNoTechsWarning(''); setSuggestions(null); setPendingJobId(job.id)
-    const lat = job.serviceLatitude ? parseFloat(job.serviceLatitude) : 40.7128
-    const lng = job.serviceLongitude ? parseFloat(job.serviceLongitude) : -74.006
-    setPendingJobLat(lat); setPendingJobLng(lng)
+    // No made-up fallback: without coordinates the server ranks without distance
+    // and says so (jobLocationMissing), and we offer to ask the customer.
+    const lat = job.serviceLatitude ? parseFloat(job.serviceLatitude) : 0
+    const lng = job.serviceLongitude ? parseFloat(job.serviceLongitude) : 0
+    setPendingJobLat(lat); setPendingJobLng(lng); setLocationMissingJob(null)
     smartAssign.mutate({ jobId: job.id, jobLatitude: lat, jobLongitude: lng }, {
       onSuccess: (res) => {
+        if (res.jobLocationMissing) setLocationMissingJob(job)
         if (res.autoAssigned) {
           setSuggestions(null); setPendingJobId(null)
           updateJobStatus.mutate({ id: job.id, status: 'SCHEDULED', statusNote: 'Auto-assigned via smart dispatch' })
-          showSuccess('Job auto-assigned to technician (score >= 90). Assignment created.')
+          showSuccess('Job auto-assigned to the top technician. Assignment created.')
           pendingJobsQuery.refetch()
         } else if (res.suggestions && res.suggestions.length > 0) {
           setSuggestions(res.suggestions)
         } else {
           setSuggestions(null); setPendingJobId(null)
-          setNoTechsWarning('No technicians found nearby. Make sure technicians are registered with GPS coordinates and are within 50 km of the job location.')
+          setNoTechsWarning(res.jobLocationMissing
+            ? 'No active technicians to suggest.'
+            : 'No technicians within 50 km of this job. Check the job location, or assign someone directly.')
         }
       },
       onError: (err: any) => {
@@ -341,7 +344,7 @@ export default function Scheduling() {
           reported by users. Sticky keeps job/tech counts visible at all
           times, however far the map is scrolled. */}
       <div
-        className="page-tabs"
+        className="page-tabs sched-tabs"
         style={{
           marginBottom: 0, justifyContent: 'space-between', paddingRight: 16,
           position: 'sticky', top: 'var(--topbar-h)', zIndex: 20,
@@ -349,7 +352,7 @@ export default function Scheduling() {
         }}
       >
 
-        <div style={{ display: 'flex' }}>
+        <div className="sched-tabs-list">
           <button className={`tab-btn ${subTab === 'board' ? 'active' : ''}`} onClick={() => setSubTab('board')}><LayoutGrid size={14} /> Board</button>
           <button className={`tab-btn ${subTab === 'active' ? 'active' : ''}`} onClick={() => setSubTab('active')}><Activity size={14} /> Active <span className="tab-count">{activeRows.length}</span></button>
           <button className={`tab-btn ${subTab === 'completed' ? 'active' : ''}`} onClick={() => setSubTab('completed')}><CheckCircle2 size={14} /> Completed <span className="tab-count">{completedRows.length}</span></button>
@@ -361,7 +364,7 @@ export default function Scheduling() {
           <button className={`tab-btn ${subTab === 'roster' ? 'active' : ''}`} onClick={() => setSubTab('roster')}><UserCheck size={14} /> Who's working</button>
         </div>
         {subTab === 'board' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12.5, color: 'var(--t2)', flexWrap: 'wrap' }}>
+          <div className="sched-tabs-stats">
             <span><b style={{ color: 'var(--t1)' }}>{scopeStats.jobs}</b> jobs</span>
             <span><b style={{ color: 'var(--amber)' }}>{scopeStats.unassigned}</b> unassigned</span>
             <span><b style={{ color: 'var(--violet, #7C3AED)' }}>{scopeStats.extra}</b> {scopeStats.extraLabel}</span>
@@ -380,12 +383,23 @@ export default function Scheduling() {
         )}
       </div>
 
-      <KelvinNotes page="scheduling" />
+      <KelvinDigest page="scheduling" />
 
       {noTechsWarning && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)', borderRadius: 10, color: '#d97706', fontSize: 13 }}>
           <AlertCircle size={14} /> {noTechsWarning}
           <button onClick={() => setNoTechsWarning('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#d97706', cursor: 'pointer' }}><X size={14} /></button>
+        </div>
+      )}
+
+      {locationMissingJob && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.25)', borderRadius: 10, color: '#b45309', fontSize: 13 }}>
+          <AlertCircle size={14} style={{ marginTop: 2, flexShrink: 0 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span>{locationMissingJob.jobNumber} has no map location, so distance isn't counted in these suggestions.</span>
+            <RequestLocationButton jobId={locationMissingJob.id} />
+          </div>
+          <button onClick={() => setLocationMissingJob(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#b45309', cursor: 'pointer' }}><X size={14} /></button>
         </div>
       )}
 
@@ -402,7 +416,16 @@ export default function Scheduling() {
                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--t1)' }}>#{idx + 1} {s.technician.name}</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: s.score >= 90 ? 'var(--green)' : s.score >= 70 ? 'var(--blue)' : 'var(--amber)' }}>{s.score.toFixed(0)}</span>
                 </div>
-                <div style={{ fontSize: 10.5, color: 'var(--t3)' }}>{s.distanceKm.toFixed(1)} km · {s.activeJobs}/{s.technician.maxDailyJobs} jobs · {(s.technician.rating ?? 0).toFixed(1)}★</div>
+                <div style={{ fontSize: 10.5, color: 'var(--t3)' }}>{distanceLabel(s.distanceKm, s.locationSource)} · {s.activeJobs}/{s.technician.maxDailyJobs} jobs · {(s.technician.rating ?? 0).toFixed(1)}★</div>
+                {s.fitsWindow === true && s.suggestedStart && (
+                  <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--green)' }}>Free inside the customer's window · would arrive {new Date(s.suggestedStart).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+                )}
+                {s.fitsWindow === false && (
+                  <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--amber)' }}>Busy for the whole of the customer's window</div>
+                )}
+                {s.onProject && (
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--amber)' }}>On {s.onProject.projectName} that day · taking them off it for this emergency</div>
+                )}
                 <button className="btn btn-primary btn-sm" onClick={() => handlePickSuggestion(s.technician.id)} disabled={manualAssign.isPending}>Assign this tech</button>
               </div>
             ))}
@@ -473,7 +496,6 @@ export default function Scheduling() {
       )}
 
       {/* Shared modals (unchanged from Dispatch) */}
-      <AddTechnicianModal isOpen={showAddTech} onClose={() => setShowAddTech(false)} />
       <AddJobModal isOpen={showCreateJob} onClose={() => setShowCreateJob(false)} />
 
       {selectedTech && (

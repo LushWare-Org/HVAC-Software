@@ -10,6 +10,7 @@
  * Deliberately not cards. Cards would say "seven separate objects"; this is one
  * object read top to bottom, so it is hairline-separated rows instead.
  */
+import RequestLocationButton from '../../components/RequestLocationButton'
 import { Phone, Mail, Navigation, Users, Crown, Wallet, CalendarClock, Plus } from 'lucide-react'
 import type { Job, CrewMember } from '../../types/api'
 import Avatar from '../../components/Avatar'
@@ -130,6 +131,14 @@ export default function JobVitalsRail({
           >
             <Navigation size={11} /> Open in maps
           </a>
+        )}
+        {/* No pin: dispatch can't measure distance and the technician can't route. */}
+        {!(Number(j.serviceLatitude) || Number(j.serviceLongitude)) && j.customerId
+          && ['PENDING', 'SCHEDULED', 'EN_ROUTE', 'ON_HOLD'].includes(j.status) && (
+          <div style={{ marginTop: 9 }}>
+            <div style={{ fontSize: 11.5, color: 'var(--amber)', marginBottom: 6 }}>Not on the map yet.</div>
+            <RequestLocationButton jobId={j.id} compact />
+          </div>
         )}
       </div>
 

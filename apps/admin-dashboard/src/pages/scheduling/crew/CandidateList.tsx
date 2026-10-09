@@ -1,3 +1,4 @@
+import { distanceLabel } from '../../../lib/format'
 import type { CrewCandidate } from '../../../types/api'
 import TechAvatar from '../../../components/TechAvatar'
 
@@ -113,13 +114,14 @@ export default function CandidateList({
               <span style={{ display: 'block', fontSize: 9.5, color: 'var(--t3)' }}>
                 {(c.technician.skills ?? []).join(', ') || 'No skills listed'}
                 {' · '}
-                {c.baseDistanceKm != null
-                  ? `${c.baseDistanceKm.toFixed(1)} km ${
-                      c.distanceFromBase ? 'from base' : 'from last position'
-                    }`
-                  : 'location unknown'}
+                {distanceLabel(c.baseDistanceKm, c.locationSource ?? (c.distanceFromBase ? 'base' : 'last_known'))}
                 {` · ${c.activeJobsThatDay} job${c.activeJobsThatDay === 1 ? '' : 's'} that day`}
               </span>
+              {c.onProject && (
+                <span style={{ display: 'block', fontSize: 9.5, fontWeight: 700, color: 'var(--amber)' }}>
+                  On {c.onProject.projectName} that day · emergency only
+                </span>
+              )}
             </span>
 
             {clash ? (

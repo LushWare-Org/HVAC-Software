@@ -8,7 +8,7 @@ import {
 import { useJob, useUpdateJobStatus } from "../../hooks/useJobs";
 import { useTechnicians, useManualAssign } from "../../hooks/useScheduling";
 import type { Job, DispatchAssignment, Technician } from "../../types/api";
-import { formatMoney } from '../../lib/format'
+import { formatMoney, jobAmount } from '../../lib/format'
 import JobStatusOverrideMenu from "../../components/JobStatusOverrideMenu";
 import TechAvatar from "../../components/TechAvatar";
 import RescheduleBadge from "../../components/reschedule/RescheduleBadge";
@@ -254,8 +254,8 @@ export default function JobDetailPanel({
                   <InfoCell icon={DollarSign} label="Amount"
                     value={job.finalAmount != null
                       ? formatMoney(job.finalAmount, { decimals: 0 })
-                      : job.estimatedAmount != null
-                        ? `${formatMoney(job.estimatedAmount, { decimals: 0 })} est.`
+                      : jobAmount(job) != null
+                        ? `${formatMoney(jobAmount(job)!, { decimals: 0 })} est.`
                         : "—"} />
                 </div>
 

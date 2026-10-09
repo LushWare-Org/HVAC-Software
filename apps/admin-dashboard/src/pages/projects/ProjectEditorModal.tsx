@@ -1,5 +1,5 @@
 /**
- * ProjectEditorModal — create / edit a project (DEMO: writes the mock store).
+ * ProjectEditorModal — create / edit a project.
  * Single scrollable form: identity → schedule & crew → site map → notes.
  */
 import { useEffect, useState } from 'react'
@@ -71,6 +71,7 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
     startDate: project?.startDate ?? '',
     targetEndDate: project?.targetEndDate ?? '',
     budget: project?.budget != null ? String(project.budget) : '',
+    labourRatePerHour: project?.labourRatePerHour != null ? String(project.labourRatePerHour) : '',
     requiredHeadcount: project?.requiredHeadcount != null ? String(project.requiredHeadcount) : '',
     siteAddress: project?.siteAddress ?? '',
     latitude: project?.latitude ?? 6.9271,
@@ -108,6 +109,7 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
       startDate: form.startDate || undefined,
       targetEndDate: form.targetEndDate || undefined,
       budget: form.budget ? Number(form.budget) : undefined,
+      labourRatePerHour: form.labourRatePerHour ? Number(form.labourRatePerHour) : undefined,
       requiredHeadcount: form.requiredHeadcount ? Number(form.requiredHeadcount) : undefined,
       siteAddress: form.siteAddress.trim() || undefined,
       latitude: form.latitude,
@@ -333,6 +335,11 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
               <label style={lbl}>Budget</label>
               <input type="number" min={0} style={inp} value={form.budget} placeholder="120000"
                 onChange={e => set('budget', e.target.value)} />
+            </div>
+            <div>
+              <label style={lbl} title="What an hour of one crew member costs you, averaged. Used to turn checked-in hours into cost.">Labour cost / hour</label>
+              <input type="number" min={0} step="0.01" style={inp} value={form.labourRatePerHour} placeholder="25"
+                onChange={e => set('labourRatePerHour', e.target.value)} />
             </div>
           </div>
 
