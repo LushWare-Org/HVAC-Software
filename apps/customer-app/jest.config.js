@@ -16,7 +16,7 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
-      { tsconfig: { module: 'commonjs', strict: true, esModuleInterop: true } },
+      { tsconfig: { module: 'commonjs', strict: true, esModuleInterop: true, types: ['jest'] } },
     ],
   },
 }
