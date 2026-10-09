@@ -172,6 +172,21 @@ export function useUpdatePreferredTime() {
   })
 }
 
+/** The customer confirms the time their visit has now. */
+export function useConfirmVisit() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const { data } = await api.post(`/jobs/jobs/${jobId}/confirm-time`)
+      return data as { confirmed: boolean; already?: boolean }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['customer', 'jobs'] })
+      qc.invalidateQueries({ queryKey: ['customer', 'job'] })
+    },
+  })
+}
+
 export function useCancelJob() {
   const qc = useQueryClient()
   return useMutation({
@@ -243,6 +258,11 @@ export function useSubmitJobRequest() {
       notes?: string
       tags?: string[]
       scheduledStart?: string
+      scheduledEnd?: string
+      /** 'WINDOW' = the customer chose an arrival window, not an exact time. */
+      timeMode?: 'EXACT' | 'WINDOW'
+      windowStart?: string
+      windowEnd?: string
       /** Booking from "My Projects" / "My Property" — job-service verifies this project/component is actually theirs. */
       projectId?: string
       houseId?: string
@@ -264,6 +284,10 @@ export function useSubmitJobRequest() {
         notes: dto.notes,
         tags: dto.tags ?? ['portal-request'],
         scheduledStart: dto.scheduledStart,
+        scheduledEnd: dto.scheduledEnd,
+        timeMode: dto.timeMode,
+        windowStart: dto.windowStart,
+        windowEnd: dto.windowEnd,
         projectId: dto.projectId,
         houseId: dto.houseId,
         componentId: dto.componentId,

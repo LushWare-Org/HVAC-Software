@@ -2,25 +2,19 @@
  * TechAvatar — the technician's photo, for the customer's benefit.
  *
  * Seeing a face for whoever is coming to your house is a trust signal, so this
- * shows a real photo wherever one exists and falls back to a deterministic
+ * shows a real photo wherever one exists and falls back to a plain-colour
  * initials chip otherwise (never a blank or a generic icon).
  *
  * Photos come from `useJobTechnicians` in hooks/useMyJobs, which resolves the
  * technician behind a job — the job row itself only carries a name.
  */
-const GRADIENTS: [string, string][] = [
-  ['#0891B2', '#0369A1'],
-  ['#3B82F6', '#2563EB'],
-  ['#059669', '#047857'],
-  ['#D97706', '#B45309'],
-  ['#DB2777', '#9D174D'],
-  ['#2563EB', '#1D4ED8'],
-]
+// Plain, calm colours: one solid colour per person, never a gradient.
+const COLOURS = ['#0E7490', '#2563EB', '#047857', '#B45309', '#9D174D', '#1D4ED8']
 
-function gradientFor(name: string): [string, string] {
+function colourFor(name: string): string {
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0
-  return GRADIENTS[hash % GRADIENTS.length]
+  return COLOURS[hash % COLOURS.length]
 }
 
 function initialsFor(name: string): string {
@@ -54,13 +48,12 @@ export default function TechAvatar({
     )
   }
 
-  const [from, to] = gradientFor(label)
   return (
     <span
       title={label}
       style={{
         width: size, height: size, borderRadius: '50%', flexShrink: 0,
-        background: `linear-gradient(135deg, ${from}, ${to})`,
+        background: colourFor(label),
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         fontSize: fs, fontWeight: 700, color: '#fff', letterSpacing: '0.02em',
       }}

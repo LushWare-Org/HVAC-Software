@@ -10,7 +10,7 @@ import './index.css'
 // Register service worker for PWA (offline support + push notifications)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch((err) => {
       console.warn('[SW] Registration failed:', err);
     });
   });

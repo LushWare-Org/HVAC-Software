@@ -17,6 +17,7 @@ export const keys = {
   jobAssignments: (jobId: string) => ['customer', 'job-assignments', jobId] as const,
   technician:     (id: string) => ['customer', 'technician', id] as const,
   threads:        () => ['customer', 'threads'] as const,
+  kelvinNotes:    () => ['customer', 'kelvin-notes'] as const,
   thread:         (id: string) => ['customer', 'thread', id] as const,
   notifications:  () => ['customer', 'notifications'] as const,
   bookings:       () => ['customer', 'bookings'] as const,

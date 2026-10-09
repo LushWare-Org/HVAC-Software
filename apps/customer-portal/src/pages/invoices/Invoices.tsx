@@ -1,8 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Download,
-  Eye,
-  ChevronLeft,
   ChevronRight,
   CheckCircle,
   CheckCircle2,
@@ -11,7 +9,6 @@ import {
   FileText,
   Search,
   CreditCard,
-  X,
   XCircle,
   Loader2,
 } from 'lucide-react'
@@ -24,17 +21,16 @@ import PayInvoiceModal from './PayInvoiceModal.tsx'
 import type { Invoice } from '../../types/api'
 import { featureEnabled, formatMoney } from '../../lib/format'
 import { useCompany } from '../../contexts/CompanyContext'
+import FilterChips, { type FilterOption } from '../../components/rowtable/FilterChips'
+import Pager, { PAGE_SIZE } from '../../components/rowtable/Pager'
+import { StatusLabel } from '../../components/rowtable/labels'
+import '../../components/rowtable/rowTable.css'
 
-const STATUS_MAP: Record<string, { label: string; css: string }> = {
-  DRAFT: { label: 'Draft', css: 'badge-amber' },
-  SENT: { label: 'Pending', css: 'badge-amber' },
-  PARTIALLY_PAID: { label: 'Partial', css: 'badge-blue' },
-  PAID: { label: 'Paid', css: 'badge-green' },
-  OVERDUE: { label: 'Overdue', css: 'badge-red' },
-  VOID: { label: 'Void', css: 'badge-neutral' },
-}
-
-const ITEMS_PER_PAGE = 10
+/** What each status is called on an invoice (a SENT invoice is simply unpaid). */
+const INVOICE_WORDS: Record<string, string> = { SENT: 'Unpaid', PARTIALLY_PAID: 'Part paid' }
+const STATUS_ORDER = ['OVERDUE', 'SENT', 'PARTIALLY_PAID', 'PAID', 'VOID']
+const AMOUNTS: Array<[string, string]> = [['under200', `Under ${formatMoney(200, { decimals: 0 })}`], ['200to500', `${formatMoney(200, { decimals: 0 })} to ${formatMoney(500, { decimals: 0 })}`], ['over500', `Over ${formatMoney(500, { decimals: 0 })}`]]
+const DATES: Array<[string, string]> = [['month', 'This month'], ['quarter', 'Last 3 months'], ['year', 'This year']]
 
 function fmtMoney(val?: string | number, currency?: string) {
   return formatMoney(val, { currency })
@@ -47,10 +43,12 @@ function fmtDate(iso?: string) {
 
 export default function Invoices() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [dateFilter, setDateFilter] = useState('all')
-  const [amountFilter, setAmountFilter] = useState('all')
+  const [statusSel, setStatusSel] = useState<string[]>([])
+  const [amountSel, setAmountSel] = useState<string[]>([])
+  const [dateSel, setDateSel] = useState<string[]>([])
   const [page, setPage] = useState(1)
+  const [pinned, setPinned] = useState<Set<string>>(new Set())
+  const [shut, setShut] = useState<Set<string>>(new Set())
 
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [showDetail, setShowDetail] = useState(false)
@@ -63,7 +61,7 @@ export default function Invoices() {
   const [invoiceActionPendingId, setInvoiceActionPendingId] = useState<string | null>(null)
   const { showError, showInfo, showSuccess } = useToast()
 
-  const { data, isLoading, refetch } = useMyInvoices({ page, limit: ITEMS_PER_PAGE })
+  const { data, isLoading, refetch } = useMyInvoices({ page: 1, limit: 200 })
   const approveInvoice = useApproveMyInvoice()
   const declineInvoice = useDeclineMyInvoice()
   const invoices = data?.data ?? []
@@ -75,37 +73,53 @@ export default function Invoices() {
     [invoices, invoiceStatusOverrides],
   )
 
-  const filtered = useMemo(() => {
-    return invoicesView.filter(inv => {
-      const firstLine = inv.lineItems?.[0]?.description ?? ''
-      const matchSearch =
-        inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        firstLine.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchStatus = statusFilter === 'all' || inv.status === statusFilter
-      const total = Number(inv.total)
-      const matchAmount =
-        amountFilter === 'all' ||
-        (amountFilter === 'under200' && total < 200) ||
-        (amountFilter === '200to500' && total >= 200 && total <= 500) ||
-        (amountFilter === 'over500' && total > 500)
-      return matchSearch && matchStatus && matchAmount
-    })
-  }, [invoicesView, searchQuery, statusFilter, amountFilter])
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
-  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+  const amountKey = (total: number) => (total < 200 ? 'under200' : total <= 500 ? '200to500' : 'over500')
+  const dateKeys = (iso?: string): string[] => {
+    if (!iso) return []
+    const d = new Date(iso), now = new Date()
+    const out: string[] = []
+    if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) out.push('month')
+    if (d >= new Date(now.getFullYear(), now.getMonth() - 2, 1)) out.push('quarter')
+    if (d.getFullYear() === now.getFullYear()) out.push('year')
+    return out
+  }
+  const matches = (inv: Invoice, skip?: 'status' | 'amount' | 'date') => {
+    const firstLine = inv.lineItems?.[0]?.description ?? ''
+    const q = searchQuery.toLowerCase()
+    if (q && !inv.invoiceNumber.toLowerCase().includes(q) && !firstLine.toLowerCase().includes(q)) return false
+    if (skip !== 'status' && statusSel.length && !statusSel.includes(inv.status)) return false
+    if (skip !== 'amount' && amountSel.length && !amountSel.includes(amountKey(Number(inv.total)))) return false
+    if (skip !== 'date' && dateSel.length && !dateKeys(inv.issueDate).some(k => dateSel.includes(k))) return false
+    return true
+  }
+  const filtered = useMemo(() => invoicesView.filter(i => matches(i)), [invoicesView, searchQuery, statusSel, amountSel, dateSel]) // eslint-disable-line react-hooks/exhaustive-deps
+  const paginated = filtered.slice((Math.min(page, Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))) - 1) * PAGE_SIZE, Math.min(page, Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))) * PAGE_SIZE)
+  const countOf = (pick: (i: Invoice) => string[], skip: 'status' | 'amount' | 'date') => {
+    const m: Record<string, number> = {}
+    for (const i of invoicesView) if (matches(i, skip)) for (const k of pick(i)) m[k] = (m[k] ?? 0) + 1
+    return m
+  }
+  const statusCounts = countOf(i => [i.status], 'status')
+  const amountCounts = countOf(i => [amountKey(Number(i.total))], 'amount')
+  const dateCounts = countOf(i => dateKeys(i.issueDate), 'date')
+  const statusOptions: FilterOption[] = STATUS_ORDER.map(v => ({ value: v, node: <StatusLabel status={v} bare label={INVOICE_WORDS[v]} />, count: statusCounts[v] ?? 0 }))
+  const amountOptions: FilterOption[] = AMOUNTS.map(([v, l]) => ({ value: v, node: <span>{l}</span>, count: amountCounts[v] ?? 0 }))
+  const dateOptions: FilterOption[] = DATES.map(([v, l]) => ({ value: v, node: <span>{l}</span>, count: dateCounts[v] ?? 0 }))
+  const flip = (set: Set<string>, id: string, on: boolean) => { const n = new Set(set); if (on) n.add(id); else n.delete(id); return n }
+  const pin = (id: string) => { const was = pinned.has(id); setPinned(p => flip(p, id, !was)); setShut(x => flip(x, id, was)) }
+  useEffect(() => { setPage(1) }, [searchQuery, statusSel, amountSel, dateSel])
 
   const paidTotal = invoicesView.filter(i => i.status === 'PAID').reduce((sum, i) => sum + Number(i.total), 0)
   const pendingTotal = invoicesView.filter(i => ['SENT', 'PARTIALLY_PAID'].includes(i.status)).reduce((sum, i) => sum + (Number(i.total) - Number(i.amountPaid)), 0)
   const overdueTotal = invoicesView.filter(i => i.status === 'OVERDUE').reduce((sum, i) => sum + (Number(i.total) - Number(i.amountPaid)), 0)
 
-  const hasActiveFilters = statusFilter !== 'all' || dateFilter !== 'all' || amountFilter !== 'all' || !!searchQuery
+  const hasActiveFilters = statusSel.length > 0 || amountSel.length > 0 || dateSel.length > 0 || !!searchQuery
 
   const clearFilters = () => {
     setSearchQuery('')
-    setStatusFilter('all')
-    setDateFilter('all')
-    setAmountFilter('all')
+    setStatusSel([])
+    setAmountSel([])
+    setDateSel([])
     setPage(1)
   }
 
@@ -190,215 +204,115 @@ export default function Invoices() {
         })}
       </div>
 
-      <div className="card card-hover anim-fade-up delay-2">
-        <div className="card-body" style={{ paddingBottom: 0 }}>
-          <div className="filter-bar">
-            <div className="filter-search">
-              <Search size={13} color="var(--t4)" />
-              <input
-                placeholder="Search invoices, services…"
-                value={searchQuery}
-                onChange={e => {
-                  setSearchQuery(e.target.value)
-                  setPage(1)
-                }}
-              />
+      <div className="pt-card anim-fade-up delay-2">
+        <div className="jf-bar" style={{ paddingTop: 20 }}>
+          <label className="jf-search">
+            <Search size={14} aria-hidden="true" />
+            <input placeholder="Search invoices, services" aria-label="Search invoices" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+          </label>
+          {hasActiveFilters && <button type="button" className="jf-clear" onClick={clearFilters}>Clear all filters</button>}
+          <span style={{ flex: 1 }} />
+          <button className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={() => refetch()}><Download size={13} /> Refresh</button>
+        </div>
+        <div className="jc-wrap">
+          <FilterChips label="Status" options={statusOptions} selected={statusSel} onChange={setStatusSel} loading={isLoading} />
+          <FilterChips label="Amount" options={amountOptions} selected={amountSel} onChange={setAmountSel} loading={isLoading} />
+          <FilterChips label="Issued" options={dateOptions} selected={dateSel} onChange={setDateSel} loading={isLoading} />
+        </div>
+
+        <div className="jt-wrap">
+          <div className="jt" role="table" aria-label="Invoices">
+            <div className="jt-grid pt-invoices jt-head" role="row">
+              <span className="jt-th" role="columnheader">Invoice</span>
+              <span className="jt-th pt-hide-sm" role="columnheader">House</span>
+              <span className="jt-th" role="columnheader">Dates</span>
+              <span className="jt-th is-right" role="columnheader">Amount due</span>
+              <span className="jt-th" role="columnheader">Status</span>
+              <span className="jt-th is-right pt-hide-sm" role="columnheader">Actions</span>
             </div>
-            <select className="select" style={{ width: 140 }} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}>
-              <option value="all">All Status</option>
-              {Object.entries(STATUS_MAP).map(([key, val]) => (
-                <option key={key} value={key}>{val.label}</option>
-              ))}
-            </select>
-            <select className="select" style={{ width: 150 }} value={amountFilter} onChange={e => { setAmountFilter(e.target.value); setPage(1) }}>
-              <option value="all">All Amounts</option>
-              <option value="under200">Under {formatMoney(200, { decimals: 0 })}</option>
-              <option value="200to500">{formatMoney(200, { decimals: 0 })} - {formatMoney(500, { decimals: 0 })}</option>
-              <option value="over500">Over {formatMoney(500, { decimals: 0 })}</option>
-            </select>
-            <select className="select" style={{ width: 150 }} value={dateFilter} onChange={e => { setDateFilter(e.target.value); setPage(1) }}>
-              <option value="all">All Dates</option>
-              <option value="month">This Month</option>
-              <option value="quarter">Last 3 Months</option>
-              <option value="year">This Year</option>
-            </select>
-            {hasActiveFilters && (
-              <button className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: 5 }} onClick={clearFilters}>
-                <X size={12} /> Clear
-              </button>
+
+            {isLoading && [1, 2, 3].map(i => (
+              <div key={i} className="jt-row" aria-hidden="true"><div className="jt-main jt-grid pt-invoices"><span style={{ gridColumn: '1 / -1', height: 14, borderRadius: 6, background: 'var(--bg-hover)' }} /></div></div>
+            ))}
+
+            {!isLoading && paginated.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--t3)' }}>
+                <FileText size={26} style={{ opacity: 0.35, display: 'block', margin: '0 auto 10px' }} aria-hidden="true" />
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--t1)' }}>{hasActiveFilters ? 'No invoices match your filters' : 'No invoices yet'}</div>
+                {hasActiveFilters && <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={clearFilters}>Clear filters</button>}
+              </div>
             )}
-            <div style={{ flex: 1 }} />
-            <button className="btn btn-primary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: 5 }} onClick={() => refetch()}>
-              <Download size={13} /> Refresh
-            </button>
-          </div>
-        </div>
 
-        <div className="card-body-flush">
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Invoice #</th>
-                  <th>Service</th>
-                  <th>House</th>
-                  <th>Date</th>
-                  <th>Due Date</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'left', width: 260 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', color: 'var(--t3)', padding: '24px' }}>Loading invoices…</td>
-                  </tr>
-                ) : paginated.length > 0 ? (
-                  paginated.map(invoice => {
-                    const s = STATUS_MAP[invoice.status] || { label: invoice.status, css: 'badge-neutral' }
-                    const outstanding = Number(invoice.total) - Number(invoice.amountPaid)
-                    const canPay = canPayOnline && ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
-                    const alreadyDecided =
-                      Boolean(invoice.approvedAt) ||
-                      Boolean(invoice.declinedAt) ||
-                      invoiceDecisionDone[invoice.id]
-                    const canDecide =
-                      !alreadyDecided && ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
-                    const isRowPending = invoiceActionPendingId === invoice.id
-                    return (
-                      <tr key={invoice.id} style={{ cursor: 'pointer' }} onClick={() => openDetail(invoice)}>
-                        <td><span className="td-mono td-primary">{invoice.invoiceNumber}</span></td>
-                        <td>
-                          <div style={{ fontWeight: 600, color: 'var(--t1)', fontSize: 13 }}>{invoice.lineItems?.[0]?.description || 'Invoice'}</div>
-                          {invoice.lineItems && invoice.lineItems.length > 1 && (
-                            <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>+{invoice.lineItems.length - 1} more</div>
-                          )}
-                        </td>
-                        <td style={{ fontSize: 12, color: 'var(--t3)' }}>{invoice.componentId ? (componentLabelById.get(invoice.componentId) ?? '—') : '—'}</td>
-                        <td style={{ fontSize: 12, color: 'var(--t3)' }}>{fmtDate(invoice.issueDate)}</td>
-                        <td style={{ fontSize: 12, color: invoice.status === 'OVERDUE' ? 'var(--red)' : 'var(--t3)' }}>{fmtDate(invoice.dueDate)}</td>
-                        <td className="td-primary font-600">{fmtMoney(outstanding > 0 ? outstanding : invoice.total, invoice.currency)}</td>
-                        <td><span className={`badge ${s.css}`}>{s.label}</span></td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-                            {canDecide && (
-                              <button
-                                title="Approve Invoice"
-                                onClick={() => handleApproveInvoice(invoice)}
-                                disabled={isRowPending}
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: 'var(--r)',
-                                  border: '1px solid #A7F3D0',
-                                  background: '#ECFDF5',
-                                  color: '#047857',
-                                  cursor: isRowPending ? 'not-allowed' : 'pointer',
-                                  opacity: isRowPending ? 0.7 : 1,
-                                }}
-                              >
-                                {isRowPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-                              </button>
-                            )}
-                            {canDecide && (
-                              <button
-                                title="Decline Invoice"
-                                onClick={() => handleDeclineInvoice(invoice)}
-                                disabled={isRowPending}
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: 'var(--r)',
-                                  border: '1px solid #FECACA',
-                                  background: '#FEF2F2',
-                                  color: '#B91C1C',
-                                  cursor: isRowPending ? 'not-allowed' : 'pointer',
-                                  opacity: isRowPending ? 0.7 : 1,
-                                }}
-                              >
-                                {isRowPending ? <Loader2 size={12} className="animate-spin" /> : <XCircle size={12} />}
-                              </button>
-                            )}
-                            <button
-                              title="View Invoice"
-                              onClick={() => openDetail(invoice)}
-                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 'var(--r)', border: 'none', background: 'transparent', color: 'var(--blue)', cursor: 'pointer', transition: 'background var(--dur-fast)' }}
-                              onMouseOver={e => (e.currentTarget.style.background = '#EFF6FF')}
-                              onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
-                            >
-                              <Eye size={15} />
-                            </button>
-                            {canPay && (
-                              <button
-                                title="Pay Securely"
-                                onClick={() => openPay(invoice)}
-                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 'var(--r)', border: 'none', background: 'transparent', color: 'var(--green)', cursor: 'pointer', transition: 'background var(--dur-fast)' }}
-                                onMouseOver={e => (e.currentTarget.style.background = '#F0FDF4')}
-                                onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
-                              >
-                                <CreditCard size={15} />
-                              </button>
-                            )}
-                            {invoice.status === 'PAID' && (
-                              <>
-                                <button
-                                  title="View PDF"
-                                  onClick={() => handleViewPdf(invoice)}
-                                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 'var(--r)', border: 'none', background: 'transparent', color: 'var(--blue)', cursor: 'pointer', transition: 'background var(--dur-fast)' }}
-                                  onMouseOver={e => (e.currentTarget.style.background = '#EFF6FF')}
-                                  onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
-                                >
-                                  <FileText size={15} />
-                                </button>
-                                <button
-                                  title="Download PDF"
-                                  onClick={() => handleDownloadPdf(invoice)}
-                                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 'var(--r)', border: 'none', background: 'transparent', color: 'var(--t3)', cursor: 'pointer', transition: 'background var(--dur-fast)' }}
-                                  onMouseOver={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                                  onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
-                                >
-                                  <Download size={15} />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={8}>
-                      <div className="empty-state">
-                        <div className="empty-icon"><FileText size={22} /></div>
-                        <div className="empty-title">No invoices match your filters</div>
-                        {hasActiveFilters && <button className="btn btn-secondary btn-sm" onClick={clearFilters}>Clear Filters</button>}
+            {!isLoading && paginated.map(invoice => {
+              const outstanding = Number(invoice.total) - Number(invoice.amountPaid)
+              const canPay = canPayOnline && ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
+              const alreadyDecided = Boolean(invoice.approvedAt) || Boolean(invoice.declinedAt) || invoiceDecisionDone[invoice.id]
+              const canDecide = !alreadyDecided && ['SENT', 'OVERDUE', 'PARTIALLY_PAID'].includes(invoice.status)
+              const isRowPending = invoiceActionPendingId === invoice.id
+              const isPinned = pinned.has(invoice.id)
+              const title = invoice.lineItems?.[0]?.description || 'Invoice'
+              const house = invoice.componentId ? componentLabelById.get(invoice.componentId) : undefined
+              return (
+                <div key={invoice.id} role="row" className={`jt-row${isPinned ? ' is-pinned' : ''}${shut.has(invoice.id) ? ' is-shut' : ''}${invoice.status === 'OVERDUE' ? ' is-urgent' : ''}`}
+                  onClick={() => openDetail(invoice)}
+                  onMouseLeave={() => { if (shut.has(invoice.id)) setShut(x => flip(x, invoice.id, false)) }}>
+                  <div className="jt-main jt-grid pt-invoices">
+                    <div className="jt-c" role="cell" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <button type="button" className="jt-chev" aria-label={isPinned ? 'Hide details' : 'Keep details open'} aria-expanded={isPinned}
+                        onClick={e => { e.stopPropagation(); pin(invoice.id) }}><ChevronRight size={15} aria-hidden="true" /></button>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="jt-t1 jt-svc" title={title}>{title}</div>
+                        <div className="jt-t2">{invoice.invoiceNumber}{invoice.lineItems && invoice.lineItems.length > 1 ? ` · +${invoice.lineItems.length - 1} more` : ''}</div>
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    </div>
+                    <div className="jt-c pt-hide-sm" role="cell"><div className="jt-t1 is-soft">{house ?? <span className="jt-t2">None</span>}</div></div>
+                    <div className="jt-c" role="cell">
+                      <div className="jt-t1 is-soft">Issued {fmtDate(invoice.issueDate)}</div>
+                      <div className="jt-t2" style={invoice.status === 'OVERDUE' ? { color: 'var(--red)' } : undefined}>Due {fmtDate(invoice.dueDate)}</div>
+                    </div>
+                    <div className="jt-t1 jt-amount" role="cell">{fmtMoney(outstanding > 0 ? outstanding : invoice.total, invoice.currency)}</div>
+                    <div role="cell"><StatusLabel status={invoice.status} label={INVOICE_WORDS[invoice.status]} /></div>
+                    <div className="jt-actions pt-hide-sm" role="cell" onClick={e => e.stopPropagation()}>
+                      {canPay && <button type="button" className="jt-act" style={{ background: 'var(--blue)', borderColor: 'var(--blue)', color: '#fff' }} onClick={() => openPay(invoice)}><CreditCard size={13} /> Pay</button>}
+                      {canDecide && (
+                        <>
+                          <button type="button" className="jt-act jt-icon" title="Approve this invoice" aria-label="Approve this invoice" disabled={isRowPending} style={{ color: 'var(--green)' }} onClick={() => handleApproveInvoice(invoice)}>
+                            {isRowPending ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                          </button>
+                          <button type="button" className="jt-act jt-icon" title="Decline this invoice" aria-label="Decline this invoice" disabled={isRowPending} onClick={() => handleDeclineInvoice(invoice)}>
+                            {isRowPending ? <Loader2 size={15} className="animate-spin" /> : <XCircle size={15} />}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="jt-more">
+                    <div className="jt-more-in">
+                      <div className="jt-detail" style={{ paddingLeft: 52 }}>
+                        <div className="jt-facts">
+                          <span className="jt-fact"><span className="k">Total</span> {fmtMoney(invoice.total, invoice.currency)}</span>
+                          <span className="jt-fact"><span className="k">Paid</span> {fmtMoney(invoice.amountPaid, invoice.currency)}</span>
+                          {house && <span className="jt-fact"><span className="k">House</span> {house}</span>}
+                        </div>
+                        <div className="jt-facts" onClick={e => e.stopPropagation()}>
+                          <button type="button" className="jt-act" onClick={() => openDetail(invoice)}>Open invoice</button>
+                          {canPay && <button type="button" className="jt-act" onClick={() => openPay(invoice)}><CreditCard size={13} /> Pay securely</button>}
+                          {invoice.status === 'PAID' && <button type="button" className="jt-act" onClick={() => handleViewPdf(invoice)}><FileText size={13} /> View PDF</button>}
+                          {invoice.status === 'PAID' && <button type="button" className="jt-act" onClick={() => handleDownloadPdf(invoice)}><Download size={13} /> Download PDF</button>}
+                          {canDecide && <button type="button" className="jt-act" disabled={isRowPending} onClick={() => handleApproveInvoice(invoice)}>Approve</button>}
+                          {canDecide && <button type="button" className="jt-act" disabled={isRowPending} onClick={() => handleDeclineInvoice(invoice)}>Decline</button>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
 
-        <div className="table-footer">
-          <span className="table-count">
-            Showing {filtered.length > 0 ? (page - 1) * ITEMS_PER_PAGE + 1 : 0} to {Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} invoices
-          </span>
-          <div className="pagination">
-            <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}><ChevronLeft size={15} /></button>
-            <span className="pagination-label">Page {page} of {totalPages}</span>
-            <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}><ChevronRight size={15} /></button>
-          </div>
-        </div>
+        <Pager total={filtered.length} page={page} onPage={setPage} noun="invoices" />
       </div>
 
       {showDetail && selectedInvoice && (

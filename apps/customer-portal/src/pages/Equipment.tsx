@@ -615,13 +615,13 @@ export default function Equipment() {
         }
       `}</style>
 
-      {/* Page header — uses white text so it's readable on the dark --bg-app background */}
+      {/* Page header — canvas text colours follow the theme (dark on the white page) */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1.2, margin: 0 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--canvas-t1)', lineHeight: 1.2, margin: 0 }}>
             My Equipment
           </h1>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>
+          <p style={{ fontSize: 12, color: 'var(--canvas-t2)', marginTop: 3 }}>
             {isLoading
               ? 'Loading…'
               : equipment.length === 0

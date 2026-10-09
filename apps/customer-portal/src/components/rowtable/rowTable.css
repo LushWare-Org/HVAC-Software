@@ -1,0 +1,191 @@
+/* Jobs page: tabs, filter menus, labels and the row-per-card table. Theme variables only. */
+
+/* ── Labels ─────────────────────────────────────────────────────────────── */
+.jl { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; white-space: nowrap; line-height: 1.2; }
+.jl-status { border: 1px solid color-mix(in srgb, var(--c, var(--t3)) 38%, var(--bd)); background: color-mix(in srgb, var(--c, var(--t3)) 11%, var(--bg-card)); color: var(--t1); border-radius: 999px; padding: 4px 11px 4px 8px; font-weight: 600; }
+.jl-status.is-bare { border: 0; background: none; padding: 0; }
+.jl-status svg { flex-shrink: 0; color: var(--c); }
+.jl-track { stroke: var(--c); stroke-opacity: 0.4; }
+.jl-arc { stroke: var(--c); }
+.jl-glyph { stroke: var(--c); }
+.jl-glyph-on { stroke: #fff; }
+.jl-s-PENDING { --c: var(--amber); }
+.jl-s-SCHEDULED { --c: var(--blue); }
+.jl-s-EN_ROUTE { --c: var(--cyan); }
+.jl-s-ON_SITE { --c: color-mix(in srgb, var(--cyan) 50%, var(--green)); }
+.jl-s-IN_PROGRESS { --c: color-mix(in srgb, var(--blue) 55%, var(--violet)); }
+.jl-s-ON_HOLD { --c: var(--t4); }
+.jl-s-COMPLETED { --c: var(--green); }
+.jl-s-INVOICED { --c: var(--violet); }
+.jl-s-PAID { --c: var(--green); }
+.jl-s-CANCELLED { --c: var(--red); }
+
+.jl-pri { gap: 9px; color: var(--pt, var(--t2)); }
+.jl-meter { display: inline-flex; gap: 2px; }
+.jl-meter i { width: 4px; height: 13px; border-radius: 2px; background: var(--bd); display: block; }
+.jl-meter i.on { background: var(--c); }
+.jl-p-EMERGENCY { --c: var(--red); --pt: var(--red); font-weight: 600; }
+.jl-p-URGENT { --c: color-mix(in srgb, var(--red) 55%, var(--amber)); --pt: color-mix(in srgb, var(--red) 55%, var(--amber)); font-weight: 600; }
+.jl-p-HIGH { --c: var(--amber); --pt: var(--amber); }
+.jl-p-NORMAL { --c: var(--t3); --pt: var(--t2); }
+.jl-p-LOW { --c: var(--t4); --pt: var(--t3); }
+
+/* ── Tabs ───────────────────────────────────────────────────────────────── */
+.jt-tabs { display: flex; align-items: flex-end; gap: 12px 28px; flex-wrap: wrap; border-bottom: 1px solid var(--bd); padding: 0 24px; }
+.jt-tablist { display: flex; gap: 28px; }
+.jt-tab { font: inherit; font-size: 14px; font-weight: 500; color: var(--t3); background: none; border: 0; padding: 16px 2px 14px; margin-bottom: -1px; border-bottom: 2px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.jt-tab:hover { color: var(--t1); }
+.jt-tab.is-on { color: var(--t1); border-bottom-color: var(--blue); }
+.jt-tab:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.jt-n { font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 1px 8px; background: var(--bg-card-2); color: var(--t2); }
+.jt-tab.is-on .jt-n { background: color-mix(in srgb, var(--blue) 12%, transparent); color: var(--blue); }
+.jt-n.is-warn { background: var(--amber-dim); color: var(--amber); }
+
+/* ── Filter bar and menus ───────────────────────────────────────────────── */
+.jf-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 16px 24px 4px; }
+.jf-search { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--bd-md); border-radius: var(--r-md); background: var(--bg-input); color: var(--t4); min-width: 240px; flex: 0 1 300px; }
+.jf-search input { flex: 1; border: 0; background: none; outline: none; font: inherit; font-size: 13px; color: var(--t1); min-width: 0; }
+.jf-search:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 14%, transparent); }
+.jf { position: relative; }
+.jf-btn { font: inherit; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--bd-md); border-radius: var(--r-md); background: var(--bg-card); color: var(--t2); font-size: 13px; cursor: pointer; box-shadow: 0 1px 1px rgba(15, 23, 42, 0.04); }
+.jf-btn:hover { border-color: var(--bd-lg); }
+.jf-btn.has-value { border-color: color-mix(in srgb, var(--blue) 45%, var(--bd-md)); background: color-mix(in srgb, var(--blue) 5%, var(--bg-card)); }
+.jf-btn b { font-weight: 500; color: var(--t1); }
+.jf-btn:focus-visible, .jf-opt:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.jf-pop { position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; min-width: 240px; max-height: 360px; overflow-y: auto; background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg); box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18); padding: 6px; animation: jf-in 140ms ease-out; transform-origin: top left; }
+@keyframes jf-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } to { opacity: 1; transform: none; } }
+.jf-opt { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; background: none; border-radius: var(--r-sm); cursor: pointer; font: inherit; font-size: 13px; color: var(--t1); text-align: left; min-height: 38px; }
+.jf-opt:hover { background: var(--bg-hover); }
+.jf-box { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--bd-lg); display: grid; place-items: center; flex-shrink: 0; color: #fff; }
+.jf-opt.is-on .jf-box { background: var(--blue); border-color: var(--blue); }
+.jf-count { margin-left: auto; font-size: 12px; color: var(--t3); font-variant-numeric: tabular-nums; }
+.jf-foot { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 4px; border-top: 1px solid var(--bd); margin-top: 4px; font-size: 12px; color: var(--t3); }
+.jf-foot button { border: 0; background: none; color: var(--blue); font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 4px 0; }
+.jf-clear { font: inherit; font-size: 13px; color: var(--t3); background: none; border: 0; cursor: pointer; padding: 0 6px; height: 36px; }
+.jf-clear:hover { color: var(--t1); }
+.jf-seg { display: inline-flex; background: var(--bg-card-2); border-radius: var(--r-md); padding: 2px; }
+.jf-seg button { font: inherit; font-size: 12.5px; font-weight: 500; border: 0; background: none; color: var(--t3); border-radius: 8px; height: 32px; padding: 0 12px; cursor: pointer; }
+.jf-seg button.is-on { background: var(--bg-card); color: var(--t1); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1); }
+.jf-toggle { font: inherit; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--bd-md); border-radius: var(--r-md); background: var(--bg-card); color: var(--t2); font-size: 13px; cursor: pointer; }
+.jf-toggle.is-on { border-color: color-mix(in srgb, var(--green) 50%, var(--bd-md)); background: color-mix(in srgb, var(--green) 8%, var(--bg-card)); color: var(--green); }
+.jf-select { height: 36px; font-size: 13px; border-radius: var(--r-md); max-width: 200px; }
+
+/* ── The table: one card per job ────────────────────────────────────────── */
+.jt-wrap { padding: 16px 24px 24px; }
+.jt { background: var(--bg-card-2); border-radius: var(--r-xl); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.jt-grid { display: grid; grid-template-columns: 28px minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, 1fr) 112px 118px 96px 100px; column-gap: 12px; align-items: center; }
+.jt-head { padding: 4px 18px 2px; }
+.jt-th { font-size: 12px; font-weight: 500; color: var(--t3); }
+.jt-th.is-right, .jt-amount { text-align: right; justify-self: end; }
+.jt-row { cursor: pointer; background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-lg); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); transition: border-color 140ms ease, box-shadow 140ms ease; }
+.jt-row.is-urgent { border-color: color-mix(in srgb, var(--red) 24%, var(--bd)); }
+.jt-main { padding: 0 18px; min-height: 64px; cursor: pointer; }
+.jt-c { min-width: 0; }
+.jt-t1 { font-size: 13.5px; font-weight: 500; color: var(--t1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jt-t1.is-soft { font-weight: 400; }
+.jt-t2 { font-size: 12.5px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jt-tech { display: flex; align-items: center; gap: 9px; }
+.jt-tech-none { width: 30px; height: 30px; border-radius: 50%; border: 1.5px dashed var(--bd-lg); flex-shrink: 0; }
+.jt-chev { width: 28px; height: 28px; border: 0; background: none; border-radius: 8px; cursor: pointer; display: grid; place-items: center; color: var(--t3); transition: background 120ms ease; }
+.jt-chev:hover { background: var(--bg-card-2); color: var(--t1); }
+.jt-chev:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.jt-chev svg { transition: transform 180ms ease; }
+.jt-row.is-pinned .jt-chev svg { transform: rotate(90deg); color: var(--blue); }
+.jt-missed { display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 600; color: var(--amber); background: var(--amber-dim); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.jt-parts { font-size: 10.5px; font-weight: 700; color: var(--amber); background: var(--amber-dim); border-radius: 999px; padding: 1px 7px; margin-left: 6px; white-space: nowrap; }
+.jt-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.jt-act { font: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; border: 1px solid var(--bd-md); background: var(--bg-card); color: var(--t1); border-radius: 8px; padding: 0 12px; font-size: 12.5px; font-weight: 500; cursor: pointer; box-shadow: 0 1px 1px rgba(15, 23, 42, 0.04); }
+.jt-act:hover { border-color: var(--blue); color: var(--blue); }
+.jt-icon { width: 32px; padding: 0; border-color: transparent; background: none; box-shadow: none; color: var(--t3); }
+.jt-icon:hover { background: var(--red-dim); color: var(--red); border-color: transparent; }
+.jt-act:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* Hover (or focus, or the chevron) grows the row to show the rest */
+.jt-more { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 200ms ease; }
+.jt-more-in { overflow: hidden; min-height: 0; }
+/* Keyboard focus opens it too, but only keyboard focus: clicking the arrow also focuses it, which used to hold the row open. */
+.jt-row.is-pinned .jt-more, .jt-row:has(:focus-visible) .jt-more { grid-template-rows: 1fr; }
+@media (hover: hover) {
+  .jt-row:hover { border-color: var(--bd-lg); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1); }
+  .jt-row:hover .jt-more { grid-template-rows: 1fr; transition-delay: 150ms; }
+  /* Folded with the arrow while the pointer is still on the row: stay folded until the pointer leaves. */
+  .jt-row.is-shut:hover .jt-more { grid-template-rows: 0fr; transition-delay: 0ms; }
+  .jt-row.is-shut:hover { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); border-color: var(--bd); }
+}
+.jt-row.is-pinned { border-color: color-mix(in srgb, var(--blue) 40%, var(--bd)); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1); }
+.jt-detail { padding: 0 18px 16px 58px; display: flex; flex-direction: column; gap: 12px; }
+.jt-facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.jt-fact { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--t2); background: var(--bg-card-2); border: 1px solid var(--bd); border-radius: 8px; padding: 5px 10px; max-width: 100%; }
+.jt-fact .k { color: var(--t3); }
+.jt-fact a { color: inherit; text-decoration: none; }
+.jt-fact a:hover { color: var(--blue); text-decoration: underline; }
+.jt-desc-row { display: flex; align-items: center; gap: 16px; }
+.jt-desc { flex: 1; min-width: 0; font-size: 13px; color: var(--t2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.jt-desc.is-empty { color: var(--t4); }
+.jt-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; border-top: 1px solid var(--bd); }
+
+/* Narrower screens: the project folds under the service so the table never needs a sideways scroll */
+.jt-proj-inline { display: none; }
+@media (max-width: 1380px) {
+  .jt-grid { grid-template-columns: 28px minmax(0, 1.2fr) minmax(0, 1.6fr) minmax(0, 1.15fr) minmax(0, 1fr) 108px 112px 92px 100px; }
+  .jt-proj { display: none; }
+  .jt-proj-inline { display: block; }
+}
+@media (max-width: 1100px) {
+  .jt-grid { grid-template-columns: 28px minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 1fr) 104px 108px 112px 100px; }
+  .jt-amount-col { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { .jt-more, .jt-chev svg, .jt-row, .jf-pop { transition: none; animation: none; } }
+
+/* ── Always-visible filter chips: click to apply, click again to remove ───── */
+.jc-wrap { padding: 4px 24px 0; display: flex; flex-direction: column; gap: 8px; }
+.jc-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jc-label { font-size: 12.5px; font-weight: 500; color: var(--t3); min-width: 56px; }
+.jc-chip { font: inherit; display: inline-flex; align-items: center; gap: 9px; height: 32px; padding: 0 11px 0 10px; border: 1px solid var(--bd); border-radius: 999px; background: var(--bg-card); color: var(--t1); cursor: pointer; transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease; }
+.jc-chip:hover { border-color: var(--bd-lg); background: var(--bg-hover); }
+.jc-chip.is-on { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 7%, var(--bg-card)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 12%, transparent); }
+.jc-chip.is-empty { opacity: 0.5; }
+.jc-chip:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.jc-n { font-size: 11.5px; font-weight: 600; color: var(--t3); background: var(--bg-card-2); border-radius: 999px; padding: 1px 7px; min-width: 14px; text-align: center; font-variant-numeric: tabular-nums; }
+.jc-chip.is-on .jc-n { background: color-mix(in srgb, var(--blue) 14%, transparent); color: var(--blue); }
+.jc-clear { font: inherit; font-size: 12.5px; color: var(--t3); background: none; border: 0; cursor: pointer; padding: 0 8px; height: 32px; }
+.jc-clear:hover { color: var(--t1); }
+@media (prefers-reduced-motion: reduce) { .jc-chip { transition: none; } }
+
+.jt-t1.jt-svc { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.3; overflow: hidden; }
+.jt-fulltitle { font-size: 14px; font-weight: 600; color: var(--t1); line-height: 1.4; overflow-wrap: anywhere; }
+
+/* Urgent banner: readable in every theme (the dark themes' red tint was too heavy for red text). */
+.jt-urgent-note { display: flex; align-items: center; gap: 8px; padding: 8px 14px; margin-bottom: 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--red); background: color-mix(in srgb, var(--red) 9%, transparent); border: 1px solid color-mix(in srgb, var(--red) 22%, transparent); }
+[data-theme="dark"] .jt-urgent-note, [data-theme="black"] .jt-urgent-note { color: #FCA5A5; background: color-mix(in srgb, #EF4444 14%, transparent); border-color: color-mix(in srgb, #EF4444 30%, transparent); }
+
+/* Did the customer confirm the booked time? */
+.jt-conf { display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; color: var(--t3); background: var(--bg-hover); white-space: nowrap; }
+.jt-conf.is-yes { color: var(--green); background: color-mix(in srgb, var(--green) 14%, transparent); }
+
+/* ── Portal grids: each table names its own columns ───────────────────────── */
+.pt-jobs { grid-template-columns: 28px minmax(0, 1.6fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 128px minmax(150px, auto); }
+.pt-quotes { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 128px 120px minmax(110px, auto); }
+.pt-invoices { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 128px 120px 120px minmax(110px, auto); }
+@media (max-width: 900px) {
+  .pt-jobs { grid-template-columns: 28px minmax(0, 1.5fr) minmax(0, 1fr) 124px; }
+  .pt-jobs .pt-hide-sm { display: none; }
+  .pt-quotes, .pt-invoices { grid-template-columns: minmax(0, 1.4fr) 124px minmax(100px, auto); }
+  .pt-quotes .pt-hide-sm, .pt-invoices .pt-hide-sm { display: none; }
+}
+.jt-head.pt-head { padding: 4px 18px 2px; }
+.pt-title { font-size: 13.5px; font-weight: 600; color: var(--t1); }
+.pt-card { background: var(--bg-card); border: 1px solid var(--bd); border-radius: var(--r-xl); box-shadow: var(--card-shadow, none); overflow: visible; }
+
+.jl-s-SENT { --c: var(--amber); }
+.jl-s-VIEWED { --c: var(--blue); }
+.jl-s-ACCEPTED, .jl-s-CONVERTED { --c: var(--green); }
+.jl-s-DECLINED, .jl-s-EXPIRED, .jl-s-OVERDUE, .jl-s-VOID { --c: var(--red); }
+.jl-s-VOID { --c: var(--t4); }
+.jl-s-DRAFT { --c: var(--t4); }
+.jl-s-PARTIALLY_PAID { --c: var(--blue); }
+
+/* ── Activity badge: a round tile tinted with the status colour, readable in every theme ─── */
+.ab { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 50%; color: var(--c, var(--t3)); background: color-mix(in srgb, var(--c, var(--t3)) 14%, var(--bg-card)); border: 1.5px solid color-mix(in srgb, var(--c, var(--t3)) 42%, transparent); }
+.ab svg { stroke-width: 2; }

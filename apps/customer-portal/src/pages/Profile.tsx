@@ -27,6 +27,7 @@ import {
 } from '../hooks/useCustomerPortal'
 import { useAuth } from '../contexts/AuthContext'
 import MyLocationCard from '../components/MyLocationCard'
+import { TelegramCard } from '../components/TelegramConnect'
 import type { CustomerEquipment } from '../types/api'
 
 function fmtDate(iso?: string) {
@@ -460,6 +461,8 @@ export default function Profile() {
           <Shield size={14} /> Security
         </button>
       </div>
+
+      {tab === 'personal' && <div style={{ marginBottom: 20 }}><TelegramCard variant="profile" /></div>}
 
       {tab === 'personal' && (
         <div id="my-location" style={{ marginBottom: 20, scrollMarginTop: 90 }}>

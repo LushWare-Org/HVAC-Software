@@ -27,18 +27,24 @@ export default function EditPreferredTimeModal({ job, onClose }: {
   const current = job.scheduledStart ? new Date(job.scheduledStart) : null
   const [date, setDate] = useState(() => toDateInput(current ?? nextSensibleDay()))
   const [windowKey, setWindowKey] = useState<RescheduleWindowKey>(() => guessWindow(current))
+  const [exactOn, setExactOn] = useState(false)
+  const [exactTime, setExactTime] = useState(() => (current ? `${String(current.getHours()).padStart(2, '0')}:${String(current.getMinutes()).padStart(2, '0')}` : '10:00'))
+  const exactOk = !exactOn || (exactTime >= '07:00' && exactTime <= '19:00')
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
 
   const submit = () => {
     setError('')
+    if (!exactOk) { setError('Please choose a time between 7:00 AM and 7:00 PM.'); return }
     const slot = slotFromWindow(date, windowKey, TZ)
+    // An exact time sends no window, so the server records it as a specific time.
+    const when = exactOn
+      ? { preferredStart: new Date(`${date}T${exactTime}:00`).toISOString() }
+      : { preferredStart: slot.startAt.toISOString(), preferredEnd: slot.endAt.toISOString(), window: slot.window }
     mutation.mutate({
       jobId: job.id,
-      preferredStart: slot.startAt.toISOString(),
-      preferredEnd: slot.endAt.toISOString(),
-      window: slot.window,
+      ...when,
       note: note.trim() || undefined,
     }, {
       onSuccess: () => setDone(true),
@@ -126,8 +132,17 @@ export default function EditPreferredTimeModal({ job, onClose }: {
               </div>
 
               <div>
-                <label style={lbl}>What time of day?</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={lbl}>{exactOn ? 'What time?' : 'What time of day?'}</label>
+                {exactOn && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <input type="time" aria-label="Exact arrival time" value={exactTime} min="07:00" max="19:00" step={900}
+                      onChange={(e) => setExactTime(e.target.value)} style={{ ...input, width: 'auto' }} />
+                    <span style={{ fontSize: 12, color: exactOk ? 'var(--t3)' : '#dc2626' }}>
+                      {exactOk ? 'Between 7:00 AM and 7:00 PM.' : 'Please choose a time between 7:00 AM and 7:00 PM.'}
+                    </span>
+                  </div>
+                )}
+                <div style={{ display: exactOn ? 'none' : 'flex', flexDirection: 'column', gap: 8 }}>
                   {WINDOW_KEYS.map((k) => {
                     const w = RESCHEDULE_WINDOWS[k]
                     const active = windowKey === k
@@ -150,6 +165,9 @@ export default function EditPreferredTimeModal({ job, onClose }: {
                     )
                   })}
                 </div>
+                <button type="button" onClick={() => setExactOn((v) => !v)} style={{ marginTop: 10, background: 'none', border: 'none', padding: 0, color: 'var(--blue)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {exactOn ? 'Pick a time window instead' : 'I need a specific time'}
+                </button>
               </div>
 
               <div>

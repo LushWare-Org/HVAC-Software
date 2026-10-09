@@ -12,6 +12,7 @@ import {
   Menu,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import KelvinPill from '../kelvin/KelvinPill'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext'
 import { useMarkAllMyNotificationsRead, useMarkMyNotificationRead, useMyNotifications } from '../hooks/useCustomerPortal'
@@ -91,6 +92,7 @@ export default function Topbar({ onMenuClick, showMenu }: TopbarProps) {
       </div>
 
       <div className="topbar-right">
+        <KelvinPill />
         <button className="topbar-icon-btn" title="Refresh" onClick={() => window.location.reload()}>
           <RefreshCw size={17} />
         </button>

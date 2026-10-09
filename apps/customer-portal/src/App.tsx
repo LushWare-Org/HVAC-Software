@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useChatRealtime } from './hooks/useChat'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { lazyPage } from './lib/lazyPage'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { ToastProvider } from './contexts/ToastContext'
@@ -6,6 +8,8 @@ import { useAuth } from './contexts/AuthContext'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import ChatWidget from './components/ChatWidget'
+import KelvinChat from './kelvin/KelvinChat'
+import { useCompany } from './contexts/CompanyContext'
 import ModalCloseGuard from './components/ModalCloseGuard'
 // Dashboard + Login stay eager: they're the post-login landing and the
 // pre-login screen, both shown immediately. Everything else is lazy-loaded
@@ -14,22 +18,23 @@ import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import { SignInTransition } from './components/airflow/CustomerAuth'
 
-const Jobs                = lazy(() => import('./pages/jobs/Jobs'))
-const Invoices            = lazy(() => import('./pages/invoices/Invoices'))
-const Quotes              = lazy(() => import('./pages/quotes/Quotes'))
-const Messages            = lazy(() => import('./pages/messages/Messages'))
-const Profile             = lazy(() => import('./pages/Profile'))
-const Devices             = lazy(() => import('./pages/Devices'))
-const MyProjects          = lazy(() => import('./pages/MyProjects'))
-const MyProperty          = lazy(() => import('./pages/MyProperty'))
-const Equipment           = lazy(() => import('./pages/Equipment'))
-const ForceResetPassword  = lazy(() => import('./pages/ForceResetPassword'))
-const ForgotPassword      = lazy(() => import('./pages/ForgotPassword'))
-const ResetPassword       = lazy(() => import('./pages/ResetPassword'))
-const Tips                = lazy(() => import('./pages/Tips'))
-const Offers              = lazy(() => import('./pages/Offers'))
-const Agreements          = lazy(() => import('./pages/Agreements'))
-const AgreementConfirm    = lazy(() => import('./pages/AgreementConfirm'))
+const Jobs                = lazyPage(() => import('./pages/jobs/Jobs'))
+const Invoices            = lazyPage(() => import('./pages/invoices/Invoices'))
+const Quotes              = lazyPage(() => import('./pages/quotes/Quotes'))
+const Messages            = lazyPage(() => import('./pages/messages/Messages'))
+const Profile             = lazyPage(() => import('./pages/Profile'))
+const Devices             = lazyPage(() => import('./pages/Devices'))
+const MyProjects          = lazyPage(() => import('./pages/MyProjects'))
+const MyProperty          = lazyPage(() => import('./pages/MyProperty'))
+const Equipment           = lazyPage(() => import('./pages/Equipment'))
+const ForceResetPassword  = lazyPage(() => import('./pages/ForceResetPassword'))
+const ForgotPassword      = lazyPage(() => import('./pages/ForgotPassword'))
+const ResetPassword       = lazyPage(() => import('./pages/ResetPassword'))
+const Tips                = lazyPage(() => import('./pages/Tips'))
+const Offers              = lazyPage(() => import('./pages/Offers'))
+const Agreements          = lazyPage(() => import('./pages/Agreements'))
+const AgreementConfirm    = lazyPage(() => import('./pages/AgreementConfirm'))
+const ShareLocation       = lazyPage(() => import('./pages/ShareLocation'))
 
 const MOBILE_BP = 768
 
@@ -65,6 +70,8 @@ function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const isLogin = location.pathname === '/login'
+  // One live chat connection while signed in: new messages, read receipts and the badge, on every page.
+  useChatRealtime()
 
   useEffect(() => {
     if (isMobile) setMobileOpen(false)
@@ -124,10 +131,16 @@ function AppShell() {
             </Suspense>
           </div>
         </div>
-        <ChatWidget />
+        <Assistant />
       </div>
     </RequireAuth>
   )
+}
+
+/** Kelvin for companies that have him; the plain assistant otherwise. */
+function Assistant() {
+  const { settings } = useCompany()
+  return settings?.features?.kelvin === true ? <KelvinChat /> : <ChatWidget />
 }
 
 export default function App() {
@@ -150,6 +163,8 @@ export default function App() {
                 </Suspense>
               }
             />
+            {/* Public: "where should we come?" link — signed token, no login required */}
+            <Route path="/share-location/:token" element={<Suspense fallback={null}><ShareLocation /></Suspense>} />
             <Route path="/*" element={<AppShell />} />
           </Routes>
           <SignInGate />

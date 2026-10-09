@@ -1,19 +1,14 @@
 /**
- * My Jobs — scannable cards, not a spreadsheet (portal redesign).
- *
- * Segmented Active / Upcoming / Past tabs replace the stacked status
- * dropdowns; live jobs get a progress tracker that turns the status enum
- * into something a homeowner instantly reads; past jobs are muted but
- * readable (the old 0.65-opacity rows failed contrast). Data layer is
- * unchanged — same hooks, same detail / booking / cancel modals.
+ * My Jobs: the same row-per-card table as the office dashboard. Tabs for what is on the way,
+ * what is coming up and what is done; filter chips with counts; 15 per page. Hover (or press the
+ * arrow) to see the address, the progress and the actions. Same data and modals as before.
  */
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Briefcase, CheckCircle, ChevronLeft, ChevronRight, Plus, Search, X,
-  Calendar, MapPin, Send, Wrench, XCircle, FileText, DollarSign, Clock,
-  CalendarClock,
+  Briefcase, CheckCircle, ChevronRight, Plus, Search, MapPin, Send, CalendarClock, XCircle,
 } from 'lucide-react'
-import { useJobTechnicians, useMyJobs } from '../../hooks/useCustomerPortal'
+import { useConfirmVisit, useJobTechnicians, useMyJobs } from '../../hooks/useCustomerPortal'
+import { canConfirm, isConfirmed } from '../../lib/confirm'
 import { useMyProjects } from '../../hooks/useMyProjects'
 import { useMyComponents } from '../../hooks/useMyComponent'
 import JobDetailModal from './JobDetailModal.tsx'
@@ -25,27 +20,12 @@ import RescheduleBadge from '../../components/reschedule/RescheduleBadge'
 import TechAvatar from '../../components/TechAvatar'
 import RescheduleModal from '../../components/reschedule/RescheduleModal'
 import EditPreferredTimeModal from './EditPreferredTimeModal.tsx'
+import MarkLocationModal from './MarkLocationModal.tsx'
 import { CUSTOMER_RESCHEDULABLE_STATUSES } from '../../lib/reschedule'
-
-const STATUS_MAP: Record<string, { label: string; css: string }> = {
-  PENDING: { label: 'Pending', css: 'badge-amber' },
-  SCHEDULED: { label: 'Scheduled', css: 'badge-violet' },
-  EN_ROUTE: { label: 'En Route', css: 'badge-blue' },
-  ON_SITE: { label: 'On Site', css: 'badge-blue' },
-  IN_PROGRESS: { label: 'In Progress', css: 'badge-blue' },
-  COMPLETED: { label: 'Completed', css: 'badge-green' },
-  INVOICED: { label: 'Invoiced', css: 'badge-cyan' },
-  PAID: { label: 'Paid', css: 'badge-green' },
-  CANCELLED: { label: 'Cancelled', css: 'badge-red' },
-  ON_HOLD: { label: 'On Hold', css: 'badge-amber' },
-}
-
-const PAST_ICON: Record<string, { icon: React.ElementType; color: string; dim: string }> = {
-  COMPLETED: { icon: CheckCircle, color: 'var(--green)', dim: 'var(--green-dim)' },
-  PAID: { icon: DollarSign, color: 'var(--green)', dim: 'var(--green-dim)' },
-  INVOICED: { icon: FileText, color: 'var(--cyan)', dim: 'var(--cyan-dim)' },
-  CANCELLED: { icon: XCircle, color: 'var(--red)', dim: 'var(--red-dim)' },
-}
+import FilterChips, { type FilterOption } from '../../components/rowtable/FilterChips'
+import Pager, { PAGE_SIZE } from '../../components/rowtable/Pager'
+import { StatusLabel } from '../../components/rowtable/labels'
+import '../../components/rowtable/rowTable.css'
 
 const LIVE_STATUSES = ['EN_ROUTE', 'ON_SITE', 'IN_PROGRESS']
 const OPEN_STATUSES = ['PENDING', 'SCHEDULED', 'ON_HOLD']
@@ -55,22 +35,32 @@ const REACHED: Record<string, number> = {
   COMPLETED: 4, INVOICED: 4, PAID: 4,
 }
 
-const ITEMS_PER_PAGE = 8
 type Tab = 'active' | 'upcoming' | 'past'
-
-const JOBS_CSS = `
-.mj-card { transition: transform 0.16s cubic-bezier(0.22,1,0.36,1), box-shadow 0.16s ease; }
-.mj-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.10); }
-`
+const WHEN: Array<[string, string]> = [['today', 'Today'], ['week', 'This week'], ['month', 'This month']]
+const TAB_STATUSES: Record<Tab, string[]> = {
+  active: ['EN_ROUTE', 'ON_SITE', 'IN_PROGRESS'],
+  upcoming: ['PENDING', 'SCHEDULED', 'ON_HOLD'],
+  past: ['COMPLETED', 'INVOICED', 'PAID', 'CANCELLED'],
+}
 
 function fmtDate(iso?: string) {
-  if (!iso) return 'Date TBD'
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  if (!iso) return 'Date to be set'
+  return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
 function fmtTime(iso?: string) {
   if (!iso) return null
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+}
+
+/** "Morning 8:00 AM – 12:00 PM" for a visit booked as an arrival window. */
+function windowText(start?: string | null, end?: string | null): string {
+  if (!start || !end) return ''
+  const a = new Date(start), b = new Date(end)
+  const t = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const h = a.getHours()
+  const name = h === 8 ? 'Morning' : h === 12 ? 'Afternoon' : h === 16 ? 'Evening' : ''
+  return `${name ? name + ' ' : ''}${t(a)} – ${t(b)}`
 }
 
 /** Status enum → progress bar the customer instantly understands. */
@@ -115,17 +105,26 @@ function ProgressTracker({ status }: { status: string }) {
   )
 }
 
+/** An open visit with no map pin: the technician has nowhere to route to. */
+const needsLocation = (job: Job) =>
+  ['PENDING', 'SCHEDULED', 'ON_HOLD'].includes(job.status) && (job.serviceLatitude == null || job.serviceLongitude == null || Number(job.serviceLatitude) === 0)
+
 export default function MyJobs() {
   const [tab, setTab] = useState<Tab | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [dateFilter, setDateFilter] = useState('all')
+  const [statusSel, setStatusSel] = useState<string[]>([])
+  const [whenSel, setWhenSel] = useState<string[]>([])
   const [page, setPage] = useState(1)
+  // Rows kept open with the arrow, and rows folded with the arrow while the pointer is still on them.
+  const [pinned, setPinned] = useState<Set<string>>(new Set())
+  const [shut, setShut] = useState<Set<string>>(new Set())
 
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [showDetail, setShowDetail] = useState(false)
   const [showBook, setShowBook] = useState(false)
   const [rescheduleJob, setRescheduleJob] = useState<Job | null>(null)
   const [editTimeJob, setEditTimeJob] = useState<Job | null>(null)
+  const [locationJob, setLocationJob] = useState<Job | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const [showCancel, setShowCancel] = useState(false)
   const [jobToCancel, setJobToCancel] = useState<Job | null>(null)
@@ -156,6 +155,24 @@ export default function MyJobs() {
     next.delete('reschedule')
     setSearchParams(next, { replace: true })
   }, [searchParams, allJobs, rescheduleJob, setSearchParams])
+
+  // Booking emails and messages link to /jobs?confirm=<jobId>: confirm that visit's time straight away.
+  const confirmVisit = useConfirmVisit()
+  const [confirmedNote, setConfirmedNote] = useState<string | null>(null)
+  useEffect(() => {
+    const target = searchParams.get('confirm')
+    if (!target || !allJobs.length || confirmVisit.isPending) return
+    const match = allJobs.find(j => j.id === target)
+    const next = new URLSearchParams(searchParams)
+    next.delete('confirm')
+    setSearchParams(next, { replace: true })
+    if (!match) return
+    if (!canConfirm(match)) { if (isConfirmed(match)) setConfirmedNote(`${match.title} is already confirmed. Thank you.`); return }
+    confirmVisit.mutate(match.id, {
+      onSuccess: () => setConfirmedNote(`Thank you. Your visit for ${match.title} is confirmed.`),
+      onError: () => setConfirmedNote('We could not confirm that visit just now. Please try the Confirm button on the visit.'),
+    })
+  }, [searchParams, allJobs]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // A portal customer has at most a handful of projects/components — cheap to map
   // once rather than resolve per-row, unlike the admin Jobs page's much larger scale.
@@ -193,41 +210,63 @@ export default function MyJobs() {
 
   const tabJobs = grouped[effectiveTab]
 
-  const filtered = useMemo(() => {
-    return tabJobs.filter(job => {
-      const who = technicians[job.id]?.name ?? job.assignedToName ?? ''
-      const text = `${job.title} ${job.jobNumber} ${who} ${job.description ?? ''}`.toLowerCase()
-      if (searchQuery && !text.includes(searchQuery.toLowerCase())) return false
-      if (dateFilter !== 'all') {
-        const jobDate = job.scheduledStart ? new Date(job.scheduledStart) : null
-        if (!jobDate) return false
-        if (dateFilter === 'today' && !(jobDate >= startOfToday && jobDate < new Date(startOfToday.getTime() + 86400000))) return false
-        if (dateFilter === 'week' && jobDate < startOfWeek) return false
-        if (dateFilter === 'month' && jobDate < startOfMonth) return false
-      }
-      return true
-    })
-  }, [tabJobs, searchQuery, dateFilter, technicians])
+  const whenOf = (job: Job): string[] => {
+    const d = job.scheduledStart ? new Date(job.scheduledStart) : null
+    if (!d) return []
+    const out: string[] = []
+    if (d >= startOfToday && d < new Date(startOfToday.getTime() + 86400000)) out.push('today')
+    if (d >= startOfWeek) out.push('week')
+    if (d >= startOfMonth) out.push('month')
+    return out
+  }
+  const matches = (job: Job, skip?: 'status' | 'when') => {
+    const who = technicians[job.id]?.name ?? job.assignedToName ?? ''
+    const text = `${job.title} ${job.jobNumber} ${who} ${job.description ?? ''}`.toLowerCase()
+    if (searchQuery && !text.includes(searchQuery.toLowerCase())) return false
+    if (skip !== 'status' && statusSel.length && !statusSel.includes(job.status)) return false
+    if (skip !== 'when' && whenSel.length && !whenOf(job).some(w => whenSel.includes(w))) return false
+    return true
+  }
+  const filtered = useMemo(() => tabJobs.filter(j => matches(j)), [tabJobs, searchQuery, statusSel, whenSel, technicians]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
-  const paginated = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE)
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
-  const switchTab = (t: Tab) => { setTab(t); setPage(1) }
+  const countBy = (pick: (j: Job) => string[], skip: 'status' | 'when') => {
+    const m: Record<string, number> = {}
+    for (const j of tabJobs) if (matches(j, skip)) for (const k of pick(j)) m[k] = (m[k] ?? 0) + 1
+    return m
+  }
+  const statusCounts = countBy(j => [j.status], 'status')
+  const whenCounts = countBy(whenOf, 'when')
+  const statusOptions: FilterOption[] = TAB_STATUSES[effectiveTab].map(v => ({ value: v, node: <StatusLabel status={v} bare />, count: statusCounts[v] ?? 0 }))
+  const whenOptions: FilterOption[] = WHEN.map(([v, label]) => ({ value: v, node: <span>{label}</span>, count: whenCounts[v] ?? 0 }))
+
+  const switchTab = (t: Tab) => { setTab(t); setStatusSel([]); setPage(1) }
+  useEffect(() => { setPage(1) }, [statusSel, whenSel, searchQuery])
+  const flip = (set: Set<string>, id: string, on: boolean) => { const n = new Set(set); if (on) n.add(id); else n.delete(id); return n }
+  const pin = (id: string) => { const was = pinned.has(id); setPinned(p => flip(p, id, !was)); setShut(x => flip(x, id, was)) }
   const openDetail = (job: Job) => { setSelectedJob(job); setShowDetail(true) }
   const openCancel = (job: Job) => { setJobToCancel(job); setShowCancel(true) }
 
-  const hasFilters = !!searchQuery || dateFilter !== 'all'
+  const hasFilters = !!searchQuery || statusSel.length > 0 || whenSel.length > 0
+  const clearAll = () => { setSearchQuery(''); setStatusSel([]); setWhenSel([]) }
 
   const tabs: { key: Tab; label: string; count: number }[] = [
-    { key: 'active', label: 'Active', count: grouped.active.length },
+    { key: 'active', label: 'On the way', count: grouped.active.length },
     { key: 'upcoming', label: 'Upcoming', count: grouped.upcoming.length },
     { key: 'past', label: 'Past', count: grouped.past.length },
   ]
 
   return (
     <div className="anim-fade-up">
-      <style>{JOBS_CSS}</style>
+      {confirmedNote && (
+        <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 14, borderRadius: 10, background: 'var(--green-dim)', color: 'var(--green)', fontSize: 13, fontWeight: 600 }}>
+          {confirmedNote}
+          <button type="button" onClick={() => setConfirmedNote(null)} aria-label="Dismiss" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: 16 }}>×</button>
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
@@ -243,245 +282,145 @@ export default function MyJobs() {
         </button>
       </div>
 
-      {/* Segmented tabs + search + date filter */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
-        <div style={{
-          display: 'inline-flex', background: 'var(--bg-card)', border: '1px solid var(--bd)',
-          borderRadius: 10, padding: 3, gap: 2,
-        }}>
-          {tabs.map(t => {
-            const active = effectiveTab === t.key
-            return (
-              <button key={t.key} onClick={() => switchTab(t.key)} style={{
-                fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
-                color: active ? '#fff' : 'var(--t3)',
-                background: active ? 'var(--blue)' : 'transparent',
-                border: 'none', padding: '7px 14px', borderRadius: 8,
-              }}>
-                {t.label} · {isLoading ? '…' : t.count}
+      <div className="pt-card" style={{ marginBottom: 16 }}>
+        <div className="jt-tabs">
+          <div className="jt-tablist" role="tablist" aria-label="My jobs">
+            {tabs.map(t => (
+              <button key={t.key} type="button" role="tab" aria-selected={effectiveTab === t.key} className={`jt-tab${effectiveTab === t.key ? ' is-on' : ''}`} onClick={() => switchTab(t.key)}>
+                {t.label} <span className="jt-n">{isLoading ? '…' : t.count}</span>
               </button>
-            )
-          })}
-        </div>
-
-        <div className="filter-search" style={{ flex: 1, minWidth: 180 }}>
-          <Search size={13} color="var(--t4)" />
-          <input
-            placeholder="Search jobs, services, technicians…"
-            value={searchQuery}
-            onChange={e => { setSearchQuery(e.target.value); setPage(1) }}
-          />
-        </div>
-        <select className="select" style={{ width: 140 }} value={dateFilter}
-          onChange={e => { setDateFilter(e.target.value); setPage(1) }}>
-          <option value="all">All dates</option>
-          <option value="today">Today</option>
-          <option value="week">This week</option>
-          <option value="month">This month</option>
-        </select>
-        {hasFilters && (
-          <button className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
-            onClick={() => { setSearchQuery(''); setDateFilter('all'); setPage(1) }}>
-            <X size={12} /> Clear
-          </button>
-        )}
-      </div>
-
-      {/* Cards */}
-      {isLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[1, 2, 3].map(i => (
-            <div key={i} style={{ height: 92, borderRadius: 14, background: 'var(--bg-card-2)', border: '1px solid var(--bd)' }} />
-          ))}
-        </div>
-      ) : paginated.length === 0 ? (
-        <div style={{
-          textAlign: 'center', padding: '56px 24px',
-          background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 16,
-        }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: 14, background: 'var(--blue-dim)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px',
-          }}>
-            <Briefcase size={22} style={{ color: 'var(--blue)' }} />
+            ))}
           </div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t2)', marginBottom: 4 }}>
-            {hasFilters ? 'No jobs match your filters' : `No ${effectiveTab} jobs`}
-          </div>
-          {hasFilters ? (
-            <button className="btn btn-secondary btn-sm" style={{ marginTop: 10 }}
-              onClick={() => { setSearchQuery(''); setDateFilter('all') }}>
-              Clear filters
-            </button>
-          ) : effectiveTab !== 'past' ? (
-            <button className="btn btn-primary btn-sm" style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 5 }}
-              onClick={() => setShowBook(true)}>
-              <Plus size={13} /> Book a service
-            </button>
-          ) : null}
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {paginated.map(job => {
-            const s = STATUS_MAP[job.status] ?? { label: job.status, css: 'badge-neutral' }
-            const who = technicians[job.id]?.name ?? job.assignedToName
-            const whoAvatar = technicians[job.id]?.avatarUrl
-            // "and 2 others" rather than a list: the customer needs to know how
-            // many people are arriving, and the email carries the names.
-            const crewExtra = Math.max(0, (job.crewUserIds?.length ?? 1) - 1)
-            const crewSuffix = crewExtra > 0
-              ? ` and ${crewExtra} other${crewExtra === 1 ? '' : 's'}`
-              : ''
-            const isLive = LIVE_STATUSES.includes(job.status)
-            const isOpen = OPEN_STATUSES.includes(job.status)
-            const startT = fmtTime(job.scheduledStart)
 
-            if (isLive) {
-              // Active job — progress tracker card
-              return (
-                <div key={job.id} className="mj-card" style={{
-                  background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 14,
-                  padding: '16px 18px', cursor: 'pointer',
-                }} onClick={() => openDetail(job)}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexWrap: 'wrap' }}>
-                      <span className={`badge ${s.css}`}>{s.label}</span>
-                      <span style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--t1)' }}>{job.title}</span>
-                      {who && <span style={{ fontSize: 12, color: 'var(--t3)' }}>· {who}{crewSuffix}</span>}
-                      {jobContext(job) && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: 'var(--blue)' }}>
-                          <Briefcase size={11} /> {jobContext(job)}
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--blue)', whiteSpace: 'nowrap' }}>Details ›</span>
-                  </div>
-                  <ProgressTracker status={job.status} />
-                </div>
-              )
-            }
+        <div className="jf-bar">
+          <label className="jf-search">
+            <Search size={14} aria-hidden="true" />
+            <input placeholder="Search jobs, services, technicians" aria-label="Search jobs" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+          </label>
+          {hasFilters && <button type="button" className="jf-clear" onClick={clearAll}>Clear all filters</button>}
+        </div>
+        <div className="jc-wrap">
+          <FilterChips label="Status" options={statusOptions} selected={statusSel} onChange={setStatusSel} loading={isLoading} />
+          <FilterChips label="When" options={whenOptions} selected={whenSel} onChange={setWhenSel} loading={isLoading} />
+        </div>
 
-            if (isOpen) {
-              // Upcoming — date badge card
-              const d = job.scheduledStart ? new Date(job.scheduledStart) : null
-              return (
-                <div key={job.id} className="mj-card" style={{
-                  background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 14,
-                  padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14,
-                  cursor: 'pointer', flexWrap: 'wrap',
-                }} onClick={() => openDetail(job)}>
-                  <div style={{
-                    width: 46, height: 46, borderRadius: 12, background: 'var(--violet-dim)', flexShrink: 0,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    color: 'var(--violet)',
-                  }}>
-                    {d ? (
-                      <>
-                        <span style={{ fontSize: 9, fontWeight: 500 }}>{d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}</span>
-                        <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1 }}>{d.getDate()}</span>
-                      </>
-                    ) : (
-                      <Clock size={18} />
-                    )}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>{job.title}</div>
-                    <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <Calendar size={11} /> {fmtDate(job.scheduledStart)}{startT ? ` · ${startT}` : ''}
-                      </span>
-                      <RescheduleBadge state={job.rescheduleState} size="sm" />
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                        {who
-                          ? <><TechAvatar name={who} avatarUrl={whoAvatar} size={18} /> {who}{crewSuffix}</>
-                          : <><Wrench size={11} /> Technician TBD</>}
-                      </span>
-                      {job.serviceAddress && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <MapPin size={11} /> {job.serviceAddress}
-                        </span>
-                      )}
-                      {jobContext(job) && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--blue)' }}>
-                          <Briefcase size={11} /> {jobContext(job)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <span className={`badge ${s.css}`} style={{ flexShrink: 0 }}>{s.label}</span>
-                  {/* Nobody has committed to this slot yet — the customer can just
-                      change it. Once a technician is on it, the same button becomes a
-                      reschedule request that we confirm. */}
-                  {job.status === 'PENDING' && !job.assignedToId ? (
-                    <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0 }}
-                      onClick={e => { e.stopPropagation(); setEditTimeJob(job) }}>
-                      <CalendarClock size={12} /> Change time
-                    </button>
-                  ) : CUSTOMER_RESCHEDULABLE_STATUSES.includes(job.status) && (
-                    <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0 }}
-                      onClick={e => { e.stopPropagation(); setRescheduleJob(job) }}>
-                      <CalendarClock size={12} /> Reschedule
-                    </button>
-                  )}
-                  {['PENDING', 'SCHEDULED'].includes(job.status) && (
-                    <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0 }}
-                      onClick={e => { e.stopPropagation(); openCancel(job) }}>
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              )
-            }
+        <div className="jt-wrap">
+          <div className="jt" role="table" aria-label="My jobs">
+            <div className="jt-grid pt-jobs jt-head" role="row">
+              <span />
+              <span className="jt-th" role="columnheader">Service</span>
+              <span className="jt-th pt-hide-sm" role="columnheader">Technician</span>
+              <span className="jt-th" role="columnheader">When</span>
+              <span className="jt-th" role="columnheader">Status</span>
+              <span className="jt-th is-right pt-hide-sm" role="columnheader">Actions</span>
+            </div>
 
-            // Past — muted but readable (no opacity hacks)
-            const p = PAST_ICON[job.status] ?? { icon: Wrench, color: 'var(--t3)', dim: 'var(--bg-card-2)' }
-            const PIcon = p.icon
-            return (
-              <div key={job.id} className="mj-card" style={{
-                background: 'var(--bg-card)', border: '1px solid var(--bd)', borderRadius: 14,
-                padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 14,
-                cursor: 'pointer', flexWrap: 'wrap',
-              }} onClick={() => openDetail(job)}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 11, background: p.dim, flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <PIcon size={17} style={{ color: p.color }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 160 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t2)' }}>{job.title}</div>
-                  <div style={{ fontSize: 11.5, color: 'var(--t4)', marginTop: 2 }}>
-                    {fmtDate(job.scheduledStart ?? job.createdAt)}{who ? ` · ${who}${crewSuffix}` : ''}{jobContext(job) ? ` · ${jobContext(job)}` : ''}
-                  </div>
-                </div>
-                <span className={`badge ${s.css}`} style={{ flexShrink: 0 }}>{s.label}</span>
-                <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0 }}
-                  onClick={e => { e.stopPropagation(); openDetail(job) }}>
-                  View details
-                </button>
+            {isLoading && [1, 2, 3].map(i => (
+              <div key={i} className="jt-row" aria-hidden="true"><div className="jt-main jt-grid pt-jobs"><span /><span style={{ gridColumn: '2 / -1', height: 14, borderRadius: 6, background: 'var(--bg-hover)' }} /></div></div>
+            ))}
+
+            {!isLoading && paginated.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--t3)' }}>
+                <Briefcase size={26} style={{ opacity: 0.35, display: 'block', margin: '0 auto 10px' }} aria-hidden="true" />
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--t1)' }}>{hasFilters ? 'No jobs match your filters' : `No ${effectiveTab === 'active' ? 'jobs on the way' : effectiveTab} jobs`}</div>
+                {hasFilters
+                  ? <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={clearAll}>Clear filters</button>
+                  : effectiveTab !== 'past' && <button className="btn btn-primary btn-sm" style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 5 }} onClick={() => setShowBook(true)}><Plus size={13} /> Book a service</button>}
               </div>
-            )
-          })}
-        </div>
-      )}
+            )}
 
-      {/* Pagination */}
-      {!isLoading && filtered.length > ITEMS_PER_PAGE && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, flexWrap: 'wrap', gap: 10 }}>
-          <span style={{ fontSize: 12, color: 'var(--t4)' }}>
-            Showing {(safePage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(safePage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
-          </span>
-          <div className="pagination">
-            <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}>
-              <ChevronLeft size={15} />
-            </button>
-            <span className="pagination-label">Page {safePage} of {totalPages}</span>
-            <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>
-              <ChevronRight size={15} />
-            </button>
+            {!isLoading && paginated.map(job => {
+              const who = technicians[job.id]?.name ?? job.assignedToName
+              const whoAvatar = technicians[job.id]?.avatarUrl
+              // "and 2 others" rather than a list: the customer needs to know how many people are
+              // arriving, and the email carries the names.
+              const crewExtra = Math.max(0, (job.crewUserIds?.length ?? 1) - 1)
+              const crewSuffix = crewExtra > 0 ? ` and ${crewExtra} other${crewExtra === 1 ? '' : 's'}` : ''
+              const startT = fmtTime(job.scheduledStart)
+              const isWin = job.timeMode === 'WINDOW' && !!job.windowStart && !!job.windowEnd
+              const addr = job.serviceAddress
+              const ctx = jobContext(job)
+              const isPinned = pinned.has(job.id)
+              const canChange = job.status === 'PENDING' && !job.assignedToId
+              const canResched = !canChange && CUSTOMER_RESCHEDULABLE_STATUSES.includes(job.status)
+              const canCancel = ['PENDING', 'SCHEDULED'].includes(job.status)
+              const needsPin = needsLocation(job)
+              // The one thing worth doing right now sits in the row; the rest is in the open row.
+              const primary = canConfirm(job)
+                ? <button type="button" className="jt-act" style={{ background: 'var(--blue)', borderColor: 'var(--blue)', color: '#fff' }} disabled={confirmVisit.isPending}
+                    onClick={e => { e.stopPropagation(); confirmVisit.mutate(job.id, { onSuccess: () => setConfirmedNote(`Thank you. Your visit for ${job.title} is confirmed.`) }) }}>Confirm this time</button>
+                : needsPin
+                  ? <button type="button" className="jt-act" onClick={e => { e.stopPropagation(); setLocationJob(job) }}><MapPin size={13} /> Mark location</button>
+                  : canResched
+                    ? <button type="button" className="jt-act" onClick={e => { e.stopPropagation(); setRescheduleJob(job) }}><CalendarClock size={13} /> Reschedule</button>
+                    : canChange
+                      ? <button type="button" className="jt-act" onClick={e => { e.stopPropagation(); setEditTimeJob(job) }}><CalendarClock size={13} /> Change time</button>
+                      : null
+              return (
+                <div key={job.id} role="row" className={`jt-row${isPinned ? ' is-pinned' : ''}${shut.has(job.id) ? ' is-shut' : ''}`}
+                  onClick={() => openDetail(job)}
+                  onMouseLeave={() => { if (shut.has(job.id)) setShut(x => flip(x, job.id, false)) }}>
+                  <div className="jt-main jt-grid pt-jobs">
+                    <button type="button" className="jt-chev" aria-label={isPinned ? 'Hide details' : 'Keep details open'} aria-expanded={isPinned}
+                      onClick={e => { e.stopPropagation(); pin(job.id) }}>
+                      <ChevronRight size={15} aria-hidden="true" />
+                    </button>
+                    <div className="jt-c" role="cell">
+                      <div className="jt-t1 jt-svc" title={job.title}>{job.title}</div>
+                      <div className="jt-t2">{job.jobNumber}{ctx ? ` · ${ctx}` : ''}</div>
+                    </div>
+                    <div className="jt-c jt-tech pt-hide-sm" role="cell">
+                      {who
+                        ? <><TechAvatar name={who} avatarUrl={whoAvatar} size={30} /><span className="jt-t1 is-soft" title={`${who}${crewSuffix}`}>{who}{crewSuffix}</span></>
+                        : <><span className="jt-tech-none" aria-hidden="true" /><span className="jt-t2">To be assigned</span></>}
+                    </div>
+                    <div className="jt-c" role="cell">
+                      <div className="jt-t1 is-soft">{fmtDate(job.scheduledStart)}</div>
+                      <div className="jt-t2" title={isWin ? 'An arrival window. We will tell you the exact time on the day.' : undefined}>
+                        {isWin ? windowText(job.windowStart, job.windowEnd) : startT ?? '\u00a0'}
+                      </div>
+                      {job.status === 'SCHEDULED' && job.assignedToId && (
+                        isConfirmed(job)
+                          ? <span className="jt-conf is-yes">Confirmed</span>
+                          : <span className="jt-conf">Please confirm</span>
+                      )}
+                    </div>
+                    <div role="cell"><StatusLabel status={job.status} /></div>
+                    <div className="jt-actions pt-hide-sm" role="cell">
+                      {primary}
+                      {canCancel && <button type="button" className="jt-act jt-icon" aria-label={`Cancel ${job.title}`} title="Cancel this visit" onClick={e => { e.stopPropagation(); openCancel(job) }}><XCircle size={15} aria-hidden="true" /></button>}
+                    </div>
+                  </div>
+
+                  <div className="jt-more">
+                    <div className="jt-more-in">
+                      <div className="jt-detail">
+                        {(LIVE_STATUSES.includes(job.status) || job.status === 'SCHEDULED') && <ProgressTracker status={job.status} />}
+                        <div className="jt-facts">
+                          {addr && <span className="jt-fact"><MapPin size={13} aria-hidden="true" />{addr}</span>}
+                          {who && <span className="jt-fact"><span className="k">Technician</span> {who}{crewSuffix}</span>}
+                          <RescheduleBadge state={job.rescheduleState} size="sm" />
+                        </div>
+                        {job.description && <div className="jt-desc">{job.description}</div>}
+                        <div className="jt-facts">
+                          {canConfirm(job) && <button type="button" className="jt-act" style={{ background: 'var(--blue)', borderColor: 'var(--blue)', color: '#fff' }} onClick={e => { e.stopPropagation(); confirmVisit.mutate(job.id, { onSuccess: () => setConfirmedNote(`Thank you. Your visit for ${job.title} is confirmed.`) }) }}>Confirm this time</button>}
+                          {needsPin && <button type="button" className="jt-act" onClick={e => { e.stopPropagation(); setLocationJob(job) }}><MapPin size={13} /> Mark location</button>}
+                          {canResched && <button type="button" className="jt-act" onClick={e => { e.stopPropagation(); setRescheduleJob(job) }}><CalendarClock size={13} /> Reschedule</button>}
+                          {canChange && <button type="button" className="jt-act" onClick={e => { e.stopPropagation(); setEditTimeJob(job) }}><CalendarClock size={13} /> Change time</button>}
+                          {canCancel && <button type="button" className="jt-act" onClick={e => { e.stopPropagation(); openCancel(job) }}>Cancel visit</button>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
-      )}
+
+        <Pager total={filtered.length} page={safePage} onPage={setPage} noun="jobs" />
+      </div>
 
       {showDetail && selectedJob && (
         <JobDetailModal
@@ -495,6 +434,10 @@ export default function MyJobs() {
         />
       )}
       {showBook && <BookServiceModal onClose={() => { setShowBook(false); refetch() }} />}
+
+      {locationJob && (
+        <MarkLocationModal job={locationJob} onClose={() => { setLocationJob(null); refetch() }} />
+      )}
 
       {editTimeJob && (
         <EditPreferredTimeModal

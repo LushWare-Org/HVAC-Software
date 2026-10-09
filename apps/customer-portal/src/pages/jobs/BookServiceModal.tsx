@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { useBookService, useSubmitJobRequest, useCustomerProfile } from '../../hooks/useCustomerPortal'
 import MapPicker from '../../components/MapPickerLazy'
+import { slotFromWindow, type RescheduleWindowKey } from '../../lib/reschedule'
 
 interface BookServiceModalProps {
   onClose: () => void
@@ -80,6 +81,9 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
   const [selectedEquipmentId, setSelectedEquipmentId] = useState('')
   const [preferredDate, setPreferredDate] = useState('')
   const [windowKey, setWindowKey] = useState('morning')
+  // Some customers need one exact time (someone is only home then). Windows stay the easy default.
+  const [exactOn, setExactOn] = useState(false)
+  const [exactTime, setExactTime] = useState('10:00')
   const [useSavedAddress, setUseSavedAddress] = useState(true)
   const [serviceAddress, setServiceAddress] = useState('')
   const [notes, setNotes] = useState('')
@@ -137,21 +141,30 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
   const step1Valid = !!serviceType
   // The address is optional: the map pin is what dispatch routes on. A blank
   // address falls back to the pin so the job never shows an empty location.
-  const step2Valid = !!preferredDate
+  const exactOk = !exactOn || (exactTime >= '07:00' && exactTime <= '19:00')
+  const step2Valid = !!preferredDate && exactOk
+  const exactLabel = new Date(`2000-01-01T${exactTime}:00`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
   const busy = isPending || isSubmittingJob
   const pinLabel = `Pinned location (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)})`
   const effectiveAddress = serviceAddress.trim() || pinLabel
 
   const handleSubmit = async () => {
-    // Local time parsing so the customer's timezone applies (unchanged contract)
-    const preferredIso = preferredDate
-      ? new Date(`${preferredDate}T${selectedWindow.time}:00`).toISOString()
-      : ''
+    // Local time parsing so the customer's timezone applies.
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const slot = preferredDate && !exactOn ? slotFromWindow(preferredDate, windowKey as RescheduleWindowKey, tz) : null
+    const preferredIso = exactOn && preferredDate
+      ? new Date(`${preferredDate}T${exactTime}:00`).toISOString()
+      : slot ? slot.startAt.toISOString() : ''
+    const timing = slot
+      ? { scheduledEnd: slot.endAt.toISOString(), timeMode: 'WINDOW' as const, windowStart: slot.startAt.toISOString(), windowEnd: slot.endAt.toISOString() }
+      : { timeMode: 'EXACT' as const }
 
     const equipmentNote = selectedEquipment
       ? `Equipment: ${selectedEquipment.brand ?? ''} ${selectedEquipment.type} ${selectedEquipment.model ?? ''}`.trim()
       : ''
-    const windowNote = `Preferred arrival window: ${selectedWindow.label} (${selectedWindow.range})`
+    const windowNote = exactOn
+      ? `Preferred arrival time: ${exactLabel}`
+      : `Preferred arrival window: ${selectedWindow.label} (${selectedWindow.range})`
     const requestTitle = `${serviceType}${title ? ` - ${title}` : ''}`
 
     await bookService({
@@ -174,6 +187,7 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
       priority: isEmergency ? 'EMERGENCY' : 'NORMAL',
       notes: [notes, windowNote, equipmentNote, 'Requested via customer portal'].filter(Boolean).join('\n'),
       scheduledStart: preferredIso || undefined,
+      ...timing,
       tags: ['portal-request', serviceType.toLowerCase()],
       projectId,
       componentId,
@@ -271,7 +285,7 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', marginBottom: 5 }}>Request submitted</div>
                 <div style={{ fontSize: 13, color: 'var(--t3)' }}>
-                  We'll confirm your {selectedWindow.label.toLowerCase()} visit shortly.
+                  We'll confirm your {exactOn ? `${exactLabel} visit` : `${selectedWindow.label.toLowerCase()} visit`} shortly.
                 </div>
               </div>
             </div>
@@ -385,8 +399,17 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
               </div>
 
               <div style={{ marginTop: 20 }}>
-                <span style={lbl}>Arrival window</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span style={lbl}>{exactOn ? 'Arrival time' : 'Arrival window'}</span>
+                {exactOn && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <input type="time" aria-label="Exact arrival time" style={{ ...input, width: 'auto' }} value={exactTime} min="07:00" max="19:00" step={900}
+                      onChange={e => setExactTime(e.target.value)} />
+                    <span style={{ fontSize: 12, color: exactOk ? 'var(--t3)' : 'var(--red)' }}>
+                      {exactOk ? 'Between 7:00 AM and 7:00 PM. We will do our best to arrive at this time.' : 'Please choose a time between 7:00 AM and 7:00 PM.'}
+                    </span>
+                  </div>
+                )}
+                <div style={{ display: exactOn ? 'none' : 'flex', flexDirection: 'column', gap: 8 }}>
                   {WINDOWS.map(w => {
                     const active = windowKey === w.key
                     const Icon = w.icon
@@ -414,6 +437,9 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
                     )
                   })}
                 </div>
+                <button type="button" onClick={() => setExactOn(v => !v)} style={{ marginTop: 10, background: 'none', border: 'none', padding: 0, color: 'var(--blue)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {exactOn ? 'Pick a time window instead' : 'I need a specific time'}
+                </button>
               </div>
 
             </>
@@ -476,7 +502,7 @@ export default function BookServiceModal({ onClose, projectId, projectName, comp
                 {[
                   ['Service', `${serviceType}${title ? ` — ${title}` : ''}`],
                   ['When', preferredDate
-                    ? `${new Date(`${preferredDate}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} · ${selectedWindow.label} (${selectedWindow.range})`
+                    ? `${new Date(`${preferredDate}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} · ${exactOn ? exactLabel : `${selectedWindow.label} (${selectedWindow.range})`}`
                     : '—'],
                   ['Address', serviceAddress.trim() || 'Map pin only'],
                   ...(selectedEquipment

@@ -23,7 +23,7 @@ export {
 // Jobs + bookings + service requests
 export {
   useMyJobs, useMyJob, useJobAssignments, useTechnician, useJobTechnicianNames, useJobTechnicians, useUpdatePreferredTime,
-  useCancelJob, useBookService, useSubmitJobRequest,
+  useCancelJob, useBookService, useSubmitJobRequest, useConfirmVisit,
 } from './useMyJobs'
 
 // Invoices + quotes + payments
@@ -36,10 +36,7 @@ export {
 
 // In-app messaging + notifications
 export {
-  useMyThreads, useUnreadMyThreadsCount, useMyThread,
-  useSendMyThreadMessage, useMarkMyThreadRead,
   useMyNotifications, useMarkMyNotificationRead, useMarkAllMyNotificationsRead,
-  useCreateMyThread, useDeleteMyThread,
 } from './useMyMessages'
 
 // Dashboard aggregations

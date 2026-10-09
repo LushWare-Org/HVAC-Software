@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import { Suspense, lazy } from 'react'
 import AnnouncementBanner from '../components/AnnouncementBanner'
+import KelvinNotes from '../kelvin/KelvinNotes'
 import {
   CheckCircle, Clock, DollarSign, FileText, ChevronRight, Calendar,
   AlertCircle, ArrowRight, Star, Lightbulb, Video, Plus, MapPin,
@@ -28,30 +29,14 @@ import { formatMoney } from '../lib/format'
 import RescheduleBanner from '../components/reschedule/RescheduleBanner'
 import AddLocationPrompt from '../components/AddLocationPrompt'
 import TechAvatar from '../components/TechAvatar'
+import { StatusLabel } from '../components/rowtable/labels'
+import '../components/rowtable/rowTable.css'
 
 const BookServiceModal = lazy(() => import('./jobs/BookServiceModal'))
 
-const JOB_STATUS: Record<string, { label: string; css: string }> = {
-  PENDING: { label: 'Pending', css: 'badge-amber' },
-  SCHEDULED: { label: 'Scheduled', css: 'badge-violet' },
-  EN_ROUTE: { label: 'En Route', css: 'badge-blue' },
-  ON_SITE: { label: 'On Site', css: 'badge-blue' },
-  IN_PROGRESS: { label: 'In Progress', css: 'badge-blue' },
-  COMPLETED: { label: 'Completed', css: 'badge-green' },
-  INVOICED: { label: 'Invoiced', css: 'badge-cyan' },
-  PAID: { label: 'Paid', css: 'badge-green' },
-  CANCELLED: { label: 'Cancelled', css: 'badge-red' },
-  ON_HOLD: { label: 'On Hold', css: 'badge-amber' },
-}
-
-const ACTIVITY_ICON: Record<string, { icon: React.ElementType; color: string; dim: string }> = {
-  COMPLETED: { icon: CheckCircle, color: 'var(--green)', dim: 'var(--green-dim)' },
-  PAID: { icon: DollarSign, color: 'var(--green)', dim: 'var(--green-dim)' },
-  INVOICED: { icon: FileText, color: 'var(--cyan)', dim: 'var(--cyan-dim)' },
-  SCHEDULED: { icon: Calendar, color: 'var(--violet)', dim: 'var(--violet-dim)' },
-  PENDING: { icon: Clock, color: 'var(--amber)', dim: 'var(--amber-dim)' },
-  EN_ROUTE: { icon: Send, color: 'var(--blue)', dim: 'var(--blue-dim)' },
-  ON_SITE: { icon: Wrench, color: 'var(--blue)', dim: 'var(--blue-dim)' },
+const ACTIVITY_ICON: Record<string, React.ElementType> = {
+  COMPLETED: CheckCircle, PAID: DollarSign, INVOICED: FileText, SCHEDULED: Calendar,
+  PENDING: Clock, EN_ROUTE: Send, ON_SITE: Wrench, IN_PROGRESS: Wrench,
 }
 
 const PULSE_CSS = `
@@ -284,6 +269,7 @@ export default function Dashboard() {
       <style>{PULSE_CSS}</style>
 
       <AnnouncementBanner />
+      <KelvinNotes />
 
       {/* Above the invoice strip on purpose: an unanswered reschedule becomes a
           missed appointment, which costs more than a late payment. Renders
@@ -354,7 +340,7 @@ export default function Dashboard() {
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)' }}>How are we doing?</div>
             <div style={{ fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>
-              {reviewStats?.companyReviews.totalRatings
+              {reviewStats?.companyReviews?.totalRatings
                 ? `${reviewStats.companyReviews.avgRating.toFixed(1)}★ from ${reviewStats.companyReviews.totalRatings} customers — add yours`
                 : 'Share your feedback about our service.'}
             </div>
@@ -434,21 +420,16 @@ export default function Dashboard() {
             </div>
           ) : (
             activityJobs.map(job => {
-              const s = JOB_STATUS[job.status] || { label: job.status, css: 'badge-neutral' }
-              const a = ACTIVITY_ICON[job.status] ?? { icon: Wrench, color: 'var(--t3)', dim: 'var(--bg-card-2)' }
-              const AIcon = a.icon
+              const AIcon = ACTIVITY_ICON[job.status] ?? Wrench
               const who = technicians[job.id]?.name ?? job.assignedToName
               return (
                 <Link key={job.id} to="/jobs" className="dash-row" style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px',
                   borderTop: '1px solid var(--bd)', textDecoration: 'none', cursor: 'pointer',
                 }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: 10, background: a.dim, flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <AIcon size={16} style={{ color: a.color }} />
-                  </div>
+                  <span className={`ab jl-s-${String(job.status).toUpperCase()}`} aria-hidden="true">
+                    <AIcon size={17} />
+                  </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
                       fontSize: 13, fontWeight: 600, color: 'var(--t1)',
@@ -460,7 +441,7 @@ export default function Dashboard() {
                       {who ? `${who} · ` : ''}{fmtDate(job.scheduledStart ?? job.createdAt)}
                     </div>
                   </div>
-                  <span className={`badge ${s.css}`} style={{ flexShrink: 0 }}>{s.label}</span>
+                  <span style={{ flexShrink: 0 }}><StatusLabel status={job.status} /></span>
                   <ChevronRight size={15} style={{ color: 'var(--t4)', flexShrink: 0 }} />
                 </Link>
               )
@@ -472,7 +453,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Book CTA */}
           <button onClick={() => setShowBook(true)} style={{
-            background: 'linear-gradient(135deg, var(--blue), #1D4ED8)', color: '#fff',
+            background: 'var(--blue)', color: '#fff',
             border: 'none', borderRadius: 14, padding: 16, textAlign: 'left', cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'inherit',
           }}>
@@ -501,7 +482,7 @@ export default function Dashboard() {
               <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                  background: 'linear-gradient(135deg, var(--cyan), var(--blue))',
+                  background: 'var(--cyan)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <Home size={16} color="#fff" />

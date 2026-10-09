@@ -13,51 +13,53 @@
 }
 
 :root {
-  --bg-app: linear-gradient(to bottom, #0F172A, #1E293B);
+  --bg-app: #FFFFFF;
+  /* On a white page, cards keep their edge with a hairline border and a soft shadow. */
+  --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 14px rgba(15, 23, 42, 0.04);
   --bg-surface: transparent;
+  /* Mist sidebar: a faint tint of the page, in every theme. */
+  --bg-sidebar: #EFF3F9;
+  --sb-hover: rgba(15, 23, 42, 0.06);
+  --sb-active: rgba(37, 99, 235, 0.12);
   --bg-card: #FFFFFF;
-  --bg-card-2: #F3F4F6;
-  --bg-hover: #F9FAFB;
-  --bg-active: #EEF2FF;
+  --bg-card-2: #F5F7FA;
+  --bg-hover: #F8FAFC;
+  --bg-active: #EEF3FF;
   --bg-input: #FFFFFF;
 
   /* Borders */
-  --bd: #E5E7EB;
-  --bd-md: #D1D5DB;
-  --bd-lg: #B0B8C8;
+  --bd: #E8EBF0;
+  --bd-md: #D6DBE4;
+  --bd-lg: #B8C0CE;
 
   /* Brand Color */
   --blue: #2563EB;
+  --telegram: #229ED9;
   --blue-light: #115DB2;
   --blue-dim: #DBEAFE;
   --blue-glow: #E0E7FF;
 
   /* Semantic Colors */
-  --green: #059669;
-  --green-dim: #DCFCE7;
-  --amber: #D97706;
-  --amber-dim: #FEF3C7;
-  --red: #DC2626;
-  --red-dim: #FEE2E2;
-  --violet: #7C3AED;
-  --violet-dim: #EDE9FE;
-  --cyan: #0891B2;
-  --cyan-dim: #CFFAFE;
+  --green: #047857;
+  --green-dim: #E3F6EC;
+  --amber: #B45309;
+  --amber-dim: #FEF1D6;
+  --red: #D12C2C;
+  --red-dim: #FDE8E8;
+  --violet: #6D28D9;
+  --violet-dim: #EFEAFD;
+  --cyan: #0E7490;
+  --cyan-dim: #DDF4F9;
 
   /* Text Hierarchy */
-  --t1: #111827;
-  --t2: #4B5563;
-  --t3: #6B7280;
-  --t4: #9CA3AF;
+  --t1: #0F172A;
+  --t2: #475569;
+  --t3: #64748B;
+  --t4: #94A3B8;
 
-  /* Canvas text — for content sitting directly on --bg-app (a dark gradient in
-     EVERY theme, unlike --bg-card which flips light/dark). --t1..t4 are tuned
-     for card backgrounds and go dark-on-dark here in light theme; these two
-     stay legible against the dark canvas regardless of theme, so they're
-     defined once, not overridden per [data-theme]. Use for page titles/eyebrow
-     text that isn't wrapped in a .card. */
-  --canvas-t1: #F1F5F9;
-  --canvas-t2: #94A3B8;
+  /* Canvas text: titles that sit directly on the page (not inside a card). Dark on the white page; the dark themes flip them. */
+  --canvas-t1: #0F172A;
+  --canvas-t2: #64748B;
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -91,6 +93,12 @@
 
 /* DARK MODE ── */
 [data-theme="dark"] {
+  --canvas-t1: #F1F5F9;
+  --canvas-t2: #94A3B8;
+  --card-shadow: none;
+  --bg-sidebar: #0C1424;
+  --sb-hover: rgba(255, 255, 255, 0.06);
+  --sb-active: rgba(110, 155, 255, 0.16);
   --bg-app: #0F172A;
   --bg-surface: #111C31;
   --bg-card: #1A2342;
@@ -105,19 +113,19 @@
 
   --blue: #3B82F6;
   --blue-light: #93C5FD;
-  --blue-dim: #1E3A8A;
+  --blue-dim: rgba(96, 165, 250, 0.20);
   --blue-glow: #1E293B;
 
   --green: #10B981;
-  --green-dim: #064E3B;
+  --green-dim: rgba(16, 185, 129, 0.18);
   --amber: #F59E0B;
-  --amber-dim: #78350F;
+  --amber-dim: rgba(245, 158, 11, 0.18);
   --red: #EF4444;
-  --red-dim: #7F1D1D;
+  --red-dim: rgba(239, 68, 68, 0.18);
   --violet: #A78BFA;
-  --violet-dim: #3730A3;
+  --violet-dim: rgba(167, 139, 250, 0.20);
   --cyan: #06B6D4;
-  --cyan-dim: #164E63;
+  --cyan-dim: rgba(6, 182, 212, 0.18);
 
   --t1: #F1F5F9;
   --t2: #CBD5E1;
@@ -132,6 +140,12 @@
 
 /* BLACK MODE */
 [data-theme="black"] {
+  --canvas-t1: #F9FAFB;
+  --canvas-t2: #9CA3AF;
+  --card-shadow: none;
+  --bg-sidebar: #070709;
+  --sb-hover: rgba(255, 255, 255, 0.06);
+  --sb-active: rgba(110, 155, 255, 0.16);
   --bg-app: #000000;
   --bg-surface: #0a0a0a;
   --bg-card: #0a0a0a;
@@ -282,7 +296,7 @@ img {
 
 /* ── ANIMATIONS ── */
 .anim-fade-up {
-  animation: fadeInUp var(--dur-slow) ease-out forwards;
+  animation: fadeInUp var(--dur-slow) ease-out backwards; /* let go when done, so modals centre on the window */
 }
 
 @keyframes fadeIn {
@@ -303,7 +317,7 @@ img {
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -416,6 +430,7 @@ img {
   background: var(--bg-card);
   border: 1px solid var(--bd);
   border-radius: var(--r-xl);
+  box-shadow: var(--card-shadow, none);
   overflow: hidden;
   transition: border-color var(--dur), box-shadow var(--dur);
 }
@@ -617,7 +632,7 @@ img {
 
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: none;
   }
 }
 
@@ -1795,7 +1810,7 @@ textarea:focus {
 
 /* ── FADE IN ANIMATION ── */
 .anim-fade-in {
-  animation: fadeIn var(--dur-slow) ease-out forwards;
+  animation: fadeIn var(--dur-slow) ease-out backwards;
 }
 
 /* ── Tab badge count ── */

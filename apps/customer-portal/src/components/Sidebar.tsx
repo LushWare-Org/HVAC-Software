@@ -19,8 +19,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { useMyProjects } from '../hooks/useMyProjects'
 import { useMyComponents } from '../hooks/useMyComponent'
-import { useTheme } from '../contexts/ThemeContext'
-import { useUnreadMyThreadsCount } from '../hooks/useCustomerPortal'
+import { useChatUnread } from '../hooks/useChat'
 import { useCompany } from '../contexts/CompanyContext'
 
 interface Props {
@@ -32,10 +31,9 @@ interface Props {
 export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
   const isMobileMode = mobileOpen !== undefined
   const loc = useLocation()
-  const { theme } = useTheme()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const unreadMessages = useUnreadMyThreadsCount()
+  const unreadMessages = useChatUnread().data?.total ?? 0
   const { data: myProjects } = useMyProjects()
   const hasProjects = (myProjects?.length ?? 0) > 0
   const { data: myComponents } = useMyComponents()
@@ -79,7 +77,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'U'
 
-  const isLight = theme === 'light'
+  const isLight = false // Mist sidebar follows the theme in light, dark and black
   const mobileClass = isMobileMode
     ? (mobileOpen ? 'mobile-visible' : 'mobile-hidden')
     : ''
@@ -90,7 +88,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
     collapsed ? 'w-[var(--sidebar-w-col)]' : 'w-[var(--sidebar-w)]',
     isLight
       ? 'bg-gradient-to-b from-slate-900 to-slate-800 text-white'
-      : 'bg-[var(--bg-surface)] text-[var(--t2)]',
+      : 'bg-[var(--bg-sidebar)] text-[var(--t2)]',
     isLight ? 'border-r border-slate-700' : 'border-r border-[var(--bd)]',
     mobileClass,
   ].join(' ')
@@ -99,10 +97,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
   const navItemBase = 'flex items-center rounded-lg cursor-pointer text-[15px] font-medium transition-colors duration-150 select-none whitespace-nowrap overflow-hidden no-underline'
   const navItemActive = isLight
     ? 'bg-slate-600 text-white'
-    : 'bg-[var(--bg-active)] text-[var(--blue)] font-semibold'
+    : 'bg-[var(--sb-active)] text-[var(--blue)] font-semibold'
   const navItemInactive = isLight
     ? 'text-slate-300 hover:bg-slate-700 hover:text-white'
-    : 'text-[var(--t3)] hover:bg-[var(--bg-hover)] hover:text-[var(--t2)]'
+    : 'text-[var(--t3)] hover:bg-[var(--sb-hover)] hover:text-[var(--t1)]'
   const footerBorder = isLight ? 'border-slate-700' : 'border-t border-[var(--bd)]'
   const loggedInCard = isLight
     ? 'bg-slate-700 rounded-lg p-3'
@@ -120,10 +118,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
   return (
     <aside className={sidebarClasses}>
       <div className={`flex items-center flex-shrink-0 h-20 border-b ${headerBorder} ${collapsed ? 'justify-center px-0' : 'justify-start px-5 gap-3.5'}`}>
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0 font-bold text-white text-xl overflow-hidden shadow-lg">
+        <div className="w-11 h-11 rounded-xl bg-[var(--blue)] flex items-center justify-center flex-shrink-0 font-bold text-white text-xl overflow-hidden">
           {settings?.logoUrl
             ? <img src={settings.logoUrl} alt={brandName} className="w-full h-full object-cover" />
-            : (initials[0] ?? 'U')}
+            : (brandName[0] ?? initials[0] ?? 'U').toUpperCase()}
         </div>
         {!collapsed && (
           <div className="min-w-0">
@@ -177,7 +175,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: Props) {
                         position: 'absolute', top: -3, right: -3,
                         width: 8, height: 8, borderRadius: '50%',
                         background: '#ef4444',
-                        boxShadow: '0 0 0 2px var(--bg-surface)',
+                        boxShadow: '0 0 0 2px var(--bg-sidebar)',
                       }} />
                     )}
                   </span>
