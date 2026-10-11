@@ -91,8 +91,8 @@ export class EmailService {
         : this.config.get<string>('sendgrid.fromEmail') ?? this.config.get<string>('smtp.fromEmail') ?? 'no-reply@tscrm.com';
     this.fromName =
       this.provider === 'smtp'
-        ? this.config.get<string>('smtp.fromName') ?? this.config.get<string>('sendgrid.fromName') ?? 'T&S Services'
-        : this.config.get<string>('sendgrid.fromName') ?? this.config.get<string>('smtp.fromName') ?? 'T&S Services';
+        ? this.config.get<string>('smtp.fromName') ?? this.config.get<string>('sendgrid.fromName') ?? 'HVACtor.ai'
+        : this.config.get<string>('sendgrid.fromName') ?? this.config.get<string>('smtp.fromName') ?? 'HVACtor.ai';
 
     if (this.provider === 'smtp') {
       this.smtpTransporter = nodemailer.createTransport({
