@@ -7,6 +7,7 @@ import SalesShowcase from '../components/home/SalesShowcase'
 import MobileAppSection from '../components/home/MobileAppSection'
 import { AgentsSection, BusinessSection } from '../components/home/AgentsAndBusiness'
 import { IntegrationsSection, RoadmapSection } from '../components/home/IntegrationsAndRoadmap'
+import AccessSection from '../components/home/AccessSection'
 
 export default function Home() {
   return (
@@ -22,6 +23,7 @@ export default function Home() {
       <BusinessSection />
       <IntegrationsSection />
       <RoadmapSection />
+      <AccessSection />
     </>
   )
 }

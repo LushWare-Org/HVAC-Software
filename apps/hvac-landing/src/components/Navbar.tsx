@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { ArrowUpRight, Menu, X } from 'lucide-react'
 import clsx from 'clsx'
 import Button from './ui/Button'
-import { NAV_LINKS } from '../data/site'
+import LoginMenu from './LoginMenu'
+import { APP_LINKS, NAV_LINKS } from '../data/site'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -92,6 +93,7 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          <LoginMenu />
           <Button to="/contact" variant="gradient" size="md">
             Request a Demo
           </Button>
@@ -167,6 +169,29 @@ export default function Navbar() {
               {link.label}
             </NavLink>
           ))}
+        </div>
+
+        <div className="border-t border-slate-100 px-4 pb-1 pt-4">
+          <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Log in</p>
+          {APP_LINKS.map((app) => {
+            const Icon = app.icon
+            return (
+              <a
+                key={app.id}
+                href={app.href}
+                className="flex items-center gap-3 rounded-lg px-2 py-3 transition-colors active:bg-navy-50"
+              >
+                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-navy-900 text-white">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-sm font-bold text-ink">{app.name}</span>
+                  <span className="block font-mono text-xs text-navy-600">{app.host}</span>
+                </span>
+                <ArrowUpRight className="h-4 w-4 flex-none text-slate-400" />
+              </a>
+            )
+          })}
         </div>
 
         <div className="space-y-3 border-t border-slate-100 p-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>

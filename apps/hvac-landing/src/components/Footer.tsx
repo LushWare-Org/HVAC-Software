@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import Container from './ui/Container'
-import { BRAND } from '../data/site'
+import { APP_LINKS, BRAND } from '../data/site'
 
 const PRODUCT_LINKS = [
   { label: 'Features', to: '/features' },
-  { label: 'Pricing', to: '/pricing' },
+  // { label: 'Pricing', to: '/pricing' }, // hidden for now
 ]
 
 const COMPANY_LINKS = [
@@ -18,7 +18,7 @@ export default function Footer() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
       <Container className="relative py-10">
-        <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr]">
+        <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
             <Link
               to="/"
@@ -53,6 +53,22 @@ export default function Footer() {
 
           <FooterColumn title="Product" links={PRODUCT_LINKS} />
           <FooterColumn title="Company" links={COMPANY_LINKS} />
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Log in</h3>
+            <ul className="mt-3 space-y-2">
+              {APP_LINKS.map((app) => (
+                <li key={app.id}>
+                  <a
+                    href={app.href}
+                    className="text-sm text-white/70 transition-colors duration-300 hover:text-white"
+                  >
+                    {app.name}
+                    <span className="block font-mono text-xs text-white/40">{app.host}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-5 text-sm text-white/50 sm:flex-row sm:items-center sm:justify-between">

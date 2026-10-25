@@ -13,7 +13,8 @@ body {
   background-color: #ffffff;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  /* clip, not hidden: hidden would make body a scroll container and break the sticky image panels */
+  overflow-x: clip;
   max-width: 100vw;
 }
 

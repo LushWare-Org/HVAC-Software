@@ -47,6 +47,41 @@ export const BRAND = {
   phone: '+94 760340975',
 }
 
+export interface AppLink {
+  id: 'admin' | 'portal'
+  name: string
+  host: string
+  href: string
+  audience: string
+  description: string
+  cta: string
+  icon: LucideIcon
+}
+
+/** Where signed-in users go. Shown in the navbar, the home page and the footer. */
+export const APP_LINKS: AppLink[] = [
+  {
+    id: 'admin',
+    name: 'Admin dashboard',
+    host: 'app.hvactor.ai',
+    href: 'https://app.hvactor.ai',
+    audience: 'For your office and field team',
+    description: 'Dispatch jobs, manage customers, quotes, invoices, inventory and reports.',
+    cta: 'Open the dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    id: 'portal',
+    name: 'Customer portal',
+    host: 'user.hvactor.ai',
+    href: 'https://user.hvactor.ai',
+    audience: 'For your customers',
+    description: 'Book visits, confirm times, follow a technician and pay invoices online.',
+    cta: 'Open the portal',
+    icon: UserCog,
+  },
+]
+
 export interface NavItem {
   to: string
   label: string
@@ -55,7 +90,7 @@ export interface NavItem {
 export const NAV_LINKS: NavItem[] = [
   { to: '/', label: 'Home' },
   { to: '/features', label: 'Features' },
-  { to: '/pricing', label: 'Pricing' },
+  // { to: '/pricing', label: 'Pricing' }, // hidden for now
 ]
 
 export const PRODUCT_SHOTS = {
@@ -956,7 +991,7 @@ export const VALUES: Value[] = [
     icon: ShieldCheck,
     title: 'Trust is the product',
     description:
-      'Bank-grade security, transparent pricing and data you can export any time. No lock-in games.',
+      'Bank-grade security and data you can export any time. No lock-in games.',
   },
   {
     icon: TrendingUp,
@@ -1015,7 +1050,7 @@ export const TEAM_SIZE_OPTIONS = [
 export const INTEREST_OPTIONS = [
   'Book a demo',
   'Start a free trial',
-  'Pricing question',
+  // 'Pricing question', // hidden for now
   'Migration from another tool',
   'Something else',
 ]
