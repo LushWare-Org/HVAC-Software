@@ -12,7 +12,7 @@ const ADOPTION_STEPS = [
   {
     icon: PlayCircle,
     title: 'Start with one priority',
-    description: 'Pick the decision area costing you the most today, such as scheduling, quoting or maintenance.',
+    description: 'Pick the decision area costing you the most today, such as scheduling, SLA performance, quoting or maintenance.',
   },
   {
     icon: Link2,
@@ -31,7 +31,7 @@ export default function Intelligence() {
     <>
       <Seo
         title="HVAC Intelligence Modules: AI for HVAC Operations"
-        description="Seven intelligence modules for HVAC/MEP contractors: scheduling, job costing, procurement, approvals, diagnostics, predictive maintenance and post-maintenance performance."
+        description="Nine connected intelligence modules for HVAC/MEP contractors: scheduling, SLA and priority management, job costing, procurement, approvals, diagnostics, predictive maintenance, post-maintenance performance and energy efficiency."
       />
       <PageHero
         title={

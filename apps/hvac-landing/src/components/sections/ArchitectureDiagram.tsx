@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import Reveal from '../ui/Reveal'
 import { SOURCE_SYSTEMS, LAYER_CAPABILITIES, OUTCOMES } from '../../data/platform'
-import { MODULES, modulePath } from '../../data/modules'
+import { MODULE_CATEGORIES, modulePath, modulesInCategory } from '../../data/modules'
 
 function Tier({
   icon: Icon,
@@ -102,19 +102,26 @@ export default function ArchitectureDiagram() {
       <Connector />
       <Reveal delay={160}>
         <Tier icon={LayoutGrid} step="Modules" title="Operational intelligence modules">
-          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {MODULES.map((m) => (
-              <li key={m.slug}>
-                <Link
-                  to={modulePath(m)}
-                  className="flex h-full items-center gap-2.5 rounded-lg border border-slate-200 px-3 py-2 text-[13px] font-medium text-slate-700 transition-colors hover:border-navy-300 hover:bg-navy-50 hover:text-navy-900"
-                >
-                  <m.icon className="h-4 w-4 flex-none text-navy-600" strokeWidth={1.9} />
-                  {m.navLabel}
-                </Link>
-              </li>
+          <div className="grid gap-4 md:grid-cols-3">
+            {MODULE_CATEGORIES.map((c) => (
+              <div key={c.id}>
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{c.name}</div>
+                <ul className="space-y-2">
+                  {modulesInCategory(c.id).map((m) => (
+                    <li key={m.slug}>
+                      <Link
+                        to={modulePath(m)}
+                        className="flex h-full items-center gap-2.5 rounded-lg border border-slate-200 px-3 py-2 text-[13px] font-medium text-slate-700 transition-colors hover:border-navy-300 hover:bg-navy-50 hover:text-navy-900"
+                      >
+                        <m.icon className="h-4 w-4 flex-none text-navy-600" strokeWidth={1.9} />
+                        {m.navLabel}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         </Tier>
       </Reveal>
       <Connector />

@@ -7,6 +7,8 @@ import {
   Stethoscope,
   Activity,
   LineChart,
+  Timer,
+  Leaf,
   BrainCircuit,
   Sigma,
   Bot,
@@ -85,6 +87,31 @@ export const TECHNIQUES: Record<Technique, TechniqueInfo> = {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Categories                                                                */
+/* -------------------------------------------------------------------------- */
+
+// Groups for navigation only; every module stays individually selectable.
+export type ModuleCategory = 'service-delivery' | 'commercial-supply' | 'asset-energy'
+
+export const MODULE_CATEGORIES: { id: ModuleCategory; name: string; description: string }[] = [
+  {
+    id: 'service-delivery',
+    name: 'Service Delivery',
+    description: 'Getting the right people to the right work, on time and to commitment.',
+  },
+  {
+    id: 'commercial-supply',
+    name: 'Commercial & Supply',
+    description: 'Pricing, purchasing and sign-off decisions that protect margin.',
+  },
+  {
+    id: 'asset-energy',
+    name: 'Asset & Energy Performance',
+    description: 'Keeping equipment reliable, efficient and worth what is spent on it.',
+  },
+]
+
+/* -------------------------------------------------------------------------- */
 /*  Modules                                                                   */
 /* -------------------------------------------------------------------------- */
 
@@ -107,6 +134,9 @@ export interface IntelligenceModule {
   dataSources: string[]
   techniques: Technique[]
   availability: Availability
+  category: ModuleCategory
+  /** Scope statement shown on the module page, e.g. what the module does not do. */
+  note?: string
   seoTitle: string
   seoDescription: string
 }
@@ -139,6 +169,7 @@ export const MODULES: IntelligenceModule[] = [
     dataSources: ['FSM jobs and work orders', 'Technician skills and rosters', 'GPS and location data', 'Job history'],
     techniques: ['optimization', 'ml', 'agents'],
     availability: 'available',
+    category: 'service-delivery',
     seoTitle: 'HVAC Scheduling & Workforce Optimization Software',
     seoDescription:
       'AI-assisted HVAC scheduling that matches technicians to jobs on skills, location and workload, and adapts the schedule as priorities change.',
@@ -171,6 +202,7 @@ export const MODULES: IntelligenceModule[] = [
     dataSources: ['FSM job history', 'Price book and quotes', 'Accounting and ERP costs', 'Inventory and material costs'],
     techniques: ['ml', 'optimization'],
     availability: 'in-development',
+    category: 'commercial-supply',
     seoTitle: 'HVAC Job Costing & Quotation Intelligence Software',
     seoDescription:
       'HVAC job costing software that uses historical job data to estimate costs, flag underquoting and improve quotation accuracy over time.',
@@ -202,6 +234,7 @@ export const MODULES: IntelligenceModule[] = [
     dataSources: ['Inventory and warehouse systems', 'ERP and purchasing records', 'Supplier lead times and pricing', 'Scheduled jobs'],
     techniques: ['ml', 'optimization'],
     availability: 'early-access',
+    category: 'commercial-supply',
     seoTitle: 'HVAC Procurement & Inventory Optimization',
     seoDescription:
       'HVAC procurement optimization: forecast parts demand, plan replenishment and support supplier decisions across warehouse and van stock.',
@@ -233,6 +266,7 @@ export const MODULES: IntelligenceModule[] = [
     dataSources: ['FSM jobs and quotes', 'ERP and accounting', 'Purchase orders', 'Policies and approval limits'],
     techniques: ['agents', 'ml'],
     availability: 'in-development',
+    category: 'commercial-supply',
     seoTitle: 'Intelligent Approval Workflows for HVAC Contractors',
     seoDescription:
       'Context-aware approval workflows for HVAC operations: prioritize requests, surface exceptions and keep human authorization and auditability.',
@@ -264,6 +298,7 @@ export const MODULES: IntelligenceModule[] = [
     dataSources: ['Asset and equipment records', 'Service history', 'Manuals and technical documentation', 'BMS and IoT readings'],
     techniques: ['agents', 'ml'],
     availability: 'in-development',
+    category: 'service-delivery',
     seoTitle: 'AI-Assisted HVAC Diagnostics for Field Technicians',
     seoDescription:
       'AI-assisted HVAC diagnostics that organize equipment history and suggest diagnostic checks, supporting qualified technicians in the field.',
@@ -295,6 +330,7 @@ export const MODULES: IntelligenceModule[] = [
     dataSources: ['Asset and CMMS records', 'BMS and IoT equipment data', 'Service history', 'Contract and cost data'],
     techniques: ['ml', 'optimization'],
     availability: 'early-access',
+    category: 'asset-energy',
     seoTitle: 'HVAC Predictive Maintenance Software',
     seoDescription:
       'HVAC predictive maintenance that prioritizes work by asset risk, criticality, cost and expected business impact, not just the calendar.',
@@ -326,12 +362,84 @@ export const MODULES: IntelligenceModule[] = [
     dataSources: ['BMS and IoT performance data', 'Service and work-order records', 'Asset data'],
     techniques: ['ml'],
     availability: 'roadmap',
+    category: 'asset-energy',
     seoTitle: 'HVAC Post-Maintenance Performance Analytics',
     seoDescription:
       'Measure HVAC maintenance effectiveness by comparing equipment performance before and after service and surfacing recurring issues.',
+  },
+  {
+    slug: 'sla-priority-management',
+    number: '08',
+    icon: Timer,
+    name: 'SLA & Priority Management',
+    navLabel: 'SLA & Priority Management',
+    tagline: 'Ensure timely service delivery and stay ahead of SLA commitments.',
+    problem:
+      'Response and resolution commitments sit in contracts, not in the dispatch queue. Urgent work competes with routine visits on equal terms, and a job at risk of breaching its SLA is often noticed only after the deadline has passed.',
+    summary:
+      'Track SLA commitments, prioritize requests by urgency and contractual obligation, and see which jobs are at risk before they breach.',
+    capabilities: [
+      { text: 'Priority levels on every job, from Low to Emergency', status: 'live' },
+      { text: 'Higher-priority work considered first when cancellations free up schedule time', status: 'live' },
+      { text: 'Track SLA commitments, response times, resolution targets and service deadlines', status: 'building' },
+      { text: 'Assess and prioritize requests on urgency, SLA terms, asset criticality and business impact', status: 'building' },
+      { text: 'Identify jobs at risk of breaching SLA commitments', status: 'building' },
+      { text: 'Support technician allocation and scheduling based on service priorities and available resources', status: 'building' },
+      { text: 'Report on SLA performance, potential breaches and recurring service delays', status: 'building' },
+    ],
+    value: [
+      'Better visibility into SLA compliance',
+      'Fewer missed service commitments',
+      'Critical work prioritized consistently',
+      'Proactive decisions instead of after-the-fact explanations',
+    ],
+    dataSources: ['Service agreements and SLA terms', 'FSM jobs and service requests', 'Asset criticality', 'Technician availability and schedules'],
+    techniques: ['optimization', 'ml', 'agents'],
+    availability: 'in-development',
+    category: 'service-delivery',
+    note: 'HVACtor helps managers see and act on SLA risk earlier. It supports their decisions; it does not guarantee SLA compliance.',
+    seoTitle: 'HVAC SLA & Priority Management Software',
+    seoDescription:
+      'Track HVAC service-level agreements, prioritize service requests by urgency and contract terms, and identify jobs at risk of breaching SLA commitments.',
+  },
+  {
+    slug: 'energy-efficiency-advisor',
+    number: '09',
+    icon: Leaf,
+    name: 'Energy Efficiency Advisor',
+    navLabel: 'Energy Efficiency Advisor',
+    tagline: 'Optimize equipment operation for smarter energy use and improved efficiency.',
+    problem:
+      'Equipment often runs on settings and schedules nobody has revisited in years. Unnecessary runtime and inefficient operation stay hidden in utility bills and building data that no one has time to analyze.',
+    summary:
+      'Analyze available equipment, schedule and energy data to find inefficiencies, and recommend operating settings and schedules for your team to review.',
+    capabilities: [
+      { text: 'Analyze available equipment performance, operating schedules, sensor readings and energy consumption data', status: 'building' },
+      { text: 'Identify potential energy inefficiencies and unusual consumption patterns', status: 'building' },
+      { text: 'Recommend operating settings and schedules that balance efficiency, comfort, equipment constraints and operational needs', status: 'building' },
+      { text: 'Identify opportunities to reduce unnecessary runtime and inefficient operation', status: 'building' },
+      { text: 'Compare energy consumption and equipment performance over time', status: 'building' },
+      { text: 'Provide actionable recommendations for more informed energy-management decisions', status: 'building' },
+    ],
+    value: [
+      'Support for more energy-efficient HVAC operation',
+      'Less avoidable energy consumption',
+      'Better equipment utilization',
+      'Better-informed operating decisions',
+    ],
+    dataSources: ['BMS and IoT equipment data', 'Equipment operating schedules', 'Energy meter and utility data', 'Asset records'],
+    techniques: ['ml', 'optimization'],
+    availability: 'roadmap',
+    category: 'asset-energy',
+    note: 'Recommendations, not control. HVACtor does not change equipment or BMS settings. Your team or the facility operator reviews each recommendation and decides whether to apply it.',
+    seoTitle: 'HVAC Energy Efficiency Advisor',
+    seoDescription:
+      'Identify HVAC energy inefficiencies and get recommended equipment settings and operating schedules, reviewed and applied by your team.',
   },
 ]
 
 export const getModule = (slug: string | undefined) => MODULES.find((m) => m.slug === slug)
 
 export const modulePath = (m: IntelligenceModule) => `/intelligence/${m.slug}`
+
+export const modulesInCategory = (c: ModuleCategory) => MODULES.filter((m) => m.category === c)

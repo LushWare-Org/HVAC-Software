@@ -13,7 +13,7 @@ const SCENARIOS = [
   {
     title: 'You already run an FSM platform',
     description:
-      'Contractors using a platform such as ServiceTitan, BuildOps or similar keep it as their system of record. HVACtor is designed to connect to job, technician and customer data and add intelligence, such as scheduling or job-cost insight, alongside it.',
+      'Contractors using a platform such as ServiceTitan, BuildOps or similar keep it as their system of record. HVACtor is designed to connect to job, technician and customer data and add intelligence, such as scheduling, SLA risk or job-cost insight, alongside it.',
   },
   {
     title: 'You run an ERP with separate inventory software',
@@ -23,7 +23,7 @@ const SCENARIOS = [
   {
     title: 'You have BMS or IoT equipment data',
     description:
-      'Connected equipment and building data can inform maintenance prioritization, diagnostics and post-maintenance performance analysis, where the data is available.',
+      'Connected equipment, building and energy data can inform maintenance prioritization, diagnostics, post-maintenance performance analysis and energy-efficiency recommendations, where the data is available. HVACtor reads this data; it does not change equipment or BMS settings.',
   },
 ]
 

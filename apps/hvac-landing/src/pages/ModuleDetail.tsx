@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, Database } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, Database, Info } from 'lucide-react'
 import clsx from 'clsx'
 import Seo from '../components/Seo'
 import PageHero from '../components/ui/PageHero'
@@ -18,7 +18,9 @@ export default function ModuleDetail() {
   if (!m) return <Navigate to="/intelligence" replace />
 
   const contactQuery = `/contact?interest=Standalone%20Intelligence%20Modules&module=${encodeURIComponent(m.navLabel)}`
-  const related = MODULES.filter((x) => x.slug !== m.slug).slice(0, 3)
+  // Same-category modules first, so the ecosystem reads as connected.
+  const others = MODULES.filter((x) => x.slug !== m.slug)
+  const related = [...others.filter((x) => x.category === m.category), ...others.filter((x) => x.category !== m.category)].slice(0, 3)
 
   return (
     <>
@@ -71,7 +73,7 @@ export default function ModuleDetail() {
                           c.status === 'live' ? 'text-emerald-700' : 'text-amber-700',
                         )}
                       >
-                        {c.status === 'live' ? 'Available' : 'In development'}
+                        {c.status === 'live' ? 'Available' : m.availability === 'roadmap' ? 'Planned' : 'In development'}
                       </span>
                     </li>
                   ))}
@@ -79,6 +81,12 @@ export default function ModuleDetail() {
                 <p className="mt-3 text-xs text-slate-500">
                   Module status: {AVAILABILITY[m.availability].label}. {AVAILABILITY[m.availability].description}
                 </p>
+                {m.note && (
+                  <p className="mt-5 flex items-start gap-3 rounded-xl border border-navy-100 bg-navy-50/60 px-4 py-3.5 text-sm leading-relaxed text-navy-900">
+                    <Info className="mt-0.5 h-4 w-4 flex-none text-navy-600" />
+                    {m.note}
+                  </p>
+                )}
               </Reveal>
 
               <Reveal className="mt-14">

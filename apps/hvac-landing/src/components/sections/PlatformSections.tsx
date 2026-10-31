@@ -8,7 +8,7 @@ import StatusBadge from '../ui/StatusBadge'
 import ModuleCard from './ModuleCard'
 import ArchitectureDiagram from './ArchitectureDiagram'
 import { CHALLENGES, OFFERINGS, PILLARS, VALUE_CATEGORIES } from '../../data/platform'
-import { AVAILABILITY, MODULES, TECHNIQUES, type Availability } from '../../data/modules'
+import { AVAILABILITY, MODULE_CATEGORIES, TECHNIQUES, modulesInCategory, type Availability } from '../../data/modules'
 
 /* Reusable page sections shared by Home, Platform and Intelligence pages. */
 
@@ -22,7 +22,7 @@ export function ChallengesSection({ index }: { index?: string }) {
           title="HVAC operations generate data. Few contractors can act on it."
           description="Commercial and industrial contractors make hundreds of scheduling, pricing, purchasing and maintenance decisions a week, usually with information scattered across systems that don’t talk to each other."
         />
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {CHALLENGES.map((c, i) => (
             <Reveal key={c.title} delay={i * 60}>
               <div className="h-full rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
@@ -177,29 +177,41 @@ export function ModulesSection({ index, showCta = true }: { index?: string; show
           index={index}
           label="HVACtor Intelligence Modules"
           title="Purpose-built intelligence for every critical HVAC workflow."
-          description="Start with the challenges that matter most to your business, integrate with your existing systems, and expand as your needs evolve. Every module shares one integration and intelligence foundation."
+          description="Nine modules across three areas of the business, all built on one integration and intelligence foundation. Start with the challenges that matter most, connect your existing systems, and expand as your needs evolve."
         />
         <AvailabilityLegend className="mt-8" />
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {MODULES.map((m, i) => (
-            <Reveal key={m.slug} delay={(i % 4) * 60}>
-              <ModuleCard module={m} />
-            </Reveal>
-          ))}
-          <Reveal delay={180}>
-            <div className="flex h-full flex-col justify-between rounded-2xl border border-dashed border-navy-200 bg-navy-50/50 p-6">
-              <div>
-                <h3 className="font-display text-lg font-bold tracking-tight text-ink">Start with one. Expand over time.</h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                  Choose a single module or a bundle. Modules added later reuse the integrations already in place.
-                </p>
+        <div className="mt-12 space-y-14">
+          {MODULE_CATEGORIES.map((c) => (
+            <div key={c.id}>
+              <div className="flex flex-col gap-1 border-b border-slate-200 pb-4 sm:flex-row sm:items-baseline sm:gap-4">
+                <h3 className="font-display text-xl font-bold tracking-tight text-ink">{c.name}</h3>
+                <p className="text-sm text-slate-500">{c.description}</p>
               </div>
-              <Button to="/contact?interest=Standalone%20Intelligence%20Modules" variant="primary" size="md" className="mt-6 self-start">
-                Discuss your priorities
-              </Button>
+              <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {modulesInCategory(c.id).map((m, i) => (
+                  <Reveal key={m.slug} delay={i * 60}>
+                    <ModuleCard module={m} />
+                  </Reveal>
+                ))}
+              </div>
             </div>
-          </Reveal>
+          ))}
         </div>
+        <Reveal className="mt-14">
+          <div className="flex flex-col gap-6 rounded-2xl border border-dashed border-navy-200 bg-navy-50/50 p-6 sm:p-8 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="font-display text-lg font-bold tracking-tight text-ink">One connected ecosystem. Start with one module.</h3>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                Choose a single module or a bundle. Modules share the same data and integrations, so each one you add
+                builds on what is already connected. Scheduling draws on SLA priorities; maintenance planning draws on
+                diagnostics and post-maintenance results.
+              </p>
+            </div>
+            <Button to="/contact?interest=Standalone%20Intelligence%20Modules" variant="primary" size="md" className="flex-none self-start md:self-auto">
+              Discuss your priorities
+            </Button>
+          </div>
+        </Reveal>
         {showCta && (
           <div className="mt-10">
             <Button to="/intelligence" variant="outline" size="md">

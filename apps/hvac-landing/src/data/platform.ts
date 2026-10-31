@@ -10,6 +10,7 @@ import {
   Calculator,
   PackageX,
   Wrench,
+  Timer,
   Workflow,
   DollarSign,
   Activity,
@@ -128,7 +129,10 @@ export const SOURCE_SYSTEMS: string[] = [
   'Accounting software',
   'Inventory & procurement',
   'Asset & maintenance management',
+  'Service agreements & SLA commitments',
   'BMS & IoT equipment data',
+  'Equipment operating data',
+  'Energy consumption data',
   'Other operational data',
 ]
 
@@ -148,6 +152,8 @@ export const OUTCOMES: string[] = [
   'More effective maintenance planning',
   'Fewer operational inefficiencies',
   'Better equipment reliability',
+  'Better visibility into SLA performance',
+  'More informed energy-management decisions',
   'Improved profitability and service delivery',
 ]
 
@@ -183,6 +189,11 @@ export const CHALLENGES: Challenge[] = [
     description: 'Cash sits in slow stock while the part a job needs is missing from the van.',
   },
   {
+    icon: Timer,
+    title: 'Service commitments tracked by hand',
+    description: 'SLA response and resolution targets live in contracts, so at-risk jobs surface after the deadline.',
+  },
+  {
     icon: Wrench,
     title: 'Maintenance by the calendar',
     description: 'Visits follow fixed schedules rather than asset risk, criticality or expected value.',
@@ -206,6 +217,7 @@ export const VALUE_CATEGORIES: ValueCategory[] = [
     points: [
       'Improve technician utilization',
       'Make better scheduling decisions',
+      'Prioritize critical work against service commitments',
       'Reduce avoidable operational inefficiencies',
       'Coordinate workflows more effectively',
     ],
@@ -228,6 +240,7 @@ export const VALUE_CATEGORIES: ValueCategory[] = [
       'Improve visibility into equipment performance',
       'Identify potential issues earlier where data supports it',
       'Evaluate maintenance effectiveness',
+      'Support more energy-efficient equipment operation',
     ],
   },
   {
@@ -263,7 +276,7 @@ export const INDUSTRIES: Industry[] = [
     description:
       'Service and maintenance across offices, retail, education and multi-site portfolios, often under service agreements with response commitments.',
     challenges: ['Large agreement portfolios to schedule', 'Mixed planned and reactive work', 'Margin pressure on fixed-price contracts'],
-    modules: ['scheduling-workforce-optimization', 'quotation-job-costing', 'predictive-maintenance'],
+    modules: ['scheduling-workforce-optimization', 'sla-priority-management', 'quotation-job-costing', 'energy-efficiency-advisor'],
   },
   {
     id: 'industrial-hvac',
@@ -272,7 +285,7 @@ export const INDUSTRIES: Industry[] = [
     description:
       'Critical equipment where downtime carries real operational cost, and maintenance decisions need a clear technical and financial rationale.',
     challenges: ['High cost of unplanned downtime', 'Specialist parts with long lead times', 'Need to justify maintenance spend'],
-    modules: ['predictive-maintenance', 'procurement-inventory-optimization', 'post-maintenance-performance'],
+    modules: ['predictive-maintenance', 'procurement-inventory-optimization', 'post-maintenance-performance', 'energy-efficiency-advisor'],
   },
   {
     id: 'mep',
@@ -290,7 +303,7 @@ export const INDUSTRIES: Industry[] = [
     description:
       'Service providers for healthcare, data centers, laboratories and similar sites, where equipment reliability and documented maintenance matter most.',
     challenges: ['Reliability expectations are strict', 'Maintenance must be documented', 'Building and equipment data is under-used'],
-    modules: ['predictive-maintenance', 'on-site-diagnostics', 'post-maintenance-performance'],
+    modules: ['sla-priority-management', 'predictive-maintenance', 'on-site-diagnostics', 'post-maintenance-performance'],
   },
 ]
 

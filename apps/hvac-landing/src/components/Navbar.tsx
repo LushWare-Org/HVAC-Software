@@ -4,7 +4,7 @@ import { ChevronDown, Menu, X } from 'lucide-react'
 import clsx from 'clsx'
 import Button from './ui/Button'
 import { NAV_LINKS, type NavItem } from '../data/site'
-import { MODULES, modulePath } from '../data/modules'
+import { MODULE_CATEGORIES, modulePath, modulesInCategory } from '../data/modules'
 import StatusBadge from './ui/StatusBadge'
 
 export default function Navbar() {
@@ -139,20 +139,27 @@ export default function Navbar() {
             </NavLink>
             {link.modules && (
               <div className="pb-2">
-                {MODULES.map((m) => (
-                  <NavLink
-                    key={m.slug}
-                    to={modulePath(m)}
-                    className={({ isActive }) =>
-                      clsx(
-                        'flex items-center gap-2.5 py-2 pl-10 pr-6 text-sm transition-colors',
-                        isActive ? 'font-semibold text-navy-900' : 'text-slate-600 hover:text-navy-800',
-                      )
-                    }
-                  >
-                    <m.icon className="h-4 w-4 flex-none text-navy-500" />
-                    {m.navLabel}
-                  </NavLink>
+                {MODULE_CATEGORIES.map((c) => (
+                  <Fragment key={c.id}>
+                    <div className="pb-1 pl-10 pr-6 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      {c.name}
+                    </div>
+                    {modulesInCategory(c.id).map((m) => (
+                      <NavLink
+                        key={m.slug}
+                        to={modulePath(m)}
+                        className={({ isActive }) =>
+                          clsx(
+                            'flex items-center gap-2.5 py-2 pl-10 pr-6 text-sm transition-colors',
+                            isActive ? 'font-semibold text-navy-900' : 'text-slate-600 hover:text-navy-800',
+                          )
+                        }
+                      >
+                        <m.icon className="h-4 w-4 flex-none text-navy-500" />
+                        {m.navLabel}
+                      </NavLink>
+                    ))}
+                  </Fragment>
                 ))}
               </div>
             )}
@@ -251,30 +258,37 @@ function ModulesMenu({ link }: { link: NavItem }) {
 
       <div
         className={clsx(
-          'absolute left-1/2 top-full w-[40rem] -translate-x-1/2 pt-3 transition-all duration-200',
+          'absolute left-1/2 top-full w-[50rem] -translate-x-1/2 pt-3 transition-all duration-200',
           open ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-1 opacity-0',
         )}
       >
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-block">
-          <ul className="grid grid-cols-2 gap-1 p-3">
-            {MODULES.map((m) => (
-              <li key={m.slug}>
-                <Link
-                  to={modulePath(m)}
-                  onClick={() => setOpen(false)}
-                  className="flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-navy-50 focus:bg-navy-50 focus:outline-none"
-                >
-                  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-navy-50 text-navy-700">
-                    <m.icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-ink">{m.navLabel}</span>
-                    <StatusBadge status={m.availability} className="mt-1.5 !px-2 !py-0.5 !text-[10px]" />
-                  </span>
-                </Link>
-              </li>
+          <div className="grid grid-cols-3 gap-2 p-3">
+            {MODULE_CATEGORIES.map((c) => (
+              <div key={c.id}>
+                <div className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{c.name}</div>
+                <ul>
+                  {modulesInCategory(c.id).map((m) => (
+                    <li key={m.slug}>
+                      <Link
+                        to={modulePath(m)}
+                        onClick={() => setOpen(false)}
+                        className="flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-navy-50 focus:bg-navy-50 focus:outline-none"
+                      >
+                        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-navy-50 text-navy-700">
+                          <m.icon className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold leading-snug text-ink">{m.navLabel}</span>
+                          <StatusBadge status={m.availability} className="mt-1.5 !px-2 !py-0.5 !text-[10px]" />
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
           <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50 px-6 py-3.5">
             <span className="text-xs text-slate-500">Use with HVACtor’s FSM or alongside your existing systems.</span>
             <Link to={link.to} onClick={() => setOpen(false)} className="whitespace-nowrap text-sm font-semibold text-navy-800 hover:underline">
