@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type { FormEvent } from 'react'
 import { Mail, Phone, CheckCircle2, ArrowRight, ArrowDown } from 'lucide-react'
+import Seo from '../components/Seo'
 import PageHero from '../components/ui/PageHero'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
 import { BRAND, TEAM_SIZE_OPTIONS, INTEREST_OPTIONS } from '../data/site'
+import { MODULES } from '../data/modules'
 
 interface FormState {
   name: string
@@ -13,6 +16,8 @@ interface FormState {
   phone: string
   teamSize: string
   interest: string
+  module: string
+  currentSystems: string
   message: string
 }
 
@@ -23,6 +28,8 @@ const EMPTY: FormState = {
   phone: '',
   teamSize: '',
   interest: INTEREST_OPTIONS[0],
+  module: '',
+  currentSystems: '',
   message: '',
 }
 
@@ -30,8 +37,37 @@ const inputBase =
   'w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder-slate-400 outline-none transition-colors focus:border-navy-700 focus:ring-1 focus:ring-navy-700'
 const labelBase = 'mb-1.5 block text-sm font-semibold text-slate-500'
 
+// Links like /contact?interest=…&module=… prefill the form from module and offering CTAs.
+function initialForm(params: URLSearchParams): FormState {
+  const interest = params.get('interest')
+  const module = params.get('module')
+  return {
+    ...EMPTY,
+    interest: interest && INTEREST_OPTIONS.includes(interest) ? interest : EMPTY.interest,
+    module: module && MODULES.some((m) => m.navLabel === module) ? module : '',
+  }
+}
+
+function buildMailto(form: FormState) {
+  const lines = [
+    `Name: ${form.name}`,
+    `Company: ${form.company}`,
+    `Email: ${form.email}`,
+    `Phone: ${form.phone}`,
+    `Team size: ${form.teamSize || '-'}`,
+    `Interested in: ${form.interest}`,
+    `Module: ${form.module || '-'}`,
+    `Current systems: ${form.currentSystems || '-'}`,
+    '',
+    form.message,
+  ]
+  const subject = `${form.interest}: ${form.company}`
+  return `mailto:${BRAND.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`
+}
+
 export default function Contact() {
-  const [form, setForm] = useState<FormState>(EMPTY)
+  const [params] = useSearchParams()
+  const [form, setForm] = useState<FormState>(() => initialForm(params))
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({})
   const [submitted, setSubmitted] = useState(false)
 
@@ -53,19 +89,26 @@ export default function Contact() {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if (validate()) setSubmitted(true)
+    if (!validate()) return
+    // No form backend yet: hand the enquiry to the visitor's mail client, addressed to us.
+    window.location.href = buildMailto(form)
+    setSubmitted(true)
   }
 
   return (
     <>
+      <Seo
+        title="Request a Demo"
+        description="Request a demo of HVACtor or discuss integrating HVACtor intelligence modules with your existing FSM, ERP, accounting or BMS systems."
+      />
       <PageHero
         title={
           <>
-            <span className="block">Let’s Get Your Crew</span>
-            <span className="mt-3 block sm:mt-4">Running on HVACtor</span>
+            <span className="block">Request a Demo or</span>
+            <span className="mt-3 block sm:mt-4">Discuss Integration</span>
           </>
         }
-        description="Book a demo, start a trial, or ask us anything. A real person on our team will get back to you within one business day."
+        description="Tell us about your operation, the systems you run today and the decisions you want to improve. A member of our team will get back to you."
       >
         <Button href="#contact-form" variant="inverse" size="lg">
           Jump to Contact Form
@@ -86,9 +129,13 @@ export default function Contact() {
                   Thanks, {form.name.split(' ')[0] || 'there'}!
                 </h2>
                 <p className="mt-3 max-w-md text-slate-600">
-                  We’ve received your message and someone from our team will reach
-                  out to <span className="font-medium text-ink">{form.email}</span>{' '}
-                  within one business day.
+                  Your email app should have opened with your enquiry addressed to{' '}
+                  <a href={`mailto:${BRAND.email}`} className="font-medium text-ink underline">
+                    {BRAND.email}
+                  </a>
+                  . Press send there and we’ll reply to{' '}
+                  <span className="font-medium text-ink">{form.email}</span>. If it didn’t
+                  open, email us directly at the address above.
                 </p>
                 <button
                   type="button"
@@ -169,6 +216,28 @@ export default function Contact() {
                       ))}
                     </select>
                   </Field>
+                  <Field label="Module of interest">
+                    <select
+                      className={inputBase}
+                      value={form.module}
+                      onChange={(e) => update('module', e.target.value)}
+                    >
+                      <option value="">Not sure yet</option>
+                      {MODULES.map((m) => (
+                        <option key={m.slug} value={m.navLabel}>
+                          {m.navLabel}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Systems you use today">
+                    <input
+                      className={inputBase}
+                      value={form.currentSystems}
+                      onChange={(e) => update('currentSystems', e.target.value)}
+                      placeholder="e.g. FSM, ERP, accounting, BMS"
+                    />
+                  </Field>
                 </div>
 
                 <div className="mt-6">
@@ -178,14 +247,14 @@ export default function Contact() {
                       rows={4}
                       value={form.message}
                       onChange={(e) => update('message', e.target.value)}
-                      placeholder="We run 8 trucks and want to move off spreadsheets…"
+                      placeholder="The decisions we most want to improve are…"
                     />
                   </Field>
                 </div>
 
                 <div className="mt-8">
                   <Button type="submit" variant="primary" size="lg">
-                    Send message
+                    Send enquiry
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -196,7 +265,7 @@ export default function Contact() {
           {/* Sidebar */}
           <aside className="relative self-start overflow-hidden rounded-2xl bg-navy-900 p-8 text-white lg:sticky lg:top-28 lg:p-10">
             <h3 className="relative font-display text-2xl font-bold tracking-tight">
-              Other Ways to Reach To us
+              Other ways to reach us
             </h3>
 
             <div className="relative mt-7 space-y-5 text-lg">

@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
+import { ChevronDown, Menu, X } from 'lucide-react'
 import clsx from 'clsx'
 import Button from './ui/Button'
-import { NAV_LINKS } from '../data/site'
+import { NAV_LINKS, type NavItem } from '../data/site'
+import { MODULES, modulePath } from '../data/modules'
+import StatusBadge from './ui/StatusBadge'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -54,44 +56,13 @@ export default function Navbar() {
           </span>
         </NavLink>
 
-        <div className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === '/'}
-              className="group relative rounded-lg px-3.5 py-2 text-sm font-medium select-none"
-            >
-              {({ isActive }) => (
-                <>
-                  <span className="flex flex-col overflow-hidden" style={{ height: '1.25em' }}>
-                    <span
-                      className={clsx(
-                        'block translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-full',
-                        isActive ? 'font-semibold text-navy-900' : 'font-medium text-slate-600',
-                      )}
-                      style={{ lineHeight: '1.25em' }}
-                    >
-                      {link.label}
-                    </span>
-                    <span
-                      className="block translate-y-0 font-semibold text-navy-900 transition-transform duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-full"
-                      style={{ lineHeight: '1.25em' }}
-                      aria-hidden="true"
-                    >
-                      {link.label}
-                    </span>
-                  </span>
-                  {isActive && (
-                    <span className="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-navy-700" />
-                  )}
-                </>
-              )}
-            </NavLink>
-          ))}
+        <div className="hidden items-center gap-0.5 lg:flex">
+          {NAV_LINKS.map((link) =>
+            link.modules ? <ModulesMenu key={link.to} link={link} /> : <DesktopNavLink key={link.to} link={link} />,
+          )}
         </div>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <Button to="/contact" variant="gradient" size="md">
             Request a Demo
           </Button>
@@ -99,7 +70,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="-mr-2 shrink-0 rounded-lg p-2 text-navy-900 transition-colors duration-200 active:bg-navy-50 md:hidden"
+          className="-mr-2 shrink-0 rounded-lg p-2 text-navy-900 transition-colors duration-200 active:bg-navy-50 lg:hidden"
           onClick={() => setOpen(true)}
           aria-label="Open menu"
           aria-expanded={open}
@@ -112,7 +83,7 @@ export default function Navbar() {
       {/* Mobile slide-in drawer */}
       <div
         className={clsx(
-          'fixed inset-0 z-50 bg-navy-950/40 backdrop-blur-sm transition-opacity duration-300 md:hidden',
+          'fixed inset-0 z-50 bg-navy-950/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden',
           open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
         )}
         onClick={() => setOpen(false)}
@@ -120,7 +91,7 @@ export default function Navbar() {
       />
       <aside
         className={clsx(
-          'fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out md:hidden',
+          'fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out lg:hidden',
           open ? 'translate-x-0' : 'translate-x-full',
         )}
         role="dialog"
@@ -151,8 +122,8 @@ export default function Navbar() {
 
         <div className="overflow-y-auto py-4">
           {NAV_LINKS.map((link) => (
+            <Fragment key={link.to}>
             <NavLink
-              key={link.to}
               to={link.to}
               end={link.to === '/'}
               className={({ isActive }) =>
@@ -166,6 +137,26 @@ export default function Navbar() {
             >
               {link.label}
             </NavLink>
+            {link.modules && (
+              <div className="pb-2">
+                {MODULES.map((m) => (
+                  <NavLink
+                    key={m.slug}
+                    to={modulePath(m)}
+                    className={({ isActive }) =>
+                      clsx(
+                        'flex items-center gap-2.5 py-2 pl-10 pr-6 text-sm transition-colors',
+                        isActive ? 'font-semibold text-navy-900' : 'text-slate-600 hover:text-navy-800',
+                      )
+                    }
+                  >
+                    <m.icon className="h-4 w-4 flex-none text-navy-500" />
+                    {m.navLabel}
+                  </NavLink>
+                ))}
+              </div>
+            )}
+            </Fragment>
           ))}
         </div>
 
@@ -176,5 +167,122 @@ export default function Navbar() {
         </div>
       </aside>
     </>
+  )
+}
+
+function AnimatedLabel({ label, isActive }: { label: string; isActive: boolean }) {
+  return (
+    <span className="flex flex-col overflow-hidden" style={{ height: '1.25em' }}>
+      <span
+        className={clsx(
+          'block translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-full',
+          isActive ? 'font-semibold text-navy-900' : 'font-medium text-slate-600',
+        )}
+        style={{ lineHeight: '1.25em' }}
+      >
+        {label}
+      </span>
+      <span
+        className="block translate-y-0 font-semibold text-navy-900 transition-transform duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-full"
+        style={{ lineHeight: '1.25em' }}
+        aria-hidden="true"
+      >
+        {label}
+      </span>
+    </span>
+  )
+}
+
+function DesktopNavLink({ link }: { link: NavItem }) {
+  return (
+    <NavLink to={link.to} end={link.to === '/'} className="group relative rounded-lg px-3 py-2 text-sm select-none">
+      {({ isActive }) => (
+        <>
+          <AnimatedLabel label={link.label} isActive={isActive} />
+          {isActive && (
+            <span className="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-navy-700" />
+          )}
+        </>
+      )}
+    </NavLink>
+  )
+}
+
+function ModulesMenu({ link }: { link: NavItem }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const { pathname } = useLocation()
+  const isActive = pathname.startsWith(link.to)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('mousedown', onClick)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('mousedown', onClick)
+    }
+  }, [open])
+
+  return (
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => setOpen((o) => !o)}
+        className="group relative flex items-center gap-1 rounded-lg px-3 py-2 text-sm select-none"
+      >
+        <AnimatedLabel label={link.label} isActive={isActive} />
+        <ChevronDown className={clsx('h-3.5 w-3.5 text-slate-500 transition-transform', open && 'rotate-180')} />
+        {isActive && (
+          <span className="absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-navy-700" />
+        )}
+      </button>
+
+      <div
+        className={clsx(
+          'absolute left-1/2 top-full w-[40rem] -translate-x-1/2 pt-3 transition-all duration-200',
+          open ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-1 opacity-0',
+        )}
+      >
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-block">
+          <ul className="grid grid-cols-2 gap-1 p-3">
+            {MODULES.map((m) => (
+              <li key={m.slug}>
+                <Link
+                  to={modulePath(m)}
+                  onClick={() => setOpen(false)}
+                  className="flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-navy-50 focus:bg-navy-50 focus:outline-none"
+                >
+                  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-navy-50 text-navy-700">
+                    <m.icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-ink">{m.navLabel}</span>
+                    <StatusBadge status={m.availability} className="mt-1.5 !px-2 !py-0.5 !text-[10px]" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50 px-6 py-3.5">
+            <span className="text-xs text-slate-500">Use with HVACtor’s FSM or alongside your existing systems.</span>
+            <Link to={link.to} onClick={() => setOpen(false)} className="whitespace-nowrap text-sm font-semibold text-navy-800 hover:underline">
+              All modules &rarr;
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

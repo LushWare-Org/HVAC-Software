@@ -13,7 +13,9 @@ import {
   AlertTriangle,
   ScanLine,
   TrendingUp,
+  ArrowRight,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import Container from '../ui/Container'
 import Reveal from '../ui/Reveal'
 import { FEATURES } from '../../data/site'
@@ -156,17 +158,26 @@ export default function FeatureAccordion() {
     <section id="features" className="bg-white">
       <Container className="pt-20 lg:pt-20">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-3xl font-bold text-ink sm:text-4xl lg:text-5xl">
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-navy-500">
+            Field Service Management, available today
+          </span>
+          <h2 className="mt-4 font-display text-3xl font-bold text-ink sm:text-4xl lg:text-5xl">
             Everything From the First Call to{' '}
             <span className="bg-gradient-to-r from-navy-700 via-navy-600 to-navy-500 bg-clip-text text-transparent">
               the Final Invoice
             </span>
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-slate-500">
-            Six capabilities, one shared record. Dispatch, invoicing, inventory
-            and more all read and write the same data, so nothing gets
-            re-typed twice.
+            For contractors who run on HVACtor, every FSM capability shares one
+            record with the intelligence modules. Dispatch, invoicing, inventory
+            and more read and write the same data.
           </p>
+          <Link
+            to="/fsm"
+            className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-navy-800 underline-offset-4 hover:underline"
+          >
+            Explore the FSM <ArrowRight className="h-4 w-4" />
+          </Link>
         </Reveal>
       </Container>
 
@@ -178,6 +189,7 @@ export default function FeatureAccordion() {
           {MARQUEE_FEATURES.map((feature, i) => (
             <div
               key={`${feature.id}-${i}`}
+              aria-hidden={i >= FEATURES.length}
               className="relative flex h-[26rem] w-72 flex-none flex-col overflow-hidden rounded-3xl bg-gradient-to-b from-navy-800 via-navy-900 to-navy-950 p-7 sm:w-80"
             >
               <div className="pointer-events-none absolute -bottom-16 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-navy-500/25 blur-3xl" />

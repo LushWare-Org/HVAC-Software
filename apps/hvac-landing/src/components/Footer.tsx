@@ -1,15 +1,20 @@
 import { Link } from 'react-router-dom'
 import Container from './ui/Container'
 import { BRAND } from '../data/site'
+import { MODULES, modulePath } from '../data/modules'
 
 const PRODUCT_LINKS = [
-  { label: 'Features', to: '/features' },
-  { label: 'Pricing', to: '/pricing' },
+  { label: 'Field Service Management', to: '/fsm' },
+  { label: 'Intelligence Modules', to: '/intelligence' },
+  { label: 'Integrations', to: '/integrations' },
 ]
+
+const MODULE_LINKS = MODULES.map((m) => ({ label: m.navLabel, to: modulePath(m) }))
 
 const COMPANY_LINKS = [
   { label: 'Home', to: '/' },
-  { label: 'Contact', to: '/contact' },
+  { label: 'Industries', to: '/industries' },
+  { label: 'Request a Demo', to: '/contact' },
 ]
 
 export default function Footer() {
@@ -18,7 +23,7 @@ export default function Footer() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
       <Container className="relative py-10">
-        <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr]">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.2fr_0.8fr]">
           <div>
             <Link
               to="/"
@@ -30,8 +35,9 @@ export default function Footer() {
               {BRAND.name}
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/60">
-              The field service management platform built for HVAC, plumbing and
-              electrical contractors who run on the road.
+              AI-powered, integration-first operational intelligence for commercial
+              and industrial HVAC/MEP contractors. Use it as your FSM, or alongside
+              the systems you already run.
             </p>
             {/* <div className="mt-4 space-y-1.5 text-sm text-white/60">
               <a
@@ -52,6 +58,7 @@ export default function Footer() {
           </div>
 
           <FooterColumn title="Product" links={PRODUCT_LINKS} />
+          <FooterColumn title="Intelligence Modules" links={MODULE_LINKS} />
           <FooterColumn title="Company" links={COMPANY_LINKS} />
         </div>
 

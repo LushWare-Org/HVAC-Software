@@ -37,7 +37,8 @@ function MobileAppShowcase() {
           <img
             key={src}
             src={src}
-            alt="HVACtor technician app screen"
+            alt={`HVACtor technician mobile app, screen ${index + 1}`}
+            aria-hidden={index !== activeIndex}
             className={[
               'absolute inset-0 h-full w-full rounded-[1.75rem] object-contain shadow-2xl shadow-black/40 transition-all duration-700 ease-out',
               index === activeIndex
@@ -64,7 +65,7 @@ export default function MobileAppSection() {
 
       <Container className="relative grid gap-10 py-10 lg:grid-cols-2 lg:items-center lg:gap-10 lg:py-12">
         <Reveal className="max-w-xl">
-          <SectionLabel index="04" tone="light">
+          <SectionLabel tone="light">
             Built for the field
           </SectionLabel>
           <h2 className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">

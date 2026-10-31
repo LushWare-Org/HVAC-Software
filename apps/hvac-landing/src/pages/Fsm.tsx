@@ -1,7 +1,10 @@
 import { CheckCircle2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import Seo from '../components/Seo'
 import PageHero from '../components/ui/PageHero'
+import MobileAppSection from '../components/home/MobileAppSection'
+import { OfferingsSection } from '../components/sections/PlatformSections'
 import Container from '../components/ui/Container'
 import SectionLabel from '../components/ui/SectionLabel'
 import CtaBanner from '../components/ui/CtaBanner'
@@ -172,28 +175,35 @@ function FeatureGroup({
   )
 }
 
-export default function Features() {
+export default function Fsm() {
   return (
     <>
+      <Seo
+        title="HVAC Field Service Management Software"
+        description="HVACtor FSM: customers, work orders, scheduling and dispatch, technician mobile app, quotes, invoicing, inventory and reporting for HVAC contractors, ready for AI intelligence modules."
+      />
       <PageHero
         title={
           <>
-            <span className="block">The Whole Operation,</span>
-            <span className="mt-3 block sm:mt-4">In One System of Record</span>
+            <span className="block">Field Service Management,</span>
+            <span className="mt-3 block sm:mt-4">Ready for Intelligence</span>
           </>
         }
-        description="Every capability shares the same data. So a job booked in the office is the same job your tech closes, and the same number that lands on the books."
+        description="For contractors without an adequate FSM, HVACtor runs day-to-day service operations: customers, work orders, dispatch, field work, quotes, invoices and inventory. Because it all shares one record, every intelligence module you add works from the same data."
       >
-        <Button to="/contact" variant="inverse" size="lg">
+        <Button to="/contact?interest=Complete%20FSM%20%2B%20Intelligence" variant="inverse" size="lg">
           Request a Demo
+        </Button>
+        <Button to="/intelligence" variant="outline-inverse" size="lg">
+          See Intelligence Modules
         </Button>
       </PageHero>
 
       <FeatureGroup
         index="01"
-        label="Platform"
+        label="Core FSM"
         heading="Everything From The First Call To The Final Invoice"
-        description="Seven capabilities that share the same data — so a job booked in the office is the same job your tech closes and gets paid for in the field."
+        description="Core capabilities that share the same data, so a job booked in the office is the same job your tech closes and gets paid for in the field."
         rows={featureRows}
       />
 
@@ -221,9 +231,16 @@ export default function Features() {
         className="border-b border-ink bg-white last:border-b-0"
       />
 
+      <MobileAppSection />
+
+      <OfferingsSection />
+
       <CtaBanner
         heading="See it on your data"
-        subheading="Book a 30-minute demo and we’ll walk your workflow through HVACtor - dispatch, mobile, invoicing and all."
+        subheading="Book a demo and we’ll walk your workflow through HVACtor: dispatch, mobile, invoicing, and the intelligence modules that fit your operation."
+        primaryTo="/contact?interest=Complete%20FSM%20%2B%20Intelligence"
+        secondaryLabel="Explore Intelligence Modules"
+        secondaryTo="/intelligence"
       />
     </>
   )
