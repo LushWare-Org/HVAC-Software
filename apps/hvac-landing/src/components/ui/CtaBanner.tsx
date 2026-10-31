@@ -1,4 +1,4 @@
-import { ArrowRight, Play } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import Container from './Container'
 import Button from './Button'
 import Reveal from './Reveal'
@@ -13,12 +13,12 @@ interface CtaBannerProps {
 }
 
 export default function CtaBanner({
-  heading = 'Ready to dispatch?',
-  subheading = 'Start a 14 day free trial. No credit card, no contract, just your crew, organized.',
-  primaryLabel = 'Start Free Trial',
+  heading = 'See HVACtor on your operation',
+  subheading = 'Book a demo and we’ll walk through your workflows, your systems and the decisions that matter most to you.',
+  primaryLabel = 'Request a Demo',
   primaryTo = '/contact',
-  secondaryLabel = 'Explore Features',
-  secondaryTo = '/features',
+  secondaryLabel = 'Explore Intelligence Modules',
+  secondaryTo = '/intelligence',
 }: CtaBannerProps) {
   return (
     <section className="bg-white">
@@ -44,7 +44,6 @@ export default function CtaBanner({
               </Button>
               {secondaryLabel && (
                 <Button to={secondaryTo} variant="outline-inverse" size="md">
-                  <Play className="h-4 w-4" />
                   {secondaryLabel}
                 </Button>
               )}

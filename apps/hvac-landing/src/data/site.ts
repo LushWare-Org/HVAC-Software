@@ -7,7 +7,6 @@ import {
   Boxes,
   BrainCircuit,
   LayoutDashboard,
-  Route,
   ShieldCheck,
   Zap,
   Clock,
@@ -25,12 +24,6 @@ import {
   Wallet,
   PackageSearch,
   LineChart,
-  Radar,
-  Ruler,
-  UserPlus,
-  Settings,
-  Rocket,
-  ClipboardList,
   PhoneCall,
   Thermometer,
   Wifi,
@@ -42,7 +35,7 @@ import {
 
 export const BRAND = {
   name: 'HVACtor.AI',
-  tagline: 'Field Service Management for the trades',
+  tagline: 'AI-powered operational intelligence for HVAC/MEP contractors',
   email: 'info@hvactor.ai',
   phone: '+94 760340975',
 }
@@ -85,12 +78,15 @@ export const APP_LINKS: AppLink[] = [
 export interface NavItem {
   to: string
   label: string
+  // Renders a dropdown of intelligence modules under this item.
+  modules?: boolean
 }
 
 export const NAV_LINKS: NavItem[] = [
-  { to: '/', label: 'Home' },
-  { to: '/features', label: 'Features' },
-  // { to: '/pricing', label: 'Pricing' }, // hidden for now
+  { to: '/fsm', label: 'FSM' },
+  { to: '/intelligence', label: 'Intelligence Modules', modules: true },
+  { to: '/integrations', label: 'Integrations' },
+  { to: '/industries', label: 'Industries' },
 ]
 
 export const PRODUCT_SHOTS = {
@@ -465,7 +461,6 @@ export interface BusinessTab {
   headline: string
   description: string
   bullets: string[]
-  stats: { value: string; label: string }[]
   image: string
   imageAlt: string
   url?: string
@@ -485,12 +480,6 @@ export const BUSINESS_TABS: BusinessTab[] = [
       'Invoices reconciled automatically with QuickBooks',
       'Expenses and AI revenue insights rolled up in one ledger',
     ],
-    stats: [
-      { value: '$134K', label: 'Accounts receivable' },
-      { value: '44', label: 'Quotes in flight' },
-      { value: '49', label: 'Invoices tracked' },
-      { value: '3', label: 'AI revenue insights' },
-    ],
     image: PRODUCT_SHOTS.finance,
     imageAlt: 'Finance dashboard in HVACtor.ai',
     url: 'app.hvactor.ai/finance',
@@ -508,12 +497,6 @@ export const BUSINESS_TABS: BusinessTab[] = [
       'Automated purchase orders triggered at the reorder point',
       'Every part costed accurately back to the job',
     ],
-    stats: [
-      { value: '16', label: 'Tracked SKUs' },
-      { value: '1+6', label: 'Warehouse + van stock' },
-      { value: '31', label: 'Logged movements' },
-      { value: 'Auto', label: 'Reorder point alerts' },
-    ],
     image: PRODUCT_SHOTS.inventory,
     imageAlt: 'Inventory tracking in HVACtor.ai',
     url: 'app.hvactor.ai/inventory',
@@ -530,12 +513,6 @@ export const BUSINESS_TABS: BusinessTab[] = [
       'Revenue and utilization tracked automatically per job',
       'Agent accuracy trend logged for every AI recommendation',
       'Full reporting exportable as CSV in one click',
-    ],
-    stats: [
-      { value: '5', label: 'Live AI insights' },
-      { value: 'Rev / Job', label: 'Tracked automatically' },
-      { value: 'Agent', label: 'Accuracy trend logged' },
-      { value: 'Export', label: 'Full report as CSV' },
     ],
     image: PRODUCT_SHOTS.analytics,
     imageAlt: 'Analytics dashboard in HVACtor.ai',
@@ -598,220 +575,6 @@ export const INTEGRATIONS: Integration[] = [
     name: 'Google Nest',
     description: 'Same live device visibility for Nest-equipped homes and light commercial sites.',
     status: 'soon',
-  },
-]
-
-/* -------------------------------------------------------------------------- */
-/*  Roadmap                                                                   */
-/* -------------------------------------------------------------------------- */
-
-export const CONSULTANT_AGENTS: string[] = [
-  'Executive Consultant Agent',
-  'Revenue Optimization Agent',
-  'Dispatch Optimization Agent',
-  'Customer Experience Agent',
-  'Technician Performance Agent',
-  'Finance Agent',
-  'Marketing Agent',
-  'Compliance / Safety Agent',
-]
-
-export interface RoadmapCard {
-  icon: LucideIcon
-  eyebrow: string
-  title: string
-  description: string
-}
-
-export const ROADMAP_CARDS: RoadmapCard[] = [
-  {
-    icon: Radar,
-    eyebrow: 'Predictive',
-    title: 'Automated fault detection & predictive maintenance',
-    description:
-      'Flag equipment likely to fail before the customer calls, using job history and connected-device data instead of a fixed maintenance calendar.',
-  },
-  {
-    icon: Ruler,
-    eyebrow: 'Engineering',
-    title: 'HVAC design & load calculation',
-    description:
-      'Bring proper load calculations and system design into the same platform that runs dispatch and the books - so estimating and engineering stop living in separate tools.',
-  },
-]
-
-/* -------------------------------------------------------------------------- */
-/*  Workflow steps                                         */
-/* -------------------------------------------------------------------------- */
-
-export interface WorkflowStep {
-  step: string
-  icon: LucideIcon
-  title: string
-  description: string
-}
-
-export const WORKFLOW: WorkflowStep[] = [
-  {
-    step: 'A',
-    icon: Users,
-    title: 'Capture the request',
-    description:
-      'Calls, web bookings and portal requests land in one inbox with the full customer and equipment history attached.',
-  },
-  {
-    step: 'B',
-    icon: Route,
-    title: 'Dispatch the right tech',
-    description:
-      'The board matches skills, parts and location, then optimizes the route for the whole crew in a single click.',
-  },
-  {
-    step: 'C',
-    icon: Smartphone,
-    title: 'Complete the work',
-    description:
-      'Techs run guided checklists, document with photos, and collect payment on-site - even with no signal.',
-  },
-  {
-    step: 'D',
-    icon: TrendingUp,
-    title: 'Grow the account',
-    description:
-      'AI surfaces renewals, upsells and at-risk customers so nothing slips through the cracks.',
-  },
-]
-
-/* -------------------------------------------------------------------------- */
-/*  Onboarding steps                                   */
-/* -------------------------------------------------------------------------- */
-
-export interface OnboardingStep {
-  number: string
-  icon: LucideIcon
-  title: string
-  description: string
-}
-
-export const ONBOARDING_STEPS: OnboardingStep[] = [
-  {
-    number: '01',
-    icon: UserPlus,
-    title: 'Sign Up in Minutes',
-    description:
-      'Create your account and import your customers - most contractors are dispatching their first job within 30 minutes.',
-  },
-  {
-    number: '02',
-    icon: Settings,
-    title: 'Configure Your Workflow',
-    description:
-      'Set job types, pricing, and technician skills so jobs route to the right person automatically.',
-  },
-  {
-    number: '03',
-    icon: ClipboardList,
-    title: 'Dispatch & Manage Jobs',
-    description:
-      'Schedule and dispatch from one dashboard while technicians get real-time updates in the field.',
-  },
-  {
-    number: '04',
-    icon: Rocket,
-    title: 'Scale & Grow',
-    description:
-      'Automate follow-ups and invoicing, then use analytics to optimize routes and grow revenue as you scale.',
-  },
-]
-
-/* -------------------------------------------------------------------------- */
-/*  Analytics deep-dive tabs                                                  */
-/* -------------------------------------------------------------------------- */
-
-export interface AnalyticsTab {
-  id: string
-  label: string
-  headline: string
-  description: string
-  metrics: { value: string; label: string }[]
-}
-
-export const ANALYTICS_TABS: AnalyticsTab[] = [
-  {
-    id: 'predictive',
-    label: 'Predictive Maintenance',
-    headline: 'See failures before your customers do',
-    description:
-      'HVACtor models run-time, age and service history for every unit to flag equipment likely to fail - turning emergency calls into scheduled, profitable visits.',
-    metrics: [
-      { value: '38%', label: 'Fewer emergency callbacks' },
-      { value: '2.7x', label: 'More maintenance renewals' },
-    ],
-  },
-  {
-    id: 'revenue',
-    label: 'Revenue Intelligence',
-    headline: 'Know exactly where the money is',
-    description:
-      'Track revenue by service line, technician and territory. Spot the jobs, memberships and customers driving your margin - and the ones quietly draining it.',
-    metrics: [
-      { value: '+22%', label: 'Avg. ticket after 90 days' },
-      { value: '$0', label: 'Missed follow-ups left on table' },
-    ],
-  },
-  {
-    id: 'ops',
-    label: 'Operational Health',
-    headline: 'Run a tighter, faster operation',
-    description:
-      'First-time-fix rate, drive time, jobs-per-tech and idle capacity - measured automatically and benchmarked so you always know your next move.',
-    metrics: [
-      { value: '91%', label: 'First-time-fix rate' },
-      { value: '-19%', label: 'Windshield (drive) time' },
-    ],
-  },
-]
-
-/* -------------------------------------------------------------------------- */
-/*  Testimonials                                                              */
-/* -------------------------------------------------------------------------- */
-
-export interface Testimonial {
-  quote: string
-  name: string
-  role: string
-  company: string
-  avatar: string
-  date: string
-}
-
-export const TESTIMONIALS: Testimonial[] = [
-  {
-    quote:
-      'We cut dispatch time in half and stopped losing maintenance renewals. HVACtor paid for itself inside the first month across our 14 trucks.',
-    name: 'Marcus Delgado',
-    role: 'Owner',
-    company: 'NorthAir Mechanical',
-    avatar: 'https://i.pravatar.cc/120?u=marcus-delgado',
-    date: 'WO-2024-0417',
-  },
-  {
-    quote:
-      'The techs actually like it - offline mode works in every basement and mechanical room. Payment collection on-site changed our cash flow completely.',
-    name: 'Priya Nair',
-    role: 'Operations Director',
-    company: 'Summit Climate Co.',
-    avatar: 'https://i.pravatar.cc/120?u=priya-nair',
-    date: 'WO-2024-0388',
-  },
-  {
-    quote:
-      'The predictive maintenance flags turned into $180k of scheduled work last year that we would have never caught. It is like having a dispatcher who never sleeps.',
-    name: 'Trevor Boone',
-    role: 'General Manager',
-    company: 'BlueLine HVAC',
-    avatar: 'https://i.pravatar.cc/120?u=trevor-boone',
-    date: 'WO-2024-0351',
   },
 ]
 
@@ -938,6 +701,16 @@ export interface Faq {
 
 export const FAQS: Faq[] = [
   {
+    question: 'Do I need to replace my current FSM or ERP?',
+    answer:
+      'No. HVACtor can be your FSM, but intelligence modules are designed to work alongside the FSM, ERP, accounting and equipment systems you already use. We connect the data each module needs.',
+  },
+  {
+    question: 'How are intelligence modules priced?',
+    answer:
+      'Per module or as a bundle, based on the systems involved and the size of your operation. You can start with one module and add more later. Contact us for a quote.',
+  },
+  {
     question: 'How long does it take to get set up?',
     answer:
       'Most shops are live within a week. Our onboarding team imports your customers, equipment and price book, and runs a hands-on training session with your dispatchers and techs.',
@@ -977,63 +750,29 @@ export interface Value {
 export const VALUES: Value[] = [
   {
     icon: Zap,
-    title: 'Built for the field, not the demo',
+    title: 'Decisions, not just records',
     description:
-      'Every feature is pressure-tested in real mechanical rooms and truck cabs — not just a sales deck.',
+      'Software should help contractors decide what should happen next and why, not only log what already happened.',
   },
   {
     icon: Clock,
-    title: 'Respect the operator’s time',
+    title: 'Work with what customers already run',
     description:
-      'Fewer clicks, less double entry. Software should get out of the way so crews can keep moving.',
+      'We connect to existing FSM, ERP and equipment systems rather than asking teams to start over.',
   },
   {
     icon: ShieldCheck,
-    title: 'Trust is the product',
+    title: 'People stay in control',
     description:
-      'Bank-grade security and data you can export any time. No lock-in games.',
+      'AI recommends and explains; authorized people approve. Every automated action is permissioned and auditable.',
   },
   {
     icon: TrendingUp,
-    title: 'Grow with our customers',
+    title: 'Honest about what is ready',
     description:
-      'When a three-truck shop becomes a thirty-truck operation, the platform is already ready for them.',
+      'We are clear about what is available today, what is in development and what is on the roadmap.',
   },
 ]
-
-export interface TimelineItem {
-  year: string
-  title: string
-  description: string
-}
-
-export const TIMELINE: TimelineItem[] = [
-  {
-    year: '2018',
-    title: 'Started in a service van',
-    description:
-      'Founded by a second-generation HVAC contractor and two engineers tired of clipboard chaos.',
-  },
-  {
-    year: '2020',
-    title: 'First 500 shops',
-    description:
-      'The dispatch board and offline mobile app hit the market and word spread through the trades fast.',
-  },
-  {
-    year: '2022',
-    title: 'Payments & portal launch',
-    description:
-      'On-site payments and the customer self-service portal turned HVACtor into an end-to-end platform.',
-  },
-  {
-    year: '2024',
-    title: 'AI insights go live',
-    description:
-      'Predictive maintenance and revenue intelligence now power decisions for over 12,000 technicians.',
-  },
-]
-
 
 /* -------------------------------------------------------------------------- */
 /*  Contact                                              */
@@ -1049,8 +788,10 @@ export const TEAM_SIZE_OPTIONS = [
 
 export const INTEREST_OPTIONS = [
   'Book a demo',
+  'Complete FSM + Intelligence',
+  'Standalone Intelligence Modules',
+  'Integration with my existing systems',
   'Start a free trial',
   // 'Pricing question', // hidden for now
-  'Migration from another tool',
   'Something else',
 ]

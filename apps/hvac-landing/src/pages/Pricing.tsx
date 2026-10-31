@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { ArrowDown, CheckCircle2, ChevronDown, Sparkles, X } from 'lucide-react'
+import { ArrowDown, ArrowRight, Puzzle, CheckCircle2, ChevronDown, Sparkles, X } from 'lucide-react'
 import clsx from 'clsx'
+import Seo from '../components/Seo'
 import PageHero from '../components/ui/PageHero'
 import Container from '../components/ui/Container'
 import SectionLabel from '../components/ui/SectionLabel'
@@ -23,6 +24,10 @@ export default function Pricing() {
 
   return (
     <>
+      <Seo
+        title="Pricing: HVAC FSM Plans & Intelligence Modules"
+        description="Transparent pricing for HVACtor’s HVAC field service management plans, plus per-module and bundle pricing for standalone intelligence modules."
+      />
       <PageHero
         title={
           <>
@@ -30,7 +35,7 @@ export default function Pricing() {
             <span className="mt-3 block sm:mt-4">No Surprises on the Invoice.</span>
           </>
         }
-        description="Pricing that scales with your crew. Every plan includes the mobile app, onboarding and updates. Cancel any time."
+        description="FSM plans that scale with your crew, including the mobile app, onboarding and updates. Intelligence modules are priced per module or bundle, with or without our FSM."
         className="pt-20 pb-20 lg:pt-30 lg:pb-10"
       >
         <Button href="#plans" variant="inverse" size="lg">
@@ -289,6 +294,35 @@ export default function Pricing() {
               )
             })}
           </div>
+        </Container>
+      </section>
+
+      {/* Standalone intelligence modules */}
+      <section className="bg-slate-50">
+        <Container className="py-16 lg:py-20">
+          <Reveal className="flex flex-col gap-8 rounded-3xl bg-navy-900 p-8 text-white shadow-block sm:p-10 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
+                <Puzzle className="h-5 w-5" />
+              </span>
+              <h2 className="mt-5 font-display text-2xl font-bold tracking-tight sm:text-3xl">
+                Already have an FSM or ERP? Add intelligence modules on their own.
+              </h2>
+              <p className="mt-3 leading-relaxed text-white/70">
+                Standalone intelligence modules are priced per module or as a bundle, scoped to the
+                systems you connect and the size of your operation. Start with one and add more later.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button to="/contact?interest=Standalone%20Intelligence%20Modules" variant="inverse" size="lg">
+                Get module pricing
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button to="/intelligence" variant="outline-inverse" size="lg">
+                View modules
+              </Button>
+            </div>
+          </Reveal>
         </Container>
       </section>
 
