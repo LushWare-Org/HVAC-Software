@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FileText, Search, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Eye, Download, Loader2, XCircle, CheckCircle2 } from 'lucide-react'
 import { useAcceptMyQuote, useDeclineMyQuote, useMyQuotes } from '../../hooks/useCustomerPortal'
-import { useMyHouses } from '../../hooks/useMyHouse'
+import { useMyComponents } from '../../hooks/useMyComponent'
 import { useToast } from '../../contexts/ToastContext'
 import { downloadPdf, viewPdf } from '../../lib/pdf'
 import QuoteDetailModal from './QuoteDetailModal'
@@ -44,8 +44,8 @@ export default function Quotes() {
   const acceptQuote = useAcceptMyQuote()
   const declineQuote = useDeclineMyQuote()
   const quotes = data?.data ?? []
-  const { data: houses } = useMyHouses()
-  const houseLabelById = new Map((houses ?? []).map(h => [h.id, h.label]))
+  const { data: components } = useMyComponents()
+  const componentLabelById = new Map((components ?? []).map(c => [c.id, c.label]))
 
   const quotesView = useMemo(
     () => quotes.map(quote => ({ ...quote, status: quoteStatusOverrides[quote.id] ?? quote.status })),
@@ -198,7 +198,7 @@ export default function Quotes() {
                           <div className="font-600" style={{ color: 'var(--t1)', fontSize: 13 }}>{quote.title}</div>
                           <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{quote.notes || '—'}</div>
                         </td>
-                        <td style={{ fontSize: 12, color: 'var(--t3)' }}>{quote.houseId ? (houseLabelById.get(quote.houseId) ?? '—') : '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--t3)' }}>{quote.componentId ? (componentLabelById.get(quote.componentId) ?? '—') : '—'}</td>
                         <td><span className={`badge ${s.css}`}>{s.label}</span></td>
                         <td style={{ fontSize: 12, color: 'var(--t3)' }}>{fmtDate(quote.createdAt)}</td>
                         <td className="td-primary font-600">{fmtMoney(quote.total)}</td>

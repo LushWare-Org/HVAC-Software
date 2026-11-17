@@ -23,7 +23,7 @@ export const DATA_PREFETCHERS: Record<string, () => Promise<unknown>> = {
     Promise.allSettled([
       import('../hooks/useDashboard').then(m => m.prefetchDashboard()),
       import('../hooks/useAnalytics').then(m => m.prefetchDashboardCharts()),
-      import('../pages/projects/housesApi').then(m => m.prefetchOpenHouseIssues()),
+      import('../pages/projects/componentsApi').then(m => m.prefetchOpenComponentIssues()),
     ]),
   '/customers':  () => import('../hooks/useCustomers').then(m => m.prefetchCustomersPage()),
   '/jobs':       () => import('../hooks/useJobs').then(m => m.prefetchJobsPage()),

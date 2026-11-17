@@ -13,7 +13,7 @@ import type { TeamSizeId } from '../data/site'
 
 type Billing = 'monthly' | 'annual'
 
-const DEFAULT_TEAM_SIZE: TeamSizeId = 'upto5'
+const DEFAULT_TEAM_SIZE: TeamSizeId = '1'
 
 export default function Pricing() {
   const [billing, setBilling] = useState<Billing>('annual')

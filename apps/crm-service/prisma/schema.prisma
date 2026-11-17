@@ -139,6 +139,8 @@ model Customer {
   iotConnections CustomerIotConnection[]
   ownedHouses    House[]            @relation("HouseOwner")
   issueReports   HouseIssueReport[]
+  ownedComponents      ProjectComponent[]     @relation("ProjectComponentOwner")
+  componentIssueReports ComponentIssueReport[]
 
   @@index([companyId])
   @@index([companyId, email])
@@ -268,7 +270,8 @@ model ServiceAgreement {
   // was picked at creation (often the project's own top-level customer, not the
   // individual house owner) — houseId is the authoritative visibility link, same
   // pattern as Job.houseId.
-  houseId   String?
+  houseId   String? // deprecated, see componentId
+  componentId String? // which project component this agreement is for — replaces houseId
 
   // Customer confirmation & renewal
   customerConfirmedAt DateTime?
@@ -286,6 +289,7 @@ model ServiceAgreement {
   @@index([companyId, status])
   @@index([companyId, nextServiceDate])
   @@index([houseId])
+  @@index([componentId])
   @@map("service_agreements")
 }
 
@@ -425,6 +429,10 @@ model Equipment {
   // keeps working unmodified.
   houseId     String?
   house       House?    @relation(fields: [houseId], references: [id], onDelete: SetNull)
+  // Generic replacement for houseId (spec: docs/superpowers/specs/2026-08-14-project-component-templates-design.md).
+  // Both columns coexist during the migration window; houseId is dropped in a later cleanup pass.
+  componentId String?
+  component   ProjectComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
   type        String    @default("Boiler")  // Boiler, AC Unit, Heat Pump, etc.
   brand       String?
   model       String?
@@ -438,6 +446,7 @@ model Equipment {
 
   consumables   EquipmentConsumable[]
   issueReports  HouseIssueReport[]
+  componentIssueReports ComponentIssueReport[]
   manualUrl     String?   @map("manual_url")
 
   imageUrl        String?   @map("image_url")
@@ -448,6 +457,7 @@ model Equipment {
 
   @@index([customerId])
   @@index([houseId])
+  @@index([componentId])
   @@map("equipment")
 }
 
@@ -815,7 +825,7 @@ model Project {
   status            String    @default("PLANNING") // PLANNING | ACTIVE | ON_HOLD | COMPLETED | CANCELLED
   // Project template — validated against a backend registry (see projects/project-templates.ts),
   // not a DB enum, so new templates are a code change, not a migration. Immutable after creation.
-  templateType      String    @default("STANDARD") // STANDARD | HOUSING_SCHEME
+  templateType      String    @default("STANDARD") // STANDARD | HOUSING_SCHEME — deprecated, see templateId
   startDate         DateTime?
   targetEndDate     DateTime?
   budget            Decimal?  @db.Decimal(12, 2)
@@ -829,8 +839,17 @@ model Project {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  // Generic component templates (spec: docs/superpowers/specs/2026-08-14-project-component-templates-design.md).
+  // templateId null = freeform project (no structure). componentTypesSnapshot is a frozen
+  // copy of the template's componentTypes at creation time — editing the template afterward
+  // never retroactively changes projects already built from it.
+  templateId                String?
+  componentTypesSnapshot    Json?
+  componentCustomerSettings Json?
+
   rosterDays ProjectRosterDay[]
   houses     House[]
+  components ProjectComponent[]
 
   @@index([companyId, status])
   @@index([companyId, customerId])
@@ -903,4 +922,73 @@ model HouseIssueReport {
   @@index([companyId, status])
   @@index([houseId])
   @@map("house_issue_reports")
+}
+
+// ─── Generic project component templates (spec: docs/superpowers/specs/2026-08-14-project-component-templates-design.md) ──
+// Supersedes the Housing Scheme-only House model above (kept in place, unused by new
+// code, until the migration + cleanup pass removes it).
+
+// Reusable recipe, company-scoped. Editing this only affects projects created AFTER
+// the edit — existing projects keep their frozen componentTypesSnapshot.
+model ProjectTemplate {
+  id             String    @id @default(uuid())
+  companyId      String
+  name           String
+  description    String?
+  componentTypes Json      // [{ key, label, icon?, customerAssignable: boolean }]
+  isBuiltIn      Boolean   @default(false)
+  status         String    @default("DRAFT")   // DRAFT | PUBLISHED — gates the New Project picker
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([companyId])
+  @@index([companyId, status])
+  @@map("project_templates")
+}
+
+// Replaces House. Flat — no self-reference. componentTypeKey references a key inside
+// the owning Project's componentTypesSnapshot (validated in the service layer, not a
+// DB FK, since componentTypesSnapshot is JSON).
+model ProjectComponent {
+  id               String    @id @default(uuid())
+  companyId        String
+  projectId        String    @db.Uuid
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  componentTypeKey String
+  label            String
+  ownerCustomerId  String?
+  owner            Customer? @relation("ProjectComponentOwner", fields: [ownerCustomerId], references: [id], onDelete: SetNull)
+  tags             String[]  @default([])
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  equipment    Equipment[]
+  issueReports ComponentIssueReport[]
+
+  @@index([companyId, projectId])
+  @@index([ownerCustomerId])
+  @@map("project_components")
+}
+
+// Renamed/generalized from HouseIssueReport. Same shape, componentId replaces houseId.
+model ComponentIssueReport {
+  id                    String    @id @default(uuid())
+  companyId             String
+  componentId           String
+  component             ProjectComponent @relation(fields: [componentId], references: [id], onDelete: Cascade)
+  equipmentId           String?
+  equipment             Equipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  reportedByCustomerId  String
+  reportedBy            Customer  @relation(fields: [reportedByCustomerId], references: [id])
+  errorCode             String?
+  description           String?
+  status                String    @default("OPEN")
+  resolvedNote          String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([companyId, componentId])
+  @@index([reportedByCustomerId])
+  @@map("component_issue_reports")
 }

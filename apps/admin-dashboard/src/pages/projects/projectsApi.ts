@@ -17,15 +17,19 @@ export type ProjectStatus = 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'C
 export type Weekday = 'SUN' | 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT'
 export const WEEKDAYS: Weekday[] = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
-// Project templates — extensible registry, mirrors crm-service's project-templates.ts.
-// Immutable after creation.
+// Deprecated — superseded by the generic template system below (spec:
+// docs/superpowers/specs/2026-08-14-project-component-templates-design.md).
+// Kept only for reading old projects' raw templateType field; no longer used
+// to drive the create-project picker.
 export type ProjectTemplateType = 'STANDARD' | 'HOUSING_SCHEME'
-export const PROJECT_TEMPLATE_META: Record<ProjectTemplateType, { label: string; description: string }> = {
-  STANDARD: { label: 'Standard', description: 'A single client with jobs, agreements, and finances.' },
-  HOUSING_SCHEME: {
-    label: 'Housing Scheme',
-    description: 'A development with many houses, each with its own owner, equipment, and portal access.',
-  },
+
+// ── Generic component templates ───────────────────────────────────────────────
+
+export interface ComponentTypeMeta {
+  key: string
+  label: string
+  icon?: string
+  customerAssignable: boolean
 }
 
 export interface ProjectJob {
@@ -44,10 +48,11 @@ export interface ProjectJob {
   description?: string
   serviceAddress?: string
   jobNumber?: string
-  // Housing Scheme: which house (and, optionally, which specific unit) this
-  // job is for — resolved to a label/owner client-side via the project's own
-  // house list, since the job row itself only carries the raw id.
+  // Which project component (and, optionally, which specific unit) this job
+  // is for — resolved to a label/owner client-side via the project's own
+  // component list, since the job row itself only carries the raw id.
   houseId?: string
+  componentId?: string
   equipmentId?: string
 }
 
@@ -58,8 +63,9 @@ export interface ProjectAgreement {
   interval: string
   nextVisit?: string
   status: string
-  /** Housing Scheme: which house this agreement is for, if any. */
+  /** Which project component this agreement is for, if any. */
   houseId?: string
+  componentId?: string
 }
 
 export interface FinanceDoc {
@@ -69,8 +75,9 @@ export interface FinanceDoc {
   total: number // dollars
   status: string
   date: string
-  /** Housing Scheme: which house this quote/invoice is for, if any. */
+  /** Which project component this quote/invoice is for, if any. */
   houseId?: string
+  componentId?: string
 }
 
 export interface RosterDay {
@@ -90,6 +97,10 @@ export interface Project {
   category?: string
   status: ProjectStatus
   templateType: ProjectTemplateType
+  /** Generic component template, if any — null means freeform (no components). */
+  templateId: string | null
+  componentTypesSnapshot: ComponentTypeMeta[] | null
+  componentCustomerSettings: Record<string, boolean> | null
   startDate?: string
   targetEndDate?: string
   budget?: number // dollars
@@ -108,8 +119,10 @@ export interface Project {
   invoices: FinanceDoc[]
   /** Effective roster for today (list page / cards). */
   rosterToday: { techUserIds: string[]; isOverride: boolean; isOff: boolean }
-  /** Housing Scheme only: rolled-up open issue-report count across all houses. */
+  /** Templated projects only: rolled-up open issue-report count across all components. */
   openIssueCount?: number
+  /** Templated projects only: rolled-up component count. */
+  componentCount?: number
 }
 
 export interface ProjectRosterBandRow {
@@ -206,6 +219,9 @@ function mapApiProject(raw: any): ProjectBase {
     category: raw.category ?? undefined,
     status: raw.status as ProjectStatus,
     templateType: (raw.templateType as ProjectTemplateType) ?? 'STANDARD',
+    templateId: raw.templateId ?? null,
+    componentTypesSnapshot: raw.componentTypesSnapshot ?? null,
+    componentCustomerSettings: raw.componentCustomerSettings ?? null,
     startDate: raw.startDate ? String(raw.startDate).slice(0, 10) : undefined,
     targetEndDate: raw.targetEndDate ? String(raw.targetEndDate).slice(0, 10) : undefined,
     budget: raw.budget != null ? Number(raw.budget) : undefined,
@@ -218,6 +234,7 @@ function mapApiProject(raw: any): ProjectBase {
     notes: raw.notes ?? undefined,
     createdAt: raw.createdAt,
     openIssueCount: raw.openIssueCount ?? undefined,
+    componentCount: raw.componentCount ?? undefined,
   }
 }
 
@@ -238,6 +255,7 @@ function mapJob(j: any): ProjectJob {
     serviceAddress: j.serviceAddress ?? undefined,
     jobNumber: j.jobNumber ?? undefined,
     houseId: j.houseId ?? undefined,
+    componentId: j.componentId ?? undefined,
     equipmentId: j.equipmentId ?? undefined,
   }
 }
@@ -251,6 +269,7 @@ function mapQuote(q: any): FinanceDoc {
     status: q.status,
     date: String(q.createdAt ?? q.date ?? '').slice(0, 10),
     houseId: q.houseId ?? undefined,
+    componentId: q.componentId ?? undefined,
   }
 }
 
@@ -263,6 +282,7 @@ function mapInvoice(i: any): FinanceDoc {
     status: i.status,
     date: String(i.issuedAt ?? i.createdAt ?? '').slice(0, 10),
     houseId: i.houseId ?? undefined,
+    componentId: i.componentId ?? undefined,
   }
 }
 
@@ -275,6 +295,7 @@ function mapAgreement(a: any): ProjectAgreement {
     nextVisit: a.nextServiceDate ? String(a.nextServiceDate).slice(0, 10) : undefined,
     status: a.status,
     houseId: a.houseId ?? undefined,
+    componentId: a.componentId ?? undefined,
   }
 }
 
@@ -468,6 +489,10 @@ export interface UpsertProjectInput {
   category?: string
   /** Only meaningful on create — immutable server-side afterward. */
   templateType?: ProjectTemplateType
+  /** Generic component template — only meaningful on create, immutable afterward. */
+  templateId?: string
+  /** "Customized project" — no template, zero predefined component types. Mutually exclusive with templateId. */
+  freeform?: boolean
   status?: ProjectStatus
   startDate?: string
   targetEndDate?: string
@@ -527,6 +552,18 @@ export function useLinkJobToProject() {
     onSuccess: () => {
       invalidateProjects()
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    },
+  })
+}
+
+/** Turn per-component customer assignment on/off for this project, bounded by its template. */
+export function useUpdateCustomerSettings(projectId: string) {
+  return useMutation({
+    mutationFn: async (settings: Record<string, boolean>) =>
+      (await api.patch(`/crm/projects/${projectId}/customer-settings`, settings)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'detail'] })
+      invalidateProjects()
     },
   })
 }
@@ -655,6 +692,6 @@ export function prefetchProjectDetail(id: string): Promise<unknown> {
     queryClient.prefetchQuery({ queryKey: ['projects', id, 'jobs'], queryFn: () => fetchProjectJobs(id), staleTime: 30_000 }),
     queryClient.prefetchQuery({ queryKey: ['projects', id, 'quotes'], queryFn: () => fetchProjectQuotes(id), staleTime: 30_000 }),
     queryClient.prefetchQuery({ queryKey: ['projects', id, 'invoices'], queryFn: () => fetchProjectInvoices(id), staleTime: 30_000 }),
-    import('./housesApi').then(m => m.prefetchHousesForProject(id)),
+    import('./componentsApi').then(m => m.prefetchComponentsForProject(id)),
   ])
 }

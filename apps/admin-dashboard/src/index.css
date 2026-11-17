@@ -2015,6 +2015,12 @@ img {
   animation: slideRight 0.3s var(--ease) both;
 }
 
+/* Live-connection pulse — used by System Activity's Live indicator and
+   anywhere else a real-time connection status needs a heartbeat cue. */
+.anim-ping-dot {
+  animation: ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
 .delay-1 {
   animation-delay: 0.05s;
 }

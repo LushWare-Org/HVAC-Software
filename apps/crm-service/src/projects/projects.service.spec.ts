@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 
 const CO = 'co-1';
 const OTHER_CO = 'co-2';
@@ -30,17 +31,33 @@ function makePrisma() {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
+    projectTemplate: {
+      findFirst: jest.fn(),
+    },
+    projectComponent: {
+      groupBy: jest.fn().mockResolvedValue([]),
+    },
+    componentIssueReport: {
+      count: jest.fn().mockResolvedValue(0),
+    },
   };
 }
+
+const mockEmail = { sendMail: jest.fn() };
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
   let prisma: ReturnType<typeof makePrisma>;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     prisma = makePrisma();
     const mod = await Test.createTestingModule({
-      providers: [ProjectsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        ProjectsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: EmailService, useValue: mockEmail },
+      ],
     }).compile();
     service = mod.get(ProjectsService);
   });
@@ -163,6 +180,102 @@ describe('ProjectsService', () => {
     await service.remove(CO, 'p1');
     expect(prisma.project.update).toHaveBeenCalledWith({
       where: { id: 'p1' }, data: { status: 'CANCELLED' },
+    });
+  });
+
+  describe('template-based creation', () => {
+    it('snapshots the template componentTypes and defaults componentCustomerSettings from them', async () => {
+      prisma.projectTemplate.findFirst.mockResolvedValue({
+        id: 'tpl-1', companyId: CO,
+        componentTypes: [
+          { key: 'room', label: 'Room', customerAssignable: true },
+          { key: 'pool', label: 'Pool', customerAssignable: false },
+        ],
+      });
+      prisma.project.create.mockResolvedValue({ id: 'p-1' });
+
+      await service.create(CO, { name: 'Grand Hotel', templateId: 'tpl-1' } as any);
+
+      expect(prisma.project.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
+          templateId: 'tpl-1',
+          componentTypesSnapshot: [
+            { key: 'room', label: 'Room', customerAssignable: true },
+            { key: 'pool', label: 'Pool', customerAssignable: false },
+          ],
+          componentCustomerSettings: { room: true, pool: false },
+        }),
+      }));
+    });
+
+    it('creates a freeform project with no template', async () => {
+      prisma.project.create.mockResolvedValue({ id: 'p-2' });
+      await service.create(CO, { name: 'One-off job' });
+      expect(prisma.projectTemplate.findFirst).not.toHaveBeenCalled();
+      expect(prisma.project.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({ templateId: null, componentTypesSnapshot: null }),
+      }));
+    });
+
+    it('rejects a templateId that does not belong to this company', async () => {
+      prisma.projectTemplate.findFirst.mockResolvedValue(null);
+      await expect(service.create(CO, { name: 'X', templateId: 'not-mine' } as any))
+        .rejects.toThrow(NotFoundException);
+    });
+
+    it('freeform: true creates a project with an empty (non-null) component type registry', async () => {
+      prisma.project.create.mockResolvedValue({ id: 'p-3' });
+      await service.create(CO, { name: 'Boutique Build', freeform: true } as any);
+      expect(prisma.projectTemplate.findFirst).not.toHaveBeenCalled();
+      expect(prisma.project.create).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
+          templateId: null, componentTypesSnapshot: [], componentCustomerSettings: {},
+        }),
+      }));
+    });
+
+    it('rejects freeform: true combined with a templateId', async () => {
+      await expect(service.create(CO, { name: 'X', freeform: true, templateId: 'tpl-1' } as any))
+        .rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('updateCustomerSettings', () => {
+    it('rejects an unknown component type key', async () => {
+      prisma.project.findFirst.mockResolvedValue({
+        id: 'p-1', companyId: CO,
+        componentTypesSnapshot: [{ key: 'room', label: 'Room', customerAssignable: true }],
+        componentCustomerSettings: { room: true },
+      });
+      await expect(service.updateCustomerSettings(CO, 'p-1', { pool: true }))
+        .rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects turning on a type the template marked not customer-assignable', async () => {
+      prisma.project.findFirst.mockResolvedValue({
+        id: 'p-1', companyId: CO,
+        componentTypesSnapshot: [{ key: 'pool', label: 'Pool', customerAssignable: false }],
+        componentCustomerSettings: { pool: false },
+      });
+      await expect(service.updateCustomerSettings(CO, 'p-1', { pool: true }))
+        .rejects.toThrow(BadRequestException);
+    });
+
+    it('merges a valid partial update rather than replacing the whole settings object', async () => {
+      prisma.project.findFirst.mockResolvedValue({
+        id: 'p-1', companyId: CO,
+        componentTypesSnapshot: [
+          { key: 'room', label: 'Room', customerAssignable: true },
+          { key: 'lobby', label: 'Lobby', customerAssignable: true },
+        ],
+        componentCustomerSettings: { room: true, lobby: true },
+      });
+      prisma.project.update.mockResolvedValue({});
+      await service.updateCustomerSettings(CO, 'p-1', { lobby: false });
+      expect(prisma.project.update).toHaveBeenCalledWith({
+        where: { id: 'p-1' },
+        data: { componentCustomerSettings: { room: true, lobby: false } },
+      });
     });
   });
 });

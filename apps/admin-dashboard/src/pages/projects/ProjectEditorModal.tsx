@@ -4,12 +4,14 @@
  */
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Check, MapPin, Loader2, Home, User, UserCheck, Briefcase, FileSignature, Receipt, CalendarClock } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { X, Check, MapPin, Loader2, Layers, User, UserCheck, Briefcase, FileSignature, Receipt, CalendarClock, Settings2 } from 'lucide-react'
 import MapPicker from '../../components/MapPickerLazy'
 import {
   WEEKDAYS, useTechDirectory, useCreateProject, useUpdateProject,
-  PROJECT_TEMPLATE_META, type Project, type ProjectStatus, type ProjectTemplateType, type Weekday,
+  type Project, type ProjectStatus, type Weekday,
 } from './projectsApi'
+import { useProjectTemplates } from './templatesApi'
 import CustomerPickerWithCreate, { type PickedCustomer } from '../../components/CustomerPickerWithCreate'
 import { TechAvatar } from './shared'
 
@@ -52,6 +54,8 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
   const createProject = useCreateProject()
   const updateProject = useUpdateProject()
   const { data: techs } = useTechDirectory()
+  const { data: allTemplates } = useProjectTemplates()
+  const publishedTemplates = (allTemplates ?? []).filter(t => t.status === 'PUBLISHED')
   // Seeded from the project being edited (if it already has a customer) so the
   // same picker UI handles "assign for the first time" and "change" alike.
   const [pickedCustomer, setPickedCustomer] = useState<PickedCustomer | null>(
@@ -74,7 +78,8 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
     workingDays: project?.workingDays ?? (['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'] as Weekday[]),
     baseTeamUserIds: project?.baseTeamUserIds ?? [],
     notes: project?.notes ?? '',
-    templateType: (project?.templateType ?? 'STANDARD') as ProjectTemplateType,
+    templateId: (project?.templateId ?? undefined) as string | undefined,
+    freeform: false,
   })
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm(f => ({ ...f, [k]: v }))
@@ -114,7 +119,7 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
     }
     try {
       if (project) await updateProject.mutateAsync({ id: project.id, ...payload })
-      else await createProject.mutateAsync({ ...payload, templateType: form.templateType })
+      else await createProject.mutateAsync({ ...payload, templateId: form.templateId, freeform: form.freeform || undefined })
       onClose()
     } catch (e: any) {
       const msg = e?.response?.data?.message
@@ -136,10 +141,10 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
         aria-modal="true"
         aria-label={project ? 'Edit project' : 'New project'}
         style={{
-          width: 980, maxWidth: '96vw', padding: 0, overflow: 'hidden',
+          width: 1140, maxWidth: '96vw', padding: 0, overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
           // Lock to the viewport: header + footer stay pinned, only the body scrolls
-          height: 'min(860px, calc(100vh - 48px))',
+          height: 'min(920px, calc(100vh - 48px))',
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -228,30 +233,78 @@ export default function ProjectEditorModal({ project, onClose }: { project?: Pro
           {/* Template — only choosable at creation, locked in afterward */}
           {!project && (
             <div>
-              <label style={lbl}>Project template</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {(Object.keys(PROJECT_TEMPLATE_META) as ProjectTemplateType[]).map(key => {
-                  const meta = PROJECT_TEMPLATE_META[key]
-                  const on = form.templateType === key
-                  return (
-                    <button key={key} onClick={() => set('templateType', key)} style={{
-                      display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left', cursor: 'pointer',
-                      padding: '12px 14px', borderRadius: 10, fontFamily: 'inherit',
-                      border: `1px solid ${on ? 'var(--blue)' : 'var(--bd)'}`,
-                      background: on ? 'var(--blue-dim)' : 'var(--bg-card)',
-                    }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                        {key === 'HOUSING_SCHEME' && <Home size={13} style={{ color: on ? 'var(--blue)' : 'var(--t3)' }} />}
-                        <span style={{ fontSize: 13, fontWeight: 700, color: on ? 'var(--blue)' : 'var(--t1)' }}>{meta.label}</span>
-                        {on && <Check size={13} style={{ color: 'var(--blue)', marginLeft: 'auto' }} />}
-                      </span>
-                      <span style={{ fontSize: 11.5, color: 'var(--t3)', lineHeight: 1.4 }}>{meta.description}</span>
-                    </button>
-                  )
-                })}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <label style={lbl}>Project template</label>
+                <Link to="/projects/templates" style={{ fontSize: 11, color: 'var(--blue)', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Settings2 size={11} /> Manage templates
+                </Link>
               </div>
-              {form.templateType === 'HOUSING_SCHEME' && (
-                <p style={{ fontSize: 11, color: 'var(--t4)', margin: '6px 0 0' }}>
+
+              {/* Row 1 — two fixed primary options */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: publishedTemplates.length > 0 ? 14 : 0 }}>
+                <button onClick={() => setForm(f => ({ ...f, templateId: undefined, freeform: false }))} style={{
+                  display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left', cursor: 'pointer',
+                  padding: '14px 16px', borderRadius: 10, fontFamily: 'inherit',
+                  border: `1.5px solid ${!form.templateId && !form.freeform ? 'var(--blue)' : 'var(--bd)'}`,
+                  background: !form.templateId && !form.freeform ? 'var(--blue-dim)' : 'var(--bg-card)',
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: !form.templateId && !form.freeform ? 'var(--blue)' : 'var(--t1)' }}>No template</span>
+                    {!form.templateId && !form.freeform && <Check size={14} style={{ color: 'var(--blue)', marginLeft: 'auto' }} />}
+                  </span>
+                  <span style={{ fontSize: 11.5, color: 'var(--t3)', lineHeight: 1.4 }}>A single client with jobs, agreements, and finances. No component breakdown.</span>
+                </button>
+
+                <button onClick={() => setForm(f => ({ ...f, templateId: undefined, freeform: true }))} style={{
+                  display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left', cursor: 'pointer',
+                  padding: '14px 16px', borderRadius: 10, fontFamily: 'inherit',
+                  border: `1.5px solid ${form.freeform ? 'var(--blue)' : 'var(--bd)'}`,
+                  background: form.freeform ? 'var(--blue-dim)' : 'var(--bg-card)',
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <Layers size={14} style={{ color: form.freeform ? 'var(--blue)' : 'var(--t3)' }} />
+                    <span style={{ fontSize: 14, fontWeight: 700, color: form.freeform ? 'var(--blue)' : 'var(--t1)' }}>Customized project</span>
+                    {form.freeform && <Check size={14} style={{ color: 'var(--blue)', marginLeft: 'auto' }} />}
+                  </span>
+                  <span style={{ fontSize: 11.5, color: 'var(--t3)', lineHeight: 1.4 }}>Start blank and add whatever components you need as you go — rooms, zones, anything. No predefined structure.</span>
+                </button>
+              </div>
+
+              {/* Divider + Row 2 — real templates, only when at least one is published */}
+              {publishedTemplates.length > 0 && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 10px' }}>
+                    <span style={{ flex: 1, height: 1, background: 'var(--bd)' }} />
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Or start from a template</span>
+                    <span style={{ flex: 1, height: 1, background: 'var(--bd)' }} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
+                    {publishedTemplates.map(t => {
+                      const on = form.templateId === t.id
+                      return (
+                        <button key={t.id} onClick={() => setForm(f => ({ ...f, templateId: t.id, freeform: false }))} style={{
+                          display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left', cursor: 'pointer',
+                          padding: '11px 13px', borderRadius: 10, fontFamily: 'inherit',
+                          border: `1px solid ${on ? 'var(--blue)' : 'var(--bd)'}`,
+                          background: on ? 'var(--blue-dim)' : 'var(--bg-card)',
+                        }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <Layers size={13} style={{ color: on ? 'var(--blue)' : 'var(--t3)' }} />
+                            <span style={{ fontSize: 12.5, fontWeight: 700, color: on ? 'var(--blue)' : 'var(--t1)' }}>{t.name}</span>
+                            {on && <Check size={12} style={{ color: 'var(--blue)', marginLeft: 'auto' }} />}
+                          </span>
+                          <span style={{ fontSize: 11, color: 'var(--t3)', lineHeight: 1.4 }}>
+                            {t.description || t.componentTypes.map(c => c.label).join(', ')}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+
+              {(form.templateId || form.freeform) && (
+                <p style={{ fontSize: 11, color: 'var(--t4)', margin: '8px 0 0' }}>
                   Can't be changed after the project is created.
                 </p>
               )}

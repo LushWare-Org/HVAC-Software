@@ -14,7 +14,6 @@ import { clampPagination } from '@tscrm/types';
 import {
   effectiveRoster, toDateStr, isValidDateStr, WEEKDAYS,
 } from './roster.util';
-import { isValidTemplateType, PROJECT_TEMPLATES } from './project-templates';
 import { EmailService, renderEmailCard, emailInfoBox } from '../email/email.service';
 
 const PROJECT_STATUSES = ['PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'CANCELLED'];
@@ -26,6 +25,9 @@ export interface UpsertProjectInput {
   category?: string | null;
   status?: string;
   templateType?: string;
+  templateId?: string;
+  /** "Customized project" — no template, starts with zero component types. */
+  freeform?: boolean;
   startDate?: string | null;
   targetEndDate?: string | null;
   budget?: number | null;
@@ -84,12 +86,11 @@ export class ProjectsService {
         nextServiceDate: true, status: true, houseId: true,
       },
     });
-    // Housing Scheme: rolled-up open-issue count across all houses (Houses tab badge).
-    const openIssueCount = project.templateType === 'HOUSING_SCHEME'
-      ? await this.prisma.houseIssueReport.count({
-          where: { companyId, status: { not: 'RESOLVED' }, house: { projectId: id } },
-        })
-      : 0;
+    // Generic component templates: rolled-up open-issue count across all components
+    // on this project (Components tab badge). Replaces the old Housing-Scheme-only branch.
+    const openIssueCount = await this.prisma.componentIssueReport.count({
+      where: { companyId, status: { not: 'RESOLVED' }, component: { projectId: id } },
+    });
     return { ...decorated, agreements, openIssueCount };
   }
 
@@ -97,9 +98,6 @@ export class ProjectsService {
     if (!input.name?.trim()) throw new BadRequestException('name is required');
     this.validateStatus(input.status);
     this.validateWorkingDays(input.workingDays);
-    if (input.templateType !== undefined && !isValidTemplateType(input.templateType)) {
-      throw new BadRequestException(`templateType must be one of ${PROJECT_TEMPLATES.join(', ')}`);
-    }
 
     if (input.customerId) {
       const customer = await this.prisma.customer.findFirst({
@@ -109,6 +107,36 @@ export class ProjectsService {
       if (!customer) throw new BadRequestException('Customer not found in this company');
     }
 
+    // Generic component templates (spec: docs/superpowers/specs/2026-08-14-project-component-templates-design.md,
+    // refined docs/superpowers/specs/2026-08-15-project-templates-refinement-design.md).
+    // templateId is optional — a project can be freeform (no structure), matching
+    // today's STANDARD. The snapshot is a starting point, not frozen: it's seeded
+    // at creation from the template but grows as components with new type names
+    // are added later (see ProjectComponentsService.resolveOrRegisterType).
+    if (input.freeform && input.templateId) {
+      throw new BadRequestException('A project cannot be both freeform and template-based');
+    }
+
+    let templateFields: { templateId: string | null; componentTypesSnapshot: any; componentCustomerSettings: any } =
+      { templateId: null, componentTypesSnapshot: null, componentCustomerSettings: null };
+
+    if (input.templateId) {
+      const template = await this.prisma.projectTemplate.findFirst({
+        where: { id: input.templateId, companyId },
+      });
+      if (!template) throw new NotFoundException('Template not found');
+      const types = template.componentTypes as Array<{ key: string; customerAssignable: boolean }>;
+      templateFields = {
+        templateId: template.id,
+        componentTypesSnapshot: template.componentTypes,
+        componentCustomerSettings: Object.fromEntries(types.map((t) => [t.key, t.customerAssignable])),
+      };
+    } else if (input.freeform) {
+      // "Customized project" — zero predefined types, but componentTypesSnapshot is
+      // non-null so the Components tab shows and grows entirely ad hoc.
+      templateFields = { templateId: null, componentTypesSnapshot: [], componentCustomerSettings: {} };
+    }
+
     const project = await this.prisma.project.create({
       data: {
         companyId,
@@ -116,7 +144,6 @@ export class ProjectsService {
         name: input.name.trim(),
         description: input.description ?? null,
         category: input.category ?? null,
-        templateType: input.templateType ?? 'STANDARD',
         status: input.status ?? 'PLANNING',
         startDate: input.startDate ? new Date(input.startDate) : null,
         targetEndDate: input.targetEndDate ? new Date(input.targetEndDate) : null,
@@ -128,6 +155,7 @@ export class ProjectsService {
         workingDays: input.workingDays ?? undefined,
         baseTeamUserIds: input.baseTeamUserIds ?? [],
         notes: input.notes ?? null,
+        ...templateFields,
       },
     });
 
@@ -136,6 +164,27 @@ export class ProjectsService {
     }
 
     return project;
+  }
+
+  /**
+   * Turn per-component customer assignment on/off for THIS project, bounded by the
+   * template's own customerAssignable ceiling — a project can only narrow it, never
+   * widen it.
+   */
+  async updateCustomerSettings(companyId: string, projectId: string, settings: Record<string, boolean>) {
+    const project = await this.prisma.project.findFirst({ where: { id: projectId, companyId } });
+    if (!project) throw new NotFoundException('Project not found');
+    const snapshot = (project.componentTypesSnapshot as Array<{ key: string; customerAssignable: boolean }> | null) ?? [];
+    const validKeys = new Set(snapshot.map((t) => t.key));
+    for (const key of Object.keys(settings)) {
+      if (!validKeys.has(key)) throw new BadRequestException(`Unknown component type: ${key}`);
+      const type = snapshot.find((t) => t.key === key)!;
+      if (settings[key] && !type.customerAssignable) {
+        throw new BadRequestException(`"${type.key}" is not customer-assignable on this project's template`);
+      }
+    }
+    const merged = { ...((project.componentCustomerSettings as object) ?? {}), ...settings };
+    return this.prisma.project.update({ where: { id: projectId }, data: { componentCustomerSettings: merged } });
   }
 
   async update(companyId: string, id: string, input: UpsertProjectInput) {
@@ -382,7 +431,7 @@ export class ProjectsService {
     }
   }
 
-  /** Attach customerName so lists render without extra round-trips. */
+  /** Attach customerName + componentCount so lists render without extra round-trips. */
   private async decorate(companyId: string, projects: any[]) {
     if (projects.length === 0) return [];
     const customerIds = [...new Set(projects.map((p) => p.customerId).filter(Boolean))] as string[];
@@ -393,6 +442,17 @@ export class ProjectsService {
         })
       : [];
     const names = new Map(customers.map((c) => [c.id, `${c.firstName} ${c.lastName}`.trim()]));
-    return projects.map((p) => ({ ...p, customerName: p.customerId ? (names.get(p.customerId) ?? '—') : null }));
+
+    const projectIds = projects.map((p) => p.id);
+    const componentCounts = await this.prisma.projectComponent.groupBy({
+      by: ['projectId'], where: { companyId, projectId: { in: projectIds } }, _count: { _all: true },
+    });
+    const componentCountByProject = new Map(componentCounts.map((c) => [c.projectId, c._count._all]));
+
+    return projects.map((p) => ({
+      ...p,
+      customerName: p.customerId ? (names.get(p.customerId) ?? '—') : null,
+      componentCount: componentCountByProject.get(p.id) ?? 0,
+    }));
   }
 }

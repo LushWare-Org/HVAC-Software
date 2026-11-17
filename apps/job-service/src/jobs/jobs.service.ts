@@ -141,7 +141,7 @@ export class JobsService {
       agreementId?: string;
       projectId?: string;
       projectIds?: string[];
-      houseId?: string;
+      componentId?: string;
       equipmentId?: string;
       isAgreementJob?: boolean;
     } = {},
@@ -168,7 +168,7 @@ export class JobsService {
     // Batch form: one request for many projects' jobs (Projects page overview)
     // instead of one request per project.
     if (filters.projectIds?.length) where.projectId = { in: filters.projectIds };
-    if (filters.houseId) where.houseId = filters.houseId;
+    if (filters.componentId) where.componentId = filters.componentId;
     if (filters.equipmentId) where.equipmentId = filters.equipmentId;
     if (filters.isAgreementJob !== undefined) where.isAgreementJob = filters.isAgreementJob;
     if (filters.dateFrom || filters.dateTo) {
@@ -579,7 +579,7 @@ export class JobsService {
       internalNotes: string;
       tags: string[];
       projectId: string | null;
-      houseId: string | null;
+      componentId: string | null;
       equipmentId: string | null;
     }>,
   ) {

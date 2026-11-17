@@ -1,22 +1,21 @@
 /**
- * ProjectJobLinkPicker — optional "link this job to a project (and house)" control.
- * Collapsed by default behind a small button so it doesn't add weight to the common
- * non-project job. Once a project is picked, a second cascading select appears only
- * if that project's template actually has a sub-entity to narrow down to (today:
- * Housing Scheme's houses). Adding a future template's own sub-entity (e.g. a Hotel's
- * Areas) is one more `else if (selectedProject?.templateType === 'HOTEL')` branch here,
- * not a rewrite of this component.
+ * ProjectJobLinkPicker — optional "link this job to a project (and component)"
+ * control. Collapsed by default behind a small button so it doesn't add weight
+ * to the common non-project job. Once a project is picked, a second cascading
+ * select appears only if that project has a template with a component
+ * breakdown to narrow down to — generic across every template, not just
+ * Housing Scheme.
  */
 import { useMemo, useState } from 'react'
 import { Briefcase, X } from 'lucide-react'
 import { useProjectsFull } from '../pages/projects/projectsApi'
-import { useHouses } from '../pages/projects/housesApi'
+import { useComponents } from '../pages/projects/componentsApi'
 
 export interface ProjectJobLink {
   projectId?: string
   projectName?: string
-  houseId?: string
-  houseLabel?: string
+  componentId?: string
+  componentLabel?: string
 }
 
 const lbl: React.CSSProperties = {
@@ -45,7 +44,7 @@ export default function ProjectJobLinkPicker({ value, onChange, customerId }: {
   }, [projects, search, customerId])
 
   const selectedProject = value.projectId ? projects.find(p => p.id === value.projectId) : undefined
-  const housesQ = useHouses(selectedProject?.templateType === 'HOUSING_SCHEME' ? selectedProject.id : undefined)
+  const componentsQ = useComponents(selectedProject?.componentTypesSnapshot != null ? selectedProject.id : undefined)
 
   if (!expanded) {
     return (
@@ -68,21 +67,21 @@ export default function ProjectJobLinkPicker({ value, onChange, customerId }: {
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange({})}>Change</button>
         </div>
 
-        {selectedProject?.templateType === 'HOUSING_SCHEME' && (
+        {selectedProject?.componentTypesSnapshot != null && (
           <div>
-            <label style={lbl}>Which house? (optional)</label>
+            <label style={lbl}>Which component? (optional)</label>
             <select
               className="select"
               style={{ width: '100%' }}
-              value={value.houseId ?? ''}
+              value={value.componentId ?? ''}
               onChange={e => {
-                const house = housesQ.data?.find(h => h.id === e.target.value)
-                onChange({ ...value, houseId: house?.id, houseLabel: house?.label })
+                const component = componentsQ.data?.find(c => c.id === e.target.value)
+                onChange({ ...value, componentId: component?.id, componentLabel: component?.label })
               }}
             >
-              <option value="">General — not house-specific</option>
-              {(housesQ.data ?? []).map(h => (
-                <option key={h.id} value={h.id}>{h.label}</option>
+              <option value="">General — not component-specific</option>
+              {(componentsQ.data ?? []).map(c => (
+                <option key={c.id} value={c.id}>{c.label}</option>
               ))}
             </select>
           </div>

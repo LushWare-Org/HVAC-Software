@@ -1,14 +1,14 @@
 /**
- * HouseIssuesAlert — the one shared "something needs attention" surface for
- * Housing Scheme issue reports (thermostat error codes etc.), reused on the
- * Dashboard (company-wide), Project detail, and the Houses tab (project-scoped).
+ * ComponentIssuesAlert — the one shared "something needs attention" surface for
+ * project component issue reports (thermostat error codes etc.), reused on the
+ * Dashboard (company-wide), Project detail, and the Components tab (project-scoped).
  * Same visual language everywhere so it's instantly recognizable, and stays
  * visible until every listed issue is marked resolved — this is deliberately
  * not dismissible.
  */
 import { useNavigate } from 'react-router-dom'
-import { MessageSquareWarning, ChevronRight, Home } from 'lucide-react'
-import { useOpenHouseIssues, ISSUE_STATUS_META, type OpenHouseIssue } from '../pages/projects/housesApi'
+import { MessageSquareWarning, ChevronRight, Box } from 'lucide-react'
+import { useOpenComponentIssues, ISSUE_STATUS_META, type OpenComponentIssue } from '../pages/projects/componentsApi'
 
 function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime()
@@ -21,8 +21,8 @@ function timeAgo(iso: string): string {
   return `${days}d ago`
 }
 
-export default function HouseIssuesAlert({ projectId, maxRows = 5 }: { projectId?: string; maxRows?: number }) {
-  const { data } = useOpenHouseIssues()
+export default function ComponentIssuesAlert({ projectId, maxRows = 5 }: { projectId?: string; maxRows?: number }) {
+  const { data } = useOpenComponentIssues()
   const navigate = useNavigate()
 
   const issues = (data ?? []).filter((i) => !projectId || i.projectId === projectId)
@@ -48,7 +48,7 @@ export default function HouseIssuesAlert({ projectId, maxRows = 5 }: { projectId
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>
-            {issues.length} open issue{issues.length === 1 ? '' : 's'} reported by homeowners
+            {issues.length} open issue{issues.length === 1 ? '' : 's'} reported by owners
           </p>
           <p style={{ fontSize: 11.5, color: 'var(--t3)', margin: '2px 0 0' }}>
             Stays here until each one is marked resolved.
@@ -58,7 +58,7 @@ export default function HouseIssuesAlert({ projectId, maxRows = 5 }: { projectId
 
       <div>
         {shown.map((issue) => (
-          <IssueRow key={issue.id} issue={issue} onClick={() => navigate(`/projects/${issue.projectId}?house=${issue.houseId}`)} />
+          <IssueRow key={issue.id} issue={issue} onClick={() => navigate(`/projects/${issue.projectId}?component=${issue.componentId}`)} />
         ))}
       </div>
 
@@ -71,7 +71,7 @@ export default function HouseIssuesAlert({ projectId, maxRows = 5 }: { projectId
   )
 }
 
-function IssueRow({ issue, onClick }: { issue: OpenHouseIssue; onClick: () => void }) {
+function IssueRow({ issue, onClick }: { issue: OpenComponentIssue; onClick: () => void }) {
   const meta = ISSUE_STATUS_META[issue.status]
   return (
     <button
@@ -83,13 +83,13 @@ function IssueRow({ issue, onClick }: { issue: OpenHouseIssue; onClick: () => vo
         cursor: 'pointer', fontFamily: 'inherit',
       }}
     >
-      <Home size={12} style={{ color: 'var(--t4)', flexShrink: 0 }} />
+      <Box size={12} style={{ color: 'var(--t4)', flexShrink: 0 }} />
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--t1)' }}>
           {issue.errorCode ? `Error ${issue.errorCode}` : 'Issue reported'}
         </span>
         <span style={{ fontSize: 11.5, color: 'var(--t4)' }}>
-          {' — '}{issue.houseLabel} · {issue.projectName} · {issue.reportedByName}
+          {' — '}{issue.componentLabel} · {issue.projectName} · {issue.reportedByName}
         </span>
       </span>
       <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: meta.dim, color: meta.color, flexShrink: 0 }}>

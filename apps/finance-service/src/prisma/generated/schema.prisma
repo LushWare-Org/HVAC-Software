@@ -109,7 +109,8 @@ model Quote {
   quoteNumber   String // e.g. QUOTE-2024-0001 (auto-generated)
   jobId         String? // optional link to a job in the jobs schema
   projectId     String? // cross-schema ref to crm.projects
-  houseId       String? // Housing Scheme: which house this quote is for (cross-schema ref to crm.houses)
+  houseId       String? // deprecated, see componentId
+  componentId   String? // which project component this quote is for (cross-schema ref to crm.project_components) — replaces houseId
   templateId    String? // cross-schema ref to crm.document_templates
   customerId    String // cross-schema ref to crm.customers
   customerName  String
@@ -155,6 +156,7 @@ model Quote {
   @@index([companyId, customerId])
   @@index([companyId, projectId])
   @@index([houseId])
+  @@index([componentId])
   @@schema("finance")
 }
 
@@ -186,7 +188,8 @@ model Invoice {
   quote         Quote?  @relation("QuoteInvoices", fields: [quoteId], references: [id])
   jobId         String? // cross-schema ref to jobs.job
   projectId     String? // cross-schema ref to crm.projects
-  houseId       String? // Housing Scheme: which house this invoice is for (cross-schema ref to crm.houses)
+  houseId       String? // deprecated, see componentId
+  componentId   String? // which project component this invoice is for (cross-schema ref to crm.project_components) — replaces houseId
   workOrderId   String? // cross-schema ref to jobs.work_order
   templateId    String? // cross-schema ref to crm.document_templates
   customerId    String
@@ -248,6 +251,7 @@ model Invoice {
   @@index([companyId, dueDate])
   @@index([companyId, projectId])
   @@index([houseId])
+  @@index([componentId])
   @@schema("finance")
 }
 

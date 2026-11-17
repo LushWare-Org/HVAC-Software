@@ -23,6 +23,7 @@
   "dependencies": {
     "@nestjs/bullmq": "^10.0.0",
     "@nestjs/common": "^10.0.0",
+    "@tscrm/activity-log": "workspace:*",
     "@nestjs/config": "^3.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/passport": "^10.0.0",
@@ -34,6 +35,7 @@
     "@prisma/client": "^5.0.0",
     "@sendgrid/eventwebhook": "^8.0.0",
     "@sendgrid/mail": "^8.1.0",
+    "axios": "^1.16.1",
     "@tscrm/auth-client": "workspace:*",
     "@tscrm/queue": "workspace:*",
     "@tscrm/types": "workspace:*",

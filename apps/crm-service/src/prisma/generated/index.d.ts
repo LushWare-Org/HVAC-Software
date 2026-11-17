@@ -163,6 +163,21 @@ export type House = $Result.DefaultSelection<Prisma.$HousePayload>
  * 
  */
 export type HouseIssueReport = $Result.DefaultSelection<Prisma.$HouseIssueReportPayload>
+/**
+ * Model ProjectTemplate
+ * 
+ */
+export type ProjectTemplate = $Result.DefaultSelection<Prisma.$ProjectTemplatePayload>
+/**
+ * Model ProjectComponent
+ * 
+ */
+export type ProjectComponent = $Result.DefaultSelection<Prisma.$ProjectComponentPayload>
+/**
+ * Model ComponentIssueReport
+ * 
+ */
+export type ComponentIssueReport = $Result.DefaultSelection<Prisma.$ComponentIssueReportPayload>
 
 /**
  * Enums
@@ -693,6 +708,36 @@ export class PrismaClient<
     * ```
     */
   get houseIssueReport(): Prisma.HouseIssueReportDelegate<ExtArgs>;
+
+  /**
+   * `prisma.projectTemplate`: Exposes CRUD operations for the **ProjectTemplate** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProjectTemplates
+    * const projectTemplates = await prisma.projectTemplate.findMany()
+    * ```
+    */
+  get projectTemplate(): Prisma.ProjectTemplateDelegate<ExtArgs>;
+
+  /**
+   * `prisma.projectComponent`: Exposes CRUD operations for the **ProjectComponent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProjectComponents
+    * const projectComponents = await prisma.projectComponent.findMany()
+    * ```
+    */
+  get projectComponent(): Prisma.ProjectComponentDelegate<ExtArgs>;
+
+  /**
+   * `prisma.componentIssueReport`: Exposes CRUD operations for the **ComponentIssueReport** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ComponentIssueReports
+    * const componentIssueReports = await prisma.componentIssueReport.findMany()
+    * ```
+    */
+  get componentIssueReport(): Prisma.ComponentIssueReportDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -1163,7 +1208,10 @@ export namespace Prisma {
     Project: 'Project',
     ProjectRosterDay: 'ProjectRosterDay',
     House: 'House',
-    HouseIssueReport: 'HouseIssueReport'
+    HouseIssueReport: 'HouseIssueReport',
+    ProjectTemplate: 'ProjectTemplate',
+    ProjectComponent: 'ProjectComponent',
+    ComponentIssueReport: 'ComponentIssueReport'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1179,7 +1227,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "company" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentErrorCode" | "documentTemplate" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "retentionRecommendation" | "revenueRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay" | "house" | "houseIssueReport"
+      modelProps: "company" | "companyUser" | "userLoginEvent" | "customer" | "contact" | "lead" | "serviceAgreement" | "agreementAmendment" | "booking" | "review" | "address" | "equipment" | "equipmentErrorCode" | "documentTemplate" | "equipmentConsumable" | "contractorPost" | "companyAnnouncement" | "followupAttempt" | "upsellRecommendation" | "retentionRecommendation" | "revenueRecommendation" | "importBatch" | "importError" | "customerIotConnection" | "customerIotDevice" | "iotDeviceHistory" | "project" | "projectRosterDay" | "house" | "houseIssueReport" | "projectTemplate" | "projectComponent" | "componentIssueReport"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3283,6 +3331,216 @@ export namespace Prisma {
           }
         }
       }
+      ProjectTemplate: {
+        payload: Prisma.$ProjectTemplatePayload<ExtArgs>
+        fields: Prisma.ProjectTemplateFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProjectTemplateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProjectTemplateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload>
+          }
+          findFirst: {
+            args: Prisma.ProjectTemplateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProjectTemplateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload>
+          }
+          findMany: {
+            args: Prisma.ProjectTemplateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload>[]
+          }
+          create: {
+            args: Prisma.ProjectTemplateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload>
+          }
+          createMany: {
+            args: Prisma.ProjectTemplateCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProjectTemplateCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload>[]
+          }
+          delete: {
+            args: Prisma.ProjectTemplateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload>
+          }
+          update: {
+            args: Prisma.ProjectTemplateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload>
+          }
+          deleteMany: {
+            args: Prisma.ProjectTemplateDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProjectTemplateUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ProjectTemplateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectTemplatePayload>
+          }
+          aggregate: {
+            args: Prisma.ProjectTemplateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProjectTemplate>
+          }
+          groupBy: {
+            args: Prisma.ProjectTemplateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProjectTemplateGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProjectTemplateCountArgs<ExtArgs>
+            result: $Utils.Optional<ProjectTemplateCountAggregateOutputType> | number
+          }
+        }
+      }
+      ProjectComponent: {
+        payload: Prisma.$ProjectComponentPayload<ExtArgs>
+        fields: Prisma.ProjectComponentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProjectComponentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProjectComponentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload>
+          }
+          findFirst: {
+            args: Prisma.ProjectComponentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProjectComponentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload>
+          }
+          findMany: {
+            args: Prisma.ProjectComponentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload>[]
+          }
+          create: {
+            args: Prisma.ProjectComponentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload>
+          }
+          createMany: {
+            args: Prisma.ProjectComponentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProjectComponentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload>[]
+          }
+          delete: {
+            args: Prisma.ProjectComponentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload>
+          }
+          update: {
+            args: Prisma.ProjectComponentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProjectComponentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProjectComponentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ProjectComponentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProjectComponentPayload>
+          }
+          aggregate: {
+            args: Prisma.ProjectComponentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProjectComponent>
+          }
+          groupBy: {
+            args: Prisma.ProjectComponentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProjectComponentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProjectComponentCountArgs<ExtArgs>
+            result: $Utils.Optional<ProjectComponentCountAggregateOutputType> | number
+          }
+        }
+      }
+      ComponentIssueReport: {
+        payload: Prisma.$ComponentIssueReportPayload<ExtArgs>
+        fields: Prisma.ComponentIssueReportFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ComponentIssueReportFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ComponentIssueReportFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload>
+          }
+          findFirst: {
+            args: Prisma.ComponentIssueReportFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ComponentIssueReportFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload>
+          }
+          findMany: {
+            args: Prisma.ComponentIssueReportFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload>[]
+          }
+          create: {
+            args: Prisma.ComponentIssueReportCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload>
+          }
+          createMany: {
+            args: Prisma.ComponentIssueReportCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ComponentIssueReportCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload>[]
+          }
+          delete: {
+            args: Prisma.ComponentIssueReportDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload>
+          }
+          update: {
+            args: Prisma.ComponentIssueReportUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload>
+          }
+          deleteMany: {
+            args: Prisma.ComponentIssueReportDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ComponentIssueReportUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ComponentIssueReportUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComponentIssueReportPayload>
+          }
+          aggregate: {
+            args: Prisma.ComponentIssueReportAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateComponentIssueReport>
+          }
+          groupBy: {
+            args: Prisma.ComponentIssueReportGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ComponentIssueReportGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ComponentIssueReportCountArgs<ExtArgs>
+            result: $Utils.Optional<ComponentIssueReportCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -3533,6 +3791,8 @@ export namespace Prisma {
     iotConnections: number
     ownedHouses: number
     issueReports: number
+    ownedComponents: number
+    componentIssueReports: number
   }
 
   export type CustomerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3549,6 +3809,8 @@ export namespace Prisma {
     iotConnections?: boolean | CustomerCountOutputTypeCountIotConnectionsArgs
     ownedHouses?: boolean | CustomerCountOutputTypeCountOwnedHousesArgs
     issueReports?: boolean | CustomerCountOutputTypeCountIssueReportsArgs
+    ownedComponents?: boolean | CustomerCountOutputTypeCountOwnedComponentsArgs
+    componentIssueReports?: boolean | CustomerCountOutputTypeCountComponentIssueReportsArgs
   }
 
   // Custom InputTypes
@@ -3653,6 +3915,20 @@ export namespace Prisma {
     where?: HouseIssueReportWhereInput
   }
 
+  /**
+   * CustomerCountOutputType without action
+   */
+  export type CustomerCountOutputTypeCountOwnedComponentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProjectComponentWhereInput
+  }
+
+  /**
+   * CustomerCountOutputType without action
+   */
+  export type CustomerCountOutputTypeCountComponentIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComponentIssueReportWhereInput
+  }
+
 
   /**
    * Count Type LeadCountOutputType
@@ -3723,12 +3999,14 @@ export namespace Prisma {
   export type EquipmentCountOutputType = {
     consumables: number
     issueReports: number
+    componentIssueReports: number
     errorCodes: number
   }
 
   export type EquipmentCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     consumables?: boolean | EquipmentCountOutputTypeCountConsumablesArgs
     issueReports?: boolean | EquipmentCountOutputTypeCountIssueReportsArgs
+    componentIssueReports?: boolean | EquipmentCountOutputTypeCountComponentIssueReportsArgs
     errorCodes?: boolean | EquipmentCountOutputTypeCountErrorCodesArgs
   }
 
@@ -3755,6 +4033,13 @@ export namespace Prisma {
    */
   export type EquipmentCountOutputTypeCountIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: HouseIssueReportWhereInput
+  }
+
+  /**
+   * EquipmentCountOutputType without action
+   */
+  export type EquipmentCountOutputTypeCountComponentIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComponentIssueReportWhereInput
   }
 
   /**
@@ -3865,11 +4150,13 @@ export namespace Prisma {
   export type ProjectCountOutputType = {
     rosterDays: number
     houses: number
+    components: number
   }
 
   export type ProjectCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     rosterDays?: boolean | ProjectCountOutputTypeCountRosterDaysArgs
     houses?: boolean | ProjectCountOutputTypeCountHousesArgs
+    components?: boolean | ProjectCountOutputTypeCountComponentsArgs
   }
 
   // Custom InputTypes
@@ -3895,6 +4182,13 @@ export namespace Prisma {
    */
   export type ProjectCountOutputTypeCountHousesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: HouseWhereInput
+  }
+
+  /**
+   * ProjectCountOutputType without action
+   */
+  export type ProjectCountOutputTypeCountComponentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProjectComponentWhereInput
   }
 
 
@@ -3935,6 +4229,46 @@ export namespace Prisma {
    */
   export type HouseCountOutputTypeCountIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: HouseIssueReportWhereInput
+  }
+
+
+  /**
+   * Count Type ProjectComponentCountOutputType
+   */
+
+  export type ProjectComponentCountOutputType = {
+    equipment: number
+    issueReports: number
+  }
+
+  export type ProjectComponentCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    equipment?: boolean | ProjectComponentCountOutputTypeCountEquipmentArgs
+    issueReports?: boolean | ProjectComponentCountOutputTypeCountIssueReportsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ProjectComponentCountOutputType without action
+   */
+  export type ProjectComponentCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponentCountOutputType
+     */
+    select?: ProjectComponentCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ProjectComponentCountOutputType without action
+   */
+  export type ProjectComponentCountOutputTypeCountEquipmentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EquipmentWhereInput
+  }
+
+  /**
+   * ProjectComponentCountOutputType without action
+   */
+  export type ProjectComponentCountOutputTypeCountIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComponentIssueReportWhereInput
   }
 
 
@@ -7557,6 +7891,8 @@ export namespace Prisma {
     iotConnections?: boolean | Customer$iotConnectionsArgs<ExtArgs>
     ownedHouses?: boolean | Customer$ownedHousesArgs<ExtArgs>
     issueReports?: boolean | Customer$issueReportsArgs<ExtArgs>
+    ownedComponents?: boolean | Customer$ownedComponentsArgs<ExtArgs>
+    componentIssueReports?: boolean | Customer$componentIssueReportsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["customer"]>
 
@@ -7626,6 +7962,8 @@ export namespace Prisma {
     iotConnections?: boolean | Customer$iotConnectionsArgs<ExtArgs>
     ownedHouses?: boolean | Customer$ownedHousesArgs<ExtArgs>
     issueReports?: boolean | Customer$issueReportsArgs<ExtArgs>
+    ownedComponents?: boolean | Customer$ownedComponentsArgs<ExtArgs>
+    componentIssueReports?: boolean | Customer$componentIssueReportsArgs<ExtArgs>
     _count?: boolean | CustomerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CustomerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7649,6 +7987,8 @@ export namespace Prisma {
       iotConnections: Prisma.$CustomerIotConnectionPayload<ExtArgs>[]
       ownedHouses: Prisma.$HousePayload<ExtArgs>[]
       issueReports: Prisma.$HouseIssueReportPayload<ExtArgs>[]
+      ownedComponents: Prisma.$ProjectComponentPayload<ExtArgs>[]
+      componentIssueReports: Prisma.$ComponentIssueReportPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -8051,6 +8391,8 @@ export namespace Prisma {
     iotConnections<T extends Customer$iotConnectionsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$iotConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CustomerIotConnectionPayload<ExtArgs>, T, "findMany"> | Null>
     ownedHouses<T extends Customer$ownedHousesArgs<ExtArgs> = {}>(args?: Subset<T, Customer$ownedHousesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findMany"> | Null>
     issueReports<T extends Customer$issueReportsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$issueReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findMany"> | Null>
+    ownedComponents<T extends Customer$ownedComponentsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$ownedComponentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "findMany"> | Null>
+    componentIssueReports<T extends Customer$componentIssueReportsArgs<ExtArgs> = {}>(args?: Subset<T, Customer$componentIssueReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8677,6 +9019,46 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: HouseIssueReportScalarFieldEnum | HouseIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * Customer.ownedComponents
+   */
+  export type Customer$ownedComponentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    where?: ProjectComponentWhereInput
+    orderBy?: ProjectComponentOrderByWithRelationInput | ProjectComponentOrderByWithRelationInput[]
+    cursor?: ProjectComponentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProjectComponentScalarFieldEnum | ProjectComponentScalarFieldEnum[]
+  }
+
+  /**
+   * Customer.componentIssueReports
+   */
+  export type Customer$componentIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    where?: ComponentIssueReportWhereInput
+    orderBy?: ComponentIssueReportOrderByWithRelationInput | ComponentIssueReportOrderByWithRelationInput[]
+    cursor?: ComponentIssueReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ComponentIssueReportScalarFieldEnum | ComponentIssueReportScalarFieldEnum[]
   }
 
   /**
@@ -10971,6 +11353,7 @@ export namespace Prisma {
     jobTemplateId: string | null
     projectId: string | null
     houseId: string | null
+    componentId: string | null
     customerConfirmedAt: Date | null
     confirmToken: string | null
     renewalReminderSent: boolean | null
@@ -11009,6 +11392,7 @@ export namespace Prisma {
     jobTemplateId: string | null
     projectId: string | null
     houseId: string | null
+    componentId: string | null
     customerConfirmedAt: Date | null
     confirmToken: string | null
     renewalReminderSent: boolean | null
@@ -11047,6 +11431,7 @@ export namespace Prisma {
     jobTemplateId: number
     projectId: number
     houseId: number
+    componentId: number
     customerConfirmedAt: number
     confirmToken: number
     renewalReminderSent: number
@@ -11105,6 +11490,7 @@ export namespace Prisma {
     jobTemplateId?: true
     projectId?: true
     houseId?: true
+    componentId?: true
     customerConfirmedAt?: true
     confirmToken?: true
     renewalReminderSent?: true
@@ -11143,6 +11529,7 @@ export namespace Prisma {
     jobTemplateId?: true
     projectId?: true
     houseId?: true
+    componentId?: true
     customerConfirmedAt?: true
     confirmToken?: true
     renewalReminderSent?: true
@@ -11181,6 +11568,7 @@ export namespace Prisma {
     jobTemplateId?: true
     projectId?: true
     houseId?: true
+    componentId?: true
     customerConfirmedAt?: true
     confirmToken?: true
     renewalReminderSent?: true
@@ -11306,6 +11694,7 @@ export namespace Prisma {
     jobTemplateId: string | null
     projectId: string | null
     houseId: string | null
+    componentId: string | null
     customerConfirmedAt: Date | null
     confirmToken: string | null
     renewalReminderSent: boolean
@@ -11363,6 +11752,7 @@ export namespace Prisma {
     jobTemplateId?: boolean
     projectId?: boolean
     houseId?: boolean
+    componentId?: boolean
     customerConfirmedAt?: boolean
     confirmToken?: boolean
     renewalReminderSent?: boolean
@@ -11405,6 +11795,7 @@ export namespace Prisma {
     jobTemplateId?: boolean
     projectId?: boolean
     houseId?: boolean
+    componentId?: boolean
     customerConfirmedAt?: boolean
     confirmToken?: boolean
     renewalReminderSent?: boolean
@@ -11445,6 +11836,7 @@ export namespace Prisma {
     jobTemplateId?: boolean
     projectId?: boolean
     houseId?: boolean
+    componentId?: boolean
     customerConfirmedAt?: boolean
     confirmToken?: boolean
     renewalReminderSent?: boolean
@@ -11501,6 +11893,7 @@ export namespace Prisma {
       jobTemplateId: string | null
       projectId: string | null
       houseId: string | null
+      componentId: string | null
       customerConfirmedAt: Date | null
       confirmToken: string | null
       renewalReminderSent: boolean
@@ -11932,6 +12325,7 @@ export namespace Prisma {
     readonly jobTemplateId: FieldRef<"ServiceAgreement", 'String'>
     readonly projectId: FieldRef<"ServiceAgreement", 'String'>
     readonly houseId: FieldRef<"ServiceAgreement", 'String'>
+    readonly componentId: FieldRef<"ServiceAgreement", 'String'>
     readonly customerConfirmedAt: FieldRef<"ServiceAgreement", 'DateTime'>
     readonly confirmToken: FieldRef<"ServiceAgreement", 'String'>
     readonly renewalReminderSent: FieldRef<"ServiceAgreement", 'Boolean'>
@@ -16523,6 +16917,7 @@ export namespace Prisma {
     companyId: string | null
     customerId: string | null
     houseId: string | null
+    componentId: string | null
     type: string | null
     brand: string | null
     model: string | null
@@ -16544,6 +16939,7 @@ export namespace Prisma {
     companyId: string | null
     customerId: string | null
     houseId: string | null
+    componentId: string | null
     type: string | null
     brand: string | null
     model: string | null
@@ -16565,6 +16961,7 @@ export namespace Prisma {
     companyId: number
     customerId: number
     houseId: number
+    componentId: number
     type: number
     brand: number
     model: number
@@ -16589,6 +16986,7 @@ export namespace Prisma {
     companyId?: true
     customerId?: true
     houseId?: true
+    componentId?: true
     type?: true
     brand?: true
     model?: true
@@ -16610,6 +17008,7 @@ export namespace Prisma {
     companyId?: true
     customerId?: true
     houseId?: true
+    componentId?: true
     type?: true
     brand?: true
     model?: true
@@ -16631,6 +17030,7 @@ export namespace Prisma {
     companyId?: true
     customerId?: true
     houseId?: true
+    componentId?: true
     type?: true
     brand?: true
     model?: true
@@ -16726,6 +17126,7 @@ export namespace Prisma {
     companyId: string
     customerId: string
     houseId: string | null
+    componentId: string | null
     type: string
     brand: string | null
     model: string | null
@@ -16765,6 +17166,7 @@ export namespace Prisma {
     companyId?: boolean
     customerId?: boolean
     houseId?: boolean
+    componentId?: boolean
     type?: boolean
     brand?: boolean
     model?: boolean
@@ -16782,8 +17184,10 @@ export namespace Prisma {
     imageScanError?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     house?: boolean | Equipment$houseArgs<ExtArgs>
+    component?: boolean | Equipment$componentArgs<ExtArgs>
     consumables?: boolean | Equipment$consumablesArgs<ExtArgs>
     issueReports?: boolean | Equipment$issueReportsArgs<ExtArgs>
+    componentIssueReports?: boolean | Equipment$componentIssueReportsArgs<ExtArgs>
     errorCodes?: boolean | Equipment$errorCodesArgs<ExtArgs>
     _count?: boolean | EquipmentCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["equipment"]>
@@ -16793,6 +17197,7 @@ export namespace Prisma {
     companyId?: boolean
     customerId?: boolean
     houseId?: boolean
+    componentId?: boolean
     type?: boolean
     brand?: boolean
     model?: boolean
@@ -16810,6 +17215,7 @@ export namespace Prisma {
     imageScanError?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     house?: boolean | Equipment$houseArgs<ExtArgs>
+    component?: boolean | Equipment$componentArgs<ExtArgs>
   }, ExtArgs["result"]["equipment"]>
 
   export type EquipmentSelectScalar = {
@@ -16817,6 +17223,7 @@ export namespace Prisma {
     companyId?: boolean
     customerId?: boolean
     houseId?: boolean
+    componentId?: boolean
     type?: boolean
     brand?: boolean
     model?: boolean
@@ -16837,14 +17244,17 @@ export namespace Prisma {
   export type EquipmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     house?: boolean | Equipment$houseArgs<ExtArgs>
+    component?: boolean | Equipment$componentArgs<ExtArgs>
     consumables?: boolean | Equipment$consumablesArgs<ExtArgs>
     issueReports?: boolean | Equipment$issueReportsArgs<ExtArgs>
+    componentIssueReports?: boolean | Equipment$componentIssueReportsArgs<ExtArgs>
     errorCodes?: boolean | Equipment$errorCodesArgs<ExtArgs>
     _count?: boolean | EquipmentCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type EquipmentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     house?: boolean | Equipment$houseArgs<ExtArgs>
+    component?: boolean | Equipment$componentArgs<ExtArgs>
   }
 
   export type $EquipmentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -16852,8 +17262,10 @@ export namespace Prisma {
     objects: {
       customer: Prisma.$CustomerPayload<ExtArgs>
       house: Prisma.$HousePayload<ExtArgs> | null
+      component: Prisma.$ProjectComponentPayload<ExtArgs> | null
       consumables: Prisma.$EquipmentConsumablePayload<ExtArgs>[]
       issueReports: Prisma.$HouseIssueReportPayload<ExtArgs>[]
+      componentIssueReports: Prisma.$ComponentIssueReportPayload<ExtArgs>[]
       errorCodes: Prisma.$EquipmentErrorCodePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -16861,6 +17273,7 @@ export namespace Prisma {
       companyId: string
       customerId: string
       houseId: string | null
+      componentId: string | null
       type: string
       brand: string | null
       model: string | null
@@ -17242,8 +17655,10 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     house<T extends Equipment$houseArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$houseArgs<ExtArgs>>): Prisma__HouseClient<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    component<T extends Equipment$componentArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$componentArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     consumables<T extends Equipment$consumablesArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$consumablesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentConsumablePayload<ExtArgs>, T, "findMany"> | Null>
     issueReports<T extends Equipment$issueReportsArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$issueReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HouseIssueReportPayload<ExtArgs>, T, "findMany"> | Null>
+    componentIssueReports<T extends Equipment$componentIssueReportsArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$componentIssueReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "findMany"> | Null>
     errorCodes<T extends Equipment$errorCodesArgs<ExtArgs> = {}>(args?: Subset<T, Equipment$errorCodesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentErrorCodePayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -17278,6 +17693,7 @@ export namespace Prisma {
     readonly companyId: FieldRef<"Equipment", 'String'>
     readonly customerId: FieldRef<"Equipment", 'String'>
     readonly houseId: FieldRef<"Equipment", 'String'>
+    readonly componentId: FieldRef<"Equipment", 'String'>
     readonly type: FieldRef<"Equipment", 'String'>
     readonly brand: FieldRef<"Equipment", 'String'>
     readonly model: FieldRef<"Equipment", 'String'>
@@ -17626,6 +18042,21 @@ export namespace Prisma {
   }
 
   /**
+   * Equipment.component
+   */
+  export type Equipment$componentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    where?: ProjectComponentWhereInput
+  }
+
+  /**
    * Equipment.consumables
    */
   export type Equipment$consumablesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -17663,6 +18094,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: HouseIssueReportScalarFieldEnum | HouseIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * Equipment.componentIssueReports
+   */
+  export type Equipment$componentIssueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    where?: ComponentIssueReportWhereInput
+    orderBy?: ComponentIssueReportOrderByWithRelationInput | ComponentIssueReportOrderByWithRelationInput[]
+    cursor?: ComponentIssueReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ComponentIssueReportScalarFieldEnum | ComponentIssueReportScalarFieldEnum[]
   }
 
   /**
@@ -32462,6 +32913,7 @@ export namespace Prisma {
     notes: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    templateId: string | null
   }
 
   export type ProjectMaxAggregateOutputType = {
@@ -32483,6 +32935,7 @@ export namespace Prisma {
     notes: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    templateId: string | null
   }
 
   export type ProjectCountAggregateOutputType = {
@@ -32506,6 +32959,9 @@ export namespace Prisma {
     notes: number
     createdAt: number
     updatedAt: number
+    templateId: number
+    componentTypesSnapshot: number
+    componentCustomerSettings: number
     _all: number
   }
 
@@ -32543,6 +32999,7 @@ export namespace Prisma {
     notes?: true
     createdAt?: true
     updatedAt?: true
+    templateId?: true
   }
 
   export type ProjectMaxAggregateInputType = {
@@ -32564,6 +33021,7 @@ export namespace Prisma {
     notes?: true
     createdAt?: true
     updatedAt?: true
+    templateId?: true
   }
 
   export type ProjectCountAggregateInputType = {
@@ -32587,6 +33045,9 @@ export namespace Prisma {
     notes?: true
     createdAt?: true
     updatedAt?: true
+    templateId?: true
+    componentTypesSnapshot?: true
+    componentCustomerSettings?: true
     _all?: true
   }
 
@@ -32697,6 +33158,9 @@ export namespace Prisma {
     notes: string | null
     createdAt: Date
     updatedAt: Date
+    templateId: string | null
+    componentTypesSnapshot: JsonValue | null
+    componentCustomerSettings: JsonValue | null
     _count: ProjectCountAggregateOutputType | null
     _avg: ProjectAvgAggregateOutputType | null
     _sum: ProjectSumAggregateOutputType | null
@@ -32739,8 +33203,12 @@ export namespace Prisma {
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    templateId?: boolean
+    componentTypesSnapshot?: boolean
+    componentCustomerSettings?: boolean
     rosterDays?: boolean | Project$rosterDaysArgs<ExtArgs>
     houses?: boolean | Project$housesArgs<ExtArgs>
+    components?: boolean | Project$componentsArgs<ExtArgs>
     _count?: boolean | ProjectCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["project"]>
 
@@ -32765,6 +33233,9 @@ export namespace Prisma {
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    templateId?: boolean
+    componentTypesSnapshot?: boolean
+    componentCustomerSettings?: boolean
   }, ExtArgs["result"]["project"]>
 
   export type ProjectSelectScalar = {
@@ -32788,11 +33259,15 @@ export namespace Prisma {
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    templateId?: boolean
+    componentTypesSnapshot?: boolean
+    componentCustomerSettings?: boolean
   }
 
   export type ProjectInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     rosterDays?: boolean | Project$rosterDaysArgs<ExtArgs>
     houses?: boolean | Project$housesArgs<ExtArgs>
+    components?: boolean | Project$componentsArgs<ExtArgs>
     _count?: boolean | ProjectCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProjectIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -32802,6 +33277,7 @@ export namespace Prisma {
     objects: {
       rosterDays: Prisma.$ProjectRosterDayPayload<ExtArgs>[]
       houses: Prisma.$HousePayload<ExtArgs>[]
+      components: Prisma.$ProjectComponentPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -32824,6 +33300,9 @@ export namespace Prisma {
       notes: string | null
       createdAt: Date
       updatedAt: Date
+      templateId: string | null
+      componentTypesSnapshot: Prisma.JsonValue | null
+      componentCustomerSettings: Prisma.JsonValue | null
     }, ExtArgs["result"]["project"]>
     composites: {}
   }
@@ -33190,6 +33669,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     rosterDays<T extends Project$rosterDaysArgs<ExtArgs> = {}>(args?: Subset<T, Project$rosterDaysArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectRosterDayPayload<ExtArgs>, T, "findMany"> | Null>
     houses<T extends Project$housesArgs<ExtArgs> = {}>(args?: Subset<T, Project$housesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HousePayload<ExtArgs>, T, "findMany"> | Null>
+    components<T extends Project$componentsArgs<ExtArgs> = {}>(args?: Subset<T, Project$componentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -33239,6 +33719,9 @@ export namespace Prisma {
     readonly notes: FieldRef<"Project", 'String'>
     readonly createdAt: FieldRef<"Project", 'DateTime'>
     readonly updatedAt: FieldRef<"Project", 'DateTime'>
+    readonly templateId: FieldRef<"Project", 'String'>
+    readonly componentTypesSnapshot: FieldRef<"Project", 'Json'>
+    readonly componentCustomerSettings: FieldRef<"Project", 'Json'>
   }
     
 
@@ -33590,6 +34073,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: HouseScalarFieldEnum | HouseScalarFieldEnum[]
+  }
+
+  /**
+   * Project.components
+   */
+  export type Project$componentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    where?: ProjectComponentWhereInput
+    orderBy?: ProjectComponentOrderByWithRelationInput | ProjectComponentOrderByWithRelationInput[]
+    cursor?: ProjectComponentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProjectComponentScalarFieldEnum | ProjectComponentScalarFieldEnum[]
   }
 
   /**
@@ -36665,6 +37168,3020 @@ export namespace Prisma {
 
 
   /**
+   * Model ProjectTemplate
+   */
+
+  export type AggregateProjectTemplate = {
+    _count: ProjectTemplateCountAggregateOutputType | null
+    _min: ProjectTemplateMinAggregateOutputType | null
+    _max: ProjectTemplateMaxAggregateOutputType | null
+  }
+
+  export type ProjectTemplateMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    name: string | null
+    description: string | null
+    isBuiltIn: boolean | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProjectTemplateMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    name: string | null
+    description: string | null
+    isBuiltIn: boolean | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProjectTemplateCountAggregateOutputType = {
+    id: number
+    companyId: number
+    name: number
+    description: number
+    componentTypes: number
+    isBuiltIn: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ProjectTemplateMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    description?: true
+    isBuiltIn?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProjectTemplateMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    description?: true
+    isBuiltIn?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProjectTemplateCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    name?: true
+    description?: true
+    componentTypes?: true
+    isBuiltIn?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ProjectTemplateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProjectTemplate to aggregate.
+     */
+    where?: ProjectTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProjectTemplates to fetch.
+     */
+    orderBy?: ProjectTemplateOrderByWithRelationInput | ProjectTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProjectTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProjectTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProjectTemplates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProjectTemplates
+    **/
+    _count?: true | ProjectTemplateCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProjectTemplateMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProjectTemplateMaxAggregateInputType
+  }
+
+  export type GetProjectTemplateAggregateType<T extends ProjectTemplateAggregateArgs> = {
+        [P in keyof T & keyof AggregateProjectTemplate]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProjectTemplate[P]>
+      : GetScalarType<T[P], AggregateProjectTemplate[P]>
+  }
+
+
+
+
+  export type ProjectTemplateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProjectTemplateWhereInput
+    orderBy?: ProjectTemplateOrderByWithAggregationInput | ProjectTemplateOrderByWithAggregationInput[]
+    by: ProjectTemplateScalarFieldEnum[] | ProjectTemplateScalarFieldEnum
+    having?: ProjectTemplateScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProjectTemplateCountAggregateInputType | true
+    _min?: ProjectTemplateMinAggregateInputType
+    _max?: ProjectTemplateMaxAggregateInputType
+  }
+
+  export type ProjectTemplateGroupByOutputType = {
+    id: string
+    companyId: string
+    name: string
+    description: string | null
+    componentTypes: JsonValue
+    isBuiltIn: boolean
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    _count: ProjectTemplateCountAggregateOutputType | null
+    _min: ProjectTemplateMinAggregateOutputType | null
+    _max: ProjectTemplateMaxAggregateOutputType | null
+  }
+
+  type GetProjectTemplateGroupByPayload<T extends ProjectTemplateGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProjectTemplateGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProjectTemplateGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProjectTemplateGroupByOutputType[P]>
+            : GetScalarType<T[P], ProjectTemplateGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProjectTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    description?: boolean
+    componentTypes?: boolean
+    isBuiltIn?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["projectTemplate"]>
+
+  export type ProjectTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    description?: boolean
+    componentTypes?: boolean
+    isBuiltIn?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["projectTemplate"]>
+
+  export type ProjectTemplateSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    name?: boolean
+    description?: boolean
+    componentTypes?: boolean
+    isBuiltIn?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $ProjectTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProjectTemplate"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      name: string
+      description: string | null
+      componentTypes: Prisma.JsonValue
+      isBuiltIn: boolean
+      status: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["projectTemplate"]>
+    composites: {}
+  }
+
+  type ProjectTemplateGetPayload<S extends boolean | null | undefined | ProjectTemplateDefaultArgs> = $Result.GetResult<Prisma.$ProjectTemplatePayload, S>
+
+  type ProjectTemplateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ProjectTemplateFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ProjectTemplateCountAggregateInputType | true
+    }
+
+  export interface ProjectTemplateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProjectTemplate'], meta: { name: 'ProjectTemplate' } }
+    /**
+     * Find zero or one ProjectTemplate that matches the filter.
+     * @param {ProjectTemplateFindUniqueArgs} args - Arguments to find a ProjectTemplate
+     * @example
+     * // Get one ProjectTemplate
+     * const projectTemplate = await prisma.projectTemplate.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProjectTemplateFindUniqueArgs>(args: SelectSubset<T, ProjectTemplateFindUniqueArgs<ExtArgs>>): Prisma__ProjectTemplateClient<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ProjectTemplate that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ProjectTemplateFindUniqueOrThrowArgs} args - Arguments to find a ProjectTemplate
+     * @example
+     * // Get one ProjectTemplate
+     * const projectTemplate = await prisma.projectTemplate.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProjectTemplateFindUniqueOrThrowArgs>(args: SelectSubset<T, ProjectTemplateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProjectTemplateClient<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ProjectTemplate that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectTemplateFindFirstArgs} args - Arguments to find a ProjectTemplate
+     * @example
+     * // Get one ProjectTemplate
+     * const projectTemplate = await prisma.projectTemplate.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProjectTemplateFindFirstArgs>(args?: SelectSubset<T, ProjectTemplateFindFirstArgs<ExtArgs>>): Prisma__ProjectTemplateClient<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ProjectTemplate that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectTemplateFindFirstOrThrowArgs} args - Arguments to find a ProjectTemplate
+     * @example
+     * // Get one ProjectTemplate
+     * const projectTemplate = await prisma.projectTemplate.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProjectTemplateFindFirstOrThrowArgs>(args?: SelectSubset<T, ProjectTemplateFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProjectTemplateClient<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ProjectTemplates that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectTemplateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProjectTemplates
+     * const projectTemplates = await prisma.projectTemplate.findMany()
+     * 
+     * // Get first 10 ProjectTemplates
+     * const projectTemplates = await prisma.projectTemplate.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const projectTemplateWithIdOnly = await prisma.projectTemplate.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProjectTemplateFindManyArgs>(args?: SelectSubset<T, ProjectTemplateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ProjectTemplate.
+     * @param {ProjectTemplateCreateArgs} args - Arguments to create a ProjectTemplate.
+     * @example
+     * // Create one ProjectTemplate
+     * const ProjectTemplate = await prisma.projectTemplate.create({
+     *   data: {
+     *     // ... data to create a ProjectTemplate
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProjectTemplateCreateArgs>(args: SelectSubset<T, ProjectTemplateCreateArgs<ExtArgs>>): Prisma__ProjectTemplateClient<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ProjectTemplates.
+     * @param {ProjectTemplateCreateManyArgs} args - Arguments to create many ProjectTemplates.
+     * @example
+     * // Create many ProjectTemplates
+     * const projectTemplate = await prisma.projectTemplate.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProjectTemplateCreateManyArgs>(args?: SelectSubset<T, ProjectTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProjectTemplates and returns the data saved in the database.
+     * @param {ProjectTemplateCreateManyAndReturnArgs} args - Arguments to create many ProjectTemplates.
+     * @example
+     * // Create many ProjectTemplates
+     * const projectTemplate = await prisma.projectTemplate.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProjectTemplates and only return the `id`
+     * const projectTemplateWithIdOnly = await prisma.projectTemplate.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProjectTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, ProjectTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ProjectTemplate.
+     * @param {ProjectTemplateDeleteArgs} args - Arguments to delete one ProjectTemplate.
+     * @example
+     * // Delete one ProjectTemplate
+     * const ProjectTemplate = await prisma.projectTemplate.delete({
+     *   where: {
+     *     // ... filter to delete one ProjectTemplate
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProjectTemplateDeleteArgs>(args: SelectSubset<T, ProjectTemplateDeleteArgs<ExtArgs>>): Prisma__ProjectTemplateClient<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ProjectTemplate.
+     * @param {ProjectTemplateUpdateArgs} args - Arguments to update one ProjectTemplate.
+     * @example
+     * // Update one ProjectTemplate
+     * const projectTemplate = await prisma.projectTemplate.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProjectTemplateUpdateArgs>(args: SelectSubset<T, ProjectTemplateUpdateArgs<ExtArgs>>): Prisma__ProjectTemplateClient<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ProjectTemplates.
+     * @param {ProjectTemplateDeleteManyArgs} args - Arguments to filter ProjectTemplates to delete.
+     * @example
+     * // Delete a few ProjectTemplates
+     * const { count } = await prisma.projectTemplate.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProjectTemplateDeleteManyArgs>(args?: SelectSubset<T, ProjectTemplateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProjectTemplates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectTemplateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProjectTemplates
+     * const projectTemplate = await prisma.projectTemplate.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProjectTemplateUpdateManyArgs>(args: SelectSubset<T, ProjectTemplateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ProjectTemplate.
+     * @param {ProjectTemplateUpsertArgs} args - Arguments to update or create a ProjectTemplate.
+     * @example
+     * // Update or create a ProjectTemplate
+     * const projectTemplate = await prisma.projectTemplate.upsert({
+     *   create: {
+     *     // ... data to create a ProjectTemplate
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProjectTemplate we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProjectTemplateUpsertArgs>(args: SelectSubset<T, ProjectTemplateUpsertArgs<ExtArgs>>): Prisma__ProjectTemplateClient<$Result.GetResult<Prisma.$ProjectTemplatePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ProjectTemplates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectTemplateCountArgs} args - Arguments to filter ProjectTemplates to count.
+     * @example
+     * // Count the number of ProjectTemplates
+     * const count = await prisma.projectTemplate.count({
+     *   where: {
+     *     // ... the filter for the ProjectTemplates we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProjectTemplateCountArgs>(
+      args?: Subset<T, ProjectTemplateCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProjectTemplateCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProjectTemplate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectTemplateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProjectTemplateAggregateArgs>(args: Subset<T, ProjectTemplateAggregateArgs>): Prisma.PrismaPromise<GetProjectTemplateAggregateType<T>>
+
+    /**
+     * Group by ProjectTemplate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectTemplateGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProjectTemplateGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProjectTemplateGroupByArgs['orderBy'] }
+        : { orderBy?: ProjectTemplateGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProjectTemplateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProjectTemplateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProjectTemplate model
+   */
+  readonly fields: ProjectTemplateFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProjectTemplate.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProjectTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProjectTemplate model
+   */ 
+  interface ProjectTemplateFieldRefs {
+    readonly id: FieldRef<"ProjectTemplate", 'String'>
+    readonly companyId: FieldRef<"ProjectTemplate", 'String'>
+    readonly name: FieldRef<"ProjectTemplate", 'String'>
+    readonly description: FieldRef<"ProjectTemplate", 'String'>
+    readonly componentTypes: FieldRef<"ProjectTemplate", 'Json'>
+    readonly isBuiltIn: FieldRef<"ProjectTemplate", 'Boolean'>
+    readonly status: FieldRef<"ProjectTemplate", 'String'>
+    readonly createdAt: FieldRef<"ProjectTemplate", 'DateTime'>
+    readonly updatedAt: FieldRef<"ProjectTemplate", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProjectTemplate findUnique
+   */
+  export type ProjectTemplateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which ProjectTemplate to fetch.
+     */
+    where: ProjectTemplateWhereUniqueInput
+  }
+
+  /**
+   * ProjectTemplate findUniqueOrThrow
+   */
+  export type ProjectTemplateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which ProjectTemplate to fetch.
+     */
+    where: ProjectTemplateWhereUniqueInput
+  }
+
+  /**
+   * ProjectTemplate findFirst
+   */
+  export type ProjectTemplateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which ProjectTemplate to fetch.
+     */
+    where?: ProjectTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProjectTemplates to fetch.
+     */
+    orderBy?: ProjectTemplateOrderByWithRelationInput | ProjectTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProjectTemplates.
+     */
+    cursor?: ProjectTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProjectTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProjectTemplates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProjectTemplates.
+     */
+    distinct?: ProjectTemplateScalarFieldEnum | ProjectTemplateScalarFieldEnum[]
+  }
+
+  /**
+   * ProjectTemplate findFirstOrThrow
+   */
+  export type ProjectTemplateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which ProjectTemplate to fetch.
+     */
+    where?: ProjectTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProjectTemplates to fetch.
+     */
+    orderBy?: ProjectTemplateOrderByWithRelationInput | ProjectTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProjectTemplates.
+     */
+    cursor?: ProjectTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProjectTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProjectTemplates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProjectTemplates.
+     */
+    distinct?: ProjectTemplateScalarFieldEnum | ProjectTemplateScalarFieldEnum[]
+  }
+
+  /**
+   * ProjectTemplate findMany
+   */
+  export type ProjectTemplateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+    /**
+     * Filter, which ProjectTemplates to fetch.
+     */
+    where?: ProjectTemplateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProjectTemplates to fetch.
+     */
+    orderBy?: ProjectTemplateOrderByWithRelationInput | ProjectTemplateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProjectTemplates.
+     */
+    cursor?: ProjectTemplateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProjectTemplates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProjectTemplates.
+     */
+    skip?: number
+    distinct?: ProjectTemplateScalarFieldEnum | ProjectTemplateScalarFieldEnum[]
+  }
+
+  /**
+   * ProjectTemplate create
+   */
+  export type ProjectTemplateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+    /**
+     * The data needed to create a ProjectTemplate.
+     */
+    data: XOR<ProjectTemplateCreateInput, ProjectTemplateUncheckedCreateInput>
+  }
+
+  /**
+   * ProjectTemplate createMany
+   */
+  export type ProjectTemplateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProjectTemplates.
+     */
+    data: ProjectTemplateCreateManyInput | ProjectTemplateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ProjectTemplate createManyAndReturn
+   */
+  export type ProjectTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ProjectTemplates.
+     */
+    data: ProjectTemplateCreateManyInput | ProjectTemplateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ProjectTemplate update
+   */
+  export type ProjectTemplateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+    /**
+     * The data needed to update a ProjectTemplate.
+     */
+    data: XOR<ProjectTemplateUpdateInput, ProjectTemplateUncheckedUpdateInput>
+    /**
+     * Choose, which ProjectTemplate to update.
+     */
+    where: ProjectTemplateWhereUniqueInput
+  }
+
+  /**
+   * ProjectTemplate updateMany
+   */
+  export type ProjectTemplateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProjectTemplates.
+     */
+    data: XOR<ProjectTemplateUpdateManyMutationInput, ProjectTemplateUncheckedUpdateManyInput>
+    /**
+     * Filter which ProjectTemplates to update
+     */
+    where?: ProjectTemplateWhereInput
+  }
+
+  /**
+   * ProjectTemplate upsert
+   */
+  export type ProjectTemplateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+    /**
+     * The filter to search for the ProjectTemplate to update in case it exists.
+     */
+    where: ProjectTemplateWhereUniqueInput
+    /**
+     * In case the ProjectTemplate found by the `where` argument doesn't exist, create a new ProjectTemplate with this data.
+     */
+    create: XOR<ProjectTemplateCreateInput, ProjectTemplateUncheckedCreateInput>
+    /**
+     * In case the ProjectTemplate was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProjectTemplateUpdateInput, ProjectTemplateUncheckedUpdateInput>
+  }
+
+  /**
+   * ProjectTemplate delete
+   */
+  export type ProjectTemplateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+    /**
+     * Filter which ProjectTemplate to delete.
+     */
+    where: ProjectTemplateWhereUniqueInput
+  }
+
+  /**
+   * ProjectTemplate deleteMany
+   */
+  export type ProjectTemplateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProjectTemplates to delete
+     */
+    where?: ProjectTemplateWhereInput
+  }
+
+  /**
+   * ProjectTemplate without action
+   */
+  export type ProjectTemplateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectTemplate
+     */
+    select?: ProjectTemplateSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ProjectComponent
+   */
+
+  export type AggregateProjectComponent = {
+    _count: ProjectComponentCountAggregateOutputType | null
+    _min: ProjectComponentMinAggregateOutputType | null
+    _max: ProjectComponentMaxAggregateOutputType | null
+  }
+
+  export type ProjectComponentMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    projectId: string | null
+    componentTypeKey: string | null
+    label: string | null
+    ownerCustomerId: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProjectComponentMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    projectId: string | null
+    componentTypeKey: string | null
+    label: string | null
+    ownerCustomerId: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProjectComponentCountAggregateOutputType = {
+    id: number
+    companyId: number
+    projectId: number
+    componentTypeKey: number
+    label: number
+    ownerCustomerId: number
+    tags: number
+    notes: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ProjectComponentMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    projectId?: true
+    componentTypeKey?: true
+    label?: true
+    ownerCustomerId?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProjectComponentMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    projectId?: true
+    componentTypeKey?: true
+    label?: true
+    ownerCustomerId?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProjectComponentCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    projectId?: true
+    componentTypeKey?: true
+    label?: true
+    ownerCustomerId?: true
+    tags?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ProjectComponentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProjectComponent to aggregate.
+     */
+    where?: ProjectComponentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProjectComponents to fetch.
+     */
+    orderBy?: ProjectComponentOrderByWithRelationInput | ProjectComponentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProjectComponentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProjectComponents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProjectComponents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProjectComponents
+    **/
+    _count?: true | ProjectComponentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProjectComponentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProjectComponentMaxAggregateInputType
+  }
+
+  export type GetProjectComponentAggregateType<T extends ProjectComponentAggregateArgs> = {
+        [P in keyof T & keyof AggregateProjectComponent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProjectComponent[P]>
+      : GetScalarType<T[P], AggregateProjectComponent[P]>
+  }
+
+
+
+
+  export type ProjectComponentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProjectComponentWhereInput
+    orderBy?: ProjectComponentOrderByWithAggregationInput | ProjectComponentOrderByWithAggregationInput[]
+    by: ProjectComponentScalarFieldEnum[] | ProjectComponentScalarFieldEnum
+    having?: ProjectComponentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProjectComponentCountAggregateInputType | true
+    _min?: ProjectComponentMinAggregateInputType
+    _max?: ProjectComponentMaxAggregateInputType
+  }
+
+  export type ProjectComponentGroupByOutputType = {
+    id: string
+    companyId: string
+    projectId: string
+    componentTypeKey: string
+    label: string
+    ownerCustomerId: string | null
+    tags: string[]
+    notes: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ProjectComponentCountAggregateOutputType | null
+    _min: ProjectComponentMinAggregateOutputType | null
+    _max: ProjectComponentMaxAggregateOutputType | null
+  }
+
+  type GetProjectComponentGroupByPayload<T extends ProjectComponentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProjectComponentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProjectComponentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProjectComponentGroupByOutputType[P]>
+            : GetScalarType<T[P], ProjectComponentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProjectComponentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    projectId?: boolean
+    componentTypeKey?: boolean
+    label?: boolean
+    ownerCustomerId?: boolean
+    tags?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    owner?: boolean | ProjectComponent$ownerArgs<ExtArgs>
+    equipment?: boolean | ProjectComponent$equipmentArgs<ExtArgs>
+    issueReports?: boolean | ProjectComponent$issueReportsArgs<ExtArgs>
+    _count?: boolean | ProjectComponentCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["projectComponent"]>
+
+  export type ProjectComponentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    projectId?: boolean
+    componentTypeKey?: boolean
+    label?: boolean
+    ownerCustomerId?: boolean
+    tags?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    owner?: boolean | ProjectComponent$ownerArgs<ExtArgs>
+  }, ExtArgs["result"]["projectComponent"]>
+
+  export type ProjectComponentSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    projectId?: boolean
+    componentTypeKey?: boolean
+    label?: boolean
+    ownerCustomerId?: boolean
+    tags?: boolean
+    notes?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ProjectComponentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    owner?: boolean | ProjectComponent$ownerArgs<ExtArgs>
+    equipment?: boolean | ProjectComponent$equipmentArgs<ExtArgs>
+    issueReports?: boolean | ProjectComponent$issueReportsArgs<ExtArgs>
+    _count?: boolean | ProjectComponentCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type ProjectComponentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+    owner?: boolean | ProjectComponent$ownerArgs<ExtArgs>
+  }
+
+  export type $ProjectComponentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProjectComponent"
+    objects: {
+      project: Prisma.$ProjectPayload<ExtArgs>
+      owner: Prisma.$CustomerPayload<ExtArgs> | null
+      equipment: Prisma.$EquipmentPayload<ExtArgs>[]
+      issueReports: Prisma.$ComponentIssueReportPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      projectId: string
+      componentTypeKey: string
+      label: string
+      ownerCustomerId: string | null
+      tags: string[]
+      notes: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["projectComponent"]>
+    composites: {}
+  }
+
+  type ProjectComponentGetPayload<S extends boolean | null | undefined | ProjectComponentDefaultArgs> = $Result.GetResult<Prisma.$ProjectComponentPayload, S>
+
+  type ProjectComponentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ProjectComponentFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ProjectComponentCountAggregateInputType | true
+    }
+
+  export interface ProjectComponentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProjectComponent'], meta: { name: 'ProjectComponent' } }
+    /**
+     * Find zero or one ProjectComponent that matches the filter.
+     * @param {ProjectComponentFindUniqueArgs} args - Arguments to find a ProjectComponent
+     * @example
+     * // Get one ProjectComponent
+     * const projectComponent = await prisma.projectComponent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProjectComponentFindUniqueArgs>(args: SelectSubset<T, ProjectComponentFindUniqueArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ProjectComponent that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ProjectComponentFindUniqueOrThrowArgs} args - Arguments to find a ProjectComponent
+     * @example
+     * // Get one ProjectComponent
+     * const projectComponent = await prisma.projectComponent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProjectComponentFindUniqueOrThrowArgs>(args: SelectSubset<T, ProjectComponentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ProjectComponent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectComponentFindFirstArgs} args - Arguments to find a ProjectComponent
+     * @example
+     * // Get one ProjectComponent
+     * const projectComponent = await prisma.projectComponent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProjectComponentFindFirstArgs>(args?: SelectSubset<T, ProjectComponentFindFirstArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ProjectComponent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectComponentFindFirstOrThrowArgs} args - Arguments to find a ProjectComponent
+     * @example
+     * // Get one ProjectComponent
+     * const projectComponent = await prisma.projectComponent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProjectComponentFindFirstOrThrowArgs>(args?: SelectSubset<T, ProjectComponentFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ProjectComponents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectComponentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProjectComponents
+     * const projectComponents = await prisma.projectComponent.findMany()
+     * 
+     * // Get first 10 ProjectComponents
+     * const projectComponents = await prisma.projectComponent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const projectComponentWithIdOnly = await prisma.projectComponent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProjectComponentFindManyArgs>(args?: SelectSubset<T, ProjectComponentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ProjectComponent.
+     * @param {ProjectComponentCreateArgs} args - Arguments to create a ProjectComponent.
+     * @example
+     * // Create one ProjectComponent
+     * const ProjectComponent = await prisma.projectComponent.create({
+     *   data: {
+     *     // ... data to create a ProjectComponent
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProjectComponentCreateArgs>(args: SelectSubset<T, ProjectComponentCreateArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ProjectComponents.
+     * @param {ProjectComponentCreateManyArgs} args - Arguments to create many ProjectComponents.
+     * @example
+     * // Create many ProjectComponents
+     * const projectComponent = await prisma.projectComponent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProjectComponentCreateManyArgs>(args?: SelectSubset<T, ProjectComponentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProjectComponents and returns the data saved in the database.
+     * @param {ProjectComponentCreateManyAndReturnArgs} args - Arguments to create many ProjectComponents.
+     * @example
+     * // Create many ProjectComponents
+     * const projectComponent = await prisma.projectComponent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProjectComponents and only return the `id`
+     * const projectComponentWithIdOnly = await prisma.projectComponent.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProjectComponentCreateManyAndReturnArgs>(args?: SelectSubset<T, ProjectComponentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ProjectComponent.
+     * @param {ProjectComponentDeleteArgs} args - Arguments to delete one ProjectComponent.
+     * @example
+     * // Delete one ProjectComponent
+     * const ProjectComponent = await prisma.projectComponent.delete({
+     *   where: {
+     *     // ... filter to delete one ProjectComponent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProjectComponentDeleteArgs>(args: SelectSubset<T, ProjectComponentDeleteArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ProjectComponent.
+     * @param {ProjectComponentUpdateArgs} args - Arguments to update one ProjectComponent.
+     * @example
+     * // Update one ProjectComponent
+     * const projectComponent = await prisma.projectComponent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProjectComponentUpdateArgs>(args: SelectSubset<T, ProjectComponentUpdateArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ProjectComponents.
+     * @param {ProjectComponentDeleteManyArgs} args - Arguments to filter ProjectComponents to delete.
+     * @example
+     * // Delete a few ProjectComponents
+     * const { count } = await prisma.projectComponent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProjectComponentDeleteManyArgs>(args?: SelectSubset<T, ProjectComponentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProjectComponents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectComponentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProjectComponents
+     * const projectComponent = await prisma.projectComponent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProjectComponentUpdateManyArgs>(args: SelectSubset<T, ProjectComponentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ProjectComponent.
+     * @param {ProjectComponentUpsertArgs} args - Arguments to update or create a ProjectComponent.
+     * @example
+     * // Update or create a ProjectComponent
+     * const projectComponent = await prisma.projectComponent.upsert({
+     *   create: {
+     *     // ... data to create a ProjectComponent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProjectComponent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProjectComponentUpsertArgs>(args: SelectSubset<T, ProjectComponentUpsertArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ProjectComponents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectComponentCountArgs} args - Arguments to filter ProjectComponents to count.
+     * @example
+     * // Count the number of ProjectComponents
+     * const count = await prisma.projectComponent.count({
+     *   where: {
+     *     // ... the filter for the ProjectComponents we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProjectComponentCountArgs>(
+      args?: Subset<T, ProjectComponentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProjectComponentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProjectComponent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectComponentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProjectComponentAggregateArgs>(args: Subset<T, ProjectComponentAggregateArgs>): Prisma.PrismaPromise<GetProjectComponentAggregateType<T>>
+
+    /**
+     * Group by ProjectComponent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProjectComponentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProjectComponentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProjectComponentGroupByArgs['orderBy'] }
+        : { orderBy?: ProjectComponentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProjectComponentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProjectComponentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProjectComponent model
+   */
+  readonly fields: ProjectComponentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProjectComponent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProjectComponentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    project<T extends ProjectDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProjectDefaultArgs<ExtArgs>>): Prisma__ProjectClient<$Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    owner<T extends ProjectComponent$ownerArgs<ExtArgs> = {}>(args?: Subset<T, ProjectComponent$ownerArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    equipment<T extends ProjectComponent$equipmentArgs<ExtArgs> = {}>(args?: Subset<T, ProjectComponent$equipmentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EquipmentPayload<ExtArgs>, T, "findMany"> | Null>
+    issueReports<T extends ProjectComponent$issueReportsArgs<ExtArgs> = {}>(args?: Subset<T, ProjectComponent$issueReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProjectComponent model
+   */ 
+  interface ProjectComponentFieldRefs {
+    readonly id: FieldRef<"ProjectComponent", 'String'>
+    readonly companyId: FieldRef<"ProjectComponent", 'String'>
+    readonly projectId: FieldRef<"ProjectComponent", 'String'>
+    readonly componentTypeKey: FieldRef<"ProjectComponent", 'String'>
+    readonly label: FieldRef<"ProjectComponent", 'String'>
+    readonly ownerCustomerId: FieldRef<"ProjectComponent", 'String'>
+    readonly tags: FieldRef<"ProjectComponent", 'String[]'>
+    readonly notes: FieldRef<"ProjectComponent", 'String'>
+    readonly createdAt: FieldRef<"ProjectComponent", 'DateTime'>
+    readonly updatedAt: FieldRef<"ProjectComponent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProjectComponent findUnique
+   */
+  export type ProjectComponentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    /**
+     * Filter, which ProjectComponent to fetch.
+     */
+    where: ProjectComponentWhereUniqueInput
+  }
+
+  /**
+   * ProjectComponent findUniqueOrThrow
+   */
+  export type ProjectComponentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    /**
+     * Filter, which ProjectComponent to fetch.
+     */
+    where: ProjectComponentWhereUniqueInput
+  }
+
+  /**
+   * ProjectComponent findFirst
+   */
+  export type ProjectComponentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    /**
+     * Filter, which ProjectComponent to fetch.
+     */
+    where?: ProjectComponentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProjectComponents to fetch.
+     */
+    orderBy?: ProjectComponentOrderByWithRelationInput | ProjectComponentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProjectComponents.
+     */
+    cursor?: ProjectComponentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProjectComponents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProjectComponents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProjectComponents.
+     */
+    distinct?: ProjectComponentScalarFieldEnum | ProjectComponentScalarFieldEnum[]
+  }
+
+  /**
+   * ProjectComponent findFirstOrThrow
+   */
+  export type ProjectComponentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    /**
+     * Filter, which ProjectComponent to fetch.
+     */
+    where?: ProjectComponentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProjectComponents to fetch.
+     */
+    orderBy?: ProjectComponentOrderByWithRelationInput | ProjectComponentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProjectComponents.
+     */
+    cursor?: ProjectComponentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProjectComponents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProjectComponents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProjectComponents.
+     */
+    distinct?: ProjectComponentScalarFieldEnum | ProjectComponentScalarFieldEnum[]
+  }
+
+  /**
+   * ProjectComponent findMany
+   */
+  export type ProjectComponentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    /**
+     * Filter, which ProjectComponents to fetch.
+     */
+    where?: ProjectComponentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProjectComponents to fetch.
+     */
+    orderBy?: ProjectComponentOrderByWithRelationInput | ProjectComponentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProjectComponents.
+     */
+    cursor?: ProjectComponentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProjectComponents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProjectComponents.
+     */
+    skip?: number
+    distinct?: ProjectComponentScalarFieldEnum | ProjectComponentScalarFieldEnum[]
+  }
+
+  /**
+   * ProjectComponent create
+   */
+  export type ProjectComponentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProjectComponent.
+     */
+    data: XOR<ProjectComponentCreateInput, ProjectComponentUncheckedCreateInput>
+  }
+
+  /**
+   * ProjectComponent createMany
+   */
+  export type ProjectComponentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProjectComponents.
+     */
+    data: ProjectComponentCreateManyInput | ProjectComponentCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ProjectComponent createManyAndReturn
+   */
+  export type ProjectComponentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ProjectComponents.
+     */
+    data: ProjectComponentCreateManyInput | ProjectComponentCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProjectComponent update
+   */
+  export type ProjectComponentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProjectComponent.
+     */
+    data: XOR<ProjectComponentUpdateInput, ProjectComponentUncheckedUpdateInput>
+    /**
+     * Choose, which ProjectComponent to update.
+     */
+    where: ProjectComponentWhereUniqueInput
+  }
+
+  /**
+   * ProjectComponent updateMany
+   */
+  export type ProjectComponentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProjectComponents.
+     */
+    data: XOR<ProjectComponentUpdateManyMutationInput, ProjectComponentUncheckedUpdateManyInput>
+    /**
+     * Filter which ProjectComponents to update
+     */
+    where?: ProjectComponentWhereInput
+  }
+
+  /**
+   * ProjectComponent upsert
+   */
+  export type ProjectComponentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProjectComponent to update in case it exists.
+     */
+    where: ProjectComponentWhereUniqueInput
+    /**
+     * In case the ProjectComponent found by the `where` argument doesn't exist, create a new ProjectComponent with this data.
+     */
+    create: XOR<ProjectComponentCreateInput, ProjectComponentUncheckedCreateInput>
+    /**
+     * In case the ProjectComponent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProjectComponentUpdateInput, ProjectComponentUncheckedUpdateInput>
+  }
+
+  /**
+   * ProjectComponent delete
+   */
+  export type ProjectComponentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+    /**
+     * Filter which ProjectComponent to delete.
+     */
+    where: ProjectComponentWhereUniqueInput
+  }
+
+  /**
+   * ProjectComponent deleteMany
+   */
+  export type ProjectComponentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProjectComponents to delete
+     */
+    where?: ProjectComponentWhereInput
+  }
+
+  /**
+   * ProjectComponent.owner
+   */
+  export type ProjectComponent$ownerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Customer
+     */
+    select?: CustomerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerInclude<ExtArgs> | null
+    where?: CustomerWhereInput
+  }
+
+  /**
+   * ProjectComponent.equipment
+   */
+  export type ProjectComponent$equipmentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Equipment
+     */
+    select?: EquipmentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentInclude<ExtArgs> | null
+    where?: EquipmentWhereInput
+    orderBy?: EquipmentOrderByWithRelationInput | EquipmentOrderByWithRelationInput[]
+    cursor?: EquipmentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: EquipmentScalarFieldEnum | EquipmentScalarFieldEnum[]
+  }
+
+  /**
+   * ProjectComponent.issueReports
+   */
+  export type ProjectComponent$issueReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    where?: ComponentIssueReportWhereInput
+    orderBy?: ComponentIssueReportOrderByWithRelationInput | ComponentIssueReportOrderByWithRelationInput[]
+    cursor?: ComponentIssueReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ComponentIssueReportScalarFieldEnum | ComponentIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * ProjectComponent without action
+   */
+  export type ProjectComponentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProjectComponent
+     */
+    select?: ProjectComponentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProjectComponentInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ComponentIssueReport
+   */
+
+  export type AggregateComponentIssueReport = {
+    _count: ComponentIssueReportCountAggregateOutputType | null
+    _min: ComponentIssueReportMinAggregateOutputType | null
+    _max: ComponentIssueReportMaxAggregateOutputType | null
+  }
+
+  export type ComponentIssueReportMinAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    componentId: string | null
+    equipmentId: string | null
+    reportedByCustomerId: string | null
+    errorCode: string | null
+    description: string | null
+    status: string | null
+    resolvedNote: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ComponentIssueReportMaxAggregateOutputType = {
+    id: string | null
+    companyId: string | null
+    componentId: string | null
+    equipmentId: string | null
+    reportedByCustomerId: string | null
+    errorCode: string | null
+    description: string | null
+    status: string | null
+    resolvedNote: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ComponentIssueReportCountAggregateOutputType = {
+    id: number
+    companyId: number
+    componentId: number
+    equipmentId: number
+    reportedByCustomerId: number
+    errorCode: number
+    description: number
+    status: number
+    resolvedNote: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ComponentIssueReportMinAggregateInputType = {
+    id?: true
+    companyId?: true
+    componentId?: true
+    equipmentId?: true
+    reportedByCustomerId?: true
+    errorCode?: true
+    description?: true
+    status?: true
+    resolvedNote?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ComponentIssueReportMaxAggregateInputType = {
+    id?: true
+    companyId?: true
+    componentId?: true
+    equipmentId?: true
+    reportedByCustomerId?: true
+    errorCode?: true
+    description?: true
+    status?: true
+    resolvedNote?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ComponentIssueReportCountAggregateInputType = {
+    id?: true
+    companyId?: true
+    componentId?: true
+    equipmentId?: true
+    reportedByCustomerId?: true
+    errorCode?: true
+    description?: true
+    status?: true
+    resolvedNote?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ComponentIssueReportAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ComponentIssueReport to aggregate.
+     */
+    where?: ComponentIssueReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComponentIssueReports to fetch.
+     */
+    orderBy?: ComponentIssueReportOrderByWithRelationInput | ComponentIssueReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ComponentIssueReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComponentIssueReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComponentIssueReports.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ComponentIssueReports
+    **/
+    _count?: true | ComponentIssueReportCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ComponentIssueReportMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ComponentIssueReportMaxAggregateInputType
+  }
+
+  export type GetComponentIssueReportAggregateType<T extends ComponentIssueReportAggregateArgs> = {
+        [P in keyof T & keyof AggregateComponentIssueReport]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateComponentIssueReport[P]>
+      : GetScalarType<T[P], AggregateComponentIssueReport[P]>
+  }
+
+
+
+
+  export type ComponentIssueReportGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComponentIssueReportWhereInput
+    orderBy?: ComponentIssueReportOrderByWithAggregationInput | ComponentIssueReportOrderByWithAggregationInput[]
+    by: ComponentIssueReportScalarFieldEnum[] | ComponentIssueReportScalarFieldEnum
+    having?: ComponentIssueReportScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ComponentIssueReportCountAggregateInputType | true
+    _min?: ComponentIssueReportMinAggregateInputType
+    _max?: ComponentIssueReportMaxAggregateInputType
+  }
+
+  export type ComponentIssueReportGroupByOutputType = {
+    id: string
+    companyId: string
+    componentId: string
+    equipmentId: string | null
+    reportedByCustomerId: string
+    errorCode: string | null
+    description: string | null
+    status: string
+    resolvedNote: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ComponentIssueReportCountAggregateOutputType | null
+    _min: ComponentIssueReportMinAggregateOutputType | null
+    _max: ComponentIssueReportMaxAggregateOutputType | null
+  }
+
+  type GetComponentIssueReportGroupByPayload<T extends ComponentIssueReportGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ComponentIssueReportGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ComponentIssueReportGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ComponentIssueReportGroupByOutputType[P]>
+            : GetScalarType<T[P], ComponentIssueReportGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ComponentIssueReportSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    componentId?: boolean
+    equipmentId?: boolean
+    reportedByCustomerId?: boolean
+    errorCode?: boolean
+    description?: boolean
+    status?: boolean
+    resolvedNote?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    component?: boolean | ProjectComponentDefaultArgs<ExtArgs>
+    equipment?: boolean | ComponentIssueReport$equipmentArgs<ExtArgs>
+    reportedBy?: boolean | CustomerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["componentIssueReport"]>
+
+  export type ComponentIssueReportSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    companyId?: boolean
+    componentId?: boolean
+    equipmentId?: boolean
+    reportedByCustomerId?: boolean
+    errorCode?: boolean
+    description?: boolean
+    status?: boolean
+    resolvedNote?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    component?: boolean | ProjectComponentDefaultArgs<ExtArgs>
+    equipment?: boolean | ComponentIssueReport$equipmentArgs<ExtArgs>
+    reportedBy?: boolean | CustomerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["componentIssueReport"]>
+
+  export type ComponentIssueReportSelectScalar = {
+    id?: boolean
+    companyId?: boolean
+    componentId?: boolean
+    equipmentId?: boolean
+    reportedByCustomerId?: boolean
+    errorCode?: boolean
+    description?: boolean
+    status?: boolean
+    resolvedNote?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ComponentIssueReportInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    component?: boolean | ProjectComponentDefaultArgs<ExtArgs>
+    equipment?: boolean | ComponentIssueReport$equipmentArgs<ExtArgs>
+    reportedBy?: boolean | CustomerDefaultArgs<ExtArgs>
+  }
+  export type ComponentIssueReportIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    component?: boolean | ProjectComponentDefaultArgs<ExtArgs>
+    equipment?: boolean | ComponentIssueReport$equipmentArgs<ExtArgs>
+    reportedBy?: boolean | CustomerDefaultArgs<ExtArgs>
+  }
+
+  export type $ComponentIssueReportPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ComponentIssueReport"
+    objects: {
+      component: Prisma.$ProjectComponentPayload<ExtArgs>
+      equipment: Prisma.$EquipmentPayload<ExtArgs> | null
+      reportedBy: Prisma.$CustomerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      companyId: string
+      componentId: string
+      equipmentId: string | null
+      reportedByCustomerId: string
+      errorCode: string | null
+      description: string | null
+      status: string
+      resolvedNote: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["componentIssueReport"]>
+    composites: {}
+  }
+
+  type ComponentIssueReportGetPayload<S extends boolean | null | undefined | ComponentIssueReportDefaultArgs> = $Result.GetResult<Prisma.$ComponentIssueReportPayload, S>
+
+  type ComponentIssueReportCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ComponentIssueReportFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ComponentIssueReportCountAggregateInputType | true
+    }
+
+  export interface ComponentIssueReportDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ComponentIssueReport'], meta: { name: 'ComponentIssueReport' } }
+    /**
+     * Find zero or one ComponentIssueReport that matches the filter.
+     * @param {ComponentIssueReportFindUniqueArgs} args - Arguments to find a ComponentIssueReport
+     * @example
+     * // Get one ComponentIssueReport
+     * const componentIssueReport = await prisma.componentIssueReport.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ComponentIssueReportFindUniqueArgs>(args: SelectSubset<T, ComponentIssueReportFindUniqueArgs<ExtArgs>>): Prisma__ComponentIssueReportClient<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ComponentIssueReport that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ComponentIssueReportFindUniqueOrThrowArgs} args - Arguments to find a ComponentIssueReport
+     * @example
+     * // Get one ComponentIssueReport
+     * const componentIssueReport = await prisma.componentIssueReport.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ComponentIssueReportFindUniqueOrThrowArgs>(args: SelectSubset<T, ComponentIssueReportFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ComponentIssueReportClient<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ComponentIssueReport that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComponentIssueReportFindFirstArgs} args - Arguments to find a ComponentIssueReport
+     * @example
+     * // Get one ComponentIssueReport
+     * const componentIssueReport = await prisma.componentIssueReport.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ComponentIssueReportFindFirstArgs>(args?: SelectSubset<T, ComponentIssueReportFindFirstArgs<ExtArgs>>): Prisma__ComponentIssueReportClient<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ComponentIssueReport that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComponentIssueReportFindFirstOrThrowArgs} args - Arguments to find a ComponentIssueReport
+     * @example
+     * // Get one ComponentIssueReport
+     * const componentIssueReport = await prisma.componentIssueReport.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ComponentIssueReportFindFirstOrThrowArgs>(args?: SelectSubset<T, ComponentIssueReportFindFirstOrThrowArgs<ExtArgs>>): Prisma__ComponentIssueReportClient<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ComponentIssueReports that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComponentIssueReportFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ComponentIssueReports
+     * const componentIssueReports = await prisma.componentIssueReport.findMany()
+     * 
+     * // Get first 10 ComponentIssueReports
+     * const componentIssueReports = await prisma.componentIssueReport.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const componentIssueReportWithIdOnly = await prisma.componentIssueReport.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ComponentIssueReportFindManyArgs>(args?: SelectSubset<T, ComponentIssueReportFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ComponentIssueReport.
+     * @param {ComponentIssueReportCreateArgs} args - Arguments to create a ComponentIssueReport.
+     * @example
+     * // Create one ComponentIssueReport
+     * const ComponentIssueReport = await prisma.componentIssueReport.create({
+     *   data: {
+     *     // ... data to create a ComponentIssueReport
+     *   }
+     * })
+     * 
+     */
+    create<T extends ComponentIssueReportCreateArgs>(args: SelectSubset<T, ComponentIssueReportCreateArgs<ExtArgs>>): Prisma__ComponentIssueReportClient<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ComponentIssueReports.
+     * @param {ComponentIssueReportCreateManyArgs} args - Arguments to create many ComponentIssueReports.
+     * @example
+     * // Create many ComponentIssueReports
+     * const componentIssueReport = await prisma.componentIssueReport.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ComponentIssueReportCreateManyArgs>(args?: SelectSubset<T, ComponentIssueReportCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ComponentIssueReports and returns the data saved in the database.
+     * @param {ComponentIssueReportCreateManyAndReturnArgs} args - Arguments to create many ComponentIssueReports.
+     * @example
+     * // Create many ComponentIssueReports
+     * const componentIssueReport = await prisma.componentIssueReport.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ComponentIssueReports and only return the `id`
+     * const componentIssueReportWithIdOnly = await prisma.componentIssueReport.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ComponentIssueReportCreateManyAndReturnArgs>(args?: SelectSubset<T, ComponentIssueReportCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ComponentIssueReport.
+     * @param {ComponentIssueReportDeleteArgs} args - Arguments to delete one ComponentIssueReport.
+     * @example
+     * // Delete one ComponentIssueReport
+     * const ComponentIssueReport = await prisma.componentIssueReport.delete({
+     *   where: {
+     *     // ... filter to delete one ComponentIssueReport
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ComponentIssueReportDeleteArgs>(args: SelectSubset<T, ComponentIssueReportDeleteArgs<ExtArgs>>): Prisma__ComponentIssueReportClient<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ComponentIssueReport.
+     * @param {ComponentIssueReportUpdateArgs} args - Arguments to update one ComponentIssueReport.
+     * @example
+     * // Update one ComponentIssueReport
+     * const componentIssueReport = await prisma.componentIssueReport.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ComponentIssueReportUpdateArgs>(args: SelectSubset<T, ComponentIssueReportUpdateArgs<ExtArgs>>): Prisma__ComponentIssueReportClient<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ComponentIssueReports.
+     * @param {ComponentIssueReportDeleteManyArgs} args - Arguments to filter ComponentIssueReports to delete.
+     * @example
+     * // Delete a few ComponentIssueReports
+     * const { count } = await prisma.componentIssueReport.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ComponentIssueReportDeleteManyArgs>(args?: SelectSubset<T, ComponentIssueReportDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ComponentIssueReports.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComponentIssueReportUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ComponentIssueReports
+     * const componentIssueReport = await prisma.componentIssueReport.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ComponentIssueReportUpdateManyArgs>(args: SelectSubset<T, ComponentIssueReportUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ComponentIssueReport.
+     * @param {ComponentIssueReportUpsertArgs} args - Arguments to update or create a ComponentIssueReport.
+     * @example
+     * // Update or create a ComponentIssueReport
+     * const componentIssueReport = await prisma.componentIssueReport.upsert({
+     *   create: {
+     *     // ... data to create a ComponentIssueReport
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ComponentIssueReport we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ComponentIssueReportUpsertArgs>(args: SelectSubset<T, ComponentIssueReportUpsertArgs<ExtArgs>>): Prisma__ComponentIssueReportClient<$Result.GetResult<Prisma.$ComponentIssueReportPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ComponentIssueReports.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComponentIssueReportCountArgs} args - Arguments to filter ComponentIssueReports to count.
+     * @example
+     * // Count the number of ComponentIssueReports
+     * const count = await prisma.componentIssueReport.count({
+     *   where: {
+     *     // ... the filter for the ComponentIssueReports we want to count
+     *   }
+     * })
+    **/
+    count<T extends ComponentIssueReportCountArgs>(
+      args?: Subset<T, ComponentIssueReportCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ComponentIssueReportCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ComponentIssueReport.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComponentIssueReportAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ComponentIssueReportAggregateArgs>(args: Subset<T, ComponentIssueReportAggregateArgs>): Prisma.PrismaPromise<GetComponentIssueReportAggregateType<T>>
+
+    /**
+     * Group by ComponentIssueReport.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComponentIssueReportGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ComponentIssueReportGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ComponentIssueReportGroupByArgs['orderBy'] }
+        : { orderBy?: ComponentIssueReportGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ComponentIssueReportGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetComponentIssueReportGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ComponentIssueReport model
+   */
+  readonly fields: ComponentIssueReportFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ComponentIssueReport.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ComponentIssueReportClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    component<T extends ProjectComponentDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProjectComponentDefaultArgs<ExtArgs>>): Prisma__ProjectComponentClient<$Result.GetResult<Prisma.$ProjectComponentPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    equipment<T extends ComponentIssueReport$equipmentArgs<ExtArgs> = {}>(args?: Subset<T, ComponentIssueReport$equipmentArgs<ExtArgs>>): Prisma__EquipmentClient<$Result.GetResult<Prisma.$EquipmentPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    reportedBy<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ComponentIssueReport model
+   */ 
+  interface ComponentIssueReportFieldRefs {
+    readonly id: FieldRef<"ComponentIssueReport", 'String'>
+    readonly companyId: FieldRef<"ComponentIssueReport", 'String'>
+    readonly componentId: FieldRef<"ComponentIssueReport", 'String'>
+    readonly equipmentId: FieldRef<"ComponentIssueReport", 'String'>
+    readonly reportedByCustomerId: FieldRef<"ComponentIssueReport", 'String'>
+    readonly errorCode: FieldRef<"ComponentIssueReport", 'String'>
+    readonly description: FieldRef<"ComponentIssueReport", 'String'>
+    readonly status: FieldRef<"ComponentIssueReport", 'String'>
+    readonly resolvedNote: FieldRef<"ComponentIssueReport", 'String'>
+    readonly createdAt: FieldRef<"ComponentIssueReport", 'DateTime'>
+    readonly updatedAt: FieldRef<"ComponentIssueReport", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ComponentIssueReport findUnique
+   */
+  export type ComponentIssueReportFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ComponentIssueReport to fetch.
+     */
+    where: ComponentIssueReportWhereUniqueInput
+  }
+
+  /**
+   * ComponentIssueReport findUniqueOrThrow
+   */
+  export type ComponentIssueReportFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ComponentIssueReport to fetch.
+     */
+    where: ComponentIssueReportWhereUniqueInput
+  }
+
+  /**
+   * ComponentIssueReport findFirst
+   */
+  export type ComponentIssueReportFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ComponentIssueReport to fetch.
+     */
+    where?: ComponentIssueReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComponentIssueReports to fetch.
+     */
+    orderBy?: ComponentIssueReportOrderByWithRelationInput | ComponentIssueReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ComponentIssueReports.
+     */
+    cursor?: ComponentIssueReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComponentIssueReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComponentIssueReports.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ComponentIssueReports.
+     */
+    distinct?: ComponentIssueReportScalarFieldEnum | ComponentIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * ComponentIssueReport findFirstOrThrow
+   */
+  export type ComponentIssueReportFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ComponentIssueReport to fetch.
+     */
+    where?: ComponentIssueReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComponentIssueReports to fetch.
+     */
+    orderBy?: ComponentIssueReportOrderByWithRelationInput | ComponentIssueReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ComponentIssueReports.
+     */
+    cursor?: ComponentIssueReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComponentIssueReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComponentIssueReports.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ComponentIssueReports.
+     */
+    distinct?: ComponentIssueReportScalarFieldEnum | ComponentIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * ComponentIssueReport findMany
+   */
+  export type ComponentIssueReportFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ComponentIssueReports to fetch.
+     */
+    where?: ComponentIssueReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComponentIssueReports to fetch.
+     */
+    orderBy?: ComponentIssueReportOrderByWithRelationInput | ComponentIssueReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ComponentIssueReports.
+     */
+    cursor?: ComponentIssueReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComponentIssueReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComponentIssueReports.
+     */
+    skip?: number
+    distinct?: ComponentIssueReportScalarFieldEnum | ComponentIssueReportScalarFieldEnum[]
+  }
+
+  /**
+   * ComponentIssueReport create
+   */
+  export type ComponentIssueReportCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ComponentIssueReport.
+     */
+    data: XOR<ComponentIssueReportCreateInput, ComponentIssueReportUncheckedCreateInput>
+  }
+
+  /**
+   * ComponentIssueReport createMany
+   */
+  export type ComponentIssueReportCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ComponentIssueReports.
+     */
+    data: ComponentIssueReportCreateManyInput | ComponentIssueReportCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ComponentIssueReport createManyAndReturn
+   */
+  export type ComponentIssueReportCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ComponentIssueReports.
+     */
+    data: ComponentIssueReportCreateManyInput | ComponentIssueReportCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ComponentIssueReport update
+   */
+  export type ComponentIssueReportUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ComponentIssueReport.
+     */
+    data: XOR<ComponentIssueReportUpdateInput, ComponentIssueReportUncheckedUpdateInput>
+    /**
+     * Choose, which ComponentIssueReport to update.
+     */
+    where: ComponentIssueReportWhereUniqueInput
+  }
+
+  /**
+   * ComponentIssueReport updateMany
+   */
+  export type ComponentIssueReportUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ComponentIssueReports.
+     */
+    data: XOR<ComponentIssueReportUpdateManyMutationInput, ComponentIssueReportUncheckedUpdateManyInput>
+    /**
+     * Filter which ComponentIssueReports to update
+     */
+    where?: ComponentIssueReportWhereInput
+  }
+
+  /**
+   * ComponentIssueReport upsert
+   */
+  export type ComponentIssueReportUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ComponentIssueReport to update in case it exists.
+     */
+    where: ComponentIssueReportWhereUniqueInput
+    /**
+     * In case the ComponentIssueReport found by the `where` argument doesn't exist, create a new ComponentIssueReport with this data.
+     */
+    create: XOR<ComponentIssueReportCreateInput, ComponentIssueReportUncheckedCreateInput>
+    /**
+     * In case the ComponentIssueReport was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ComponentIssueReportUpdateInput, ComponentIssueReportUncheckedUpdateInput>
+  }
+
+  /**
+   * ComponentIssueReport delete
+   */
+  export type ComponentIssueReportDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+    /**
+     * Filter which ComponentIssueReport to delete.
+     */
+    where: ComponentIssueReportWhereUniqueInput
+  }
+
+  /**
+   * ComponentIssueReport deleteMany
+   */
+  export type ComponentIssueReportDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ComponentIssueReports to delete
+     */
+    where?: ComponentIssueReportWhereInput
+  }
+
+  /**
+   * ComponentIssueReport.equipment
+   */
+  export type ComponentIssueReport$equipmentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Equipment
+     */
+    select?: EquipmentSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EquipmentInclude<ExtArgs> | null
+    where?: EquipmentWhereInput
+  }
+
+  /**
+   * ComponentIssueReport without action
+   */
+  export type ComponentIssueReportDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComponentIssueReport
+     */
+    select?: ComponentIssueReportSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComponentIssueReportInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -36846,6 +40363,7 @@ export namespace Prisma {
     jobTemplateId: 'jobTemplateId',
     projectId: 'projectId',
     houseId: 'houseId',
+    componentId: 'componentId',
     customerConfirmedAt: 'customerConfirmedAt',
     confirmToken: 'confirmToken',
     renewalReminderSent: 'renewalReminderSent',
@@ -36938,6 +40456,7 @@ export namespace Prisma {
     companyId: 'companyId',
     customerId: 'customerId',
     houseId: 'houseId',
+    componentId: 'componentId',
     type: 'type',
     brand: 'brand',
     model: 'model',
@@ -37264,7 +40783,10 @@ export namespace Prisma {
     baseTeamUserIds: 'baseTeamUserIds',
     notes: 'notes',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    templateId: 'templateId',
+    componentTypesSnapshot: 'componentTypesSnapshot',
+    componentCustomerSettings: 'componentCustomerSettings'
   };
 
   export type ProjectScalarFieldEnum = (typeof ProjectScalarFieldEnum)[keyof typeof ProjectScalarFieldEnum]
@@ -37315,6 +40837,54 @@ export namespace Prisma {
   };
 
   export type HouseIssueReportScalarFieldEnum = (typeof HouseIssueReportScalarFieldEnum)[keyof typeof HouseIssueReportScalarFieldEnum]
+
+
+  export const ProjectTemplateScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    name: 'name',
+    description: 'description',
+    componentTypes: 'componentTypes',
+    isBuiltIn: 'isBuiltIn',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ProjectTemplateScalarFieldEnum = (typeof ProjectTemplateScalarFieldEnum)[keyof typeof ProjectTemplateScalarFieldEnum]
+
+
+  export const ProjectComponentScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    projectId: 'projectId',
+    componentTypeKey: 'componentTypeKey',
+    label: 'label',
+    ownerCustomerId: 'ownerCustomerId',
+    tags: 'tags',
+    notes: 'notes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ProjectComponentScalarFieldEnum = (typeof ProjectComponentScalarFieldEnum)[keyof typeof ProjectComponentScalarFieldEnum]
+
+
+  export const ComponentIssueReportScalarFieldEnum: {
+    id: 'id',
+    companyId: 'companyId',
+    componentId: 'componentId',
+    equipmentId: 'equipmentId',
+    reportedByCustomerId: 'reportedByCustomerId',
+    errorCode: 'errorCode',
+    description: 'description',
+    status: 'status',
+    resolvedNote: 'resolvedNote',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ComponentIssueReportScalarFieldEnum = (typeof ComponentIssueReportScalarFieldEnum)[keyof typeof ComponentIssueReportScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -37940,6 +41510,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionListRelationFilter
     ownedHouses?: HouseListRelationFilter
     issueReports?: HouseIssueReportListRelationFilter
+    ownedComponents?: ProjectComponentListRelationFilter
+    componentIssueReports?: ComponentIssueReportListRelationFilter
   }
 
   export type CustomerOrderByWithRelationInput = {
@@ -37979,6 +41551,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionOrderByRelationAggregateInput
     ownedHouses?: HouseOrderByRelationAggregateInput
     issueReports?: HouseIssueReportOrderByRelationAggregateInput
+    ownedComponents?: ProjectComponentOrderByRelationAggregateInput
+    componentIssueReports?: ComponentIssueReportOrderByRelationAggregateInput
   }
 
   export type CustomerWhereUniqueInput = Prisma.AtLeast<{
@@ -38021,6 +41595,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionListRelationFilter
     ownedHouses?: HouseListRelationFilter
     issueReports?: HouseIssueReportListRelationFilter
+    ownedComponents?: ProjectComponentListRelationFilter
+    componentIssueReports?: ComponentIssueReportListRelationFilter
   }, "id">
 
   export type CustomerOrderByWithAggregationInput = {
@@ -38343,6 +41919,7 @@ export namespace Prisma {
     jobTemplateId?: StringNullableFilter<"ServiceAgreement"> | string | null
     projectId?: StringNullableFilter<"ServiceAgreement"> | string | null
     houseId?: StringNullableFilter<"ServiceAgreement"> | string | null
+    componentId?: StringNullableFilter<"ServiceAgreement"> | string | null
     customerConfirmedAt?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     confirmToken?: StringNullableFilter<"ServiceAgreement"> | string | null
     renewalReminderSent?: BoolFilter<"ServiceAgreement"> | boolean
@@ -38384,6 +41961,7 @@ export namespace Prisma {
     jobTemplateId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
     houseId?: SortOrderInput | SortOrder
+    componentId?: SortOrderInput | SortOrder
     customerConfirmedAt?: SortOrderInput | SortOrder
     confirmToken?: SortOrderInput | SortOrder
     renewalReminderSent?: SortOrder
@@ -38429,6 +42007,7 @@ export namespace Prisma {
     jobTemplateId?: StringNullableFilter<"ServiceAgreement"> | string | null
     projectId?: StringNullableFilter<"ServiceAgreement"> | string | null
     houseId?: StringNullableFilter<"ServiceAgreement"> | string | null
+    componentId?: StringNullableFilter<"ServiceAgreement"> | string | null
     customerConfirmedAt?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     renewalReminderSent?: BoolFilter<"ServiceAgreement"> | boolean
     renewedFromId?: StringNullableFilter<"ServiceAgreement"> | string | null
@@ -38469,6 +42048,7 @@ export namespace Prisma {
     jobTemplateId?: SortOrderInput | SortOrder
     projectId?: SortOrderInput | SortOrder
     houseId?: SortOrderInput | SortOrder
+    componentId?: SortOrderInput | SortOrder
     customerConfirmedAt?: SortOrderInput | SortOrder
     confirmToken?: SortOrderInput | SortOrder
     renewalReminderSent?: SortOrder
@@ -38515,6 +42095,7 @@ export namespace Prisma {
     jobTemplateId?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
     projectId?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
     houseId?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
+    componentId?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
     customerConfirmedAt?: DateTimeNullableWithAggregatesFilter<"ServiceAgreement"> | Date | string | null
     confirmToken?: StringNullableWithAggregatesFilter<"ServiceAgreement"> | string | null
     renewalReminderSent?: BoolWithAggregatesFilter<"ServiceAgreement"> | boolean
@@ -38919,6 +42500,7 @@ export namespace Prisma {
     companyId?: StringFilter<"Equipment"> | string
     customerId?: StringFilter<"Equipment"> | string
     houseId?: StringNullableFilter<"Equipment"> | string | null
+    componentId?: StringNullableFilter<"Equipment"> | string | null
     type?: StringFilter<"Equipment"> | string
     brand?: StringNullableFilter<"Equipment"> | string | null
     model?: StringNullableFilter<"Equipment"> | string | null
@@ -38936,8 +42518,10 @@ export namespace Prisma {
     imageScanError?: StringNullableFilter<"Equipment"> | string | null
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
     house?: XOR<HouseNullableRelationFilter, HouseWhereInput> | null
+    component?: XOR<ProjectComponentNullableRelationFilter, ProjectComponentWhereInput> | null
     consumables?: EquipmentConsumableListRelationFilter
     issueReports?: HouseIssueReportListRelationFilter
+    componentIssueReports?: ComponentIssueReportListRelationFilter
     errorCodes?: EquipmentErrorCodeListRelationFilter
   }
 
@@ -38946,6 +42530,7 @@ export namespace Prisma {
     companyId?: SortOrder
     customerId?: SortOrder
     houseId?: SortOrderInput | SortOrder
+    componentId?: SortOrderInput | SortOrder
     type?: SortOrder
     brand?: SortOrderInput | SortOrder
     model?: SortOrderInput | SortOrder
@@ -38963,8 +42548,10 @@ export namespace Prisma {
     imageScanError?: SortOrderInput | SortOrder
     customer?: CustomerOrderByWithRelationInput
     house?: HouseOrderByWithRelationInput
+    component?: ProjectComponentOrderByWithRelationInput
     consumables?: EquipmentConsumableOrderByRelationAggregateInput
     issueReports?: HouseIssueReportOrderByRelationAggregateInput
+    componentIssueReports?: ComponentIssueReportOrderByRelationAggregateInput
     errorCodes?: EquipmentErrorCodeOrderByRelationAggregateInput
   }
 
@@ -38976,6 +42563,7 @@ export namespace Prisma {
     companyId?: StringFilter<"Equipment"> | string
     customerId?: StringFilter<"Equipment"> | string
     houseId?: StringNullableFilter<"Equipment"> | string | null
+    componentId?: StringNullableFilter<"Equipment"> | string | null
     type?: StringFilter<"Equipment"> | string
     brand?: StringNullableFilter<"Equipment"> | string | null
     model?: StringNullableFilter<"Equipment"> | string | null
@@ -38993,8 +42581,10 @@ export namespace Prisma {
     imageScanError?: StringNullableFilter<"Equipment"> | string | null
     customer?: XOR<CustomerRelationFilter, CustomerWhereInput>
     house?: XOR<HouseNullableRelationFilter, HouseWhereInput> | null
+    component?: XOR<ProjectComponentNullableRelationFilter, ProjectComponentWhereInput> | null
     consumables?: EquipmentConsumableListRelationFilter
     issueReports?: HouseIssueReportListRelationFilter
+    componentIssueReports?: ComponentIssueReportListRelationFilter
     errorCodes?: EquipmentErrorCodeListRelationFilter
   }, "id">
 
@@ -39003,6 +42593,7 @@ export namespace Prisma {
     companyId?: SortOrder
     customerId?: SortOrder
     houseId?: SortOrderInput | SortOrder
+    componentId?: SortOrderInput | SortOrder
     type?: SortOrder
     brand?: SortOrderInput | SortOrder
     model?: SortOrderInput | SortOrder
@@ -39031,6 +42622,7 @@ export namespace Prisma {
     companyId?: StringWithAggregatesFilter<"Equipment"> | string
     customerId?: StringWithAggregatesFilter<"Equipment"> | string
     houseId?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
+    componentId?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
     type?: StringWithAggregatesFilter<"Equipment"> | string
     brand?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
     model?: StringNullableWithAggregatesFilter<"Equipment"> | string | null
@@ -40515,8 +44107,12 @@ export namespace Prisma {
     notes?: StringNullableFilter<"Project"> | string | null
     createdAt?: DateTimeFilter<"Project"> | Date | string
     updatedAt?: DateTimeFilter<"Project"> | Date | string
+    templateId?: StringNullableFilter<"Project"> | string | null
+    componentTypesSnapshot?: JsonNullableFilter<"Project">
+    componentCustomerSettings?: JsonNullableFilter<"Project">
     rosterDays?: ProjectRosterDayListRelationFilter
     houses?: HouseListRelationFilter
+    components?: ProjectComponentListRelationFilter
   }
 
   export type ProjectOrderByWithRelationInput = {
@@ -40540,8 +44136,12 @@ export namespace Prisma {
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    templateId?: SortOrderInput | SortOrder
+    componentTypesSnapshot?: SortOrderInput | SortOrder
+    componentCustomerSettings?: SortOrderInput | SortOrder
     rosterDays?: ProjectRosterDayOrderByRelationAggregateInput
     houses?: HouseOrderByRelationAggregateInput
+    components?: ProjectComponentOrderByRelationAggregateInput
   }
 
   export type ProjectWhereUniqueInput = Prisma.AtLeast<{
@@ -40568,8 +44168,12 @@ export namespace Prisma {
     notes?: StringNullableFilter<"Project"> | string | null
     createdAt?: DateTimeFilter<"Project"> | Date | string
     updatedAt?: DateTimeFilter<"Project"> | Date | string
+    templateId?: StringNullableFilter<"Project"> | string | null
+    componentTypesSnapshot?: JsonNullableFilter<"Project">
+    componentCustomerSettings?: JsonNullableFilter<"Project">
     rosterDays?: ProjectRosterDayListRelationFilter
     houses?: HouseListRelationFilter
+    components?: ProjectComponentListRelationFilter
   }, "id">
 
   export type ProjectOrderByWithAggregationInput = {
@@ -40593,6 +44197,9 @@ export namespace Prisma {
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    templateId?: SortOrderInput | SortOrder
+    componentTypesSnapshot?: SortOrderInput | SortOrder
+    componentCustomerSettings?: SortOrderInput | SortOrder
     _count?: ProjectCountOrderByAggregateInput
     _avg?: ProjectAvgOrderByAggregateInput
     _max?: ProjectMaxOrderByAggregateInput
@@ -40624,6 +44231,9 @@ export namespace Prisma {
     notes?: StringNullableWithAggregatesFilter<"Project"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Project"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Project"> | Date | string
+    templateId?: StringNullableWithAggregatesFilter<"Project"> | string | null
+    componentTypesSnapshot?: JsonNullableWithAggregatesFilter<"Project">
+    componentCustomerSettings?: JsonNullableWithAggregatesFilter<"Project">
   }
 
   export type ProjectRosterDayWhereInput = {
@@ -40875,6 +44485,258 @@ export namespace Prisma {
     resolvedNote?: StringNullableWithAggregatesFilter<"HouseIssueReport"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"HouseIssueReport"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"HouseIssueReport"> | Date | string
+  }
+
+  export type ProjectTemplateWhereInput = {
+    AND?: ProjectTemplateWhereInput | ProjectTemplateWhereInput[]
+    OR?: ProjectTemplateWhereInput[]
+    NOT?: ProjectTemplateWhereInput | ProjectTemplateWhereInput[]
+    id?: StringFilter<"ProjectTemplate"> | string
+    companyId?: StringFilter<"ProjectTemplate"> | string
+    name?: StringFilter<"ProjectTemplate"> | string
+    description?: StringNullableFilter<"ProjectTemplate"> | string | null
+    componentTypes?: JsonFilter<"ProjectTemplate">
+    isBuiltIn?: BoolFilter<"ProjectTemplate"> | boolean
+    status?: StringFilter<"ProjectTemplate"> | string
+    createdAt?: DateTimeFilter<"ProjectTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"ProjectTemplate"> | Date | string
+  }
+
+  export type ProjectTemplateOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    componentTypes?: SortOrder
+    isBuiltIn?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProjectTemplateWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ProjectTemplateWhereInput | ProjectTemplateWhereInput[]
+    OR?: ProjectTemplateWhereInput[]
+    NOT?: ProjectTemplateWhereInput | ProjectTemplateWhereInput[]
+    companyId?: StringFilter<"ProjectTemplate"> | string
+    name?: StringFilter<"ProjectTemplate"> | string
+    description?: StringNullableFilter<"ProjectTemplate"> | string | null
+    componentTypes?: JsonFilter<"ProjectTemplate">
+    isBuiltIn?: BoolFilter<"ProjectTemplate"> | boolean
+    status?: StringFilter<"ProjectTemplate"> | string
+    createdAt?: DateTimeFilter<"ProjectTemplate"> | Date | string
+    updatedAt?: DateTimeFilter<"ProjectTemplate"> | Date | string
+  }, "id">
+
+  export type ProjectTemplateOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    componentTypes?: SortOrder
+    isBuiltIn?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ProjectTemplateCountOrderByAggregateInput
+    _max?: ProjectTemplateMaxOrderByAggregateInput
+    _min?: ProjectTemplateMinOrderByAggregateInput
+  }
+
+  export type ProjectTemplateScalarWhereWithAggregatesInput = {
+    AND?: ProjectTemplateScalarWhereWithAggregatesInput | ProjectTemplateScalarWhereWithAggregatesInput[]
+    OR?: ProjectTemplateScalarWhereWithAggregatesInput[]
+    NOT?: ProjectTemplateScalarWhereWithAggregatesInput | ProjectTemplateScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ProjectTemplate"> | string
+    companyId?: StringWithAggregatesFilter<"ProjectTemplate"> | string
+    name?: StringWithAggregatesFilter<"ProjectTemplate"> | string
+    description?: StringNullableWithAggregatesFilter<"ProjectTemplate"> | string | null
+    componentTypes?: JsonWithAggregatesFilter<"ProjectTemplate">
+    isBuiltIn?: BoolWithAggregatesFilter<"ProjectTemplate"> | boolean
+    status?: StringWithAggregatesFilter<"ProjectTemplate"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"ProjectTemplate"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ProjectTemplate"> | Date | string
+  }
+
+  export type ProjectComponentWhereInput = {
+    AND?: ProjectComponentWhereInput | ProjectComponentWhereInput[]
+    OR?: ProjectComponentWhereInput[]
+    NOT?: ProjectComponentWhereInput | ProjectComponentWhereInput[]
+    id?: StringFilter<"ProjectComponent"> | string
+    companyId?: StringFilter<"ProjectComponent"> | string
+    projectId?: UuidFilter<"ProjectComponent"> | string
+    componentTypeKey?: StringFilter<"ProjectComponent"> | string
+    label?: StringFilter<"ProjectComponent"> | string
+    ownerCustomerId?: StringNullableFilter<"ProjectComponent"> | string | null
+    tags?: StringNullableListFilter<"ProjectComponent">
+    notes?: StringNullableFilter<"ProjectComponent"> | string | null
+    createdAt?: DateTimeFilter<"ProjectComponent"> | Date | string
+    updatedAt?: DateTimeFilter<"ProjectComponent"> | Date | string
+    project?: XOR<ProjectRelationFilter, ProjectWhereInput>
+    owner?: XOR<CustomerNullableRelationFilter, CustomerWhereInput> | null
+    equipment?: EquipmentListRelationFilter
+    issueReports?: ComponentIssueReportListRelationFilter
+  }
+
+  export type ProjectComponentOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    componentTypeKey?: SortOrder
+    label?: SortOrder
+    ownerCustomerId?: SortOrderInput | SortOrder
+    tags?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    project?: ProjectOrderByWithRelationInput
+    owner?: CustomerOrderByWithRelationInput
+    equipment?: EquipmentOrderByRelationAggregateInput
+    issueReports?: ComponentIssueReportOrderByRelationAggregateInput
+  }
+
+  export type ProjectComponentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ProjectComponentWhereInput | ProjectComponentWhereInput[]
+    OR?: ProjectComponentWhereInput[]
+    NOT?: ProjectComponentWhereInput | ProjectComponentWhereInput[]
+    companyId?: StringFilter<"ProjectComponent"> | string
+    projectId?: UuidFilter<"ProjectComponent"> | string
+    componentTypeKey?: StringFilter<"ProjectComponent"> | string
+    label?: StringFilter<"ProjectComponent"> | string
+    ownerCustomerId?: StringNullableFilter<"ProjectComponent"> | string | null
+    tags?: StringNullableListFilter<"ProjectComponent">
+    notes?: StringNullableFilter<"ProjectComponent"> | string | null
+    createdAt?: DateTimeFilter<"ProjectComponent"> | Date | string
+    updatedAt?: DateTimeFilter<"ProjectComponent"> | Date | string
+    project?: XOR<ProjectRelationFilter, ProjectWhereInput>
+    owner?: XOR<CustomerNullableRelationFilter, CustomerWhereInput> | null
+    equipment?: EquipmentListRelationFilter
+    issueReports?: ComponentIssueReportListRelationFilter
+  }, "id">
+
+  export type ProjectComponentOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    componentTypeKey?: SortOrder
+    label?: SortOrder
+    ownerCustomerId?: SortOrderInput | SortOrder
+    tags?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ProjectComponentCountOrderByAggregateInput
+    _max?: ProjectComponentMaxOrderByAggregateInput
+    _min?: ProjectComponentMinOrderByAggregateInput
+  }
+
+  export type ProjectComponentScalarWhereWithAggregatesInput = {
+    AND?: ProjectComponentScalarWhereWithAggregatesInput | ProjectComponentScalarWhereWithAggregatesInput[]
+    OR?: ProjectComponentScalarWhereWithAggregatesInput[]
+    NOT?: ProjectComponentScalarWhereWithAggregatesInput | ProjectComponentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ProjectComponent"> | string
+    companyId?: StringWithAggregatesFilter<"ProjectComponent"> | string
+    projectId?: UuidWithAggregatesFilter<"ProjectComponent"> | string
+    componentTypeKey?: StringWithAggregatesFilter<"ProjectComponent"> | string
+    label?: StringWithAggregatesFilter<"ProjectComponent"> | string
+    ownerCustomerId?: StringNullableWithAggregatesFilter<"ProjectComponent"> | string | null
+    tags?: StringNullableListFilter<"ProjectComponent">
+    notes?: StringNullableWithAggregatesFilter<"ProjectComponent"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ProjectComponent"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ProjectComponent"> | Date | string
+  }
+
+  export type ComponentIssueReportWhereInput = {
+    AND?: ComponentIssueReportWhereInput | ComponentIssueReportWhereInput[]
+    OR?: ComponentIssueReportWhereInput[]
+    NOT?: ComponentIssueReportWhereInput | ComponentIssueReportWhereInput[]
+    id?: StringFilter<"ComponentIssueReport"> | string
+    companyId?: StringFilter<"ComponentIssueReport"> | string
+    componentId?: StringFilter<"ComponentIssueReport"> | string
+    equipmentId?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    reportedByCustomerId?: StringFilter<"ComponentIssueReport"> | string
+    errorCode?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    description?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    status?: StringFilter<"ComponentIssueReport"> | string
+    resolvedNote?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    createdAt?: DateTimeFilter<"ComponentIssueReport"> | Date | string
+    updatedAt?: DateTimeFilter<"ComponentIssueReport"> | Date | string
+    component?: XOR<ProjectComponentRelationFilter, ProjectComponentWhereInput>
+    equipment?: XOR<EquipmentNullableRelationFilter, EquipmentWhereInput> | null
+    reportedBy?: XOR<CustomerRelationFilter, CustomerWhereInput>
+  }
+
+  export type ComponentIssueReportOrderByWithRelationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    componentId?: SortOrder
+    equipmentId?: SortOrderInput | SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrderInput | SortOrder
+    description?: SortOrderInput | SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    component?: ProjectComponentOrderByWithRelationInput
+    equipment?: EquipmentOrderByWithRelationInput
+    reportedBy?: CustomerOrderByWithRelationInput
+  }
+
+  export type ComponentIssueReportWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ComponentIssueReportWhereInput | ComponentIssueReportWhereInput[]
+    OR?: ComponentIssueReportWhereInput[]
+    NOT?: ComponentIssueReportWhereInput | ComponentIssueReportWhereInput[]
+    companyId?: StringFilter<"ComponentIssueReport"> | string
+    componentId?: StringFilter<"ComponentIssueReport"> | string
+    equipmentId?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    reportedByCustomerId?: StringFilter<"ComponentIssueReport"> | string
+    errorCode?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    description?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    status?: StringFilter<"ComponentIssueReport"> | string
+    resolvedNote?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    createdAt?: DateTimeFilter<"ComponentIssueReport"> | Date | string
+    updatedAt?: DateTimeFilter<"ComponentIssueReport"> | Date | string
+    component?: XOR<ProjectComponentRelationFilter, ProjectComponentWhereInput>
+    equipment?: XOR<EquipmentNullableRelationFilter, EquipmentWhereInput> | null
+    reportedBy?: XOR<CustomerRelationFilter, CustomerWhereInput>
+  }, "id">
+
+  export type ComponentIssueReportOrderByWithAggregationInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    componentId?: SortOrder
+    equipmentId?: SortOrderInput | SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrderInput | SortOrder
+    description?: SortOrderInput | SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ComponentIssueReportCountOrderByAggregateInput
+    _max?: ComponentIssueReportMaxOrderByAggregateInput
+    _min?: ComponentIssueReportMinOrderByAggregateInput
+  }
+
+  export type ComponentIssueReportScalarWhereWithAggregatesInput = {
+    AND?: ComponentIssueReportScalarWhereWithAggregatesInput | ComponentIssueReportScalarWhereWithAggregatesInput[]
+    OR?: ComponentIssueReportScalarWhereWithAggregatesInput[]
+    NOT?: ComponentIssueReportScalarWhereWithAggregatesInput | ComponentIssueReportScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ComponentIssueReport"> | string
+    companyId?: StringWithAggregatesFilter<"ComponentIssueReport"> | string
+    componentId?: StringWithAggregatesFilter<"ComponentIssueReport"> | string
+    equipmentId?: StringNullableWithAggregatesFilter<"ComponentIssueReport"> | string | null
+    reportedByCustomerId?: StringWithAggregatesFilter<"ComponentIssueReport"> | string
+    errorCode?: StringNullableWithAggregatesFilter<"ComponentIssueReport"> | string | null
+    description?: StringNullableWithAggregatesFilter<"ComponentIssueReport"> | string | null
+    status?: StringWithAggregatesFilter<"ComponentIssueReport"> | string
+    resolvedNote?: StringNullableWithAggregatesFilter<"ComponentIssueReport"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ComponentIssueReport"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ComponentIssueReport"> | Date | string
   }
 
   export type CompanyCreateInput = {
@@ -41335,6 +45197,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateInput = {
@@ -41373,6 +45237,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUpdateInput = {
@@ -41411,6 +45277,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateInput = {
@@ -41449,6 +45317,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerCreateManyInput = {
@@ -41819,6 +45689,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -41860,6 +45731,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -41897,6 +45769,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -41938,6 +45811,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -41977,6 +45851,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -42013,6 +45888,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -42051,6 +45927,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -42521,8 +46398,10 @@ export namespace Prisma {
     imageScanError?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
     house?: HouseCreateNestedOneWithoutEquipmentInput
+    component?: ProjectComponentCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
@@ -42531,6 +46410,7 @@ export namespace Prisma {
     companyId: string
     customerId: string
     houseId?: string | null
+    componentId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -42548,6 +46428,7 @@ export namespace Prisma {
     imageScanError?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
@@ -42571,8 +46452,10 @@ export namespace Prisma {
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
     house?: HouseUpdateOneWithoutEquipmentNestedInput
+    component?: ProjectComponentUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -42581,6 +46464,7 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42598,6 +46482,7 @@ export namespace Prisma {
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -42606,6 +46491,7 @@ export namespace Prisma {
     companyId: string
     customerId: string
     houseId?: string | null
+    componentId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -42648,6 +46534,7 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -44394,8 +48281,12 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    templateId?: string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     rosterDays?: ProjectRosterDayCreateNestedManyWithoutProjectInput
     houses?: HouseCreateNestedManyWithoutProjectInput
+    components?: ProjectComponentCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateInput = {
@@ -44419,8 +48310,12 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    templateId?: string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     rosterDays?: ProjectRosterDayUncheckedCreateNestedManyWithoutProjectInput
     houses?: HouseUncheckedCreateNestedManyWithoutProjectInput
+    components?: ProjectComponentUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUpdateInput = {
@@ -44444,8 +48339,12 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     rosterDays?: ProjectRosterDayUpdateManyWithoutProjectNestedInput
     houses?: HouseUpdateManyWithoutProjectNestedInput
+    components?: ProjectComponentUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateInput = {
@@ -44469,8 +48368,12 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     rosterDays?: ProjectRosterDayUncheckedUpdateManyWithoutProjectNestedInput
     houses?: HouseUncheckedUpdateManyWithoutProjectNestedInput
+    components?: ProjectComponentUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectCreateManyInput = {
@@ -44494,6 +48397,9 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    templateId?: string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type ProjectUpdateManyMutationInput = {
@@ -44517,6 +48423,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type ProjectUncheckedUpdateManyInput = {
@@ -44540,6 +48449,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type ProjectRosterDayCreateInput = {
@@ -44800,6 +48712,282 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     houseId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProjectTemplateCreateInput = {
+    id?: string
+    companyId: string
+    name: string
+    description?: string | null
+    componentTypes: JsonNullValueInput | InputJsonValue
+    isBuiltIn?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProjectTemplateUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    name: string
+    description?: string | null
+    componentTypes: JsonNullValueInput | InputJsonValue
+    isBuiltIn?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProjectTemplateUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypes?: JsonNullValueInput | InputJsonValue
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProjectTemplateUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypes?: JsonNullValueInput | InputJsonValue
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProjectTemplateCreateManyInput = {
+    id?: string
+    companyId: string
+    name: string
+    description?: string | null
+    componentTypes: JsonNullValueInput | InputJsonValue
+    isBuiltIn?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProjectTemplateUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypes?: JsonNullValueInput | InputJsonValue
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProjectTemplateUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypes?: JsonNullValueInput | InputJsonValue
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProjectComponentCreateInput = {
+    id?: string
+    companyId: string
+    componentTypeKey: string
+    label: string
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    project: ProjectCreateNestedOneWithoutComponentsInput
+    owner?: CustomerCreateNestedOneWithoutOwnedComponentsInput
+    equipment?: EquipmentCreateNestedManyWithoutComponentInput
+    issueReports?: ComponentIssueReportCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    componentTypeKey: string
+    label: string
+    ownerCustomerId?: string | null
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutComponentInput
+    issueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    project?: ProjectUpdateOneRequiredWithoutComponentsNestedInput
+    owner?: CustomerUpdateOneWithoutOwnedComponentsNestedInput
+    equipment?: EquipmentUpdateManyWithoutComponentNestedInput
+    issueReports?: ComponentIssueReportUpdateManyWithoutComponentNestedInput
+  }
+
+  export type ProjectComponentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUncheckedUpdateManyWithoutComponentNestedInput
+    issueReports?: ComponentIssueReportUncheckedUpdateManyWithoutComponentNestedInput
+  }
+
+  export type ProjectComponentCreateManyInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    componentTypeKey: string
+    label: string
+    ownerCustomerId?: string | null
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProjectComponentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProjectComponentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComponentIssueReportCreateInput = {
+    id?: string
+    companyId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    component: ProjectComponentCreateNestedOneWithoutIssueReportsInput
+    equipment?: EquipmentCreateNestedOneWithoutComponentIssueReportsInput
+    reportedBy: CustomerCreateNestedOneWithoutComponentIssueReportsInput
+  }
+
+  export type ComponentIssueReportUncheckedCreateInput = {
+    id?: string
+    companyId: string
+    componentId: string
+    equipmentId?: string | null
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComponentIssueReportUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    component?: ProjectComponentUpdateOneRequiredWithoutIssueReportsNestedInput
+    equipment?: EquipmentUpdateOneWithoutComponentIssueReportsNestedInput
+    reportedBy?: CustomerUpdateOneRequiredWithoutComponentIssueReportsNestedInput
+  }
+
+  export type ComponentIssueReportUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComponentIssueReportCreateManyInput = {
+    id?: string
+    companyId: string
+    componentId: string
+    equipmentId?: string | null
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComponentIssueReportUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComponentIssueReportUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentId?: StringFieldUpdateOperationsInput | string
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
     reportedByCustomerId?: StringFieldUpdateOperationsInput | string
     errorCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -45341,6 +49529,18 @@ export namespace Prisma {
     none?: HouseIssueReportWhereInput
   }
 
+  export type ProjectComponentListRelationFilter = {
+    every?: ProjectComponentWhereInput
+    some?: ProjectComponentWhereInput
+    none?: ProjectComponentWhereInput
+  }
+
+  export type ComponentIssueReportListRelationFilter = {
+    every?: ComponentIssueReportWhereInput
+    some?: ComponentIssueReportWhereInput
+    none?: ComponentIssueReportWhereInput
+  }
+
   export type ReviewOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -45374,6 +49574,14 @@ export namespace Prisma {
   }
 
   export type HouseIssueReportOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ProjectComponentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ComponentIssueReportOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -45715,6 +49923,7 @@ export namespace Prisma {
     jobTemplateId?: SortOrder
     projectId?: SortOrder
     houseId?: SortOrder
+    componentId?: SortOrder
     customerConfirmedAt?: SortOrder
     confirmToken?: SortOrder
     renewalReminderSent?: SortOrder
@@ -45762,6 +49971,7 @@ export namespace Prisma {
     jobTemplateId?: SortOrder
     projectId?: SortOrder
     houseId?: SortOrder
+    componentId?: SortOrder
     customerConfirmedAt?: SortOrder
     confirmToken?: SortOrder
     renewalReminderSent?: SortOrder
@@ -45800,6 +50010,7 @@ export namespace Prisma {
     jobTemplateId?: SortOrder
     projectId?: SortOrder
     houseId?: SortOrder
+    componentId?: SortOrder
     customerConfirmedAt?: SortOrder
     confirmToken?: SortOrder
     renewalReminderSent?: SortOrder
@@ -46128,6 +50339,11 @@ export namespace Prisma {
     isNot?: HouseWhereInput | null
   }
 
+  export type ProjectComponentNullableRelationFilter = {
+    is?: ProjectComponentWhereInput | null
+    isNot?: ProjectComponentWhereInput | null
+  }
+
   export type EquipmentConsumableListRelationFilter = {
     every?: EquipmentConsumableWhereInput
     some?: EquipmentConsumableWhereInput
@@ -46153,6 +50369,7 @@ export namespace Prisma {
     companyId?: SortOrder
     customerId?: SortOrder
     houseId?: SortOrder
+    componentId?: SortOrder
     type?: SortOrder
     brand?: SortOrder
     model?: SortOrder
@@ -46175,6 +50392,7 @@ export namespace Prisma {
     companyId?: SortOrder
     customerId?: SortOrder
     houseId?: SortOrder
+    componentId?: SortOrder
     type?: SortOrder
     brand?: SortOrder
     model?: SortOrder
@@ -46196,6 +50414,7 @@ export namespace Prisma {
     companyId?: SortOrder
     customerId?: SortOrder
     houseId?: SortOrder
+    componentId?: SortOrder
     type?: SortOrder
     brand?: SortOrder
     model?: SortOrder
@@ -47163,6 +51382,9 @@ export namespace Prisma {
     notes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    templateId?: SortOrder
+    componentTypesSnapshot?: SortOrder
+    componentCustomerSettings?: SortOrder
   }
 
   export type ProjectAvgOrderByAggregateInput = {
@@ -47191,6 +51413,7 @@ export namespace Prisma {
     notes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    templateId?: SortOrder
   }
 
   export type ProjectMinOrderByAggregateInput = {
@@ -47212,6 +51435,7 @@ export namespace Prisma {
     notes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    templateId?: SortOrder
   }
 
   export type ProjectSumOrderByAggregateInput = {
@@ -47368,6 +51592,124 @@ export namespace Prisma {
     id?: SortOrder
     companyId?: SortOrder
     houseId?: SortOrder
+    equipmentId?: SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrder
+    description?: SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProjectTemplateCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    componentTypes?: SortOrder
+    isBuiltIn?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProjectTemplateMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    isBuiltIn?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProjectTemplateMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    isBuiltIn?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProjectComponentCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    componentTypeKey?: SortOrder
+    label?: SortOrder
+    ownerCustomerId?: SortOrder
+    tags?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProjectComponentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    componentTypeKey?: SortOrder
+    label?: SortOrder
+    ownerCustomerId?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProjectComponentMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    projectId?: SortOrder
+    componentTypeKey?: SortOrder
+    label?: SortOrder
+    ownerCustomerId?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProjectComponentRelationFilter = {
+    is?: ProjectComponentWhereInput
+    isNot?: ProjectComponentWhereInput
+  }
+
+  export type ComponentIssueReportCountOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    componentId?: SortOrder
+    equipmentId?: SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrder
+    description?: SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ComponentIssueReportMaxOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    componentId?: SortOrder
+    equipmentId?: SortOrder
+    reportedByCustomerId?: SortOrder
+    errorCode?: SortOrder
+    description?: SortOrder
+    status?: SortOrder
+    resolvedNote?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ComponentIssueReportMinOrderByAggregateInput = {
+    id?: SortOrder
+    companyId?: SortOrder
+    componentId?: SortOrder
     equipmentId?: SortOrder
     reportedByCustomerId?: SortOrder
     errorCode?: SortOrder
@@ -47782,6 +52124,20 @@ export namespace Prisma {
     connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
   }
 
+  export type ProjectComponentCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<ProjectComponentCreateWithoutOwnerInput, ProjectComponentUncheckedCreateWithoutOwnerInput> | ProjectComponentCreateWithoutOwnerInput[] | ProjectComponentUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutOwnerInput | ProjectComponentCreateOrConnectWithoutOwnerInput[]
+    createMany?: ProjectComponentCreateManyOwnerInputEnvelope
+    connect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+  }
+
+  export type ComponentIssueReportCreateNestedManyWithoutReportedByInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutReportedByInput, ComponentIssueReportUncheckedCreateWithoutReportedByInput> | ComponentIssueReportCreateWithoutReportedByInput[] | ComponentIssueReportUncheckedCreateWithoutReportedByInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutReportedByInput | ComponentIssueReportCreateOrConnectWithoutReportedByInput[]
+    createMany?: ComponentIssueReportCreateManyReportedByInputEnvelope
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+  }
+
   export type ContactUncheckedCreateNestedManyWithoutCustomerInput = {
     create?: XOR<ContactCreateWithoutCustomerInput, ContactUncheckedCreateWithoutCustomerInput> | ContactCreateWithoutCustomerInput[] | ContactUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: ContactCreateOrConnectWithoutCustomerInput | ContactCreateOrConnectWithoutCustomerInput[]
@@ -47871,6 +52227,20 @@ export namespace Prisma {
     connectOrCreate?: HouseIssueReportCreateOrConnectWithoutReportedByInput | HouseIssueReportCreateOrConnectWithoutReportedByInput[]
     createMany?: HouseIssueReportCreateManyReportedByInputEnvelope
     connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+  }
+
+  export type ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<ProjectComponentCreateWithoutOwnerInput, ProjectComponentUncheckedCreateWithoutOwnerInput> | ProjectComponentCreateWithoutOwnerInput[] | ProjectComponentUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutOwnerInput | ProjectComponentCreateOrConnectWithoutOwnerInput[]
+    createMany?: ProjectComponentCreateManyOwnerInputEnvelope
+    connect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+  }
+
+  export type ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutReportedByInput, ComponentIssueReportUncheckedCreateWithoutReportedByInput> | ComponentIssueReportCreateWithoutReportedByInput[] | ComponentIssueReportUncheckedCreateWithoutReportedByInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutReportedByInput | ComponentIssueReportCreateOrConnectWithoutReportedByInput[]
+    createMany?: ComponentIssueReportCreateManyReportedByInputEnvelope
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
   }
 
   export type EnumCustomerTypeFieldUpdateOperationsInput = {
@@ -48076,6 +52446,34 @@ export namespace Prisma {
     deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
   }
 
+  export type ProjectComponentUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<ProjectComponentCreateWithoutOwnerInput, ProjectComponentUncheckedCreateWithoutOwnerInput> | ProjectComponentCreateWithoutOwnerInput[] | ProjectComponentUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutOwnerInput | ProjectComponentCreateOrConnectWithoutOwnerInput[]
+    upsert?: ProjectComponentUpsertWithWhereUniqueWithoutOwnerInput | ProjectComponentUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: ProjectComponentCreateManyOwnerInputEnvelope
+    set?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    disconnect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    delete?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    connect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    update?: ProjectComponentUpdateWithWhereUniqueWithoutOwnerInput | ProjectComponentUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: ProjectComponentUpdateManyWithWhereWithoutOwnerInput | ProjectComponentUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: ProjectComponentScalarWhereInput | ProjectComponentScalarWhereInput[]
+  }
+
+  export type ComponentIssueReportUpdateManyWithoutReportedByNestedInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutReportedByInput, ComponentIssueReportUncheckedCreateWithoutReportedByInput> | ComponentIssueReportCreateWithoutReportedByInput[] | ComponentIssueReportUncheckedCreateWithoutReportedByInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutReportedByInput | ComponentIssueReportCreateOrConnectWithoutReportedByInput[]
+    upsert?: ComponentIssueReportUpsertWithWhereUniqueWithoutReportedByInput | ComponentIssueReportUpsertWithWhereUniqueWithoutReportedByInput[]
+    createMany?: ComponentIssueReportCreateManyReportedByInputEnvelope
+    set?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    disconnect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    delete?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    update?: ComponentIssueReportUpdateWithWhereUniqueWithoutReportedByInput | ComponentIssueReportUpdateWithWhereUniqueWithoutReportedByInput[]
+    updateMany?: ComponentIssueReportUpdateManyWithWhereWithoutReportedByInput | ComponentIssueReportUpdateManyWithWhereWithoutReportedByInput[]
+    deleteMany?: ComponentIssueReportScalarWhereInput | ComponentIssueReportScalarWhereInput[]
+  }
+
   export type ContactUncheckedUpdateManyWithoutCustomerNestedInput = {
     create?: XOR<ContactCreateWithoutCustomerInput, ContactUncheckedCreateWithoutCustomerInput> | ContactCreateWithoutCustomerInput[] | ContactUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: ContactCreateOrConnectWithoutCustomerInput | ContactCreateOrConnectWithoutCustomerInput[]
@@ -48256,6 +52654,34 @@ export namespace Prisma {
     update?: HouseIssueReportUpdateWithWhereUniqueWithoutReportedByInput | HouseIssueReportUpdateWithWhereUniqueWithoutReportedByInput[]
     updateMany?: HouseIssueReportUpdateManyWithWhereWithoutReportedByInput | HouseIssueReportUpdateManyWithWhereWithoutReportedByInput[]
     deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+  }
+
+  export type ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<ProjectComponentCreateWithoutOwnerInput, ProjectComponentUncheckedCreateWithoutOwnerInput> | ProjectComponentCreateWithoutOwnerInput[] | ProjectComponentUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutOwnerInput | ProjectComponentCreateOrConnectWithoutOwnerInput[]
+    upsert?: ProjectComponentUpsertWithWhereUniqueWithoutOwnerInput | ProjectComponentUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: ProjectComponentCreateManyOwnerInputEnvelope
+    set?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    disconnect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    delete?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    connect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    update?: ProjectComponentUpdateWithWhereUniqueWithoutOwnerInput | ProjectComponentUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: ProjectComponentUpdateManyWithWhereWithoutOwnerInput | ProjectComponentUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: ProjectComponentScalarWhereInput | ProjectComponentScalarWhereInput[]
+  }
+
+  export type ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutReportedByInput, ComponentIssueReportUncheckedCreateWithoutReportedByInput> | ComponentIssueReportCreateWithoutReportedByInput[] | ComponentIssueReportUncheckedCreateWithoutReportedByInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutReportedByInput | ComponentIssueReportCreateOrConnectWithoutReportedByInput[]
+    upsert?: ComponentIssueReportUpsertWithWhereUniqueWithoutReportedByInput | ComponentIssueReportUpsertWithWhereUniqueWithoutReportedByInput[]
+    createMany?: ComponentIssueReportCreateManyReportedByInputEnvelope
+    set?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    disconnect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    delete?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    update?: ComponentIssueReportUpdateWithWhereUniqueWithoutReportedByInput | ComponentIssueReportUpdateWithWhereUniqueWithoutReportedByInput[]
+    updateMany?: ComponentIssueReportUpdateManyWithWhereWithoutReportedByInput | ComponentIssueReportUpdateManyWithWhereWithoutReportedByInput[]
+    deleteMany?: ComponentIssueReportScalarWhereInput | ComponentIssueReportScalarWhereInput[]
   }
 
   export type CompanyCreateNestedOneWithoutContactsInput = {
@@ -48572,6 +52998,12 @@ export namespace Prisma {
     connect?: HouseWhereUniqueInput
   }
 
+  export type ProjectComponentCreateNestedOneWithoutEquipmentInput = {
+    create?: XOR<ProjectComponentCreateWithoutEquipmentInput, ProjectComponentUncheckedCreateWithoutEquipmentInput>
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutEquipmentInput
+    connect?: ProjectComponentWhereUniqueInput
+  }
+
   export type EquipmentConsumableCreateNestedManyWithoutEquipmentInput = {
     create?: XOR<EquipmentConsumableCreateWithoutEquipmentInput, EquipmentConsumableUncheckedCreateWithoutEquipmentInput> | EquipmentConsumableCreateWithoutEquipmentInput[] | EquipmentConsumableUncheckedCreateWithoutEquipmentInput[]
     connectOrCreate?: EquipmentConsumableCreateOrConnectWithoutEquipmentInput | EquipmentConsumableCreateOrConnectWithoutEquipmentInput[]
@@ -48584,6 +53016,13 @@ export namespace Prisma {
     connectOrCreate?: HouseIssueReportCreateOrConnectWithoutEquipmentInput | HouseIssueReportCreateOrConnectWithoutEquipmentInput[]
     createMany?: HouseIssueReportCreateManyEquipmentInputEnvelope
     connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+  }
+
+  export type ComponentIssueReportCreateNestedManyWithoutEquipmentInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutEquipmentInput, ComponentIssueReportUncheckedCreateWithoutEquipmentInput> | ComponentIssueReportCreateWithoutEquipmentInput[] | ComponentIssueReportUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutEquipmentInput | ComponentIssueReportCreateOrConnectWithoutEquipmentInput[]
+    createMany?: ComponentIssueReportCreateManyEquipmentInputEnvelope
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
   }
 
   export type EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput = {
@@ -48605,6 +53044,13 @@ export namespace Prisma {
     connectOrCreate?: HouseIssueReportCreateOrConnectWithoutEquipmentInput | HouseIssueReportCreateOrConnectWithoutEquipmentInput[]
     createMany?: HouseIssueReportCreateManyEquipmentInputEnvelope
     connect?: HouseIssueReportWhereUniqueInput | HouseIssueReportWhereUniqueInput[]
+  }
+
+  export type ComponentIssueReportUncheckedCreateNestedManyWithoutEquipmentInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutEquipmentInput, ComponentIssueReportUncheckedCreateWithoutEquipmentInput> | ComponentIssueReportCreateWithoutEquipmentInput[] | ComponentIssueReportUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutEquipmentInput | ComponentIssueReportCreateOrConnectWithoutEquipmentInput[]
+    createMany?: ComponentIssueReportCreateManyEquipmentInputEnvelope
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
   }
 
   export type EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput = {
@@ -48630,6 +53076,16 @@ export namespace Prisma {
     delete?: HouseWhereInput | boolean
     connect?: HouseWhereUniqueInput
     update?: XOR<XOR<HouseUpdateToOneWithWhereWithoutEquipmentInput, HouseUpdateWithoutEquipmentInput>, HouseUncheckedUpdateWithoutEquipmentInput>
+  }
+
+  export type ProjectComponentUpdateOneWithoutEquipmentNestedInput = {
+    create?: XOR<ProjectComponentCreateWithoutEquipmentInput, ProjectComponentUncheckedCreateWithoutEquipmentInput>
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutEquipmentInput
+    upsert?: ProjectComponentUpsertWithoutEquipmentInput
+    disconnect?: ProjectComponentWhereInput | boolean
+    delete?: ProjectComponentWhereInput | boolean
+    connect?: ProjectComponentWhereUniqueInput
+    update?: XOR<XOR<ProjectComponentUpdateToOneWithWhereWithoutEquipmentInput, ProjectComponentUpdateWithoutEquipmentInput>, ProjectComponentUncheckedUpdateWithoutEquipmentInput>
   }
 
   export type EquipmentConsumableUpdateManyWithoutEquipmentNestedInput = {
@@ -48658,6 +53114,20 @@ export namespace Prisma {
     update?: HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput | HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput[]
     updateMany?: HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput | HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput[]
     deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+  }
+
+  export type ComponentIssueReportUpdateManyWithoutEquipmentNestedInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutEquipmentInput, ComponentIssueReportUncheckedCreateWithoutEquipmentInput> | ComponentIssueReportCreateWithoutEquipmentInput[] | ComponentIssueReportUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutEquipmentInput | ComponentIssueReportCreateOrConnectWithoutEquipmentInput[]
+    upsert?: ComponentIssueReportUpsertWithWhereUniqueWithoutEquipmentInput | ComponentIssueReportUpsertWithWhereUniqueWithoutEquipmentInput[]
+    createMany?: ComponentIssueReportCreateManyEquipmentInputEnvelope
+    set?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    disconnect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    delete?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    update?: ComponentIssueReportUpdateWithWhereUniqueWithoutEquipmentInput | ComponentIssueReportUpdateWithWhereUniqueWithoutEquipmentInput[]
+    updateMany?: ComponentIssueReportUpdateManyWithWhereWithoutEquipmentInput | ComponentIssueReportUpdateManyWithWhereWithoutEquipmentInput[]
+    deleteMany?: ComponentIssueReportScalarWhereInput | ComponentIssueReportScalarWhereInput[]
   }
 
   export type EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput = {
@@ -48700,6 +53170,20 @@ export namespace Prisma {
     update?: HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput | HouseIssueReportUpdateWithWhereUniqueWithoutEquipmentInput[]
     updateMany?: HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput | HouseIssueReportUpdateManyWithWhereWithoutEquipmentInput[]
     deleteMany?: HouseIssueReportScalarWhereInput | HouseIssueReportScalarWhereInput[]
+  }
+
+  export type ComponentIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutEquipmentInput, ComponentIssueReportUncheckedCreateWithoutEquipmentInput> | ComponentIssueReportCreateWithoutEquipmentInput[] | ComponentIssueReportUncheckedCreateWithoutEquipmentInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutEquipmentInput | ComponentIssueReportCreateOrConnectWithoutEquipmentInput[]
+    upsert?: ComponentIssueReportUpsertWithWhereUniqueWithoutEquipmentInput | ComponentIssueReportUpsertWithWhereUniqueWithoutEquipmentInput[]
+    createMany?: ComponentIssueReportCreateManyEquipmentInputEnvelope
+    set?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    disconnect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    delete?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    update?: ComponentIssueReportUpdateWithWhereUniqueWithoutEquipmentInput | ComponentIssueReportUpdateWithWhereUniqueWithoutEquipmentInput[]
+    updateMany?: ComponentIssueReportUpdateManyWithWhereWithoutEquipmentInput | ComponentIssueReportUpdateManyWithWhereWithoutEquipmentInput[]
+    deleteMany?: ComponentIssueReportScalarWhereInput | ComponentIssueReportScalarWhereInput[]
   }
 
   export type EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput = {
@@ -49006,6 +53490,13 @@ export namespace Prisma {
     connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
   }
 
+  export type ProjectComponentCreateNestedManyWithoutProjectInput = {
+    create?: XOR<ProjectComponentCreateWithoutProjectInput, ProjectComponentUncheckedCreateWithoutProjectInput> | ProjectComponentCreateWithoutProjectInput[] | ProjectComponentUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutProjectInput | ProjectComponentCreateOrConnectWithoutProjectInput[]
+    createMany?: ProjectComponentCreateManyProjectInputEnvelope
+    connect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+  }
+
   export type ProjectRosterDayUncheckedCreateNestedManyWithoutProjectInput = {
     create?: XOR<ProjectRosterDayCreateWithoutProjectInput, ProjectRosterDayUncheckedCreateWithoutProjectInput> | ProjectRosterDayCreateWithoutProjectInput[] | ProjectRosterDayUncheckedCreateWithoutProjectInput[]
     connectOrCreate?: ProjectRosterDayCreateOrConnectWithoutProjectInput | ProjectRosterDayCreateOrConnectWithoutProjectInput[]
@@ -49018,6 +53509,13 @@ export namespace Prisma {
     connectOrCreate?: HouseCreateOrConnectWithoutProjectInput | HouseCreateOrConnectWithoutProjectInput[]
     createMany?: HouseCreateManyProjectInputEnvelope
     connect?: HouseWhereUniqueInput | HouseWhereUniqueInput[]
+  }
+
+  export type ProjectComponentUncheckedCreateNestedManyWithoutProjectInput = {
+    create?: XOR<ProjectComponentCreateWithoutProjectInput, ProjectComponentUncheckedCreateWithoutProjectInput> | ProjectComponentCreateWithoutProjectInput[] | ProjectComponentUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutProjectInput | ProjectComponentCreateOrConnectWithoutProjectInput[]
+    createMany?: ProjectComponentCreateManyProjectInputEnvelope
+    connect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
   }
 
   export type ProjectUpdateworkingDaysInput = {
@@ -49058,6 +53556,20 @@ export namespace Prisma {
     deleteMany?: HouseScalarWhereInput | HouseScalarWhereInput[]
   }
 
+  export type ProjectComponentUpdateManyWithoutProjectNestedInput = {
+    create?: XOR<ProjectComponentCreateWithoutProjectInput, ProjectComponentUncheckedCreateWithoutProjectInput> | ProjectComponentCreateWithoutProjectInput[] | ProjectComponentUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutProjectInput | ProjectComponentCreateOrConnectWithoutProjectInput[]
+    upsert?: ProjectComponentUpsertWithWhereUniqueWithoutProjectInput | ProjectComponentUpsertWithWhereUniqueWithoutProjectInput[]
+    createMany?: ProjectComponentCreateManyProjectInputEnvelope
+    set?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    disconnect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    delete?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    connect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    update?: ProjectComponentUpdateWithWhereUniqueWithoutProjectInput | ProjectComponentUpdateWithWhereUniqueWithoutProjectInput[]
+    updateMany?: ProjectComponentUpdateManyWithWhereWithoutProjectInput | ProjectComponentUpdateManyWithWhereWithoutProjectInput[]
+    deleteMany?: ProjectComponentScalarWhereInput | ProjectComponentScalarWhereInput[]
+  }
+
   export type ProjectRosterDayUncheckedUpdateManyWithoutProjectNestedInput = {
     create?: XOR<ProjectRosterDayCreateWithoutProjectInput, ProjectRosterDayUncheckedCreateWithoutProjectInput> | ProjectRosterDayCreateWithoutProjectInput[] | ProjectRosterDayUncheckedCreateWithoutProjectInput[]
     connectOrCreate?: ProjectRosterDayCreateOrConnectWithoutProjectInput | ProjectRosterDayCreateOrConnectWithoutProjectInput[]
@@ -49084,6 +53596,20 @@ export namespace Prisma {
     update?: HouseUpdateWithWhereUniqueWithoutProjectInput | HouseUpdateWithWhereUniqueWithoutProjectInput[]
     updateMany?: HouseUpdateManyWithWhereWithoutProjectInput | HouseUpdateManyWithWhereWithoutProjectInput[]
     deleteMany?: HouseScalarWhereInput | HouseScalarWhereInput[]
+  }
+
+  export type ProjectComponentUncheckedUpdateManyWithoutProjectNestedInput = {
+    create?: XOR<ProjectComponentCreateWithoutProjectInput, ProjectComponentUncheckedCreateWithoutProjectInput> | ProjectComponentCreateWithoutProjectInput[] | ProjectComponentUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutProjectInput | ProjectComponentCreateOrConnectWithoutProjectInput[]
+    upsert?: ProjectComponentUpsertWithWhereUniqueWithoutProjectInput | ProjectComponentUpsertWithWhereUniqueWithoutProjectInput[]
+    createMany?: ProjectComponentCreateManyProjectInputEnvelope
+    set?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    disconnect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    delete?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    connect?: ProjectComponentWhereUniqueInput | ProjectComponentWhereUniqueInput[]
+    update?: ProjectComponentUpdateWithWhereUniqueWithoutProjectInput | ProjectComponentUpdateWithWhereUniqueWithoutProjectInput[]
+    updateMany?: ProjectComponentUpdateManyWithWhereWithoutProjectInput | ProjectComponentUpdateManyWithWhereWithoutProjectInput[]
+    deleteMany?: ProjectComponentScalarWhereInput | ProjectComponentScalarWhereInput[]
   }
 
   export type ProjectRosterDayCreatetechUserIdsInput = {
@@ -49274,6 +53800,173 @@ export namespace Prisma {
     upsert?: CustomerUpsertWithoutIssueReportsInput
     connect?: CustomerWhereUniqueInput
     update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutIssueReportsInput, CustomerUpdateWithoutIssueReportsInput>, CustomerUncheckedUpdateWithoutIssueReportsInput>
+  }
+
+  export type ProjectComponentCreatetagsInput = {
+    set: string[]
+  }
+
+  export type ProjectCreateNestedOneWithoutComponentsInput = {
+    create?: XOR<ProjectCreateWithoutComponentsInput, ProjectUncheckedCreateWithoutComponentsInput>
+    connectOrCreate?: ProjectCreateOrConnectWithoutComponentsInput
+    connect?: ProjectWhereUniqueInput
+  }
+
+  export type CustomerCreateNestedOneWithoutOwnedComponentsInput = {
+    create?: XOR<CustomerCreateWithoutOwnedComponentsInput, CustomerUncheckedCreateWithoutOwnedComponentsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutOwnedComponentsInput
+    connect?: CustomerWhereUniqueInput
+  }
+
+  export type EquipmentCreateNestedManyWithoutComponentInput = {
+    create?: XOR<EquipmentCreateWithoutComponentInput, EquipmentUncheckedCreateWithoutComponentInput> | EquipmentCreateWithoutComponentInput[] | EquipmentUncheckedCreateWithoutComponentInput[]
+    connectOrCreate?: EquipmentCreateOrConnectWithoutComponentInput | EquipmentCreateOrConnectWithoutComponentInput[]
+    createMany?: EquipmentCreateManyComponentInputEnvelope
+    connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+  }
+
+  export type ComponentIssueReportCreateNestedManyWithoutComponentInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutComponentInput, ComponentIssueReportUncheckedCreateWithoutComponentInput> | ComponentIssueReportCreateWithoutComponentInput[] | ComponentIssueReportUncheckedCreateWithoutComponentInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutComponentInput | ComponentIssueReportCreateOrConnectWithoutComponentInput[]
+    createMany?: ComponentIssueReportCreateManyComponentInputEnvelope
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+  }
+
+  export type EquipmentUncheckedCreateNestedManyWithoutComponentInput = {
+    create?: XOR<EquipmentCreateWithoutComponentInput, EquipmentUncheckedCreateWithoutComponentInput> | EquipmentCreateWithoutComponentInput[] | EquipmentUncheckedCreateWithoutComponentInput[]
+    connectOrCreate?: EquipmentCreateOrConnectWithoutComponentInput | EquipmentCreateOrConnectWithoutComponentInput[]
+    createMany?: EquipmentCreateManyComponentInputEnvelope
+    connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+  }
+
+  export type ComponentIssueReportUncheckedCreateNestedManyWithoutComponentInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutComponentInput, ComponentIssueReportUncheckedCreateWithoutComponentInput> | ComponentIssueReportCreateWithoutComponentInput[] | ComponentIssueReportUncheckedCreateWithoutComponentInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutComponentInput | ComponentIssueReportCreateOrConnectWithoutComponentInput[]
+    createMany?: ComponentIssueReportCreateManyComponentInputEnvelope
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+  }
+
+  export type ProjectComponentUpdatetagsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type ProjectUpdateOneRequiredWithoutComponentsNestedInput = {
+    create?: XOR<ProjectCreateWithoutComponentsInput, ProjectUncheckedCreateWithoutComponentsInput>
+    connectOrCreate?: ProjectCreateOrConnectWithoutComponentsInput
+    upsert?: ProjectUpsertWithoutComponentsInput
+    connect?: ProjectWhereUniqueInput
+    update?: XOR<XOR<ProjectUpdateToOneWithWhereWithoutComponentsInput, ProjectUpdateWithoutComponentsInput>, ProjectUncheckedUpdateWithoutComponentsInput>
+  }
+
+  export type CustomerUpdateOneWithoutOwnedComponentsNestedInput = {
+    create?: XOR<CustomerCreateWithoutOwnedComponentsInput, CustomerUncheckedCreateWithoutOwnedComponentsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutOwnedComponentsInput
+    upsert?: CustomerUpsertWithoutOwnedComponentsInput
+    disconnect?: CustomerWhereInput | boolean
+    delete?: CustomerWhereInput | boolean
+    connect?: CustomerWhereUniqueInput
+    update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutOwnedComponentsInput, CustomerUpdateWithoutOwnedComponentsInput>, CustomerUncheckedUpdateWithoutOwnedComponentsInput>
+  }
+
+  export type EquipmentUpdateManyWithoutComponentNestedInput = {
+    create?: XOR<EquipmentCreateWithoutComponentInput, EquipmentUncheckedCreateWithoutComponentInput> | EquipmentCreateWithoutComponentInput[] | EquipmentUncheckedCreateWithoutComponentInput[]
+    connectOrCreate?: EquipmentCreateOrConnectWithoutComponentInput | EquipmentCreateOrConnectWithoutComponentInput[]
+    upsert?: EquipmentUpsertWithWhereUniqueWithoutComponentInput | EquipmentUpsertWithWhereUniqueWithoutComponentInput[]
+    createMany?: EquipmentCreateManyComponentInputEnvelope
+    set?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    disconnect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    delete?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    update?: EquipmentUpdateWithWhereUniqueWithoutComponentInput | EquipmentUpdateWithWhereUniqueWithoutComponentInput[]
+    updateMany?: EquipmentUpdateManyWithWhereWithoutComponentInput | EquipmentUpdateManyWithWhereWithoutComponentInput[]
+    deleteMany?: EquipmentScalarWhereInput | EquipmentScalarWhereInput[]
+  }
+
+  export type ComponentIssueReportUpdateManyWithoutComponentNestedInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutComponentInput, ComponentIssueReportUncheckedCreateWithoutComponentInput> | ComponentIssueReportCreateWithoutComponentInput[] | ComponentIssueReportUncheckedCreateWithoutComponentInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutComponentInput | ComponentIssueReportCreateOrConnectWithoutComponentInput[]
+    upsert?: ComponentIssueReportUpsertWithWhereUniqueWithoutComponentInput | ComponentIssueReportUpsertWithWhereUniqueWithoutComponentInput[]
+    createMany?: ComponentIssueReportCreateManyComponentInputEnvelope
+    set?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    disconnect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    delete?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    update?: ComponentIssueReportUpdateWithWhereUniqueWithoutComponentInput | ComponentIssueReportUpdateWithWhereUniqueWithoutComponentInput[]
+    updateMany?: ComponentIssueReportUpdateManyWithWhereWithoutComponentInput | ComponentIssueReportUpdateManyWithWhereWithoutComponentInput[]
+    deleteMany?: ComponentIssueReportScalarWhereInput | ComponentIssueReportScalarWhereInput[]
+  }
+
+  export type EquipmentUncheckedUpdateManyWithoutComponentNestedInput = {
+    create?: XOR<EquipmentCreateWithoutComponentInput, EquipmentUncheckedCreateWithoutComponentInput> | EquipmentCreateWithoutComponentInput[] | EquipmentUncheckedCreateWithoutComponentInput[]
+    connectOrCreate?: EquipmentCreateOrConnectWithoutComponentInput | EquipmentCreateOrConnectWithoutComponentInput[]
+    upsert?: EquipmentUpsertWithWhereUniqueWithoutComponentInput | EquipmentUpsertWithWhereUniqueWithoutComponentInput[]
+    createMany?: EquipmentCreateManyComponentInputEnvelope
+    set?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    disconnect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    delete?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    connect?: EquipmentWhereUniqueInput | EquipmentWhereUniqueInput[]
+    update?: EquipmentUpdateWithWhereUniqueWithoutComponentInput | EquipmentUpdateWithWhereUniqueWithoutComponentInput[]
+    updateMany?: EquipmentUpdateManyWithWhereWithoutComponentInput | EquipmentUpdateManyWithWhereWithoutComponentInput[]
+    deleteMany?: EquipmentScalarWhereInput | EquipmentScalarWhereInput[]
+  }
+
+  export type ComponentIssueReportUncheckedUpdateManyWithoutComponentNestedInput = {
+    create?: XOR<ComponentIssueReportCreateWithoutComponentInput, ComponentIssueReportUncheckedCreateWithoutComponentInput> | ComponentIssueReportCreateWithoutComponentInput[] | ComponentIssueReportUncheckedCreateWithoutComponentInput[]
+    connectOrCreate?: ComponentIssueReportCreateOrConnectWithoutComponentInput | ComponentIssueReportCreateOrConnectWithoutComponentInput[]
+    upsert?: ComponentIssueReportUpsertWithWhereUniqueWithoutComponentInput | ComponentIssueReportUpsertWithWhereUniqueWithoutComponentInput[]
+    createMany?: ComponentIssueReportCreateManyComponentInputEnvelope
+    set?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    disconnect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    delete?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    connect?: ComponentIssueReportWhereUniqueInput | ComponentIssueReportWhereUniqueInput[]
+    update?: ComponentIssueReportUpdateWithWhereUniqueWithoutComponentInput | ComponentIssueReportUpdateWithWhereUniqueWithoutComponentInput[]
+    updateMany?: ComponentIssueReportUpdateManyWithWhereWithoutComponentInput | ComponentIssueReportUpdateManyWithWhereWithoutComponentInput[]
+    deleteMany?: ComponentIssueReportScalarWhereInput | ComponentIssueReportScalarWhereInput[]
+  }
+
+  export type ProjectComponentCreateNestedOneWithoutIssueReportsInput = {
+    create?: XOR<ProjectComponentCreateWithoutIssueReportsInput, ProjectComponentUncheckedCreateWithoutIssueReportsInput>
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutIssueReportsInput
+    connect?: ProjectComponentWhereUniqueInput
+  }
+
+  export type EquipmentCreateNestedOneWithoutComponentIssueReportsInput = {
+    create?: XOR<EquipmentCreateWithoutComponentIssueReportsInput, EquipmentUncheckedCreateWithoutComponentIssueReportsInput>
+    connectOrCreate?: EquipmentCreateOrConnectWithoutComponentIssueReportsInput
+    connect?: EquipmentWhereUniqueInput
+  }
+
+  export type CustomerCreateNestedOneWithoutComponentIssueReportsInput = {
+    create?: XOR<CustomerCreateWithoutComponentIssueReportsInput, CustomerUncheckedCreateWithoutComponentIssueReportsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutComponentIssueReportsInput
+    connect?: CustomerWhereUniqueInput
+  }
+
+  export type ProjectComponentUpdateOneRequiredWithoutIssueReportsNestedInput = {
+    create?: XOR<ProjectComponentCreateWithoutIssueReportsInput, ProjectComponentUncheckedCreateWithoutIssueReportsInput>
+    connectOrCreate?: ProjectComponentCreateOrConnectWithoutIssueReportsInput
+    upsert?: ProjectComponentUpsertWithoutIssueReportsInput
+    connect?: ProjectComponentWhereUniqueInput
+    update?: XOR<XOR<ProjectComponentUpdateToOneWithWhereWithoutIssueReportsInput, ProjectComponentUpdateWithoutIssueReportsInput>, ProjectComponentUncheckedUpdateWithoutIssueReportsInput>
+  }
+
+  export type EquipmentUpdateOneWithoutComponentIssueReportsNestedInput = {
+    create?: XOR<EquipmentCreateWithoutComponentIssueReportsInput, EquipmentUncheckedCreateWithoutComponentIssueReportsInput>
+    connectOrCreate?: EquipmentCreateOrConnectWithoutComponentIssueReportsInput
+    upsert?: EquipmentUpsertWithoutComponentIssueReportsInput
+    disconnect?: EquipmentWhereInput | boolean
+    delete?: EquipmentWhereInput | boolean
+    connect?: EquipmentWhereUniqueInput
+    update?: XOR<XOR<EquipmentUpdateToOneWithWhereWithoutComponentIssueReportsInput, EquipmentUpdateWithoutComponentIssueReportsInput>, EquipmentUncheckedUpdateWithoutComponentIssueReportsInput>
+  }
+
+  export type CustomerUpdateOneRequiredWithoutComponentIssueReportsNestedInput = {
+    create?: XOR<CustomerCreateWithoutComponentIssueReportsInput, CustomerUncheckedCreateWithoutComponentIssueReportsInput>
+    connectOrCreate?: CustomerCreateOrConnectWithoutComponentIssueReportsInput
+    upsert?: CustomerUpsertWithoutComponentIssueReportsInput
+    connect?: CustomerWhereUniqueInput
+    update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutComponentIssueReportsInput, CustomerUpdateWithoutComponentIssueReportsInput>, CustomerUncheckedUpdateWithoutComponentIssueReportsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -49772,6 +54465,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutCompanyInput = {
@@ -49809,6 +54504,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutCompanyInput = {
@@ -49943,6 +54640,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -49982,6 +54680,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -50272,6 +54971,7 @@ export namespace Prisma {
     jobTemplateId?: StringNullableFilter<"ServiceAgreement"> | string | null
     projectId?: StringNullableFilter<"ServiceAgreement"> | string | null
     houseId?: StringNullableFilter<"ServiceAgreement"> | string | null
+    componentId?: StringNullableFilter<"ServiceAgreement"> | string | null
     customerConfirmedAt?: DateTimeNullableFilter<"ServiceAgreement"> | Date | string | null
     confirmToken?: StringNullableFilter<"ServiceAgreement"> | string | null
     renewalReminderSent?: BoolFilter<"ServiceAgreement"> | boolean
@@ -50666,6 +55366,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -50705,6 +55406,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -50873,8 +55575,10 @@ export namespace Prisma {
     imageScanResult?: NullableJsonNullValueInput | InputJsonValue
     imageScanError?: string | null
     house?: HouseCreateNestedOneWithoutEquipmentInput
+    component?: ProjectComponentCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
@@ -50882,6 +55586,7 @@ export namespace Prisma {
     id?: string
     companyId: string
     houseId?: string | null
+    componentId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -50899,6 +55604,7 @@ export namespace Prisma {
     imageScanError?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
@@ -51208,6 +55914,80 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ProjectComponentCreateWithoutOwnerInput = {
+    id?: string
+    companyId: string
+    componentTypeKey: string
+    label: string
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    project: ProjectCreateNestedOneWithoutComponentsInput
+    equipment?: EquipmentCreateNestedManyWithoutComponentInput
+    issueReports?: ComponentIssueReportCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentUncheckedCreateWithoutOwnerInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    componentTypeKey: string
+    label: string
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutComponentInput
+    issueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentCreateOrConnectWithoutOwnerInput = {
+    where: ProjectComponentWhereUniqueInput
+    create: XOR<ProjectComponentCreateWithoutOwnerInput, ProjectComponentUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type ProjectComponentCreateManyOwnerInputEnvelope = {
+    data: ProjectComponentCreateManyOwnerInput | ProjectComponentCreateManyOwnerInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ComponentIssueReportCreateWithoutReportedByInput = {
+    id?: string
+    companyId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    component: ProjectComponentCreateNestedOneWithoutIssueReportsInput
+    equipment?: EquipmentCreateNestedOneWithoutComponentIssueReportsInput
+  }
+
+  export type ComponentIssueReportUncheckedCreateWithoutReportedByInput = {
+    id?: string
+    companyId: string
+    componentId: string
+    equipmentId?: string | null
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComponentIssueReportCreateOrConnectWithoutReportedByInput = {
+    where: ComponentIssueReportWhereUniqueInput
+    create: XOR<ComponentIssueReportCreateWithoutReportedByInput, ComponentIssueReportUncheckedCreateWithoutReportedByInput>
+  }
+
+  export type ComponentIssueReportCreateManyReportedByInputEnvelope = {
+    data: ComponentIssueReportCreateManyReportedByInput | ComponentIssueReportCreateManyReportedByInput[]
+    skipDuplicates?: boolean
+  }
+
   export type CompanyUpsertWithoutCustomersInput = {
     update: XOR<CompanyUpdateWithoutCustomersInput, CompanyUncheckedUpdateWithoutCustomersInput>
     create: XOR<CompanyCreateWithoutCustomersInput, CompanyUncheckedCreateWithoutCustomersInput>
@@ -51434,6 +56214,7 @@ export namespace Prisma {
     companyId?: StringFilter<"Equipment"> | string
     customerId?: StringFilter<"Equipment"> | string
     houseId?: StringNullableFilter<"Equipment"> | string | null
+    componentId?: StringNullableFilter<"Equipment"> | string | null
     type?: StringFilter<"Equipment"> | string
     brand?: StringNullableFilter<"Equipment"> | string | null
     model?: StringNullableFilter<"Equipment"> | string | null
@@ -51686,6 +56467,71 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"HouseIssueReport"> | Date | string
   }
 
+  export type ProjectComponentUpsertWithWhereUniqueWithoutOwnerInput = {
+    where: ProjectComponentWhereUniqueInput
+    update: XOR<ProjectComponentUpdateWithoutOwnerInput, ProjectComponentUncheckedUpdateWithoutOwnerInput>
+    create: XOR<ProjectComponentCreateWithoutOwnerInput, ProjectComponentUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type ProjectComponentUpdateWithWhereUniqueWithoutOwnerInput = {
+    where: ProjectComponentWhereUniqueInput
+    data: XOR<ProjectComponentUpdateWithoutOwnerInput, ProjectComponentUncheckedUpdateWithoutOwnerInput>
+  }
+
+  export type ProjectComponentUpdateManyWithWhereWithoutOwnerInput = {
+    where: ProjectComponentScalarWhereInput
+    data: XOR<ProjectComponentUpdateManyMutationInput, ProjectComponentUncheckedUpdateManyWithoutOwnerInput>
+  }
+
+  export type ProjectComponentScalarWhereInput = {
+    AND?: ProjectComponentScalarWhereInput | ProjectComponentScalarWhereInput[]
+    OR?: ProjectComponentScalarWhereInput[]
+    NOT?: ProjectComponentScalarWhereInput | ProjectComponentScalarWhereInput[]
+    id?: StringFilter<"ProjectComponent"> | string
+    companyId?: StringFilter<"ProjectComponent"> | string
+    projectId?: UuidFilter<"ProjectComponent"> | string
+    componentTypeKey?: StringFilter<"ProjectComponent"> | string
+    label?: StringFilter<"ProjectComponent"> | string
+    ownerCustomerId?: StringNullableFilter<"ProjectComponent"> | string | null
+    tags?: StringNullableListFilter<"ProjectComponent">
+    notes?: StringNullableFilter<"ProjectComponent"> | string | null
+    createdAt?: DateTimeFilter<"ProjectComponent"> | Date | string
+    updatedAt?: DateTimeFilter<"ProjectComponent"> | Date | string
+  }
+
+  export type ComponentIssueReportUpsertWithWhereUniqueWithoutReportedByInput = {
+    where: ComponentIssueReportWhereUniqueInput
+    update: XOR<ComponentIssueReportUpdateWithoutReportedByInput, ComponentIssueReportUncheckedUpdateWithoutReportedByInput>
+    create: XOR<ComponentIssueReportCreateWithoutReportedByInput, ComponentIssueReportUncheckedCreateWithoutReportedByInput>
+  }
+
+  export type ComponentIssueReportUpdateWithWhereUniqueWithoutReportedByInput = {
+    where: ComponentIssueReportWhereUniqueInput
+    data: XOR<ComponentIssueReportUpdateWithoutReportedByInput, ComponentIssueReportUncheckedUpdateWithoutReportedByInput>
+  }
+
+  export type ComponentIssueReportUpdateManyWithWhereWithoutReportedByInput = {
+    where: ComponentIssueReportScalarWhereInput
+    data: XOR<ComponentIssueReportUpdateManyMutationInput, ComponentIssueReportUncheckedUpdateManyWithoutReportedByInput>
+  }
+
+  export type ComponentIssueReportScalarWhereInput = {
+    AND?: ComponentIssueReportScalarWhereInput | ComponentIssueReportScalarWhereInput[]
+    OR?: ComponentIssueReportScalarWhereInput[]
+    NOT?: ComponentIssueReportScalarWhereInput | ComponentIssueReportScalarWhereInput[]
+    id?: StringFilter<"ComponentIssueReport"> | string
+    companyId?: StringFilter<"ComponentIssueReport"> | string
+    componentId?: StringFilter<"ComponentIssueReport"> | string
+    equipmentId?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    reportedByCustomerId?: StringFilter<"ComponentIssueReport"> | string
+    errorCode?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    description?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    status?: StringFilter<"ComponentIssueReport"> | string
+    resolvedNote?: StringNullableFilter<"ComponentIssueReport"> | string | null
+    createdAt?: DateTimeFilter<"ComponentIssueReport"> | Date | string
+    updatedAt?: DateTimeFilter<"ComponentIssueReport"> | Date | string
+  }
+
   export type CompanyCreateWithoutContactsInput = {
     id?: string
     name: string
@@ -51780,6 +56626,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutContactsInput = {
@@ -51817,6 +56665,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutContactsInput = {
@@ -51935,6 +56785,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutContactsInput = {
@@ -51972,6 +56824,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CompanyCreateWithoutLeadsInput = {
@@ -52068,6 +56922,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutLeadsInput = {
@@ -52105,6 +56961,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutLeadsInput = {
@@ -52263,6 +57121,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutLeadsInput = {
@@ -52300,6 +57160,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type AddressUpsertWithWhereUniqueWithoutLeadInput = {
@@ -52412,6 +57274,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutAgreementsInput = {
@@ -52449,6 +57313,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutAgreementsInput = {
@@ -52597,6 +57463,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutAgreementsInput = {
@@ -52634,6 +57502,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type AgreementAmendmentUpsertWithWhereUniqueWithoutAgreementInput = {
@@ -52694,6 +57564,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -52734,6 +57605,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -52786,6 +57658,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -52826,6 +57699,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -52928,6 +57802,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutBookingsInput = {
@@ -52965,6 +57841,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutBookingsInput = {
@@ -53083,6 +57961,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutBookingsInput = {
@@ -53120,6 +58000,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerCreateWithoutReviewsInput = {
@@ -53157,6 +58039,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutReviewsInput = {
@@ -53194,6 +58078,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutReviewsInput = {
@@ -53247,6 +58133,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutReviewsInput = {
@@ -53284,6 +58172,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerCreateWithoutAddressesInput = {
@@ -53321,6 +58211,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutAddressesInput = {
@@ -53358,6 +58250,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutAddressesInput = {
@@ -53464,6 +58358,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutAddressesInput = {
@@ -53501,6 +58397,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type LeadUpsertWithoutAddressesInput = {
@@ -53597,6 +58495,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutEquipmentInput = {
@@ -53634,6 +58534,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutEquipmentInput = {
@@ -53672,6 +58574,39 @@ export namespace Prisma {
   export type HouseCreateOrConnectWithoutEquipmentInput = {
     where: HouseWhereUniqueInput
     create: XOR<HouseCreateWithoutEquipmentInput, HouseUncheckedCreateWithoutEquipmentInput>
+  }
+
+  export type ProjectComponentCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    componentTypeKey: string
+    label: string
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    project: ProjectCreateNestedOneWithoutComponentsInput
+    owner?: CustomerCreateNestedOneWithoutOwnedComponentsInput
+    issueReports?: ComponentIssueReportCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentUncheckedCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    componentTypeKey: string
+    label: string
+    ownerCustomerId?: string | null
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    issueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentCreateOrConnectWithoutEquipmentInput = {
+    where: ProjectComponentWhereUniqueInput
+    create: XOR<ProjectComponentCreateWithoutEquipmentInput, ProjectComponentUncheckedCreateWithoutEquipmentInput>
   }
 
   export type EquipmentConsumableCreateWithoutEquipmentInput = {
@@ -53747,6 +58682,42 @@ export namespace Prisma {
 
   export type HouseIssueReportCreateManyEquipmentInputEnvelope = {
     data: HouseIssueReportCreateManyEquipmentInput | HouseIssueReportCreateManyEquipmentInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ComponentIssueReportCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    component: ProjectComponentCreateNestedOneWithoutIssueReportsInput
+    reportedBy: CustomerCreateNestedOneWithoutComponentIssueReportsInput
+  }
+
+  export type ComponentIssueReportUncheckedCreateWithoutEquipmentInput = {
+    id?: string
+    companyId: string
+    componentId: string
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComponentIssueReportCreateOrConnectWithoutEquipmentInput = {
+    where: ComponentIssueReportWhereUniqueInput
+    create: XOR<ComponentIssueReportCreateWithoutEquipmentInput, ComponentIssueReportUncheckedCreateWithoutEquipmentInput>
+  }
+
+  export type ComponentIssueReportCreateManyEquipmentInputEnvelope = {
+    data: ComponentIssueReportCreateManyEquipmentInput | ComponentIssueReportCreateManyEquipmentInput[]
     skipDuplicates?: boolean
   }
 
@@ -53826,6 +58797,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutEquipmentInput = {
@@ -53863,6 +58836,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type HouseUpsertWithoutEquipmentInput = {
@@ -53902,6 +58877,45 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutHouseNestedInput
+  }
+
+  export type ProjectComponentUpsertWithoutEquipmentInput = {
+    update: XOR<ProjectComponentUpdateWithoutEquipmentInput, ProjectComponentUncheckedUpdateWithoutEquipmentInput>
+    create: XOR<ProjectComponentCreateWithoutEquipmentInput, ProjectComponentUncheckedCreateWithoutEquipmentInput>
+    where?: ProjectComponentWhereInput
+  }
+
+  export type ProjectComponentUpdateToOneWithWhereWithoutEquipmentInput = {
+    where?: ProjectComponentWhereInput
+    data: XOR<ProjectComponentUpdateWithoutEquipmentInput, ProjectComponentUncheckedUpdateWithoutEquipmentInput>
+  }
+
+  export type ProjectComponentUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    project?: ProjectUpdateOneRequiredWithoutComponentsNestedInput
+    owner?: CustomerUpdateOneWithoutOwnedComponentsNestedInput
+    issueReports?: ComponentIssueReportUpdateManyWithoutComponentNestedInput
+  }
+
+  export type ProjectComponentUncheckedUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    issueReports?: ComponentIssueReportUncheckedUpdateManyWithoutComponentNestedInput
   }
 
   export type EquipmentConsumableUpsertWithWhereUniqueWithoutEquipmentInput = {
@@ -53955,6 +58969,22 @@ export namespace Prisma {
     data: XOR<HouseIssueReportUpdateManyMutationInput, HouseIssueReportUncheckedUpdateManyWithoutEquipmentInput>
   }
 
+  export type ComponentIssueReportUpsertWithWhereUniqueWithoutEquipmentInput = {
+    where: ComponentIssueReportWhereUniqueInput
+    update: XOR<ComponentIssueReportUpdateWithoutEquipmentInput, ComponentIssueReportUncheckedUpdateWithoutEquipmentInput>
+    create: XOR<ComponentIssueReportCreateWithoutEquipmentInput, ComponentIssueReportUncheckedCreateWithoutEquipmentInput>
+  }
+
+  export type ComponentIssueReportUpdateWithWhereUniqueWithoutEquipmentInput = {
+    where: ComponentIssueReportWhereUniqueInput
+    data: XOR<ComponentIssueReportUpdateWithoutEquipmentInput, ComponentIssueReportUncheckedUpdateWithoutEquipmentInput>
+  }
+
+  export type ComponentIssueReportUpdateManyWithWhereWithoutEquipmentInput = {
+    where: ComponentIssueReportScalarWhereInput
+    data: XOR<ComponentIssueReportUpdateManyMutationInput, ComponentIssueReportUncheckedUpdateManyWithoutEquipmentInput>
+  }
+
   export type EquipmentErrorCodeUpsertWithWhereUniqueWithoutEquipmentInput = {
     where: EquipmentErrorCodeWhereUniqueInput
     update: XOR<EquipmentErrorCodeUpdateWithoutEquipmentInput, EquipmentErrorCodeUncheckedUpdateWithoutEquipmentInput>
@@ -54005,8 +59035,10 @@ export namespace Prisma {
     imageScanError?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
     house?: HouseCreateNestedOneWithoutEquipmentInput
+    component?: ProjectComponentCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentUncheckedCreateWithoutErrorCodesInput = {
@@ -54014,6 +59046,7 @@ export namespace Prisma {
     companyId: string
     customerId: string
     houseId?: string | null
+    componentId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -54031,6 +59064,7 @@ export namespace Prisma {
     imageScanError?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
   export type EquipmentCreateOrConnectWithoutErrorCodesInput = {
@@ -54069,8 +59103,10 @@ export namespace Prisma {
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
     house?: HouseUpdateOneWithoutEquipmentNestedInput
+    component?: ProjectComponentUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentUncheckedUpdateWithoutErrorCodesInput = {
@@ -54078,6 +59114,7 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -54095,6 +59132,7 @@ export namespace Prisma {
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
   export type EquipmentCreateWithoutConsumablesInput = {
@@ -54117,7 +59155,9 @@ export namespace Prisma {
     imageScanError?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
     house?: HouseCreateNestedOneWithoutEquipmentInput
+    component?: ProjectComponentCreateNestedOneWithoutEquipmentInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
@@ -54126,6 +59166,7 @@ export namespace Prisma {
     companyId: string
     customerId: string
     houseId?: string | null
+    componentId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -54142,6 +59183,7 @@ export namespace Prisma {
     imageScanResult?: NullableJsonNullValueInput | InputJsonValue
     imageScanError?: string | null
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
@@ -54181,7 +59223,9 @@ export namespace Prisma {
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
     house?: HouseUpdateOneWithoutEquipmentNestedInput
+    component?: ProjectComponentUpdateOneWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -54190,6 +59234,7 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -54206,6 +59251,7 @@ export namespace Prisma {
     imageScanResult?: NullableJsonNullValueInput | InputJsonValue
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -54244,6 +59290,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutUpsellRecommendationsInput = {
@@ -54281,6 +59329,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutUpsellRecommendationsInput = {
@@ -54334,6 +59384,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutUpsellRecommendationsInput = {
@@ -54371,6 +59423,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerCreateWithoutRetentionRecommendationsInput = {
@@ -54408,6 +59462,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutRetentionRecommendationsInput = {
@@ -54445,6 +59501,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutRetentionRecommendationsInput = {
@@ -54498,6 +59556,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutRetentionRecommendationsInput = {
@@ -54535,6 +59595,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerCreateWithoutRevenueRecommendationsInput = {
@@ -54572,6 +59634,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutRevenueRecommendationsInput = {
@@ -54609,6 +59673,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutRevenueRecommendationsInput = {
@@ -54662,6 +59728,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutRevenueRecommendationsInput = {
@@ -54699,6 +59767,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type ImportErrorCreateWithoutBatchInput = {
@@ -54872,6 +59942,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutIotConnectionsInput = {
@@ -54909,6 +59981,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutIotConnectionsInput = {
@@ -54998,6 +60072,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutIotConnectionsInput = {
@@ -55035,6 +60111,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerIotDeviceUpsertWithWhereUniqueWithoutConnectionInput = {
@@ -55323,6 +60401,44 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ProjectComponentCreateWithoutProjectInput = {
+    id?: string
+    companyId: string
+    componentTypeKey: string
+    label: string
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner?: CustomerCreateNestedOneWithoutOwnedComponentsInput
+    equipment?: EquipmentCreateNestedManyWithoutComponentInput
+    issueReports?: ComponentIssueReportCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentUncheckedCreateWithoutProjectInput = {
+    id?: string
+    companyId: string
+    componentTypeKey: string
+    label: string
+    ownerCustomerId?: string | null
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutComponentInput
+    issueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentCreateOrConnectWithoutProjectInput = {
+    where: ProjectComponentWhereUniqueInput
+    create: XOR<ProjectComponentCreateWithoutProjectInput, ProjectComponentUncheckedCreateWithoutProjectInput>
+  }
+
+  export type ProjectComponentCreateManyProjectInputEnvelope = {
+    data: ProjectComponentCreateManyProjectInput | ProjectComponentCreateManyProjectInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ProjectRosterDayUpsertWithWhereUniqueWithoutProjectInput = {
     where: ProjectRosterDayWhereUniqueInput
     update: XOR<ProjectRosterDayUpdateWithoutProjectInput, ProjectRosterDayUncheckedUpdateWithoutProjectInput>
@@ -55369,6 +60485,22 @@ export namespace Prisma {
     data: XOR<HouseUpdateManyMutationInput, HouseUncheckedUpdateManyWithoutProjectInput>
   }
 
+  export type ProjectComponentUpsertWithWhereUniqueWithoutProjectInput = {
+    where: ProjectComponentWhereUniqueInput
+    update: XOR<ProjectComponentUpdateWithoutProjectInput, ProjectComponentUncheckedUpdateWithoutProjectInput>
+    create: XOR<ProjectComponentCreateWithoutProjectInput, ProjectComponentUncheckedCreateWithoutProjectInput>
+  }
+
+  export type ProjectComponentUpdateWithWhereUniqueWithoutProjectInput = {
+    where: ProjectComponentWhereUniqueInput
+    data: XOR<ProjectComponentUpdateWithoutProjectInput, ProjectComponentUncheckedUpdateWithoutProjectInput>
+  }
+
+  export type ProjectComponentUpdateManyWithWhereWithoutProjectInput = {
+    where: ProjectComponentScalarWhereInput
+    data: XOR<ProjectComponentUpdateManyMutationInput, ProjectComponentUncheckedUpdateManyWithoutProjectInput>
+  }
+
   export type ProjectCreateWithoutRosterDaysInput = {
     id?: string
     companyId: string
@@ -55390,7 +60522,11 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    templateId?: string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     houses?: HouseCreateNestedManyWithoutProjectInput
+    components?: ProjectComponentCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutRosterDaysInput = {
@@ -55414,7 +60550,11 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    templateId?: string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     houses?: HouseUncheckedCreateNestedManyWithoutProjectInput
+    components?: ProjectComponentUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutRosterDaysInput = {
@@ -55454,7 +60594,11 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     houses?: HouseUpdateManyWithoutProjectNestedInput
+    components?: ProjectComponentUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutRosterDaysInput = {
@@ -55478,7 +60622,11 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     houses?: HouseUncheckedUpdateManyWithoutProjectNestedInput
+    components?: ProjectComponentUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectCreateWithoutHousesInput = {
@@ -55502,7 +60650,11 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    templateId?: string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     rosterDays?: ProjectRosterDayCreateNestedManyWithoutProjectInput
+    components?: ProjectComponentCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutHousesInput = {
@@ -55526,7 +60678,11 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    templateId?: string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     rosterDays?: ProjectRosterDayUncheckedCreateNestedManyWithoutProjectInput
+    components?: ProjectComponentUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutHousesInput = {
@@ -55569,6 +60725,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutOwnedHousesInput = {
@@ -55606,6 +60764,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutOwnedHousesInput = {
@@ -55632,8 +60792,10 @@ export namespace Prisma {
     imageScanResult?: NullableJsonNullValueInput | InputJsonValue
     imageScanError?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
+    component?: ProjectComponentCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
@@ -55641,6 +60803,7 @@ export namespace Prisma {
     id?: string
     companyId: string
     customerId: string
+    componentId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -55658,6 +60821,7 @@ export namespace Prisma {
     imageScanError?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
     issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
@@ -55739,7 +60903,11 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     rosterDays?: ProjectRosterDayUpdateManyWithoutProjectNestedInput
+    components?: ProjectComponentUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutHousesInput = {
@@ -55763,7 +60931,11 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
     rosterDays?: ProjectRosterDayUncheckedUpdateManyWithoutProjectNestedInput
+    components?: ProjectComponentUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type CustomerUpsertWithoutOwnedHousesInput = {
@@ -55812,6 +60984,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutOwnedHousesInput = {
@@ -55849,6 +61023,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type EquipmentUpsertWithWhereUniqueWithoutHouseInput = {
@@ -55936,7 +61112,9 @@ export namespace Prisma {
     imageScanError?: string | null
     customer: CustomerCreateNestedOneWithoutEquipmentInput
     house?: HouseCreateNestedOneWithoutEquipmentInput
+    component?: ProjectComponentCreateNestedOneWithoutEquipmentInput
     consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
   }
 
@@ -55945,6 +61123,7 @@ export namespace Prisma {
     companyId: string
     customerId: string
     houseId?: string | null
+    componentId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -55961,6 +61140,7 @@ export namespace Prisma {
     imageScanResult?: NullableJsonNullValueInput | InputJsonValue
     imageScanError?: string | null
     consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
     errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
   }
 
@@ -56004,6 +61184,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerUncheckedCreateWithoutIssueReportsInput = {
@@ -56041,6 +61223,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationUncheckedCreateNestedManyWithoutCustomerInput
     iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
     ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
   }
 
   export type CustomerCreateOrConnectWithoutIssueReportsInput = {
@@ -56118,7 +61302,9 @@ export namespace Prisma {
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
     house?: HouseUpdateOneWithoutEquipmentNestedInput
+    component?: ProjectComponentUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -56127,6 +61313,7 @@ export namespace Prisma {
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -56143,6 +61330,7 @@ export namespace Prisma {
     imageScanResult?: NullableJsonNullValueInput | InputJsonValue
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -56192,6 +61380,8 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutIssueReportsInput = {
@@ -56229,6 +61419,802 @@ export namespace Prisma {
     revenueRecommendations?: RevenueRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+  }
+
+  export type ProjectCreateWithoutComponentsInput = {
+    id?: string
+    companyId: string
+    customerId?: string | null
+    name: string
+    description?: string | null
+    category?: string | null
+    status?: string
+    templateType?: string
+    startDate?: Date | string | null
+    targetEndDate?: Date | string | null
+    budget?: Decimal | DecimalJsLike | number | string | null
+    requiredHeadcount?: number | null
+    siteAddress?: string | null
+    latitude?: number | null
+    longitude?: number | null
+    workingDays?: ProjectCreateworkingDaysInput | string[]
+    baseTeamUserIds?: ProjectCreatebaseTeamUserIdsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    templateId?: string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
+    rosterDays?: ProjectRosterDayCreateNestedManyWithoutProjectInput
+    houses?: HouseCreateNestedManyWithoutProjectInput
+  }
+
+  export type ProjectUncheckedCreateWithoutComponentsInput = {
+    id?: string
+    companyId: string
+    customerId?: string | null
+    name: string
+    description?: string | null
+    category?: string | null
+    status?: string
+    templateType?: string
+    startDate?: Date | string | null
+    targetEndDate?: Date | string | null
+    budget?: Decimal | DecimalJsLike | number | string | null
+    requiredHeadcount?: number | null
+    siteAddress?: string | null
+    latitude?: number | null
+    longitude?: number | null
+    workingDays?: ProjectCreateworkingDaysInput | string[]
+    baseTeamUserIds?: ProjectCreatebaseTeamUserIdsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    templateId?: string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
+    rosterDays?: ProjectRosterDayUncheckedCreateNestedManyWithoutProjectInput
+    houses?: HouseUncheckedCreateNestedManyWithoutProjectInput
+  }
+
+  export type ProjectCreateOrConnectWithoutComponentsInput = {
+    where: ProjectWhereUniqueInput
+    create: XOR<ProjectCreateWithoutComponentsInput, ProjectUncheckedCreateWithoutComponentsInput>
+  }
+
+  export type CustomerCreateWithoutOwnedComponentsInput = {
+    id?: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutCustomersInput
+    contacts?: ContactCreateNestedManyWithoutCustomerInput
+    leads?: LeadCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementCreateNestedManyWithoutCustomerInput
+    bookings?: BookingCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewCreateNestedManyWithoutCustomerInput
+    addresses?: AddressCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
+    revenueRecommendations?: RevenueRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutReportedByInput
+  }
+
+  export type CustomerUncheckedCreateWithoutOwnedComponentsInput = {
+    id?: string
+    companyId: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
+    leads?: LeadUncheckedCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCustomerInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
+    addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    revenueRecommendations?: RevenueRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+  }
+
+  export type CustomerCreateOrConnectWithoutOwnedComponentsInput = {
+    where: CustomerWhereUniqueInput
+    create: XOR<CustomerCreateWithoutOwnedComponentsInput, CustomerUncheckedCreateWithoutOwnedComponentsInput>
+  }
+
+  export type EquipmentCreateWithoutComponentInput = {
+    id?: string
+    companyId: string
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
+    customer: CustomerCreateNestedOneWithoutEquipmentInput
+    house?: HouseCreateNestedOneWithoutEquipmentInput
+    consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentUncheckedCreateWithoutComponentInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    houseId?: string | null
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
+    consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    componentIssueReports?: ComponentIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentCreateOrConnectWithoutComponentInput = {
+    where: EquipmentWhereUniqueInput
+    create: XOR<EquipmentCreateWithoutComponentInput, EquipmentUncheckedCreateWithoutComponentInput>
+  }
+
+  export type EquipmentCreateManyComponentInputEnvelope = {
+    data: EquipmentCreateManyComponentInput | EquipmentCreateManyComponentInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ComponentIssueReportCreateWithoutComponentInput = {
+    id?: string
+    companyId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentCreateNestedOneWithoutComponentIssueReportsInput
+    reportedBy: CustomerCreateNestedOneWithoutComponentIssueReportsInput
+  }
+
+  export type ComponentIssueReportUncheckedCreateWithoutComponentInput = {
+    id?: string
+    companyId: string
+    equipmentId?: string | null
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComponentIssueReportCreateOrConnectWithoutComponentInput = {
+    where: ComponentIssueReportWhereUniqueInput
+    create: XOR<ComponentIssueReportCreateWithoutComponentInput, ComponentIssueReportUncheckedCreateWithoutComponentInput>
+  }
+
+  export type ComponentIssueReportCreateManyComponentInputEnvelope = {
+    data: ComponentIssueReportCreateManyComponentInput | ComponentIssueReportCreateManyComponentInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ProjectUpsertWithoutComponentsInput = {
+    update: XOR<ProjectUpdateWithoutComponentsInput, ProjectUncheckedUpdateWithoutComponentsInput>
+    create: XOR<ProjectCreateWithoutComponentsInput, ProjectUncheckedCreateWithoutComponentsInput>
+    where?: ProjectWhereInput
+  }
+
+  export type ProjectUpdateToOneWithWhereWithoutComponentsInput = {
+    where?: ProjectWhereInput
+    data: XOR<ProjectUpdateWithoutComponentsInput, ProjectUncheckedUpdateWithoutComponentsInput>
+  }
+
+  export type ProjectUpdateWithoutComponentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    requiredHeadcount?: NullableIntFieldUpdateOperationsInput | number | null
+    siteAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    workingDays?: ProjectUpdateworkingDaysInput | string[]
+    baseTeamUserIds?: ProjectUpdatebaseTeamUserIdsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
+    rosterDays?: ProjectRosterDayUpdateManyWithoutProjectNestedInput
+    houses?: HouseUpdateManyWithoutProjectNestedInput
+  }
+
+  export type ProjectUncheckedUpdateWithoutComponentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    templateType?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    targetEndDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    budget?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    requiredHeadcount?: NullableIntFieldUpdateOperationsInput | number | null
+    siteAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    workingDays?: ProjectUpdateworkingDaysInput | string[]
+    baseTeamUserIds?: ProjectUpdatebaseTeamUserIdsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    templateId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentTypesSnapshot?: NullableJsonNullValueInput | InputJsonValue
+    componentCustomerSettings?: NullableJsonNullValueInput | InputJsonValue
+    rosterDays?: ProjectRosterDayUncheckedUpdateManyWithoutProjectNestedInput
+    houses?: HouseUncheckedUpdateManyWithoutProjectNestedInput
+  }
+
+  export type CustomerUpsertWithoutOwnedComponentsInput = {
+    update: XOR<CustomerUpdateWithoutOwnedComponentsInput, CustomerUncheckedUpdateWithoutOwnedComponentsInput>
+    create: XOR<CustomerCreateWithoutOwnedComponentsInput, CustomerUncheckedCreateWithoutOwnedComponentsInput>
+    where?: CustomerWhereInput
+  }
+
+  export type CustomerUpdateToOneWithWhereWithoutOwnedComponentsInput = {
+    where?: CustomerWhereInput
+    data: XOR<CustomerUpdateWithoutOwnedComponentsInput, CustomerUncheckedUpdateWithoutOwnedComponentsInput>
+  }
+
+  export type CustomerUpdateWithoutOwnedComponentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
+    contacts?: ContactUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
+    revenueRecommendations?: RevenueRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
+  }
+
+  export type CustomerUncheckedUpdateWithoutOwnedComponentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUncheckedUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUncheckedUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    revenueRecommendations?: RevenueRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+  }
+
+  export type EquipmentUpsertWithWhereUniqueWithoutComponentInput = {
+    where: EquipmentWhereUniqueInput
+    update: XOR<EquipmentUpdateWithoutComponentInput, EquipmentUncheckedUpdateWithoutComponentInput>
+    create: XOR<EquipmentCreateWithoutComponentInput, EquipmentUncheckedCreateWithoutComponentInput>
+  }
+
+  export type EquipmentUpdateWithWhereUniqueWithoutComponentInput = {
+    where: EquipmentWhereUniqueInput
+    data: XOR<EquipmentUpdateWithoutComponentInput, EquipmentUncheckedUpdateWithoutComponentInput>
+  }
+
+  export type EquipmentUpdateManyWithWhereWithoutComponentInput = {
+    where: EquipmentScalarWhereInput
+    data: XOR<EquipmentUpdateManyMutationInput, EquipmentUncheckedUpdateManyWithoutComponentInput>
+  }
+
+  export type ComponentIssueReportUpsertWithWhereUniqueWithoutComponentInput = {
+    where: ComponentIssueReportWhereUniqueInput
+    update: XOR<ComponentIssueReportUpdateWithoutComponentInput, ComponentIssueReportUncheckedUpdateWithoutComponentInput>
+    create: XOR<ComponentIssueReportCreateWithoutComponentInput, ComponentIssueReportUncheckedCreateWithoutComponentInput>
+  }
+
+  export type ComponentIssueReportUpdateWithWhereUniqueWithoutComponentInput = {
+    where: ComponentIssueReportWhereUniqueInput
+    data: XOR<ComponentIssueReportUpdateWithoutComponentInput, ComponentIssueReportUncheckedUpdateWithoutComponentInput>
+  }
+
+  export type ComponentIssueReportUpdateManyWithWhereWithoutComponentInput = {
+    where: ComponentIssueReportScalarWhereInput
+    data: XOR<ComponentIssueReportUpdateManyMutationInput, ComponentIssueReportUncheckedUpdateManyWithoutComponentInput>
+  }
+
+  export type ProjectComponentCreateWithoutIssueReportsInput = {
+    id?: string
+    companyId: string
+    componentTypeKey: string
+    label: string
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    project: ProjectCreateNestedOneWithoutComponentsInput
+    owner?: CustomerCreateNestedOneWithoutOwnedComponentsInput
+    equipment?: EquipmentCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentUncheckedCreateWithoutIssueReportsInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    componentTypeKey: string
+    label: string
+    ownerCustomerId?: string | null
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutComponentInput
+  }
+
+  export type ProjectComponentCreateOrConnectWithoutIssueReportsInput = {
+    where: ProjectComponentWhereUniqueInput
+    create: XOR<ProjectComponentCreateWithoutIssueReportsInput, ProjectComponentUncheckedCreateWithoutIssueReportsInput>
+  }
+
+  export type EquipmentCreateWithoutComponentIssueReportsInput = {
+    id?: string
+    companyId: string
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
+    customer: CustomerCreateNestedOneWithoutEquipmentInput
+    house?: HouseCreateNestedOneWithoutEquipmentInput
+    component?: ProjectComponentCreateNestedOneWithoutEquipmentInput
+    consumables?: EquipmentConsumableCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentUncheckedCreateWithoutComponentIssueReportsInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    houseId?: string | null
+    componentId?: string | null
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
+    consumables?: EquipmentConsumableUncheckedCreateNestedManyWithoutEquipmentInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutEquipmentInput
+    errorCodes?: EquipmentErrorCodeUncheckedCreateNestedManyWithoutEquipmentInput
+  }
+
+  export type EquipmentCreateOrConnectWithoutComponentIssueReportsInput = {
+    where: EquipmentWhereUniqueInput
+    create: XOR<EquipmentCreateWithoutComponentIssueReportsInput, EquipmentUncheckedCreateWithoutComponentIssueReportsInput>
+  }
+
+  export type CustomerCreateWithoutComponentIssueReportsInput = {
+    id?: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    company: CompanyCreateNestedOneWithoutCustomersInput
+    contacts?: ContactCreateNestedManyWithoutCustomerInput
+    leads?: LeadCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementCreateNestedManyWithoutCustomerInput
+    bookings?: BookingCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewCreateNestedManyWithoutCustomerInput
+    addresses?: AddressCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationCreateNestedManyWithoutCustomerInput
+    revenueRecommendations?: RevenueRecommendationCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentCreateNestedManyWithoutOwnerInput
+  }
+
+  export type CustomerUncheckedCreateWithoutComponentIssueReportsInput = {
+    id?: string
+    companyId: string
+    type?: $Enums.CustomerType
+    firstName: string
+    lastName: string
+    email?: string | null
+    phone?: string | null
+    mobile?: string | null
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    zipCode?: string | null
+    notes?: string | null
+    source?: string | null
+    tags?: CustomerCreatetagsInput | string[]
+    isActive?: boolean
+    automaticFollowupEnabled?: boolean
+    engagementStatus?: $Enums.CustomerEngagementStatus
+    auth0UserId?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    contacts?: ContactUncheckedCreateNestedManyWithoutCustomerInput
+    leads?: LeadUncheckedCreateNestedManyWithoutCustomerInput
+    agreements?: ServiceAgreementUncheckedCreateNestedManyWithoutCustomerInput
+    bookings?: BookingUncheckedCreateNestedManyWithoutCustomerInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutCustomerInput
+    addresses?: AddressUncheckedCreateNestedManyWithoutCustomerInput
+    equipment?: EquipmentUncheckedCreateNestedManyWithoutCustomerInput
+    upsellRecommendations?: UpsellRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    retentionRecommendations?: RetentionRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    revenueRecommendations?: RevenueRecommendationUncheckedCreateNestedManyWithoutCustomerInput
+    iotConnections?: CustomerIotConnectionUncheckedCreateNestedManyWithoutCustomerInput
+    ownedHouses?: HouseUncheckedCreateNestedManyWithoutOwnerInput
+    issueReports?: HouseIssueReportUncheckedCreateNestedManyWithoutReportedByInput
+    ownedComponents?: ProjectComponentUncheckedCreateNestedManyWithoutOwnerInput
+  }
+
+  export type CustomerCreateOrConnectWithoutComponentIssueReportsInput = {
+    where: CustomerWhereUniqueInput
+    create: XOR<CustomerCreateWithoutComponentIssueReportsInput, CustomerUncheckedCreateWithoutComponentIssueReportsInput>
+  }
+
+  export type ProjectComponentUpsertWithoutIssueReportsInput = {
+    update: XOR<ProjectComponentUpdateWithoutIssueReportsInput, ProjectComponentUncheckedUpdateWithoutIssueReportsInput>
+    create: XOR<ProjectComponentCreateWithoutIssueReportsInput, ProjectComponentUncheckedCreateWithoutIssueReportsInput>
+    where?: ProjectComponentWhereInput
+  }
+
+  export type ProjectComponentUpdateToOneWithWhereWithoutIssueReportsInput = {
+    where?: ProjectComponentWhereInput
+    data: XOR<ProjectComponentUpdateWithoutIssueReportsInput, ProjectComponentUncheckedUpdateWithoutIssueReportsInput>
+  }
+
+  export type ProjectComponentUpdateWithoutIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    project?: ProjectUpdateOneRequiredWithoutComponentsNestedInput
+    owner?: CustomerUpdateOneWithoutOwnedComponentsNestedInput
+    equipment?: EquipmentUpdateManyWithoutComponentNestedInput
+  }
+
+  export type ProjectComponentUncheckedUpdateWithoutIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUncheckedUpdateManyWithoutComponentNestedInput
+  }
+
+  export type EquipmentUpsertWithoutComponentIssueReportsInput = {
+    update: XOR<EquipmentUpdateWithoutComponentIssueReportsInput, EquipmentUncheckedUpdateWithoutComponentIssueReportsInput>
+    create: XOR<EquipmentCreateWithoutComponentIssueReportsInput, EquipmentUncheckedCreateWithoutComponentIssueReportsInput>
+    where?: EquipmentWhereInput
+  }
+
+  export type EquipmentUpdateToOneWithWhereWithoutComponentIssueReportsInput = {
+    where?: EquipmentWhereInput
+    data: XOR<EquipmentUpdateWithoutComponentIssueReportsInput, EquipmentUncheckedUpdateWithoutComponentIssueReportsInput>
+  }
+
+  export type EquipmentUpdateWithoutComponentIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
+    customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
+    house?: HouseUpdateOneWithoutEquipmentNestedInput
+    component?: ProjectComponentUpdateOneWithoutEquipmentNestedInput
+    consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
+  }
+
+  export type EquipmentUncheckedUpdateWithoutComponentIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
+    consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
+  }
+
+  export type CustomerUpsertWithoutComponentIssueReportsInput = {
+    update: XOR<CustomerUpdateWithoutComponentIssueReportsInput, CustomerUncheckedUpdateWithoutComponentIssueReportsInput>
+    create: XOR<CustomerCreateWithoutComponentIssueReportsInput, CustomerUncheckedCreateWithoutComponentIssueReportsInput>
+    where?: CustomerWhereInput
+  }
+
+  export type CustomerUpdateToOneWithWhereWithoutComponentIssueReportsInput = {
+    where?: CustomerWhereInput
+    data: XOR<CustomerUpdateWithoutComponentIssueReportsInput, CustomerUncheckedUpdateWithoutComponentIssueReportsInput>
+  }
+
+  export type CustomerUpdateWithoutComponentIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    company?: CompanyUpdateOneRequiredWithoutCustomersNestedInput
+    contacts?: ContactUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUpdateManyWithoutCustomerNestedInput
+    revenueRecommendations?: RevenueRecommendationUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+  }
+
+  export type CustomerUncheckedUpdateWithoutComponentIssueReportsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    zipCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: CustomerUpdatetagsInput | string[]
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    automaticFollowupEnabled?: BoolFieldUpdateOperationsInput | boolean
+    engagementStatus?: EnumCustomerEngagementStatusFieldUpdateOperationsInput | $Enums.CustomerEngagementStatus
+    auth0UserId?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    contacts?: ContactUncheckedUpdateManyWithoutCustomerNestedInput
+    leads?: LeadUncheckedUpdateManyWithoutCustomerNestedInput
+    agreements?: ServiceAgreementUncheckedUpdateManyWithoutCustomerNestedInput
+    bookings?: BookingUncheckedUpdateManyWithoutCustomerNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+    addresses?: AddressUncheckedUpdateManyWithoutCustomerNestedInput
+    equipment?: EquipmentUncheckedUpdateManyWithoutCustomerNestedInput
+    upsellRecommendations?: UpsellRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    retentionRecommendations?: RetentionRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    revenueRecommendations?: RevenueRecommendationUncheckedUpdateManyWithoutCustomerNestedInput
+    iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
+    ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
   export type CustomerCreateManyCompanyInput = {
@@ -56320,6 +62306,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -56404,6 +62391,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateWithoutCompanyInput = {
@@ -56441,6 +62430,8 @@ export namespace Prisma {
     iotConnections?: CustomerIotConnectionUncheckedUpdateManyWithoutCustomerNestedInput
     ownedHouses?: HouseUncheckedUpdateManyWithoutOwnerNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
+    ownedComponents?: ProjectComponentUncheckedUpdateManyWithoutOwnerNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutReportedByNestedInput
   }
 
   export type CustomerUncheckedUpdateManyWithoutCompanyInput = {
@@ -56605,6 +62596,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -56644,6 +62636,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -56682,6 +62675,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -56878,6 +62872,7 @@ export namespace Prisma {
     jobTemplateId?: string | null
     projectId?: string | null
     houseId?: string | null
+    componentId?: string | null
     customerConfirmedAt?: Date | string | null
     confirmToken?: string | null
     renewalReminderSent?: boolean
@@ -56940,6 +62935,7 @@ export namespace Prisma {
     id?: string
     companyId: string
     houseId?: string | null
+    componentId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -57063,6 +63059,31 @@ export namespace Prisma {
     id?: string
     companyId: string
     houseId: string
+    equipmentId?: string | null
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProjectComponentCreateManyOwnerInput = {
+    id?: string
+    companyId: string
+    projectId: string
+    componentTypeKey: string
+    label: string
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComponentIssueReportCreateManyReportedByInput = {
+    id?: string
+    companyId: string
+    componentId: string
     equipmentId?: string | null
     errorCode?: string | null
     description?: string | null
@@ -57210,6 +63231,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -57249,6 +63271,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -57287,6 +63310,7 @@ export namespace Prisma {
     jobTemplateId?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     customerConfirmedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     confirmToken?: NullableStringFieldUpdateOperationsInput | string | null
     renewalReminderSent?: BoolFieldUpdateOperationsInput | boolean
@@ -57464,8 +63488,10 @@ export namespace Prisma {
     imageScanResult?: NullableJsonNullValueInput | InputJsonValue
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     house?: HouseUpdateOneWithoutEquipmentNestedInput
+    component?: ProjectComponentUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -57473,6 +63499,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -57490,6 +63517,7 @@ export namespace Prisma {
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -57497,6 +63525,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -57865,6 +63894,85 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ProjectComponentUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    project?: ProjectUpdateOneRequiredWithoutComponentsNestedInput
+    equipment?: EquipmentUpdateManyWithoutComponentNestedInput
+    issueReports?: ComponentIssueReportUpdateManyWithoutComponentNestedInput
+  }
+
+  export type ProjectComponentUncheckedUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUncheckedUpdateManyWithoutComponentNestedInput
+    issueReports?: ComponentIssueReportUncheckedUpdateManyWithoutComponentNestedInput
+  }
+
+  export type ProjectComponentUncheckedUpdateManyWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComponentIssueReportUpdateWithoutReportedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    component?: ProjectComponentUpdateOneRequiredWithoutIssueReportsNestedInput
+    equipment?: EquipmentUpdateOneWithoutComponentIssueReportsNestedInput
+  }
+
+  export type ComponentIssueReportUncheckedUpdateWithoutReportedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComponentIssueReportUncheckedUpdateManyWithoutReportedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AddressCreateManyLeadInput = {
     id?: string
     companyId: string
@@ -57993,6 +64101,19 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type ComponentIssueReportCreateManyEquipmentInput = {
+    id?: string
+    companyId: string
+    componentId: string
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type EquipmentErrorCodeCreateManyEquipmentInput = {
     id?: string
     companyId: string
@@ -58078,6 +64199,45 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     houseId?: StringFieldUpdateOperationsInput | string
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComponentIssueReportUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    component?: ProjectComponentUpdateOneRequiredWithoutIssueReportsNestedInput
+    reportedBy?: CustomerUpdateOneRequiredWithoutComponentIssueReportsNestedInput
+  }
+
+  export type ComponentIssueReportUncheckedUpdateWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentId?: StringFieldUpdateOperationsInput | string
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComponentIssueReportUncheckedUpdateManyWithoutEquipmentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentId?: StringFieldUpdateOperationsInput | string
     reportedByCustomerId?: StringFieldUpdateOperationsInput | string
     errorCode?: NullableStringFieldUpdateOperationsInput | string | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -58256,6 +64416,18 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type ProjectComponentCreateManyProjectInput = {
+    id?: string
+    companyId: string
+    componentTypeKey: string
+    label: string
+    ownerCustomerId?: string | null
+    tags?: ProjectComponentCreatetagsInput | string[]
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type ProjectRosterDayUpdateWithoutProjectInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
@@ -58326,10 +64498,51 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ProjectComponentUpdateWithoutProjectInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: CustomerUpdateOneWithoutOwnedComponentsNestedInput
+    equipment?: EquipmentUpdateManyWithoutComponentNestedInput
+    issueReports?: ComponentIssueReportUpdateManyWithoutComponentNestedInput
+  }
+
+  export type ProjectComponentUncheckedUpdateWithoutProjectInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUncheckedUpdateManyWithoutComponentNestedInput
+    issueReports?: ComponentIssueReportUncheckedUpdateManyWithoutComponentNestedInput
+  }
+
+  export type ProjectComponentUncheckedUpdateManyWithoutProjectInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    componentTypeKey?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    ownerCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: ProjectComponentUpdatetagsInput | string[]
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type EquipmentCreateManyHouseInput = {
     id?: string
     companyId: string
     customerId: string
+    componentId?: string | null
     type?: string
     brand?: string | null
     model?: string | null
@@ -58379,8 +64592,10 @@ export namespace Prisma {
     imageScanResult?: NullableJsonNullValueInput | InputJsonValue
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
+    component?: ProjectComponentUpdateOneWithoutEquipmentNestedInput
     consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -58388,6 +64603,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -58405,6 +64621,7 @@ export namespace Prisma {
     imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
     consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
     issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
     errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
   }
 
@@ -58412,6 +64629,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
+    componentId?: NullableStringFieldUpdateOperationsInput | string | null
     type?: StringFieldUpdateOperationsInput | string
     brand?: NullableStringFieldUpdateOperationsInput | string | null
     model?: NullableStringFieldUpdateOperationsInput | string | null
@@ -58456,6 +64674,154 @@ export namespace Prisma {
   }
 
   export type HouseIssueReportUncheckedUpdateManyWithoutHouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EquipmentCreateManyComponentInput = {
+    id?: string
+    companyId: string
+    customerId: string
+    houseId?: string | null
+    type?: string
+    brand?: string | null
+    model?: string | null
+    serialNo?: string | null
+    installDate?: Date | string | null
+    warrantyEnd?: Date | string | null
+    notes?: string | null
+    importBatchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    manualUrl?: string | null
+    imageUrl?: string | null
+    imageScanStatus?: string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: string | null
+  }
+
+  export type ComponentIssueReportCreateManyComponentInput = {
+    id?: string
+    companyId: string
+    equipmentId?: string | null
+    reportedByCustomerId: string
+    errorCode?: string | null
+    description?: string | null
+    status?: string
+    resolvedNote?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EquipmentUpdateWithoutComponentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
+    customer?: CustomerUpdateOneRequiredWithoutEquipmentNestedInput
+    house?: HouseUpdateOneWithoutEquipmentNestedInput
+    consumables?: EquipmentConsumableUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUpdateManyWithoutEquipmentNestedInput
+  }
+
+  export type EquipmentUncheckedUpdateWithoutComponentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
+    consumables?: EquipmentConsumableUncheckedUpdateManyWithoutEquipmentNestedInput
+    issueReports?: HouseIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    componentIssueReports?: ComponentIssueReportUncheckedUpdateManyWithoutEquipmentNestedInput
+    errorCodes?: EquipmentErrorCodeUncheckedUpdateManyWithoutEquipmentNestedInput
+  }
+
+  export type EquipmentUncheckedUpdateManyWithoutComponentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    houseId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: NullableStringFieldUpdateOperationsInput | string | null
+    serialNo?: NullableStringFieldUpdateOperationsInput | string | null
+    installDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    warrantyEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    importBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    manualUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    imageScanStatus?: StringFieldUpdateOperationsInput | string
+    imageScanResult?: NullableJsonNullValueInput | InputJsonValue
+    imageScanError?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type ComponentIssueReportUpdateWithoutComponentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    equipment?: EquipmentUpdateOneWithoutComponentIssueReportsNestedInput
+    reportedBy?: CustomerUpdateOneRequiredWithoutComponentIssueReportsNestedInput
+  }
+
+  export type ComponentIssueReportUncheckedUpdateWithoutComponentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
+    reportedByCustomerId?: StringFieldUpdateOperationsInput | string
+    errorCode?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    resolvedNote?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComponentIssueReportUncheckedUpdateManyWithoutComponentInput = {
     id?: StringFieldUpdateOperationsInput | string
     companyId?: StringFieldUpdateOperationsInput | string
     equipmentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -58513,6 +64879,10 @@ export namespace Prisma {
      * @deprecated Use HouseCountOutputTypeDefaultArgs instead
      */
     export type HouseCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = HouseCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ProjectComponentCountOutputTypeDefaultArgs instead
+     */
+    export type ProjectComponentCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ProjectComponentCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use CompanyDefaultArgs instead
      */
@@ -58633,6 +65003,18 @@ export namespace Prisma {
      * @deprecated Use HouseIssueReportDefaultArgs instead
      */
     export type HouseIssueReportArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = HouseIssueReportDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ProjectTemplateDefaultArgs instead
+     */
+    export type ProjectTemplateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ProjectTemplateDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ProjectComponentDefaultArgs instead
+     */
+    export type ProjectComponentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ProjectComponentDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ComponentIssueReportDefaultArgs instead
+     */
+    export type ComponentIssueReportArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ComponentIssueReportDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

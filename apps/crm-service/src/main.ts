@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ActivityLogInterceptor } from '@tscrm/activity-log';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
 
@@ -19,6 +20,9 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
+  // ---- Activity log (super-admin monitoring dashboard) ----
+  app.useGlobalInterceptors(new ActivityLogInterceptor('crm'));
 
   // ---- CORS (dev — Nginx handles prod) ----
   app.enableCors({

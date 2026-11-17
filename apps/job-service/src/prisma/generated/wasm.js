@@ -220,6 +220,7 @@ exports.Prisma.JobScalarFieldEnum = {
   templateId: 'templateId',
   projectId: 'projectId',
   houseId: 'houseId',
+  componentId: 'componentId',
   equipmentId: 'equipmentId',
   title: 'title',
   description: 'description',

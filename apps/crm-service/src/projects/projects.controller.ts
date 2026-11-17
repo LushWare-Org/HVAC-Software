@@ -17,6 +17,11 @@ class CreateProjectDto {
   @IsOptional() @IsString() @MaxLength(60) category?: string;
   // Immutable after creation — omitted entirely from UpdateProjectDto below.
   @IsOptional() @IsString() templateType?: string;
+  // Generic component template (spec: docs/superpowers/specs/2026-08-14-project-component-templates-design.md).
+  // Immutable after creation, same reasoning as templateType above.
+  @IsOptional() @IsString() templateId?: string;
+  // "Customized project" — mutually exclusive with templateId, also immutable after creation.
+  @IsOptional() @IsBoolean() freeform?: boolean;
   @IsOptional() @IsString() status?: string;
   @IsOptional() @IsString() startDate?: string;
   @IsOptional() @IsString() targetEndDate?: string;
@@ -120,6 +125,13 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Cancel a project (soft delete)' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.projects.remove(user.companyId, id);
+  }
+
+  @Patch(':id/customer-settings')
+  @Roles(...STAFF_WRITE)
+  @ApiOperation({ summary: 'Turn per-component customer assignment on/off for this project (bounded by the template)' })
+  updateCustomerSettings(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: Record<string, boolean>) {
+    return this.projects.updateCustomerSettings(user.companyId, id, dto);
   }
 
   @Get(':id/roster')

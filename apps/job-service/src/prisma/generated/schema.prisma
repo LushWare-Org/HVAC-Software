@@ -194,7 +194,8 @@ model Job {
   templateId  String?
   template    JobTemplate? @relation(fields: [templateId], references: [id])
   projectId   String? // FK to crm.projects (cross-service ref)
-  houseId     String? // FK to crm.houses (cross-service ref) — Housing Scheme template
+  houseId     String? // FK to crm.houses (cross-service ref) — deprecated, see componentId
+  componentId String? // FK to crm.project_components (cross-service ref) — replaces houseId
   equipmentId String? // FK to crm.equipment (cross-service ref) — optional, which unit was serviced
 
   title       String
@@ -261,6 +262,7 @@ model Job {
   @@index([agreementId])
   @@index([companyId, projectId])
   @@index([houseId])
+  @@index([componentId])
   @@index([equipmentId])
   @@index([companyId, rescheduleState])
   @@map("jobs")

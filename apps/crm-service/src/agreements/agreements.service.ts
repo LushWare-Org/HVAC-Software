@@ -56,7 +56,7 @@ export class AgreementsService {
 
   async findAll(
     companyId: string,
-    opts: { status?: string; customerId?: string; projectId?: string; houseId?: string; page?: number; limit?: number } = {},
+    opts: { status?: string; customerId?: string; projectId?: string; houseId?: string; componentId?: string; page?: number; limit?: number } = {},
   ) {
     const { page, limit } = clampPagination({ page: opts.page, limit: opts.limit });
     const where = {
@@ -65,6 +65,7 @@ export class AgreementsService {
       ...(opts.customerId && { customerId: opts.customerId }),
       ...(opts.projectId && { projectId: opts.projectId }),
       ...(opts.houseId && { houseId: opts.houseId }),
+      ...(opts.componentId && { componentId: opts.componentId }),
     };
     const [data, total] = await Promise.all([
       this.prisma.serviceAgreement.findMany({
@@ -88,16 +89,21 @@ export class AgreementsService {
    * that are either directly theirs OR tied to a house they own.
    */
   async findMine(companyId: string, customerId: string) {
-    const ownedHouses = await this.prisma.house.findMany({
-      where: { companyId, ownerCustomerId: customerId },
-      select: { id: true },
-    });
+    const [ownedHouses, ownedComponents] = await Promise.all([
+      this.prisma.house.findMany({ where: { companyId, ownerCustomerId: customerId }, select: { id: true } }),
+      this.prisma.projectComponent.findMany({ where: { companyId, ownerCustomerId: customerId }, select: { id: true } }),
+    ]);
     const houseIds = ownedHouses.map((h) => h.id);
+    const componentIds = ownedComponents.map((c) => c.id);
 
     const data = await this.prisma.serviceAgreement.findMany({
       where: {
         companyId,
-        OR: [{ customerId }, ...(houseIds.length ? [{ houseId: { in: houseIds } }] : [])],
+        OR: [
+          { customerId },
+          ...(houseIds.length ? [{ houseId: { in: houseIds } }] : []),
+          ...(componentIds.length ? [{ componentId: { in: componentIds } }] : []),
+        ],
       },
       include: { amendments: { orderBy: { createdAt: 'desc' }, take: 20 } },
       orderBy: { createdAt: 'desc' },
@@ -160,10 +166,10 @@ export class AgreementsService {
     });
     if (!customer) throw new BadRequestException('Customer not found in this company');
 
-    // Housing Scheme: an agreement created for a specific house auto-inherits
-    // that house's project (same fix already applied to Job.projectId) — a
-    // house-linked agreement with no projectId would otherwise never show up
-    // in that project's own Agreements tab.
+    // An agreement created for a specific house/component auto-inherits its
+    // project (same fix already applied to Job.projectId) — a house/component-
+    // linked agreement with no projectId would otherwise never show up in that
+    // project's own Agreements tab.
     let projectId = data.projectId ?? null;
     if (data.houseId) {
       const house = await this.prisma.house.findFirst({
@@ -172,6 +178,14 @@ export class AgreementsService {
       });
       if (!house) throw new BadRequestException('House not found in this company');
       if (!projectId) projectId = house.projectId;
+    }
+    if (data.componentId) {
+      const component = await this.prisma.projectComponent.findFirst({
+        where: { id: data.componentId, companyId },
+        select: { id: true, projectId: true },
+      });
+      if (!component) throw new BadRequestException('Component not found in this company');
+      if (!projectId) projectId = component.projectId;
     }
 
     const startDate = new Date(data.startDate);
@@ -186,6 +200,7 @@ export class AgreementsService {
         customerId: data.customerId,
         projectId,
         houseId: data.houseId ?? null,
+        componentId: data.componentId ?? null,
         name: data.name,
         description: data.description,
         startDate,

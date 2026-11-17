@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "tscrm-demo-2026"
-  }
+    "default": "tscrm-demo-2026",
+    "hvactor": "hvactor"
+  },
+  "targets": {},
+  "etags": {}
 }

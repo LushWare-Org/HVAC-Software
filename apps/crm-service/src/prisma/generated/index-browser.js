@@ -272,6 +272,7 @@ exports.Prisma.ServiceAgreementScalarFieldEnum = {
   jobTemplateId: 'jobTemplateId',
   projectId: 'projectId',
   houseId: 'houseId',
+  componentId: 'componentId',
   customerConfirmedAt: 'customerConfirmedAt',
   confirmToken: 'confirmToken',
   renewalReminderSent: 'renewalReminderSent',
@@ -349,6 +350,7 @@ exports.Prisma.EquipmentScalarFieldEnum = {
   companyId: 'companyId',
   customerId: 'customerId',
   houseId: 'houseId',
+  componentId: 'componentId',
   type: 'type',
   brand: 'brand',
   model: 'model',
@@ -630,7 +632,10 @@ exports.Prisma.ProjectScalarFieldEnum = {
   baseTeamUserIds: 'baseTeamUserIds',
   notes: 'notes',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  templateId: 'templateId',
+  componentTypesSnapshot: 'componentTypesSnapshot',
+  componentCustomerSettings: 'componentCustomerSettings'
 };
 
 exports.Prisma.ProjectRosterDayScalarFieldEnum = {
@@ -661,6 +666,45 @@ exports.Prisma.HouseIssueReportScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
   houseId: 'houseId',
+  equipmentId: 'equipmentId',
+  reportedByCustomerId: 'reportedByCustomerId',
+  errorCode: 'errorCode',
+  description: 'description',
+  status: 'status',
+  resolvedNote: 'resolvedNote',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProjectTemplateScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  name: 'name',
+  description: 'description',
+  componentTypes: 'componentTypes',
+  isBuiltIn: 'isBuiltIn',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProjectComponentScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  projectId: 'projectId',
+  componentTypeKey: 'componentTypeKey',
+  label: 'label',
+  ownerCustomerId: 'ownerCustomerId',
+  tags: 'tags',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ComponentIssueReportScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  componentId: 'componentId',
   equipmentId: 'equipmentId',
   reportedByCustomerId: 'reportedByCustomerId',
   errorCode: 'errorCode',
@@ -783,7 +827,10 @@ exports.Prisma.ModelName = {
   Project: 'Project',
   ProjectRosterDay: 'ProjectRosterDay',
   House: 'House',
-  HouseIssueReport: 'HouseIssueReport'
+  HouseIssueReport: 'HouseIssueReport',
+  ProjectTemplate: 'ProjectTemplate',
+  ProjectComponent: 'ProjectComponent',
+  ComponentIssueReport: 'ComponentIssueReport'
 };
 
 /**

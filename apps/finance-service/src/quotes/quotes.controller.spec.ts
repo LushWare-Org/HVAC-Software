@@ -23,7 +23,7 @@ function makeController() {
     findOne: jest.fn(),
     create: jest.fn().mockResolvedValue({ id: 'quote-1' }),
   };
-  const crmClient = { getHouseDetails: jest.fn() };
+  const crmClient = { getComponentDetails: jest.fn() };
   const controller = new QuotesController(
     quotesService as unknown as QuotesService,
     {} as any,
@@ -47,17 +47,17 @@ describe('QuotesController.findAll — customer scoping security fix', () => {
 
   it('drops the customerId filter when the customer owns the requested house', async () => {
     const { controller, quotesService, crmClient } = makeController();
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-1' });
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-1' });
     await controller.findAll(makeUser(), undefined, undefined, undefined, undefined, undefined, 'house-1');
     expect(quotesService.findAll).toHaveBeenCalledWith(
       CO,
-      expect.objectContaining({ customerId: undefined, houseId: 'house-1' }),
+      expect.objectContaining({ customerId: undefined, componentId: 'house-1' }),
     );
   });
 
-  it('rejects a houseId owned by another customer', async () => {
+  it('rejects a componentId owned by another customer', async () => {
     const { controller, crmClient } = makeController();
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: OTHER_CUSTOMER_ID, projectId: 'proj-1' });
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: OTHER_CUSTOMER_ID, projectId: 'proj-1' });
     await expect(
       controller.findAll(makeUser(), undefined, undefined, undefined, undefined, undefined, 'house-1'),
     ).rejects.toThrow(ForbiddenException);
@@ -76,29 +76,29 @@ describe('QuotesController.findAll — customer scoping security fix', () => {
 describe('QuotesController.findOne — ownership check', () => {
   it('rejects a customer fetching a quote that is neither their own nor their house\'s', async () => {
     const { controller, quotesService } = makeController();
-    quotesService.findOne.mockResolvedValue({ id: 'q-1', customerId: OTHER_CUSTOMER_ID, houseId: null });
+    quotesService.findOne.mockResolvedValue({ id: 'q-1', customerId: OTHER_CUSTOMER_ID, componentId: null });
     await expect(controller.findOne(makeUser(), 'q-1')).rejects.toThrow(ForbiddenException);
   });
 
   it('allows a customer fetching their own quote', async () => {
     const { controller, quotesService } = makeController();
-    quotesService.findOne.mockResolvedValue({ id: 'q-1', customerId: CUSTOMER_ID, houseId: null });
+    quotesService.findOne.mockResolvedValue({ id: 'q-1', customerId: CUSTOMER_ID, componentId: null });
     await expect(controller.findOne(makeUser(), 'q-1')).resolves.toBeDefined();
   });
 
   it('allows a customer fetching a quote linked to a house they own, even if customerId differs', async () => {
     const { controller, quotesService, crmClient } = makeController();
-    quotesService.findOne.mockResolvedValue({ id: 'q-1', customerId: OTHER_CUSTOMER_ID, houseId: 'house-1' });
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-1' });
+    quotesService.findOne.mockResolvedValue({ id: 'q-1', customerId: OTHER_CUSTOMER_ID, componentId: 'house-1' });
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-1' });
     await expect(controller.findOne(makeUser(), 'q-1')).resolves.toBeDefined();
   });
 });
 
-describe('QuotesController.create — houseId auto-backfills projectId', () => {
-  it('backfills projectId from the house when houseId is set but projectId is not', async () => {
+describe('QuotesController.create — componentId auto-backfills projectId', () => {
+  it('backfills projectId from the house when componentId is set but projectId is not', async () => {
     const { controller, quotesService, crmClient } = makeController();
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-from-house' });
-    const dto: any = { houseId: 'house-1', customerId: CUSTOMER_ID, customerName: 'Jane', customerEmail: 'j@x.com', title: 'Quote' };
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-from-house' });
+    const dto: any = { componentId: 'house-1', customerId: CUSTOMER_ID, customerName: 'Jane', customerEmail: 'j@x.com', title: 'Quote' };
     await controller.create(makeUser({ role: Role.COMPANY_ADMIN, customerId: null }), dto);
     expect(dto.projectId).toBe('proj-from-house');
     expect(quotesService.create).toHaveBeenCalled();
@@ -106,17 +106,17 @@ describe('QuotesController.create — houseId auto-backfills projectId', () => {
 
   it('keeps an explicitly-supplied projectId even if it differs from the house\'s own project', async () => {
     const { controller, quotesService, crmClient } = makeController();
-    crmClient.getHouseDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-from-house' });
-    const dto: any = { houseId: 'house-1', projectId: 'explicit-proj', customerId: CUSTOMER_ID, customerName: 'Jane', customerEmail: 'j@x.com', title: 'Quote' };
+    crmClient.getComponentDetails.mockResolvedValue({ ownerCustomerId: CUSTOMER_ID, projectId: 'proj-from-house' });
+    const dto: any = { componentId: 'house-1', projectId: 'explicit-proj', customerId: CUSTOMER_ID, customerName: 'Jane', customerEmail: 'j@x.com', title: 'Quote' };
     await controller.create(makeUser({ role: Role.COMPANY_ADMIN, customerId: null }), dto);
     expect(dto.projectId).toBe('explicit-proj');
-    expect(crmClient.getHouseDetails).not.toHaveBeenCalled();
+    expect(crmClient.getComponentDetails).not.toHaveBeenCalled();
   });
 
-  it('rejects a houseId that does not exist', async () => {
+  it('rejects a componentId that does not exist', async () => {
     const { controller, quotesService, crmClient } = makeController();
-    crmClient.getHouseDetails.mockResolvedValue(undefined);
-    const dto: any = { houseId: 'missing', customerId: CUSTOMER_ID, customerName: 'Jane', customerEmail: 'j@x.com', title: 'Quote' };
+    crmClient.getComponentDetails.mockResolvedValue(undefined);
+    const dto: any = { componentId: 'missing', customerId: CUSTOMER_ID, customerName: 'Jane', customerEmail: 'j@x.com', title: 'Quote' };
     await expect(controller.create(makeUser({ role: Role.COMPANY_ADMIN, customerId: null }), dto)).rejects.toThrow(BadRequestException);
     expect(quotesService.create).not.toHaveBeenCalled();
   });

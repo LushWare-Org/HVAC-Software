@@ -19,7 +19,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 import { useCustomerDashboard, useJobTechnicians, useCompanyReviewStats } from '../hooks/useCustomerPortal'
 import { useMyEquipment } from '../hooks/useMyEquipment'
-import { useMyHouses, useMyIssueReports } from '../hooks/useMyHouse'
+import { useMyComponents, useMyIssueReports } from '../hooks/useMyComponent'
 import ReviewModal from '../components/ReviewModal'
 import { useLatestTip, usePosts } from '../hooks/usePosts'
 import type { Job } from '../types/api'
@@ -240,10 +240,10 @@ export default function Dashboard() {
   const { data: latestTip } = useLatestTip()
   const { data: offers = [] } = usePosts('OFFER')
   const { data: equipment = [] } = useMyEquipment()
-  const { data: myHouses = [] } = useMyHouses()
+  const { data: myComponents = [] } = useMyComponents()
   const { data: myIssues = [] } = useMyIssueReports()
-  const myHouse = myHouses[0]
-  const myHouseOpenIssues = myHouse ? myIssues.filter(i => i.houseId === myHouse.id && i.status !== 'RESOLVED').length : 0
+  const myComponent = myComponents[0]
+  const myComponentOpenIssues = myComponent ? myIssues.filter(i => i.componentId === myComponent.id && i.status !== 'RESOLVED').length : 0
 
   const recentJobs = data?.recentJobs ?? []
   const pendingInvoices = data?.pendingInvoiceItems ?? []
@@ -483,14 +483,14 @@ export default function Dashboard() {
             </div>
           </button>
 
-          {/* My House — easy access when this customer owns a house on a Housing Scheme project */}
-          {myHouse && (
-            <Link to="/my-house" style={{
+          {/* My Property — easy access when this customer owns a project component */}
+          {myComponent && (
+            <Link to="/my-property" style={{
               textDecoration: 'none', background: 'var(--bg-card)',
-              border: `1px solid ${myHouseOpenIssues > 0 ? 'var(--red)' : 'var(--bd)'}`,
+              border: `1px solid ${myComponentOpenIssues > 0 ? 'var(--red)' : 'var(--bd)'}`,
               borderRadius: 14, overflow: 'hidden', display: 'block',
             }}>
-              <div style={{ height: 3, background: `linear-gradient(90deg, ${myHouseOpenIssues > 0 ? 'var(--red)' : 'var(--cyan)'}, transparent)` }} />
+              <div style={{ height: 3, background: `linear-gradient(90deg, ${myComponentOpenIssues > 0 ? 'var(--red)' : 'var(--cyan)'}, transparent)` }} />
               <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 36, height: 36, borderRadius: 10, flexShrink: 0,
@@ -501,11 +501,11 @@ export default function Dashboard() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {myHouse.label}
+                    {myComponent.label}
                   </div>
-                  <div style={{ fontSize: 11.5, color: myHouseOpenIssues > 0 ? 'var(--red)' : 'var(--t3)', marginTop: 1, fontWeight: myHouseOpenIssues > 0 ? 700 : 500 }}>
-                    {myHouseOpenIssues > 0
-                      ? `${myHouseOpenIssues} report${myHouseOpenIssues === 1 ? '' : 's'} in progress`
+                  <div style={{ fontSize: 11.5, color: myComponentOpenIssues > 0 ? 'var(--red)' : 'var(--t3)', marginTop: 1, fontWeight: myComponentOpenIssues > 0 ? 700 : 500 }}>
+                    {myComponentOpenIssues > 0
+                      ? `${myComponentOpenIssues} report${myComponentOpenIssues === 1 ? '' : 's'} in progress`
                       : 'Equipment, service history & reports'}
                   </div>
                 </div>

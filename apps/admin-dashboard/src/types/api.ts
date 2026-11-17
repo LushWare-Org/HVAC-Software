@@ -318,6 +318,7 @@ export interface Job {
   isAgreementJob?: boolean
   projectId?: string
   houseId?: string
+  componentId?: string
   equipmentId?: string
   cancellationReason?: string
   hasPartShortage?: boolean
@@ -442,6 +443,7 @@ export interface Invoice {
   jobTitle?: string
   projectId?: string
   houseId?: string
+  componentId?: string
   quoteId?: string
   quote?: { quoteNumber: string }
   status: InvoiceStatus
@@ -469,6 +471,7 @@ export interface Quote {
   jobTitle?: string
   projectId?: string
   houseId?: string
+  componentId?: string
   status: QuoteStatus
   total: string        // Prisma Decimal serialised as string
   taxRate?: number

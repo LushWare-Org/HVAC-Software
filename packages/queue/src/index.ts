@@ -19,6 +19,13 @@ export enum QueueName {
   FOLLOWUP = 'followup-queue',
   MARKETING_SEND = 'marketing-send',
   EQUIPMENT_AUTOMATION = 'equipment-automation',
+  ACTIVITY_LOG = 'activity-log',
+  // Separate from ACTIVITY_LOG on purpose: two Workers listening on the same
+  // BullMQ queue COMPETE for jobs rather than each seeing every job, so the
+  // nightly retention sweep must run on its own queue — sharing one would
+  // risk a real log-event job being silently swallowed by the cleanup
+  // worker (or vice versa) depending on which Worker happens to grab it.
+  ACTIVITY_LOG_CLEANUP = 'activity-log-cleanup',
 }
 
 // ---- Redis connection factory (shared config) ----

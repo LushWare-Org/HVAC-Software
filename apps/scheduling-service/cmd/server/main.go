@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/tscrm/scheduling-service/internal/activitylog"
 	"github.com/tscrm/scheduling-service/internal/config"
 	"github.com/tscrm/scheduling-service/internal/database"
 	"github.com/tscrm/scheduling-service/internal/handler"
@@ -94,6 +95,7 @@ func main() {
 
 	// ── All other routes require a valid Auth0 JWT ───────────────────────
 	auth := middleware.JWTMiddleware(cfg.Auth0Domain, cfg.Auth0Audience)
+	r.Use(activitylog.Middleware(cfg.CommsServiceURL))
 
 	// WebSocket endpoint
 	r.GET("/ws", auth, wsH.ServeWS)

@@ -33,7 +33,7 @@ interface AddInvoiceModalProps {
   /** Attaches the invoice to a project on create (finance-service accepts an optional projectId). */
   projectId?: string;
   /** Attaches the invoice to a specific house within a Housing Scheme project; projectId is auto-backfilled server-side if omitted. */
-  houseId?: string;
+  componentId?: string;
   contextLabel?: string;
   onCreated?: (invoice: any) => void;
   onBack?: () => void;
@@ -58,7 +58,7 @@ const INVOICE_CATEGORY_OPTIONS = [
 const inputClass =
   "w-full px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none";
 
-export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetCustomer, projectId, houseId, contextLabel, onCreated, onBack }: AddInvoiceModalProps) {
+export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetCustomer, projectId, componentId, contextLabel, onCreated, onBack }: AddInvoiceModalProps) {
   const { showError, showSuccess, showInfo } = useToast();
   const [error, setError] = useState("");
   const [customerNameVal, setCustomerNameVal] = useState("");
@@ -207,7 +207,7 @@ export default function AddInvoiceModal({ isOpen, onClose, prefilledJob, presetC
         customerEmail: customerEmail || undefined,
         jobId: jobId || undefined,
         projectId: projectId || undefined,
-        houseId: houseId || undefined,
+        componentId: componentId || undefined,
         dueDate: dueDate || undefined,
         taxRate: (parseFloat(taxRate) || 0) / 100,
         notes: notes || undefined,

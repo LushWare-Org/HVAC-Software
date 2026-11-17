@@ -26,7 +26,7 @@ class UpdateJobDto {
   @IsOptional() @IsNumber() estimatedValue?: number;
   @IsOptional() @IsString() cancellationReason?: string;
   @IsOptional() @IsString() projectId?: string;
-  @IsOptional() @IsString() houseId?: string;
+  @IsOptional() @IsString() componentId?: string;
   @IsOptional() @IsString() equipmentId?: string;
 }
 
@@ -106,25 +106,25 @@ export class JobsController {
     @Query('agreementId') agreementId?: string,
     @Query('projectId') projectId?: string,
     @Query('projectIds') projectIds?: string,
-    @Query('houseId') houseId?: string,
+    @Query('componentId') componentId?: string,
     @Query('equipmentId') equipmentId?: string,
     @Query('isAgreementJob') isAgreementJob?: string,
   ) {
     // CUSTOMER role: force-filter to their own customerId for security — EXCEPT
-    // when querying a specific houseId they actually own. A house-linked job's
-    // customerId is whoever was picked when the job was created (often the
-    // Housing Scheme project's own top-level customer, not the individual house
-    // owner), so AND-ing customerId with houseId would silently hide a
-    // homeowner's own service history for jobs booked under the project's
-    // customer instead of theirs. Ownership of the house is what actually
-    // authorizes seeing its jobs, not a customerId match on each job row.
+    // when querying a specific componentId they actually own. A component-linked
+    // job's customerId is whoever was picked when the job was created (often the
+    // project's own top-level customer, not the individual component owner), so
+    // AND-ing customerId with componentId would silently hide an owner's own
+    // service history for jobs booked under the project's customer instead of
+    // theirs. Ownership of the component is what actually authorizes seeing its
+    // jobs, not a customerId match on each job row.
     let effectiveCustomerId = user.role === Role.CUSTOMER ? user.customerId : customerId;
-    if (user.role === Role.CUSTOMER && houseId) {
-      const ownerCustomerId = await this.crmClient.getHouseOwnerCustomerId(user.companyId, houseId);
+    if (user.role === Role.CUSTOMER && componentId) {
+      const ownerCustomerId = await this.crmClient.getComponentOwnerCustomerId(user.companyId, componentId);
       if (ownerCustomerId && ownerCustomerId === user.customerId) {
         effectiveCustomerId = undefined;
       } else {
-        throw new ForbiddenException('You can only view jobs for your own house');
+        throw new ForbiddenException('You can only view jobs for your own component');
       }
     }
 
@@ -134,7 +134,7 @@ export class JobsController {
       agreementId,
       projectId,
       projectIds: projectIds ? projectIds.split(',').filter(Boolean) : undefined,
-      houseId,
+      componentId,
       equipmentId,
       isAgreementJob: isAgreementJob === undefined ? undefined : isAgreementJob === 'true',
     });
@@ -157,19 +157,19 @@ export class JobsController {
   @Roles(Role.SUPER_ADMIN, Role.COMPANY_ADMIN, Role.OFFICE_MANAGER, Role.DISPATCHER, Role.CUSTOMER)
   @ApiOperation({ summary: 'Create a new job' })
   async create(@CurrentUser() user: AuthUser, @Body() dto: CreateJobDto) {
-    // Auto-backfill projectId from the house, for EVERY caller (staff or
-    // customer) — regardless of role. A house-linked job with no projectId is
-    // correctly attached to the house but invisible in that project's own Jobs
+    // Auto-backfill projectId from the component, for EVERY caller (staff or
+    // customer) — regardless of role. A component-linked job with no projectId is
+    // correctly attached to the component but invisible in that project's own Jobs
     // tab (which is scoped by projectId), a silent gap no caller should have to
     // remember to avoid by hand. Runs before the customer ownership check below
     // so that check also benefits from a single fetch.
-    let houseDetails: { ownerCustomerId: string | null; projectId: string } | undefined;
-    if (dto.houseId) {
-      houseDetails = await this.crmClient.getHouseDetails(user.companyId, dto.houseId);
-      if (houseDetails === undefined) {
-        throw new BadRequestException('House not found');
+    let componentDetails: { ownerCustomerId: string | null; projectId: string } | undefined;
+    if (dto.componentId) {
+      componentDetails = await this.crmClient.getComponentDetails(user.companyId, dto.componentId);
+      if (componentDetails === undefined) {
+        throw new BadRequestException('Component not found');
       }
-      if (!dto.projectId) dto.projectId = houseDetails.projectId;
+      if (!dto.projectId) dto.projectId = componentDetails.projectId;
     }
 
     if (user.role === Role.CUSTOMER) {
@@ -182,14 +182,14 @@ export class JobsController {
       if (!dto.serviceAddress?.trim()) {
         throw new BadRequestException('Service address is required');
       }
-      // A customer may only book against a project/house that is actually theirs —
-      // otherwise a crafted request could attach a job (and its visibility) to any
-      // project or house in the company. houseId is checked in preference to
-      // projectId when both are present, since a house's own owner is the more
-      // specific and authoritative link for a Housing Scheme booking.
-      if (houseDetails) {
-        if (houseDetails.ownerCustomerId !== user.customerId) {
-          throw new ForbiddenException('You can only book a service for your own house');
+      // A customer may only book against a project/component that is actually
+      // theirs — otherwise a crafted request could attach a job (and its
+      // visibility) to any project or component in the company. componentId is
+      // checked in preference to projectId when both are present, since a
+      // component's own owner is the more specific and authoritative link.
+      if (componentDetails) {
+        if (componentDetails.ownerCustomerId !== user.customerId) {
+          throw new ForbiddenException('You can only book a service for your own component');
         }
       } else if (dto.projectId) {
         const projectCustomerId = await this.crmClient.getProjectCustomerId(user.companyId, dto.projectId);

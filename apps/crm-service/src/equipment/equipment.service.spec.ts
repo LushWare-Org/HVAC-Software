@@ -17,6 +17,9 @@ function makePrisma() {
       create: jest.fn(),
       delete: jest.fn(),
     },
+    projectComponent: {
+      findFirst: jest.fn(),
+    },
   };
 }
 
@@ -122,5 +125,51 @@ describe('EquipmentService — error codes', () => {
   it('removeErrorCode 404s for a code outside the company', async () => {
     prisma.equipmentErrorCode.findFirst.mockResolvedValue(null);
     await expect(service.removeErrorCode('co-1', 'c-1')).rejects.toThrow(NotFoundException);
+  });
+});
+
+describe('EquipmentService — project components', () => {
+  let prisma: ReturnType<typeof makePrisma>;
+  let service: EquipmentService;
+
+  beforeEach(() => {
+    prisma = makePrisma();
+    service = new EquipmentService(prisma as any, makeStorage() as any, makeScan() as any);
+  });
+
+  it('findByComponent lists equipment for a component', async () => {
+    prisma.equipment.findMany.mockResolvedValue([{ id: 'eq-1', componentId: 'c-1' }]);
+    const result = await service.findByComponent('co-1', 'c-1');
+    expect(prisma.equipment.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { companyId: 'co-1', componentId: 'c-1' },
+    }));
+    expect(result[0].id).toBe('eq-1');
+  });
+
+  it('createForComponent 404s when the component does not exist in this company', async () => {
+    prisma.projectComponent.findFirst.mockResolvedValue(null);
+    await expect(service.createForComponent('co-1', 'c-1', {})).rejects.toThrow(NotFoundException);
+  });
+
+  it('createForComponent rejects when the component has no owner', async () => {
+    prisma.projectComponent.findFirst.mockResolvedValue({ id: 'c-1', companyId: 'co-1', ownerCustomerId: null });
+    await expect(service.createForComponent('co-1', 'c-1', {})).rejects.toThrow(BadRequestException);
+  });
+
+  it('createForComponent derives customerId from the component owner', async () => {
+    prisma.projectComponent.findFirst.mockResolvedValue({ id: 'c-1', companyId: 'co-1', ownerCustomerId: 'cust-1' });
+    prisma.equipment.create.mockResolvedValue({ id: 'eq-1' });
+    await service.createForComponent('co-1', 'c-1', { type: 'Thermostat' });
+    expect(prisma.equipment.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ companyId: 'co-1', customerId: 'cust-1', componentId: 'c-1', type: 'Thermostat' }),
+    }));
+  });
+
+  it('resyncComponentEquipmentOwner updates customerId for all of a component\'s equipment', async () => {
+    await service.resyncComponentEquipmentOwner('co-1', 'c-1', 'cust-2');
+    expect(prisma.equipment.updateMany).toHaveBeenCalledWith({
+      where: { companyId: 'co-1', componentId: 'c-1' },
+      data: { customerId: 'cust-2' },
+    });
   });
 });

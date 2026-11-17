@@ -4,7 +4,7 @@
  */
 import { ShieldCheck, CalendarDays, Loader2, CheckCircle2, Clock, RefreshCw, Infinity as InfinityIcon, Home } from 'lucide-react'
 import { useMyAgreements, type MyAgreement } from '../hooks/useMyAgreements'
-import { useMyHouses } from '../hooks/useMyHouse'
+import { useMyComponents } from '../hooks/useMyComponent'
 import { formatMoney } from '../lib/format'
 
 const fmtDate = (iso?: string | null) =>
@@ -60,7 +60,7 @@ function VisitBar({ a }: { a: MyAgreement }) {
   )
 }
 
-function AgreementCard({ a, houseLabel }: { a: MyAgreement; houseLabel?: string }) {
+function AgreementCard({ a, componentLabel }: { a: MyAgreement; componentLabel?: string }) {
   const meta = STATUS_META[a.status]
   const freq = frequencyText(a)
   const money = fmtMoney(a.value)
@@ -72,12 +72,12 @@ function AgreementCard({ a, houseLabel }: { a: MyAgreement; houseLabel?: string 
           <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{a.name}</h3>
           <p style={{ fontSize: 13, color: 'var(--t3)', margin: '3px 0 0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {a.serviceType && <span>{a.serviceType}{freq ? ` — ${freq}` : ''}</span>}
-            {houseLabel && (
+            {componentLabel && (
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700,
                 color: 'var(--blue)', background: 'var(--blue-dim)', padding: '1px 7px', borderRadius: 999,
               }}>
-                <Home size={9} /> {houseLabel}
+                <Home size={9} /> {componentLabel}
               </span>
             )}
           </p>
@@ -169,8 +169,8 @@ function AgreementCard({ a, houseLabel }: { a: MyAgreement; houseLabel?: string 
 export default function Agreements() {
   const { data, isLoading } = useMyAgreements()
   const agreements = (data?.data ?? []).filter(a => a.status !== 'DRAFT' && a.status !== 'RENEWED')
-  const { data: houses } = useMyHouses()
-  const houseLabelById = new Map((houses ?? []).map(h => [h.id, h.label]))
+  const { data: components } = useMyComponents()
+  const componentLabelById = new Map((components ?? []).map(c => [c.id, c.label]))
 
   return (
     <div>
@@ -197,7 +197,7 @@ export default function Agreements() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 720 }}>
-          {agreements.map(a => <AgreementCard key={a.id} a={a} houseLabel={a.houseId ? houseLabelById.get(a.houseId) : undefined} />)}
+          {agreements.map(a => <AgreementCard key={a.id} a={a} componentLabel={a.componentId ? componentLabelById.get(a.componentId) : undefined} />)}
         </div>
       )}
     </div>

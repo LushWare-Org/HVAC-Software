@@ -562,3 +562,27 @@ export interface RevenueDecisionAudit {
 }
 
 export * from './reschedule';
+
+// ---- Activity log (super-admin monitoring dashboard) ----
+export type ActivityLogService =
+  | 'crm' | 'jobs' | 'scheduling' | 'finance' | 'comms' | 'analytics' | 'inventory' | 'churn';
+
+export type ActivityLogStatus = 'SUCCESS' | 'FAILURE';
+
+export interface ActivityLogEvent {
+  companyId: string | null;
+  service: ActivityLogService;
+  method: string;
+  path: string;
+  actorUserId: string | null;
+  actorName: string | null;
+  actorRole: string | null;
+  action: string;
+  description: string;
+  status: ActivityLogStatus;
+  statusCode: number;
+  durationMs: number;
+  requestSummary?: Record<string, unknown>;
+  responseSummary?: Record<string, unknown>;
+  errorMessage?: string;
+}

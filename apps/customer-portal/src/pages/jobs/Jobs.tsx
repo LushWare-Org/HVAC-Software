@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { useJobTechnicians, useMyJobs } from '../../hooks/useCustomerPortal'
 import { useMyProjects } from '../../hooks/useMyProjects'
-import { useMyHouses } from '../../hooks/useMyHouse'
+import { useMyComponents } from '../../hooks/useMyComponent'
 import JobDetailModal from './JobDetailModal.tsx'
 import BookServiceModal from './BookServiceModal.tsx'
 import CancelJobModal from './CancelJobModal.tsx'
@@ -157,16 +157,16 @@ export default function MyJobs() {
     setSearchParams(next, { replace: true })
   }, [searchParams, allJobs, rescheduleJob, setSearchParams])
 
-  // A portal customer has at most a handful of projects/houses — cheap to map once
-  // rather than resolve per-row, unlike the admin Jobs page's much larger scale.
+  // A portal customer has at most a handful of projects/components — cheap to map
+  // once rather than resolve per-row, unlike the admin Jobs page's much larger scale.
   const { data: myProjects } = useMyProjects()
-  const { data: myHouses } = useMyHouses()
+  const { data: myComponents } = useMyComponents()
   const jobContext = (job: Job): string | null => {
     if (!job.projectId) return null
     const projectName = myProjects?.find(p => p.id === job.projectId)?.name
-    const houseLabel = job.houseId ? myHouses?.find(h => h.id === job.houseId)?.label : undefined
+    const componentLabel = job.componentId ? myComponents?.find(c => c.id === job.componentId)?.label : undefined
     if (!projectName) return null
-    return houseLabel ? `${projectName} — ${houseLabel}` : projectName
+    return componentLabel ? `${projectName} — ${componentLabel}` : projectName
   }
 
   const grouped = useMemo(() => {

@@ -28,16 +28,16 @@ export class CrmClient {
     }
   }
 
-  async getHouseDetails(companyId: string, houseId: string): Promise<{ ownerCustomerId: string | null; projectId: string } | undefined> {
+  async getComponentDetails(companyId: string, componentId: string): Promise<{ ownerCustomerId: string | null; projectId: string } | undefined> {
     try {
-      const res = await axios.get(`${CRM_URL}/houses/${houseId}`, {
+      const res = await axios.get(`${CRM_URL}/components/${componentId}`, {
         timeout: 8_000,
         headers: this.serviceHeaders(companyId),
       });
       return { ownerCustomerId: res.data?.ownerCustomerId ?? null, projectId: res.data?.projectId };
     } catch (err: any) {
       if (err?.response?.status === 404) return undefined;
-      this.logger.warn(`Could not verify house ${houseId}: ${err?.response?.status} ${err.message}`);
+      this.logger.warn(`Could not verify component ${componentId}: ${err?.response?.status} ${err.message}`);
       return undefined;
     }
   }

@@ -33,15 +33,15 @@ const fieldRowStyle: React.CSSProperties = {
 }
 
 export default function AgreementEditorModal({
-  agreement, presetCustomerId, presetCustomerName, presetProjectId, presetHouseId, onClose, onSaved,
+  agreement, presetCustomerId, presetCustomerName, presetProjectId, presetComponentId, onClose, onSaved,
 }: {
   agreement?: Agreement | null
   presetCustomerId?: string
   presetCustomerName?: string
   /** Attaches the agreement to a project on create. */
   presetProjectId?: string
-  /** Attaches the agreement to a specific house within a Housing Scheme project; projectId is auto-backfilled server-side if omitted. */
-  presetHouseId?: string
+  /** Attaches the agreement to a specific component within a templated project; projectId is auto-backfilled server-side if omitted. */
+  presetComponentId?: string
   onClose: () => void
   onSaved?: (a: Agreement) => void
 }) {
@@ -127,7 +127,7 @@ export default function AgreementEditorModal({
       onError: (err: any) => setError(err?.response?.data?.message ?? 'Could not save the agreement.'),
     }
     if (isEdit) updateMut.mutate({ id: agreement!.id, ...payload }, opts)
-    else createMut.mutate({ ...payload, customerId: form.customerId, projectId: presetProjectId, houseId: presetHouseId }, opts)
+    else createMut.mutate({ ...payload, customerId: form.customerId, projectId: presetProjectId, componentId: presetComponentId }, opts)
   }
 
   return createPortal(

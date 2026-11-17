@@ -243,9 +243,35 @@ exports.Prisma.DeliveryLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ActivityLogScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  companyName: 'companyName',
+  service: 'service',
+  method: 'method',
+  path: 'path',
+  actorUserId: 'actorUserId',
+  actorName: 'actorName',
+  actorRole: 'actorRole',
+  action: 'action',
+  description: 'description',
+  status: 'status',
+  statusCode: 'statusCode',
+  durationMs: 'durationMs',
+  requestSummary: 'requestSummary',
+  responseSummary: 'responseSummary',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -256,6 +282,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 exports.Channel = exports.$Enums.Channel = {
   SMS: 'SMS',
@@ -310,7 +342,8 @@ exports.Prisma.ModelName = {
   NotificationTemplate: 'NotificationTemplate',
   AutomationRule: 'AutomationRule',
   WebPushSubscription: 'WebPushSubscription',
-  DeliveryLog: 'DeliveryLog'
+  DeliveryLog: 'DeliveryLog',
+  ActivityLog: 'ActivityLog'
 };
 
 /**
