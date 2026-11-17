@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../lib/api'
+import { useToast } from '../contexts/ToastContext'
 
 export interface IotDeviceSnapshot {
   deviceId: string
@@ -44,14 +45,24 @@ export function useDisconnectMyIot() {
   })
 }
 
-export function useConnectHoneywellPortal() {
-  return () => {
-    window.location.href = '/api/crm/iot/honeywell/connect-portal'
+// The connect endpoints need the login token, which a plain browser navigation
+// can't send. Ask for the provider URL over the authenticated client, then go there.
+function useConnectPortal(provider: 'honeywell' | 'nest') {
+  const { showError } = useToast()
+  return async () => {
+    try {
+      const { data } = await api.get<{ url: string }>(`/crm/iot/${provider}/connect-portal-url`)
+      window.location.href = data.url
+    } catch {
+      showError('We could not start the connection. Please try again in a moment.', 'Connection failed')
+    }
   }
 }
 
+export function useConnectHoneywellPortal() {
+  return useConnectPortal('honeywell')
+}
+
 export function useConnectNestPortal() {
-  return () => {
-    window.location.href = '/api/crm/iot/nest/connect-portal'
-  }
+  return useConnectPortal('nest')
 }

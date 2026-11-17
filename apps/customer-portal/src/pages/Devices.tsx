@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Wifi, WifiOff, AlertTriangle, RefreshCw, Plug, Trash2, Zap, Thermometer, Droplets, Wind } from 'lucide-react'
 import {
   useMyIotDevices, useDisconnectMyIot, useConnectHoneywellPortal, useConnectNestPortal,
@@ -401,6 +403,16 @@ export default function Devices() {
   const disconnect = useDisconnectMyIot()
   const connectHoneywell = useConnectHoneywellPortal()
   const connectNest = useConnectNestPortal()
+
+  // Arrive from the "connect your thermostat" email: start that connection once.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const connectParam = searchParams.get('connect')
+  useEffect(() => {
+    if (connectParam !== 'honeywell' && connectParam !== 'nest') return
+    setSearchParams({}, { replace: true })
+    void (connectParam === 'honeywell' ? connectHoneywell() : connectNest())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectParam])
 
   const connections = data ?? []
   const allDevices = connections.flatMap(c =>

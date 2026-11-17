@@ -4,6 +4,7 @@ import { HoneywellClient, HoneywellDevice } from './honeywell.client';
 import { NestClient, NestDevice } from './nest.client';
 import { encryptToken, decryptToken } from './token-crypto';
 import { EmailService } from '../email/email.service';
+import { signOAuthState, verifyOAuthState } from './oauth-state';
 
 export interface IotDeviceSnapshot {
   deviceId: string;
@@ -119,14 +120,13 @@ export class IotService {
   // ── Honeywell OAuth ──────────────────────────────────────────────────────────
 
   buildHoneywellAuthUrl(companyId: string, customerId: string, source: 'admin' | 'portal' = 'admin'): string {
-    const state = Buffer.from(JSON.stringify({ companyId, customerId, source, provider: 'honeywell' })).toString('base64');
+    const state = signOAuthState({ companyId, customerId, source, provider: 'honeywell' });
     return this.honeywell.buildAuthUrl(state);
   }
 
   async handleHoneywellCallback(code: string, state: string): Promise<{ customerId: string; source: string }> {
-    const { companyId, customerId, source = 'admin' } = JSON.parse(
-      Buffer.from(state, 'base64').toString(),
-    ) as { companyId: string; customerId: string; source?: string };
+    // Verify before exchanging the code: a forged or stale state must not reach the provider.
+    const { companyId, customerId, source } = verifyOAuthState(state, 'honeywell');
 
     const tokens = await this.honeywell.exchangeCode(code);
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
@@ -167,14 +167,13 @@ export class IotService {
   // ── Google Nest OAuth ────────────────────────────────────────────────────────
 
   buildNestAuthUrl(companyId: string, customerId: string, source: 'admin' | 'portal' = 'admin'): string {
-    const state = Buffer.from(JSON.stringify({ companyId, customerId, source, provider: 'nest' })).toString('base64');
+    const state = signOAuthState({ companyId, customerId, source, provider: 'nest' });
     return this.nest.buildAuthUrl(state);
   }
 
   async handleNestCallback(code: string, state: string): Promise<{ customerId: string; source: string }> {
-    const { companyId, customerId, source = 'admin' } = JSON.parse(
-      Buffer.from(state, 'base64').toString(),
-    ) as { companyId: string; customerId: string; source?: string };
+    // Verify before exchanging the code: a forged or stale state must not reach the provider.
+    const { companyId, customerId, source } = verifyOAuthState(state, 'nest');
 
     const tokens = await this.nest.exchangeCode(code);
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
@@ -502,9 +501,11 @@ export class IotService {
     });
     if (!customer || !customer.email) throw new NotFoundException('Customer email not found');
 
-    const base = process.env.API_GATEWAY_URL ?? 'http://localhost:80';
-    const honeywellUrl = `${base}/api/crm/iot/honeywell/connect-portal`;
-    const nestUrl = `${base}/api/crm/iot/nest/connect-portal`;
+    // The API endpoints need a login token, which an email link can't carry, so
+    // the buttons open the portal's Devices page (login first, then it connects).
+    const portal = (process.env.CUSTOMER_PORTAL_URL ?? 'http://localhost:5174').replace(/\/$/, '');
+    const honeywellUrl = `${portal}/devices?connect=honeywell`;
+    const nestUrl = `${portal}/devices?connect=nest`;
 
     const company = await this.prisma.company.findFirst({ where: { id: companyId } });
     const appName = company?.name ?? process.env.APP_NAME ?? 'HVACtor.ai';

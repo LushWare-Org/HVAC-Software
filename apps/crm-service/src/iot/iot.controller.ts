@@ -61,6 +61,16 @@ export class IotController {
     return res.redirect(this.iot.buildHoneywellAuthUrl(user.companyId, user.customerId, 'portal'));
   }
 
+  // A browser navigation can't send the Authorization header, so the portal asks
+  // for the provider URL over an authenticated request and then navigates itself.
+  @Get('honeywell/connect-portal-url')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Customer: Honeywell OAuth URL for the portal to open' })
+  connectHoneywellPortalUrl(@CurrentUser() user: AuthUser) {
+    if (!user.customerId) throw new NotFoundException('Not a customer account');
+    return { url: this.iot.buildHoneywellAuthUrl(user.companyId, user.customerId, 'portal') };
+  }
+
   // ── Google Nest OAuth (admin) ────────────────────────────────────────────────
 
   @Get('nest/connect')
@@ -99,6 +109,14 @@ export class IotController {
   connectNestPortal(@CurrentUser() user: AuthUser, @Res() res: Response) {
     if (!user.customerId) throw new NotFoundException('Not a customer account');
     return res.redirect(this.iot.buildNestAuthUrl(user.companyId, user.customerId, 'portal'));
+  }
+
+  @Get('nest/connect-portal-url')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Customer: Google Nest OAuth URL for the portal to open' })
+  connectNestPortalUrl(@CurrentUser() user: AuthUser) {
+    if (!user.customerId) throw new NotFoundException('Not a customer account');
+    return { url: this.iot.buildNestAuthUrl(user.companyId, user.customerId, 'portal') };
   }
 
   // ── Device data ──────────────────────────────────────────────────────────────
