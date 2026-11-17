@@ -9,6 +9,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { RescheduleModule } from './reschedule/reschedule.module';
+import { SweepsModule } from './sweeps/sweeps.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { LocationRequestsModule } from './location-requests/location-requests.module';
 import appConfig from './config/app.config';
@@ -31,6 +32,7 @@ import appConfig from './config/app.config';
     RemindersModule,
     WorkOrdersModule,
     RescheduleModule,
+    SweepsModule,
   ],
 })
 export class AppModule {}

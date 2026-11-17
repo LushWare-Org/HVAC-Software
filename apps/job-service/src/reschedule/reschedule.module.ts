@@ -19,6 +19,6 @@ import { CrmClient } from '../jobs/crm.client';
     // handing the job to comms-service.
     CrmClient,
   ],
-  exports: [RescheduleService],
+  exports: [RescheduleService, RescheduleNudgeCron],
 })
 export class RescheduleModule {}
