@@ -15,7 +15,7 @@ import { ActivityGateway } from './activity.gateway';
 @Injectable()
 export class ActivityLogProcessor implements OnModuleDestroy {
   private readonly logger = new Logger(ActivityLogProcessor.name);
-  private readonly worker: Worker;
+  private readonly worker?: Worker;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -26,6 +26,11 @@ export class ActivityLogProcessor implements OnModuleDestroy {
     // `worker` is injectable so unit tests can construct this class without
     // opening a real Redis connection (which would otherwise keep Jest's
     // process alive after the test finishes).
+    // ACTIVITY_LOG_ENABLED=false pauses the audit feed: no worker, no Redis polling.
+    if (!worker && process.env.ACTIVITY_LOG_ENABLED === 'false') {
+      this.logger.log('Activity log paused (ACTIVITY_LOG_ENABLED=false)');
+      return;
+    }
     this.worker =
       worker ??
       new Worker(QueueName.ACTIVITY_LOG, async (job) => this.handleEvent(job.data as ActivityLogEvent), {
@@ -40,6 +45,7 @@ export class ActivityLogProcessor implements OnModuleDestroy {
   }
 
   async handleEvent(event: ActivityLogEvent) {
+    if (process.env.ACTIVITY_LOG_ENABLED === 'false') return null;
     const companyName = await this.companyNames.resolve(event.companyId);
     const created = await this.prisma.activityLog.create({
       data: {
@@ -66,6 +72,6 @@ export class ActivityLogProcessor implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await this.worker.close();
+    await this.worker?.close();
   }
 }

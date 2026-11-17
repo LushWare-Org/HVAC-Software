@@ -13,13 +13,19 @@ import { describeAction } from './describe-action';
  * already flowing back to the caller, and any enqueue failure is logged and
  * swallowed.
  */
+/** The audit feed is on unless ACTIVITY_LOG_ENABLED is exactly 'false'. */
+export function activityLogEnabled(): boolean {
+  return process.env.ACTIVITY_LOG_ENABLED !== 'false';
+}
+
 @Injectable()
 export class ActivityLogInterceptor implements NestInterceptor {
   private readonly logger = new Logger(ActivityLogInterceptor.name);
-  private readonly queue: Queue;
+  private readonly queue?: Queue;
 
   constructor(private readonly service: ActivityLogService, queue?: Queue) {
-    this.queue = queue ?? createQueue(QueueName.ACTIVITY_LOG);
+    // ACTIVITY_LOG_ENABLED=false pauses the audit feed: no queue, no Redis traffic.
+    this.queue = queue ?? (activityLogEnabled() ? createQueue(QueueName.ACTIVITY_LOG) : undefined);
   }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -41,7 +47,7 @@ export class ActivityLogInterceptor implements NestInterceptor {
     // for actions and scenarios that actually happened (a job created, a
     // technician assigned, an email sent), not a record of which screens a
     // super admin clicked through. Every mutating verb still gets logged.
-    if (method === 'GET') {
+    if (method === 'GET' || !this.queue) {
       return next.handle();
     }
 
@@ -68,7 +74,7 @@ export class ActivityLogInterceptor implements NestInterceptor {
     };
 
     const enqueue = (event: ActivityLogEvent) => {
-      this.queue.add('log-event', event).catch((err: Error) => {
+      this.queue?.add('log-event', event).catch((err: Error) => {
         this.logger.warn(`Failed to enqueue activity-log event: ${err.message}`);
       });
     };

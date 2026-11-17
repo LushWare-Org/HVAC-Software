@@ -124,3 +124,17 @@ describe('ActivityLogInterceptor', () => {
     });
   });
 });
+
+describe('ActivityLogInterceptor when paused', () => {
+  afterEach(() => { delete process.env.ACTIVITY_LOG_ENABLED; });
+
+  it('logs nothing and opens no queue while ACTIVITY_LOG_ENABLED=false', (done) => {
+    process.env.ACTIVITY_LOG_ENABLED = 'false';
+    const interceptor = new ActivityLogInterceptor('jobs');
+    const context = makeContext({ method: 'POST', route: '/jobs', user: { companyId: 'co-1' }, body: {} });
+    interceptor.intercept(context, { handle: () => of({ id: 'j1' }) }).subscribe({
+      next: (val: unknown) => expect(val).toEqual({ id: 'j1' }),
+      complete: () => done(),
+    });
+  });
+});

@@ -30,6 +30,7 @@ export class ActivityLogCleanupService implements OnModuleInit, OnModuleDestroy 
   }
 
   async onModuleInit() {
+    if (process.env.ACTIVITY_LOG_ENABLED === 'false') return;
     // Never let Redis stop the service from starting (e.g. a hosted Redis that hit its
     // request allowance): without this, one failed command here took all of comms down,
     // emails and chat included. The nightly cleanup simply waits for the next start.
