@@ -6,10 +6,11 @@
 
 set -euo pipefail
 
-REGISTRY="us-central1-docker.pkg.dev/${GCP_PROJECT:-hvactor}/tscrm-images"
-REGION="us-central1"
-PROJECT="${GCP_PROJECT:-hvactor}"
-GATEWAY_URL="https://nginx-gateway-536584181394.us-central1.run.app"
+REGISTRY="asia-northeast3-docker.pkg.dev/${GCP_PROJECT:-hvactor-ai-prod}/tscrm-images"
+REGION="asia-northeast3"
+PROJECT="${GCP_PROJECT:-hvactor-ai-prod}"
+FIREBASE_PROJECT="${FIREBASE_PROJECT:-hvactor}"
+GATEWAY_URL="https://nginx-gateway-858799009248.asia-northeast3.run.app"
 ADMIN_URL="https://tscrm-demo-admin.web.app"
 CUSTOMER_URL="https://tscrm-demo-customer.web.app"
 
@@ -76,14 +77,14 @@ header "Building admin-dashboard"
 cd apps/admin-dashboard && pnpm build && cd ../..
 ok "admin-dashboard built"
 
-firebase deploy --only hosting:tscrm-demo-admin --project "$PROJECT"
+firebase deploy --only hosting:tscrm-demo-admin --project "$FIREBASE_PROJECT"
 ok "admin-dashboard → $ADMIN_URL"
 
 header "Building customer-portal"
 cd apps/customer-portal && pnpm build && cd ../..
 ok "customer-portal built"
 
-firebase deploy --only hosting:tscrm-demo-customer --project "$PROJECT"
+firebase deploy --only hosting:tscrm-demo-customer --project "$FIREBASE_PROJECT"
 ok "customer-portal → $CUSTOMER_URL"
 
 # ── print seed instructions ───────────────────────────────────────────────────

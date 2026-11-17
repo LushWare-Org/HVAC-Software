@@ -26,10 +26,11 @@
 # ============================================================================
 set -euo pipefail
 
-PROJECT="hvactor"
-REGISTRY="us-central1-docker.pkg.dev/${PROJECT}/tscrm-images"
-REGION="us-central1"
-GATEWAY="https://nginx-gateway-536584181394.us-central1.run.app"
+PROJECT="hvactor-ai-prod"            # Cloud Run + registry
+FIREBASE_PROJECT="hvactor"       # Firebase Hosting for the frontends (separate project)
+REGISTRY="asia-northeast3-docker.pkg.dev/${PROJECT}/tscrm-images"
+REGION="asia-northeast3"
+GATEWAY="https://nginx-gateway-858799009248.asia-northeast3.run.app"
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export DOCKER_DEFAULT_PLATFORM="linux/amd64"
 
@@ -126,7 +127,7 @@ if $FRONTEND; then
   echo ""
   echo "STEP 4: Deploy Firebase Hosting (admin + portal)"
   echo "---------------------------------------------"
-  npx firebase-tools deploy --only hosting --project "$PROJECT"
+  npx firebase-tools deploy --only hosting --project "$FIREBASE_PROJECT"
 fi
 
 # ── Health checks ────────────────────────────────────────────────────────────

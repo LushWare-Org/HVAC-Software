@@ -13,11 +13,11 @@
 # Required env vars (set before running, or the script will prompt):
 #   RESIDEO_CLIENT_ID        – from developer.honeywellhome.com
 #   RESIDEO_CLIENT_SECRET    – from developer.honeywellhome.com
-#   RESIDEO_REDIRECT_URI     – e.g. https://nginx-gateway-536584181394.us-central1.run.app/api/crm/iot/honeywell/callback
+#   RESIDEO_REDIRECT_URI     – e.g. https://nginx-gateway-858799009248.asia-northeast3.run.app/api/crm/iot/honeywell/callback
 #   NEST_PROJECT_ID          – from Google Device Access Console ($5 one-time fee)
 #   NEST_CLIENT_ID           – OAuth2 client from Google Cloud Console
 #   NEST_CLIENT_SECRET       – OAuth2 client secret
-#   NEST_REDIRECT_URI        – e.g. https://nginx-gateway-536584181394.us-central1.run.app/api/crm/iot/nest/callback
+#   NEST_REDIRECT_URI        – e.g. https://nginx-gateway-858799009248.asia-northeast3.run.app/api/crm/iot/nest/callback
 #   IOT_ENCRYPTION_KEY       – 32-byte hex (auto-generated if not set)
 #
 # NOTE: The Supabase DB migration (customer_iot_connections + customer_iot_devices tables)
@@ -26,10 +26,11 @@
 
 set -euo pipefail
 
-REGISTRY="us-central1-docker.pkg.dev/${GCP_PROJECT:-hvactor}/tscrm-images"
-REGION="us-central1"
-PROJECT="${GCP_PROJECT:-hvactor}"
-GATEWAY_URL="https://nginx-gateway-536584181394.us-central1.run.app"
+REGISTRY="asia-northeast3-docker.pkg.dev/${GCP_PROJECT:-hvactor-ai-prod}/tscrm-images"
+REGION="asia-northeast3"
+PROJECT="${GCP_PROJECT:-hvactor-ai-prod}"
+FIREBASE_PROJECT="${FIREBASE_PROJECT:-hvactor}"
+GATEWAY_URL="https://nginx-gateway-858799009248.asia-northeast3.run.app"
 ADMIN_URL="https://tscrm-demo-admin.web.app"
 CUSTOMER_PORTAL_URL="https://tscrm-demo-customer.web.app"
 
@@ -149,7 +150,7 @@ pnpm build
 cd ../..
 ok "admin-dashboard built"
 
-firebase deploy --only hosting:tscrm-demo-admin --project "$PROJECT"
+firebase deploy --only hosting:tscrm-demo-admin --project "$FIREBASE_PROJECT"
 ok "admin-dashboard deployed to $ADMIN_URL"
 
 # ── 6. build + deploy customer-portal ────────────────────────────────────────
@@ -160,7 +161,7 @@ pnpm build
 cd ../..
 ok "customer-portal built"
 
-firebase deploy --only hosting:tscrm-demo-customer --project "$PROJECT"
+firebase deploy --only hosting:tscrm-demo-customer --project "$FIREBASE_PROJECT"
 ok "customer-portal deployed to $CUSTOMER_PORTAL_URL"
 
 # ── 7. smoke tests ────────────────────────────────────────────────────────────

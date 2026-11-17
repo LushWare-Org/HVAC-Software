@@ -12,7 +12,7 @@ import axios from 'axios'
 import Constants from 'expo-constants'
 import { devApiBaseUrl } from './devHost'
 
-const DEFAULT_API_BASE_URL = 'https://nginx-gateway-536584181394.asia-northeast3.run.app/api'
+const DEFAULT_API_BASE_URL = 'https://nginx-gateway-858799009248.asia-northeast3.run.app/api'
 
 /** The address Metro is served from — the machine running the local services. */
 export function expoHostUri(): string | undefined {

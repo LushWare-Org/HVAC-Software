@@ -7,7 +7,7 @@ import { CUSTOMER_EVENTS, invalidateForEvent } from '@/lib/realtimeEvents'
 import { devWsBaseUrl } from '@/lib/devHost'
 import { expoHostUri } from '@/lib/api'
 
-const DEFAULT_WS_BASE_URL = 'https://nginx-gateway-536584181394.asia-northeast3.run.app'
+const DEFAULT_WS_BASE_URL = 'https://nginx-gateway-858799009248.asia-northeast3.run.app'
 
 export function getWsBaseUrl(): string {
   const explicit =

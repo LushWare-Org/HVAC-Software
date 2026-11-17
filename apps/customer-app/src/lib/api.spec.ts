@@ -15,6 +15,6 @@ describe('normalizeApiBaseUrl', () => {
   })
 
   it('falls back to the hvactor gateway for an empty value', () => {
-    expect(normalizeApiBaseUrl('')).toContain('nginx-gateway-536584181394')
+    expect(normalizeApiBaseUrl('')).toContain('nginx-gateway-858799009248')
   })
 })
